@@ -1,0 +1,6282 @@
+/*
+filename    darkelf
+password    daelf
+changedby   skay
+EmailAdd     Palio <palio@blinksoft.com>
+request     compile
+version     30
+END HEADER*/
+
+#include "values.h"
+#include "wmacros.h"
+#include <composed.h>
+
+#define SORCERER_GUILD "Midgaard Sorcerer"
+#define NECRO_GUILD "Necromancer"
+#define CONJURER_GUILD "Udgaard Conjurer"
+#define TEL_ONGOING "Teleport Ring Quest Ongoing"
+#define TEL_COMPLETE "Teleport Ring Quest Complete"
+#define RING_RETRIEVE "Ring Retrieve Quest Begun"
+#define RING_DONE     "Ring Retrieve Quest Complete"
+#define STATS \
+	  MSET_ABILITY(15,15,10,20,8,8,12,12) \
+	  MSET_WEAPON(6,6,6,6,6,6) \
+	  MSET_SPELL(6,6,6,6,6,6,6,6,6,6,4)
+
+
+%zone darkelf
+title "Underdark Caves"
+
+lifespan 40
+reset RESET_ANYHOW
+creators {"elminster"}
+
+notes
+"The ruined village of Hermgaard and the entrance to the Underdark, by
+Elminster the Sage. This god would appreciate any suggestions you have
+to improve this zone. Voice them to (E-Mail) JMG3128@tamsun.tamu.edu."
+
+help
+"&f
+    The ruined village of Hermgaard hides a terrible secret 
+     - the entrance to the Underdark is open once again.
+	
+	Dark-elves and evil dwarves populate those
+	    areas... and other things better
+  	    	left unmentioned...
+
+ Hermgaard, Underdark and the volcano areas have been created by 
+ 		   Elminster the Sage 
+		and currently updated by 	
+    	   Sk(r)ay the Speaker for the Dead. 
+&l&n"
+
+%dil
+
+
+dilbegin healaffect(medi : unitptr, targ : unitptr, hm : integer);
+code
+{
+	act("Your $2N glows and heals some of your wounds!",A_ALWAYS,self,
+	medi,targ,TO_VICT);
+	act("$1N's $2N emits blue mist which surrounds $1s!", A_SOMEONE,self,
+	medi,targ,TO_NOTVICT);
+	return;
+}
+dilend
+
+dilbegin faeaffect1(medi : unitptr, targ : unitptr, hm : integer);
+code
+{
+	act("Blue fire erupts from your sword, BURNING $3n!", A_ALWAYS, self,
+	medi, targ, TO_CHAR);
+	act("Blue fire erups from $1n's sword, BURNING $3n!", A_ALWAYS,
+	self, medi,targ,TO_NOTVICT);
+	act("Blue fire erupts from $1n's sword BURNING you!", A_ALWAYS,
+	self,medi,targ,TO_VICT);
+	return;
+}
+dilend
+
+dilbegin faeaffect2(medi : unitptr, targ : unitptr, hm : integer);
+code
+{
+	act("Blue fire erupts from your sword, SEARING $3n!", A_ALWAYS,
+	self,medi,targ,TO_CHAR);
+	act("Blue fire erupts from $1n's sword, SEARING $3n!", A_ALWAYS,
+	self,medi,targ,TO_NOTVICT);
+	act("Blue fire erupts from $1n's sword, SEARING you!", A_ALWAYS,
+	self, medi,targ,TO_VICT);
+        return;
+}
+dilend
+
+dilbegin faeaffect3(medi : unitptr, targ : unitptr, hm : integer);
+code
+{
+	act("Blue fire erupts from your sword, ENGULFING $3n!", A_ALWAYS,
+	self,medi,targ,TO_CHAR);
+	act("Blue fire erupts from $1n's sword, ENGULFING $3n!", A_ALWAYS,
+	self,medi,targ,TO_NOTVICT);
+	act("Blue fire erupts from $1n's sword, ENGULFING you!", A_ALWAYS,
+	self, medi,targ,TO_VICT);
+	act("$1n screams in agony!", A_ALWAYS, targ,medi,null,TO_REST);
+	act("You scream in agonay!", A_ALWAYS,self,medi,targ,TO_VICT);
+        return;
+}
+dilend
+
+
+%rooms
+
+
+/* --------------------------- Forest east of Urland ------------------ */
+
+
+
+
+				road1
+
+title "On an old road"
+descr
+"This road looks as if at one time it was well used. Now it lays in obvious
+misneglect and the only tracks you see upon it are what appear to be humanoid
+shaped, but clawed, tracks. You can follow the road to the east, or enter
+a path near Urland to the west."
+
+names {"road", "road1"}
+extra {"tracks"}
+"You would guess the tracks were made by orcs."
+extra {"road"}
+"The road is very old and worn. It obviously hasnt been used in many years.
+Years old ruts mar its surface, and long weeds have grown over most of it.
+Here and there u notice an old broken cobblestone."
+movement SECT_FOREST
+flags {UNIT_FL_NO_MOB}
+east to road2;
+west to vil_path6@urland;
+end
+
+				road2
+
+title "On an old road"
+descr
+"The road continues east-west here, and impenatrable forest blocks passage
+south. The only sign of civilized activity is a column of smoke
+rising from the trees to the north-west. "
+
+extra {"road"}
+"The road is quite old, and seems to have not been used in years."
+extra {"forest"}
+"The forest is mainly gnarled old oak trees, with thick briar's and bushes
+winding between the trunks. It appears quite dark and impassable."
+extra {"smoke", "column"}
+"The column of smoke lifts out of the trees and into the air with a slight
+twirl. There is a slight odor of smoking meat in the air."
+
+names{"road"}
+movement SECT_FOREST
+west to road1;
+east to road3;
+/* north to ship1@treasure; XXX*/
+end
+
+
+				road3
+
+title "On an old road"
+descr
+"The road turns north and west here, with impenatrable forest to the south and
+east. There is a hill to the north where the road ends, and there is a column
+of smoke rising into the air from that direction."
+
+movement SECT_FOREST
+extra {"road"}
+"The road is old and worn, but u can see remenants of wagon ruts and a broken
+cobblestone here and there. Weeds have overgrown most of the road, but it
+appears to have at one time been used quite regularly."
+extra {"column", "smoke"}
+"The column of smoke rises into the air, twirling in a corkscrew manner. It
+appears to be coming from directly north."
+extra {"forest"}
+"The forest is mainly made up of gnarled oak trees and thick foilage. Passage
+through it would be impossible through the thick bushes."
+extra{"hill"}
+"The hill rises high above the forest"
+
+names{"road"}
+movement SECT_FOREST
+west to road2;
+north to orc1;
+end
+
+				orc1
+
+title "End of an old road"
+names {"road end"}
+descr
+"The road ends here at the base of a hill. You can see the remanants of the
+road continuing up the hill, but it disappears completely after a few feet.
+There is a fire here, and a cave to the north."
+
+extra {"road"}
+"The road basically ends here. It seems to have once gone up the side of the
+hill to your north, but now has nearly completely disappeared."
+extra {"hill"}
+"The hill is tall and has a cave set in its side to the north."
+extra {"cave"}
+"The cave looks dark and mysterious."
+extra {"fire"}
+"It looks like a cooking fire, and u notice a roasting rabbit on a scewer over
+the top of it. This would seem to be the source of the smoke column."
+
+movement SECT_FOREST
+south to road3;
+north to orc_cave;
+up to hilltop;
+end
+
+
+				orc_cave
+
+title "Inside an orc cave"
+names {"cave"}
+descr
+"The cave is dark and disgusting, obviously an orc cave. There are bear skins
+and and animal skulls lining the walls, and a table in the center of the room
+covered with pieces of half eaten animals. To the south, you can exit the
+cave and there are exits in all other directions going further into the
+cave."
+
+extra {"skins"}
+"The skins are of bears, and seem to be used as door ways into other rooms in
+the cave. There is one to the east, north, and west."
+extra {"skulls"}
+"The skulls are of powerful animals, such as bears, and boars, and decorate
+the walls like macabre trophies."
+extra {"table"}
+"The table seems to be used to eat. There are pieces of half eaten animals
+about its top, including rabbit, boar, and other unidentifiable remains."
+
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER}
+north to chief_rm;
+west to orc_shrine;
+east to champ_rm;
+south to orc1;
+end
+
+
+				chief_rm
+
+title "Bedroom of an orc chief"
+names {"orc bedroom"}
+descr
+"This part of the cave is decorated with baubles collected by the orcs during
+there raids. There is a Urland style bed here, and a desk obviously from
+midgaard. A dwarven rug decorates the floor, although it is now dirty. A
+ripped tapestry of a battle decorates the north wall."
+
+extra {"baubles"}
+"The baubles include an urland style bed, a midgaard desk, a dwarven rug,
+and a ripped tapestry."
+extra {"bed"}
+"The bed looks to have been made by the carpenter in Urland, but it is now
+very dirty and ruffled."
+extra{"desk"}
+"The desk is made of the finest wood from the Cypress forest east of midgaard.
+The seal of Midgaard upon its top labels it from the carpenter in that city."
+extra {"rug"}
+"This rug was obviously stolen from the dwarven kingdom of Farginok, for it
+has the seal of their king woven into its top. Once a fine rug, it is now
+dirty and worn from many orc feet."
+extra {"tapestry"}
+"The tapestry depicts the great battle between Midgaard I and the Dragon
+Ancalador. I shows the city being burned, and then the dragon being turned to
+stone by some mighty mage."
+
+movement SECT_INSIDE
+south to orc_cave;
+end
+
+				orc_shrine
+
+title "Orc Shrine"
+names {"orc shrine"}
+descr
+"This is a shrine dedicated to the spider queen. There is a large altar made to
+look like a snarling spider, and a table with sacrifice tools littering it."
+
+extra {"altar"}
+"The altar is the shape of a spider, and covered with long dried blood."
+extra {"tools"}
+"The tools include a bowl for collecting blood, a sacrifical knife, and
+brush for painting glyps and symbols with the blood."
+extra {"table"}
+"The table is a simple wooden one, but covered with dried blood."
+
+movement SECT_INSIDE
+east to orc_cave;
+end
+
+
+				champ_rm
+
+title "Bedroom of the orc Champion"
+names {"champion room"}
+descr
+"This room is sparcely decorated, with a bed and desk. It would look to be the
+room of someone constantly out, and not too concerned with personal items."
+
+extra {"bed"}
+"The seems normal enough, although large enough for an orc to sleep in. It is
+however, quite clean."
+extra {"desk"}
+"The desk is simple and tidy."
+
+movement SECT_INSIDE
+west to orc_cave;
+end
+
+
+
+				hilltop
+
+title "The top of a hill"
+names {"hilltop"}
+descr
+"You are standing on the top of a hill. To the west you can see the town of
+Urland, and far to the west Ratswarf. To the north you can just make out what
+appears to be a small village, and to the north-east there is an old tower."
+
+extra {"urland"}
+"You can see the rooftops of this small village, just to the west, less than
+a mile away. You can detect the busy movements of the Urland commoners, goings
+about their various tasks."
+extra {"ratswarf"}
+"You can see this seedy little town in the distance, it is several miles
+away. A slight cloud of darkness covers the town, almost as if resisting
+the sunlight of the day."
+extra {"village"}
+"The small village appears deserted, for u can detect no movement, even though
+it is only a few hundered meters to the north of this hill."
+extra {"tower"}
+"The tower is only 2 stories tall, and seems old and in disrepair. Still,
+you can detect an aura of power surrounding it, which makes u wonder who
+lives there."
+
+movement SECT_FOREST
+south to orc1;
+north to hillbottom;
+end
+
+
+
+				hillbottom
+
+title "The Bottom of a Hill"
+descr
+"The hill drops down to a gentle slope. To the north, you can just make out a
+small path leading through a dense forest. As you look back up the hill, you
+think that perhaps you should return to the safety of Urland, for the forest
+ahead is thick and forebooding, and would seem to hold something more
+dangerous than rabbits and badgers."
+
+names {"hillbottom"}
+extra {"path"}
+"The path is small and barely noticable. It looks as if no one has traveled
+it in years."
+extra {"tree", "trees"}
+"The trees are gnarled old oaks, and seem ancient. Travel through them is
+impossible due to the thick undergrowth filled with thorns and other nasty
+plants. Carved into one of the tree's near the path's entrance is the word
+DANGER!"
+extra {"forest"}
+"The forest here is similar to the rest so far in this area, mostly large,
+gnarled oak trees surrounded by thick vegitation. Passage into the forest
+is impossible, except by the path to the north."
+
+movement SECT_FOREST
+flags {UNIT_FL_NO_MOB}
+up to hilltop;
+north to path1;
+end
+
+
+				path1
+
+title "Small path through the thick forest"
+descr
+"You are on a small path leading north-south through a thick forest. The path
+appears to have not been used in years, but was obviously at one time used to
+travel to Urland."
+
+names {"small path", "path", "path1"}
+extra {"tree", "trees"}
+"The tree's are gnarled old oaks and seem ancient. Travel through them is
+impossible due to the large amount of brush and briars blocking the way."
+extra {"forest"}
+"The forest consists mainly of gnarled old oak trees and thick underbrush."
+
+movement SECT_FOREST
+north to path_inter;
+south to hillbottom;
+end
+
+
+				path_inter
+
+title "An intersection in the path"
+
+descr
+"The trail brances off in all directions here. To the north you can see what
+appears to be a village, while to the east there is a pool of water with a
+old tower on its far side. To the west, the trail slopes up to a slight rise.
+There is an old sign here."
+
+names {"intersection", "path intersection"}
+extra {"trail"}
+"The old trail goes in all directions here, and you now notice that it must
+at one time have been a road used for travel between the village to the
+north and Urland."
+extra {"village"}
+"The village to the north looks deserted and still."
+extra {"pool"}
+"to the west there is a cool, blue pool of water."
+extra {"tower"}
+"The tower looks old and in disrepair. There is an aura of power emenating
+from it however."
+extra {"sign"}
+"&l The sign says:
+
+		North : Village of Hermgaard
+		West  : Inn of the Welcome Wench
+		South : Village of Urland
+		East  : Tower of Elminster the sage
+
+"
+
+movement SECT_FOREST
+south to path1;
+north to village_entr;
+west to rise;
+east to pool;
+end
+
+
+
+					rise
+
+title "A rise in the forest"
+descr
+"The path goes up a slight hill that rises over a ruined building to the west.
+To the east, you see an intersection in the path. There is a stillness in the
+air here that is discomforting."
+
+names {"rise"}
+extra {"ruins", "ruin"}
+"You have a good view of what appears to have been a large inn at one time. It
+appears to have been burned down, and is now a forgotten ruin."
+extra {"path"}
+"The path seems old but at one time used regularly."
+
+movement SECT_FOREST
+east to path_inter;
+west to ruin1;
+end
+
+
+					ruin1
+
+title "Ruins of an old inn"
+descr
+"You enter a large clearing in the woods that at one time contained a large
+building. That building is now rubble, and appears to have been burned down.
+There is a settleness to the air, and you notice that many of the sounds normal
+to the forest are absent here, almost as if nature holds this place as sacred.
+You also see the remanants of a path to the north and east."
+
+names {"ruins", "ruin"}
+extra {"ruin", "rubble", "ruins"}
+"The inn seems to at one time have been quite cozy. Upon closer inspection of
+the rubble, you get the impression that the inn was attacked from the outside.
+Burned furniture is placed in front of entryways, and you can see the charred
+remains of the former occupants, some still clutching blackened weapons."
+extra {"path"}
+"The old path's travel to the north and south from this clearing."
+
+movement SECT_FOREST
+
+north to path2;
+east to rise;
+end
+
+
+				path2
+
+title "A small path throught the woods."
+descr
+"This small path leads north-south through the woods. To the north you see a
+cave surrounded by trees. To the south there is a clearing."
+
+extra {"path"}
+"The path is old, and seems to have not been used in many years."
+extra {"woods"}
+"The woods grows dark as well as thick here, the normal sounds of animal's are
+not present."
+extra{"cave"}
+"The cave is dark and mysterious, you sense an evil presense emenating from its
+interior."
+extra {"clearing"}
+"There is a clearing in the woods to the south."
+
+names {"path"}
+movement SECT_FOREST
+
+north to cave;
+south to ruin1;
+end
+
+
+
+				cave
+
+title "A cave in the woods"
+descr
+"The cave rises out of the ground here, and seems almost unnatural. The
+entrance is very dark and dank. You see footprints in the ground around the
+entrance, and they seem quite fresh. There are paths leading east and south."
+
+names {"cave"}
+extra {"prints", "footprints"}
+"The footprints seem to have been by a large humanoid. They do not extend
+further than a few feet from the cave entrance. The prints are deep, suggesting
+a creature of great weight."
+extra {"cave"}
+"The cave is dark and perfectly silent"
+extra {"path"}
+"The paths lead south and east."
+
+movement SECT_FOREST
+
+east to path3;
+south to path2;
+west to cave_entrance;
+end
+
+
+				cave_entrance
+
+title "Entrance to a cave"
+descr
+"It is very dark in here, and you know without a light source you would not be
+able to see anything at all. As it is, your light only extends a few feet in
+front of you. The cave is small, and you can see what appears to be the end
+of it ahead. Upon closer inspection, you also see a silouette in the darkness
+ahead. There is a sign here with some writing on it. You can continue on
+further in the cave to the west, and the cave exits to the east."
+
+names {"cave entrance"}
+extra {"sign", "writing"}
+" &l				WARNING!!!!
+
+
+		Ahead lies the entrance to the darkelf caverns.
+		This area is recommended for player of lvl 9-
+		20. I would return when you have a diverse party
+		with different skills and abilities, as this area
+		will test the endurance of your characters to the
+		maximum. However, for those quick of wit and strong
+		of arm, this land will provide many a reward."
+extra {"silouette"}
+"The silouette seems to be humanoid in appearance, although it is very large
+and is standing absolutely still."
+
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_MOB}
+west to underdark_entr;
+east to cave;
+end
+
+
+				underdark_entr
+
+title "Entrance to the Underdark"
+descr
+"As you enter this room, you see the cave ends. Standing in the center is a
+very large stone statue, resembling an elf. Behind the statue stands a very
+sturdy iron door."
+
+names {"entrance", "underdark entrance"}
+
+extra {"door"}
+"The door is made of a black substance, called adamantium. It is very nearly
+indestructable. There is a small keyhole in its center."
+extra {"keyhole"}
+"The keyhole is small, and probably fits a key."
+
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER}
+west to d1 open {EX_OPEN_CLOSE, EX_CLOSED, EX_PICKPROOF}
+key black_key keyword {"door"} descr "The
+black, iron door is very sturdy and seems indestructable. There is a small
+keyhole in its center.";
+east to cave_entrance;
+end
+
+
+				path3
+
+title "A small path through the forest"
+descr
+"You are on a small path leading east-west throught he forest. To the west
+you can see the entrance to a cave. To the east, the path ends in what appears
+to be a village."
+
+extra {"path"}
+"The path leads east into a village, or west to a cave entrance."
+extra {"forest"}
+"The forest is dark and quiet here."
+extra {"cave"}
+"The cave entrance look dark and forebooding. You detect a sense of evil
+emenating from it."
+extra {"village"}
+"The village appears deserted, for you hear and see no signs of life coming
+from it."
+
+names {"path", "path3"}
+movement SECT_FOREST
+west to cave;
+east to village1;
+end
+
+
+				village_entr
+
+title "Entrance to the village of Hermgaard"
+descr
+"Ahead to the north the path enters the Village of Hermgaard. As you enter
+the village, you notice there are no sounds of life, infact there is a stillnes
+to the air that is downright disturbing. The path also leads south to an
+intersection."
+
+extra {"path"}
+"The path ends to the north to enter a deserted village."
+extra {"village"}
+"There is absolutly no sound comming from the village. It appears completely
+deserted."
+extra {"intersection"}
+"There is an intersection in the path you are on to the south."
+
+names {"village entrance"}
+movement SECT_FOREST
+north to village1;
+south to path_inter;
+end
+
+				village1
+
+title "The Village of Hermgaard"
+descr
+"Upon entering the village, you get the uncomfortable feeling that something
+is very wrong. There are no children running in the streets, no wives going
+off to do errands, no husbands doing work. The place seems completely
+deserted, or so it would seem. Also, there is no sound of animals, forest like
+or domesticated; everything is dead quiet. Paths lead west and south, and a
+small village road leaves east. To the north, you see a small building with
+the words 'Mirtle the Money Lender' on the door."
+
+names {"village", "Hermgaard"}
+extra {"road"}
+"The road is cobblestone paved, but there are weeds growing up between the
+stones. It looks as if it hasnt been used in years."
+extra {"bank", "building"}
+"The bank is a well built building, made completely of stone. It looks in
+disrepair due to neglect however."
+extra {"door"}
+"The door is made of wood, and appears to be still functional, even though
+a large hole was knocked in it by what u would guess was a battering ram."
+
+east to village2;
+north to bank open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+south to village_entr;
+west to path3;
+end
+
+				bank
+
+title "Bank of Hermgaard"
+descr
+"You are inside an old building that at one time served as a bank. Broken
+chests litter the floor, and the skeletal remains of who you assume was the
+banker are in the corner. The only exit is through a doorway south."
+
+names {"bank"}
+extra {"skeleton", "remains", "skeletal remains"}
+"The skeleton is lying on the ground. Close inspection shows laceration marks
+upon the bone, and the remains of many dart like objects lying among the
+ribcage. You discern that the poor chap was attacked with small, dart-like
+missles and very sharp slashing weapons. There is nothing of value in or
+around the remains."
+extra {"dart", "missle"}
+"The dart seems like a minature crossbow bolt, and is covered with a sticky
+substance."
+extra {"safe", "broken chest"}
+"The safe-like chest's are broken open and any valuables they once contained
+have long been gone."
+extra {"floor"}
+"The floor is made of cool grey stone, but is covered with patches of what
+you assume is dried blood."
+
+movement SECT_INSIDE
+south to village1 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+down to tigika_house@houses  open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED,EX_HIDDEN} 
+key small_key@houses keyword {"trap door","door"} descr
+"The ground looks a little off here.";
+SECRET_DOOR_DIFFICULTY(DOWN,75)
+end
+
+
+				village2
+
+title "The Village of Hermgaard"
+descr
+"You are on a road leading east-west through the deserted village of Hermgaard
+To the north is the village fountain, and to the south you see a stone building
+with a sign posted on its wall. The road continues further into the village
+to the east, and toward the village entrance to the west."
+
+names {"village", "village2", "Hermgaard"}
+extra {"road"}
+"The road is old and worn, made of cobblestones. Weeds grow between the stones
+and there are sign of neglect all around."
+extra {"sign"}
+"&l				Ranthor the Blacksmith
+			      Best this side of Haon Dor"
+
+extra {"fountain"}
+"The fountain to the north appears long dried out."
+extra {"building"}
+"The building to the south is stone, and appears to have been a blacksmith
+shop judging by the hug smoke flume."
+
+movement SECT_CITY
+north to fountain;
+south to black;
+west to village1;
+east to village3;
+end
+
+
+				fountain
+
+title "The village fountain"
+descr
+"You are standing at the village fountain. It is long dried out. You can exit
+to the south back onto the village road."
+
+names {"fountain"}
+extra {"village fountain","water","fountain"}
+"The fountain has been dried out for some time."
+
+movement SECT_CITY
+south to village2;
+end
+
+
+				black
+
+title "Abandoned Blacksmith shop"
+descr
+"You are in the remanants of a seemingly once successful blacksmith shop.
+Armour and other metalwork line the walls, now rusted and worthless. There
+is a hole in the roof, and an old stone furnace dominating the room, lying
+long cold. The room shows sighns of a fierce struggle, and there are dark
+stains carpeting the floors and walls. You can exit back onto the village
+street to the north."
+
+names {"blacksmiths shop", "shop"}
+extra {"armour", "metalwork"}
+"The armour and pieces of unfinished metal work are hung about the room,
+rusted beyond any value."
+extra {"furnace"}
+"Inside the furnace you see what appears to be humanoid remains. You can find
+nothing of value there."
+extra {"stains", "dark stains"}
+"The stains would appear to be long dried blood, and from the amount you would
+think several people died here in a fierce struggle."
+extra {"hole"}
+"The hole in the roof appears to have been made from some sort of force
+exploing to the outside. You can see the sky through the hole."
+extra {"street"}
+"The cobblestone street is to the north."
+
+movement SECT_INSIDE
+north to village2;
+end
+
+
+				village3
+
+title "A turn in the village road"
+descr
+"The village road turns north here. Continuing east you can enter what
+appears to be the town hall. To the south is a collapsed building, the former
+weapons shop. You can also follow the road to the west."
+
+names {"village", "hermgaard", "village3"}
+extra {"road"}
+"The cobblestone road leads north and west from here."
+extra {"town hall", "hall"}
+"The building is the largest in the city, and appears to have been assaulted
+from all sides."
+extra {"building"}
+"The collapsed building appears to have been the weapons shop. Now it is a
+pile of rubble."
+
+movement SECT_CITY
+north to village4;
+west to village2;
+south to weapon_shop;
+east to town_hall;
+end
+
+
+				weapon_shop
+
+title "Collapsed weapon shop"
+descr
+"This building appears to have been reduce to rubble by a great explosion.
+There are bits and pieces of the walls and roof thrown several feet from the
+edge of its foundation. You would guess that magic involved in this building's
+destruction, and you realize you will find nothing of value here. You can
+return to the village road to the north."
+
+names {"rubble", "ruin", "weapon shop"}
+
+movement SECT_CITY
+north to village3;
+end
+
+
+				town_hall
+
+title "The Town Hall of Hermgaard"
+descr
+"Upon entering this building you get the disquieting feeling that something
+very bad occured here. You get the feeling, from the amount of destruction
+and arrangement of rubble, that the people of this doomed town made their
+last stand here. There is much dried blood, and numerous minature crossbow
+darts. There is a passageway leading east, to a very dark room. You can also
+exit to the west, back to the main street of the town."
+
+names {"town hall", "hall"}
+extra {"darts", "crossbow darts"}
+"The darts are small, and seem to fit a hand crossbow. They are covered with
+a sticky substance. You get the feeling that they are very dangerous, and
+decide to let them be."
+
+movement SECT_INSIDE
+west to village3;
+east to lair descr
+"To the east you get the distinct impression of danger. It is very dark, and
+you feel the presence of possibly another creature, or perhaps your imagination
+is just playing tricks on you.";
+end
+
+
+				lair
+
+title "Lair of spiders"
+descr
+"Upon entering this room you see huge spider webs blanketing the room. Dried
+husks of both humans and animals are hung like macabre trophies throughout
+the room. You believe this room may be dangerous to stay in long."
+
+names {"lair", "spider lair"}
+extra {"webs"}
+"The webs are thick and strong. The blanket what once would seem to be the
+council chamber of the town hall, and through them on the far wall you see a
+large hole in the wall, covered with the web."
+extra {"hole"}
+"The hole leads to the outside, and you assume that is how whatever made these
+webs entered the building. It is impossible to reach without hacking through
+several feet thick of web."
+extra {"husks", "dried husks", "trophies", "macabre trophies"}
+"The husks are wrapped in tight bonds of steel strong silk, and appear to have
+been dead a long time. You can just make out the look of pain filled screams
+on the faces of the humans. You get a frightning feeling that maybe the
+occupents of this room are hungry."
+
+movement SECT_INSIDE
+west to town_hall;
+end
+
+
+				village4
+
+title "The end of the village road"
+descr
+"The village road ends here, although you can north to the remains of a shrine
+to Odin, or back south following the village road."
+
+names {"village", "hermgaard"}
+extra {"road"}
+"The cobblestone road ends in a shrine to the north here."
+extra {"shrine", "remains"}
+"The shrine seems to have been desecrated greatly. It is slightly burned, and
+symbols have been marred across its surface. There is a presence of evil
+emenating from it."
+
+movement SECT_CITY
+north to shrine;
+south to village3;
+end
+
+
+
+				shrine
+
+title "Desecrated shrine"
+descr
+"The shrine has been desecrated in every possible way. A dark substance has
+been smeared all along the walls and pictures of spiders have been drawn along
+the walls, floor, ceiling, and windows. The altar has been completely dowsed
+in the substance, and the statue of Odin has been melted to a slab of
+unreconizable stone. The touch of Odin has been forced from this place, and
+you detect the presense of evil in the air."
+
+names {"shrine"}
+extra {"altar"}
+"The altar looks as if people have been sacrificed upon it. The substance would
+appear to be blood, and a lot of it. Whatever rituals where conducted here,
+you dont want to even think about."
+extra {"substance", "dark substance"}
+"The substance appears to be long dried blood."
+extra {"stone", "statue"}
+"The once proud image of Odin has been melted by a tremondous heat, and you
+can detect none of his normal features due to the damage."
+extra {"pictures"}
+"The pictures are of spiders in a grand contenance. You would suspect that
+thay have some religous signifigance to the person who drew them."
+
+movement SECT_INSIDE
+south to village4;
+end
+
+
+/* -------------------- The Underdark ---------------------------*/
+
+
+
+
+				d1
+
+title "The Underdark"
+descr
+"You enter a series of caves and tunnels leading west into the underdark.
+The underdark is very quiet, and from the shine of your light source, you
+notice a slight glow to the cavern walls and roof. Almost as if the rock
+itself where magical in nature. In the distance you here the flow of water. You
+notice that as you travel further west there is a gentle slope downward. You
+can exit the underdark through a door to your east."
+
+names {"underdark"}
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+east to underdark_entr open {EX_OPEN_CLOSE, EX_CLOSED} descr
+   "a large black, metal door leads east." keyword {"door"};
+west to d2;
+end
+
+
+				d2
+
+title "The Underdark"
+descr
+"The caves and tunnels continue in all directions here. There is a disquieting
+felling here, as if something is about to happen. To the north you here the
+distinct sound of water flowing, from the south you here the sound of a fire
+crackling. To the west and east there is no sound at all."
+
+names {"underdark"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+east to d1;
+north to d3;
+west to d14;
+south to d8;
+end
+
+
+				d3
+
+title "The Underdark"
+descr
+"The caves and tunnels continue north-south here. You feel the pressure of
+tons of rock all around you, it is very disquieting. From the north you
+here flowing water, perhaps there is an underground river here.."
+
+names {"underdark"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+north to d4;
+south to d2;
+end
+
+
+				d4
+
+title "The Underdark"
+descr
+"The caves and tunnels continue north-south here. Directly to the north there
+is the sound of flowing water, and you can here a 'bleep' sound, you cannot
+fanthom what could be making it though. The walls here are coated with
+persperation, and the air is thick with humidity."
+
+names {"underdark"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+north to d5;
+south to d3;
+end
+
+
+
+				d5
+
+title "The Underdark"
+descr
+"You come to a T-intersection in the tunnels. Passageway's lead east, west
+and south. To the east you see a huge cavern opening up to a large mushroom
+patch. To the west you see the source of the sound of water flowing, a large
+underground river flows into a huge cavern full of underground plant life.
+To the south to curving tunnels and caverns continue."
+
+names {"underdark"}
+flags {UNIT_FL_INDOORS}
+extra {"patch"}
+"The patch is several hundred square yard in size, and is made of huge, giant
+mushrooms, measuring 6 to 15 feet in height!"
+extra {"river"}
+"The river is dark and flowing exceptionally fast from one end of the cavern
+to the next. It enters and exits the cavern from large slits in the side of
+the cavern walls. The river flows across the far end of the cavern, and would
+be deadly to enter."
+extra {"plant", "life"}
+"The plant life is completely unknown to you, but most seems to be a type of
+phosphoresent bush that radiates a pale blue light. All would see to not need
+sunlight to survive."
+
+movement SECT_INSIDE
+west to d6;
+east to d7;
+south to d4;
+end
+
+
+
+
+				d6
+
+title "The Underdark"
+descr
+"This is a huge cavern in the underdark, in which a large river flows through
+on the far side. The room is filled with underground plant life, most of which
+glow in a soft blue glow, bathing the entire chamber in a soft blue aura. It
+is by far the most beautiful sight you have seen so far in this underground
+maze of the underdark. As you examine the room closer, you believe it may
+be used as an area to raise some sort of cattle type creature, you see signs
+of the presence of some type of grazing animal. You can enter the river to
+the west, or exit this cavern to the west."
+
+names {"underdark"}
+flags {UNIT_FL_INDOORS}
+extra {"river"}
+"The river flows fast from one end of the cavern to the other, entering and
+exiting through large slits in the cavern walls."
+extra {"plants"}
+"The plants seem to need no sunlight, and glow with an inner aura of blue."
+extra {"aura", "glow"}
+"The blue aura is emenating from the plants."
+extra {"signs"}
+"You see tracks of a hooved animal and some of the plants have been eaten."
+
+movement SECT_INSIDE
+east to d5;
+west to on_river4@volcano;
+end
+
+
+				d7
+
+title "The Underdark"
+descr
+"You have entered a huge cavern of mushrooms. The mushrooms seem to be
+cultivated, for you see a cart-like device and some tools used to cut down
+the mushrooms."
+
+extra {"mushrooms"}
+"The mushrooms are huge, ranging from 6-15 feet tall. The are a deep dark,
+purple colour, and seem to absorb light."
+extra {"device"}
+"The device is a cart of some kind, seemingly used to carry off mushroom
+bulk to some unknown destination."
+extra {"tools"}
+"The tools include large axe type tools, and a harvesting hook for carring
+large amounts of bulk mushroom"
+
+names {"underdark"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+west to d5;
+end
+
+
+				d8
+
+title "The Underdark"
+descr
+"The tunnels and caves continue their downward slope in this direction. The
+caves and tunnels begin to take on a slight sheen as you traverse this
+direction, and you notice tiny spiders moving here and there. You get the
+distinct impression that you are heading someplace dangerous."
+
+extra {"sheen"}
+"The sheen on the walls seems to be a strange, sticky substance."
+extra {"spiders"}
+"The spiders are small and black, and seem to instead of walking to their
+destination, spring about like a frog."
+
+names {"underdark"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+north to d2;
+south to d9;
+end
+
+
+				d9
+
+title "The Underdark"
+descr
+"The tunnels and caves continue north-south here, and to the south there is a
+downward slope. The sheen on the walls increases here, and you get the
+distinct feeling of danger, as the hairs on your neck rise up."
+
+extra {"sheen"}
+"The sheen seems to be some strange sticky substance covering the walls and
+roof."
+
+names {"underdark"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+north to d8;
+south to d10;
+end
+
+
+				d10
+
+title "The Underdark"
+descr
+"The tunnel here is much like it is everywhere else in the underdark, with the
+exception of some rope-like webs begin to appear in the southern part of the
+tunnel. Your skin begins to prickle as you sense possible danger."
+
+extra {"webs"}
+"The webs are thick and strong. Some are several feet thick! Whatever made
+them must be large indeed."
+
+names {"underdark"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+north to d9;
+south to lair2 descr
+"You see the beginnings of a rather large spiderweb. You believe that whatever
+made that web must be pretty large, because it stretches for hundreds of
+yards.";
+end
+
+
+				lair2
+
+title "Spider web across a rift"
+descr
+"There is a huge rift here stretching as far down as your light extends. A huge
+spider web is affixed to the rift and leads downwards. You can just make out a
+passage way about 50 feet down in the rift leading west. The only way to reach
+it would be to crawl down on the web, but your not sure if you want to meet
+this web's creator."
+
+extra {"rift"}
+"The rift seems to extend downward into infinity, and was probably created
+be an ancient earth quake. The tunnel at one time would seem to have continued,
+but the rift seems to have move the rest of the tunnels down several hundred
+feet."
+extra {"web"}
+"The web expands hundreds of feet, up and down and across the rift, and down
+into the continuing passage ways."
+
+names {"spider lair", "rift"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+down to web;
+north to d10;
+end
+
+
+			web
+
+title "On the huge spider web"
+descr
+"The web strands are massive, giving you more than enough room to maneuver on.
+Whatever made these webs must be big indeed!"
+
+extra {"strands"}
+"The strands are several feet thick, and strong as steel."
+
+names {"web", "spider web"}
+flags {UNIT_FL_INDOORS}
+up to lair2;
+west to lair3 descr
+"Following the web, you can enter a spiraling whirlpool of web leading into
+a cave. You detect movement from the cave and suddenly feel vibration on the
+web, as if some giant hand was plucking at the strand.";
+end
+
+
+				lair3
+
+title "Gargantuan spider lair"
+descr
+"You have entered a huge cave filled with a giant web of interconnecting
+strands. Each strand is the diameter of a tree trunk! To the west, you notice
+the passage continues out of the web."
+
+extra {"web"}
+"The web forms a whirlpool type effect into the western part of this cave. If
+the sight wasnt so frightning, it would be quite beautiful indeed."
+
+names {"spider lair", "lair"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+west to d11;
+east to web descr
+"you can go out and walk on the spider web above a deep chasm in this
+direction.";
+end
+
+
+				d11
+
+title "The Underdark"
+descr
+"The caves and tunnels continue in an east-west direction. To the east, you
+see the begginings of a massive spiderweb. to the west, you notice the air
+is beggining to warm."
+
+extra {"web", "spiderweb"}
+"The web continues to the east, and seems huge in size."
+
+names {"underdark"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+west to d12;
+east to lair3;
+end
+
+
+				d12
+
+title "The Underdark"
+descr
+"The tunnels twist south and east here. You also see streaks of dried liquid
+on the ground here."
+
+names {"underdark"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+extra {"streaks", "dried liquid"}
+"The streaks look to be long dried blood, and lead from the southern exit to
+the north wall."
+east to d11;
+south to d13;
+north to wizard open {EX_OPEN_CLOSE, EX_HIDDEN, EX_CLOSED} descr
+"You can just make out the outline of a door on the north wall."
+keyword {"door"};
+end
+
+
+
+				wizard
+
+title "Wizard Home"
+descr
+"You see a small cave which houses the belongings of a very dead wizard. His
+corpse is sitting behind a desk and there is a quill in his skeletal hand in
+which he wrote a note across the desktop. The trail of blood leads to his
+body. There is a bookshelf lining the east wall. The north wall is strangely
+blank."
+
+names {"home", "wizard home"}
+flags {UNIT_FL_INDOORS, UNIT_FL_SACRED}
+movement SECT_INSIDE
+extra {"note", "writing"}
+"To any who read this, beware the area to the south of my home, my spell of
+binding failed to work on the demon Alrzzhogar. He nearly slew me immediatly,
+but i managed to escape to leave this warning. His is very powerfull, but his
+soul is bound to the room i summoned him too. He no doubt has summoned
+guardians to protect him, so beware. My home is magically protected and your
+wounds will heal faster here, so take advantage of my legacy. I see my wounds
+are mortal. May Odin forgive my sins."
+extra {"bookshelf"}
+"The shelf contains books on magic and summoning. As you reach for one you
+detect a spell of warding to protect them. You realize you can not take them
+without removing the ward."
+extra {"desk"}
+"The desk is old, rotton wood."
+extra {"quill"}
+"The quill rotted away long ago."
+
+south to d12 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+
+SECRET_DOOR_DIFFICULTY(NORTH, 100)
+north to clan_home_008@clans
+keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN} descr
+"Something funny...";
+end
+
+
+				d13
+
+title "The Underdark"
+descr
+"The tunnel traverses n-s here. You begin to sweat as the
+temperature rises to the south. A red glow is emenating from the
+south passageway."
+
+extra {"glow"}
+"The glow emenating from the south seems to have been made by fire, for
+it flickers about the wall."
+
+names {"underdark"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+north to d12;
+south to hell1;
+end
+
+
+				hell1
+
+title "Cave of Fire"
+descr
+"This cave is filled with four pools of molten rock. The fire coming from the
+pools seems rythmic, almost alive. The cave of fire continues east."
+
+extra {"pools"}
+"The pools are of molten rock, and bubble and boil under the extreme heat."
+extra {"fire"}
+"The fire looks exceptionally like a fire elemental."
+
+names {"cave of fire"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+east to hell2;
+north to d13;
+end
+
+				hell2
+
+title "Cave of Fire"
+descr
+"This cave has been transformed into a throne room of fire. There is a huge
+throne of human skulls here, fire exputing from every orafice. The entire
+room is on fire, except for a small path(that you are on) leading to the
+throne."
+
+extra {"throne"}
+"The throne is made of human skulls, each of which expudes fire from the
+eye sockets."
+extra {"path"}
+"The path is made of solid gold, and where the gold is, no fire touches."
+
+names {"cave of fire", "throne of fire"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+west to hell1;
+end
+
+
+					d14
+
+title "The Underdark"
+descr
+"The caves and tunnels continue east-west. The huge caverns that are the
+underdark are exceptionally silent, except for the pitter patter of small,
+jumping spiders which are in abundance here."
+
+extra {"spiders"}
+"The spiders are black and seem to hop around instead of walk."
+
+names {"underdark"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+west to d15;
+east to d2;
+end
+
+
+					d15
+
+title "The Underdark"
+descr
+"The caves and tunnels continue east and west. You get the distinct impression
+you are being watched."
+
+names{"underdark"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+west to d16;
+east to d14;
+north to post2 open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN} descr
+"You can just make out a hidden door to the north." keyword {"door"};
+south to post1 open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN} descr
+"You can just make out a hidden door to the south." keyword {"door"};
+end
+
+
+					post2
+
+title "darkelf Guard Post"
+descr
+"This would seem to be the place where the darkelves watch for people who enter
+their realm. There are slits in the southern hidden door where the guards can
+watch the passageway without being detected."
+
+extra {"slits"}
+"Through the slits you get a clear view of the southern passageway."
+
+names{"guard post"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+south to d15 open {EX_OPEN_CLOSE, EX_CLOSED} descr
+"There is a door to the south leading back into the caverns." keyword {"door"};
+end
+
+
+					post1
+
+title "Darkelf Guard Post"
+descr
+"This would seem to be the place where the darkelves watch for people entering
+their realm. There are slits in the northern hidden door where the guard can
+watch the passageway without being seen."
+
+extra {"slits"}
+"Through the slits you get a clear view of the northern passageway."
+
+names{"guard post"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+north to d15 open {EX_OPEN_CLOSE, EX_CLOSED} descr
+"There is a door to the north leading back into the caverns." keyword {"door"};
+end
+
+
+
+					d16
+
+title "The Underdark"
+descr
+"The caverns and tunnels continue east and west here. To the west you see a
+large glowing gate, which seems to hum slightly."
+
+extra {"gate"}
+"From here the gate seems to be made of a glowing black metal, and it looks
+delicate."
+
+names{"underdark"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+west to gate;
+east to d15;
+end
+
+
+					gate
+
+names {"at the gate"}
+title "A gate in the Underdark"
+descr
+"You have come to a large gate preventing further passage to the west. You can
+continue through the tunnels to the east."
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+extra {"gate"}
+"The gate is made of adamantium, a supposedly indestructable material that the
+darkelves use to make their weapons and armour. There is no way you can get
+through the gate without unlocking it first."
+east to d16;
+west to d17 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_PICKPROOF}
+keyword {"gate"} key grey_key descr "You see a gate made of
+adamantium blocking the path.&n";
+end
+
+					d17
+
+title "The Underdark"
+descr
+"You have come to an intersection in the underdark. You can go north, south,
+or east through a massive gate."
+
+names{"underdark"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+extra {"gate"}
+"The gate is made of adamantium, a supposedly indestructable material that the
+darkelfs use to make their weapons and armour. There is no way you can get
+through this gate without unlocking it first."
+
+north to d19;
+south to d24;
+east to gate open {EX_OPEN_CLOSE, EX_CLOSED, EX_PICKPROOF, EX_LOCKED} keyword
+ {"gate"};
+end
+
+
+					d19
+
+names {"underdark"}
+title "The Underdark"
+descr
+"The tunnels and caverns lead north and south here. There are some strange
+scrape marks on the west wall."
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+extra {"scrape marks", "marks"}
+"The marks look as if something with claws was trying to get throught the wall
+here. You wonder why someone (or something) would be trying to get 
+through the wall...&n" 
+north to d20;
+south to d17;
+west to undead1 open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN} descr
+"You see some scrape marks on the wall. You wonder what whatever it was doing
+the scraping was trying to get into.&n" keyword {"door","marks"};
+end
+
+
+					undead1
+
+title "Ancient crypt"
+descr
+"You enter the entrance to an ancient crypt. Skeletal remains litter the floor,
+and the remains of tapistries adorn the walls. You can exit back into the
+underdark to the east, or traverse further into the crypt to the west."
+
+extra {"remains"}
+"The remains seem to be those of warriors, perhaps at one time guardians of
+the crypt."
+extra {"tapistries"}
+"The ruined tapistries are ripped and torn, and so old that you can not tell
+what was adorning them."
+
+names{"crypt"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+west to undead2;
+east to d19 open {EX_OPEN_CLOSE, EX_CLOSED} descr
+"You see a door leading back into the underdark." keyword {"door"};
+end
+
+
+					undead2
+
+title "Ancient Crypt"
+descr
+"You enter a disgusting room filled with filth and trash. Halfeaten bones
+litter the floor. There is a room to the north and east."
+
+extra {"trash", "filth"}
+"The trash seems mostly to be halfeaten remains of animals and humanoids."
+extra {"bones"}
+"The bones appear to have been gnawed upon."
+
+names {"crypt"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+east to undead1;
+north to undead3;
+end
+
+
+					undead3
+
+title "Ancient crypt altar"
+descr
+"You enter the altar room of an ancient crypt. The altar depicts acts of
+bloody violence and torture, and you dont believe that this was ever a shrine
+for good."
+
+names {"crypt"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+extra {"altar"}
+"The altar is the apitomie of evil. Behind it to the north you can detect the
+outline of a hidden door."
+
+south to undead2;
+north to undead4 open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN} descr
+"You can see the outline of a secret door north of the altar." keyword {"door"};
+end
+
+
+					undead4
+
+title "Ancient crypt inner sanctum"
+descr
+"You enter the inner sanctum of the ancient crypt. Thrown about the room are
+tomes of magic, and a table covered with jars, bottles, dusts, and other
+magical devices is in the center of the room."
+
+extra {"tomes"}
+"The tomes are warded with some sort of magic, and seem obviously magical."
+extra {"jars", "bottles", "dusts", "devices"}
+"There are a number of items across the table, mostly being magical
+components."
+extra {"table"}
+"The table is covered with runes of warding and protection that seem to glow
+threatningly when u get near."
+
+names {"crypt"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+south to undead3 open {EX_OPEN_CLOSE, EX_CLOSED} descr
+"You see a door leading south to the altar room." keyword {"door"};
+end
+
+
+					d20
+
+title "The Underdark"
+descr
+"You have come to a turn in the tunnels, leading north, east and south. You
+detect a presense of incredable power and evil from the eastern tunnel."
+
+names {"underdark"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+south to d19;
+east to d21;
+north to d26;
+end
+
+
+					d26
+
+title "The Underdark"
+descr
+"The tunnel leads north and south here. You also can detect a downward motion
+in the northward direction, you seem to be heading deeper into the earth."
+
+names {"underdark"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+south to d20;
+north to d27;
+end
+
+
+					d27
+
+title "The Underdark"
+descr
+"The tunnel turns here, going west and south. Far too the northwest you can
+barely hear the sound of metal striking metal, like a forge. The tunnel also
+has a slight decline to the west."
+
+names {"underdark"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+west to d28;
+south to d26;
+end
+
+
+					d28
+
+title "The Underdark"
+descr
+"The tunnel turns north and east here, and on the south wall there is a door.
+Far to the north you see a red glowing light, and a stream of warm air flows
+from that direction."
+
+names {"underdark"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+north to d29;
+east to d27;
+south to trav_home open {EX_OPEN_CLOSE, EX_CLOSED, EX_PICKPROOF, EX_LOCKED}
+key trav_key keyword {"door"};
+end
+
+
+				trav_home
+
+title "Home of the Darkelf Traveler."
+descr
+"You have entered a beautiful room filled with objects from all around the
+world. You see exotic rugs, fine furniture, art paintings, and several pieces
+of sculpture, all emenating a slight magical protective glow. As usual, the
+darkelf traveler is off exploring the world, and is not present."
+
+names {"traveler home"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+north to d28 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+south to trav_treasure open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN} keyword
+{"door"};
+end
+
+
+				trav_treasure
+
+title "Treasure vault of the Darkelf Traveler."
+descr
+"You have entered a large vaultlike chamber containing the traveler's more
+valuable objects. You feel powerful magics protecting this chamber from
+the thieves."
+
+names {"treasure vault"}
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to trav_home open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+end
+
+
+				d29
+
+title "Underdark"
+descr
+"The tunnel goes north-south here. A fire red light illuminates the tunnel to
+the north, and a warm, flowing breeze comes from that direction as well."
+
+names {"underdark"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+north to d30;
+south to d28;
+end
+
+
+				d30
+
+title "The Underdark"
+descr
+"The tunnel here enters a much more elaborately carved corridor to the north.
+A bright red glow emenates from the north east, and the temperature here has
+climbed several degrees. The tunnel also heads south into darker areas."
+
+names {"underdark"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+south to d29;
+north to d20@volcano;
+end
+
+
+
+					d21
+title "The Underdark"
+descr
+"You have entered a cave in the underdark. You can exit the cave to the west,
+and there is a large portcullis blocking passage to the east. The presence
+of evil to the east nearly cools you to the bone, and you can hear the
+heavy breathing of a large creature from beyond the portcullis."
+
+names{"underdark"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+extra {"portal", "portcullis"}
+"The portcullis is made of the same adamantium as darkelf armor and weapons.
+It glows with a bright green light. The magic of the portal seems to be
+directed toward the east, as if to keep something out."
+west to d20;
+east to dragon1 open {EX_OPEN_CLOSE, EX_CLOSED} keyword
+{"portcullis","portal","gate"};
+end
+
+
+					dragon1
+
+title "Huge Cavern"
+descr
+"This enormous cavern is very dark. You sense an evil presence in this cave.
+The air is very cold, and the size of the cavern makes you feel very
+insignifigant. You can exit this cavern through a portcullis to the west."
+
+extra {"portcullis"}
+"The portcullis is made of the same adamantium as darkelf armour and weapons.
+It glows with a bright green light."
+
+names{"underdark"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+
+west to d21 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"portcullis"};
+north to dragon4;
+end
+
+					dragon4
+
+title "Huge Cavern"
+descr
+"This huge cavern continues to the north and south. It is very dark and cold
+in here, and you detect very little sound, except a deep breathing. There are
+also several arrow looking things stuck in the west wall."
+
+extra {"arrow", "things"}
+"They appear too be bolts of some kind, much like those fired from a crossbow
+trap."
+
+names {"cavern"}
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+
+north to dragon6;
+south to dragon1;
+
+dilbegin trap1();
+var
+	pc      : unitptr;
+	dmg     : integer;
+	dex_mod : integer;
+	num     : integer;
+code
+{
+	:init:
+	heartbeat := PULSE_SEC*7;
+
+	:start:
+
+	wait(SFB_CMD,(activator.type == UNIT_ST_PC));
+
+	pc := activator;
+	secure(pc, start);
+	dex_mod := pc.abilities[ABIL_DEX];
+	num     := rnd(1,100);
+
+	if((num+dex_mod)/2 > 50)
+{
+	pause;
+	act("Bolts fly from the wall as you step on a trapped stone, but you "+
+	"evade them in time!", A_ALWAYS, pc, null, null, TO_CHAR);
+	act("Bolts fly at "+pc.name+" but he nimbly evades them!", A_ALWAYS,
+	pc, null, null, TO_REST);
+	unsecure(pc);
+	goto wait_abit;
+}
+	else
+{
+	pause;
+	act("Bolts fly from the wall, striking you in the side!", A_ALWAYS,
+	pc, null, null, TO_CHAR);
+	act("Bolts fly from the wall, striking "+pc.name+"!", A_ALWAYS,
+	pc, null, null, TO_REST);
+
+	pc.hp := pc.hp - 10;
+	unsecure(pc);
+	goto wait_abit;
+}
+	:wait_abit:
+	pause;
+	act("There is a mechanical sound coming from the east wall.", A_ALWAYS,
+	self.inside, null, null, TO_ALL);
+	heartbeat := PULSE_SEC*100;
+	pause;
+	goto init;
+}
+dilend
+end
+
+					dragon6
+
+title "Huge Cavern"
+descr
+"This huge cavern extends too the east and south. It is very dark and cold
+here, and you get a feeling of being watched as the hairs on your neck rise."
+
+names {"cavern"}
+flags{UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+east to dragon7;
+south to dragon4;
+end
+
+
+
+					dragon7
+
+title "Huge cavern"
+descr
+"This huge cavern extends to the west and south. To the south you hear the
+sound of heavy breathing. The cave seems too get much colder to the south as
+well."
+
+names {"cavern"}
+flags{UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+south to dragon2;
+west to dragon6;
+
+dilbegin trap_door();
+var
+	pc      : unitptr;
+	dex_mod : integer;
+	dmg     : integer;
+	num     : integer;
+code
+{
+
+	:init:
+	heartbeat := PULSE_SEC*7;
+
+	:start:
+
+	wait(SFB_CMD, (activator.type == UNIT_ST_PC));
+
+	pc := activator;
+	secure(pc, init);
+
+	dex_mod := pc.abilities[ABIL_DEX];
+	num	:= rnd(1,100);
+
+	if((num+dex_mod)/2 > 50)
+{
+	pause;
+	act("A trap door opens under your feet, but your quick reaction saves"+
+	" you!", A_ALWAYS, self.inside, null, null, TO_CHAR);
+	act("A trap door opens under "+pc.name+"'s feet, but he catches "+
+	"himself in time.", A_ALWAYS, self.inside, null, null, TO_REST);
+	unsecure(pc);
+	goto wait_abit;
+}
+	else
+{
+	pause;
+	act("A trap door opens under your feet! You fall through!", A_ALWAYS,
+	self.inside, null, null, TO_CHAR);
+	act("AAAahhhh!!!! Crunch! You land hard at the bottom of the pit!",
+	A_ALWAYS, self.inside, null, null, TO_CHAR);
+	pc.hp := pc.hp - 20;
+	link(pc, findroom("pit@darkelf"));
+	act("A trap door opens under "+pc.name+"'s feet and he falls through!",
+	A_ALWAYS, self.inside, null, null, TO_REST);
+	pause;
+	act("You hear a loud THUMP as "+pc.name+" hits the bottom of the pit.",
+	A_ALWAYS, self.inside, null, null, TO_REST);
+	unsecure(pc);
+	goto wait_abit;
+}
+	:wait_abit:
+	pause;
+	act("The trapdoor slowly begins to close, reseting itself.", A_ALWAYS,
+	self.inside, null, null, TO_ALL);
+	heartbeat := PULSE_SEC*100;
+	pause;
+	goto init;
+}
+dilend
+end
+
+					pit
+
+title "In the Pit"
+descr
+"You are currently in a 30 foot pit, a trap laid by the shadow dragon to
+protect its lair."
+names {"pit"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+up to dragon7;
+
+dilbegin con_drain();
+var
+	pc : unitptr;
+code
+{
+	:start:
+	wait(SFB_CMD,(activator.type == UNIT_ST_PC) and (command(CMD_UP)));
+
+	pc := activator;
+	secure(pc, start);
+
+	act("It takes a lot of effort to climb and exit the pit!", A_ALWAYS,
+	self.inside, null, null, TO_CHAR);
+
+	pc.endurance := pc.endurance - 80;
+	goto start;
+}
+dilend
+end
+
+
+
+					dragon2
+
+title "Cave of the Shadow Dragon"
+descr
+"You have entered a huge cave which the shadow dragon calls its home. The cave
+is extremely dark and cold, but to the east you see a massive treasure cave!
+The dragon would not like it if he caught you here."
+
+names{"dragon cave"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+north to dragon7;
+east to dragon3;
+end
+
+					dragon3
+
+title "Treasure cave of the Shadow Dragon"
+descr
+"This is the a rather small cavern, containing the hoard of the Shadow dragon.
+Objects that he has collected from all about the realm are abondant in this
+room, as well as several skeletal remains of their former owners."
+names {"dragon treasure"}
+movement SECT_INSIDE
+west to dragon2;
+end
+
+
+					d24
+
+title "The Underdark"
+descr
+"The tunnels and caves lead north-west here. Far to the west you can see
+the beginning of a huge cavern."
+
+extra {"cavern"}
+"The huge cavern to the west gives of a slight greenish blue color, as if
+there where something glowing inside of it."
+
+names {"underdark"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+north to d17;
+west to d25;
+end
+
+
+					d25
+
+title "The underdark"
+descr
+"The tunnels and caves lead east-west here. To the west, you see the entrance
+to a huge cavern."
+
+names {"underdark"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+east to d24;
+west to citygate;
+end
+
+
+
+					citygate
+
+title "The City gate of Nearbealum"
+descr
+"You see massive gates guarding the entrance of the city of Nearbealum. The
+gates are open, but could be closed at any time. They are made of the same
+adamantium the darkelfs have used elsewhere in the underdark, and glow with
+a soft green light. Beyond the gates you see a huge cavern in which a
+glorious city abounds. Underneath the beauty, however, you can just detect
+a hint of viciousness, as if the entire city is poised, ready to strike."
+
+extra {"city"}
+"The city is one of the most beautiful sights you have ever seen. It spans
+a cavern about two miles across at ist widest point. The ceiling rises
+a thousand feet high, and its floor is studded with many stalagmites and
+lesser pillars. You see row upon row of carved, spired stone castles,
+their salient points and sculpted highlights lit by the soft, tinted flows
+of permanent illusionary fire. Everystone in the cavern has been worked
+into a smooth, unbroken, unjointed expanse."
+extra {"gates"}
+"The gates are made of adamantium, and seem to glow with a soft black glow.
+There are 2 huge spider statues standing on either side of the gate, which
+seem to look at you as you stand there."
+
+names {"city gates"}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+east to d25;
+west to city1;
+end
+
+
+
+					city1
+
+title "Path to Nearbealum"
+descr
+"You are on a path leading to the city of Nearbealum. On both sides of the path
+you see deep chasms, leading far down into the darkness. The path leads west
+into the city and east through some gates into the underdark."
+
+extra {"chasms"}
+"The chasm drops several hundred feet, and you can just make out the bottom."
+extra {"city"}
+"The city looks quite intimidating at this distance. It looks as if many
+riches could be found inside the city, but at dangerous cost."
+
+names {"nearbealum"}
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+east to citygate;
+west to city2;
+end
+
+
+
+					city2
+
+title "Nearbealum"
+descr
+"You have entered the city of Nearbealum. Great darkelf houses and mansions
+are all around you. Entering any of the houses yards would surely be fatal,
+as you can see the guards of each house eye you dangerously. You can travel
+west deeper into the city, or east to a path."
+
+extra {"houses"}
+"The houses vary in size and power, but each seem to be quite dangerous, and
+impossible to enter."
+extra {"guards"}
+"Dozens of guards guard each house, making it fatal to attempt to enter any
+of them."
+
+names{"nearbealum"}
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+east to city1;
+west to city3;
+end
+
+
+					city3
+
+title "Glow stone of Nearbealum"
+descr
+"You enter an area in the center of the city. This square is dominated by
+a large piller of softly glowing rock. You cannot discern its function. You
+can exit in all directions here."
+
+names{"glow stone"}
+extra {"stone", "glow stone", "pillar"}
+"The stone is slightly glowing and gives of a faint trace of heat."
+
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS}
+west to city4;
+east to city2;
+north to city5;
+south to city6;
+end
+
+				stone
+
+title "Inside glow stone of Nearbealum"
+descr
+"You are inside the glowstone of Nearbealum."
+
+names{"elm456"}
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS}
+up to city3;
+end
+
+					city4
+
+title "Nearbealum"
+descr
+"The city continues east here, and there are noble houses to the north and
+south. To the west you can enter a large temple."
+
+extra {"houses"}
+"The houses are many and varied, and guarded by dozens of guards."
+
+names{"nearbealum"}
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS}
+west to temple1;
+east to city3;
+end
+
+
+					city5
+
+title "Nearbealum"
+descr
+"The city continues south here, and there are noble houses to the east and
+west. To the north is the darkelf fighter's guild."
+
+extra {"guild"}
+"The guild building is large, but unadored."
+extra {"houses"}
+"The noble houses vary in size, but all are guarded by dozens of darkelf
+warriors."
+
+names{"nearbealum"}
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS}
+north to guild1 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+south to city3;
+end
+
+
+					city6
+
+title "Nearbealum"
+descr
+"The city continues north here, and there are noble houses to the east and
+west. To the south is a dark tower reeking of magic."
+
+extra {"tower"}
+"The tower is tall and completely black. It exudes powerful magic dwealmers."
+
+names{"nearbealum"}
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+north to city3;
+south to tower1 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED} keyword {"door"};
+end
+
+
+					tower1
+
+title "Darkelf Tower"
+descr
+"This is the entry of a tall tower. Luxurious furnishings are all about
+the room, and a staircase leads up."
+
+extra {"furnishings"}
+"The furnishings are the types nobles would have, expensive and beautiful.
+everything exudes an aura of magic."
+extra {"staircase"}
+"The staircase extends upwards into the tower."
+
+names{"tower"}
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS}
+north to city6 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+up to tower2;
+end
+
+
+					tower2
+
+title "Darkelf Tower"
+descr
+"The tower seems much larger than possible from the outside here. This large
+room contains many tomes laying about, and a pentagram is drawn on the floor
+here."
+
+extra {"tomes"}
+"The language is unknown to you."
+extra {"pentagram"}
+"The pentagram is drawn in what appears to be shavings of silver metal."
+
+names{"tower"}
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_SACRED}
+down to tower1;
+end
+
+
+				guild1
+
+title "Darkelf Fighters guild"
+descr
+"You have entered a large building with apparently only one room. It is a large
+practice area, and looks well used."
+
+names{"darkelf guild"}
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+south to city5 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+north to guild2 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_HIDDEN}
+keyword {"door"};
+end
+
+
+				guild2
+
+title "Guildmaster's Quarters"
+descr
+"You have entered a small, sparse room reserved for the guildmaster. The room
+is plainly furnished, with little furnishings except those necessary for
+living."
+
+names{"guildmaster room"}
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS}
+south to guild1 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+end
+
+
+
+				temple1
+
+title "Darkelf Temple"
+descr
+"You have entered a huge temple with a grand sacrificing altar dominating
+the room. There are images of a strange spider goddess all around the
+room, and in the center of the domed ceiling there is a huge illusionary
+image of a darkelf female. The image alternates between the female picture
+and one of a huge spider."
+extra {"altar"}
+"The altar is covered with dried blood, and has a indention for a humanoid
+body, with what appears to be a drain hole set in its center. It is covered
+with dried blood."
+
+names{"darkelf temple"}
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+east to city4;
+west to corr open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN} keyword {"door"};
+end
+
+
+				corr
+
+title "A small Corridor"
+descr
+"You are in a small corridor leading to a large metal door. There is an
+absence of magic in this room."
+names{"corridor"}
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+east to temple1 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+west to room open {EX_OPEN_CLOSE, EX_CLOSED, EX_PICKPROOF, EX_LOCKED}
+key gold_key keyword {"door"} descr "A large, indestructable
+black door guards the way west.";
+
+dilbegin no_cast();
+code
+{
+   :start:
+
+   wait (SFB_CMD, TRUE);
+
+   if ((activator.type == UNIT_ST_PC) and command(CMD_CAST))
+
+   {
+      act("This room is a dead magic zone!", A_ALWAYS, self.inside, null,
+          null, TO_ALL);
+      block;
+      goto start;
+
+   }
+   goto start;
+}
+dilend
+
+end
+
+				room
+
+title "Darkelf Prison Cell"
+names {"cell"}
+descr
+"You have entered a magically prepared cell, that the darkelf's use to hold
+prisoners used in their worship of their goddess, usually as sacrifices.
+The cell is unadorned, and seems to contain an energy bubble, probably used
+to contain the prisoners."
+
+
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS}
+east to corr open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+end
+
+
+				pool
+
+title "Pool"
+names{"pool"}
+descr
+"You see a small pool of clear water. This seems a pleasant place, and there
+is a large, worn rock sitting near it, perfect for lying in the sun and
+contemplating life. The smell of tabac(a type of tobacco) is in the air.
+To the east is an old tower. There is a sign, a poster, and a marking stone
+here."
+
+extra {"sign"}
+"Trespassers could die a quick and certain death or they could be invited
+in for stew. Thank you for thinking better of disturbing my privacy."
+extra{"poster"}
+"Rumors of spike-filled pits along this path are almost totally false.
+Thank you for your caution."
+extra{"marker", "stone", "marking stone"}
+"This ancient path/Is cracked and paved/With vistors who/Could not behave.
+Elminster"
+extra {"tower"}
+"The tower is two stories, and not very impressive. It may be the home of some
+strange mage."
+extra {"pool"}
+"The pool is of clear blue water."
+
+movement SECT_FOREST
+west to path_inter;
+east to elm_tower;
+end
+
+
+				elm_tower
+
+title "Elminster's Tower"
+names{"tower"}
+descr
+"This is the home of Elminster the sage. Reputively the most powerfull mage in
+the world, you question the wisdom of bothering him. He does have a reputation
+of helping those in need, however. The tower appears in slight disrepair, with
+weeds growing around it, and soom of the stones chipped and worn. There is
+a sign here."
+
+extra{"sign"}
+"No Trespassing. Violators should notify next of kin. Have a pleasant day."
+
+movement SECT_FOREST
+west to pool;
+north to inside open {EX_OPEN_CLOSE, EX_CLOSED} keyword "door";
+end
+
+
+				inside
+
+title "Inside Elminster's Tower"
+names {"inside tower", "elmtower"}
+descr
+"The inside of this tower is a mess. Books and scrolls litter the floor, and
+all types of magical prepherphenalia litter the ground. Papers and documents
+are stuffed into every corner of the room, and there are stacks of curious
+items on the staircase leading upwards. There is a strong odor of tabac
+in the air. There is also a sign here."
+
+extra{"sign"}
+"To ye weary traveler's, sit a spell, and if thee needs my assistance, I may
+be returning soon. Feel free to relax all ye wish, I only ask that ye not
+touch any of me papers and things, for they may be dangerous to thee. My
+regards and happy adventuring.
+
+Elminster the Sage
+"
+extra{"papers", "documents", "stacks", "items"}
+"As you approach the items, you feel a strong magical ward."
+
+movement SECT_INSIDE
+up to bedroom;
+south to elm_tower open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+down to treasure open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_HIDDEN}
+ keyword {"door"};
+end
+
+
+
+				treasure
+
+title "Elminster's Builder Room"
+descr
+"This is Elminster the sage's personal design room, where he makes plans for
+the improvements of his zones.  "
+
+names{"elm123"}
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_PRIVATE}
+movement SECT_INSIDE
+up to inside;
+end
+
+
+				bedroom
+
+title "Elminster's Bedroom"
+names {"bedroom"}
+descr
+"You have entered a ransacked bedroom(at least it looks ransacked). It is
+dominated by a large bed covered with tomes and papers. Even more books and
+documents litter the floor, giving the room a look of chaos. You wonder how
+anyone could find anything is such chaos."
+
+flags {UNIT_FL_PRIVATE}
+movement SECT_INSIDE
+down to inside;
+end
+
+				ring_room
+names {"ring room"}
+title "A magical room floating in space."
+descr
+"You are in a small, magical room, created out of energy, and seemingly
+floating in the middle of space. There are no apparent exits."
+
+flags {UNIT_FL_SACRED, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+
+end
+
+
+
+
+%mobiles
+
+
+				fairlane
+
+names {"car", "fairlane"}
+title "Ford Fairlane"
+descr "A 57' Ford Fairlane sits here running idle."
+extra {}
+"The car is a classic, candy apple red with a white stripe running along its
+side. It is a convertable, with plush red leather seats and carpeted floors.
+It has chromed wheels and bumpers, and a pair of fluffy green dice hang from
+the rearview mirror. The steering wheel is wrapped in black leather, and
+the license plate reads 'ELMIE'."
+race RACE_HUMAN
+manipulate {MANIPULATE_TAKE, MANIPULATE_ENTER}
+level 1
+height 300
+weight 10000
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+sex SEX_MALE
+MSET_ABILITY(10,10,10,20,20,5,20,5)
+MSET_WEAPON(0,0,0,0,10,0)
+MSET_SPELL(10,10,10,10,5,5,10,10,10,10,0)
+position POSITION_STANDING
+default POSITION_STANDING
+
+
+end
+
+
+
+
+
+
+				lhaeo
+
+names{"lhaeo","assistant","man"}
+title "Lhaeo"
+descr "Lhaeo, Elminster's assistant, is here."
+extra {}
+"You see a young man of light build, slightly balding and with a studious
+look to his eyes. He looks quite comfortable in the hustle and bustle around
+the tower, and seems to know exactly were things are even in the mess."
+race RACE_HUMAN
+level 30
+height 160
+weight 135
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+exp 20
+alignment  350
+sex SEX_MALE
+MSET_ABILITY(10,10,10,20,20,5,20,5)
+MSET_WEAPON(5,5,5,5,10,5)
+MSET_SPELL(10,5,5,5,5,5,5,5,5,5,10)
+position POSITION_STANDING
+default POSITION_STANDING
+dilcopy combat_mag@function("acidball","",0,2);
+
+dilbegin lhaeo_quest();
+var
+  pcname : string;
+  item   : unitptr;
+  pc     : unitptr;
+  i      : integer;
+  exdp   : extraptr;
+
+code
+{
+
+   :init:
+   heartbeat := PULSE_SEC*5;
+
+:start:
+wait(SFB_CMD,(activator.type == UNIT_ST_PC) and (not command(CMD_GIVE)));
+
+if (RING_DONE in activator.quests)
+  goto waitawhile;
+
+if (TEL_COMPLETE in activator.quests)
+  goto waitawhile;
+
+if (pc.level < 20)
+  goto waitawhile;
+
+pc := activator;
+secure(pc, lostpc);
+
+if ((RING_RETRIEVE in pc.quests) and (not(TEL_ONGOING in pc.quests)))
+{
+   pause;
+   exec("say Brother Kane said you would come to see me.", self);
+
+   pause;
+   exec("say I will assist you in getting into the Lava dragon cave.", self);
+   pause;
+
+   exec("say But first i need some components to cast a powerful spell.",
+        self);
+   pause;
+
+   exec("say I will create two ring's of teleportation, which will take you " +
+        "directly in and out of the dragons evil lair!", self);
+   pause;
+
+   exec("say Bring me these four items, and i will create the ring for " +
+        "you.", self);
+   pause;
+
+   exec("say The first is the essense of fire, the feather of the pheonix, " +
+	"found beneath the very dragon lair you wish to fight!", self);
+   pause;
+
+   exec("say The second is the essense of wind, found in the cloud kingdom " +
+	"of Asgaard, flowing across a spacious field.", self);
+   pause;
+   exec("say The third is the essense of the earth, you can find this within "+
+        "the mines of the Dark Dwarves.", self);
+   pause;
+
+   exec("say Finally is the essense of water, stolen by the frost lich, " +
+	"and held within his icy fortress.", self);
+   pause;
+   exec("say bring me these four items, and i will make the teleportation " +
+	"rings.", self);
+   pause;
+
+   exec("say If you feel you are up to this task, please nod.", self);
+
+
+i := 0;
+while (i < 5)
+{
+   wait(SFB_CMD, activator #= pc);
+
+   if (command(CMD_NOD))
+   {
+      goto quest_accepted;
+   }
+   else if (command(CMD_SAY))
+   {
+
+        pause;
+        exec("say Nod if you accept this quest, shake your head " +
+             "if you feel you are not worthy at this time.", self);
+   }
+   else if (command(CMD_SHAKE))
+
+     goto no_quest;
+
+   i := i+1;
+}
+
+:no_quest:
+pause;
+exec("say Very well. Perhaps, Brother Kane was wrong about you.", self);
+unsecure(pc);
+goto waitawhile;
+
+
+:quest_accepted:
+pause;
+exec("say Excellent! I knew you would be willing. You must bring me those " +
+     "components and then i shall design the teleportation rings for " +
+     "you.", self);
+
+addextra(pc.quests, {TEL_ONGOING}, "");
+unsecure(pc);
+goto start;
+
+}
+
+else
+{
+   exdp := TEL_ONGOING in pc.quests;
+
+   if (("feather" in exdp.names) and ("wind dagger" in exdp.names) and
+       ("mineral" in exdp.names) and ("tear" in exdp.names))
+   {
+      pause;
+      subextra(pc.quests, TEL_ONGOING);
+      addextra(pc.quests, {TEL_COMPLETE}, "");
+      exec("emote takes all four items and places them into chest.", self);
+      pause;
+      exec("emote draws a small, black, glowing box from the folds of " +
+           "his robes.", self);
+      pause;
+      exec("emote opens the box and takes out a small vial.", self);
+      pause;
+      exec("emote takes two plain rings from a jar on a shelf.", self);
+      pause;
+      exec("emote drops the two rings into the chest.", self);
+      pause;
+      exec("say shialak, durashy, malash!", self);
+      pause;
+      exec("emote pours a mixture from the vial into the chest.", self);
+      pause;
+      act("Smoke pours from the box and a bright light surrounds the rings.",
+           A_ALWAYS, pc, null, null, TO_CHAR);
+      pause;
+      exec("emote takes the new, magically charged rings from the box.",
+	   self);
+      pause;
+      exec("say here you go "+pc.name+", look at the ring, instructions " +
+	   "are inscribed upon them.", self);
+      pause;
+      exec("say but be warned, each ring works only once, and only to the " +
+	   "lava dragons cave!", self);
+      pause;
+      exec("say it allows you to bypass certain death from the extreme  " +
+     	   "heat of the lava surrounding the dragons cave.", self);
+      pause;
+      exec("say attempting to leave the cave without the ring will bring " +
+	   "about certain death, and without the ring you will be " +
+	   "trapped.", self);
+      pause;
+      exec("say also, the dragon will most certainly attack almost as soon " +
+	   "as you arrive so be certain that you are prepared!", self);
+      pause;
+      exec("say good luck to you, you certainly are a brave one!", self);
+
+      item := load("ring1@darkelf");
+      item.height := pc.height;
+      link(item, pc);
+      item := load("ring2@darkelf");
+      item.height := pc.height;
+      link(item, pc);
+      pause;
+      exec("wave", self);
+                }
+}
+
+unsecure(pc);
+goto start;
+
+
+:waitawhile:
+heartbeat := PULSE_SEC*60;
+pause;
+goto init;
+
+
+:lostpc:
+exec("say Now I may never find someone worthy!", self);
+pause;
+exec("sigh", self);
+goto start;
+
+
+}
+dilend
+
+
+dilbegin lhaeo_give();
+var
+  pc     : unitptr;
+  item   : unitptr;
+  exdp   : extraptr;
+
+code
+{
+   heartbeat := PULSE_SEC*5;
+
+:start:
+wait(SFB_CMD, command(CMD_GIVE) and (activator.type == UNIT_ST_PC));
+
+
+:give:
+if (not (TEL_ONGOING in activator.quests))
+  goto start;
+
+
+pc := activator;
+item := self.inside;
+secure(pc, labsecure);
+secure(item, labsecure);
+
+wait(SFB_CMD | SFB_TICK, TRUE);
+
+if (not (item #= self.inside))
+{
+   unsecure(item);
+   exdp := TEL_ONGOING in pc.quests;
+
+   if ("feather" in self.inside.name)
+   {
+      addstring(exdp.names, "feather");
+      exec("say the essense of fire, this will give the ring its power.", self);
+      destroy(self.inside);
+}
+else if ("wind dagger" in self.inside.name)
+{
+   addstring(exdp.names, "wind dagger");
+   exec("say the essense of wind, this will give the ring its direction!",
+        self);
+   destroy(self.inside);
+ }
+else if ("mineral" in self.inside.name)
+{
+   addstring(exdp.names, "mineral");
+   exec("say the essense of earth, this will give the ring its strength!",
+        self);
+
+   destroy(self.inside);
+}
+else if ("tear" in self.inside.name)
+{
+   addstring(exdp.names, "tear");
+   exec("say the essense of water, this will bond the ring's powers together!",
+        self);
+   destroy(self.inside);
+}
+else
+{
+  exec("say I did not ask you for this "+pc.name +"?", self);
+  pause;
+  exec("say Here you go.", self);
+  link(self.inside, pc);
+   }
+}
+unsecure(pc);
+
+
+
+
+if ((command (CMD_GIVE)) and (activator.type == UNIT_ST_PC))
+{
+   goto give;
+}
+else
+  goto start;
+
+:labsecure:
+exec("say So much for that, not much of a hero anyway.", self);
+goto start;
+}
+dilend
+
+end
+
+
+
+
+
+
+
+
+				golem
+
+names {"stone golem", "statue", "golem", "elf"}
+title "a stone golem"
+descr "A stone statue of an elf is seemingly standing guard over the door
+behind it."
+extra {}
+"The statue is painted entirely black except for its hair, which is bone white.
+It stands poised with a huge metal sword rested with its tip on the ground.
+Belted to its waist is a small metal key."
+level 20
+race RACE_GOLEM
+sex SEX_NEUTRAL
+height 250
+weight 1000
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+exp 110
+alignment  0
+STATS
+position POSITION_STANDING
+default POSITION_STANDING
+
+dilbegin golem_speech();
+var
+	pc : unitptr;
+code
+{
+	:start:
+	wait(SFB_CMD, (command(CMD_WEST) | (command(CMD_OPEN) and ("door" in
+	argument))));
+
+
+	if((activator.type == UNIT_ST_PC)and(activator.level<200))
+	pc := activator;
+	secure(pc, start);
+{
+	block;
+	exec("say In order too enter the drow realms, "+pc.name+", you must "+
+        "defeat me!", self);
+	pause;
+	exec("say And I promise, that will be no easy feat!", self);
+	pause;
+	exec("kill "+pc.name+"", self);
+	unsecure(pc);
+	goto start;
+}
+goto start;
+}
+dilend
+
+dilbegin golem_death();
+code
+{
+	:start:
+wait(SFB_CMD,command(CMD_AUTO_DEATH)and(activator==self));
+act("$1n collapses into a pile of stones!",
+A_SOMEONE,self,null,null,TO_ALL);
+while (self.inside) link(self.inside,self.outside);
+link(load("golem_corpse@darkelf"),self.outside);
+destroy(self);
+}
+dilend
+
+end
+
+
+				giant_spider
+
+names {"giant spider", "spider"}
+title "a giant spider"
+descr "A giant spider approaches you, its many eyes staring at you."
+extra {}
+"A huge arachnid, approximately 4 feet in diameter, with its bolbous body
+poised to strike, is staring at you hungrily. Long dark fangs protrude from
+its mouth, dripping a dark ichor. It stands 3 feet off the ground, and is
+a hideous sight to behold."
+M_SPIDER(23, SEX_NEUTRAL)
+alignment -1000
+
+position POSITION_STANDING
+default POSITION_STANDING
+
+end
+
+				umber_hulk
+
+names {"umber hulk","hulk"}
+title "an umber hulk"
+extra {}
+"This large beast stands half-imbedded within the wall, and is almost
+impossible to see."
+
+M_STONE_RENDER(SEX_NEUTRAL)
+level 21
+special SFUN_HIDEAWAY
+
+dilbegin umberhulk();
+var
+	pc : unitptr;
+code
+{
+	:start:
+	wait(SFB_CMD,(activator.type == UNIT_ST_PC) and (command(CMD_EAST))
+	and(activator.level<200));
+
+	pc := activator;
+	secure(pc, start);
+
+	if(self.position == 8)
+	{
+	block;
+	act("A huge creature rips itself from the wall as you attempt to pass "+
+	"it!", A_ALWAYS, pc, null, null, TO_CHAR);
+	act("A huge creature rips itself from the wall, attacking "+pc.name+""+
+	" as he passes it!", A_ALWAYS, pc, null, null, TO_REST);
+
+	exec("kill "+pc.name+"", self);
+	goto start;
+	}
+	else
+	{
+	goto start;
+	}
+}
+dilend
+end
+
+
+
+				yogoloth
+names {"yochlol"}
+title "the yochlol"
+descr "A horrible yochlol is here."
+extra {}
+"A heinous sight unfolds before you, a creature standing 7 feet tall, 
+looking like a half melted candle. It has four whiplike appendages 
+flailing out from its sides, and a single eye set in its center. It reeks 
+evil, and powerful magic, a dangerous foe at the least. The darkelf 
+traveler must be powerful indeed to have such a guardian."
+M_YOGOLOTH(SEX_NEUTRAL)
+flags {UNIT_FL_NO_TELEPORT}
+level 45
+
+dilbegin yogoloth();
+var
+	pc : unitptr;
+code
+{
+
+	:start:
+	wait(SFB_CMD,(activator.type == UNIT_ST_PC) and 
+	(command(CMD_GET)or command(CMD_DRAG))
+	and(activator.level<200));
+
+	pc := activator;
+	secure(pc, start);
+
+	block;
+	exec("close north door", self);
+	exec("cast lock north door", self);
+	pause;
+	exec("say So you wish to steal from my master do you?", self);
+	pause;
+	exec("say Well "+pc.name+", I am here to stop that!", self);
+	pause;
+	exec("cast harm "+pc.name, self);
+	self.mana := 100;
+	self.hp := self.max_hp;
+	goto start;
+}
+dilend
+end
+
+
+				shadowd
+names {"shadow dragon", "dragon"}
+title "the Shadow dragon"
+descr "A shadow dragon becomes visible and attacks!"
+extra {}
+"This enormous serpent is black as night and seems a part of the shadows
+themselves. Its jaws are a bright white contrasted to the rest of its body,
+and its eyes glow fiery red."
+race RACE_DRAGON_BLACK
+sex SEX_FEMALE
+level 25
+height 600
+weight 1000
+NATURAL_DEF(WPN_CLAW, ARM_PLATE)
+exp 160
+alignment -750
+STATS
+money 10 COPPER_PIECE
+position POSITION_STANDING
+default POSITION_STANDING
+dilcopy combat_mag@function("acid breath", "", 25, 2);
+
+/*
+dilbegin dragon();
+code
+{
+	heartbeat := PULSE_SEC * 20;
+
+	wait(SFB_TICK | SFB_RANTIME, TRUE);
+
+	:start:
+	if(self.position == POSITION_FIGHTING)
+	goto start;
+
+	walkto(findroom("dragon2@darkelf"));
+	if(self.position > POSITION_SLEEPING)
+	{
+	   exec("sleep", self);
+	   pause;
+	}
+
+	heartbeat := WAIT_SEC*SECS_PER_MUD_HOUR/2;
+	while((mudhour > 4) and (mudhour < 9))
+	{
+	   exec("snore", self);
+	   pause;
+	}
+	heartbeat := WAIT_SEC*10;
+	exec("wake", self);
+	pause;
+	exec("stand", self);
+	pause;
+	exec("emote stretches her wings and looks up to the roof of her " +
+	     "cave.", self);
+	pause;
+	exec("emote flaps his wings and flys out of the cave through a hole " +
+	     "in the roof.", self);
+	link(self, findroom("in_egate@midgaard"));
+	exec("emote flys down from the sky, descending upon the cityguards!",
+	     self);
+	pause;
+	exec("kill guard", self);
+	pause;
+	exec("kill guard", self);
+	pause;
+	pause;
+	exec("emote flaps her wings and fly's away.", self);
+	link(self, findroom("magic_shop@midgaard"));
+	exec("emote bursts through the windows of the shop, attacking " +
+	     "the proprieter!", self);
+	pause;
+	exec("kill gnome", self);
+	pause;
+	exec("take money from corpse", self);
+	pause;
+	exec("emote launches itself into the air and flys away!", self);
+	pause;
+	walkto(findroom("midgaard/jewel_shop"));
+	pause;
+	exec("kill janet", self);
+	pause;
+	exec("take money from corpse", self);
+	pause;
+	walkto(findsymbolic("commoner@urland"));
+	exec("kill commoner", self);
+	pause;
+	walkto(findsymbolic("commoner@urland"));
+	exec("kill commoner", self);
+	pause;
+	exec("cackle", self);
+	pause;
+	exec("emote launches itself into the air and fly's away.", self);
+	link(self, findroom("dragon3@darkelf"));
+	pause;
+	exec("drop all", self);
+	pause;
+	exec("cackle", self);
+	pause;
+	goto start;
+
+}
+dilend
+*/
+
+end
+
+
+				drguard2
+
+names {"darkelf guard", "darkelf", "guard"}
+title "a darkelf guard"
+descr "A darkelf guard eyes you dangerously."
+extra {}
+"This darkelf looks quite dangerous. He stands with an air of confidence, and
+looks quite experience handling his weapon."
+race RACE_DARK_ELF
+level 22
+sex SEX_MALE
+height 170
+weight 130
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+exp 120
+alignment -750
+STATS
+dilcopy combat_mag@function("frostball","cure light",50,2);
+
+dilbegin drow_guard();
+var
+	pc : unitptr;
+code
+{
+	:init:
+	heartbeat := PULSE_SEC * 5;
+
+	:loop:
+	if(self.position == POSITION_FIGHTING)
+        goto loop;
+
+	wait(SFB_CMD, (activator.type == UNIT_ST_PC)
+	and(activator.level<200)and(activator.race!=RACE_DARK_ELF));
+
+	pc := activator;
+	
+	secure(pc, loop);
+
+	exec("say You should not be here surface dweller.", self);
+	pause;
+	exec("say The underdark is dangerous for your kind, "+pc.name+".",
+	self);
+	pause;
+	exec("say Go now, return to your home.", self);
+	unsecure(pc);
+	goto wait_abit;
+
+	:wait_abit:
+	heartbeat := PULSE_SEC*100;
+	pause;
+	goto init;
+
+
+}
+dilend
+
+end
+
+
+				drwander
+names {"darkelf fighter","fighter","darkelf","elf"}
+title "a darkelf fighter"
+descr "A darkelf fighter fingers her weapons, staring at you."
+extra {}
+"This darkelf looks like a deadly fighter. She stares at you with disgust 
+and anger in her eyes."
+race RACE_DARK_ELF
+level 24
+sex SEX_FEMALE
+height 170
+weight 130
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+exp 130
+alignment -850
+STATS
+romflags {CHAR_SNEAK}
+dilcopy combat_mag@function("jolt","cure light",40,2);
+special SFUN_RANDOM_ZONE_MOVE time PULSE_SEC*70
+special SFUN_TEAMWORK"darkelf"  
+
+dilbegin drow_fighter();
+var
+	pc : unitptr;
+code
+{
+	:init:
+	heartbeat := PULSE_SEC * 5;
+
+	:loop:
+	wait(SFB_CMD, (activator.type == UNIT_ST_PC)
+	and(activator.level<200)and(activator.race!=RACE_DARK_ELF));
+	if(self.position == POSITION_FIGHTING)
+        goto loop;
+
+	pc := activator;
+	secure(pc, loop);
+
+	exec("emote narrows her eyes, looking at you.", self);
+	pause;
+	exec("look "+pc.name+".", self);
+	pause;
+	exec("say Begone, surface dweller.", self);
+	pause;
+	exec("say The spider queen doesnt treat intruders kindly.", self);
+	pause;
+	exec("emote fingers her weapons.", self);
+	pause;
+	exec("say Leave now!", self);
+	pause;
+	exec("say Very well, die!", self);
+	exec("kill "+pc.name+"", self);
+	unsecure(pc);
+	goto wait_abit;
+
+	:wait_abit:
+	heartbeat := PULSE_SEC*100;
+	pause;
+	goto init;
+
+}
+dilend
+money 2 COPPER_PIECE
+end
+
+
+				drguard
+names {"darkelf warrior", "warrior","darkelf"}
+title "a darkelf warrior"
+descr "A darkelf warrior eyes you dangerously."
+extra {}
+"This darkelf looks like a deadly fighter. He holds his weapons with an
+air of confidence and experience."
+race RACE_DARK_ELF
+level 24
+sex SEX_MALE
+height 170
+weight 130
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+exp 120
+alignment -750
+STATS
+dilcopy combat_mag@function("frostball","cure light",40,2);
+
+dilbegin drow_warrior();
+var
+	pc : unitptr;
+code
+{
+	:init:
+	heartbeat := PULSE_SEC * 5;
+
+	:loop:
+	wait(SFB_CMD, (activator.type == UNIT_ST_PC)
+	and(activator.level<200)and(activator.race!=RACE_DARK_ELF));
+	if(self.position == POSITION_FIGHTING)
+        goto loop;
+
+	pc := activator;
+	secure(pc, loop);
+
+	exec("emote shifts his feet idly.", self);
+	pause;
+	exec("look "+pc.name+".", self);
+	pause;
+	exec("say I would leave the underdark, surface dweller.", self);
+	pause;
+	exec("say The spider queen doesnt treat intruders kindly.", self);
+	pause;
+	exec("emote fingers his weapons.", self);
+	pause;
+	exec("say Perhaps you should leave.", self);
+	pause;
+	exec("say This is my last warning "+pc.name+".", self);
+	pause;
+	exec("say Very well, have it your way.", self);
+	pause;
+	exec("kill "+pc.name+"", self);
+	unsecure(pc);
+	goto wait_abit;
+
+	:wait_abit:
+	heartbeat := PULSE_SEC*100;
+	pause;
+	goto init;
+
+}
+dilend
+
+money 12 IRON_PIECE
+end
+
+
+				wind
+
+names{"air elemental", "elemental"}
+descr "An air elemental flows across the top of the field here."
+title "an air elemental"
+extra {}
+"The air elemental is vaguely humanoid, and holds the essense of the wind
+in its hand in the shape of a dagger."
+level 23
+sex SEX_NEUTRAL
+race RACE_ELEMENTAL_AIR
+height 250
+weight 30
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+exp 120
+alignment 0
+STATS
+
+position POSITION_STANDING
+default POSITION_STANDING
+end
+
+
+				ogre
+names {"ogre"}
+title "a huge ogre"
+descr "a huge ogre stands here."
+extra {}
+"He is a huge ugly creature, standing nearly 8 feet tall. He wields a huge
+club with ease, and appears quite strong. He glares at you."
+race RACE_OGRE
+level 20
+sex SEX_MALE
+height 275
+weight 200
+NATURAL_DEF(WPN_FIST, ARM_CHAIN)
+
+alignment -400
+MSET_ABILITY(25,15,25,25,0,5,5,0)
+MSET_WEAPON(10,10,10,10,10,10)
+MSET_SPELL(5,5,5,5,5,5,5,5,0,0,0)
+
+
+position POSITION_STANDING
+default POSITION_STANDING
+money 2 COPPER_PIECE
+
+dilbegin ogre();
+var
+	pc : unitptr;
+code
+{	:init:
+	heartbeat := PULSE_SEC * 5;
+	unsecure(pc);
+
+	:loop:
+	wait(SFB_CMD, (activator.type == UNIT_ST_PC)and(activator.level<200));
+	if(self.position == POSITION_FIGHTING)
+        goto loop;
+
+	pc := activator;
+	secure(pc, init);
+
+	if((pc.race == RACE_ELF)or(pc.race == RACE_HALF_ELF)
+	or(pc.race == RACE_DARK_ELF))
+{
+	exec("say An elf! I love the taste of elves!", self);
+	pause;
+	exec("say Come meet me club little elfie.", self);
+	pause;
+	exec("kill "+pc.name+"", self);
+	goto init;
+}
+else
+{
+	exec("look "+pc.name+".", self);
+	pause;
+	exec("emote scratches himself and snarls angrily.", self);
+	pause;
+	exec("say Me want an elf to eat!", self);
+	pause;
+	exec("say You no elf, but I too hungry to wait till one comes!",
+	self);
+	pause;
+	exec("say I guess you will do "+pc.name+"", self);
+	pause;
+	exec("kill "+pc.name+".", self);
+	goto init;
+}
+}
+dilend
+
+end
+
+
+				gar_spider
+
+names {"gargantuan spider","spider"}
+title "a gargantuan spider"
+descr "A gargantuan spider looms over you here!"
+extra {}
+"This enormous creature is nearly 25 feet tall! Its huge jaws work back and
+forth, and you see 2 foot long fangs extend from its mouth. It looks very
+hungry, and very mad!"
+M_SPIDER(26, SEX_NEUTRAL)
+position POSITION_STANDING
+default POSITION_STANDING
+exp 125
+end
+
+
+				lich
+names {"lich"}
+title "an evil lich"
+descr "An evil lich is here."
+extra {}
+"This undead creature is the epitome of evil and death. It stands in a 
+rotting robe, its putrid skin pulled tight over old bones. Its face is a 
+mask of death, with spots of glowing yellow light where its eyes once 
+were. The creature emanates power, and appears quite dangerous."
+level 29
+race RACE_LICH
+sex SEX_NEUTRAL
+height 180
+weight 115
+NATURAL_DEF(WPN_CLAW, ARM_CHAIN)
+exp 130
+alignment -1000
+STATS
+
+dilcopy combat_mag@function("fireball","",0,2);
+
+money 3 COPPER_PIECE
+position POSITION_STANDING
+default POSITION_STANDING
+
+dilbegin lich_speech();
+var
+	pc : unitptr;
+code
+{
+	:init:
+	heartbeat := PULSE_SEC * 5;
+
+	:loop:
+	wait(SFB_CMD, (activator.type == UNIT_ST_PC)and(activator.level<200));
+	if(self.position == POSITION_FIGHTING)
+        goto loop;
+
+	pc := activator;
+	secure(pc, init);
+
+	exec("emote mumbles to himself as he fingers through a thick tome.",
+	 self);
+	pause;
+	exec("say You dare disturb me "+pc.name+"?", self);
+	pause;
+	exec("say Leave NOW! Or I will reduce you to ash!", self);
+	pause;
+	pause;
+	exec("say still here fool?", self);
+	pause;
+	exec("say very well, I am always in need of new subjects!", self);
+	pause;
+	exec("cast fireball "+pc.name+"", self);
+	goto loop;
+}
+dilend
+
+dilbegin dead_raise();
+code
+{
+	:start:
+	wait(SFB_DEAD, (activator.type == UNIT_ST_PC));
+
+
+	heartbeat := PULSE_SEC*15;
+	pause;
+	self.mana := 100;
+	self.hp := self.max_hp;
+	exec("cast animate dead corpse", self);
+	pause;
+	exec("say more soldiers added to my army!", self);
+	pause;
+	exec("cackle", self);
+	goto start;
+}
+dilend
+
+end
+
+
+				fire_el
+names {"fire elemental", "elemental", "figure", "flaming figure"}
+descr "A large flaming figure is here."
+title "a fire elemental"
+extra {}
+"The fire elemental seems to be made of pure fire with little substance. It
+exudes a great heat from its body."
+race RACE_ELEMENTAL_FIRE
+level 25
+sex SEX_NEUTRAL
+height 220
+weight 300
+NATURAL_DEF(WPN_FIST, ARM_HLEATHER)
+exp 120
+alignment -350
+STATS
+
+dilcopy combat_mag@function("burn","",0,1);
+
+dilbegin elemental();
+var
+	pc : unitptr;
+code
+{
+	:init:
+	heartbeat := PULSE_SEC * 5;
+
+	:loop:
+	wait(SFB_CMD, (command(CMD_EAST) and (activator.type == UNIT_ST_PC))
+	and(activator.level<200));
+	pc := activator;
+{
+	block;
+	exec("say NO one may disturb the master!", self);
+	pause;
+	exec("say Least of all ingrates such as yourself, "+pc.name+"!", self);
+	pause;
+	exec("say Stay here, and you face the wrath of Alrzzhogan!", self);
+	pause;
+	goto init;
+}
+goto init;
+}
+dilend
+
+
+end
+
+
+
+
+				orc
+
+names {"orc"}
+title "an orc"
+descr "A large orc stands here eyeing you."
+extra {}
+"The orc is a disgusting sight to behold. He stands in once fine clothing,
+obviously taken from some wealthy merchant, but now reduced to filty rags. He
+has long, dirty, black hair and jagged, sharp teeth protrude from his mouth.
+He has beedy little black eyes, and his clawed hands grip a short sword and
+shield coated with dried blood."
+
+level 20
+race RACE_ORC
+sex SEX_MALE
+height 175
+weight 200
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+alignment -500
+STATS
+
+position POSITION_STANDING
+default POSITION_STANDING
+
+special SFUN_SCAVENGER time 100 bits SFB_RANTIME
+
+dilbegin orc_warrior();
+var
+	pc : unitptr;
+code
+{
+	:loop:
+	heartbeat := PULSE_SEC * 5;
+	wait(SFB_CMD, (activator.type == UNIT_ST_PC)
+	and(activator.level<200));
+	if(self.position == POSITION_FIGHTING)
+        goto loop;
+
+	pc := activator;
+	secure(pc, loop);
+
+	if(activator.race == RACE_HUMAN)
+{
+	exec("emote looks at you.", self);
+	pause;
+	exec("say Me starving!", self);
+	pause;
+	exec("say Me love to eat humans!", self);
+	pause;
+	exec("say Especially plumb ones like you, "+pc.name+"!", self);
+	pause;
+	exec("grin", self);
+	pause;
+	exec("say You make fine addition to the cook pot!", self);
+	pause;
+	exec("kill "+pc.name+"", self);
+	unsecure(pc);
+	goto loop;
+}
+else
+{
+	exec("look "+pc.name, self);
+	pause;
+	exec("say You not a human!", self);
+	pause;
+	exec("say Me hungry for human!", self);
+	pause;
+	exec("say You have any human friends, "+pc.name+"?", self);
+	pause;
+	exec("say Bring them back when next you come, ok?", self);
+	pause;
+	goto wait_abit;
+}
+	:wait_abit:
+	heartbeat := PULSE_SEC*100;
+	pause;
+	unsecure(pc);
+	goto loop;
+}
+dilend
+
+end
+
+
+
+				orc_champion
+names {"champion", "orc"}
+title "a powerful orc"
+descr "A powerful looking orc stands here."
+extra {}
+"This tall, strong looking orc is much cleaner than any orc you have seen
+before. He has powerfull arms griping a glowing axe. He is wearing a suit of
+splint mail armour, and his eyes show a greater intelligence than his fellows.
+He seems quick, and well suited for battle."
+level 20
+race RACE_ORC
+sex SEX_MALE
+height 175
+weight 200
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+exp 120
+alignment -500
+STATS
+
+position POSITION_STANDING
+default POSITION_STANDING
+
+dilbegin orc_champ();
+var
+	pc : unitptr;
+code
+{
+	:loop:
+	heartbeat := PULSE_SEC * 5;
+	wait(SFB_CMD, (activator.type == UNIT_ST_PC)
+	and(activator.level<200));
+	if(self.position == POSITION_FIGHTING)
+        goto loop;
+
+	pc := activator;
+	secure(pc, loop);
+
+	exec("say what are you doing here "+pc.name+"!", self);
+	pause;
+	exec("emote pulls out a large, double bladed battle axe.", self);
+	pause;
+	exec("emote runs his finger over the axe's blade, testing its " +
+	     "sharpness.", self);
+	pause;
+	exec("say looks like my little ManCleaver will get used today after "+
+	     "all!", self);
+	pause;
+	exec("say die fool!", self);
+	exec("kill "+pc.name+"", self);
+	unsecure(pc);
+	goto wait_abit;
+
+	:wait_abit:
+	heartbeat := PULSE_SEC*100;
+	pause;
+	goto loop;
+
+}
+dilend
+
+
+end
+
+
+				orc_shaman
+
+
+names{"shaman", "orc"}
+title "an orc shaman"
+descr "An orc shaman is standing here."
+extra {}
+"This creature stands in the robed garb of a priest. His claw grips a glowing
+staff, and he wears a holy symbol decorated with a spider around his neck.
+His beady eyes glow slightly red, and he seems deep in concentration."
+level 20
+race RACE_ORC
+sex SEX_MALE
+height 175
+weight 200
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+exp 120
+alignment -500
+STATS
+
+dilcopy combat_mag@function("cause light","",0,1);
+
+position POSITION_STANDING
+default POSITION_STANDING
+
+dilbegin orc_shaman();
+var
+	pc : unitptr;
+code
+{
+	:loop:
+	heartbeat := PULSE_SEC*5;
+	wait(SFB_CMD, (activator.type == UNIT_ST_PC));
+	if(self.position == POSITION_FIGHTING)
+        goto loop;
+
+	pc := activator;
+	secure(pc, loop);
+
+	exec("emote sets a crying human child on the altar.", self);
+	pause;
+	exec("emote removes a long, wicked dagger from beneath her robes.",
+	self);
+	pause;
+	exec("emote brings the dagger down, pinning the child and killing it "+
+	"instantly!", self);
+	pause;
+	exec("emote begins to chant in a strange tounge, as blood flows from "+
+	"the tiny carcass.", self);
+	pause;
+	exec("say for you my queen, I give you this sacrifice of blood!", self);
+	pause;
+	exec("emote glows with a dark light.", self);
+	pause;
+	exec("say thank you my queen, for your gift!", self);
+	pause;
+	exec("emote turns around and eyes "+pc.name+"", self);
+	pause;
+	self.hp := self.hp + 100;
+	self.mana := 100;
+	exec("say now its time for you too die "+pc.name+"!", self);
+	pause;
+	exec("cast harm "+pc.name+"", self);
+	unsecure(pc);
+	goto wait_abit;
+
+	:wait_abit:
+	heartbeat := PULSE_SEC*100;
+	pause;
+	goto loop;
+}
+dilend
+
+
+
+end
+
+
+				orc_chief
+
+names {"chief", "orc"}
+title "an orc chief"
+descr "An orc chief stands here."
+extra {}
+"The orc chief stands in fine clothes, although he is still obviously unclean.
+He wields a glowing scimitar with ease, however, and appears quite skilled
+in battle."
+level 21
+race RACE_ORC
+sex SEX_MALE
+height 175
+weight 200
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+exp 105
+alignment -500
+STATS
+
+position POSITION_STANDING
+default POSITION_STANDING
+
+dilbegin orc_chief();
+var
+	pc : unitptr;
+code
+{
+	:loop:
+	heartbeat := PULSE_SEC * 20;
+	wait(SFB_CMD, (activator.type == UNIT_ST_PC)
+	and(activator.level<200));
+	if(self.position == POSITION_FIGHTING)
+        goto loop;
+
+	pc := activator;
+	secure(pc, loop);
+
+	exec("say Intruders in my home!", self);
+	pause;
+	exec("say no matter, i could use a good battle!", self);
+	pause;
+	exec("emote draws a glowing scimitar from his belt.", self);
+	pause;
+	exec("grin", self);
+	pause;
+	exec("emote motions for your to defend yourself!", self);
+	pause;
+	exec("kill "+pc.name+"", self);
+	unsecure(pc);
+	goto loop;
+
+}
+dilend
+
+end
+
+
+
+
+				skel_war
+names {"skeletal warrior", "skeleton","warrior"}
+title "a skeletal warrior"
+descr "A large skeletal warrior is here."
+extra {}
+"The large skeleton looks ancient. From the tattered bits of armour, you can
+tell that the creature was at one time a fine warrior, but now it has been
+reduced to a hideous monster."
+level 21
+race RACE_SKELETON
+sex SEX_NEUTRAL
+height 180
+weight 50
+NATURAL_DEF(WPN_CLAW, ARM_CHAIN)
+exp 105
+alignment 0
+STATS
+
+
+position POSITION_STANDING
+default POSITION_SITTING
+
+special SFUN_AGGRESSIVE time 40
+end
+
+
+				ghoul
+names {"ghoul"}
+title "a ghoul"
+descr "A hideous ghoul lurches here."
+extra {}
+"The ghoul is by far the most disgusting creature you have ever seen. Once a
+proud man, it is now a hobbling abomination, dining on human flesh."
+race RACE_GHOUL
+level 22
+sex SEX_NEUTRAL
+height 180
+weight 150
+NATURAL_DEF(WPN_CLAW, ARM_LEATHER)
+exp 105
+alignment  -350
+STATS
+
+position POSITION_STANDING
+default POSITION_STANDING
+
+dilbegin ghoul();
+var
+	pc : unitptr;
+code
+{
+	:loop:
+	heartbeat := PULSE_SEC*5;
+	wait(SFB_CMD, (activator.type == UNIT_ST_PC)
+	and(activator.level<200));
+	if(self.position == POSITION_FIGHTING)
+        goto loop;
+
+	pc := activator;
+	secure(pc, loop);
+
+	if(pc.race == RACE_HUMAN)
+{
+	exec("emote licks its lips hungerly", self);
+	pause;
+	exec("say i smell human flesh!", self);
+	pause;
+	exec("growl", self);
+	pause;
+	exec("say i must eat!", self);
+	pause;
+	exec("look "+pc.name+"", self);
+	pause;
+	exec("say I knew I smelled human!", self);
+	pause;
+	exec("say Your flesh will satisfy my hunger "+pc.name+"!", self);
+	pause;
+	exec("kill "+pc.name+"", self);
+	unsecure(pc);
+	goto loop;
+}
+}
+dilend
+
+end
+
+
+				ghost
+
+names {"ghost"}
+title "a ghost"
+descr "A horrible ghost is floating here."
+extra {}
+"The ghost seems in constant torment. It wails loudly and painfully. It floats
+toward you, and snarls aggressively."
+race RACE_GHOST
+sex SEX_NEUTRAL
+level 24
+height 150
+weight 1
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+exp  125
+alignment    -750
+STATS
+dilcopy combat_mag@function("cause serious","",0,1);
+
+position POSITION_STANDING
+default POSITION_STANDING
+
+dilbegin ghost();
+var
+	pc : unitptr;
+code
+{
+	on_activation(self.position==POSITION_FIGHTING,skip);
+
+		:loop:
+	heartbeat := PULSE_SEC*4;
+	wait(SFB_CMD, (command(CMD_NORTH))
+	and(activator.level<200));
+
+	pc := activator;
+	secure(pc, loop);
+	block;
+	exec("emote blocks the way northward.", self);
+	exec("emote wails out in agony.", self);
+	pause;
+	exec("say Must guard my master!", self);
+	exec("say He must not be interrupted.", self);
+	pause;
+	exec("say all trespassers must die!", self);
+	pause;
+	exec("kill "+pc.name+"", self);
+	goto loop;
+}
+dilend
+
+end
+
+
+				demon
+names {"demon"}
+title "a demon"
+descr "A flaming demon is here."
+extra {}
+"The demon is covered with flame, and wields a large spear."
+race RACE_LESSER_DEMON
+level 30
+sex  SEX_MALE
+height 200
+weight 300
+NATURAL_DEF(WPN_CLAW, ARM_PLATE)
+exp 125
+alignment -1000
+STATS
+
+dilcopy combat_mag@function("fireball","",0,2);
+
+money 15 IRON_PIECE
+position POSITION_STANDING
+default POSITION_STANDING
+
+dilbegin demon();
+var
+	pc : unitptr;
+code
+{
+	on_activation(self.position==POSITION_FIGHTING,skip);
+	:loop:
+	heartbeat := PULSE_SEC*5;
+	wait(SFB_CMD, (activator.type == UNIT_ST_PC)
+	and(activator.level<200));
+
+	pc := activator;
+	secure(pc, loop);
+
+	exec("say Welcome to my home, "+pc.name+".", self);
+	pause;
+	exec("say Now I will show you what true power is all about!", self);
+	pause;
+	exec("say And then I shall devour your soul!", self);
+	pause;
+	exec("cackle", self);
+	pause;
+	exec("cast fireball "+pc.name+"", self);
+	unsecure(pc);
+	goto loop;
+}
+dilend
+end
+
+			drider
+names {"drider","guard"}
+title "a drider"
+descr "A drider stands guard here, his eight legs moving restlessly."
+extra {}
+"A hideous creature to behold, the drider has the upper body of a darkelf 
+mounted on the body of a giant spider. His eyes are blank and pure white 
+- there is no will back in the husk."
+height 240
+weight 280
+level 25
+race RACE_DARK_ELF
+sex SEX_MALE
+NATURAL_DEF(WPN_FIST, ARM_CHAIN)
+exp 130
+alignment  -600
+MSET_ABILITY(20,15,10,22,8,5,10,10) 
+MSET_WEAPON(10,10,10,10,6,6) 
+MSET_SPELL(2,2,2,6,6,6,5,5,5,5,4)
+dilcopy combat_mag@function("energy bolt","",0,2);
+special SFUN_TEAMWORK"darkelf"
+special SFUN_RESCUE"darkelf priestess"
+special SFUN_AGGRESSIVE time 160
+end
+
+				priest
+names {"darkelf priestess","priestess","darkelf"} 
+title "a darkelf priestess"
+descr "A darkelf priestess is standing here"
+extra {}
+"This beautiful priestess also looks deadly. She carries a snake headed whip
+that snarls in your direction."
+height 170
+weight 135
+level 27
+race RACE_DARK_ELF
+sex SEX_FEMALE
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+exp 130
+alignment  -1000
+STATS
+
+dilcopy combat_mag@function("icestorm","cure serious",40,2);
+
+money 4 COPPER_PIECE
+position POSITION_STANDING
+default POSITION_STANDING
+
+dilbegin  priestess();
+var
+	pc : unitptr;
+code
+{
+	on_activation(self.position==POSITION_FIGHTING,skip);
+	:loop:
+	heartbeat := PULSE_SEC*8;
+	wait(SFB_CMD, (activator.type == UNIT_ST_PC)
+	and(activator.level<200)and(activator.race!=RACE_DARK_ELF));
+
+	pc := activator;
+	secure(pc, loop);
+
+	exec("emote is deeply in her ritual, and fails too notice your "+
+	"presence.", self);
+	pause;
+	exec("emote raises her hands up and looks upward", self);
+	pause;
+	exec("say please Goddess! Give me a sign!", self);
+	pause;
+	exec("emote is surrounded by a bright glow", self);
+	pause;
+	exec("nod", self);
+	pause;
+	exec("say I understand my Queen.", self);
+	pause;
+	exec("say the invasion shall begin soon!", self);
+	pause;
+	exec("say and all surface dwellers will be on their knees!", self);
+	pause;
+	exec("emote drops to her knees as the glow fades", self);
+	pause;
+	exec("say soon all of Midgaard will bow before me!", self);
+	pause;
+	exec("cackle", self);
+	pause;
+	exec("emote suddenly notices you standing there!", self);
+	pause;
+	exec("say ingrates! You know of my plans to invade the surface!",
+	self);
+	pause;
+	exec("say For that you will die!", self);
+	pause;
+	exec("emote begins too call upon her goddess, energy fills her!", self);
+	pause;
+	self.hp := self.max_hp + 100;
+	self.mana := 150;
+	exec("cast lightning bolt "+pc.name, self);
+	unsecure(pc);
+	goto loop;
+}
+dilend
+
+end
+
+
+				master
+
+names {"weaponmaster","master","darkelf"}
+title "a darkelf weaponsmaster"
+descr "A darkelf weaponsmaster is standing here."
+extra {}
+"This darkelf looks deadly indeed. He stares at you with a look that would
+melt steel, and grips his weapons as if they were lifelong companions."
+height 175
+weight 135
+level 26
+sex SEX_MALE
+race RACE_DARK_ELF
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+exp 125
+alignment  -350
+STATS
+
+
+money 16 IRON_PIECE
+position POSITION_STANDING
+default POSITION_STANDING
+
+dilbegin weapon_master();
+var
+	pc  : unitptr;
+code
+{
+	heartbeat := PULSE_SEC * 5;
+
+	:loop:
+	wait(SFB_CMD, (activator.type == UNIT_ST_PC)
+	and(activator.level<200));
+	if(self.position == POSITION_FIGHTING)
+        goto loop;
+
+	pc := activator;
+	secure(pc, loop);
+
+	exec("say No, you must make the weapon an extension of the arm!", self);
+	pause;
+	exec("emote goes through an elaborate form with his longsword.", self);
+	pause;
+	exec("say Like that!", self);
+	pause;
+	exec("say You must become one with your weapons!", self);
+	pause;
+	exec("emote nods in satisfaction as the warriors imitate his form.",
+	self);
+	pause;
+	exec("say Yes, very good!", self);
+	pause;
+	exec("say Soon your enemies will squeal and beg you for mercy!", self);
+	pause;
+	exec("grin", self);
+	pause;
+	exec("emote looks up and notices you in his training hall.", self);
+	pause;
+	exec("say "+pc.name+", you do not belong here!", self);
+	pause;
+	exec("emote draws his weapon from its sheath.", self);
+	pause;
+	exec("say Lets see what you are made of "+pc.name+"!", self);
+	pause;
+	exec("kill "+pc.name+"", self);
+	unsecure(pc);
+	goto loop;
+}
+dilend
+
+
+end
+
+				rothe
+
+names {"deep rothe", "rothe"}
+title "a rothe"
+descr "A deep rothe is grazing here."
+extra {}
+"You see a squat, strongly-built creature resembling oxen, with curving horns,
+cloven hooves, and lon, shaggy coats of thick hair."
+race RACE_COW
+sex SEX_MALE
+level 20
+height 100
+weight 300
+NATURAL_DEF(WPN_BITE, ARM_PLATE)
+exp 101
+alignment 0
+MSET_ABILITY(20,20,20,40,0,0,0,0)
+MSET_WEAPON(10,10,10,10,10,10)
+MSET_SPELL(10,10,10,10,0,0,0,0,0,0,0)
+position POSITION_STANDING
+default POSITION_SLEEPING
+end
+
+
+				mage
+
+names {"darkelf mage", "mage", "darkelf"}
+title "a darkelf mage"
+descr "A darkelf mage is studing his tomes here."
+extra {}
+"This mage seems deep in thought. He emanates powerful magic, and seems
+ready to use it."
+race RACE_DARK_ELF
+sex SEX_MALE
+level 27
+height 170
+weight 130
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+exp 135
+alignment  -350
+STATS
+
+dilcopy combat_mag@function("spray of acid","",0,1);
+
+money 3 COPPER_PIECE
+position POSITION_STANDING
+default POSITION_STANDING
+
+dilbegin mage();
+var
+	pc : unitptr;
+code
+{
+	:loop:
+	heartbeat := PULSE_SEC*5;
+	wait(SFB_CMD, (activator.type == UNIT_ST_PC)
+	and(activator.level<200)and(activator.race!=RACE_DARK_ELF));
+	if(self.position == POSITION_FIGHTING)
+        goto loop;
+
+	pc := activator;
+	secure(pc, loop);
+
+	exec("emote looks up from his reading and eyes you coldly.", self);
+	pause;
+	exec("say Leave me "+pc.name+"! I have no time for imputence!", self);
+	pause;
+	exec("say Leave now! Or be destroyed!", self);
+	pause;
+	exec("emote looks back down at his book.", self);
+	pause;
+	exec("emote notices you haven't left, and eyes you with a look of "+
+	"death.", self);
+	pause;
+	exec("say Very well, you were warned!", self);
+	pause;
+	exec("cast spray of acid "+pc.name, self);
+	unsecure(pc);
+	goto loop;
+}
+dilend
+
+end
+
+
+
+
+				traveler
+
+names {"darkelf traveler", "traveler", "darkelf"}
+title "a darkelf traveler"
+descr "A darkelf traveler stands here."
+extra {}
+"This darkelf has traveled the world in search of adventure. In his travels
+he has amassed a massive amount of power and wealth."
+race RACE_DARK_ELF
+level 80
+sex SEX_MALE
+height 175
+weight 130
+NATURAL_DEF(WPN_FIST, ARM_CHAIN)
+exp 150
+alignment -400
+MSET_ABILITY(13,17,13,13,12,12,10,10)
+MSET_WEAPON(7,15,5,4,0,0)
+MSET_SPELL(5,5,5,5,5,7,7,7,7,8,8)
+dilcopy combat_mag@function("icestorm","heal",40,3);
+
+dilbegin traveler();
+var
+
+	s             : string;
+	i	      : integer;
+	room	      : unitptr;
+	pc	      : unitptr;
+code
+{
+	heartbeat := PULSE_SEC*9;
+
+	:start:
+	nopriority;
+	wait(SFB_COM,(activator.type == UNIT_ST_PC)
+	and(activator.level<200));
+	priority;
+	s := self.fighting.name;
+	pause;
+	act("The darkelf traveler turns a ring on his hand and vanishes!", 
+	A_ALWAYS,self, null, null, TO_ALL);
+	link(self, findroom("village1@darkelf"));
+	pause;
+	self.mana := 100;
+	self.hp := self.max_hp;
+	exec("cast bless traveler", self);
+	exec("cast invisibility traveler", self);
+	exec("cast detect invisible traveler", self);
+	self.mana := 100;
+	exec("hide", self);
+	exec("sneak", self);
+
+	pc := findunit(self, s, FIND_UNIT_WORLD, null);
+
+	link(self, pc.outside);
+	exec("say Attack me, will you?! Die!!!!", self);
+	exec("cast spray of acid "+pc.name+"", self);
+
+	heartbeat := PULSE_SEC*200;
+	pause;
+	pause;
+	unsecure(pc);
+	quit;
+
+
+}
+dilend
+
+dilbegin flee();
+var
+pc : unitptr;
+code
+{
+
+	:start:
+	nopriority;
+	wait(SFB_COM,(activator.type == UNIT_ST_PC));
+	priority;
+	pc := activator;
+	secure(pc, start);
+
+		wait(SFB_CMD,(self.outside.fighting) and (command(CMD_FLEE)));
+		self.mana := 100;
+		self.hp  := self.max_hp;
+		exec("cast gate "+pc.name+"", self);
+		exec("cast firestorm "+pc.name+"", self);
+		unsecure(pc);
+		goto start;
+}
+dilend
+
+dilbegin take_all();
+code
+{
+	:start:
+	nopriority;
+	wait(SFB_DEAD,(activator.type == UNIT_ST_PC));
+	priority;
+	heartbeat := PULSE_SEC*9;
+	pause;
+	exec("take all from corpse", self);
+	pause;
+	exec("emote turns a ring on his finger and vanishes!", self);
+	link(self, findroom("trav_treasure@darkelf"));
+	pause;
+	exec("put all in barrel", self);
+	pause;
+	exec("emote turns a ring on his finger and vanishes!", self);
+	link(self, findroom("road1@darkelf"));
+	exec("west", self);
+	exec("west", self);
+	exec("west", self);
+	goto start;
+}
+dilend
+
+special SFUN_RANDOM_GLOBAL_MOVE
+end
+
+
+
+
+
+				bracer_spider
+names {"large spider","spider"}
+title "a large spider"
+descr "A large, disgusting looking spider is here."
+extra {}
+"This large creature sits nearly 2 feet tall, with a bulbous body and eight
+hairy legs. It also has long, dripping fangs."
+M_SPIDER_GIANT(SEX_NEUTRAL)
+level 20
+dilcopy vanish_back@mageguild();
+end
+
+
+
+
+%objects
+
+				golem_corpse
+names {"pile of stones","stones","pile","golem corpse"}
+title "a pile of stones"
+descr "A pile of stones lies here."
+extra {}
+"A pile of dark stones is all that remains of the stone golem that once 
+guarded the underdark."
+weight 1000
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+type ITEM_TRASH
+dilcopy blowaway@function
+(100,"The stones crumble, leaving only fine powder behind.");
+end
+
+				lich_robe
+names {"moulded robe","robe"}
+title "a moulded robe"
+descr "A moulding, black robe lies here."
+extra {}
+"A moulding black robe of what once was fine, soft velvet but now is but 
+a shadow of its former glory."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_ABOUT}
+ARMOUR_CLOTHES(-15,0)
+spell 10
+CURSED_OBJECT
+end
+				lich_circlet
+names {"black circlet","circlet","band"}
+title "a black circlet"
+descr "A circlet of black metal lies here, radiating evil."
+extra {}
+"A circlet of strange, black metal. It's wide enough to be worn on the 
+head. An odd chill radiates from the band. A small gemstone at the 
+circlet catches your attention - it is formed as a skull."
+extra {"skull-shaped gemstone","gemstone","skull","stone","gem"}
+"The gemstone is opaque black and is carved into the likenes of a small 
+skull. It's eyes radiate a soft, red light.&n"
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_HEAD}
+type ITEM_WORN
+CON_TRANSFER(-2)
+rent 50 IRON_PIECE
+spell 10
+dilcopy abi_restrict@function (ABIL_MAG,14,0,25,"");
+CURSED_OBJECT
+
+dilbegin undead_curse();
+var
+	u	: unitptr;
+code
+{
+	:start:
+heartbeat:=PULSE_SEC*3;
+wait(SFB_CMD,(self.outside.position>POSITION_RESTING)
+and(activator==self.outside)and(self.equip==WEAR_HEAD));
+if (self.outside.type == UNIT_ST_NPC) goto start;
+
+pause;
+u:=findunit(self.outside,"corpse",FIND_UNIT_HERE,null);
+if ((u.nameidx=="corpse")and(u.zoneidx=="basis")and
+    (not(isset(u.flags,UNIT_FL_BURIED))and(visible(self,u))))
+{
+act("A strange urge comes over you... You snarl hungrily!&n"+
+"&c+wYou throw yourself over the $3N and hungrily devour it!&cw",
+A_ALWAYS,self.outside,self,u,TO_CHAR);
+act("$1n starts twitching and snarling...&n"+
+"&c+w$1n throws $1mself over the $3N and and hungrily devours it!&cw",
+A_SOMEONE,self.outside,self,u,TO_REST);
+while (u.inside) link(u.inside,self.outside);
+destroy(u);
+}
+goto start;
+}
+dilend
+end
+
+				lich_whip
+names {"barbed whip","whip"}
+title "a barbed whip"
+descr "A barbed leather whip lies here."
+extra {}
+"A long leather whip with nasty barbs, truly a weapon of pain!"
+WEAPON_DEF(WPN_WHIP,0,0)
+weight 5
+cost 6 COPPER_PIECE
+rent 62 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_DEX,15,0,0,"");
+end
+
+				black_sword
+names {"black sword","sword","greatsword"}
+title "a black sword"
+descr "A black, glowing sword lies on the ground here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_GREAT_SWORD, 0, 0)
+weight 20
+cost 3 GOLD_PIECE
+rent 62 IRON_PIECE
+extra {}
+"This huge, black two-handed sword glows with a faint black flame. It looks
+like a devastating weapon."
+extra {"$identify"}
+"This sword will upon killing an opponent, suck its soul and give you
+some of that souls power."
+dilcopy abi_restrict@function (ABIL_STR,20,0,0,"");
+
+dilbegin drain_sword();
+var
+	pc : unitptr;
+code
+{
+	:start:
+wait(SFB_COM,(self.equip==WEAR_WIELD)and(self.outside.fighting.hp<10));
+
+act("Your $2N bathes you in darkness as it drains the soul of $3n!",
+A_ALWAYS, self.outside,self,self.outside.fighting, TO_CHAR);
+act("$1n's sword bathes you in darkness as it drains the soul of $3n!",
+A_ALWAYS, self.outside,self,self.outside.fighting,TO_NOTVICT);
+act("$1n's sword bathes you in darkness and you can feel your life being "+
+"sapped away...",A_ALWAYS, self.outside,self,self.outside.fighting,TO_VICT);
+self.outside.fighting.hp:=-8;
+self.outside.hp:=self.outside.hp+1;
+if (self.outside.hp>self.outside.max_hp)
+ 	self.outside.hp:=self.outside.max_hp;
+position_update(self.outside.fighting);
+position_update(self.outside);
+pause;
+goto start;
+}
+dilend
+end
+
+				fae_sword
+names {"Sword of Faeborn", "faesword", "greatsword", "sword"}
+title "the Sword of Faeborn"
+descr "A sword emanating a blue mist lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_GREAT_SWORD, 0, 0)
+weight 10
+cost 3 PLATINUM_PIECE
+rent 360 IRON_PIECE
+spell 60
+extra {}
+"This great sword is made of a black metal, and emits a cool, blue like mist of
+energy. It is razor sharp, and seemingly unbreakable. It is devoid of decoration
+of any kind, yet you detect an awesome power within."
+extra {"$identify"}
+"As you complete your spell the sword seems to absorb the spells energy,
+keeping knowledge of its powers from you.&n"
+extra {"$improved identify"}
+"&n
+After a while you get a feeling of disorientation, and a small voice
+whispers to you &c+w'wield me and use the command 'powers'...'&cw"
+extra {"$wear_s"}
+"As you wield the sword, a blue misty aura emanates from it, surrounding 
+you and filling the room."
+extra {"wear_o"}
+"$1n wields $2n, a blue misty aura emanates from it." 
+extra {"$get_s"}
+"You feel a surge of power as you pick $2n."
+extra {"$get_o"}
+"Blue energy crackles around $1n as $1s picks up $2n."
+extra {"$rem_o"}
+"The blue mist surrounding $1n is sucked into $2n as $1e removes it."
+extra {"rem_s"}
+"The blue mist around you is sucked into $2n as you remove it."
+dilcopy abi_restrict@function(ABIL_STR,90,0,0,"");
+dilcopy abi_restrict@function(ABIL_DEX,70,0,0,"");
+dilcopy abi_restrict@function(ABIL_BRA,50,0,50,"");
+
+dilbegin elf_restrict();
+code
+{
+	:start:
+wait(SFB_DONE,(command(CMD_WIELD)or command(CMD_WEAR))and(medium==self)and
+(activator.type==UNIT_ST_PC)and(activator.level < 200) and
+((activator.race!=RACE_ELF)and(activator.race!=RACE_DARK_ELF)and
+(activator.race!=RACE_HALF_ELF)));
+sendtext("Only those of elven blood may use this weapon!&n",self.outside);
+act("$1n's $2n repells $1m as $1e tries to wield it!"
+,A_SOMEONE,self.outside,self,null,TO_REST); 
+unequip(self);
+goto start;
+}
+dilend
+
+dilbegin recall aware fae_sword();
+var
+    bra_mod     : integer;
+    con_mod     : integer;
+    charges     : integer;
+    sword_skill : integer;
+    num		: integer;
+    num2	: integer;
+    modifier    : integer;
+    heal_num    : integer;
+    enemy       : unitptr;
+    i		: integer;
+    pc		: unitptr;
+code
+{
+	:init:
+	heartbeat:=PULSE_SEC*3;
+	charges := 12;
+
+	:start:
+	wait(SFB_CMD, ((activator #= self.outside) and (self.equip ==
+	WEAR_WIELD)));
+
+	pc := activator;
+
+	if(command("recharge")and(pc.type==UNIT_ST_PC))
+	{
+	block;
+	goto charge;
+	}
+	if(command("destroy") and (pc.position != POSITION_FIGHTING))
+	{
+	block;
+	act("Your $2N bursts into blue flames!"
+	, A_SOMEONE, pc, self, null, TO_CHAR);
+	act("$1n's $2N bursts into blue flames!"
+	, A_SOMEONE, pc, self, null, TO_REST);
+	goto start;
+	}
+	if(command("destroy") and (charges < 1) and (pc.position ==
+	POSITION_FIGHTING))
+	{
+	block;
+	act("Your faesword whispers to you 'I am out of energy, master!'"
+	, A_ALWAYS, pc, null, null,TO_CHAR);
+	goto start;
+	}
+
+	if(command("destroy") and (charges > 0) and (pc.position ==
+	POSITION_FIGHTING))
+	{
+	block;
+	num := rnd(1,100);
+	bra_mod      := self.outside.abilities[ABIL_STR];
+	con_mod      := self.outside.abilities[ABIL_DEX];
+	sword_skill  := self.outside.weapons[WPN_GREAT_SWORD];
+	modifier     := (num+bra_mod+con_mod+sword_skill)/4;
+	enemy  	     := self.outside.fighting;
+
+	if(modifier > 90)
+{
+	charges := charges - 2;
+	modifier := cast_spell(SPL_FROSTBALL_1, self.outside, self,enemy,
+	"faeaffect3@darkelf");
+	modifier := cast_spell(SPL_CURE_WOUNDS_1,self.outside,self,self.outside,"healaffect@darkelf");
+	pause;
+	goto start;
+}
+
+	charges := charges -1;
+	modifier := cast_spell(SPL_FROSTBALL_1, self.outside, self, enemy,
+	"faeaffect2@darkelf");
+	pause;
+	goto start;
+}
+	else
+	{
+	pause;
+	goto start;
+	}
+
+	:charge:
+	if (pc.type!=UNIT_ST_PC) goto start;
+	act("You are surrounded by a blue aura as your sword recharges!",
+	A_SOMEONE, pc, self, null, TO_CHAR);
+	act("$1n is surround by a blue aura emanating from $1s sword!&n"+
+	"$1e pales and sinks to $1s knees..."
+	,A_SOMEONE, pc, self, null, TO_REST);
+	act("The magic of your $2N drains you of life, you sink to your knees!",
+	A_SOMEONE, pc, self, null, TO_CHAR);
+  	  pc.hp := rnd(1,5);
+	  pc.mana := 0;
+	  pc.endurance := 1;
+	  pc.position:=POSITION_SITTING;
+	  position_update(pc); 
+	if (charges<12) charges:=charges+(pc.abilities[ABIL_BRA]/25);
+	if (charges>12) charges:=12;
+	goto start;
+}
+dilend
+
+dilbegin power_list();
+var
+	pc : unitptr;
+code
+{
+	:start:
+	heartbeat := PULSE_SEC*4;
+
+	wait(SFB_CMD,(activator #= self.outside) and (self.equip ==
+	WEAR_WIELD));
+
+	pc := activator;
+	secure(pc, start);
+
+	if(command("powers"))
+	{
+	block;
+	act("Your faesword whispers to you, 'My powers are: detect "+
+	    "and vanish.'", A_ALWAYS, pc, null,null, TO_CHAR);
+
+	pause;
+	act("Your faesword whispers to you, 'They are at your disposal "+
+	    "master, just name them to activate them!'"
+	, A_ALWAYS, pc, null, null, TO_CHAR);
+	pause;
+	act("Your faesword whispers to you, 'I can also discharge magical "+
+	"energies in combat.'",
+	A_ALWAYS, pc, null, null, TO_CHAR);
+	pause;
+	act("Your faesword whispers to you, 'To use them simply use the "+
+	"command 'destroy' in combat.'",
+	A_ALWAYS, pc, null, null, TO_CHAR);
+	pause;
+	act("Your faesword whispers to you, 'Then to recharge simply use "+
+	"the command 'recharge' at any time.'",
+	A_ALWAYS, pc, null, null, TO_CHAR);
+	unsecure(pc);
+	goto start;
+	}
+	else
+	{
+	goto start;
+	}
+}
+dilend
+
+dilbegin aware powers();
+var
+	pc : unitptr;
+	i  : integer;
+code
+{
+
+	:start:
+
+	wait(SFB_CMD,(activator #= self.outside) and (self.equip ==
+	WEAR_WIELD));
+
+	pc := activator;
+	secure(pc, start);
+
+	if(command("detect"))
+	{
+		if(pc.mana < 50) goto no_mana;
+
+	else
+	{
+	block;
+	pc.mana := pc.mana-50;
+	act("Your eyes glow with a blue essense!",A_ALWAYS, pc, null, null,
+	TO_CHAR);
+	act("$1n's eyes glow with a blue essense!",A_ALWAYS,pc,null,null,
+	TO_REST);
+	cast_spell(SPL_DET_INVISIBLE, pc,self,pc);
+	unsecure(pc);
+	goto start;
+	}
+	}
+	if(command("vanish"))
+	{
+	if(pc.mana < 50) goto no_mana;
+
+	else
+	{
+	block;
+	pc.mana := pc.mana-50;
+	act("Your sword glows and enshrouds you in a cloud of magical "+
+	    "energy!", A_ALWAYS, pc,null,null,TO_CHAR);
+	act("$1n's sword glows and enshrouds $1s body in a cloud of "+
+	    "energy!", A_ALWAYS, pc,null,null,TO_REST);
+	cast_spell(SPL_INVISIBILITY,pc,self,pc);
+	unsecure(pc);
+	goto start;
+	}
+	}
+else goto start;
+	:no_mana:
+	act("You don't have enough mana to activate the power!"
+	, A_ALWAYS, pc, null,null, TO_CHAR);
+	unsecure(pc);
+	goto start;
+
+}
+dilend
+end
+
+
+				light_wand
+names {"wand of lightning", "wand"}
+title "a wand of lightning"
+descr "A small wand lies here."
+extra {}
+"This is a small, silver wand."
+weight 1
+cost 1 PLATINUM_PIECE
+WAND_DEF(50, 15, SPL_LIGHTNING_3, SPL_LIGHTNING_3)
+end
+
+				heal_potion
+names {"potion of extra healing", "potion"}
+title "a potion of extra healing"
+descr "A potion lies here."
+extra {}
+"A small inscription on the potion says, 'to use, quaff me'."
+weight 1
+cost 3 GOLD_PIECE
+POTION_DEF(50, SPL_CURE_WOUNDS_1, SPL_CURE_WOUNDS_1, SPL_CURE_WOUNDS_2)
+end
+
+				inv_potion
+names {"potion of invisibility", "potion"}
+title "a potion of invisibility"
+descr "A potion lies here."
+extra {}
+"A small inscription on the potion says, 'to use, quaff me'."
+weight 1
+cost 1 GOLD_PIECE
+POTION_DEF(50, SPL_INVISIBILITY, SPL_NONE, SPL_NONE)
+end
+
+				poison_staff
+names {"staff of poison", "staff"}
+title "a staff of poison"
+descr "A gnarled staff lies here."
+extra {}
+"This gnarled staff is covered with green runes."
+extra {"$identify"}
+"This staff will cast poison upon a target. To use, type 'use staff target'."
+weight 5
+cost 7 GOLD_PIECE
+STAFF_DEF(90, 20, SPL_POISON, SPL_DISEASE_2)
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+dilcopy abi_restrict@function (ABIL_MAG,10,0,25,"");
+dilcopy abi_restrict@function (ABIL_BRA,70,0,25,"");
+end
+
+
+				bag_holding
+names {"bag of holding", "bag", "travbag"}
+title "a bag of holding"
+descr "a bag lies here."
+extra {}
+"This bag has a seemingly limitless capacity, it is obviously magical."
+weight 1
+cost 25 GOLD_PIECE
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD, MANIPULATE_ENTER}
+CONTAINER_DEF(9000)
+end
+
+				coins
+MONEY(COPPER_PIECE, 20)
+end
+
+
+				pc_barrel
+names {"barrel", "pcbarrel"}
+title "a large barrel"
+descr "A large barrel is here."
+CONTAINER_DEF(3000)
+weight 10
+end
+
+				trav_chest
+names {"chest"}
+title "a sturdy chest"
+descr "A sturdy chest, covered with runes, sits here."
+open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_PICKPROOF}
+key trav_key
+manipulate{MANIPULATE_TAKE, MANIPULATE_ENTER}
+CONTAINER_DEF(300)
+weight 100
+cost 2 PLATINUM_PIECE
+extra {}
+"This is a very study and heavy looking chest, covered with magical 
+protective runes."
+
+dilbegin chest();
+var
+	pc : unitptr;
+	dex_mod : integer;
+	num     : integer;
+code
+{
+
+	:start:
+	wait(SFB_CMD,(command(CMD_OPEN)) and ("chest" in argument));
+
+	pc := activator;
+	secure(pc, start);
+
+	dex_mod := pc.abilities[ABIL_DEX];
+	num     := rnd(1, 100);
+
+	if((num+dex_mod)/2 > 80)
+{
+	act("A cloud of gas expels from the chest as you open it, but you "+
+	"manage to evade it.", A_ALWAYS, pc, self, null, TO_CHAR);
+	act("A cloud of gas expels from the chest, narrowly missing $1n!"
+	, A_ALWAYS, pc, self, null, TO_REST);
+
+	goto start;
+}
+	else
+{
+	act("A cloud of gas expels from the chest as you open it, striking "+
+	"you directly in the face!", A_ALWAYS, pc, null, null, TO_CHAR);
+	act("A cloud of gas expels from the chest, striking $1n "+
+	"in the face!", A_ALWAYS, pc, null, null, TO_REST);
+
+	pc.endurance := 0;
+	pc.hp  	     := 1;
+	position_update(pc);
+
+	goto start;
+}
+}
+dilend
+end
+
+				silkvest
+names {"spider silk vestments","vestments","robe"}
+title "spider silk vestments"
+descr "Vestments made of beautiful and delicate silk lie in a heap here."
+extra {}
+"This beautiful robe is woven of delicate spider silk and feels very 
+light but also extremely strong. It's black, with a silver pattern 
+resembling a spider's web covering it."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+ARMOUR_HRD_LEATHER(0,0)
+weight 1
+cost 4 GOLD_PIECE                        
+rent 55 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_DIV,15,0,0,"");
+end
+
+				drchain
+names{"darkelf jerkin", "jerkin"}
+title "darkelf jerkin"
+descr "A black jerkin lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_HRD_LEATHER(0, 0)
+weight 10
+cost 3 GOLD_PIECE
+rent 37 IRON_PIECE
+dilcopy level_restrict@function (11,0,0,"");
+dilcopy abi_restrict@function (ABIL_STR,10,0,0,"");
+end
+
+
+
+				pwiafi
+names {"pwiafi", "drow cloak", "cloak"}
+title "pwiafi"
+descr "A dark cloak lies in a heap here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+weight 1
+cost 5 GOLD_PIECE
+rent 75 IRON_PIECE
+extra{"$identify"}
+"This cloak will increase your dexterity and also grant you the ability to
+hide."
+extra {}
+"This cloak is black, but seems to shift colour with the surroundings, making
+its wearer nearly invisible."
+extra {"$wear_s"}
+"You wrap $2N about your body and shimmer out of sight as you don your $2N!"
+extra {"$wear_o"}
+"$1n dons a $2N and disappears!"
+extra {"$rem_s"}
+"You appear from the shadows as you remove your $2N."
+extra {"$rem_o"}
+"$1n appears from nowhere, removing a $2N."
+CHAR_FLAG_TRANSFER(CHAR_HIDE)
+type ITEM_WORN
+MATERIAL_CLOTH("This is enchanted cloth.")
+dilcopy abi_restrict@function (ABIL_DEX,12,0,0,"");
+end
+
+				ring1
+names {"Midgaard ring", "ring"}
+title "a ring of teleport to Midgaard"
+descr "A magic ring lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FINGER}
+weight 1
+extra{}
+"The inscriptions on this ring say 'In order to teleport to the market square
+in Midgaard, wear midgaard ring'."
+
+dilbegin mid_teleport();
+var
+  pc	: unitptr;
+code
+{
+   :start:
+   wait(SFB_DONE, command(CMD_WEAR));
+
+   if (medium == self)
+   {
+      act("You dematerialize and rematerialize in Midgaard.", A_ALWAYS,
+	  self.outside, null,null, TO_CHAR);
+      act(pc.name+" vanishes!", A_ALWAYS, self.outside,null,null,
+	  TO_REST);
+      link(self.outside, findroom("market_sq@midgaard"));
+      destroy(self);
+   }
+   goto start;
+}
+dilend
+end
+
+				ring2
+
+names{"lava ring", "ring"}
+title "a ring of teleportation to lava cave"
+descr "A magical ring lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FINGER}
+weight 1
+extra {}
+"The inscriptions on this ring say 'To teleport to Lava dragon lair, wear
+lava ring'."
+
+dilbegin lava_teleport();
+var
+ pc	: unitptr;
+code
+{
+   :start:
+   wait(SFB_DONE, command(CMD_WEAR));
+
+   if (medium == self)
+   {
+      act ("You dematerialize and rematerialize in the lava dragon's lair",
+	   A_ALWAYS, activator, null, null, TO_CHAR);
+      act(self.outside.name+" vanishes!", A_ALWAYS, activator,null,null,
+	  TO_REST);
+      link(self.outside, findroom("lair@volcano"));
+      destroy(self);
+   }
+   goto start;
+}
+dilend
+end
+
+
+
+
+
+				wdagger
+names{"wind dagger", "dagger","essence"}
+title "a Wind Dagger"
+descr "A dagger made of the essence of wind lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+weight 1
+extra {"$identify"}
+"This dagger increases your charisma."
+WEAPON_DEF(WPN_DAGGER, 0, 0)
+dilcopy abi_restrict@function (ABIL_BRA,30,0,0,"");
+end
+
+				dark_short
+names {"dark shortsword", "shortsword","sword"}
+title "a dark shortsword"
+descr "A black, glowing shortsword lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+weight 5
+cost 1 GOLD_PIECE
+rent 61 IRON_PIECE
+extra {}
+"This sleek, elegant weapon is perfectly balanced and razor sharp, perfect
+for backstabbing!"
+extra {"$identify"}
+"This powerful weapon will increase your str, while improving your
+backstab and short sword skills."
+WEAPON_DEF(WPN_SHORT_SWORD, 0, 0)
+SKILL_TRANSFER(SKI_BACKSTAB, +3)
+dilcopy abi_restrict@function (ABIL_DEX,15,0,0,"");
+end
+
+				scimitar
+names {"glowing scimitar","scimitar","sword"}
+title "a glowing scimitar"
+descr "A glowing scimitar lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+weight 10
+cost 1 SILVER_PIECE
+rent 62 IRON_PIECE
+extra {}
+"The scimitar seems well made, and glows with a slight radiance. Inscripted
+up the side are pictures of spiders."
+WEAPON_DEF(WPN_SCIMITAR, 0, 0)
+dilcopy abi_restrict@function (ABIL_STR,8,0,0,"");
+end
+
+
+				staff
+names {"glowing staff","staff"}
+title "a glowing staff"
+descr "A glowing staff lies on the ground here."
+weight 5
+cost 1 SILVER_PIECE
+rent 37 IRON_PIECE
+extra {}
+"The staff is made of a black wood, and glows with a soft green enchantment.
+It seems very hard for wood, and well suited as a weapon."
+WEAPON_DEF(WPN_QUARTERSTAFF,0,0)
+dilcopy abi_restrict@function (ABIL_STR,5,0,0,"");
+end
+
+				axe
+names{"glowing axe","battle axe","axe"}
+title "a glowing battle axe"
+descr "A large, glowing axe lies here."
+weight 15
+cost 5 SILVER_PIECE
+rent 37 IRON_PIECE
+extra {}
+"This axe is made of a glowing silvery metal. The wooden handle is made of
+black wood, and there are spider inscriptions up and down its length."
+WEAPON_DEF(WPN_BATTLE_AXE, 0, 0)
+dilcopy abi_restrict@function (ABIL_STR,15,0,0,"");
+end
+
+
+				shield
+names {"orc shield","shield"}
+title "an orc shield"
+descr "an orc shield is lying here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_SHIELD}
+SHIELD_DEF(SHIELD_LARGE, -5, 0)
+weight 15
+cost 1 IRON_PIECE
+extra {}
+"It is made from hard wood that has been reinforced with heavy iron bands. It
+is covered with dried blood."
+end
+
+
+				short
+names {"short sword", "sword", "shortsword"}
+title "a short sword"
+descr "A short sword lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_SHORT_SWORD, 0, 0)
+weight 15
+cost 5 IRON_PIECE
+extra {}
+"It is a normal short sword of average quality, covered in dried blood."
+end
+
+				breast
+names {"breastplate","plate","mail","splint mail"}
+title "a splint mail breastplate"
+descr "a splint mail breast plate lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_HRD_LEATHER(0, 0)
+weight 14
+cost 2 SILVER_PIECE
+extra {}
+"The splint mail is of good quality, and has an inscription of an eagle on its
+chest."
+end
+
+
+				leggings
+names {"mail leggings","leggings"}
+title "splint mail leggings"
+descr "Some splint mail leggings lie here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+ARMOUR_HRD_LEATHER(0, 0)
+weight 10
+cost 3 SILVER_PIECE
+extra {}
+"The splint mail is of good quality, and has inscriptions of eagles on the
+side."
+end
+
+				helmet
+names {"splinted helmet","helmet"}
+title "a splinted helmet"
+descr "A splinted helmet lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+ARMOUR_HRD_LEATHER(0, 0)
+weight 8
+cost 1 SILVER_PIECE
+extra {}
+"The helmet is of good quality, and has an eagle inscribed on the forehead."
+end
+
+				sleeves
+names {"splint mail sleeves","sleeves"}
+title "splint mail sleeves"
+descr "A pair of splint mail sleeves lie here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ARMS}
+ARMOUR_HRD_LEATHER(0, 0)
+weight 10
+cost 2 SILVER_PIECE
+extra {}
+"The splint mail sleeves are of good quality and inscribed with eagles."
+end
+
+
+
+				longsword
+names {"longsword","sword"}
+title "a rusty longsword"
+descr "An old longsword lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_LONG_SWORD, -15, 0)
+weight 10
+cost 1 IRON_PIECE
+extra {}
+"It is an old, rusty longsword."
+end
+
+				rust_chain
+names {"rusty chainmail","chainmail","mail","chain"}
+title "rusty chainmail"
+descr "A rusty chain mail lies here.."
+extra {}
+"This chain mail is what can be only described as a collection of holes 
+loosely bound together by a rusty wire." 
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_CHAIN(-15, -5)
+weight 25
+cost 4 IRON_PIECE
+end
+
+				drlong
+names {"dark longsword", "longsword", "sword"}
+title "a dark longsword"
+descr "A dark longsword lies glowing here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_LONG_SWORD, 0, 0)
+weight 6
+cost 5 GOLD_PIECE
+rent 37 IRON_PIECE
+extra {}
+"This beautiful and elegant weapon looks quite deadly. It is perfectly balanced
+and seems razor sharp."
+dilcopy abi_restrict@function (ABIL_STR,10,0,0,"");
+end
+
+				drhalberd
+names {"dark halberd","halberd","polearm"}
+title "a dark halberd"
+descr "A halberd of dark metal lies here, glowing softly."
+weight 12
+cost 3 GOLD_PIECE
+rent 37 IRON_PIECE
+WEAPON_DEF(WPN_HALBERD, 0, 0)
+dilcopy abi_restrict@function(ABIL_STR,20,0,0,"");
+end
+
+				drmace
+names {"dark mace","mace"}
+title "a dark mace"
+descr "A dark, slender mace lies glowing here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_MACE, 0, 0)
+weight 8
+cost 5 GOLD_PIECE
+rent 37 IRON_PIECE
+extra {}
+"This beautiful weapon looks quite deadly. It is perfectly balanced and 
+the slender head is carved to resemble a web-entangled skull."
+dilcopy abi_restrict@function (ABIL_STR,10,0,0,"");
+end
+
+
+				coin
+names {"golden coin","coin"}
+title "a golden coin"
+descr "A golden coin is lying here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+cost 1 GOLD_PIECE
+type ITEM_TREASURE
+extra {}
+"The coin has an inscription of a spider on it, and seems slightly warm to the
+touch."
+dilcopy flip_coin@treasure();
+end
+
+				dspear
+names {"black spear", "spear"}
+title "a black flame spear"
+descr "A black spear with a flaming tip lies here."
+weight 8
+cost 23 GOLD_PIECE
+rent 41 IRON_PIECE
+extra {"$identify"}
+"This spear is mighty indeed. &n"
+extra {"$improved identify"}
+"It is said that evil people can make the tip flame by commanding the 
+spear with the word 'suax'.&n"
+extra {}
+"The spear is long and deadly. The tip seems to flame up as if on fire, 
+but the flames are black and shed shadows rather than light!"
+extra {"flamming tip","flames","tip","shadows"}
+"The flames caressing the tip are black. This spear doesn't shed light, 
+it sheds shadows!&n"
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_SPEAR, 0, 0)
+dilcopy abi_restrict@function(ABIL_STR,20,0,0,"");
+dilcopy abi_restrict@function(ABIL_BRA,10,0,25,"");
+spell 25
+
+dilbegin recall spearcharge();
+code
+{
+	:start:
+heartbeat:=PULSE_SEC*SECS_PER_MUD_DAY/6;
+wait (SFB_TICK,(self.equip==WEAR_WIELD));
+act ("Black flames lick along the shaft of your $2N.",
+A_SOMEONE,self.outside,self,null,TO_CHAR);
+act ("Black flames lick along the shaft of $1n's $2N!",
+A_HIDEINV,self.outside,self,null,TO_REST);
+sendto("reflame",self);
+goto start;
+}
+dilend
+
+dilbegin recall aware flamelick();
+var
+        i 	: integer;
+        enemy 	: unitptr;
+	n	: integer;
+        charge	: integer;
+	pwr	: integer;
+code
+{
+pwr:=7;
+
+	:init:
+heartbeat := PULSE_SEC*3;
+charge:=interrupt (SFB_MSG,((self==activator) and
+(argument=="reflame")), charge);
+
+	:start:
+wait (SFB_CMD,(command("suax"))and(self.equip==WEAR_WIELD)
+and(self.outside.position>POSITION_SLEEPING));
+block;
+act("You call upon the power of your $2N...",
+A_SOMEONE,self.outside,self,null,TO_CHAR);
+act("$1n calls upon the power of $1s $2N...",
+A_HIDEINV,self.outside,self,null,TO_REST);
+if (self.outside.alignment > -350) goto ifnot;
+if (pwr<=0) goto fail;
+enemy:=self.outside.fighting;
+if (enemy==null) goto no_person;
+secure (enemy,start);
+pwr:=pwr-1;
+
+if (rnd(1,40) < self.outside.abilities[ABIL_STR])
+{
+act("A black flame from the tip of your $2N strikes $3n!",
+A_ALWAYS,self.outside,self,enemy,TO_CHAR);
+act("A black flame sears from $1n's $2N, striking $3n!",
+A_ALWAYS,self.outside,self,enemy,TO_NOTVICT);
+act("A black flame sears from $1n's $2N, striking you in the chest!",
+A_ALWAYS,self.outside,self,enemy,TO_VICT);
+n:=cast_spell(SPL_FIREBALL_1,self.outside,self,enemy,"");
+pause;
+goto start;
+}
+
+	:ifnot:
+{
+act ("The tip of your $2N flames briefly but nothing else happens.",
+A_SOMEONE,self.outside,self,self,TO_CHAR);
+act ("The tip of $1n's $2N flames briefly but nothing else happens.",
+A_HIDEINV,self.outside,self,self,TO_REST);
+}
+goto start;
+
+	:fail:
+act ("The tip of your $2N flickers briefly and disappointingly...",
+A_SOMEONE,self.outside,self,self,TO_CHAR);
+act ("The tip of $1n's $2N flickers briefly and disappointingly...",
+A_HIDEINV,self.outside,self,self,TO_REST);
+goto start;
+
+	:charge:
+clear(charge);
+if (pwr<7)
+pwr:=pwr+2;
+goto init;
+
+	:no_person:
+act ("Dark flames dance at the tip of your $2N!"
+,A_SOMEONE,self.outside,self,null,TO_CHAR);
+act ("Dark flames dance at the tip of $1n's $2N!"
+,A_SOMEONE,self.outside,self,null,TO_REST);
+goto start;
+}
+dilend
+
+dilbegin flamedeath();
+code
+{
+heartbeat := PULSE_SEC*3;
+	:start:
+wait(SFB_COM, command(CMD_AUTO_COMBAT) and
+    (self.equip == WEAR_WIELD) and
+    (self.outside.fighting.hp < 10));
+act("Black flames engulf $3n in a shroud of darkness...",
+A_ALWAYS, self.outside, self, self.outside.fighting, TO_CHAR);
+act("Black flames from $1n's spear engulf you in a shroud of darkness...",
+A_SOMEONE, self.outside, self, self.outside.fighting, TO_VICT);
+act("Black flames from $1n's spear engulf $3n in a shroud of darkness...",
+A_SOMEONE, self.outside, self, self.outside.fighting, TO_NOTVICT);
+self.outside.fighting.hp := -8;
+position_update(self.outside.fighting);
+pause;
+goto start;
+}
+dilend
+
+end
+
+
+				black_key
+
+names {"key", "black key"}
+title "Black key"
+descr "A black key is lying here."
+manipulate {MANIPULATE_TAKE}
+type ITEM_KEY
+weight 1
+extra {}
+"The key is small and black, and has an inscription of a spider upon it."
+end
+
+
+
+				grey_key
+
+names {"key", "grey key"}
+title "Grey key"
+descr "A grey key is lying here."
+manipulate {MANIPULATE_TAKE}
+type ITEM_KEY
+weight 1
+extra {}
+"The key is small and grey, with an inscription of a spider upon it."
+end
+
+				trav_key
+
+names {"key", "travellers key"}
+title "a Travellers Key"
+descr "A travellers key is lying here."
+manipulate {MANIPULATE_TAKE}
+type ITEM_KEY
+weight 1
+extra {}
+"The key is small and light made from a wooden material."
+end
+
+				drbands
+names {"dark armbands","armbands","bands","pair"}
+title "dark armbands"
+descr "A pair of dark armbands lie here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ARMS}
+ARMOUR_HRD_LEATHER(0, 0)
+weight 14
+cost 2 GOLD_PIECE
+rent 12 IRON_PIECE
+extra {"inscriptions"}
+"The inscriptions glow slightly.&n"
+dilcopy abi_restrict@function(ABIL_STR,20,0,0,"");
+spell 15
+CURSED_OBJECT
+end
+
+				drbracers
+names {"darkelf bracers", "bracers", "pair"}
+title "darkelf bracers"
+descr "A pair of black bracers lie here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ARMS}
+ARMOUR_HRD_LEATHER(0, 0)
+weight 10
+cost 4 GOLD_PIECE
+rent 12 IRON_PIECE
+extra {"$identify"}
+"These bracers provide bonuses to dex and mag. Also, by saying the words
+'summon spider', these bracers will summon a low lvl arachnid to assist
+you in combat. The bracers will not work outside combat.&n"
+extra {}
+"These bracers are black with ornate, spiderlike inscriptions detailing them."
+dilcopy abi_restrict@function(ABIL_BRA,15,0,25,"");
+dilcopy abi_restrict@function(ABIL_MAG,10,0,25,"");
+
+dilbegin bracer_summon();
+var
+	spider : unitptr;
+code
+{
+
+	:start:
+
+	wait(SFB_CMD,((self.outside) and (self.equip == WEAR_ARMS)));
+
+	if(command(CMD_SAY) and ("summon spider" in argument))
+{
+	block;
+	sendtext("You command your bracers to summon a spider.&n",self.outside);
+
+	if(self.outside.mana < 10) 
+	{
+	sendtext("You don't have enough mana to power the bracers!&n"
+	,self.outside);	
+	goto start;
+	}
+
+	if(self.outside.position != POSITION_FIGHTING)
+	{
+	sendtext("The bracers do not work outside combat!&n",self.outside);
+	goto start;
+	}
+
+	act("Your bracers glow, and in a flash of light a large spider "+
+	"appears!", A_ALWAYS, self.outside, null, null, TO_CHAR);
+	act("$1n's bracers glow, and in a flash of light "+
+	"a large spider appears!", A_ALWAYS, self.outside, null, null, TO_REST);
+
+	spider := load("bracer_spider@darkelf");
+	link(spider, self.outside.outside);
+	exec("kill "+self.outside.fighting.name, spider);
+	self.outside.mana := self.outside.mana - 10;
+}
+goto start;
+}
+dilend
+
+end
+
+
+
+				gold_key
+
+names {"gold key", "key"}
+title "gold key"
+descr "A small gold key lies here."
+manipulate {MANIPULATE_TAKE}
+type ITEM_KEY
+weight 1
+extra {}
+"The key is small and gold, decorated with a spider inscription."
+end
+
+
+				loincloth
+names {"hide","loincloth","skin"}
+title "a piece of hide"
+descr "A piece of hide lies here."
+extra {}
+"A piece of crude hide, can be wrapped around your waist to protect your 
+groin, but it's smelly and dirty."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_WAIST}
+ARMOUR_LEATHER(-2,0)
+weight 5
+cost 8 IRON_PIECE
+end
+
+				club
+names {"club"}
+title "a club"
+descr "A club lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_CLUB, 0, 0)
+weight 18
+extra {}
+"This looks like the type of club an ogre would use."
+end
+
+				club2
+names {"large club","club"}
+title "a large club"
+descr "A large club lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_BATTLE_CLUB, 0, 0)
+weight 28
+extra {}
+"This looks like the type of club an ogre would use and it is large even 
+for them." 
+end
+
+				dflail
+names {"snake-headed whip", "whip"}
+title "a snake-headed whip"
+descr "A snake-headed whip lies on the ground, hissing."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_WHIP, 0, 0)
+weight 2
+cost 7 GOLD_PIECE
+rent 60 IRON_PIECE
+extra {}
+"This black whip ends in four snake heads! They hiss and bite at 
+you as you approach."
+extra {"$identify"}
+" This weapon will also come alive at the command 
+'&c+wlash&cw' and attack your enemy.&n
+This whip is of craftmanship 6 and magic bonus 4.&n"
+dilcopy abi_restrict@function(ABIL_STR,10,0,0,"");
+dilcopy abi_restrict@function(ABIL_DEX,20,0,25,"");
+spell 20
+
+dilbegin recall snakehiss();
+code
+{
+	:start:
+heartbeat:=PULSE_SEC*SECS_PER_MUD_DAY/6;
+wait(SFB_TICK,(self.equip==WEAR_WIELD)or(self.equip==WEAR_HOLD));
+act("The snake heads on your whip hiss angrily at you... They crave blood!",
+A_ALWAYS,self.outside,self,null,TO_CHAR);
+act("The snake heads on $1n's whip hiss angrily... They crave blood!",
+A_ALWAYS,self.outside,self,null,TO_REST);
+sendto("allright",self);
+goto start;
+}
+dilend
+
+dilbegin recall aware snakebite();
+var
+        i : integer;
+        enemy :unitptr;
+	n:integer;
+        charge:integer;
+	pwr:integer;
+code
+{
+pwr:=12;
+	:init:
+heartbeat := PULSE_SEC*3;
+charge:=interrupt (SFB_MSG,((self==activator) and
+	(argument=="allright")), charge);
+	:start:
+wait(SFB_CMD,(command("lash"))and(self.equip==WEAR_WIELD));
+block;
+enemy:=self.outside.fighting;
+if (enemy==null) goto no_person;
+secure (enemy,start);
+if (pwr<=0) goto fail;
+pwr:=pwr-1;
+act("You lash at $3n with your whip, the snake heads come alive and "+
+"bite at $3m!",A_SOMEONE,self.outside,self,enemy,TO_CHAR);
+act("$1n lashes $3n with $1s whip, the snake heads come alive and "+
+"bite at $3m!",A_SOMEONE,self.outside,self,enemy,TO_NOTVICT);
+act("$1n lashes at you with $1s whip, the snake heads come alive and "+
+"bite at you!",A_SOMEONE,self.outside,self,enemy,TO_VICT);
+n:=cast_spell(SPL_POISON,self,self,enemy,"");
+pause;
+goto start;
+
+	:fail:
+act("You try to lash $3n with your $2N but the snake heads respond "+
+"sluggishly...", A_SOMEONE,self.outside,self,enemy,TO_CHAR);
+act("$1n attempts a fancy lash with $1s $2N but the snake heads respond "+
+"sluggishly...",A_SOMEONE,self.outside,self,enemy,TO_REST);
+goto start;
+
+	:charge:
+clear(charge);
+if (pwr<12)
+pwr:=pwr+6;
+goto init;
+
+	:no_person:
+act("You crack your $2N over your head!"
+,A_ALWAYS,self.outside,self,null,TO_CHAR);
+act("$1n cracks $1s $2N over $1s head!"
+,A_SOMEONE,self.outside,self,null,TO_REST);
+goto start;
+}
+dilend
+end
+
+				broke_wizring
+names {"ring of wizardry","ring"}
+title "ring of wizardry"
+descr "A ring, missing a center jewel, lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FINGER}
+weight 1
+cost 1 IRON_PIECE
+extra {}
+"This ring looks as if it may have been very powerful, but seems to have been
+damaged in a fight. Perhaps if you found a magical gem too fit the ring's
+centerpiece it would work again."
+extra {"$identify"}
+"In order to return this ring to its true power, an newly mined emerald
+must be put into it. The ring will recharge itself with the emerald simply
+by having the both in your inventory and then typeing 'use emerald'."
+
+
+dilbegin ring_transform();
+var
+	emerald   : unitptr;
+	good_ring : unitptr;
+code
+{
+	:start:
+	wait(SFB_CMD,((self.outside) and (command(CMD_USE))));
+
+	if("emerald" in argument)
+	block;
+		emerald := findunit(self.outside, "emerald", FIND_UNIT_INVEN,
+		null);
+		   if(emerald == null)
+	 	   {
+			act("You do not have the stone in your inventory!",
+			A_ALWAYS, self.outside, null, null, TO_CHAR);
+			goto start;
+		   }
+		   else
+	 	   {
+			act("The emerald fuses into the ring, making it whole!",
+			A_ALWAYS, self.outside, null, null, TO_CHAR);
+
+			destroy(emerald);
+			good_ring := load("wizring@darkelf");
+                        good_ring.height := self.outside.height;
+			link(good_ring, self.outside);
+			destroy(self);
+			goto start;
+		   }
+}
+dilend
+end
+
+
+
+				wizring
+names {"ring of Wizardry","ring"}
+title "ring of Wizardry"
+descr "A powerful looking ring lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FINGER}
+weight 1
+cost 1 PLATINUM_PIECE
+extra {}
+"This ring glows with a strong enchantment."
+extra {"$identify"}
+"This ring provides its wearer with bonuses to cha and bra."
+extra {"$improved identify"}
+"During combat, the command 'use ring' will wisk the user away to a safe
+haven, but be warned, you will have to wait for mana regeneration to
+return to the mortal realms."
+rent 130 IRON_PIECE
+dilcopy abi_restrict@function (ABIL_BRA,10,0,0,"");
+dilcopy abi_restrict@function (ABIL_MAG,10,0,25,"");
+dilbegin wiz_ring();
+code
+{
+	:start:
+ 	wait(SFB_CMD,((self.outside) and ((self.equip == WEAR_FINGER_R) |
+	(self.equip == WEAR_FINGER_L))));
+
+	if((activator.guild != GUILD_UDG_MAGE) or (activator.guild !=
+	GUILD_SORCERER) or (activator.guild != GUILD_UDG_CLERIC) or
+	(activator.guild != GUILD_NECROMANCER)and
+	(activator.level<200))
+	{
+	act("You lack the ability to control the ring, and it backfires!",
+	A_ALWAYS, self.outside,null,null,TO_CHAR);
+	act("A ring on $1N's finger explodes in a flash of light!", A_ALWAYS,
+	self.outside,null,null,TO_REST);
+
+	self.outside.hp := self.outside.hp/2;
+	destroy(self);
+	}
+	if((self.outside.level > 30)and(self.outside.level < 200))
+	{
+	act("Your ring try's to support you, but your own power level "+
+	    "overloads it!", A_ALWAYS, self.outside,null,null,TO_CHAR);
+	act("A ring on $1N's finger explodes in a flash of light!", A_ALWAYS,
+	self.outside,null,null,TO_REST);
+
+	self.outside.hp := self.outside.hp/2;
+	destroy(self);
+	}
+
+	if(command(CMD_USE) and ("ring" in argument))
+{
+	block;
+		if(self.outside.mana < 10)
+			{
+			goto no_mana;
+			}
+		if(self.outside.position != POSITION_FIGHTING)
+			{
+			goto not_fighting;
+			}
+	self.outside.mana := 0;
+	act("You turn your ring and feel yourself transported!", A_ALWAYS,
+	self.outside, null, null, TO_CHAR);
+	act(""+self.outside.name+" turns a ring on his hand, and vanishes!",
+	A_ALWAYS, self.outside, null, null, TO_REST);
+
+	link(self.outside, findroom("ring_room@darkelf"));
+	goto mana_recharge;
+}
+else
+{
+goto start;
+}
+	:mana_recharge:
+
+	wait(SFB_CMD,((self.outside) and (command(CMD_USE)) and ("ring"
+	in argument)));
+	block;
+
+	if(self.outside.mana < 30)
+{
+	act("Your ring refuses to work until it has 30 mana to power it!",
+	A_ALWAYS, self.outside, null, null, TO_CHAR);
+	goto mana_recharge;
+}
+	if(self.outside.mana >= 30)
+{
+	act("You turn your ring and vanish!", A_ALWAYS, self.outside, null,
+	null, TO_CHAR);
+	act(""+self.outside.name+" turns a ring on his hand and vanishes!",
+	A_ALWAYS, self.outside, null, null, TO_REST);
+	link(self.outside, findroom("market_sq@midgaard"));
+	self.outside.mana := self.outside.mana - 30;
+	goto start;
+}
+	:no_mana:
+	act("You lack the mana to use your rings powers!", A_ALWAYS,
+	self.outside, null, null, TO_CHAR);
+	goto start;
+
+	:not_fighting:
+	act("The ring refuses to work when you are not in combat.", A_ALWAYS,
+	self.outside, null, null, TO_CHAR);
+	goto start;
+
+	:not_guild:
+	act("You cannot use this ring, it is for magic users!", A_ALWAYS,
+	self.outside, null, null, TO_CHAR);
+	link(self, self.outside.outside);
+	goto start;
+
+}
+dilend
+
+end
+
+				detectring
+names {"ring of Detection","ring"}
+title "ring of Detection"
+descr "A black ring lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FINGER}
+weight 1
+cost 5 GOLD_PIECE
+rent 125 IRON_PIECE
+extra {}
+"This black ring glows slightly."
+extra {"$identify"}
+"This ring provides its wearer with many of the detection spells.&n"
+extra {"$improved identify"}
+"&l
+ - Detect Invisible
+ - Detect Alignment
+ - Detect Undead
+ - Detect Curse
+ - Detect Poison
+&f&n"
+CHAR_FLAG_TRANSFER(CHAR_DETECT_INVISIBLE)
+CHAR_FLAG_TRANSFER(CHAR_DETECT_ALIGN)
+CHAR_FLAG_TRANSFER(CHAR_DETECT_UNDEAD)
+CHAR_FLAG_TRANSFER(CHAR_DETECT_CURSE)
+CHAR_FLAG_TRANSFER(CHAR_DETECT_POISON)
+
+end
+
+
+				robe
+names {"robe of arch-magi","glowing robe","robe"}
+title "the robe of arch-magi"
+descr "A glowing robe lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_CLOTHES(0,0)
+weight 7
+cost 1 GOLD_PIECE
+rent 120 IRON_PIECE
+extra {}
+"This robe seems powerfully enchanted."
+dilcopy abi_restrict@function (ABIL_BRA,20,0,0,"");
+end
+
+
+				pendant
+names {"pendant", "bloodstone pendant"}
+title "bloodstone pendant"
+descr "A blood red pendant on a gold chain lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_NECK}
+weight 1
+cost 10 GOLD_PIECE
+rent 120 IRON_PIECE
+extra {}
+"The blood-red stone of this pendant seems to pulse with its own life. Upon
+examining it, you notice a small spider encased within."
+extra {"$identify"}
+"This powerful pendant represents the true divine evil and power of the
+darkelves. It is fashioned from the lifeblood of a creature of good, and
+embodied with the divine power of evil corruption. You feel that by wearing
+this object you will become a target of law and order."
+CHAR_FLAG_TRANSFER(CHAR_LEGAL_TARGET)
+dilcopy ali_restrict@function (-350,-1000,0,50,"");
+dilcopy abi_restrict@function (ABIL_BRA,20,0,0,"");
+end
+
+
+				drboots
+names {"boots", "darkelf boots"}
+title "darkelf boots"
+descr "A pair of black leather boots lie here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+ARMOUR_LEATHER(0, 0)
+weight 5
+cost 5 GOLD_PIECE
+rent 62 IRON_PIECE
+extra {}
+"These soft, black leather boots are very comfortable looking."
+CHAR_FLAG_TRANSFER(CHAR_SNEAK)
+end
+
+
+
+%reset
+
+load golem into underdark_entr max 1
+{
+     equip black_sword position WEAR_WIELD
+     load black_key local 1
+        }
+
+load giant_spider into lair max 8 local 4
+load giant_spider into lair max 8 local 4
+load giant_spider into lair max 8 local 4
+load giant_spider into lair max 8 local 4
+load giant_spider into lair2 max 8 local 2
+load giant_spider into temple1 max 8 local 2
+load gar_spider into lair3 max 1
+load giant_spider into lair2 max 8 local 2
+load giant_spider into temple1 max 8 local 2
+load demon into hell2 max 1
+{
+     equip dspear position WEAR_WIELD
+}
+
+load drwander into city5 max 2
+{
+	equip drchain position WEAR_BODY
+	equip drmace position WEAR_WIELD
+     	equip drboots position WEAR_FEET
+}
+
+load drwander into city2 max 2
+{
+	equip drchain position WEAR_BODY
+	equip drmace position WEAR_WIELD
+     	equip drboots position WEAR_FEET
+}
+
+load drguard into post1 max 10 local 2
+{
+     equip drlong position WEAR_WIELD
+     equip pwiafi position WEAR_ABOUT
+     load grey_key local 1
+}
+load coin into ruin1 max 10 local 1
+
+load drguard into post2 local 2
+{
+     equip drlong position WEAR_WIELD
+     equip drboots position WEAR_FEET
+     load grey_key local 1
+        }
+
+load drguard into post1 max 10 local 2
+{
+     equip drlong position WEAR_WIELD
+     equip drchain position WEAR_BODY
+        }
+load drguard into post2 max 10 local 2
+{
+     equip drlong position WEAR_WIELD
+     equip drchain position WEAR_BODY
+        }
+
+load drguard into city3 max 10 local 1
+{
+     equip drlong position WEAR_WIELD
+     equip drboots position WEAR_FEET
+        }
+load fire_el into hell1 max 4
+load fire_el into hell1 max 4
+
+load drguard into citygate max 10 local 1
+{
+     equip drlong position WEAR_WIELD
+     equip drchain position WEAR_BODY
+        }
+
+load skel_war into undead1 max 2
+{
+	equip longsword position WEAR_WIELD
+	equip rust_chain position WEAR_BODY
+       }
+load skel_war into undead1 max 2
+{
+        equip longsword position WEAR_WIELD
+	equip rust_chain position WEAR_BODY
+      }
+load ghoul into undead2 max 2
+load ghoul into undead2 max 2
+load ghost into undead3 max 1
+load lich into undead4 max 1
+{
+       	equip detectring position WEAR_FINGER_R
+	equip lich_whip position WEAR_WIELD
+	equip lich_circlet position WEAR_HEAD
+	equip lich_robe position WEAR_ABOUT
+     }
+load ogre into rise zonemax 6
+{
+	equip loincloth position WEAR_WAIST
+	equip club position WEAR_WIELD
+ 	}
+load ogre into cave zonemax 6
+{
+	equip loincloth position WEAR_WAIST
+	equip club2 position WEAR_WIELD
+   	}
+load ogre into ruin1 zonemax 6
+{
+	equip loincloth position WEAR_WAIST
+	equip club position WEAR_WIELD
+	}
+load ogre into village2 zonemax 6
+{
+	equip loincloth position WEAR_WAIST
+	equip club2 position WEAR_WIELD
+	}
+load ogre into village4 zonemax 6
+{
+	equip loincloth position WEAR_WAIST
+	equip club position WEAR_WIELD
+	}
+load ogre into path_inter zonemax 6
+{
+	equip loincloth position WEAR_WAIST
+	equip club position WEAR_WIELD
+	}
+
+load shadowd into dragon2 max 1
+load dark_short into dragon3 local 1
+load helmet4@elfdom into dragon3 local 1
+load battle_axe@dwarves into dragon3 local 1
+
+load mage into tower2 max 1
+{
+	equip dark_short WEAR_WIELD
+	equip robe position WEAR_BODY
+        equip broke_wizring position WEAR_FINGER_R
+	equip drbracers position WEAR_ARMS
+	}
+load master into guild1 max 1
+{
+	equip drboots position WEAR_FEET
+	equip drbracers position WEAR_ARMS
+	equip drlong position WEAR_WIELD
+	equip dark_short position WEAR_HOLD
+	equip drchain position WEAR_BODY
+	}
+load drguard into guild1 local 2
+{
+	equip drlong position WEAR_WIELD
+	equip drchain position WEAR_BODY
+	}
+
+load priest into temple1 max 1
+{
+	equip silkvest position WEAR_ABOUT
+	equip drbracers position WEAR_ARMS
+	equip dflail position WEAR_WIELD
+	equip pendant position WEAR_NECK_1
+}
+load drider into temple1 max 1
+{
+	equip drhalberd position WEAR_WIELD
+	equip drbands position WEAR_ARMS
+}
+load orc_champion into champ_rm max 1
+{
+	equip breast position WEAR_BODY
+	equip leggings position WEAR_LEGS
+	equip helmet position WEAR_HEAD
+	equip sleeves position WEAR_ARMS
+	equip axe position WEAR_WIELD
+	}
+load orc_shaman into orc_shrine max 1
+{
+	equip staff position WEAR_WIELD
+	}
+load orc_chief into chief_rm max 1
+{
+	equip scimitar position WEAR_WIELD
+	}
+load orc into orc1 max 4
+{
+	equip shield position WEAR_SHIELD
+	equip short position WEAR_WIELD
+	}
+load orc into road1 max 4
+{
+	equip shield position WEAR_SHIELD
+	equip short position WEAR_WIELD
+	}
+load orc into road3 max 4
+{
+	equip shield position WEAR_SHIELD
+	equip short position WEAR_WIELD
+	}
+load orc into hilltop max 4
+{
+	equip shield position WEAR_SHIELD
+	equip short position WEAR_WIELD
+	}
+load yogoloth into room max 1
+
+load wiz/builder_board into bedroom local 1
+load drguard2 into d3 max 4 local 1
+{
+ 	equip drlong position WEAR_WIELD
+	equip drchain position WEAR_BODY
+	}
+load drguard2 into d19 max 4 local 1
+{
+	equip drlong position WEAR_WIELD
+	equip drchain position WEAR_BODY
+	}
+load drguard2 into d14 max 4 local 1
+{
+	equip drlong position WEAR_WIELD
+	equip drchain position WEAR_BODY
+	}
+load drguard2 into d24 max 4 local 1
+{
+	equip drlong position WEAR_WIELD
+	equip drchain position WEAR_BODY
+	}
+load rothe into d6 max 3
+load rothe into d6 max 3
+load rothe into d6 max 3
+
+load wind into field_f7@asgaard local 1
+{
+	equip wdagger position WEAR_WIELD
+}
+load lhaeo into inside max 1
+load trav_chest into trav_treasure max 1
+{
+	load coins local 1
+	load heal_potion local 2
+	load inv_potion local 1
+	load light_wand local 1
+	load poison_staff local 1
+}
+load pc_barrel into trav_treasure local 1
+
+load traveler into road1 max 1
+{
+	equip fae_sword position WEAR_WIELD
+	equip drboots position WEAR_FEET
+	equip drchain position WEAR_BODY
+	load trav_key local 1
+	load bag_holding local 1
+	equip drbracers position WEAR_ARMS
+	equip detectring position WEAR_FINGER_R
+}
+load yogoloth into trav_treasure local 1
+load umber_hulk into dragon6 local 1
+
+door bank SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door bank DOWN {EX_OPEN_CLOSE, EX_CLOSED,EX_LOCKED,EX_HIDDEN}
+door village1 NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door underdark_entr WEST {EX_OPEN_CLOSE, EX_CLOSED, EX_PICKPROOF, EX_LOCKED}
+door d1 EAST {EX_OPEN_CLOSE, EX_CLOSED}
+door gate WEST {EX_OPEN_CLOSE, EX_CLOSED, EX_PICKPROOF, EX_LOCKED}
+door d17 EAST {EX_OPEN_CLOSE, EX_CLOSED}
+door d19 WEST {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door undead1 EAST {EX_OPEN_CLOSE, EX_CLOSED}
+door undead3 NORTH {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door undead4 SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door d21 EAST {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+door dragon1 WEST {EX_OPEN_CLOSE, EX_CLOSED}
+door elm_tower NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door inside SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door city5 NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door guild1 SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door guild1 NORTH {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door city6 SOUTH {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+door tower1 NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door trav_treasure NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door trav_home SOUTH {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door trav_home NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door d28 SOUTH {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_PICKPROOF}
+
+
+
+%end
+
+
+
+
+

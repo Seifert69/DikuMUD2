@@ -1,0 +1,2794 @@
+/*
+filename    neptune
+password    poseidon
+changedby   Saor
+EmailAdd     Morgan Schafer <saor@maestro.com>
+request     compile
+version     5
+END HEADER*/
+
+#include <composed.h>
+%zone neptune
+title "Lake of Merpeople"
+lifespan 20
+reset RESET_ANYHOW
+creators {"bloodrage"}
+
+notes
+"My first zone, hope people like it.  Comments or complaints email to
+ajc+@andrew.cmu.edu"
+
+help
+"Underwater zone! This zone is for levels 30+. Small groups are
+encouraged. Beware, staying underwater too long is hazardous to your
+health! Creator: Bloodrage"
+      
+#define MARKUS1_COMP "Markus Lowbie Quest Completed"
+#define MARKUS2_COMP "Markus Quest Complete"
+#define MARKUS1_ONGOING "Markus Lowbie Quest Ongoing"
+#define MARKUS2_ONGOING "Markus Quest Ongoing"
+
+//  MSET_ABILITY(str,dex,con,hit,cha,bra,mag,div)
+//  MSET_WEAPON(axeham,sword,club,polearm,natural,spec)
+//  MSET_SPELL(div,pro,det,sum,cre,mind,heat,cold,elec,poison,acid)
+
+/*
+homarid: innate magic ability, subhuman intellegence, limited civilization
+exoskeleton, crab claws hinder use of tools, extreme magic resistance
+vulnerable to divine, mind, and electricity spells
+*/
+
+#define RACE_HOMARID 7019
+#define RACE_BARRACUDA 7020
+
+#define BASE_HOMARID(MLVL,GENDER,HEIGHT,WEIGHT) \
+   race RACE_HOMARID \
+   level MLVL \
+   sex GENDER \
+   height HEIGHT \
+   weight WEIGHT \
+   alignment -350 \
+   NATURAL_DEF(WPN_CLAW,ARM_PLATE) \
+   MSET_ABILITY(20,15,20,20,10,10,5,0) \
+   MSET_WEAPON(0,0,0,0,20,0) \
+   MSET_SPELL(0,10,10,10,10,0,10,10,0,10,10)
+
+#define HOMARID_MAGE(MLVL,GENDER,ATT_SPL,DEF_SPL) \
+   BASE_HOMARID(MLVL,GENDER,150,170) \
+   dilcopy combat_mag@function(ATT_SPL,DEF_SPL,25,2);
+
+#define HOMARID_WARRIOR(MLVL,GENDER,HEIGHT,WEIGHT) \
+   BASE_HOMARID(MLVL,GENDER,HEIGHT,WEIGHT)
+
+#define BASE_MERFOLK(MLVL,GENDER,HEIGHT,WEIGHT) \
+   race RACE_MERMAID \
+   level MLVL \
+   sex GENDER \
+   height HEIGHT \
+   weight WEIGHT \
+   alignment 250 \
+   NATURAL_DEF(WPN_FIST,ARM_CHAIN) \
+   MSET_ABILITY(10,15,20,20,15,10,0,10) \
+   MSET_WEAPON(0,10,0,15,15,0) \
+   MSET_SPELL(10,5,0,5,10,10,10,10,0,0,0)
+
+#define MERFOLK_WARRIOR(MLVL,GENDER) \
+   BASE_MERFOLK(MLVL,GENDER,220,180)
+
+#define MERFOLK_SHAMAN(MLVL,GENDER,ATT_SPL,DEF_SPL) \
+   BASE_MERFOLK(MLVL,GENDER,200,170) \
+   dilcopy combat_mag@function(ATT_SPL,DEF_SPL,25,2);
+
+%dil
+dilbegin underwater();
+var
+  pc : unitptr;
+  onhead : unitptr;
+code
+{
+  heartbeat:= PULSE_SEC*30; /*tick every 30 seconds*/
+  :start:
+  wait(SFB_TICK, TRUE);
+  foreach(UNIT_ST_PC, pc)
+  {
+    if(pc.level<200)
+    {
+      onhead:=equipment(pc, WEAR_HEAD);
+      if (((onhead.nameidx) in "quest_helmet") and ((onhead.zoneidx) in
+"neptune"))
+      {
+	continue;
+      }
+      else if (((onhead.nameidx) in "great_helmet") and ((onhead.zoneidx)
+in "neptune"))
+      {
+	continue;
+      }
+      else
+      {
+	pc.hp := pc.hp - (pc.max_hp/10);
+	act("$1N chokes and thrashes about in panic.",
+	     A_SOMEONE, pc, null,null, TO_ROOM);
+	act("You swallow some water and start to choke and cough.",
+	     A_ALWAYS,pc, null, null, TO_CHAR);
+	position_update(pc);
+      }
+    }
+  }
+  goto start;
+}
+dilend
+
+dilbegin m_block(blocker : unitptr,pc : unitptr);
+code
+{
+  act("$1n blocks you from passing.",A_SOMEONE,blocker,null,pc,TO_VICT);
+  act("$1n blocks $3n from passing.",A_SOMEONE,blocker,null,pc,TO_NOTVICT);
+  return;
+}
+dilend
+
+dilbegin clean_dead();
+var
+  u : unitptr;
+code
+{
+  :start:
+  heartbeat:=PULSE_SEC*5;
+  wait(SFB_TICK,(self.position!=POSITION_FIGHTING) and (self.hp>0) );
+  foreach(UNIT_ST_NPC,u)
+  {
+    if(u.hp<=0)
+    {
+      set_fighting(self,u);
+      break;
+    }
+  }
+  goto start;
+}
+dilend
+
+dilbegin ass_merfolk();
+var
+  u : unitptr;
+code
+{
+  :start:
+  wait(SFB_COM,TRUE);
+  foreach(UNIT_ST_NPC,u)
+  {
+    if(("merman" in u.names) or ("mermaid" in u.names))
+    {
+      exec("assist "+u.name,self);
+    }
+  }
+  goto start;
+}
+dilend
+
+dilbegin heal_merfolk();
+var
+  u : unitptr;
+  res : integer;
+code
+{
+  :start:
+  wait(SFB_COM,TRUE);
+  foreach(UNIT_ST_NPC,u)
+  {
+    if(("merman" in u.names) or ("mermaid" in u.names))
+    {
+      if((u.hp<(u.max_hp/4))and (self.mana>=20))
+      {
+	res:=cast_spell(SPL_CURE_WOUNDS_3,self,self,u,"");
+	self.mana:=self.mana-20;
+	act("$1n lays hands on $3n and heals $3s wounds!",
+	    A_SOMEONE,self,self,u,TO_NOTVICT);
+	break;
+      }
+    }
+  }
+  goto start;
+}
+dilend
+
+dilbegin agg_merfolk();
+var
+  u : unitptr;
+code
+{
+  heartbeat:=20;
+  :start:
+  wait(SFB_TICK,self.position!=POSITION_FIGHTING);
+  foreach (UNIT_ST_NPC,u)
+  {
+    if(("merman" in u.names) or ("mermaid" in u.names))
+    {
+       set_fighting(self,u);
+    }
+  }
+  goto start;
+}
+dilend
+
+%rooms
+
+path_und
+names {"path into lake"}
+title "A Path Leading into the Lake"
+descr
+"You follow a small path, and upon arriving at the lake's edge see that it
+leads straight into the water. The shore of the lake is covered with
+pebbles. Exits lead north into the lake, and south to the path."
+extra {"small path","path"}
+"Very peculiar indeed!  The small path leads right into the lake."
+extra {"pebbles","shore","beach","lake's edge","edge"}
+"The shore is covered in pebbles."
+extra {"lake"}
+"The water looks a dark shade of purple."
+movement SECT_FIELD
+north to warntz_ent@warntz descr "Into the Warntz Forest.";
+south to ent_und descr "The icy depths of the lake stand before you.";
+/* markus is here */
+end /* path_und */
+
+ent_und
+names {"entrance to lake"}
+title "Entering the Lake"
+descr
+"As you go into the icy water, you get a chill down your spine. You fear
+that you will never come back from this place. You are walking on sandy
+ground, and the way deeper into the lake is obscured by darkness. The water
+comes up to your neck here. The path back out of this lake lies to the
+south."
+extra {"water"}
+"The water is very chilly, and surprisingly clear."
+extra {"sandy ground","sand","ground"}
+"The ground here is sandy and firm.  It seems well traveled."
+extra {"path"}
+"The path goes north deeper into the lake and south back above the water."
+movement SECT_WATER_SWIM
+flags {UNIT_FL_NO_MOB}
+north to path_und descr "Back out of this Cold Place.";
+west to river_3@outxiyang descr "On the Yellow River.";
+down to lake_8 descr "Deeper into the Lake.";
+/*
+dilbegin water_elem();
+var
+  u : unitptr;
+  m : unitptr;
+  g : unitptr;
+code
+{
+  :start:
+  heartbeat:=PULSE_SEC*24;
+  wait(SFB_TICK,TRUE);
+  foreach(UNIT_ST_PC,u)
+  {
+    if(MARKUS2_ONGOING in u.quests)
+    {
+      m:=load("w_elem@neptune");
+      g:=load("water_gem@neptune");
+      link(g,m);
+      link(self,m);
+      act("A large water elemental rises forth from the lake",
+	  A_ALWAYS,u,null,null,TO_ALL);
+    }
+  }
+  goto start;
+}
+dilend
+*/
+end /* ent_und */
+
+lake_1
+title "Below the Surface of the Lake"
+descr
+"You go deeper into the lake, and you can only see darkness around you.
+You can barely see your feet, but you can make out some aquatic plant life,
+and small fish darting around. You can go east, south, up or down from
+here."
+extra {"small fish","fish"}
+"The small fish dart around you. You doubt you could ever hit one, they're
+way too fast."
+extra {"aquatic plant life", "aquatic plant", "plant"}
+"The plants sway slowly with the current."
+up to ent_und descr "On the surface of the lake.";
+south to lake_4 descr "Below the surface of the lake.";
+east to lake_2 descr "Below the surface of the lake.";
+down to lake2_1 descr "Deep under the lake.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* lake_1 */
+
+lake_2
+title "Below the Surface of the Lake"
+descr
+"You go deeper into the lake, and you can see a school of fish swimming
+around you.  You can go in all directions except north from here."
+extra {"school of fish","small fish","fish"}
+"You doubt you could ever hit one, they're way too fast."
+up to ent_und descr "On the surface of the lake.";
+west to lake_1 descr "Below the surface of the lake.";
+south to lake_5 descr "Below the surface of the lake.";
+east to lake_3 descr "Below the surface of the lake.";
+down to lake2_2 descr "Deep under the lake.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* lake_2 */
+
+lake_3
+title "Below the Surface of the Lake"
+descr
+"You go deeper into the lake, and you can only see darkness around you.
+You can barely see your feet, but you can make out some aquatic plant life,
+and small fish darting around. You can go west, south, up or down from 
+here. Up is the exit from this icy grave."
+extra {"small fish","fish"}
+"The small fish dart around you. You doubt you could ever hit one, they're
+way too fast."
+extra {"aquatic plant life", "aquatic plant", "plant"}
+"The plants sway slowly with the current."
+up to ent_und descr "On the surface of the lake.";
+west to lake_2 descr "Below the surface of the lake.";
+south to lake_6 descr "Below the surface of the lake.";
+down to lake2_3 descr "Deep under the lake.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* lake_3 */
+
+lake_4
+title "Below the Surface of the Lake"
+descr
+"You go deeper into the lake, and you can only see darkness around you.
+You can barely see your feet, but you can make out some aquatic plant life,
+and small fish darting around. You can go in all directions except west
+from here. Up is the exit from this icy grave."
+extra {"small fish","fish"}
+"The small fish dart around you.  You doubt you could ever hit one, they're
+way too fast."
+extra {"aquatic plant life", "aquatic plant", "plant"}
+"The plants sway slowly with the current."
+up to ent_und descr "On the surface of the lake.";
+north to lake_1 descr "Below the surface of the lake.";
+south to lake_7 descr "Below the surface of the lake.";
+east to lake_5 descr "Below the surface of the lake.";
+down to lake2_4 descr "Deep under the lake.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* lake_4 */
+
+lake_5
+title "Below the Surface of the Lake"
+descr
+"You go deeper into the lake, and you can only see darkness around you.
+You can barely see your feet, but you can make out some aquatic plant life,
+and small fish darting around. You can go in all directions from here. Up
+is the exit from this icy grave."
+extra {"small fish","fish"}
+"The small fish dart around you. You doubt you could ever hit one, they're
+way too fast."
+extra {"aquatic plant life", "aquatic plant", "plant"}
+"The plants sway slowly with the current."
+up to ent_und descr "On the surface of the lake.";
+north to lake_2 descr "Below the surface of the lake.";
+west to lake_4 descr "Below the surface of the lake.";
+south to lake_8 descr "Below the surface of the lake.";
+east to lake_6 descr "Below the surface of the lake.";
+down to lake2_5 descr "Entrance to the Merfolk Kingdom.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* lake_5 */
+
+lake_6
+title "Below the Surface of the Lake"
+descr
+"You go deeper into the lake, and you can only see darkness around you.
+You can barely see your feet, but you can make out some aquatic plant life,
+and small fish darting around. You can go in all directions except east 
+from here.  Up is the exit from this icy grave."
+extra {"small fish","fish"}
+"The small fish dart around you.  You doubt you could ever hit one, they're
+way too fast."
+extra {"aquatic plant life", "aquatic plant", "plant"}
+"The plants sway slowly with the current."
+up to ent_und descr "On the surface of the lake.";
+north to lake_3 descr "Below the surface of the lake.";
+west to lake_5 descr "Below the surface of the lake.";
+south to lake_9 descr "Below the surface of the lake.";
+down to lake2_6 descr "Deep under the lake.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* lake_6 */
+
+lake_7
+title "Below the Surface of the Lake"
+descr
+"You go deeper into the lake, and you can only see darkness around you.
+You can barely see your feet, but you can make out some aquatic plant life,
+and small fish darting around.  You can go north and east from here. Up
+is the exit from this icy grave."
+extra {"small fish","fish"}
+"The small fish dart around you. You doubt you could ever hit one, they're
+way too fast."
+extra {"aquatic plant life", "aquatic plant", "plant"}
+"The plants sway slowly with the current."
+up to ent_und descr "On the surface of the lake.";
+north to lake_4 descr "Below the surface of the lake.";
+east to lake_8 descr "Below the surface of the lake.";
+down to lake2_7 descr "Deep under the lake.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* lake_7 */
+
+lake_8
+title "Below the Surface of the Lake"
+descr
+"You go deeper into the lake, and you can only see darkness around you.
+You can barely see your feet, but you can make out some aquatic plant life,
+and small fish darting around. To the south you see a dark cave. You can 
+go in all directions from here. Up is the exit from this icy grave."
+extra {"small fish","fish"}
+"The small fish dart around you. You doubt you could ever hit one, they're
+way too fast."
+extra {"aquatic plant life", "aquatic plant", "plant"}
+"The plants sway slowly with the current."
+up to ent_und descr "On the surface of the lake.";
+north to lake_5 descr "Below the surface of the lake.";
+west to lake_7 descr "Below the surface of the lake.";
+south to cave_enter descr "An underwater cave.";
+east to lake_9 descr "Below the surface of the lake.";
+down to lake2_8 descr "Deep under the lake.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* lake_8 */
+
+lake_9
+title "Below the Surface of the Lake"
+descr
+"You go deeper into the lake, and you can only see darkness around you.
+You can barely see your feet, but you can make out some aquatic plant life,
+and small fish darting around.  You can west and north from here. Up is the
+exit from this icy grave."
+extra {"small fish","fish"}
+"The small fish dart around you. You doubt you could ever hit one, they're
+way too fast."
+extra {"aquatic plant life", "aquatic plant", "plant"}
+"The plants sway slowly with the current."
+up to ent_und descr "On the surface of the lake.";
+north to lake_6 descr "Below the surface of the lake.";
+west to lake_8 descr "Below the surface of the lake.";
+down to lake2_9 descr "Deep under the lake.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* lake_9 */
+
+/*end of first level of the lake*/
+/*beginning of cave system*/
+
+cave_enter
+title "Inside an Underwater Cave"
+descr
+"You are almost blinded by the complete darkness in this cave, but you can
+still see a glimpse of light coming from above.  The lack of fish in this
+cave strikes you as odd.  The cave slopes down to the south.  North is out
+of this cave."
+extra {"light", "above"}
+"The light is dim, but you feel reassured that it is still there."
+north to lake_8 descr "Below the surface of the lake.";
+south to cave_1 descr "An underwater cave.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* cave_enter */
+
+cave_1
+title "An Underwater Cave"
+descr
+"You are almost blinded by the complete darkness in this cave, but you can
+still see a glimpse of light coming from the entrance. Scattered about the
+cave are bones and rusted pieces of armor.  The cave slopes down to the 
+south.  North is the entrance to the cave."
+/* a rusty trident should be placed in this room */
+extra {"pieces of rusted armor", "pieces of armor", "rusted armor", "armor"} 
+"You think they might be covering some kind of opening."
+extra {"bones"}
+"White worn bones, lots of them."
+extra {"light", "entrance"}
+"The entrance is giving off a very dim glow, telling you which way is out."
+south to cave_2 descr "A hideous lair.";
+north to cave_enter descr "An underwater cave.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* cave_1 */
+
+cave_2
+title "A Hideous Lair"
+descr
+"You can see reflections of your light on rusty armor and bones scattered
+about. You have to reach out to find the walls."
+/*giant crab level 50 goes here won't let people pass by north or down*/
+extra {"pieces of rusted armor", "pieces of armor", "rusted armor", "armor"} 
+"You think they might be covering some kind of opening."
+extra {"bones"}
+"White worn bones, lots of them."
+down to cave_nest keyword {"opening"}
+open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN};
+SECRET_DOOR_DIFFICULTY(DOWN, 35)
+north to cave_1 descr "An underwater cave.";
+south to cave_3 descr "Deep within the cave.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* cave_2 */
+
+cave_nest
+title "Nest"
+descr
+"This appears to be some sort of nest."
+/* several smaller crabs level 35 */
+up to cave_2 descr "A hideous lair.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* cave_nest */
+
+cave_3
+title "Deep within the Cave"
+descr
+"The cave open up into a huge room here.  You are astounded by the vastness
+of this cave.  Above you is an air pocket.  Other exits lead north and south
+deeper into the cave."
+south to cave_4 descr "An intersection in the cave.";
+north to cave_2 descr "A hideous lair.";
+up to cave_air descr "A pool in the cave.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /*cave_3*/
+
+cave_air
+title "A Pool in the Cave"
+descr
+"You climb up out of the water into a small cavern filled with air. The
+air is warm and you feel safer now you are out of the cold water."
+down to cave_3 descr "Deep within the cave.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+end /* cave_air */
+
+cave_4
+title "An Intersection in the Cave"
+descr
+"The gloom of the cave closes in on you as you advance further.  At this
+point, the cave splits into two directions.  You are chilled to the bone
+by the cold currents flowing through this cave, and you are not sure
+if you dare contintinue.  There is a strange light coming from the eastern
+cave."
+north to cave_3 descr "Deep within the cave.";
+west to cave_5 descr "A branch of the cave.";
+east to cave_6 descr "The source.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /*cave_4*/
+
+cave_5
+title "A Branch of the Cave"
+descr
+"This passage leads to a huge room filled with shells of all sizes.  You
+feel a weak current here pushing you back towards the entrance of the cave.
+You realize this must be the home of dozens of those homarid creatures."
+east to cave_4 descr "An intersection in the cave.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /*cave_5*/
+
+cave_6
+title "The Source"
+descr
+"You are amazed as you walk into this room.  The walls are lined with
+some kind of crystals, glowing and amplifying the light, which is coming
+from an orb embedded in the wall.  You wonder how it got here and who
+created it..."
+west to cave_4 descr "An intersection in the cave.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+extra {"orb","crystals"}
+"The crystals and orb seem to be part of the cave walls.  This must be the
+source of these strange mutations."
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /*cave_6*/
+
+/*second level of lake*/
+
+lake2_1
+title "Deep Under the Lake"
+descr
+"You go deeper into the lake, and you can only see darkness around you.
+You can barely see your feet, but you can make out some aquatic plant life,
+and small fish darting around.  You can go east, south, or up from here."
+extra {"small fish","fish"}
+"The small fish dart around you.  You doubt you could ever hit one, they're
+way too fast."
+extra {"aquatic plant life", "aquatic plant", "plant"}
+"The plants sway slowly with the current."
+up to lake_1 descr "Below the surface of the lake.";
+south to lake2_4 descr "Deep under the lake.";
+east to lake2_2 descr "Deep under the lake.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* lake2_1 */
+
+lake2_2
+title "Deep Under the Lake"
+descr
+"You go deeper into the lake, and you can only see darkness around you.
+You can barely see your feet, but you can make out some aquatic plant life,
+and small fish darting around. You can go in all directions except north
+and down from here."
+extra {"small fish","fish"}
+"The small fish dart around you. You doubt you could ever hit one, they're
+way too fast."
+extra {"aquatic plant life", "aquatic plant", "plant"}
+"The plants sway slowly with the current."
+up to lake_2 descr "Below the surface of the lake.";
+west to lake2_1 descr "Deep under the lake.";
+south to lake2_5 descr "Entrance to the Merfolk Kingdom.";
+east to lake2_3 descr "Deep under the lake.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* lake2_2 */
+
+lake2_3
+title "Deep Under the Lake"
+descr
+"You go deeper into the lake, and you can only see darkness around you.
+You can barely see your feet, but you can make out some aquatic plant life,
+and small fish darting around.  You can go west, south, or up from here."
+extra {"small fish","fish"}
+"The small fish dart around you.  You doubt you could ever hit one, they're
+way too fast."
+extra {"aquatic plant life", "aquatic plant", "plant"}
+"The plants sway slowly with the current."
+up to lake_3 descr "Below the surface of the lake.";
+west to lake2_2 descr "Deep under the lake.";
+south to lake2_6 descr "Deep under the lake.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* lake2_3 */
+
+lake2_4
+title "Deep Under the Lake"
+descr
+"You go deeper into the lake, and you can only see darkness around you.
+You can barely see your feet, but you can make out some aquatic plant life,
+and small fish darting around.  You can go in all directions except west and 
+down from here."
+extra {"small fish","fish"}
+"The small fish dart around you. You doubt you could ever hit one, they're
+way too fast."
+extra {"aquatic plant life", "aquatic plant", "plant"}
+"The plants sway slowly with the current."
+up to lake_4 descr "Below the surface of the lake.";
+north to lake2_1 descr "Deep under the lake.";
+south to lake2_7 descr "Deep under the lake.";
+east to lake2_5 descr "Entrance to the Merfolk Kingdom.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* lake2_4 */
+
+lake2_5
+title "Entrance to the Merfolk Kingdom"
+descr
+"You go deeper into the lake, and you can only see darkness around you.
+You can barely see your feet, but you can make out some aquatic plant life,
+and small fish darting around.  You can go in all directions from here.  A
+large opening leads down into the Merfolk Kingdom."
+/* place 2 merfolk guards here */
+extra {"small fish","fish"}
+"The small fish dart around you.  You doubt you could ever hit one, they're
+way too fast."
+extra {"aquatic plant life", "aquatic plant", "plant"}
+"The plants sway slowly with the current."
+up to lake_5 descr "Below the surface of the lake.";
+north to lake2_2 descr "Deep under the Lake.";
+west to lake2_4 descr "Deep under the lake.";
+south to lake2_8 descr "Deep under the lake.";
+east to lake2_6 descr "Deep under the lake.";
+down to merfolk_enter descr "Entrance to the Merfolk Kingdom.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* lake2_5 */
+
+lake2_6
+title "Deep Under the Lake"
+descr
+"You go deeper into the lake, and you can only see darkness around you.
+You can barely see your feet, but you can make out some aquatic plant life,
+and small fish darting around.  You can go in all directions except east and
+down from here."
+extra {"small fish","fish"}
+"The small fish dart around you.  You doubt you could ever hit one, they're
+way too fast."
+extra {"aquatic plant life", "aquatic plant", "plant"}
+"The plants sway slowly with the current."
+up to lake_6 descr "Below the surface of the lake.";
+north to lake2_3 descr "Deep under the lake.";
+west to lake2_5 descr "Entrance to the Merfolk Kingdom.";
+south to lake2_9 descr "Deep under the lake.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* lake2_6 */
+
+lake2_7
+title "Deep Under the Lake"
+descr
+"You go deeper into the lake, and you can only see darkness around you.
+You can barely see your feet, but you can make out some aquatic plant life,
+and small fish darting around.  You can go north, up, and east from here."
+extra {"small fish","fish"}
+"The small fish dart around you.  You doubt you could ever hit one, they're
+way too fast."
+extra {"aquatic plant life", "aquatic plant", "plant"}
+"The plants sway slowly with the current."
+up to lake_7 descr "Below the surface of the lake.";
+north to lake2_4 descr "Deep under the lake.";
+east to lake2_8 descr "Deep under the lake.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* lake2_7 */
+
+lake2_8
+title "Deep Under the Lake"
+descr
+"You go deeper into the lake, and you can only see darkness around you.
+You can barely see your feet, but you can make out some aquatic plant life,
+and small fish darting around.  You can go in all directions except south
+and down from here."
+extra {"small fish","fish"}
+"The small fish dart around you.  You doubt you could ever hit one, they're
+way too fast."
+extra {"aquatic plant life", "aquatic plant", "plant"}
+"The plants sway slowly with the current."
+up to lake_8 descr "Below the surface of the lake.";
+north to lake2_5 descr "Entrance to the Merfolk Kingdom.";
+west to lake2_7 descr "Deep under the lake.";
+east to lake2_9 descr "Deep under the lake.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* lake2_8 */
+
+lake2_9
+title "Deep Under the Lake"
+descr
+"You go deeper into the lake, and you can only see darkness around you.
+You can barely see your feet, but you can make out some aquatic plant life,
+and small fish darting around.  You can west, north, and up from here."
+extra {"small fish","fish"}
+"The small fish dart around you.  You doubt you could ever hit one, they're
+way too fast."
+extra {"aquatic plant life", "aquatic plant", "plant"}
+"The plants sway slowly with the current."
+up to lake_9 descr "Below the surface of the lake.";
+north to lake2_6 descr "Deep under the lake.";
+west to lake2_8 descr "Deep under the lake.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* lake2_9 */
+
+/* Merfolk Kingdom */
+
+merfolk_enter
+names {"terantis square"}
+title "Terantis Square"
+descr
+"This place is well lit by glowing pyramids along the road.  To the north
+is the majestic castle.  Streets lead west, east and south.  Merfolk swim by
+gracefully, giving you strange glances as they do so.  You see a large rock
+with writing chiseled into it."
+extra {"large rock","rock","writing"}
+"Welcome to the city of Terantis.  Surface dwellers: We have made a special
+place for you.  An arrow below this points east."
+up to lake2_5 descr "Entrance to Merfolk Kingdom.";
+south to guard_hall descr "A large hall.";
+north to castle_ent descr "Entrance to the castle.";
+east to road_1 descr "A road.";
+west to roadw_1 descr "A road.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* merfolk_enter */
+
+roadw_1
+title "A Road"
+descr
+"A nice peaceful road lit by small glowing stones along the sides of the
+road.  There are houses to the north and south.  To the east is Terantis
+Square, and the road to the mines continues to the west."
+east to merfolk_enter descr "Terantis Square.";
+north to house_1 descr "Inside a house.";
+south to house_2 descr "Inside a house.";
+west to roadw_2 descr "A road.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* roadw_1 */
+
+house_1
+title "Inside a House"
+descr
+"This house is quite different from what land-dwellers are used to. It
+is a large open space with coral and sponges growing on the seafloor. There
+is a flat stone on the ground, presumably what is used as a table, and the
+sponges are used as beds."
+south to roadw_1 descr "A road.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* house_1 */
+
+house_2
+title "Inside a House"
+descr
+"This house is decorated with several spears from previous generations,
+perhaps as a land-dweller would hang a portrait of an honored ancestor on a
+wall.  There are several sponge beds, and some coral formations growing
+here."
+north to roadw_1 descr "A road.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* house_2 */
+
+roadw_2
+title "A Road"
+descr
+"The large crack that the merfolk live inside is closing in as you
+approach the mines.  There is a small house to the north, and the road back
+to Terantis Square is to the east."
+east to roadw_1 descr "A road.";
+north to house_3 descr "Inside a house.";
+west to roadw_3 descr "A road.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* roadw_2 */
+
+house_3
+title "Inside a House"
+descr
+"A small, sparse room with several sponge beds on the floor, and a large
+glowing stone built into the ceiling of the room.  The only exit is back
+south to the road."
+south to roadw_2 descr "A road.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* house_3 */
+
+roadw_3
+title "A Road"
+descr
+"The walls of stone on each side of the road are only about 10 feet apart
+here.  Further on to the west is the entrance into the mine.  Back to the
+east is Terantis Square."
+west to mine_1 descr "Mine entrance.";
+east to roadw_2 descr "A road.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* roadw_3 */
+
+mine_1
+title "Entrance into the Mines"
+descr
+"The walls here are only about 7 feet apart.  The entrance into the mine
+is before you.  Inside the mine you can see small glowing stones placed to
+light your way."
+east to roadw_3 descr "A road.";
+west to mine_2 descr "Inside the mines.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* mine_1 */
+
+mine_2
+title "Inside the Mines"
+descr
+"The mine is just the right size for you to swim about freely inside.
+The walls are rough and cold. The valuable metal that is mined here is well
+worth the hard work to the merfolk though."
+east to mine_1 descr "Entrance into the mines.";
+north to mine_3 descr "A turn in the mine.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* mine_2 */
+
+mine_3
+title "Inside the Mines"
+descr
+"The mine turns to the west here, and you can almost make out the end of
+the mine. Obviously this mine isn't very old as the walls are still covered
+with some metal, just waiting to be pounded into tools and weapons."
+west to mine_4 descr "Deep inside the mines.";
+south to mine_2 descr "Inside the mines.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* mine_3 */
+
+mine_4
+title "Deep inside the Mines"
+descr
+"The glowing stones that light the mine end here and the mine to the west
+is in darkness.  Towards the east is the entrance of the mines."
+east to mine_3 descr "Inside the mines.";
+west to mine_5 descr "A turn in the mine.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* mine_4 */
+
+mine_5
+title "A Turn in the Mine"
+descr
+"Through the darkness you can see the walls glimmer from your light. You
+seem to make out exits to the south and east."
+east to mine_4 descr "Deep inside the mines.";
+south to mine_6 descr "The end of the mine.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* mine_5 */
+
+mine_6
+title "Dead End in the Mines"
+descr
+"You almost run into the wall as you walk into a dead end in the mine.
+It doesn't look like the merfolk have mined very deep here yet. Back to the
+north is way to the entrance."
+north to mine_5 descr "A turn in the mine.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* mine_6 */
+
+guard_hall
+title "Guard Hall"
+descr
+"This large hall reminds you of the ancient days of legend.  There are
+statues of the greatest merfolk warriors lining the walls here, and
+seemingly there were many great heroes.  This room looks well used. The
+merfolk warriors gather here before entering battle against the homarids."
+north to merfolk_enter descr "Terantis Square.";
+west to hall_4 descr "A large hallway.";
+south to mess_hall descr "Mess hall.";
+east to armory descr "The armory.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* guard_hall */
+
+mess_hall
+title "Mess Hall"
+descr
+"This looks surprisingly like a large tavern.  There are tables scattered
+about and there is a bar along one wall.  The room is decorated with the
+proud banners of the merfolk, and the atmosphere is friendly."
+north to guard_hall descr "Guard hall.";
+east to kitchen descr "Kitchens.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* mess_hall */
+
+kitchen
+title "Kitchens"
+descr
+"The kitchen is quite a mess.  Several large tables used for preparation
+of fish are covered with the guts, scales, and various other nasty parts of
+seafood.  Baskets of fish and other sea creatures are everywhere.  There is
+certainly no lack of food here."
+west to mess_hall descr "Mess hall.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* kitchen */
+
+armory
+title "Armory"
+descr
+"The armory is massively understocked. It seems that the merfolk can't
+produce steel weaponry very efficiently. Most of the weapons here are
+spears with steel tips."
+west to guard_hall descr "Guard hall.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* armory */
+
+hall_4
+title "A Large Hallway"
+descr
+"A long hallway with little decoration.  This is definately a military
+installation."
+west to hall_3 descr "A large hallway.";
+north to train_room descr "A training room.";
+south to capt_room descr "A nice office.";
+east to guard_hall descr "Guard hall.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* hall_4 */
+
+train_room
+title "Training Room"
+descr
+"A large training room built to accomodate about a dozen troops.  There
+are various targets and dummies about the room for practice."
+south to hall_4 descr "A large hallway.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* train_room */
+
+capt_room
+title "The Captain's Office"
+descr
+"This room is nicely decorated with weapons and armor.  A large stone
+desk sits in the middle of the room.  The banner of the merfolk hangs from
+the ceiling.  The room looks practical and comfortable."
+north to hall_4 descr "A large hallway.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* capt_room */
+
+hall_3
+title "A Large Hallway"
+descr
+"A long hallway with little decoration.  Designed purely for necessity, 
+this is definately a military installation."
+north to barrack_3 descr "Barracks.";
+south to barrack_6 descr "Barracks.";
+west to hall_2 descr "A large hallway.";
+east to hall_4 descr "A large hallway.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* hall_3 */
+
+hall_2
+title "A Large Hallway"
+descr
+"A long hallway with little decoration.  This is definately a military
+installation."
+north to barrack_2 descr "Barracks.";
+south to barrack_5 descr "Barracks.";
+west to hall_1 descr "A large hallway.";
+east to hall_3 descr "A large hallway.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* hall_2 */
+
+hall_1
+title "A Large Hallway"
+descr
+"A long hallway with little decoration.  This is definately a military
+installation.  "
+north to barrack_1 descr "Barracks.";
+south to barrack_4 descr "Barracks.";
+east to hall_2 descr "A large hallway.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* hall_1 */
+
+barrack_1
+title "Barracks"
+descr
+"This room is designed with only necessity in mind.  The beds are made
+from some kind of sponge.  The room is otherwise empty."
+south to hall_1 descr "A large hallway.";
+east to barrack_2 descr "Barracks.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* barrack_1 */
+
+barrack_2
+title "Barracks"
+descr
+"This room is designed with only necessity in mind.  The beds are made
+from some kind of sponge.  The room is otherwise empty."
+south to hall_2 descr "A large hallway.";
+west to barrack_1 descr "Barracks.";
+east to barrack_3 descr "Barracks.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* barrack_2 */
+
+barrack_3
+title "Barracks"
+descr
+"This room is designed with only necessity in mind.  The beds are made
+from some kind of sponge.  The room is otherwise empty."
+south to hall_3 descr "A large hallway.";
+west to barrack_2 descr "Barracks.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* barrack_3 */
+
+barrack_4
+title "Barracks"
+descr
+"This room is designed with only necessity in mind.  The beds are made
+from some kind of sponge.  The room is otherwise empty."
+north to hall_1 descr "A large hallway.";
+east to barrack_5 descr "Barracks.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* barrack_4 */
+
+barrack_5
+title "Barracks"
+descr
+"This room is designed with only necessity in mind.  The beds are made
+from some kind of sponge.  The room is otherwise empty."
+north to hall_2 descr "A large hallway.";
+west to barrack_4 descr "Barracks.";
+east to barrack_6 descr "Barracks.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* barrack_5 */
+
+barrack_6
+title "Barracks"
+descr
+"This room is designed with only necessity in mind.  The beds are made
+from some kind of sponge.  The room is otherwise empty."
+north to hall_3 descr "A large hallway.";
+west to barrack_5 descr "Barracks.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* barrack_6 */
+
+/* tower of magic */
+
+/* road */
+road_1
+title "A Road"
+descr
+"The gentle currents of the ocean rock you with a relaxing sway as you
+walk down the road towards the stone tower.  You seem to be in a kind of
+open marketplace where all sorts of trinkets are being traded.  To the north
+is a small stone building with a waterskin on the sign above the door.
+South there is a sturdy stone building, the bank, you figure."
+west to merfolk_enter descr "Terantis Square.";
+east to road_2 descr "A road.";
+north to drink descr "A tavern.";
+south to bank descr "Terantis Bank.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* road_1 */
+
+drink
+title "A Tavern"
+descr
+"Several large stones lay on the seafloor inside this tavern as tables.
+The bar looks well stocked.  Many different shells of all shapes and sizes
+hang on the wall filled with different drinks."
+south to road_1 descr "A road.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* drink */
+
+bank
+title "Terantis Bank"
+descr
+"The vault is made out of the strange black rock you have seen in various
+places in this village.  The bank otherwise looks like a normal merfolk
+building.  The walls are made of stone, and there are some coral formations
+growing from the sea floor here."
+north to road_1 descr "A road.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* bank */
+
+road_2
+title "A Road"
+descr
+"The water shimmers with light from the stones placed along the road.
+The water actually seems a bit warmer here, and the current is barely
+noticable.  To the south you see a strange sight indeed, a tall building
+carved from a single massive stone.  On the north side of the street is a
+small building bearing a sign with a fish on it."
+west to road_1 descr "A road.";
+east to road_3 descr "A road.";
+north to fish_store descr "A seafood store.";
+south to sanctuary descr "An air filled building.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* road_2 */
+
+sanctuary
+title "An Air-Filled Room"
+descr
+"As you walk into this room, your lungs fill with air again. It feels good
+to be back in your natural habitat. The building is made from an odd black
+stone, and it is carved out from a single huge stone.  There are a few
+chairs and a wooden table in here for you to sit at."
+north to road_2 descr "A road.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+end /* sanctuary */
+
+fish_store
+title "Seafood Store"
+descr
+"The store contains many baskets of fish and other sea creatures.  There
+is a large flat stone on the floor, which is used as the counter."
+south to road_2 descr "A road.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* fish_store */
+
+road_3
+title "A Road"
+descr
+"The muffled clang of hammers is present both to the north and south of
+here.  The sign on the northern building is a dull metal breast plate.  To
+the south there hangs a sign with a spear on it.  The road ends to the east
+of here and beyond that is a tower."
+north to armorer descr "An armor shop.";
+south to weapons descr "A weapon shop.";
+east to entrance_mage descr "A guard post.";
+west to road_2 descr "A road.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* road_3 */
+
+armorer
+title "An Armor Shop"
+descr
+"You find to your amazement that the merfolk do not use metal much in
+their armor. Instead shells, coral, and stone are the main materials used.
+The quality and workmanship of the armor here is excellent, considering the
+materials."
+south to road_3 descr "A road.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* armorer */
+
+weapons
+title "A Weapon Shop"
+descr
+"Hammering cold steel is a hard task indeed.  There are several smiths
+towards the back of the shop working away slowly on weapons.  At the front
+of the shop are an array of different spears, and polearms."
+north to road_3 descr "A road.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* weapons */
+
+entrance_mage
+title "A Guard Post"
+descr
+"A massive black tower lies beyond the black stone gates before you.  You
+wonder how the seamless black walls were ever created here, obviously the
+craftsmen were far superior to any you have seen.  The walls are untouched
+despite the many battles that took place at there very gates."
+east to courtyard descr "A beautiful courtyard.";
+west to road_3 descr "A road.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* entrance_mage */
+
+courtyard
+title "A Beautiful Courtyard"
+descr
+"The courtyard stands before a massive black tower, created aeons ago,
+not by these mermen, but something much older.  In the center of the
+courtyard stands a fountain created from bones.  Flowing from the fountain
+and staining the water is blood.  Still the courtyard lacks life as it did
+centuries ago, and nothing but the strange black rock can be seen here."
+east to tower_mage descr "Inside the tower.";
+north to north_mage descr "Northern courtyard.";
+south to south_mage descr "Southern courtyard.";
+west to entrance_mage descr "A guard post.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* courtyard */
+
+tower_mage
+title "Inside the Tower"
+descr
+"The tower reminds you of a crypt.  You get the eerie feeling that this
+place may be the last thing you will ever see.  There is a door here with a
+strange sigil marked upon it.  You get the feeling that whatever is behind
+the door could surely destroy you."
+west to courtyard descr "A beautiful courtyard.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+/* add extra */
+dilcopy underwater@neptune();
+end /* tower_mage */
+
+home
+title "Forbidden Room"
+descr
+"This is the room that stands beyond the sealed doors within the tower.
+Only the most priveleged mortal have ever seen this room and survived.  The
+walls are made from the indestructible black stone placed here aeons ago by
+the mighty Old Ones.  There is an intricately carved throne standing in the
+center of the room here."
+extra {"throne"}
+"The throne is carved out of black stone.  The armrests are huge serpents
+with their mouths open wide bearing their fangs.  On either side of the
+throne are large hideous gargoyle statues.  A large sigil on the backrest
+of the throne translates to 'Rage, the Destroyer'."
+west to tower_mage descr "Inside the tower.";
+up to market_sq@midgaard descr "Market Square.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+end /* home */
+
+north_mage
+title "Northern Courtyard"
+descr
+"The courtyard extends some distance until it comes to the ancient black
+wall here.  You observe a dark green moss growing near the wall, almost
+reaching for it.  This seems odd as no other plant life is present in the
+courtyard."
+south to courtyard descr "A beautiful courtyard.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* north_mage */
+
+south_mage
+title "Southern Courtyard"
+descr
+"You realize &cmnothing&cw seems to inhabit this courtyard as you carefully
+observe the black wall before you.  You are certain the wall has some story
+to tell, but could your mortal magic unlock its secret?"
+north to courtyard descr "A beautiful courtyard.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT} 
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+
+dilbegin iden_wall();
+var 
+  pc : unitptr;
+  s1  : string;
+  s2  : string;
+  s3  : string;
+  splno : integer;
+  i : integer;
+code 
+{ 
+heartbeat := PULSE_SEC*5;
+:start:
+  wait(SFB_CMD, TRUE);
+  pc := activator;
+  if(cmdstr!="cast")
+    goto start;
+  if(pc.mana<20)
+    goto start;
+  splno:=spellindex(argument);
+  s1:=getword(argument);
+  s2:=getword(argument);
+  s3:=getword(argument);
+  if(splno==SPL_IDENTIFY_1)
+    if(s2=="wall")
+      goto iden;
+  if(splno==SPL_IDENTIFY_2)
+    if(s3=="wall")
+      goto iden2;
+  goto start;
+:iden:
+i:=rnd(1,100);
+if(i<60)
+  goto zap;
+act("$1n reaches out, touches the wall, and utters the word, 'Revela'",
+    A_SOMEONE,pc,null,null,TO_ROOM);
+act("A vision forms in your mind of the creation of these walls.  "+
+"Millions of souls were taken, ripped from their bodies and formed into "+
+"the seamless rock that the walls now exist as.  An image of a creature "+
+"coalesces in your mind.  It is constantly changing it's shape and size.  "+
+"This creatures feasts upon the dead bodies left behind.  Then a century "+
+"flashes by before your eyes, and even more time, perhaps a millennium, "+
+"perhaps many, and you find yourself staring at your body.  Your vision "+
+"finally begins to fade and you find yourself back in your body.",
+    A_ALWAYS,pc,null,null,TO_CHAR);
+pc.mana:=pc.mana-20;
+block;
+goto start;
+:iden2:
+i:=rnd(1,100);
+if(i<40)
+  goto zap;
+act("$1n reaches out, touches the wall, and utters the words, 'Revela
+incarade'",
+    A_SOMEONE,pc,null,null,TO_ROOM);
+act("A vision forms in your mind of the creation of these walls.  "+
+"Millions of souls were taken, ripped from their bodies and formed into "+
+"the seamless rock that the walls now exist as.  The creators of this wall "+
+"thrive upon chaos.  They could utterly destroy worlds, coming down from "+
+"the stars and ripping the souls from all life.  These seem to be called "+
+"the Old Ones.  A new image of a creature "+
+"coalesces in your mind.  It is constantly changing it's shape and size.  "+
+"This creatures feasts upon the dead bodies left behind.  These creatures "+
+"battled with the Old Ones, but the Old Ones used their power to lock them "+
+"away within this tower many millenia ago.  Then a century "+
+"flashes by before your eyes, and even more time, perhaps a millenium, "+
+"perhaps many, and you find yourself staring at your body.  Your vision "+
+"finally begins to fade and you find yourself back in your body.",
+    A_ALWAYS,pc,null,null,TO_CHAR);
+pc.mana:=pc.mana-20;
+block;
+goto start;
+:zap:
+act("$1n reaches and touches the wall, but it gives him a powerful zap and
+$1e collapses.",
+    A_SOMEONE,pc,null,null,TO_ROOM);
+act("As you reach out to touch the wall it zaps you and everything goes
+black.",
+    A_ALWAYS,pc,null,null,TO_CHAR);
+pc.mana:=pc.mana-20;
+pc.hp:=0;
+position_update(pc);
+block;
+goto start;
+}
+dilend
+
+end /* south_mage */
+
+/* castle */
+castle_ent
+title "Entrance to the Castle"
+descr
+"A majestic castle enclosed on all sides to repel attacks.  The walls of
+the castle are lined with glowing stones.  To the north is a hallway, to
+the south is the city square."
+/* two guards stationed here */
+extra {"hallway"}
+"The hallway leads north towards the throne room."
+extra {"glowing stones", "stones"}
+"The stone are built into the walls and appear to be magical."
+north to mc_int descr "An intersection in the castle.";
+south to merfolk_enter descr "Terantis Square.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* castle_ent */
+
+mc_int
+title "An Intersection in the Castle"
+descr
+"Two hallways meet here.  The hallway to the north continues towards the
+throne room.  To the west the hallway leads to the banquet hall, and to the
+east the hallway leads to stairs going up.  To the south is the entrance to
+the castle."
+extra {"north hallway","hallway"}
+"The main hallway leads north towards the throne room."
+south to castle_ent descr "Entrance the the castle.";
+west to castle_w_hall descr "West hall.";
+east to castle_e_hall descr "East hall.";
+north to castle_throne descr "Throne room.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* castle_intersection */
+
+castle_throne
+title "The Throne Room of the Castle"
+descr
+"This room is decorated with an assortment of shells and fine weapons.
+The throne is made from a large clam shell, several other smaller thrones are
+placed about the room.  The room seems to be filled with magic."
+extra {"throne", "large clam shell","clam shell"}
+"This must have been one large clam. The craftsmanship on the throne itself
+is exquisite.  It is beautifully carved from stone and melded with the
+shell."
+extra {"shells", "shell"}
+"Hanging on the walls are all sorts of shells."
+extra {"fine weapons", "weapons", "weapon"}
+"Tridents, swords, and spears decorate the north wall."
+south to mc_int descr "An intersection.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* throne room */
+
+castle_w_hall
+title "West Hall"
+descr
+"This hall goes west to the banquet hall, and east back to an intersection
+in the castle."
+west to castle_banq descr "Banquet hall.";
+east to mc_int descr "An intersection.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* west hall */
+
+castle_banq
+title "Banquet Hall"
+descr
+"This hall contains many long tables for banquets.  It looks to be very
+well used.  The walls are decorated with shells and banners."
+extra{"shells", "shell"}
+"The shells are large and beautiful like many of the others seen in the
+castle."
+extra{"banners", "banner"}
+"The banners hanging from the walls have a trident and a lightning bolt on
+them.  This seems to be the royal coat of arms."
+east to castle_w_hall descr "West hall.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* banquet hall */
+
+castle_e_hall
+title "East Hall"
+descr
+"This hall leads further east towards some stairs upward.  An exit to the
+north leads into the library.  To the south is another set of stairs
+leading down."
+north to castle_library descr "The library.";
+south to castle_dun descr "Stairs to the dungeon.";
+east to castle_east_up descr "Stairs up to the tower.";
+west to mc_int descr "An intersection in the castle.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* east hall */
+
+castle_dun
+title "The Dungeon"
+descr
+"These are the stairs down to the dreaded dungeons of the merfolk castle.
+It is said once you are put in the dungeon you will never come out alive
+again.  Of course they do allow visitors to leave right?"
+north to castle_e_hall descr "East hall.";
+down to dun_4 descr "A dark hallway.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* castle_dun */
+
+dun_4
+title "Dark Hallway"
+descr
+"A dark hallway leading north to the guard post or west towards the cells."
+north to guard_room descr "A guard post.";
+west to dun_3 descr "Dark hallway.";
+up to castle_dun descr "The dungeon.";
+dilcopy underwater@neptune();
+end /* dun_4 */
+
+guard_room
+title "Guard Room"
+descr
+"A dimly lit room where the guards keep watch over the prisoners.  There
+is nothing here but a large flat stone used as a table."
+south to dun_4 descr "Dark hallway.";
+dilcopy underwater@neptune();
+end /* guard room */
+
+dun_3
+title "Dark Hallway"
+descr
+"A small cramped hallway with cells to the north and south.  It continues
+to the west, and east is back out of the dungeons."
+north to cell_3 descr "Cell 3.";
+south to cell_7 descr "Cell 7.";
+west to dun_2 descr "Dark hallway.";
+east to dun_4 descr "Dark hallway.";
+dilcopy underwater@neptune();
+end /* dun_3 */
+
+dun_2
+title "Dark Hallway"
+descr
+"A small cramped hallway with cells to the north and south.  It continues
+to the west, and east is back out of the dungeons."
+north to cell_2 descr "Cell 2.";
+south to cell_6 descr "Cell 6.";
+east to dun_3 descr "Dark hallway.";
+west to dun_1 descr "Dark hallway.";
+dilcopy underwater@neptune();
+end /* dun_2 */
+
+dun_1
+title "Dark Hallway"
+descr
+"A small cramped hallway with cells to the north and south.  It continues
+to the west, and east is back out of the dungeons."
+north to cell_1 descr "Cell 1.";
+west to cell_4 descr "Cell 4.";
+south to cell_5 descr "Cell 5.";
+east to dun_2 descr "Dark hallway.";
+dilcopy underwater@neptune();
+end /* dun_1 */
+
+cell_1
+title "Cell 1"
+descr
+"The cell is small cramped and murky.  There is very little water
+circulation here.  You would not like to be locked in one of these tiny
+cells."
+south to dun_1 descr "Dark hallway.";
+dilcopy underwater@neptune();
+end /* cell_1 */
+
+cell_2
+title "Cell 2"
+descr
+"The cell is small cramped and murky.  There is very little water
+circulation here.  You would not like to be locked in one of these tiny
+cells."
+south to dun_2 descr "Dark hallway.";
+dilcopy underwater@neptune();
+end /* cell_2 */
+
+cell_3
+title "Cell 3"
+descr
+"The cell is small cramped and murky.  There is very little water
+circulation here.  You would not like to be locked in one of these tiny
+cells."
+south to dun_3 descr "Dark hallway.";
+dilcopy underwater@neptune();
+end /* cell_3 */
+
+cell_4
+title "Cell 4"
+descr
+"The cell is small cramped and murky.  There is very little water
+circulation here.  You would not like to be locked in one of these tiny
+cells."
+east to dun_1 descr "Dark hallway.";
+dilcopy underwater@neptune();
+end /* cell_4 */
+
+cell_5
+title "Cell 5"
+descr
+"The cell is small cramped and murky.  There is very little water
+circulation here.  You would not like to be locked in one of these tiny
+cells."
+north to dun_1 descr "Dark hallway.";
+dilcopy underwater@neptune();
+end /* cell_5 */
+
+cell_6
+title "Cell 6"
+descr
+"The cell is small cramped and murky.  There is very little water
+circulation here.  You would not like to be locked in one of these tiny
+cells."
+north to dun_2 descr "Dark hallway.";
+dilcopy underwater@neptune();
+end /* cell_6 */
+
+cell_7
+title "Cell 7"
+descr
+"The cell is small cramped and murky.  There is very little water
+circulation here.  You would not like to be locked in one of these tiny
+cells."
+north to dun_3 descr "Dark hallway.";
+dilcopy underwater@neptune();
+end /* cell_7 */
+
+castle_library
+title "The Library"
+descr
+"The library is filled with bookshelves and peculiar looking books.
+There are several tables to sit and study at, with the glowing pyramids to
+provide light."
+/* merscholar here */
+south to castle_e_hall descr "East hall.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* library */
+
+castle_east_up
+title "Stairway"
+descr
+"Solid stone stair spiral upwards into the tower.  Hanging on the walls
+here as in many other rooms within the castle are banners of the merfolk
+kingdom.  The craftsmanship of the walls and stairs is utterly amazing."
+extra {"walls", "stairs"}
+"The blocks used in building here have perfectly flat sides, and the
+construction looks like it is beyond the work of human hands.  Magic must
+play some role in this place."
+west to castle_e_hall descr "East hall.";
+up to castle_tower_1 descr "On the stairs.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /*east stairs*/
+
+castle_tower_1
+title "On the Stairs"
+descr
+"After the first turn of stairs you come to a landing.  The door here
+looks worn and battered as if someone were trying to break it down.  It
+still stands strong as ever against whomever might next try to destroy it."
+up to castle_tower_2 descr "In the tower.";
+down to castle_east_up descr "Bottom of the stairs.";
+north to castle_tower_d descr "A messy room.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /*middle tdower*/
+
+castle_tower_d
+title "A Messy Room"
+descr
+"The room looks a mess.  There is a coral bed on the stone floor, and
+drinking shells and various tools lay scattered about the room.  This place
+needs a good cleaning."
+south to castle_tower_1 descr "On the stairs.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /* castle_tower_d */
+
+castle_tower_2
+title "In the Tower"
+descr
+"You stand before a mighty door barring your passage into the room at the
+top of the tower.  You are compelled to continue after climbing all these
+damn stairs.  The craftsmanship of this place is as good as the entire
+tower. It seems that this tower may have been build separately from the
+rest of this castle."
+north to castle_tower_3 descr "The tower laboratory.";
+down to castle_tower_1 descr "On the stairs.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy underwater@neptune();
+end /*top of tower*/
+
+castle_tower_3
+title "The Tower Laboratory"
+descr
+"This room is filled with flasks, bottles, and various other things.  
+Built into the floor with colored stones is a large summoning circle.  The
+room is also filled with air!  This is amazing considering that the only
+things between the water outside and this room are the blocks used to build
+this tower.  Perhaps the effort put into perfecting the blocks was to seal
+the tower.  There are also racks of books around the room on various
+philosophical and magical subjects."
+south to castle_tower_2 descr "In the tower.";
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+end /*tower room*/
+
+%objects
+
+quest_helmet
+names {"black helmet","helmet"}
+title "black helmet"
+descr "A helmet lies on the ground here."
+extra {}
+"This helmet is very impressive. It's fine workmanship and powerful magic
+make it a valuable item."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+ARMOUR_PLATE(3,3)
+weight 2
+flags {UNIT_FL_MAGIC}
+dilcopy quest_restrict@function(MARKUS1_COMP,0,0,"");
+end
+
+great_helmet
+names {"great helmet","helmet"}
+title "great helmet"
+descr "A legendary helmet lies here forgotten."
+extra {}
+"This helmet is beyond description.  It is made of the finest steel, and
+forged into one of the finest helmets to exist."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+ARMOUR_PLATE(5,5)
+DEX_TRANSFER(+1)
+STR_TRANSFER(+1)
+SPELL_TRANSFER(SPL_COLD,6)
+weight 4
+flags {UNIT_FL_MAGIC}
+dilcopy quest_restrict@function(MARKUS2_COMP,0,0,"");
+end
+
+water_gem
+names {"water gem","gem"}
+title "water gem"
+descr "A small gem lies here."
+extra {}
+"Curious, this seems to be solid water, but it is not cold to the touch."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+weight 6
+flags {UNIT_FL_MAGIC}
+end
+
+air
+names {"breath of air","air"}
+title "breath of air"
+extra {}
+"The strangest thing you have ever touched.  It seems like solid air."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+weight 1
+flags {UNIT_FL_MAGIC}
+end
+
+trident
+names {"trident"}
+title "trident"
+descr "A fine trident lies here."
+extra {}
+"A trident, made entirely from steel, and pounded into shape while
+&cbcold&cw by the merfolk artisans."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_TRIDENT,1,1)
+weight 4
+flags {UNIT_FL_MAGIC}
+rent 50 IRON_PIECE
+cost 100 IRON_PIECE
+end
+
+spear
+names {"merfolk spear","spear"}
+title "Merfolk spear"
+descr "A spear lies here."
+extra {}
+"A powerful weapon against the Homarids.  This spear is made of wood with a
+steel spearhead."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_SPEAR,0,0)
+WEAPON_SLAYER(RACE_HOMARID)
+weight 3
+end
+
+shield
+names {"shell shield","shield","shell"}
+title "shell shield"
+descr "A large shell lies here."
+extra {}
+"This shell is reinforced with steel bands, and had a nice grip on the
+inside."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_SHIELD}
+weight 7
+end
+
+%mobiles
+
+w_elem
+names {"water elemental","elemental"}
+title "a water elemental"
+descr "A water elemental stands here."
+extra {}
+"A large fierce looking humanoid-shaped water elemental."
+alignment 0
+race RACE_ELEMENTAL_WATER
+sex SEX_NEUTRAL
+level 40
+height 230
+weight 440 /* for accuracy -- water is heavy */
+NATURAL_DEF(WPN_CRUSH,ARM_CLOTHES)
+MSET_ABILITY(25,25,25,25,0,0,0,0)
+MSET_WEAPON(0,0,0,0,10,0) // 10%
+MSET_SPELL(9,9,9,9,9,9,0,9,9,9,9) // 90% vulnerable to heat sphere of course
+minv 253
+
+dilbegin water_elem();
+var
+   i: integer;
+   u: unitptr;
+code
+{
+  :start:
+  heartbeat:=PULSE_SEC*400;
+  wait(SFB_DONE, (activator.type==UNIT_ST_PC));
+
+  foreach(UNIT_ST_PC,u)
+  {
+    if(MARKUS1_ONGOING in u.quests)
+    {
+      self.minv:=0;
+      act("A large water elemental rises forth from the lake.",
+          A_ALWAYS,u,null,null,TO_ALL);
+      goto do_wait;
+    }
+  }
+  self.minv:=253;
+  goto start;
+
+:do_wait:
+pause;
+act("The water elemental tires of waiting and disappears back into the water.",
+A_ALWAYS,u,null,null,TO_ALL);
+self.minv:=253;
+goto start;
+}
+dilend
+end
+
+a_elem
+names {"air elemental","elemental"}
+title "an air elemental"
+descr "An air elemental hovers here."
+extra {}
+"A wispy being made of air."
+alignment 0
+race RACE_ELEMENTAL_AIR
+sex SEX_NEUTRAL
+level 40
+height 200
+weight 150 /* a bit heavy for air?? */
+NATURAL_DEF(WPN_CRUSH,ARM_CLOTHES)
+MSET_ABILITY(20,20,20,20,20,0,0,0)
+MSET_WEAPON(0,0,0,0,10,0) // 10%
+MSET_SPELL(9,9,9,0,9,9,9,9,9,9,9) // 90% vulnerable to summoning sphere
+dilcopy wander_zones@function("neptune",PULSE_SEC*3,0,0);
+end
+
+shark
+names {"shark"}
+title "a shark"
+descr "A lightning fast shark swims about looking for some food."
+extra {}
+"This shark looks hungry.  You better watch your back with it around."
+alignment 0
+race RACE_SHARK
+sex SEX_NEUTRAL
+level 40
+height 240
+weight 300
+NATURAL_DEF(WPN_BITE, ARM_HLEATHER)
+MSET_ABILITY(25,25,25,20,5,0,0,0)
+MSET_WEAPON(0,0,0,0,12,0)
+MSET_SPELL(8,8,8,8,8,8,8,8,8,8,8)
+dilcopy wander_zones@function("neptune",PULSE_SEC*3,0,0);
+dilcopy fido@function("","");
+dilcopy clean_dead@neptune();
+dilbegin join_fight();
+code
+{
+  :start:
+  wait(SFB_COM,(self.position!=POSITION_FIGHTING));
+  exec("emote dives into the fray.",self);
+  set_fighting(self,activator);
+  goto start;
+}
+dilend /* join_fight */
+end
+
+h_worker_m
+names {"homarid worker","homarid","worker"}
+title "a homarid worker"
+descr "A homarid worker is here gathering food."
+extra {}
+"This horrible thing is some kind of cross between a crab and a human.
+It has a hard outer shell, large crab-like claws and two eyes on the end of
+stalks poking out of what appears to be its head.  Whatever they are you
+should probably keep your distance."
+HOMARID_WARRIOR(40,SEX_MALE,160,150)
+dilcopy wander_zones@function("neptune",PULSE_SEC*30,0,0);
+dilcopy agg_merfolk@neptune();
+end /* worker_m */
+
+h_worker_f
+names {"homarid worker","homarid","worker"}
+title "a homarid worker"
+descr "A homarid worker is here gathering food."
+extra {}
+"This horrible thing is some kind of cross between a crab and a human.
+It has a hard outer shell, large crab-like claws and two eyes on the end of
+stalks poking out of what appears to be its head.  Whatever they are you
+should probably keep your distance."
+HOMARID_WARRIOR(40,SEX_FEMALE,155,145)
+dilcopy wander_zones@function("neptune",PULSE_SEC*30,0,0);
+dilcopy agg_merfolk@neptune();
+end /* worker_f */
+
+h_warrior_m
+names {"homarid warrior","homarid","warrior"}
+title "a homarid warrior"
+descr "A homarid warrior is patrolling here."
+extra {}
+"This horrible thing is some kind of cross between a crab and a human.
+It has a hard outer shell, large crab-like claws and two eyes on the end of
+stalks poking out of what appears to be its head.  It looks a little larger
+than the others you have seen."
+HOMARID_WARRIOR(45,SEX_MALE,190,200)
+dilcopy wander_zones@function("neptune",PULSE_SEC*45,0,0);
+dilcopy agg_merfolk@neptune();
+end /* warrior_m */
+
+h_warrior_f
+names {"homarid warrior","homarid","warrior"}
+title "a homarid warrior"
+descr "A homarid warrior is patrolling here."
+HOMARID_WARRIOR(45,SEX_FEMALE,190,195)
+extra {}
+"This horrible thing is some kind of cross between a crab and a human.
+It has a hard outer shell, large crab-like claws and two eyes on the end of
+stalks poking out of what appears to be its head.  It looks a little larger
+than the others you have seen."
+dilcopy wander_zones@function("neptune",PULSE_SEC*45,0,0);
+dilcopy agg_merfolk@neptune();
+end /* warrior_f */
+
+m_warrior_m
+names {"merman warrior","merman","warrior"}
+title "a merman warrior"
+descr "A brave merman warrior watches for intruders."
+extra {}
+"This stong warrior looks proud to defend his people from the homarids."
+MERFOLK_WARRIOR(45,SEX_MALE)
+dilcopy ass_merfolk@neptune();
+end /* warrior_m */
+
+m_warrior_f
+names {"mermaid warrior","mermaid","warrior"}
+title "a mermaid"
+descr "A cunning mermaid keeps watch here."
+extra {}
+"This mermaid looks very enticing.  Her well muscled body and warm smile
+make her a cunning and formidable opponent."
+MERFOLK_WARRIOR(45,SEX_FEMALE)
+dilcopy ass_merfolk@neptune();
+end /* warrior_f */
+
+m_patrol_m
+names {"merman warrior","merman","warrior"}
+title "a merman warrior"
+descr "A brave merman patrols the lake."
+extra {}
+"He looks determined to rid the lake of the homarids single-handedly.
+You dare not cross this proud warrior."
+MERFOLK_WARRIOR(45,SEX_MALE)
+dilcopy wander_zones@function("neptune",PULSE_SEC*45,1,0);
+dilcopy ass_merfolk@neptune();
+end /* patrol_m */
+
+m_patrol_f
+names {"mermaid warrior","mermaid","warrior"}
+title "a mermaid"
+descr "A cunning mermaid patrols the lake."
+extra {}
+"This charming mermaid is on the prowl for homarids."
+MERFOLK_WARRIOR(45,SEX_FEMALE)
+dilcopy wander_zones@function("neptune",PULSE_SEC*45,1,0);
+dilcopy ass_merfolk@neptune();
+end /* patrol_f */
+
+m_shaman_m
+names {"merman shaman","merman","shaman"}
+title "a merman shaman"
+descr "A powerful shaman of the mermen is here."
+extra {}
+"This merman has various symbols painted on his body.  He looks
+experienced and strong.  A difficult challenge in battle."
+MERFOLK_SHAMAN(50,SEX_MALE,"","heal")
+dilcopy heal_merfolk@neptune();
+end /* shaman_m */
+
+m_shaman_f
+names {"mermaid priestess","mermaid","priestess"}
+title "a mermaid priestess"
+descr "A sly mermaid priestess swims about here."
+extra {}
+"She has to be the most beautiful mermaid you have ever seen."
+MERFOLK_SHAMAN(50,SEX_FEMALE,"","heal")
+dilcopy heal_merfolk@neptune();
+end /* shaman_f */
+
+m_worker_m
+names {"merman"}
+title "a merman"
+descr "A merman is here going about his own business."
+extra {}
+"This merman is going about his life happily, knowing that his brothers
+will protect him from the homarids."
+MERFOLK_WARRIOR(40,SEX_MALE)
+dilcopy wander_zones@function("neptune",PULSE_SEC*30,1,0);
+dilcopy ass_merfolk@neptune();
+end /* worker_m */
+
+m_worker_f
+names {"mermaid"}
+title "a mermaid"
+descr "An innocent looking mermaid swims about."
+extra {}
+"A young innocent mermaid swims about playfully."
+MERFOLK_WARRIOR(40,SEX_FEMALE)
+dilcopy wander_zones@function("neptune",PULSE_SEC*30,1,0);
+dilcopy ass_merfolk@neptune();
+end /* worker_f */
+
+m_armorer
+names {"merman armorer"}
+title "a merman armorer"
+descr "A strong armorer stands here ready to serve."
+extra {}
+"A strong weathered merman stands here offering his goods."
+MERFOLK_WARRIOR(50,SEX_MALE)
+special SFUN_SHOP_INIT
+"Profit sell = 120
+Profit buy = 80
+Production = ~shield@neptune~
+Trade types = "+ITEM_ARMOR+"
+Hours1 = 4 12
+Hours2 = 13 23"
+end /* armorer */
+
+m_weapon
+names {"merman weaponsmith"}
+title "a merman weaponsmith"
+descr "A strong merman weaponsmith stands here ready to serve you."
+extra {}
+"This guy definately knows what he's doing when it comes to weapons."
+MERFOLK_WARRIOR(50,SEX_MALE)
+special SFUN_SHOP_INIT
+"Profit sell = 120
+Profit buy = 80
+Production = ~trident@neptune~ ~spear@neptune~
+Trade types = "+ITEM_WEAPON+"
+Hours1 = 4 12
+Hours2 = 13 23"
+end /* weaponsmith */
+
+m_fish
+names {"merman merchant","merman"}
+title "a merman merchant"
+descr "A merman stands here selling his goods."
+extra {}
+"A respectable merchant."
+MERFOLK_WARRIOR(45,SEX_MALE)
+special SFUN_SHOP_INIT
+"Profit sell = 130
+Profit buy = 10
+Production = ~kipper@midgaard~ ~split_cod@midgaard~ ~salmon@midgaard~
+Trade types = "+ITEM_FOOD+"
+Hours1 = 4 12
+Hours2 = 13 23"
+end /* fish seller */
+
+m_drink
+names {"merman barkeeper","merman"}
+title "a merman barkeeper"
+descr "A friendly barkeeper stands here."
+extra {}
+"You better not pick a fight in this place, this guy is not a wimp."
+MERFOLK_WARRIOR(50,SEX_MALE)
+special SFUN_SHOP_INIT
+"Profit sell = 160
+Profit buy = 10
+Production = ~tuborg@midgaard~ ~brandy_bottle@midgaard~ ~beer_bottle@midgaard~
+Trade types = "+ITEM_DRINKCON+"
+Hours1 = 4 12
+Hours2 = 13 23"
+end /* bartender */
+
+m_banker
+names {"merman banker","merman"}
+title "a merman banker"
+descr "A friendly banker stands here."
+extra {}
+"This guy look quite friendly."
+MERFOLK_WARRIOR(46,SEX_MALE)
+special SFUN_BANK
+end /* banker */
+
+m_guard_m
+names {"merman guard","merman","guard"}
+title "a merman guard"
+descr "A brave merman stands watch at the gate."
+extra {}
+"The most respected of mermen.  This brave guard stands watch at the gate
+to defend against constant homarid attack."
+MERFOLK_WARRIOR(50,SEX_MALE)
+dilcopy 
+guard_level@function(DOWN,"lake2_5@neptune",50,255,"m_block@neptune");
+dilcopy ass_merfolk@neptune();
+end /* gate guards */
+
+m_king
+names {"lord jaga","jaga","merman","king"}
+title "Jaga"
+descr "Wise king Jaga sits upon his throne here."
+extra {}
+"The king looks very old, but still very strong and experienced in battle."
+MERFOLK_WARRIOR(60,SEX_MALE)
+end /* king jaga */
+
+barracuda
+names {"barracuda","fish"}
+title "a barracuda"
+descr "A long slender barracuda swims about here."
+extra {}
+"A long slender fish with a mouth packed with razor sharp teeth."
+race RACE_BARRACUDA
+sex SEX_FEMALE
+level 40
+height 300
+weight 150
+NATURAL_DEF(WPN_BITE, ARM_CHAIN)
+MSET_ABILITY(20,30,10,30,0,10,0,0)
+MSET_WEAPON(0,0,0,0,34,0)
+MSET_SPELL(6,6,6,6,6,6,6,6,6,6,6)
+dilcopy wander_zones@function("neptune",10,0,0);
+dilcopy fido@function("","");
+dilcopy clean_dead@neptune();
+end /* barracuda */
+
+giant_crab
+names {"giant crab","crab"}
+title "a giant crab"
+descr "This giant crab doesn't look happy at your intrusion."
+extra {}
+"Looks like an ordinary crab only much bigger."
+race RACE_CRAB
+sex SEX_MALE
+level 50
+height 300
+weight 400
+NATURAL_DEF(WPN_CLAW, ARM_PLATE)
+MSET_ABILITY(25,25,25,25,0,0,0,0)
+MSET_WEAPON(0,0,0,0,23,0)
+MSET_SPELL(7,7,7,7,7,7,7,7,7,7,7)
+dilcopy guard_level@function(SOUTH,"cave_2@neptune",51,255,"m_block@neptune");
+dilcopy guard_level@function(DOWN,"cave_2@neptune",51,255,"m_block@neptune");
+dilcopy agg_merfolk@neptune();
+end /* giant crab */
+
+markus
+names {"markus"}
+title "Markus the Great"
+descr "Markus stands here guarding the icy depths."
+extra {}
+"A great warrior of stout heart and pure muscle stands willing to help
+those in need."
+alignment 500
+race RACE_HUMAN
+sex SEX_MALE
+level 65
+height 200
+weight 223
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY(13,13,10,12,12,10,15,15)
+MSET_WEAPON(10,10,0,1,10,1)
+MSET_SPELL(10,1,1,0,1,10,15,10,0,10,10)
+
+dilbegin helmet_quest();
+var
+  item : unitptr;
+  pc : unitptr;
+  i : integer;
+  exdp : extraptr;
+  
+code
+{
+heartbeat:= PULSE_SEC*3;
+
+:start:
+  wait(SFB_CMD,(activator.type == UNIT_ST_PC));
+  if((activator.level>=35) and (not (MARKUS1_COMP in activator.quests)))
+    goto low_level;
+  if((activator.level>=50) and (MARKUS1_COMP in activator.quests))
+    goto high_level;
+  else
+    goto start;
+  :high_level:
+  pc:=activator;
+  secure(pc,lostpc);
+  if (MARKUS2_ONGOING in pc.quests)
+    goto quest2_ongoing;
+  exec("say Greetings adventurer",self);
+  exec("say I know why you have come here,",self);
+  pause;
+  exec("say You seek a powerful helmet.",self);
+  pause;
+  exec("scratch",self);
+  pause;
+  exec("say This helmet you seek is mine to give if you prove
+yourself.",self);
+  pause;
+  exec("say I was once a great adventurer.",self);
+  pause;
+  exec("say If you can prove to me that you are my equal, then I will give
+you what you seek.",self);
+  pause;
+  exec("say First to prove your leadership ability.  Bring me the
+lengendary helmet found on the statues.",self);
+  pause;
+  exec("say To prove your cunning bring me the ring of detection from the
+mysterious darkelf traveler.",self);
+  pause;
+  exec("say To prove your bravery fetch the sleeves made of silver.",self);
+  pause;
+  exec("say To prove your piety bring me the leggings of Freya.",self);
+  pause;
+  exec("say And finally to prove your fame bring me a mantle from the
+defenders of good.",self);
+  pause;
+  exec("say Nod if you will choose to accept.",self);
+     i := 0;
+     while (i < 5)
+     {
+	wait(SFB_CMD, activator #= pc);
+
+	if(command(CMD_NOD))
+	{
+	  goto quest2_accepted;
+	}
+	else if(command(CMD_SAY))
+	{
+	  pause;
+        exec("say Please nod if you wish to accept or shake your head"+
+             " if you wish to decline.",self);
+	}
+	else if(command(CMD_SHAKE))
+	goto no_quest;
+	i := i + 1;
+     }
+
+/*
+  :accept2_loop:
+  wait(SFB_CMD, activator #= pc);
+  if(command(CMD_NOD))
+    goto quest2_accepted;
+  else if (command(CMD_SHAKE))
+    goto no_quest;
+  else
+  {
+    exec("say Please nod if you wish to accept or shake your head if you
+wish to decline.",self);
+    goto accept2_loop;
+  }
+*/  
+:no_quest:
+  exec("say So be it, but I warn you it is dangerous in this lake.",self);
+  unsecure(pc);
+  goto start;
+
+:quest2_accepted:
+  exec("say I wish you luck on your challenge.",self);
+  addextra(pc.quests, {MARKUS2_ONGOING}, "");
+  unsecure(pc);
+  goto start;
+
+:quest2_ongoing:
+  exdp := MARKUS2_ONGOING in pc.quests;
+  
+if (("helmet" in exdp.names) and 
+    ("ring" in exdp.names) and 
+    ("sleeves" in exdp.names) and
+    ("leggings" in exdp.names) and
+    ("mantle" in exdp.names))
+{
+  pause;
+  subextra(pc.quests,MARKUS2_ONGOING);
+  addextra(pc.quests, {MARKUS2_COMP}, "");
+  experience(7000, pc);
+  item := load ("great_helmet@neptune");
+  link(item,pc);
+  exec("bounce " + pc.name, self);
+  pause;
+  exec("say You did it!", self);
+  pause;
+  exec("say Here is your reward great one!",self);
+  pause;
+  exec("wave " + pc.name, self);
+}
+
+unsecure(pc);
+goto start;
+
+:low_level:
+  pc:=activator;
+  secure(pc,lostpc);
+  if(MARKUS1_ONGOING in pc.quests)
+    goto quest1_ongoing;
+  exec("say Greetings adventurer!",self);
+  exec("say I know why you have come here.",self);
+  pause;
+  exec("say I can make a helmet for you to breathe underwater with,
+but...",self);
+  pause;
+  exec("say I will need you to gather some things to help me with
+this.",self);
+  pause;
+  exec("say Please fetch me a mithril helmet from the dwarven keep.",self);
+  pause;
+  exec("say I will also need a hammer to work on the helmet with",self);
+  pause;
+  exec("say it doesn't need to be anything special...",self);
+  pause;
+  exec("say I will also need the essence of water,",self);
+  pause;
+  exec("say and finally a breath of air.",self);
+  pause;
+  exec("say If are willing to bring me these things please nod.",self);
+
+     i := 0;
+     while (i < 5)
+     {
+	wait(SFB_CMD, activator #= pc);
+
+	if(command(CMD_NOD))
+	{
+	  goto quest1_accepted;
+	}
+	else if(command(CMD_SAY))
+	{
+	  pause;
+          exec("say Nod if you will gather these things for your helmet.",self);
+	}
+	else if(command(CMD_SHAKE))
+	goto no_quest;
+	i := i + 1;
+     }
+/*
+  :accept1_loop:
+  wait(SFB_CMD, activator #= pc);
+  if(command(CMD_NOD))
+    goto quest1_accepted;
+  else 
+  {
+    if (command(CMD_SHAKE))
+      goto no_quest;
+    else
+    {
+      exec("say Nod if you will gather these things for your helmet.",self);
+      goto accept1_loop;
+    }
+  }
+*/
+
+:quest1_accepted:
+  exec("say I wish you luck in your task.",self);
+  addextra(pc.quests, {MARKUS1_ONGOING}, "");
+  unsecure(pc);
+  goto start;
+  
+:quest1_ongoing:
+  exdp := MARKUS1_ONGOING in pc.quests;
+  
+if (("helmet" in exdp.names) and
+    ("hammer" in exdp.names) and
+    ("water" in exdp.names) and
+    ("air" in exdp.names))
+{
+  subextra(pc.quests, MARKUS1_ONGOING);
+  addextra(pc.quests, {MARKUS1_COMP}, "");
+  experience(5000, pc);
+  item := load("quest_helmet@neptune");
+  link(item,pc);
+  exec("cheer " + pc.name,self);
+  pause;
+  exec(" say Congratulations " + pc.name + ", use your helmet in good
+health!",self);
+  pause;
+  exec("say Oh, one other thing I heard rumors of a giant man-eating crab" +
+       "in the lake, so be careful!",self);
+  pause;
+  exec("wave " + pc.name,self);
+}
+
+unsecure(pc);
+goto start;
+
+:lostpc:
+  exec("shrug",self);
+  pause;
+  exec("say dumb newbies...",self);
+  goto start;
+}
+dilend
+
+dilbegin markus_give();
+var
+  pc: unitptr;
+  item: unitptr;
+  exdp: extraptr;
+  
+code
+{
+heartbeat:=PULSE_SEC*3;
+
+:start:
+wait(SFB_DONE, command (CMD_GIVE) and
+	      (target == self) and
+	      (activator.type == UNIT_ST_PC));
+/*exec("say "+medium.nameidx+"@"+medium.zoneidx+" received",self);*/
+pc := activator;
+item := medium;
+if(MARKUS2_ONGOING in pc.quests)
+  goto give2;
+else if(MARKUS1_ONGOING in pc.quests)
+  goto give1;
+else
+{
+  exec("say quest not started...",self);
+  goto start;
+}
+
+:give2:
+secure(pc, lostpc);
+exdp := MARKUS2_ONGOING in pc.quests;
+
+  if ("g_helmet@garden" in (item.nameidx + "@" + item.zoneidx))
+  {
+    addstring(exdp.names, "helmet");
+    exec("say Good, good, you have proven your abilility to lead!",self);
+    destroy(item);
+  }
+  else if ("detectring@darkelf" in (item.nameidx + "@" + item.zoneidx))
+  {
+    addstring(exdp.names, "ring");
+    exec("zigzag",self);
+    exec("say You have proven your cunning!",self);
+    destroy(item);
+  }
+  else if ("silver_sleeves@keep" in (item.nameidx + "@" + item.zoneidx))
+  {
+    addstring(exdp.names, "sleeves");
+    exec("bow " + pc.name, self);
+    pause;
+    exec("say You are truely brave, it is an honor to know you!",self);
+    destroy(item);
+  }
+  else if("freyan_leg@asgaard" in (item.nameidx + "@" + item.zoneidx))
+  {
+    addstring(exdp.names, "leggings");
+    exec("emote consults the gods...",self);
+    pause;
+    exec("say You truly are favored by the gods.",self);
+    destroy(item);
+  }
+  else if("crimson_mantle@isledead" in (item.nameidx + "@" + item.zoneidx))
+  {
+    addstring(exdp.names, "mantle");
+    pause;
+    exec("say I hope no harm came to the Sanctuarians in getting this",self);
+    destroy(item);
+  }
+  else
+  {
+    exec("say I did not ask for this did I?",self);
+    pause;
+    exec("say oh well, thanks for the gift",self);
+  }
+unsecure(pc);
+goto start;
+  :give1:
+secure(pc, lostpc);
+exdp := MARKUS1_ONGOING in pc.quests;
+  if (("mith_helmet@dwarves") in (item.nameidx + "@" + item.zoneidx))
+  {
+    addstring(exdp.names, "helmet");
+    exec("say Good, good, you have found the helmet I need!",self);
+    destroy(item);
+  }
+  else if (("gnome_hammer@gnome")in(item.nameidx+"@"+item.zoneidx))
+  {
+    addstring(exdp.names, "hammer");
+    exec("say Excellent, this hammer will do nicely!",self);
+    destroy(item);
+  }
+  else if (("water_gem@neptune")in(item.nameidx+"@"+item.zoneidx))
+  {
+    addstring(exdp.names, "water");
+    exec("say I hope the elemental did not give you too much trouble.",self);
+    destroy(item);
+  }
+  else if (("air@neptune")in(item.nameidx+"@"+item.zoneidx))
+  {
+    addstring(exdp.names, "air");
+    exec("say Excellent, I bet that was hard to find!",self);
+    destroy(item);
+  }
+  else
+  {
+    exec("say hmm this isn't quite what I needed",self);
+    link(item,pc);
+  }
+  unsecure(pc);
+  goto start;
+  :lostpc:
+  goto start;
+}
+dilend /* quest_give */
+end /* markus */
+
+%reset
+
+load markus into path_und local 1
+load w_elem into ent_und max 1
+{
+  load water_gem
+}
+load a_elem into path_und max 1
+{
+  load air
+}
+load shark into lake2_2 local 1
+load shark into lake2_4 local 1
+load shark into lake2_6 local 1
+load shark into lake2_8 local 1
+load barracuda into lake2_5 local 1
+load h_warrior_m into cave_enter local 2
+load h_warrior_m into cave_enter local 2
+load h_warrior_f into cave_1 local 2
+load h_warrior_m into cave_1 local 2
+load h_warrior_m into cave_4 local 1
+load h_warrior_f into cave_4 local 1
+load h_warrior_m into cave_3 local 1
+load h_warrior_f into cave_3 local 1
+load h_warrior_m into cave_2 local 1
+load h_warrior_f into cave_2 local 1
+load h_worker_m into cave_1 local 1
+load h_worker_f into cave_2 local 1
+load h_worker_f into cave_nest local 1
+load h_worker_f into cave_3 local 1
+load h_worker_f into cave_4 local 1
+load h_worker_f into cave_5 local 4
+load h_worker_f into cave_5 local 4
+load h_worker_f into cave_5 local 4
+load h_worker_f into cave_5 local 4
+load h_worker_m into cave_5 local 2
+load h_worker_m into cave_5 local 2
+load giant_crab into cave_2 local 1
+load m_king into castle_throne local 1
+{
+  equip trident position WEAR_WIELD
+}
+load m_warrior_m into castle_throne local 1
+{
+  equip spear position WEAR_WIELD
+}
+load m_warrior_f into castle_throne local 1
+{
+  equip spear position WEAR_WIELD
+}
+load m_shaman_f into castle_throne local 1
+load m_patrol_m into mc_int local 1
+{
+  equip trident position WEAR_WIELD
+}
+load m_patrol_f into mc_int local 1
+{
+  equip trident position WEAR_WIELD
+}
+load m_warrior_m into castle_ent local 1
+{
+  equip spear position WEAR_WIELD
+}
+load m_warrior_f into castle_ent local 1
+{
+  equip spear position WEAR_WIELD
+}
+load m_patrol_m into barrack_1 local 1
+{
+  equip trident position WEAR_WIELD
+}
+load m_warrior_m into barrack_1 local 1
+{
+  equip spear position WEAR_WIELD
+}
+load m_patrol_m into barrack_2 local 1
+{
+  equip trident position WEAR_WIELD
+}
+load m_warrior_m into barrack_2 local 1
+{
+  equip spear position WEAR_WIELD
+}
+load m_patrol_m into barrack_3 local 1
+{
+  equip trident position WEAR_WIELD
+}
+load m_warrior_m into barrack_3 local 1
+{
+  equip spear position WEAR_WIELD
+}
+load m_patrol_f into barrack_4 local 1
+{
+  equip trident position WEAR_WIELD
+}
+load m_warrior_f into barrack_4 local 1
+{
+  equip spear position WEAR_WIELD
+}
+load m_patrol_f into barrack_5 local 1
+{
+  equip trident position WEAR_WIELD
+}
+load m_warrior_f into barrack_5 local 1
+{
+  equip spear position WEAR_WIELD
+}
+load m_patrol_f into barrack_6 local 1
+{
+  equip trident position WEAR_WIELD
+}
+load m_warrior_f into barrack_6 local 1
+{
+  equip spear position WEAR_WIELD
+}
+load m_guard_m into lake2_5 local 4
+{
+  equip trident position WEAR_WIELD
+}
+load m_guard_m into lake2_5 local 4
+{
+  equip trident position WEAR_WIELD
+}
+load m_shaman_m into lake2_5 local 1
+load m_worker_m into road_3 local 1
+load m_worker_f into road_3 local 1
+load m_worker_m into road_2 local 1
+load m_worker_f into road_2 local 1
+load m_worker_m into road_1 local 1
+load m_worker_f into road_1 local 1
+load m_worker_m into merfolk_enter local 1
+load m_worker_f into merfolk_enter local 1
+load m_armorer into armorer local 1
+load m_weapon into weapons local 1
+load m_fish into fish_store local 1
+load m_drink into drink local 1
+load m_banker into bank local 1
+load m_warrior_m into guard_room local 1
+load m_warrior_f into guard_room local 1
+load m_patrol_m into dun_1 local 1
+load m_warrior_m into castle_tower_2 local 1
+{
+  equip trident position WEAR_WIELD
+}
+load m_shaman_f into castle_library local 1
+%end
+
+

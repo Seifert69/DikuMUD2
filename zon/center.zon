@@ -1,0 +1,4656 @@
+/*
+filename    center
+password    hu99ing
+changedby   Zig
+EmailAdd     Brian Moses <zag@diac.com>
+request     compile
+version     31
+END HEADER*/
+
+#include <composed.h>
+
+#define RACE_ELEMENTALS_REX     9992
+#define RACE_VORTEX_REX        9994
+#define RACE_DRHEAD_REX      9995
+#define RACE_DR_BODY_REX    9996
+#define ROD_ONGOING "Paladin Rod Quest Ongoing"
+#define ROD_COMPLETE "Paladin Rod Quest Complete"
+#define KEEP_HEAD "Keeping your Head"
+#define KATANA_REPLACED "Sword of Truth Replaced"
+#define RACE_ELEMENTAL_GENIE  9997
+#define BASE_GENIE(MLVL, GENDER) \
+   race RACE_ELEMENTAL_GENIE \
+   level MLVL \
+   sex GENDER \
+   height   210       /* cm            */ \
+   weight   500       /* Pounds        */ \
+   NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+#define ELEMENTAL_GENIE(MLVL, GENDER, ATT_SPL)              \
+   BASE_GENIE(MLVL, GENDER)                                 \
+   MSET_ABILITY(20,20,0,15,15,8,22,0)                    \
+   MSET_WEAPON(1,4,1,4,0,0)                /* 12%  */       \
+   MSET_SPELL(0,9,9,9,9,9,9,9,9,9,9) \
+   dilcopy combat_mag@function(ATT_SPL," ",0,2);
+
+%zone center
+title "Elemental Planes"
+lifespan 24
+reset RESET_ANYHOW
+creators {"Rexor, Nitemare, and Mollusk","Zig"}
+
+notes
+"This zone is a journey to the center of the earth.  It encompasses travel
+through the 4 elemental planes culminating at the center of the earth.  It
+is
+recommended for players of levels 45 and above.  We would appreciate any
+suggestions you have to improve this zone. Voice them to
+(E-Mail) Msantilli@vgi1.com
+jan 13/ 96   Updates money, rent, exp, ability bonuses, mag modifiers,
+craftmanship. -Palio
+Oct. 16, 1996 Brought Sword of Truth in to replace Katana of Truth -Zig
+Dec 3 Sword of truth brought into limits. Set to 12 charges not 100 and
+set to 1 charge per tick not 4. Also removed the slayer on the item as it
+has dil damage. Reference to zig removed from mob (lets not get cocky
+here) -Palio "
+
+
+%dil
+dilbegin sword_aff(medi : unitptr, targ : unitptr, hm : integer);
+code
+{
+        act("$1n slices $3n completley, you hear flesh tearing!", A_SOMEONE,
+self, null,targ, TO_NOTVICT);
+        act("$1n slices you hard, your flesh tears!", A_ALWAYS, self,
+null,null, TO_VICT);
+        act("You boldy slice into $3n's stomach!", A_ALWAYS, self, null,targ
+, TO_CHAR);
+        act("You grasp your midsection, holding your intestines in!", 
+A_ALWAYS, self, null,targ , TO_VICT);
+        act("$1n grabs at $1s midsection, holding in $1s intestines!", 
+A_SOMEONE, targ, null, null, TO_REST);
+        return;
+}
+dilend
+
+
+dilbegin fireroom();
+var
+     i : integer;
+     pc: unitptr;
+    code
+{
+     heartbeat := PULSE_SEC*20;
+
+     :start:
+     wait(SFB_CMD, (activator.type == UNIT_ST_PC));
+     i := rnd (1,25);
+     if (i > 1)
+       goto start;
+     act("Flames leap up and singe $1n!!!",A_ALWAYS, activator, null, null,
+TO_REST);
+     act("Flames leap up and singe you!!!",A_ALWAYS, activator, null, null,
+TO_CHAR);
+     act("$1n screams loudly, you can smell flesh burning.",A_ALWAYS,
+activator, null, null, TO_REST);
+     act("You scream loudly, you smell your flesh burning.",A_ALWAYS,
+activator, null, null, TO_CHAR);
+     activator.hp := activator.hp - 15;
+     pause;
+     goto start;
+}
+dilend
+
+
+%rooms
+
+
+/* --------------------------- Cavern Entrance ------------------ */
+
+                                cavern1
+
+title "A Large Cavern"
+descr
+"This large cavern is a relief from the dismal waste of the swamp area. 
+The
+walls of the cave are smooth and polished with a bright and magical aura.
+Ancient and mystic runes are barely legible along the walls and ceiling,
+and
+a faint trace of magic is in the air.  The only exits are a narrowing
+passage
+down or a tight passageway up."
+
+names {"cavern1"}
+extra {"walls","runes"}
+"You observe these mystical markings which are geometrical in shape and
+appear
+to resemble the mysterious light in the midnight sky."
+movement SECT_FOREST
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+flags {UNIT_FL_NO_MOB}
+down to cavern2
+descr
+"Down here seems to continue forever.  This almost seems like it would
+continue to the center of the world";
+up to base_mount@deadl1
+descr
+"Up takes you out of the mystic cavern";
+end
+
+                                cavern2
+
+title "A Smaller Cavern"
+descr
+"The caverns continue in a downward fashion.  More illegible runes are
+etched in the walls. The temperature of the cavern is becoming warmer and
+much more comfortable.  The feeling of magic in the air increases as you
+continue the descent downward.  The cavern continues upward and downward."
+
+names{"cavern2"}
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_FOREST
+up to cavern1
+descr
+"The exit up looks to be a long passage out of this narrow cavernous
+area.";
+down to cavern3
+descr
+"The ceiling lowers as the cavern continues to the east";
+end
+
+                                cavern3
+
+title "A Smaller Cavern"
+descr
+"You enter a long cavern which has an extremely low ceiling.  You almost
+need to crawl through here.  The air in this place is warn and humid. 
+There
+is a strong  feeling of magic in the air and a pleasant aroma of sweet
+flowers
+emanating from the end of the cavern.  There is a crawl space down and a
+passage leading up."
+
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+names{"cavern3"}
+
+up to cavern2
+descr
+"This passage up will take you back towards the inhabitable area of the
+world";
+down to pal1
+descr
+"The path downward is a small crawl space that seems to almost require that
+you
+take off your armor to fit through.  It looks as if it leads to a wonderful
+place.";
+end
+
+                                pal1
+
+title "A Great Cavern"
+names {"paladin cavern"}
+descr
+"You have entered into an immense cavern.  The most amazing thing about
+this cavern is the lush vegetation growing everywhere.  Brilliantly colored
+flowers, bushes, and trees cover the ground as far as the eye can see.  You
+don't mind the humid air but you sense a strong magic which helps these
+plants grow in the absence of sunlight.  There is a path off to the east."
+
+extra {"path"}
+"The path is a tiny well manicured walkway between the amazing plant life."
+extra {"flowers","trees","plants"}
+"Thousands of yellow, red, blue, orange, and green plants cover the ground
+for as far as the eye can see."
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+movement SECT_INSIDE
+east to pal2
+descr
+"The path continues east through the abundance of plant life.";
+up to cavern3
+descr
+"The crawl space upwards takes you out of this wonderful place and brings
+you
+back into the dark caves";
+end
+
+
+                                pal2
+
+title "Inside the paladin cave"
+names {"paladin cave"}
+descr
+"The path continues along for a ways.  There continues to be the lush
+vegetation all around and a small stream flows off to the side of the path.
+Various tropical fish swim in the stream.  You are in awe of the perfection
+of this mystical haven.  A hut rises off in the east."
+
+extra {"stream","fish"}
+"A small fresh water stream flows slowly parallel to the forest path.  You
+notice hundreds of tiny fish swimming in the stream."
+extra {"hut"}
+"A lavishly build hut made of straw and wood stands off to the east. 
+Wooden
+steps lead up into the hut."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+movement SECT_INSIDE
+east to pal3
+descr
+"This path continues directly to the wooden steps that lead to the hut.";
+west to pal1
+descr
+"The path continues off into the lush vegetation";
+end
+
+
+                                pal3
+
+title "Old paladin hut"
+names {"paladin hut"}
+descr
+"As you climb the stairs into this hut, you observe that this is a
+magnificent
+building.  The walls are made of straw but have a golden glow about them.
+A bed is situated in the far corner and a small table and chair are set in
+the
+middle of the room.  This is the home of the old paladin named Sir Michael
+of
+Serador."
+
+extra {"table"}
+"The table is made of a fine unknown wood."
+extra {"bed"}
+"The bed is made of an unknown wood and is extremely neat."
+
+flags {UNIT_FL_SACRED}
+flags {UNIT_FL_INDOORS}
+movement SECT_INSIDE
+east to pal4
+descr
+"This exit will take you out of the back of the hut";
+west to pal2
+descr
+"This is the front door of the hut which will take you back to the forest";
+end
+
+                                pal4
+
+title "Stairs to Elemental plane"
+names {"stairs"}
+descr
+"This is a set of stairs that lead down.  The stairs are made of a strange
+metal that feels extremely cold to the touch.  The walls are smooth and
+black.
+The only exits are back to the west and down towards the center of the
+earth."
+
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+west to pal3
+descr
+"The exit west will take you back into the straw hut";
+down to stair1
+descr
+"These stairs downward lead you off into the depths of the earth";
+end
+
+
+                                temp_rm1
+
+title "Stairs room"
+names {"Stairs Room"}
+descr
+"It appears that you have taken a wrong set of stairs.  This room is a
+glass
+box mystically floating above the lush valley of the paladin.  The only way
+out is down back into the garden behind the hut of Sir Michael."
+flags {UNIT_FL_NO_MOB}
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+down to pal4
+descr
+"This exit will put you back on the correct path again";
+end
+
+
+
+                                stair1
+
+title "Stairs down"
+names {"stairs"}
+descr
+"This is a set of stairs that spiral farther down.  The stairs are made of
+a strange metal that feels extremely cold to the touch.  The walls are
+smooth
+and black.  The only exits are back up and down farther towards the center
+of
+the earth."
+
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER}
+flags {UNIT_FL_NO_MOB}
+
+up to pal4
+descr
+"The exit up will take you back to the safety of the valley of the
+paladin";
+down to e10
+descr
+"The exit down continues into the center of the world";
+end
+
+
+
+/*--------Elemental plane of earth----------*/
+
+                                e10
+
+title "Elemental plane of Earth"
+names{"Earth Plane"}
+descr
+"You have descended the stairs and landed on the elemental plane of earth.
+The plane continues for as far as the eye can see in any direction.  The
+terrain is barren of all life and is covered with rocks and mud. 
+Occasionally
+
+you catch a glimpse of movement from the corner of your eye, but your are
+unable to pinpoint the origin of the movement."
+
+
+extra {"rock", "rocks"}
+"The brown stones are everywhere and some are playing games with your mind
+because then seem to be moving slightly as you look at them....almost as if
+they were alive."
+extra {"mud"}
+"The mud is concentrated in pits all over the area.  The mud seems to be
+moving almost as if it is alive."
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to e14
+descr
+"The plane continues for as far as the eye can see.";
+south to e6
+descr
+"The plane continues for as far as the eye can see.";
+east to e11
+descr
+"The plane continues for as far as the eye can see.";
+west to e9
+descr
+"The plane continues for as far as the eye can see.";
+up to stair1
+descr
+"The stairs up will take you out of this abyss and take you back up to
+the world above";
+end
+
+
+                                e13
+
+title "Elemental plane of Earth"
+names{"Earth Plane"}
+descr
+"You are wandering around the dismal plane of earth which continues for as
+far as the eye can see in any direction.  The terrain is barren of all life
+and is covered with rocks and mud.  Occasionally you catch a glimpse of
+movement from the corner of your eye, but your are unable to pinpoint the
+origin of the movement."
+
+extra {"rock", "rocks"}
+"The brown stones are everywhere and some are playing games with your mind
+because then seem to be moving slightly as you look at them....almost as if
+they were alive."
+extra {"mud"}
+"The mud is concentrated in pits all over the area.  The mud seems to be
+moving almost as if it is alive."
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to e18
+descr
+"The plane continues for as far as the eye can see.";
+south to e9
+descr
+"The plane continues for as far as the eye can see.";
+east to e14
+descr
+"The plane continues for as far as the eye can see.";
+west to e12
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+
+                                e14
+
+title "Elemental plane of Earth"
+names{"Earth Plane"}
+descr
+"You are wandering around the dismal plane of earth which continues for as
+far as the eye can see in any direction.  The terrain is barren of all life
+and is covered with rocks and mud.  Occasionally you catch a glimpse of
+movement from the corner of your eye, but your are unable to pinpoint the
+origin of the movement."
+
+extra {"rock", "rocks"}
+"The brown stones are everywhere and some are playing games with your mind
+because then seem to be moving slightly as you look at them....almost as if
+they were alive."
+extra {"mud"}
+"The mud is concentrated in pits all over the area.  The mud seems to be
+moving almost as if it is alive."
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to e3
+descr
+"The plane continues for as far as the eye can see.";
+south to e10
+descr
+"The plane continues for as far as the eye can see.";
+east to e15
+descr
+"The plane continues for as far as the eye can see.";
+west to e13
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                e15
+
+title "Elemental plane of Earth"
+names{"Earth Plane"}
+descr
+"You are wandering around the dismal plane of earth which continues for as
+far as the eye can see in any direction.  The terrain is barren of all life
+and is covered with rocks and mud.  Occasionally you catch a glimpse of
+movement from the corner of your eye, but your are unable to pinpoint the
+origin of the movement."
+
+extra {"rock", "rocks"}
+"The brown stones are everywhere and some are playing games with your mind
+because then seem to be moving slightly as you look at them....almost as if
+they were alive."
+extra {"mud"}
+"The mud is concentrated in pits all over the area.  The mud seems to be
+moving almost as if it is alive."
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to e7
+descr
+"The plane continues for as far as the eye can see.";
+south to e11
+descr
+"The plane continues for as far as the eye can see.";
+east to e16
+descr
+"The plane continues for as far as the eye can see.";
+west to e14
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                e9
+
+title "Elemental plane of Earth"
+names{"Earth Plane"}
+descr
+"You are wandering around the dismal plane of earth which continues for as
+far as the eye can see in any direction.  The terrain is barren of all life
+and is covered with rocks and mud.  Occasionally you catch a glimpse of
+movement from the corner of your eye, but your are unable to pinpoint the
+origin of the movement."
+
+extra {"rock", "rocks"}
+"The brown stones are everywhere and some are playing games with your mind
+because then seem to be moving slightly as you look at them....almost as if
+they were alive."
+extra {"mud"}
+"The mud is concentrated in pits all over the area.  The mud seems to be
+moving almost as if it is alive."
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to e13
+descr
+"The plane continues for as far as the eye can see.";
+south to e5
+descr
+"The plane continues for as far as the eye can see.";
+east to e10
+descr
+"The plane continues for as far as the eye can see.";
+west to e11
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                e11
+
+title "Elemental plane of Earth"
+names{"Earth Plane"}
+descr
+"You are wandering around the dismal plane of earth which continues for as
+far as the eye can see in any direction.  The terrain is barren of all life
+and is covered with rocks and mud.  Occasionally you catch a glimpse of
+movement from the corner of your eye, but your are unable to pinpoint the
+origin of the movement."
+
+extra {"rock", "rocks"}
+"The brown stones are everywhere and some are playing games with your mind
+because then seem to be moving slightly as you look at them....almost as if
+they were alive."
+extra {"mud"}
+"The mud is concentrated in pits all over the area.  The mud seems to be
+moving almost as if it is alive."
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to e15
+descr
+"The plane continues for as far as the eye can see.";
+south to e7
+descr
+"The plane continues for as far as the eye can see.";
+east to e9
+descr
+"The plane continues for as far as the eye can see.";
+west to e10
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                e5
+
+title "Elemental plane of Earth"
+names{"Earth Plane"}
+descr
+"You are wandering around the dismal plane of earth which continues for as
+far as the eye can see in any direction.  The terrain is barren of all life
+and is covered with rocks and mud.  Occasionally you catch a glimpse of
+movement from the corner of your eye, but your are unable to pinpoint the
+origin of the movement."
+
+extra {"rock", "rocks"}
+"The brown stones are everywhere and some are playing games with your mind
+because then seem to be moving slightly as you look at them....almost as if
+they were alive."
+extra {"mud"}
+"The mud is concentrated in pits all over the area.  The mud seems to be
+moving almost as if it is alive."
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to e9
+descr
+"The plane continues for as far as the eye can see.";
+south to e2
+descr
+"The plane continues for as far as the eye can see.";
+east to e6
+descr
+"The plane continues for as far as the eye can see.";
+west to e4
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                e6
+
+title "Elemental plane of Earth"
+names{"Earth Plane"}
+descr
+"You are wandering around the dismal plane of earth which continues for as
+far as the eye can see in any direction.  The terrain is barren of all life
+and is covered with rocks and mud.  Occasionally you catch a glimpse of
+movement from the corner of your eye, but your are unable to pinpoint the
+origin of the movement."
+
+extra {"rock", "rocks"}
+"The brown stones are everywhere and some are playing games with your mind
+because then seem to be moving slightly as you look at them....almost as if
+they were alive."
+extra {"mud"}
+"The mud is concentrated in pits all over the area.  The mud seems to be
+moving almost as if it is alive."
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to e10
+descr
+"The plane continues for as far as the eye can see.";
+south to e3
+descr
+"The plane continues for as far as the eye can see.";
+east to e7
+descr
+"The plane continues for as far as the eye can see.";
+west to e5
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                e7
+
+title "Elemental plane of Earth"
+names{"Earth Plane"}
+descr
+"You are wandering around the dismal plane of earth which continues for as
+far as the eye can see in any direction.  The terrain is barren of all life
+and is covered with rocks and mud.  Occasionally you catch a glimpse of
+movement from the corner of your eye, but your are unable to pinpoint the
+origin of the movement."
+
+extra {"rock", "rocks"}
+"The brown stones are everywhere and some are playing games with your mind
+because then seem to be moving slightly as you look at them....almost as if
+they were alive."
+extra {"mud"}
+"The mud is concentrated in pits all over the area.  The mud seems to be
+moving almost as if it is alive."
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to e11
+descr
+"The plane continues for as far as the eye can see.";
+south to e15
+descr
+"The plane continues for as far as the eye can see.";
+east to e8
+descr
+"The plane continues for as far as the eye can see.";
+west to e6
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                e8
+
+title "Elemental plane of Earth"
+names{"Earth Plane"}
+descr
+"You are wandering around the dismal plane of earth which continues for as
+far as the eye can see in any direction.  The terrain is barren of all life
+and is covered with rocks and mud.  Occasionally you catch a glimpse of
+movement from the corner of your eye, but your are unable to pinpoint the
+origin of the movement."
+
+extra {"rock", "rocks"}
+"The brown stones are everywhere and some are playing games with your mind
+because then seem to be moving slightly as you look at them....almost as if
+they were alive."
+extra {"mud"}
+"The mud is concentrated in pits all over the area.  The mud seems to be
+moving almost as if it is alive."
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to e16
+descr
+"The plane continues for as far as the eye can see.";
+south to e16
+descr
+"The plane continues for as far as the eye can see.";
+east to e5
+descr
+"The plane continues for as far as the eye can see.";
+west to e7
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                e2
+
+title "Elemental plane of Earth"
+names{"Earth Plane"}
+descr
+"You are wandering around the dismal plane of earth which continues for as
+far as the eye can see in any direction.  The terrain is barren of all life
+and is covered with rocks and mud.  Occasionally you catch a glimpse of
+movement from the corner of your eye, but your are unable to pinpoint the
+origin of the movement."
+
+extra {"rock", "rocks"}
+"The brown stones are everywhere and some are playing games with your mind
+because then seem to be moving slightly as you look at them....almost as if
+they were alive."
+extra {"mud"}
+"The mud is concentrated in pits all over the area.  The mud seems to be
+moving almost as if it is alive."
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to e5
+descr
+"The plane continues for as far as the eye can see.";
+south to e13
+descr
+"The plane continues for as far as the eye can see.";
+east to e3
+descr
+"The plane continues for as far as the eye can see.";
+west to e3
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                e3
+
+title "Elemental plane of Earth"
+names{"Earth Plane"}
+descr
+"You are wandering around the dismal plane of earth which continues for as
+far as the eye can see in any direction.  The terrain is barren of all life
+and is covered with rocks and mud.  Occasionally you catch a glimpse of
+movement from the corner of your eye, but your are unable to pinpoint the
+origin of the movement."
+
+extra {"rock", "rocks"}
+"The brown stones are everywhere and some are playing games with your mind
+because then seem to be moving slightly as you look at them....almost as if
+they were alive."
+extra {"mud"}
+"The mud is concentrated in pits all over the area.  The mud seems to be
+moving almost as if it is alive."
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to e6
+descr
+"The plane continues for as far as the eye can see.";
+south to e1
+descr
+"The plane continues for as far as the eye can see.";
+east to e2
+descr
+"The plane continues for as far as the eye can see.";
+west to e2
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                e12
+
+title "Elemental plane of Earth"
+names{"Earth Plane"}
+descr
+"You are wandering around the dismal plane of earth which continues for as
+far as the eye can see in any direction.  The terrain is barren of all life
+and is covered with rocks and mud.  Occasionally you catch a glimpse of
+movement from the corner of your eye, but your are unable to pinpoint the
+origin of the movement."
+
+extra {"rock", "rocks"}
+"The brown stones are everywhere and some are playing games with your mind
+because then seem to be moving slightly as you look at them....almost as if
+they were alive."
+extra {"mud"}
+"The mud is concentrated in pits all over the area.  The mud seems to be
+moving almost as if it is alive."
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to e17
+descr
+"The plane continues for as far as the eye can see.";
+south to e17
+descr
+"The plane continues for as far as the eye can see.";
+east to e13
+descr
+"The plane continues for as far as the eye can see.";
+west to e16
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                e17
+
+title "Elemental plane of Earth"
+names{"Earth Plane"}
+descr
+"You are wandering around the dismal plane of earth which continues for as
+far as the eye can see in any direction.  The terrain is barren of all life
+and is covered with rocks and mud.  Occasionally you catch a glimpse of
+movement from the corner of your eye, but your are unable to pinpoint the
+origin of the movement."
+
+extra {"rock", "rocks"}
+"The brown stones are everywhere and some are playing games with your mind
+because then seem to be moving slightly as you look at them....almost as if
+they were alive."
+extra {"mud"}
+"The mud is concentrated in pits all over the area.  The mud seems to be
+moving almost as if it is alive."
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to e12
+descr
+"The plane continues for as far as the eye can see.";
+south to e12
+descr
+"The plane continues for as far as the eye can see.";
+east to e18
+descr
+"The plane continues for as far as the eye can see.";
+west to e19
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                e16
+
+title "Elemental plane of Earth"
+names{"Earth Plane"}
+descr
+"You are wandering around the dismal plane of earth which continues for as
+far as the eye can see in any direction.  The terrain is barren of all life
+and is covered with rocks and mud.  Occasionally you catch a glimpse of
+movement from the corner of your eye, but your are unable to pinpoint the
+origin of the movement."
+
+extra {"rock", "rocks"}
+"The brown stones are everywhere and some are playing games with your mind
+because then seem to be moving slightly as you look at them....almost as if
+they were alive."
+extra {"mud"}
+"The mud is concentrated in pits all over the area.  The mud seems to be
+moving almost as if it is alive."
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to e19
+descr
+"The plane continues for as far as the eye can see.";
+south to e19
+descr
+"The plane continues for as far as the eye can see.";
+east to e12
+descr
+"The plane continues for as far as the eye can see.";
+west to e15
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                e1
+
+title "Elemental plane of Earth"
+names{"Earth Plane"}
+descr
+"You have stumbled upon a small shrine carved into the rocks in this area
+of
+the rock waste.  Pictures of a four headed beast being worshipped by all
+types
+creatures are depicted on the altar.  You get slightly concerned because
+usually there is a guardian around a holy (or unholy) place such as this.
+Stairs down can be seen behind the stone altar. "
+
+extra {"pictures", "altar"}
+"The pictures on the altar show a dragon like creature that all creatures
+are
+groveling in front of"
+extra {"stairs"}
+"Stone stairs lead down into the darkness away from the stone plane"
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to e3
+descr
+"The plane continues for as far as the eye can see.";
+south to e14
+descr
+"The plane continues for as far as the eye can see.";
+east to e1
+descr
+"The plane continues for as far as the eye can see.";
+west to e1
+descr
+"The plane continues for as far as the eye can see.";
+down to temp_rm1
+descr
+"The stairs lead down to the unknown.";
+end
+                                e4
+
+title "Elemental plane of Earth"
+names{"Earth Plane"}
+descr
+"You have stumbled upon a small shrine carved into the rocks in this area
+of
+the rock waste.  Pictures of a four headed beast being worshipped by all
+types
+creatures are depicted on the altar.  You get slightly concerned because
+usually there is a guardian around a holy (or unholy) place such as this.
+Stairs down can be seen behind the stone altar. "
+
+extra {"pictures", "altar"}
+"The pictures on the altar show a dragon like creature that all creatures
+are
+groveling in front of"
+extra {"stairs"}
+"Stone stairs lead down into the darkness away from the stone plane"
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT,UNIT_FL_NO_MOB}
+
+north to e11
+descr
+"The plane continues for as far as the eye can see.";
+south to e15
+descr
+"The plane continues for as far as the eye can see.";
+east to e8
+descr
+"The plane continues for as far as the eye can see.";
+west to e6
+descr
+"The plane continues for as far as the eye can see.";
+down to temp_rm1
+descr
+"The stairs lead down to the unknown.";
+
+end
+
+                               e18
+
+title "Elemental plane of Earth"
+names{"Earth Plane"}
+descr
+"You have stumbled upon a small shrine carved into the rocks in this area
+of
+the rock waste.  Pictures of a four headed beast being worshipped by all
+types
+creatures are depicted on the altar.  You get slightly concerned because
+usually there is a guardian around a holy (or unholy) place such as this.
+Stairs down can be seen behind the stone altar. "
+
+extra {"pictures", "altar"}
+"The pictures on the altar show a dragon like creature that all creatures
+are
+groveling in front of"
+extra {"stairs"}
+"Stone stairs lead down into the darkness away from the stone plane"
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to e11
+descr
+"The plane continues for as far as the eye can see.";
+south to e15
+descr
+"The plane continues for as far as the eye can see.";
+east to e8
+descr
+"The plane continues for as far as the eye can see.";
+west to e6
+descr
+"The plane continues for as far as the eye can see.";
+down to temp_rm1
+descr
+"The stairs lead down to the unknown.";
+
+end
+
+                                e19
+
+title "Elemental plane of Earth"
+names{"Earth Plane"}
+descr
+"You have stumbled upon a small shrine carved into the rocks in this area
+of
+the rock waste.  Pictures of a four headed beast being worshipped by all
+types
+creatures are depicted on the altar.  You get slightly concerned because
+usually there is a guardian around a holy (or unholy) place such as this.
+Stairs down can be seen behind the stone altar. "
+
+extra {"pictures", "altar"}
+"The pictures on the altar show a dragon like creature that all creatures
+are
+groveling in front of"
+extra {"stairs"}
+"Stone stairs lead down into the darkness away from the stone plane"
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to e11
+descr
+"The plane continues for as far as the eye can see.";
+south to e15
+descr
+"The plane continues for as far as the eye can see.";
+east to e8
+descr
+"The plane continues for as far as the eye can see.";
+west to e6
+descr
+"The plane continues for as far as the eye can see.";
+down to etoa1
+descr
+"The stairs lead down to the unknown.";
+
+end
+
+
+                                etoa1
+title "Stairs room"
+names {"Stairs Room"}
+descr
+"It appears that you have taken the correct set of stairs down towards the
+next elemental zone.  The only exit is a set of stairs down to an unknown
+area."
+
+movement SECT_INSIDE
+flags {UNIT_FL_SACRED}
+flags {UNIT_FL_NO_MOB}
+
+up to e19
+descr
+"This exit will send you back to the elemental plane of earth";
+down to a9
+descr
+"This exit will put you on to the elemental plane of air";
+end
+
+/*------------------- Elemental plane of air------------------------- */
+                                a9
+
+title "Elemental plane of Air"
+names{"Air Plane"}
+descr
+"You have descended the stairs and landed on the elemental plane of air.
+You are standing on a wispy puff of air which has the appearance of the
+clouds
+that you see in the sky.  A path made of clouds continues in every
+direction
+and as you look over the edge of the path you can not see down through the
+clouds, but you feel that your safest bet is to say on the path for fear of
+falling into the abyss.  A cool breeze tickles your face."
+
+extra {"path", "cloud","clouds"}
+"The path is made of puffy white clouds that are soft to the touch yet
+solid
+enough to support your entire weight.  Clouds of all shapes move around you
+mainly propelled by the breeze."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to a10
+descr
+"The plane continues for as far as the eye can see.";
+south to a18
+descr
+"The plane continues for as far as the eye can see.";
+west to a8
+descr
+"The plane continues for as far as the eye can see.";
+east to a13
+descr
+"The plane continues for as far as the eye can see.";
+up to etoa1
+descr
+"The stairs up will take you out of this abyss and take you back up to
+the world above";
+end
+
+                                a1
+
+title "Elemental plane of Air"
+names{"Air Plane"}
+descr
+"You have come to the end of the sky path.  A small shrine in the center of
+the
+path blocks your way.  The shrine is the same as you saw on the previous
+plane.
+The pictures of the four headed beast are imprinted in the altar but are
+difficult to fully distinguish.  Once again there is the feeling of dread
+that
+the protector of this shrine is going to appear out of nowhere and have it
+out with you.  Stairs descend down to more unknown and the path only leads
+south."
+ extra {"path", "cloud","clouds"}
+"The path is made of puffy white clouds that are soft to the touch yet
+solid
+enough to support your entire weight.  Clouds of all shapes move around you
+mainly propelled by the breeze."
+extra {"shrine","altar"}
+"This is another of the altars that is for worship to the strange 4 headed
+monster."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+south to a2
+descr
+"The path of clouds continues for as far as the eye can see.";
+down to atow1
+descr
+"The stairs down lead further down through the elemental planes";
+end
+                                a2
+
+title "Elemental plane of Air"
+names{"Air Plane"}
+descr
+"You are standing on the path of clouds on the elemental plane of air.
+The path made of clouds continues to the north and south.  That cool breeze
+still tickles your face almost to the point of it hurting.  You really just
+want to more on and get the heck out of this area."
+
+extra {"path", "cloud","clouds"}
+"The path is made of puffy white clouds that are soft to the touch yet
+solid
+enough to support your entire weight.  Clouds of all shapes move around you
+mainly propelled by the breeze."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to a1
+descr
+"The plane continues for as far as the eye can see.";
+south to a3
+descr
+"The plane continues for as far as the eye can see.";
+end
+                                a3
+
+title "Elemental plane of Air"
+names{"Air Plane"}
+descr
+"Your still just wandering around here.  You wonder if you will ever
+actually
+find anything of worth down here or if your just wasting you time in this
+god
+forsaken place.  Path exits continue to the north and the south."
+
+extra {"path", "cloud","clouds"}
+"The path is made of puffy white clouds that are soft to the touch yet
+solid
+enough to support your entire weight.  Clouds of all shapes move around you
+mainly propelled by the breeze."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to a2
+descr
+"The plane continues for as far as the eye can see.";
+south to a4
+descr
+"The plane continues for as far as the eye can see.";
+end
+                                a4
+
+title "Elemental plane of Air"
+names{"Air Plane"}
+descr
+"This path seems to continue on forever.  You start to daydream of the
+normal
+places that you have left behind on the surface of the world and wish that
+you
+could possibly leave here soon."
+
+extra {"path", "cloud","clouds"}
+"The path is made of puffy white clouds that are soft to the touch yet
+solid
+enough to support your entire weight.  Clouds of all shapes move around you
+mainly propelled by the breeze."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to a3
+descr
+"The plane continues for as far as the eye can see.";
+south to a5
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                a5
+
+title "Elemental plane of Air"
+names{"Air Plane"}
+descr
+"You have come upon a turn in the path.  You can follow the turn north off
+into
+the clouds or east along the long boring path."
+
+extra {"path", "cloud","clouds"}
+"The path is made of puffy white clouds that are soft to the touch yet
+solid
+enough to support your entire weight.  Clouds of all shapes move around you
+mainly propelled by the breeze."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to a4
+descr
+"The plane continues for as far as the eye can see.";
+east to a6
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                a6
+
+title "Elemental plane of Air"
+names{"Air Plane"}
+descr
+"You continue to wander around the elemental plane of air.  The cool breeze
+is
+starting to pick up into a stronger wind.  You think that occasionally you
+hear
+voices or noises from all around you...... or maybe that is just the wind?"
+
+extra {"path", "cloud","clouds"}
+"The path is made of puffy white clouds that are soft to the touch yet
+solid
+enough to support your entire weight.  Clouds of all shapes move around you
+mainly propelled by the breeze."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+east to a7
+descr
+"The plane continues for as far as the eye can see.";
+west to a5
+descr
+"The plane continues for as far as the eye can see.";
+end
+                                a7
+
+title "Elemental plane of Air"
+names{"Air  Plane"}
+descr
+"The path continues to the east and to the west.  It seems as if every step
+you take along this path only gets you inches past your last spot.  This
+Elemental plane seems to contain great magic somewhere."
+
+extra {"path", "cloud","clouds"}
+"The path is made of puffy white clouds that are soft to the touch yet
+solid
+enough to support your entire weight.  Clouds of all shapes move around you
+mainly propelled by the breeze."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+east to a8
+descr
+"The plane continues for as far as the eye can see.";
+west to a6
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                a8
+title "Elemental plane of Air"
+names{"Air  Plane"}
+descr
+"You continue to wander around without any clue as to where your eventual
+final destination is.  This is an extremely bright area with light
+reflecting
+off of all of the clouds.  You can follow the path either east or west."
+
+extra {"path", "cloud","clouds"}
+"The path is made of puffy white clouds that are soft to the touch yet
+solid
+enough to support your entire weight.  Clouds of all shapes move around you
+mainly propelled by the breeze."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+east to a9
+descr
+"The plane continues for as far as the eye can see.";
+west to a7
+descr
+"The plane continues for as far as the eye can see.";
+end
+                                a10
+
+title "Elemental plane of Air"
+names{"Air Plane"}
+descr
+"You continue to wander around the elemental plane of air.  You are baffled
+by
+the fact that creatures live here on this plane, yet the is little signs of
+any
+life at all.  The path continues north and south."
+
+extra {"path", "cloud","clouds"}
+"The path is made of puffy white clouds that are soft to the touch yet
+solid
+enough to support your entire weight.  Clouds of all shapes move around you
+mainly propelled by the breeze."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to a11
+descr
+"The plane continues for as far as the eye can see.";
+south to a9
+descr
+"The plane continues for as far as the eye can see.";
+end
+                                a11
+
+title "Elemental plane of Air"
+names{"Air  Plane"}
+descr
+"You continue along this long and boring path.  An encounter right about
+now
+would be useful to keep your battle skills honed to perfection.  The path
+continues to the north and the south."
+ extra {"path", "cloud","clouds"}
+"The path is made of puffy white clouds that are soft to the touch yet
+solid
+enough to support your entire weight.  Clouds of all shapes move around you
+mainly propelled by the breeze."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+south to a10
+descr
+"The path of clouds continues for as far as the eye can see.";
+north to a12
+descr
+"The path of clouds continues for as far as the eye can see.";
+end
+                                a12
+title "Elemental plane of Air"
+names{"Air  Plane"}
+descr
+"You have come to the end of the sky path.  A small shrine in the center of
+the
+path blocks your way.  The shrine is the same as you saw on the previous
+plane.
+The pictures of the four headed beast are imprinted in the altar but are
+difficult to fully distinguish.  Once again there is the feeling of dread
+that
+the protector of this shrine is going to appear out of nowhere and have it
+out with you.  Stairs descend down to more unknown and the path only leads
+south."
+ extra {"path", "cloud","clouds"}
+"The path is made of puffy white clouds that are soft to the touch yet
+solid
+enough to support your entire weight.  Clouds of all shapes move around you
+mainly propelled by the breeze."
+extra {"shrine","altar"}
+"This is another of the altars that is for worship to the strange 4 headed
+monster."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+south to a11
+descr
+"The path of clouds continues for as far as the eye can see.";
+down to temp_rm1
+descr
+"The stairs down lead further down through the elemental planes";
+end
+                                a13
+
+title "Elemental plane of Air"
+names{"Air  Plane"}
+descr
+"The plane looks all the same with clouds just about everywhere.  The only
+reference point for this entire area is the path that is under foot.  It
+will
+lead you through this entire plane.  It goes west back to the stairs or
+into
+the clouds off to the east."
+ extra {"path", "cloud","clouds"}
+"The path is made of puffy white clouds that are soft to the touch yet
+solid
+enough to support your entire weight.  Clouds of all shapes move around you
+mainly propelled by the breeze."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+west to a9
+descr
+"The plane continues for as far as the eye can see.";
+east to a14
+descr
+"The plane continues for as far as the eye can see.";
+end
+                                a14
+
+title "Elemental plane of Air"
+names{"Air  Plane"}
+descr
+"You have come upon a turn in the path. South will take you deeper into the
+clouds while west  will take you back towards the stairs you came down. "
+
+extra {"path", "cloud","clouds"}
+"The path is made of puffy white clouds that are soft to the touch yet
+solid
+enough to support your entire weight.  Clouds of all shapes move around you
+mainly propelled by the breeze."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+south to a15
+descr
+"The plane continues for as far as the eye can see.";
+west to a13
+descr
+"The plane continues for as far as the eye can see.";
+end
+                                a15
+
+title "Elemental plane of Air"
+names{"Air  Plane"}
+descr
+"You are still on the elemental plane of air.  The breeze continues to blow
+in
+your face and you wonder how any type of creature could survive in such a
+totally miserable place.  The path dictates your continuing journey either
+north or south."
+
+extra {"path", "cloud","clouds"}
+"The path is made of puffy white clouds that are soft to the touch yet
+solid
+enough to support your entire weight.  Clouds of all shapes move around you
+mainly propelled by the breeze."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to a14
+descr
+"The plane continues for as far as the eye can see.";
+south to a16
+descr
+"The plane continues for as far as the eye can see.";
+end
+                                a16
+
+title "Elemental plane of Air"
+names{"Air  Plane"}
+descr
+"Still wandering the elemental plane of air.  Man is this one confusing
+place.  The path cuts down you option in which way you can go.  North and
+south look like the only alternatives for now"
+
+extra {"path", "cloud","clouds"}
+"The path is made of puffy white clouds that are soft to the touch yet
+solid
+enough to support your entire weight.  Clouds of all shapes move around you
+mainly propelled by the breeze."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to a15
+descr
+"The plane continues for as far as the eye can see.";
+south to a17
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                a17
+title "Elemental plane of Air"
+names{"Air  Plane"}
+descr
+"You have come to the end of the sky path.  A small shrine in the center of
+the
+path blocks your way.  The shrine is the same as you saw on the previous
+plane.
+The pictures of the four headed beast are imprinted in the altar but are
+difficult to fully distinguish.  Once again there is the feeling of dread
+that
+the protector of this shrine is going to appear out of nowhere and have it
+out with you.  Stairs descend down to more unknown and the path only leads
+south."
+ extra {"path", "cloud","clouds"}
+"The path is made of puffy white clouds that are soft to the touch yet
+solid
+enough to support your entire weight.  Clouds of all shapes move around you
+mainly propelled by the breeze."
+extra {"shrine","altar"}
+"This is another of the altars that is for worship to the strange 4 headed
+monster."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to a16
+descr
+"The path of clouds continues for as far as the eye can see.";
+down to temp_rm1
+descr
+"The stairs down  lead further down through the elemental planes";
+end
+
+                                a18
+title "Elemental plane of Air"
+names{"Air  Plane"}
+descr
+"You have come to the end of the sky path.  A small shrine in the center of
+the
+path blocks your way.  The shrine is the same as you saw on the previous
+plane.
+The pictures of the four headed beast are imprinted in the altar but are
+difficult to fully distinguish.  Once again there is the feeling of dread
+that
+the protector of this shrine is going to appear out of nowhere and have it
+out with you.  Stairs descend down to more unknown and the path only leads
+north."
+ extra {"path", "cloud","clouds"}
+"The path is made of puffy white clouds that are soft to the touch yet
+solid
+enough to support your entire weight.  Clouds of all shapes move around you
+mainly propelled by the breeze."
+extra {"shrine","altar"}
+"This is another of the altars that is for worship to the strange 4 headed
+monster."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to a9
+descr
+"The path of clouds continues for as far as the eye can see.";
+down to temp_rm1
+descr
+"The stairs down  lead further down through the elemental planes";
+end
+
+                                atow1
+title "Stairs room"
+names {"Stairs Room"}
+descr
+"It appears that you have taken the correct set of stairs down towards the
+next elemental zone.  The only exit is a set of stairs down to an unknown
+area."
+
+movement SECT_INSIDE
+flags {UNIT_FL_SACRED}
+flags {UNIT_FL_NO_MOB}
+
+up to a1
+descr
+"This will take you back up to the elemental plane of air";
+
+down to w1
+descr
+"This exit will put you on to the elemental plane of water";
+end
+
+/*-----------Elemental Plane of Water----------*/
+
+                w1
+title "Entrance to the Elemental Plane of Water"
+names{"Water Plane Entrance"}
+descr
+"The stairs disapear into a mixture of water and ice. It seems as if
+there is no bottom to this river, but as you step into it you somehow
+only sink to your knees. You wonder what force is supporting your weight,
+as you watch the ice and water crash against the walls of this tunnel.
+The tunnel continues south and back up from where you came."
+
+extra{"water","ice"}
+"The mixture of ice and water is like nothing you've ever seen on the
+surface. You have the strange sensation that someone or something has
+sensed your presence as the the ice and water flows around your legs."
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+south to w2
+descr
+"The tunnel continues as far as the eye can see.";
+up to atow1
+descr
+"The stairs lead back to the Elemental Plane of Air.";
+end
+
+                w2
+title "Elemental Plane of Water"
+names{"Water Plane"}
+descr
+"You are standing knee-deep in what passes for water and ice one this
+plane.
+The ice and water actually seems to be grabbing at your legs as you
+struggle to move. The current seems to be pulling you south towards an
+opening in the tunnel. A loud roar can be heard coming from the opening.
+The only other exit is to the north."
+
+extra{"water","ice"}
+"The mixture of ice and water is like nothing you've ever seen on the
+surface. You have the strange sensation that someone or something has
+sensed your presence as the the ice and water flows around your legs."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+south to w3
+descr
+"The tunnel continues to the south ";
+north to w1
+descr
+"The tunnel continues to the north ";
+end
+
+                w3
+title "On top of a large waterfall"
+names {"waterfall"}
+descr
+"The tunnel opens into a large cavern as the current becomes terribly
+strong. You are filled with fear and panic as you watch ice and water
+dissapear over an edge to the south. It occurrs to you, over the
+deafening roar, that you probably wont be able to hold your footing in
+this current for long. As a peculiar cross draft of mist and air cools
+your face, you contemplate your chances of surviving a trip over the water
+fall."
+
+extra {"water","ice"}
+"The mixture of ice and water is like nothing you've ever seen on the
+surface. You have the strange sensation that someone or something has
+sensed your presence as the the ice and water flows around your legs."
+
+extra {"waterfall"}
+"Ice and water dissapear over the edge as a fine mist boils up from
+wherever the ends. "
+
+extra {"wall"}
+"The wall of this tunnel looks normal except for the strange draft that
+flows through it."
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+
+north to w2
+descr
+"The tunnel continues to the north";
+
+east to w4 open {EX_OPEN_CLOSE,EX_CLOSED,EX_HIDDEN}
+keyword {"secret door","door","wall"}
+descr "You find a secret door off to the east";
+SECRET_DOOR_DIFFICULTY(EAST,40)
+
+west to w5 open {EX_OPEN_CLOSE,EX_CLOSED,EX_HIDDEN}
+keyword {"secret door","door","wall"}
+descr "You have found a secret door that leads off to the west";
+SECRET_DOOR_DIFFICULTY(WEST,40)
+special SFUN_FORCE_MOVE "center/fall! You lose your footing as the rushing
+water and ice suck you towards the edge." time 200 bits SFB_RANTIME
+end
+
+                        w4
+title "Elemental Plane of Water"
+names {"Water Plane"}
+descr
+"The river flows around a bend in the tunnel. Swirls of ice and water
+appear and dissapear as the river turns the corner. You hear the sound of
+crashing water to the west through a large ice doorway. The current
+softly tugs you to the south. You can go west through the doorway or
+follow the current south."
+extra {"water","ice","swirl"}
+"The mixture of ice and water is like nothing you've ever seen on the
+surface. You have the strange sensation that someone or something has
+sensed your presence as the the ice and water flows around your legs."
+
+extra {"door","ice door"}
+"You see a door made of ice."
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+south to w6
+descr
+"The tunnel continues south";
+west to w3 open {EX_OPEN_CLOSE,EX_CLOSED}
+keyword {"ice door","door"}
+descr
+"To the west is a door made of ice";
+end
+
+                        w5
+title "Elemental Plane of Water"
+names {"Water Plane"}
+descr
+"The river flows around a bend in the tunnel. Swirls of ice and water
+appear and dissapear as the river turns the corner. You hear the sound of
+crashing water to the east through a large ice doorway. The current
+softly tugs you to the south. You can go east through the doorway or
+follow the current south."
+extra {"water","ice"}
+"The mixture of ice and water is like nothing you've ever seen on the
+surface. You have the strange sensation that someone or something has
+sensed your presence as the the ice and water flows around your legs."
+
+extra {"door","ice door"}
+"You see a door made of ice"
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+east to w3 open {EX_OPEN_CLOSE,EX_CLOSED}
+keyword {"ice door","door"}
+descr
+" To the east is a door made of ice";
+south to w7
+descr
+"The tunnel continues to the south";
+end
+
+                        w6
+title "Elemental Plane of Water"
+names {"Water Plane"}
+descr
+"The river flows through the tunnel to the south. A low rumble from
+the west tells you you must be beside the waterfall. You can follow the
+river south or go upstream to the north."
+extra {"water","ice"}
+"The mixture of ice and water is like nothing you've ever seen on the
+surface. You have the strange sensation that someone or something has
+sensed your presence as the the ice and water flows around your legs."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to w4
+descr
+" The tunnel continues to the north";
+south to w10
+descr
+" The tunnel continues to the south";
+end
+
+                        w7
+title "Elemental Plane of Water"
+names {"Water Plane"}
+descr
+"The river flows through the tunnel to the south. A low rumble from
+the east tells you you must be beside the waterfall. You can follow the
+river south or go upstream to the north."
+
+extra {"water","ice"}
+"The mixture of ice and water is like nothing you've ever seen on the
+surface. You have the strange sensation that someone or something has
+sensed your presence as the the ice and water flows around your legs."
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to w5
+descr
+" The tunnel continues to the north";
+south to w13
+descr
+"The tunnel continues to the south";
+end
+
+                        w8
+title "Pool at the Bottom of a Waterfall"
+names {"Pool"}
+descr
+"The water crashes down into a pool filled with broken ice and water.
+Travel back up the waterfall to the north is impossible. It looks as if
+the only way out of here involves wings -- to bad you dont have any. You
+realize however that the water must go somewhere otherwise this gully
+would flood in seconds....."
+extra {"waterfall","fall"}
+"Massive amounts of ice and water crash down into the north edge of this
+pool. Its quite a fall down that thing."
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+south to w9 open {EX_OPEN_CLOSE,EX_HIDDEN,EX_CLOSED}
+keyword {"ice door","door","wall","secret door"}
+descr "You have located a secret door to the south";
+SECRET_DOOR_DIFFICULTY(SOUTH,55)
+end
+
+                        w9
+title "Elemental Plane of Water"
+names{"Water Plane"}
+descr
+"This is a three-way junction in the tunnel. Water flows to the south,
+east, and west here and it all seems to come from the north. You can
+follow the tunnels to the in the direction of any flow."
+extra {"water","ice"}
+"The mixture of ice and water is like nothing you've ever seen on the
+surface. You have the strange sensation that someone or something has
+sensed your presence as the the ice and water flows around your legs."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+south to w15
+descr
+"The ice and water seem to work their way to the south";
+west to w13
+descr
+"The tunnel continues on to the west";
+east to w10
+descr
+"The plane continues on to the east";
+north to w8 open {EX_OPEN_CLOSE,EX_CLOSED,EX_HIDDEN}
+keyword {"ice door","door","wall","secret door"}
+descr "You have located a secret door that leads off to the north";
+SECRET_DOOR_DIFFICULTY(NORTH,45)
+end
+
+                        w10
+title "Elemental Plane of Water"
+names {"Water Plane"}
+descr
+"The tunnel forms a cross here. The current continues to the east towards
+and opening in the tunnel and further down a tunnel to the north. Travel
+is possible in all directions."
+extra {"water","ice"}
+"The mixture of ice and water is like nothing you've ever seen on the
+surface. You have the strange sensation that someone or something has
+sensed your presence as the the ice and water flows around your legs."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to w6
+descr
+"The tunnel continues on to the north";
+west to w9
+descr
+"The tunnel continues on to the west";
+east to w11
+descr
+"The tunnel continues on to the east";
+south to w16
+descr
+"The tunnel continues on to the south";
+end
+                w11
+title "Elemental Sea"
+names {"Water Plane"}
+descr
+"The tunnel opens up as the water and ice flow into a giant sea that
+stretches as far as the eye can see. Imposing cliffs of ice block any
+passage north or south. Whatever it is that keeps you from sinking into
+this mess of ice and water weakens as you sink to your chest. You
+quickly realize that continuing to the east is futile."
+extra {"cliff","cliffs"}
+"The cliffs are of jagged ice and higher than any cliffs you have ever
+seen "
+extra {"sea","ocean","water","ice"}
+"The Elemental Sea seems to have no end. Giant swells of ice choked waves
+roll to what would be the horizon if there was any sun."
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+west to w10
+descr
+"You can go back west into the tunnel";
+end
+
+                        w12
+title "Elemental Sea"
+names {"Water Plane"}
+descr
+"The tunnel opens up as the water and ice flow into a giant sea that
+stretches as far as the eye can see. Imposing cliffs of ice block any
+passage north or south. Whatever it is that keeps you from sinking into
+this mess of ice and water weakens as you sink to your chest. You
+quickly realize that continuing to the west is futile."
+extra {"cliff","cliffs"}
+"The  cliffs are of jagged ice and higher than any cliffs you have ever
+seen "
+extra {"sea","ocean","water","ice"}
+"The Elemental Sea seems to have no end. Giant swells of ice choked waves
+roll to what would be the horizon if there was any sun."
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+east to w13
+descr
+"You can go back east into the tunnel";
+end
+                        w13
+title "Elemental Plane of Water"
+names {"Water Plane"}
+descr
+"The tunnel forms a cross here. The current continues to the east towards
+and opening in the tunnel and further down a tunnel to the north. Travel
+is possible in all directions."
+extra {"water","ice"}
+"The mixture of ice and water is like nothing you've ever seen on the
+surface. You have the strange sensation that someone or something has
+sensed your presence as the the ice and water flows around your legs."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+west to w12
+descr
+"The tunnel open up into a large sea to the west";
+east to w9
+descr
+"the tunnel continues to the east";
+south to w14
+descr
+"The tunnel continues to the south";
+end
+                        w14
+title "Elemental Plane of Water"
+names {"Water Plane"}
+descr
+"The The river continues south through the tunnel. You can follow the
+river downstream or head back upstream to the north. "
+
+extra {"water","ice"}
+"The mixture of ice and water is like nothing you've ever seen on the
+surface. You have the strange sensation that someone or something has
+sensed your presence as the the ice and water flows around your legs."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to w13
+descr
+"The tunnel continues to the north";
+south to w17
+descr
+"The tunnel continues to the south";
+end
+                        w15
+title "Elememtal Plane of Water"
+names{"Water Plane"}
+descr
+"The river continues south through the tunnel. You can follow the
+river downstream or head back upstream to the north. "
+extra {"water","ice"}
+"The mixture of ice and water is like nothing you've ever seen on the
+surface. You have the strange sensation that someone or something has
+sensed your presence as the the ice and water flows around your legs."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to w9
+descr
+"The tunnel continues to the north";
+south to w18
+descr
+"The tunnel continues to the south";
+end
+                        w16
+title "Elememtal Plane of Water"
+names{"Water Plane"}
+descr
+"The river continues south through the tunnel. You can follow the
+river downstream or head back upstream to the north. "
+
+extra {"water","ice"}
+"The mixture of ice and water is like nothing you've ever seen on the
+surface. You have the strange sensation that someone or something has
+sensed your presence as the the ice and water flows around your legs."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to w10
+descr
+"The tunnel continues to the north";
+south to w19
+descr
+"The tunnel continues to the south";
+end
+                        w17
+title "Elememtal Plane of Water"
+names{"Water Plane"}
+descr
+"The tunnel opens up to the south as the river flows out of it. There
+is a river flowing from the east towards the opening to the south as
+well. A strange mist boils out of a room to the west. You can head towards
+the opening or head upstream to the north or east, or enter the room to
+the west."
+extra {"water","ice"}
+"The mixture of ice and water is like nothing you've ever seen on the
+surface. You have the strange sensation that someone or something has
+sensed your presence as the the ice and water flows around your legs."
+extra {"mist","heavy mist"}
+"This mist clings to your skin as it rolls out from the north. It is even
+colder than The icy river you are standing in."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to w14
+descr
+"The tunnel continues to the north";
+south to w20
+descr
+"The tunnel continues to the south";
+east to w18
+descr
+"the tunnel continues to the east";
+west to w23
+descr
+"This room is the source of the strange mist";
+end
+                        w18
+title "Elememtal Plane of Water"
+names{"Water Plane"}
+descr
+"A heavy mist rolls into this part of the tunnel from the north chilling
+you to the bone. the river branches off to the east and west but ceases
+its flow to the south. You can follow the river in any direction or head
+north into the mist."
+extra {"water","ice"}
+"The mixture of ice and water is like nothing you've ever seen on the
+surface. You have the strange sensation that someone or something has
+sensed your presence as the the ice and water flows around your legs."
+extra {"mist","heavy mist"}
+"This mist clings to your skin as it rolls out from the north. It is even
+colder than The icy river you are standing in."
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to w15
+descr
+"The tunnel continues to the north";
+south to w21
+descr
+"The tunnel continues to the south";
+east to w19
+descr
+"The tunnel continues to the east";
+west to w17
+descr
+"The tunnel continues to the west";
+end
+                        w19
+title "Elememtal Plane of Water"
+names{"Water Plane"}
+descr
+"The tunnel opens up to the south as the river flows out of it. There
+is a river flowing from the west towards the opening to the south as
+well.  A thick cold mist is boiling out of a room to the east to the
+east. You can head towards the opening or head upstream to the north or
+west or go east into the mist."
+
+extra {"water","ice"}
+"The mixture of ice and water is like nothing you've ever seen on the
+surface. You have the strange sensation that someone or something has
+sensed your presence as the the ice and water flows around your legs."
+extra {"mist","heavy mist"}
+"This mist clings to your skin as it rolls out from the east. It is even
+colder than The icy river you are standing in."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to w16
+descr
+"The tunnel continues to the north";
+south to w22
+descr
+"The tunnel continues to the south";
+west to w18
+descr
+"The tunnel continues to the west";
+east to w24
+descr " This room is the source of the strange mist";
+end
+                w20
+title "Elemental Sea"
+names {"Water Plane"}
+descr
+"The tunnel opens up as the water and ice flow into a giant sea that
+stretches as far as the eye can see. Imposing cliffs of ice block any
+passage east or west. Whatever it is that keeps you from sinking into
+this mess of ice and water weakens as you sink to your chest. You
+quickly realize that continuing to the south is futile."
+extra {"cliff","cliffs"}
+"The cliffs are of jagged ice and higher than any cliffs you have ever
+seen "
+ extra {"sea","ocean","water","ice"}
+"The Elemental Sea seems to have no end. Giant swells of ice choked waves
+roll to what would be the horizon if there was any sun."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to w17
+descr
+"You can go back north into the tunnel";
+end
+                w22
+title "Elemental Sea"
+names {"Water Plane"}
+descr
+"The tunnel opens up as the water and ice flow into a giant sea that
+stretches as far as the eye can see. Imposing cliffs of ice block any
+passage east or west. Whatever it is that keeps you from sinking into
+this mess of ice and water weakens as you sink to your chest. You
+quickly realize that continuing to the south is futile."
+extra {"cliff","cliffs"}
+"The  cliffs are of jagged ice and higher than any cliffs you have ever
+seen "
+ extra {"sea","ocean","water","ice"}
+"The Elemental Sea seems to have no end. Giant swells of ice choked waves
+roll to what would be the horizon if there was any sun."
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to w19
+descr
+"You can go back north into the tunnel";
+end
+                        w21
+
+title "Elemental Plane of Water"
+names {"Water Plane"}
+descr
+"This room is choked with mist. though you can barely breath or see, you
+manage to make out doorways to the east and west both of which are
+pumping out the mist which is chilling you. You can see what is in these
+rooms or go to the north."
+extra {"mist","heavy mist"}
+"This mist clings to your skin as it rolls out from the east. It is even
+colder than The icy river you were standing in."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+
+
+
+south to w18
+descr
+"The mist lightens to the south";
+east to w26
+descr
+"This room is one source of the mist";
+west to w25
+descr
+"This room is one source of the mist";
+end
+
+                fall
+title "Falling"
+names {"Over the Edge"}
+descr
+"HERE COMES THE EDGE!!!!!! HO
+                             O
+                              O
+                              O
+                              O
+                              O
+                              O
+                              O
+                              L
+                              L
+                              L
+                              L                 .   .
+                              L                .   .  .
+                              Y              .  .    ..  .         .
+                              Y               .        .  .    .
+                              Y                         .  .
+                                                .        .  . .  .
+                              S  .               .        . .  .
+                              H     .   .  .        .      .. .
+                              H ..  .     .      .          . .
+                              I    .   .  .              . . .
+                              I      .  .  .            .  . .. .
+                         .    I   .       .    .   .  .  . ..
+                              I   .   . .   .  ....     . .. .
+                         OOOOMMMMPPPPHHHHH!!!!!!"
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+special SFUN_DEATH_ROOM "50" time PULSE_SEC*20
+special SFUN_FORCE_MOVE "center/w8!The boiling waterfall pushes you south."
+time 120 bits SFB_RANTIME
+end
+
+                        w23
+title "Elememtal Plane of Water"
+names{"Water Plane"}
+descr
+"You are no longer standing in a river. You see before you a forboding
+altar carved of ice. Much like the previous altars it depicts many
+bizarre and hideous creatures groveling before a massive being. If the
+previous  altars have taught you anything it is to beware of the
+guardians of such an evil place. A small staircase is behind the altar."
+extra {"altar"}
+" The altar is obviously made from very powerful magic. As you stare at
+it water pulses through the ice sculpture making it seem almost alive."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+east to w17
+descr
+"You can go back east";
+down to temp_rm1
+descr
+"These stairs lead down out of the plane";
+end
+
+                w24
+title "Elememtal Plane of Water"
+names{"Water Plane"}
+descr
+"You are no longer standing in a river. You see before you a forboding
+altar carved of ice. Much like the previous altars it depicts many
+bizarre and hideous creatures groveling before a massive being. If the
+previous  altars have taught you anything it is to beware of the
+guardians of such an evil place. A small staircase is behind the altar."
+extra {"altar"}
+" The altar is obviously made from very powerful magic. As you stare at
+it water pulses through the ice sculpture making it seem almost alive."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+west to w19
+descr
+"You can go back west";
+down to temp_rm1
+descr
+"These stairs lead down out of the plane";
+end
+                        w25
+title "Elememtal Plane of Water"
+names{"Water Plane"}
+descr
+"You are no longer standing in a river. You see before you a forboding
+altar carved of ice. Much like the previous altars it depicts many
+bizarre and hideous creatures groveling before a massive being. If the
+previous  altars have taught you anything it is to beware of the
+guardians of such an evil place. A small staircase is behind the altar."
+extra {"altar"}
+" The altar is obviously made from very powerful magic. As you stare at
+it water pulses through the ice sculpture making it seem almost alive."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+east to w21
+descr
+"You can go back east";
+down to temp_rm1
+descr
+"These stairs lead down out of the plane";
+end
+
+                w26
+title "Elememtal Plane of Water"
+names{"Water Plane"}
+descr
+"You are no longer standing in a river. You see before you a forboding
+altar carved of ice. Much like the previous altars it depicts many
+bizarre and hideous creatures groveling before a massive being. If the
+previous  altars have taught you anything it is to beware of the
+guardians of such an evil place. A small staircase is behind the altar."
+extra {"altar"}
+" The altar is obviously made from very powerful magic. As you stare at
+it water pulses through the ice sculpture making it seem almost alive."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+west to w21
+descr
+"You can go back west";
+down to wtof1
+descr
+"These stairs lead further down into the earth";
+end
+
+
+
+                                wtof1
+title "Stairs room"
+names {"Stairs Room"}
+descr
+"It appears that you have taken the correct set of stairs down towards the
+next elemental zone.  The only exit is a set of stairs down to an unknown
+area."
+
+movement SECT_INSIDE
+flags {UNIT_FL_SACRED}
+flags {UNIT_FL_NO_MOB}
+up to w26
+descr
+"These stairs take you back up to the elemental plane of water";
+down to f3
+descr
+"This exit will put you on to the elemental plane of fire";
+end
+
+/*--------------------fire elemental floor-------------------------*/
+                                f3
+
+title "Elemental plane of Fire"
+names{"Fire Plane"}
+descr
+"You feel very relieved to know you made this far, and still manage to be
+alive.  You have arrived at the final elemental plane of the demented
+journey
+to the center, the elemental plane of fire.  The heat is REALLY unbearable
+here.  Flames dances around the exits in all cardinal directions, and you
+may safely exit up out of this plane as well."
+
+extra {"flames", "flame"}
+"You see flames everywhere.  You then realize that it will be difficult to
+make out exits on this plane.  The flames give off unbearable heat."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+dilcopy fireroom();
+north to f7
+descr
+"The plane continues for as far as the eye can see.";
+south to f6
+descr
+"The plane continues for as far as the eye can see.";
+west to f2
+descr
+"The plane continues for as far as the eye can see.";
+east to f4
+descr
+"The plane continues for as far as the eye can see.";
+up to wtof1
+descr
+"The stairs up will take you out of this abyss and take you back up to
+the world above";
+end
+
+                                f2
+
+title "Elemental plane of Fire"
+names{"Fire Plane"}
+descr
+"You are lost in the Elemental plane of fire.  Exits you can barely make
+out
+through the flames lead out in all four cardinal directions."
+
+extra {"flames", "flame"}
+"You see flames everywhere.  You then realize that it will be difficult to
+make out exits on this plane.  The flames give off unbearable heat."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to f4
+descr
+"The plane continues for as far as the eye can see.";
+south to f5
+descr
+"The plane continues for as far as the eye can see.";
+west to f1
+descr
+"The plane continues for as far as the eye can see.";
+east to f3
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                f1
+
+title "Elemental plane of Fire"
+names{"Fire Plane"}
+descr
+"Could it be, that you finally found your way out of this confusing plane?
+You do recognize the shrine as the same kind from all the previous
+elemental
+planes, having a painting of 4-headed beast on it, and you start feeling
+very
+uneasy, more so than previous times at the shrines.  You still see exits in
+all 4 cardinal directions, as well as a staircase down, behind the altar.
+Flames dances wildly here."
+
+extra {"flames", "flame"}
+"You see flames everywhere.  You then realize that it will be difficult to
+make out exits on this plane.  The flames give off unbearable heat."
+extra {"shrine","altar"}
+"This is the same kind of shrine of four-head beast as you have seen on all
+the previous elemental planes."
+
+flags {UNIT_FL_SACRED}
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to f7
+descr
+"The plane continues for as far as the eye can see.";
+south to f5
+descr
+"The plane continues for as far as the eye can see.";
+west to f6
+descr
+"The plane continues for as far as the eye can see.";
+east to f2
+descr
+"The plane continues for as far as the eye can see.";
+down to temp_rm1
+descr
+"The staircase leads down into the darkness, off the elemental plane of
+fire.";
+end
+
+                                f4
+
+title "Elemental plane of Fire"
+names{"Fire Plane"}
+descr
+"Could it be, that you finally found your way out of this confusing plane?
+You do recognize the shrine as the same kind from all the previous
+elemental
+planes, having a painting of 4-headed beast on it, and you start feeling
+very
+uneasy, more so than previous times at the shrines.  You still see exits in
+all 4 cardinal directions, as well as a staircase down, behind the altar.
+Flames dances wildly here."
+
+extra {"flames", "flame"}
+"You see flames everywhere.  You then realize that it will be difficult to
+make out exits on this plane.  The flames give off unbearable heat."
+extra {"shrine","altar"}
+"This is the same kind of shrine of four-head beast as you have seen on all
+the previous elemental planes."
+
+flags {UNIT_FL_SACRED}
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to f8
+descr
+"The plane continues for as far as the eye can see.";
+south to f7
+descr
+"The plane continues for as far as the eye can see.";
+west to f3
+descr
+"The plane continues for as far as the eye can see.";
+east to f2
+descr
+"The plane continues for as far as the eye can see.";
+down to temp_rm1
+descr
+"The staircase leads down into the darkness, off the elemental plane of
+fire.";
+end
+
+                                f17
+
+title "Elemental plane of Fire"
+names{"Fire Plane"}
+descr
+"Could it be, that you finally found your way out of this confusing plane?
+You do recognize the shrine as the same kind from all the previous
+elemental
+planes, having a painting of 4-headed beast on it, and you start feeling
+very
+uneasy, more so than previous times at the shrines.  You still see exits in
+all 4 cardinal directions, as well as a staircase down, behind the altar.
+Flames dances wildly here."
+
+extra {"flames", "flame"}
+"You see flames everywhere.  You then realize that it will be difficult to
+make out exits on this plane.  The flames give off unbearable heat."
+extra {"shrine","altar"}
+"This is the same kind of shrine of four-head beast as you have seen on all
+the previous elemental planes."
+
+flags {UNIT_FL_SACRED}
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to f14
+descr
+"The plane continues for as far as the eye can see.";
+south to f11
+descr
+"The plane continues for as far as the eye can see.";
+west to f10
+descr
+"The plane continues for as far as the eye can see.";
+east to f18
+descr
+"The plane continues for as far as the eye can see.";
+down to temp_rm1
+descr
+"The staircase leads down into the darkness, off the elemental plane of
+fire.";
+end
+
+                                f20
+
+title "Elemental plane of Fire"
+names{"Fire Plane"}
+descr
+"Could it be, that you finally found your way out of this confusing plane?
+You do recognize the shrine as the same kind from all the previous
+elemental
+planes, having a painting of 4-headed beast on it, and you start feeling
+very
+uneasy, more so than previous times at the shrines.  You still see exits in
+all 4 cardinal directions, as well as a staircase down, behind the altar.
+Flames dances wildly here."
+
+extra {"flames", "flame"}
+"You see flames everywhere.  You then realize that it will be difficult to
+make out exits on this plane.  The flames give off unbearable heat."
+extra {"shrine","altar"}
+"This is the same kind of shrine of four-head beast as you have seen on all
+the previous elemental planes."
+
+flags {UNIT_FL_SACRED}
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to f2
+descr
+"The plane continues for as far as the eye can see.";
+south to f5
+descr
+"The plane continues for as far as the eye can see.";
+west to f19
+descr
+"The plane continues for as far as the eye can see.";
+east to f7
+descr
+"The plane continues for as far as the eye can see.";
+down to c1
+descr
+"The staircase leads down into the darkness, off the elemental plane of
+fire.";
+end
+
+                                f5
+
+title "Elemental plane of Fire"
+names{"Fire Plane"}
+descr
+"You are still lost in the Elemental plane of fire.  Exits you can barely
+make
+out through the flames lead out in all four cardinal directions."
+
+extra {"flames", "flame"}
+"You see flames everywhere.  You then realize that it will be difficult to
+make out exits on this plane.  The flames give off unbearable heat."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+dilcopy fireroom();
+
+north to f2
+descr
+"The plane continues for as far as the eye can see.";
+south to f8
+descr
+"The plane continues for as far as the eye can see.";
+west to f1
+descr
+"The plane continues for as far as the eye can see.";
+east to f6
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                f6
+
+title "Elemental plane of Fire"
+names{"Fire Plane"}
+descr
+"You pause and attempt to cool yourself in some of the cooler spots in the
+room, which is HOT anyway.  Exits you can barely make out through the
+flames
+lead out in all four cardinal directions."
+
+extra {"flames", "flame"}
+"You see flames everywhere.  You then realize that it will be difficult to
+make out exits on this plane.  The flames give off unbearable heat."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+dilcopy fireroom();
+
+north to f3
+descr
+"The plane continues for as far as the eye can see.";
+south to f9
+descr
+"The plane continues for as far as the eye can see.";
+west to f5
+descr
+"The plane continues for as far as the eye can see.";
+east to f7
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                f7
+
+title "Elemental plane of Fire"
+names{"Fire Plane"}
+descr
+"You adjust some of your metallic armor, which are burning you.  Exits you
+can
+barely make out through the flames lead out in all four cardinal
+directions."
+
+extra {"flames", "flame"}
+"You see flames everywhere.  You then realize that it will be difficult to
+make out exits on this plane.  The flames give off unbearable heat."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to f4
+descr
+"The plane continues for as far as the eye can see.";
+south to f5
+descr
+"The plane continues for as far as the eye can see.";
+west to f6
+descr
+"The plane continues for as far as the eye can see.";
+east to f2
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                f8
+
+title "Elemental plane of Fire"
+names{"Fire Plane"}
+descr
+"You guessed it right, you are still lost in this unbearably heated plane.
+Exits you can barely make out through the flames lead out in all four
+cardinal
+directions."
+
+extra {"flames", "flame"}
+"You see flames everywhere.  You then realize that it will be difficult to
+make out exits on this plane.  The flames give off unbearable heat."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+dilcopy fireroom();
+
+north to f5
+descr
+"The plane continues for as far as the eye can see.";
+south to f7
+descr
+"The plane continues for as far as the eye can see.";
+west to f5
+descr
+"The plane continues for as far as the eye can see.";
+east to f9
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                f9
+
+title "Elemental plane of Fire"
+names{"Fire Plane"}
+descr
+"Your brain sizzles in this heat... OUCH!  Exits you can barely make out
+through the flames lead out in all four cardinal directions."
+
+extra {"flames", "flame"}
+"You see flames everywhere.  You then realize that it will be difficult to
+make out exits on this plane.  The flames give off unbearable heat."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+dilcopy fireroom();
+
+north to f6
+descr
+"The plane continues for as far as the eye can see.";
+south to f10
+descr
+"The plane continues for as far as the eye can see.";
+west to f8
+descr
+"The plane continues for as far as the eye can see.";
+east to f8
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                f10
+
+title "Elemental plane of Fire"
+names{"Fire Plane"}
+descr
+"All you can think of now is how stupid anyone could be to not give up in
+this
+plane, being constantly burnt by intense heat.  Exits you can barely make
+out
+through the flames lead out in all four cardinal directions."
+
+extra {"flames", "flame"}
+"You see flames everywhere.  You then realize that it will be difficult to
+make out exits on this plane.  The flames give off unbearable heat."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+dilcopy fireroom();
+
+north to f9
+descr
+"The plane continues for as far as the eye can see.";
+south to f8
+descr
+"The plane continues for as far as the eye can see.";
+west to f11
+descr
+"The plane continues for as far as the eye can see.";
+east to f2
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                f11
+
+title "Elemental plane of Fire"
+names{"Fire Plane"}
+descr
+"As you pause to open the canteen to pour over yourself with water, the
+entire
+canteen of water suddenly escapes into the air in a vapor!  Exits you can
+barely make out through the flames lead out in all four cardinal
+directions."
+
+extra {"flames", "flame"}
+"You see flames everywhere.  You then realize that it will be difficult to
+make out exits on this plane.  The flames give off unbearable heat."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+
+north to f8
+descr
+"The plane continues for as far as the eye can see.";
+south to f12
+descr
+"The plane continues for as far as the eye can see.";
+west to f9
+descr
+"The plane continues for as far as the eye can see.";
+east to f10
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                f12
+
+title "Elemental plane of Fire"
+names{"Fire Plane"}
+descr
+"All of the sudden, a lock of your hair, giving in to intense heat, just
+went
+up into flames!  Exits you can barely make out through the flames lead out
+in
+all four cardinal directions."
+
+extra {"flames", "flame"}
+"You see flames everywhere.  You then realize that it will be difficult to
+make out exits on this plane.  The flames give off unbearable heat."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+dilcopy fireroom();
+
+north to f11
+descr
+"The plane continues for as far as the eye can see.";
+south to f15
+descr
+"The plane continues for as far as the eye can see.";
+west to f10
+descr
+"The plane continues for as far as the eye can see.";
+east to f13
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                f13
+
+title "Elemental plane of Fire"
+names{"Fire Plane"}
+descr
+"The flames in this room seems to be mocking you with the heat.  Exits you
+can
+barely make out through the flames lead out in all four cardinal
+directions."
+
+extra {"flames", "flame"}
+"You see flames everywhere.  You then realize that it will be difficult to
+make out exits on this plane.  The flames give off unbearable heat."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+dilcopy fireroom();
+
+north to f10
+descr
+"The plane continues for as far as the eye can see.";
+south to f16
+descr
+"The plane continues for as far as the eye can see.";
+west to f12
+descr
+"The plane continues for as far as the eye can see.";
+east to f5
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                f14
+
+title "Elemental plane of Fire"
+names{"Fire Plane"}
+descr
+"You are lost in the Elemental plane of fire.  You seem to be getting good
+at
+this, being lost.  Exits you can barely make out through the flames lead
+out
+in all four cardinal directions."
+
+extra {"flames", "flame"}
+"You see flames everywhere.  You then realize that it will be difficult to
+make out exits on this plane.  The flames give off unbearable heat."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+dilcopy fireroom();
+
+north to f12
+descr
+"The plane continues for as far as the eye can see.";
+south to f17
+descr
+"The plane continues for as far as the eye can see.";
+west to f11
+descr
+"The plane continues for as far as the eye can see.";
+east to f15
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                f15
+
+title "Elemental plane of Fire"
+names{"Fire Plane"}
+descr
+"You pause to cool off on top of a hot rock, away from the flames in this
+room.  Exits you can barely make out through the flames lead out in all
+four
+cardinal directions."
+
+extra {"flames", "flame"}
+"You see flames everywhere.  You then realize that it will be difficult to
+make out exits on this plane.  The flames give off unbearable heat."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+dilcopy fireroom();
+
+north to f12
+descr
+"The plane continues for as far as the eye can see.";
+south to f18
+descr
+"The plane continues for as far as the eye can see.";
+west to f14
+descr
+"The plane continues for as far as the eye can see.";
+east to f16
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                f16
+
+title "Elemental plane of Fire"
+names{"Fire Plane"}
+descr
+"All you have to do to light a torch is to take it out, then it will be
+lit.
+Exits you can barely make out through the flames lead out in all four
+cardinal
+directions."
+
+extra {"flames", "flame"}
+"You see flames everywhere.  You then realize that it will be difficult to
+make out exits on this plane.  The flames give off unbearable heat."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+dilcopy fireroom();
+
+north to f13
+descr
+"The plane continues for as far as the eye can see.";
+south to f19
+descr
+"The plane continues for as far as the eye can see.";
+west to f15
+descr
+"The plane continues for as far as the eye can see.";
+east to f12
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                f18
+
+title "Elemental plane of Fire"
+names{"Fire Plane"}
+descr
+"You are beginning to dehydrate, since you have sweated all there is to
+sweat.
+Exits you can barely make out through the flames lead out in all four
+cardinal
+directions."
+
+extra {"flames", "flame"}
+"You see flames everywhere.  You then realize that it will be difficult to
+make out exits on this plane.  The flames give off unbearable heat."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+north to f15
+descr
+"The plane continues for as far as the eye can see.";
+south to f10
+descr
+"The plane continues for as far as the eye can see.";
+west to f17
+descr
+"The plane continues for as far as the eye can see.";
+east to f19
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+                                f19
+
+title "Elemental plane of Fire"
+names{"Fire Plane"}
+descr
+"The heat is ESPECIALLY intense here.  Exits you can barely make out
+through
+the flames lead out in all four cardinal directions."
+
+extra {"flames", "flame"}
+"You see flames everywhere.  You then realize that it will be difficult to
+make out exits on this plane.  The flames give off unbearable heat."
+
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+dilcopy fireroom();
+
+north to f16
+descr
+"The plane continues for as far as the eye can see.";
+south to f11
+descr
+"The plane continues for as far as the eye can see.";
+west to f18
+descr
+"The plane continues for as far as the eye can see.";
+east to f20
+descr
+"The plane continues for as far as the eye can see.";
+end
+
+  c2
+title "Room of elements"
+names {"Room of Elements"}
+descr
+"This is perhaps one of the most amazing sights you have ever seen in your
+life! This cavern is made up of everything and nothing at the same time.
+Liquid fire pours over you from ground above, but you are unharmed, only
+the air seems to be holding you up as there is nothing beneath you. You
+struggle to fight off vertigo as the room changes once again. A door to
+your south constantly shifts between rock, cloud, ice, and flame.  "
+extra {"door"}
+" This door shifts between every elemental form in a hypnotic fashion."
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+south to c3 keyword {"door"}
+open {EX_OPEN_CLOSE,EX_CLOSED}
+descr
+"A great evil emenates to the south";
+north to c1
+descr
+"The cavern continues to the north";
+ end
+
+ c3
+title "Lair of the Dragon"
+names {"Elemental Lair"}
+descr
+"An immense cavern extends before you, The floor is of ancient rock, the
+walls are of fire on one side and ice on the other, and the top of the
+cavern are clouds that seem to reach forever. All of the elements
+converge into an monolithic altar at the far end of this room. Bones and
+armor are strewn about this cavern. You are filled with fear and awe as
+you realize this is the home of the ruler of all the elements. The only
+exit is to the north."
+extra {"altar"}
+"This massive altar seems to be a combination of all the others you have
+seen. It is stained with eons of sacrifices"
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement  SECT_INSIDE
+north to c2 keyword {"door"}
+open {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+descr
+"The cavern continues into darkness.";
+end
+
+  c1
+title "stairs"
+names {"Stairs"}
+descr
+"As you reach the bottom of this staircase you get the feeling that
+every direction is now up....  Strange since you know the earth is flat.
+To your south is a large cavern that seems to only be there half the
+time.  This is a very confusing place. You can enter this strange room to
+the south or go up the stairs."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+south to c2
+descr
+"A large cavern opens up to the south";
+up to f20
+descr
+"The stairs lead up into darkness";
+end
+
+
+
+
+/*------------------my little home---------------------------*/
+                                rex_room
+
+title "Rexor's Bungalow"
+names{"Bungalow"}
+descr
+"This is the home of Rexor. This large beach front bungalow has all the
+modern
+conveniences of home.  There is a large computer room where Rexor
+studiously
+works on his coding assignments and zone development, a large kitchen where
+pasta is cooking on the stove, Amanda's room where she(a future goddess of
+Valhalla) sleeps, and a balcony where his wife is working on her
+cross-stitch
+for the baby's room.  This is an extremely serene place as long as the
+Amanda
+is not crying."
+
+flags {UNIT_FL_SACRED}
+flags {UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+
+end
+
+
+
+%mobiles
+m_genie_earth
+names {"dao","elemental genie","elemental","genie"}
+title "a Dao elemental genie"
+descr "A Dao elemental genie of earth is standing here"
+extra {}
+"As you gaze at this Dao, you realize his skin is brown, very similar
+to the color of the dirt around you. His fingernails and toenails are
+suprisingly very metal like. He is free of body hair, except for the well
+groomed mustache he wears on his face."
+ELEMENTAL_GENIE(90, SEX_MALE, "meteor shower")
+exp 105
+end
+
+f_genie_earth
+names {"dao","elemental genie","elemental","genie"}
+title "a Dao elemental genie"
+descr "a Dao elemental genie of earth is standing here"
+extra {}
+"As you gaze at this Dao, you realize her skin is brown, very similar
+to the color of the dirt around you. His fingernails and toenails are
+suprisingly very metal like. She is completley free of body hair, which
+simply accentuates her powerful muscles."
+ELEMENTAL_GENIE(90, SEX_FEMALE, "meteor shower")
+exp 105
+end
+
+m_genie_fire
+names {"efreet","elemental genie","elemental","genie"}
+title "an Eefreet elemental genie"
+descr "An Efreet elemental genie of fire is standing here."
+extra {}
+"Before you stands a towering, hulking humanoid. His eyes are a deep
+red, and seem to flicker just the same as a burning ember. He wears
+a black beard, which makes him all the more formidable appearing."
+ELEMENTAL_GENIE(90, SEX_MALE, "cast firestorm")
+exp 105
+end
+
+f_genie_fire
+names {"efreet","elemental genie","elemental","genie"}
+title "a Efreet elemental genie"
+descr "An Efreet elemental genie of fire is standing here."
+extra {}
+"Before you stands a towering, hulking humanoid. His eyes are a deep
+red, and seem to flicker just the same as a burning ember. He wears
+a black beard, which makes him all the more formidable appearing."
+ELEMENTAL_GENIE(90, SEX_FEMALE, "firestorm")
+exp 105
+end
+
+
+
+
+m_genie_water
+names {"marid","elemental genie","elemental","genie"}
+title "a Marid elemental genie."
+descr "A Marid elemental genie of water is standing here."
+extra {}
+"You set your eyes on what is simply one of the most stunning creatures
+you ever laid eyes upon. His skin is pale blue, almost a perfect match
+of the oceans off the continent of Xiyang, his hair is whitish, as
+to reflect the color of a cresting wave."
+ELEMENTAL_GENIE(90, SEX_MALE, "icestorm")
+exp 105
+end
+
+f_genie_water
+names {"marid","elemental genie","elemental","genie"}
+title "a Marid elemental genie."
+descr "A Marid elemental genie of water is standing here."
+extra {}
+"You set your eyes on what is simply one of the most stunning creatures
+you ever laid eyes upon. Her skin is pale green, almost a perfect match
+of the oceans off the continent of Arabia, her hair is whitish, as
+to reflect the color of a cresting wave."
+ELEMENTAL_GENIE(90, SEX_FEMALE, "icestorm")
+exp 105
+end
+
+
+m_genie_air
+names {"Djinn","elemental genie","elemental","genie"}
+title "a Djinn elemental genie"
+descr "A Djinn elemental genie air is standing here"
+extra {}
+"This Djinn genie is quite tall, and very muscular, he wears a silk
+robe. His skin is pale blue. And his eyes are a deep brown."
+ELEMENTAL_GENIE(90, SEX_MALE, "light bolt")
+exp 105
+end
+
+f_genie_air
+names {"Djinn","elemental genie","elemental","genie"}
+title "a Djinn elemental genie"
+descr "A Djinn elemental genie air is standing here"
+extra {}
+"This Djinn genie is quite tall, and very muscular, she wears a silk
+robe. Her skin is olive green. And his eyes are a tremendously pale blue."
+ELEMENTAL_GENIE(90, SEX_FEMALE, "light bolt")
+exp 105
+end
+                                michael
+
+names{"michael"}
+title "Sir Michael of Serador"
+descr "Sir Michael, The most Noble of Warriors, is here."
+extra {}
+"You see an ageless man of large build, long golden white hair and eyes
+that
+ have seen the best and worst of battle. He rests in his small cottage
+content
+with keeping the flowers in his garden well manicured."
+race RACE_HUMAN
+level 99
+height 120
+flags{UNIT_FL_NO_TELEPORT}
+weight 135
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+exp -500
+alignment  1000
+sex SEX_MALE
+MSET_ABILITY(10,10,10,20,20,5,20,5)
+MSET_WEAPON(5,5,5,5,20,5)
+MSET_SPELL(0,0,0,5,5,5,5,5,5,5,20)
+position POSITION_STANDING
+default POSITION_STANDING
+special SFUN_GUARD_WAY_LEVEL "1@pal3@1-44@$1n stops you. @$1n
+ prevents $3n from continuing because $3n is not powerful enough"
+
+dilcopy combat_mag@function("acid ball","",0,4);
+
+dilbegin michael();
+var
+  pcname : string;
+  item   : unitptr;
+  pc     : unitptr;
+  i      : integer;
+  exdp   : extraptr;
+
+code
+{
+
+   :init:
+   heartbeat := PULSE_SEC*5;
+
+:start:
+wait(SFB_CMD,(activator.type == UNIT_ST_PC) and (not command(CMD_GIVE)));
+pc := activator;
+secure(pc, lostpc);
+if (pc.level < 44)
+  goto waitawhile;
+
+if ((not(ROD_COMPLETE in pc.quests)) and (not(ROD_ONGOING in pc.quests)))
+{
+exec("say Welcome to my humble haven away from the rest of the world.",
+self);
+
+ pause;
+ exec("say I have been waiting a long time for a worthy adventurer to
+assist"+
+        " me.", self);
+pause;
+
+exec("say I need someone who has had seen many battles to destroy an evil"+
+        " foe.", self);
+pause;
+
+exec("say I am able to keep these evil entities in the center of the earth"
++
+     " by the magic from my garden, however I am too old to rid the"+
+     " world of this terrible nuisance", self);
+   pause;
+
+   exec("say You must seek out the four elemental vortices and get their "
++
+        "ruling rods from each of them.", self);
+   pause;
+
+   exec("say These rods when joined with the magical hilt from the beast
+in" +
+        " the center of the world will create a massive weapon which will
+"+
+        "assist you in your adventuring days before you retire such as" +
+        " I did.",self);
+  pause;
+
+ exec("say The first rod is from the earth vortex.  He rules the elemental
+"+
+        "plane of earth.", self);
+   pause;
+
+ exec("say The second rod is held by air vortex.  He is in command of the
+"+
+      "elemental plane of air.",self);
+   pause;
+   exec("say The third rod is on the water vortex.  He commands all of
+the"+
+        " water plane. ", self);
+   pause;
+
+   exec("say and final rod is with the fire vortex.  He is the most
+powerful"+
+     " of the vortices and can be found in the closest plane to the center
+of"+
+        " the earth.", self);
+   pause;
+
+   exec("say The hilt you need to find at the centermost point in the
+world"+
+        "... Be careful though...A massive creature holds this last
+item.",self)
+;
+
+   exec("say Bring me these five items, and I will be able to help you make
+a"+
+         " weapon of immense power.", self);
+   pause;
+
+   exec("say If you feel you are up to this task, please nod.", self);
+
+
+i := 0;
+while (i < 5)
+{
+   wait(SFB_CMD, activator #= pc);
+
+   if (command(CMD_NOD))
+   {
+      goto quest_accepted;
+   }
+   else if (command(CMD_SAY))
+   {
+
+        pause;
+        exec("say Nod if you accept this quest, shake your head " +
+             "if you feel you are not worthy at this time.", self);
+   }
+   else if (command(CMD_SHAKE))
+
+     goto no_quest;
+
+   i := i+1;
+}
+
+:no_quest:
+pause;
+exec("say Very well. Perhaps, you are not worthy of this challenge.",
+self);
+unsecure(pc);
+goto waitawhile;
+
+
+:quest_accepted:
+pause;
+exec("say Excellent! I knew you would be willing. You must bring me those "
++
+     "components and then I shall attempt to make you that weapon.", self);
+pause;
+
+addextra(pc.quests, {ROD_ONGOING}, "");
+unsecure(pc);
+goto start;
+
+}
+
+else
+{
+   exdp := ROD_ONGOING in pc.quests;
+
+   if (("hilt" in exdp.names) and ("firerod" in exdp.names) and
+       ("waterrod" in exdp.names) and ("earthrod" in exdp.names)
+        and ("airrod" in exdp.names))
+   {
+      pause;
+      subextra(pc.quests, ROD_ONGOING);
+      addextra(pc.quests, {ROD_COMPLETE}, "");
+      exec("emote takes all five items and places them into a bag.", self);
+      pause;
+
+   exec("say You have proved that you are the best of warriors in riding
+the"+
+           " underworld of those menaces", self);
+     pause;
+
+   exec("say and now here is your reward for defeating the massive
+elemental"+
+        " dragon",self);
+     pause;
+
+      item := load("sword_truth@center");
+      item.height := pc.height;
+      link(item, pc);
+      experience(3500, pc);
+      exec("say I also have this powerful item, which shall assist you in
+the future",self);
+      item := load("belt_power@center");
+      item.height := pc.height;
+      link(item,pc);
+      exec("Use these items well, they shall assist you.",self);
+      pause;
+
+      exec("say Good luck to you, you certainly are a brave one!", self);
+
+     exec("wave", self);
+                }
+}
+
+unsecure(pc);
+goto start;
+
+
+:waitawhile:
+heartbeat := PULSE_SEC*60;
+pause;
+goto init;
+
+
+:lostpc:
+exec("say Now I may never find someone worthy!", self);
+pause;
+exec("sigh", self);
+goto start;
+
+
+}
+dilend
+
+
+dilbegin michael2();
+var
+  pc     : unitptr;
+  item   : unitptr;
+  exdp   : extraptr;
+
+code
+{
+   heartbeat := PULSE_SEC*5;
+
+:start:
+wait(SFB_CMD, (command(CMD_GIVE) and (activator.type == UNIT_ST_PC)));
+
+
+:give:
+if (not (ROD_ONGOING in activator.quests))
+  goto start;
+
+
+pc := activator;
+item := self.inside;
+secure(pc, labsecure);
+secure(item, labsecure);
+
+wait(SFB_CMD | SFB_TICK, TRUE);
+
+if (not (item #= self.inside))
+{
+   unsecure(item);
+   exdp := ROD_ONGOING in pc.quests;
+
+   if ("earthrod" in self.inside.name)
+   {
+    addstring(exdp.names, "earthrod");
+    exec("say Obtaining this rod must have been the first of many
+challenges " +
+       "that you managed to over come in here.", self);
+      destroy(self.inside);
+}
+else if ("hilt" in self.inside.name)
+  {
+   addstring(exdp.names, "hilt");
+   exec("say This is the most impressive feat you have ever accomplished.",
+self
+);
+      destroy(self.inside);
+}
+
+else if ("waterrod" in self.inside.name)
+{
+   addstring(exdp.names, "waterrod");
+   exec("say The Water Vortex must have given you quite a battle!",
+        self);
+   destroy(self.inside);
+ }
+else if ("firerod" in self.inside.name)
+{
+   addstring(exdp.names, "firerod");
+   exec("say I doubt the Fire Vortex gave this willing to you!",
+        self);
+
+   destroy(self.inside);
+}
+else if ("airrod" in self.inside.name)
+{
+   addstring(exdp.names, "airrod");
+   exec("say This must have been difficult to take from the Air Vortex!",
+        self);
+   destroy(self.inside);
+}
+else
+{
+  exec("say I did not ask you for this "+pc.name +"?", self);
+  pause;
+  exec("say Here you go.", self);
+  link(self.inside, pc);
+   }
+}
+unsecure(pc);
+
+
+
+
+if ((command (CMD_GIVE)) and (activator.type == UNIT_ST_PC))
+{
+   goto give;
+}
+else
+  goto start;
+
+:labsecure:
+exec("say So much for that, not much of a hero anyway.", self);
+goto start;
+}
+dilend
+
+end
+
+		elem_imp
+
+names {"imp", "elemental", "element imp","creature"}
+descr "A small creature lurks here."
+title "Elemental Imp"
+extra {}
+"The Elemental Imp is the lowest form of life here on the elemental planes.
+It has the large-nosed head of a normal imp yet has an arm of fire,
+an arm of water, and legs of stone and air.  It is truely a hideous
+creature."
+race RACE_ELEMENTALS_REX
+level 101
+sex SEX_NEUTRAL
+flags{UNIT_FL_NO_TELEPORT}
+height 100
+weight 350
+NATURAL_DEF(WPN_CRUSH, ARM_PLATE)
+exp 110          /* Set higher cause of size and spells */
+alignment -600
+MSET_ABILITY(20,20,20,20,10,0,10,0)
+MSET_WEAPON(10,10,10,10,10,10)
+MSET_SPELL(0,0,0,0,0,0,5,5,10,0,20)
+position POSITION_STANDING
+default POSITION_STANDING
+special SFUN_AGGRESSIVE time 30
+dilcopy combat_mag@function("lightning bolt","",0,3);
+
+end
+
+                                earth_el
+
+names {"earth elemental", "elemental", "figure"}
+descr "A large rock figure is here"
+title "Earth Elemental"
+extra {}
+"The earth elemental seems to be made of pure stone.  It is hard to
+distinguish
+from the surrounding landscape."
+race RACE_ELEMENTALS_REX
+level 90
+sex SEX_NEUTRAL
+flags{UNIT_FL_NO_TELEPORT}
+height 300
+weight 450
+NATURAL_DEF(WPN_CRUSH, ARM_PLATE)
+exp 110          /* Set higher cause of size and spells */
+alignment -600
+MSET_ABILITY(20,20,20,20,10,0,10,0)
+MSET_WEAPON(10,10,10,10,10,10)
+MSET_SPELL(0,0,0,0,0,0,5,5,10,0,20)
+position POSITION_STANDING
+default POSITION_STANDING
+special SFUN_AGGRESSIVE time 50
+
+
+end
+                                earth_vor
+
+names {"earth vortex", "vortex", "entity", "stone entity"}
+descr "A huge stone entity is here"
+title "Earth Vortex"
+extra {}
+"This huge earthen entity is massive in size built entirely of solid stone.
+ He
+is definitely the protector and master of this Elemental Plane."
+race RACE_VORTEX_REX
+level 95
+sex SEX_NEUTRAL
+flags{UNIT_FL_NO_TELEPORT}
+height 600
+weight 500
+NATURAL_DEF(WPN_CRUSH, ARM_PLATE)
+money 7 SILVER_PIECE, 4 COPPER_PIECE
+exp 110                   /* Set higher cause of size and spells */
+alignment -600
+MSET_ABILITY(20,20,20,20,10,0,10,0)
+MSET_WEAPON(10,10,10,10,10,10)
+MSET_SPELL(0,0,0,0,0,0,5,5,10,0,20)
+position POSITION_STANDING
+special SFUN_AGGRESSIVE time 70
+default POSITION_STANDING
+dilcopy combat_mag@function("lightning bolt","",0,3);
+
+end
+                                fire_el
+
+names {"fire elemental", "elemental", "figure", "flaming figure"}
+descr "A large flaming figure is here"
+title "Fire Elemental"
+extra {}
+"The fire elemental seems to be made of pure fire and molten lava. It
+emits a great heat from its body."
+race RACE_ELEMENTALS_REX
+level 90
+sex SEX_NEUTRAL
+flags{UNIT_FL_NO_TELEPORT}
+height 200
+weight 400
+NATURAL_DEF(WPN_CRUSH, ARM_PLATE)
+exp 110                                   /* Set higher cause of size and
+spells */
+alignment -600
+MSET_ABILITY(20,20,20,20,10,0,10,0)
+MSET_WEAPON(10,10,10,10,10,10)
+MSET_SPELL(0,0,0,0,0,0,20,10,5,0,5)
+position POSITION_STANDING
+default POSITION_STANDING
+special SFUN_AGGRESSIVE time 60
+
+
+end
+                        fire_vor
+
+names {"fire vortex", "vortex","entity","flaming entity","molten entity"}
+descr "A huge flaming molten entity is here"
+title "Fire Vortex"
+extra {}
+"This huge Molten mass is devastating in size and strength.  No one in this
+world can match is power.  He is definitely master of his domain."
+race RACE_VORTEX_REX
+level 95
+sex SEX_NEUTRAL
+height 600
+weight 700
+flags{UNIT_FL_NO_TELEPORT}
+NATURAL_DEF(WPN_CRUSH, ARM_PLATE)
+money 7 SILVER_PIECE, 4 COPPER_PIECE
+exp 110                       /* Set higher cause of size and
+spells */
+alignment -600
+MSET_ABILITY(20,20,20,20,10,0,10,0)
+MSET_WEAPON(10,10,10,10,10,10)
+MSET_SPELL(0,0,0,0,0,0,20,10,5,0,5)
+position POSITION_STANDING
+special SFUN_AGGRESSIVE time 60
+default POSITION_STANDING
+dilcopy combat_mag@function("firestorm","",0,3);
+
+end
+                        water_el
+
+names {"water elemental", "elemental","figure","watery figure"}
+descr "A large watery figure is here"
+title "Water Elemental"
+extra {}
+"The water elemental seems to be made of pure ice and water.  Its liquid
+form
+emanates a vast power from within the creature"
+race RACE_ELEMENTALS_REX
+level 90
+sex SEX_NEUTRAL
+flags{UNIT_FL_NO_TELEPORT}
+height 400
+weight 500
+NATURAL_DEF(WPN_CRUSH, ARM_PLATE)
+exp 110                                    /* Set higher cause of size and
+spells */
+alignment -600
+MSET_ABILITY(20,20,20,20,10,0,10,0)
+MSET_WEAPON(10,10,10,10,10,10)
+MSET_SPELL(0,0,0,0,0,0,5,20,10,0,5)
+position POSITION_STANDING
+default POSITION_STANDING
+special SFUN_AGGRESSIVE time 50
+
+
+
+end
+                        water_vor
+
+names {"water vortex", "vortex","entity","water-ice entity"}
+descr "A huge water-ice entity is here"
+title "Water Vortex"
+extra {}
+"This huge watery creature is here to defend it's home from all intruders."
+race RACE_VORTEX_REX
+level 95
+sex SEX_NEUTRAL
+flags{UNIT_FL_NO_TELEPORT}
+height 600
+weight 700
+NATURAL_DEF(WPN_CRUSH, ARM_PLATE)
+money 7 SILVER_PIECE, 4 COPPER_PIECE
+exp 100                        /* Set higher cause of size and spells */
+alignment -600
+MSET_ABILITY(20,20,20,20,10,0,10,0)
+MSET_WEAPON(10,10,10,10,10,10)
+MSET_SPELL(0,0,0,0,0,0,5,20,10,0,5)
+position POSITION_STANDING
+default POSITION_STANDING
+special SFUN_AGGRESSIVE time 70
+dilcopy combat_mag@function("icestorm","",0,3);
+
+end
+                                air_el
+
+names {"air elemental", "elemental","figure","translucent figure"}
+descr "A large translucent figure is here"
+title "Air Elemental"
+extra {}
+"The air elemental seems to be made from the clouds in the sky.  You feel a
+cool deadly breeze as the elemental closes in on you"
+race RACE_ELEMENTALS_REX
+level 90
+sex SEX_NEUTRAL
+flags{UNIT_FL_NO_TELEPORT}
+height 400
+weight 550
+NATURAL_DEF(WPN_CRUSH, ARM_PLATE)
+exp 110                                   /* Set higher cause of size and
+spells */
+alignment -600
+MSET_ABILITY(20,20,20,20,10,0,10,0)
+MSET_WEAPON(10,10,10,10,10,10)
+MSET_SPELL(0,0,0,0,0,0,5,10,20,0,5)
+position POSITION_STANDING
+default POSITION_STANDING
+special SFUN_AGGRESSIVE time 60
+
+end
+                        air_vor
+
+names {"air vortex", "vortex","entity","wispy entity"}
+descr "A huge wispy entity is here"
+title "Air Vortex"
+extra {}
+"This protector of the Elemental Plane of Air looks as if it is more deadly
+than any of the massive storms that you have witnessed on the surface."
+race RACE_VORTEX_REX
+level 95
+sex SEX_NEUTRAL
+flags{UNIT_FL_NO_TELEPORT}
+height 600
+weight 700
+NATURAL_DEF(WPN_CRUSH, ARM_PLATE)
+exp 110                                     /* Set higher cause of size and
+spells */
+alignment -600
+money 7 SILVER_PIECE, 4 COPPER_PIECE
+MSET_ABILITY(20,20,20,20,10,0,10,0)
+MSET_WEAPON(10,10,10,10,10,10)
+MSET_SPELL(0,0,0,0,0,0,5,10,20,0,5)
+position POSITION_STANDING
+default POSITION_STANDING
+special SFUN_AGGRESSIVE time 40
+dilcopy combat_mag@function("lightning bolt","",0,3);
+
+end
+                                dr_air_head
+
+names {"head", "dragon head", "air dragon head"}
+descr "Elemental Dragon Head of Air"
+title "Elemental Dragon Head of Air"
+extra {}
+"This is one of the four heads of the Dreaded Elemental Dragon.  It is a
+wispy
+white head made up of clouds."
+race RACE_DRHEAD_REX
+level 60
+sex SEX_NEUTRAL
+flags{UNIT_FL_NO_TELEPORT}
+height 300
+weight 550
+NATURAL_DEF(WPN_BITE, ARM_PLATE)
+exp 110                                /* Set higher cause of size and
+spells */
+alignment -1000
+MSET_ABILITY(20,20,20,20,10,0,10,0)
+MSET_WEAPON(0,10,10,10,20,10)
+MSET_SPELL(0,0,0,0,0,0,5,10,20,0,5)
+position POSITION_STANDING
+default POSITION_STANDING
+special SFUN_RESCUE"body/head"
+special SFUN_TEAMWORK"head/body"
+special SFUN_AGGRESSIVE time 40
+dilcopy combat_mag@function("lightning bolt","",0,4);
+end
+
+                                dr_water_head
+
+names {"head", "dragon head", "water dragon head"}
+descr "Elemental Dragon Head of Water"
+title "Elemental Dragon Head of Water"
+extra {}
+" This is another head of the Dreaded Elemental Dragon.  This head is
+made up of crystallized water formed into a extremely hard skin protecting
+this
+deadly part of the dragon."
+race RACE_DRHEAD_REX
+level 60
+sex SEX_NEUTRAL
+flags{UNIT_FL_NO_TELEPORT}
+height 300
+weight 550
+NATURAL_DEF(WPN_BITE, ARM_PLATE)
+exp 110                                 /* Set higher cause of size and
+spells */
+alignment -1000
+MSET_ABILITY(20,20,20,20,10,0,10,0)
+MSET_WEAPON(0,10,10,10,20,10)
+MSET_SPELL(0,0,0,0,0,0,0,20,5,5,10)
+position POSITION_STANDING
+default POSITION_STANDING
+special SFUN_RESCUE"body/head"
+special SFUN_TEAMWORK"head/body"
+special SFUN_AGGRESSIVE time 50
+dilcopy combat_mag@function("icestorm","",0,4);
+
+end
+                                dr_earth_head
+
+names {"head", "dragon head", "earth dragon head"}
+descr "Elemental Dragon Head of Earth"
+title "Elemental Dragon Head of Earth"
+extra {}
+"This head of the Elemental Dragon is made totally of stone.  Even the
+stone
+teeth on this mouth look as if they would put a nice sized hole in your
+armor."
+race RACE_DRHEAD_REX
+level 60
+sex SEX_NEUTRAL
+flags{UNIT_FL_NO_TELEPORT}
+height 300
+weight 550
+NATURAL_DEF(WPN_BITE, ARM_PLATE)
+exp 110                                  /* Set higher cause of size and
+spells */
+alignment -1000
+MSET_ABILITY(20,20,20,20,10,0,10,0)
+MSET_WEAPON(0,10,10,10,20,10)
+MSET_SPELL(0,0,0,0,0,0,10,5,5,0,20)
+position POSITION_STANDING
+default POSITION_STANDING
+dilcopy combat_mag@function("meteor shower","",0,4);
+special SFUN_AGGRESSIVE time 70
+special SFUN_RESCUE"body/head"
+special SFUN_TEAMWORK"head/body"
+
+end
+                                dr_fire_head
+
+names {"head", "dragon head", "fire head"}
+descr "Elemental Dragon Head of Fire"
+title "Elemental Dragon Head of Fire"
+extra {}
+"This is a flaming head on the Elemental dragon.  The tongue of flame
+leaping
+from it's mouth looks as if it will sear your skin in one quick second."
+race RACE_DRHEAD_REX
+level 50
+sex SEX_NEUTRAL
+flags{UNIT_FL_NO_TELEPORT}
+height 300
+weight 550
+NATURAL_DEF(WPN_BITE, ARM_PLATE)
+exp 110                                  /* Set higher cause of size and
+spells */
+alignment -1000
+MSET_ABILITY(20,20,20,20,10,0,10,0)
+MSET_WEAPON(0,10,10,10,20,10)
+MSET_SPELL(0,0,0,0,0,0,20,5,5,0,10)
+position POSITION_STANDING
+default POSITION_STANDING
+special SFUN_RESCUE"body/head"
+special SFUN_TEAMWORK"body/head"
+special SFUN_AGGRESSIVE time 60
+dilcopy combat_mag@function("firestorm","",0,4);
+
+end
+                                dr_body
+
+names {"body", "dragon body", "dragon"}
+descr "This is the massive body of the Elemental Dragon."
+title "Dragon Body"
+extra {}
+"This Massive form is the body of the Elemental Dragon.  This has to be the
+largest creature that you have ever seen.  The razor sharp claws look as if
+they will easily tear your mortal hide to shreds.  This body supports the
+four massive heads of the Dragon"
+race RACE_DR_BODY_REX
+level 90
+sex SEX_NEUTRAL
+money 1 GOLD_PIECE, 3 SILVER_PIECE
+flags{UNIT_FL_NO_TELEPORT}
+height 800
+weight 5000
+NATURAL_DEF(WPN_CLAW, ARM_PLATE)
+exp 115                /* Set higher cause of size and spells */
+alignment -1000
+MSET_ABILITY(20,20,20,20,10,0,10,0)
+MSET_WEAPON(0,10,10,10,20,0)
+MSET_SPELL(20,0,0,0,0,0,5,10,5,0,10)
+position POSITION_STANDING
+default POSITION_STANDING
+special SFUN_RESCUE"head"
+special SFUN_TEAMWORK"head"
+dilcopy combat_mag@function("lightning bolt","",0,5);
+
+end
+
+		lag25
+
+names {"monster", "lag monster", "lag"}
+descr "This is the massive lagmonster."
+title "Lag monster"
+extra {}
+"This Massive embodied form of the dreaded Lag Monster.  This has to be the
+largest creature that you have ever seen.  The razor sharp claws look as if
+they will easily tear your mortal hide to shreds.  Definitely this creature
+could slow down any mud in the world.  You better kill it now!!!!"
+race RACE_DR_BODY_REX
+level 25
+sex SEX_NEUTRAL
+money 3 SILVER_PIECE
+flags{UNIT_FL_NO_TELEPORT}
+height 800
+weight 5000
+NATURAL_DEF(WPN_CLAW, ARM_PLATE)
+alignment -1000
+MSET_ABILITY(20,20,20,20,10,0,10,0)
+MSET_WEAPON(10,10,10,10,10,0)
+MSET_SPELL(10,0,0,0,0,0,5,10,5,10,10)
+position POSITION_STANDING
+default POSITION_STANDING
+
+end
+
+		lag50
+
+names {"monster", "lag monster", "lag"}
+descr "This is the massive lagmonster."
+title "Lag monster"
+extra {}
+"This Massive embodied form of the dreaded Lag Monster.  This has to be the
+largest creature that you have ever seen.  The razor sharp claws look as if
+they will easily tear your mortal hide to shreds.  Definitely this creature
+could slow down any mud in the world.  You better kill it now!!!!"
+race RACE_DR_BODY_REX
+level 50
+sex SEX_NEUTRAL
+money 6 SILVER_PIECE
+flags{UNIT_FL_NO_TELEPORT}
+height 800
+weight 5000
+NATURAL_DEF(WPN_CLAW, ARM_PLATE)
+alignment -1000
+MSET_ABILITY(20,20,20,20,10,0,10,0)
+MSET_WEAPON(10,10,10,10,10,0)
+MSET_SPELL(10,0,0,0,0,0,5,10,5,10,10)
+position POSITION_STANDING
+default POSITION_STANDING
+
+end
+
+		lag100
+
+names {"monster", "lag monster", "lag"}
+descr "This is the massive lagmonster."
+title "Lag monster"
+extra {}
+"This Massive embodied form of the dreaded Lag Monster.  This has to be the
+largest creature that you have ever seen.  The razor sharp claws look as if
+they will easily tear your mortal hide to shreds.  Definitely this creature
+could slow down any mud in the world.  You better kill it now!!!!"
+race RACE_DR_BODY_REX
+level 100
+sex SEX_NEUTRAL
+money 1 GOLD_PIECE, 5 SILVER_PIECE
+flags{UNIT_FL_NO_TELEPORT}
+height 800
+weight 5000
+NATURAL_DEF(WPN_CLAW, ARM_PLATE)
+alignment -1000
+MSET_ABILITY(20,20,20,20,10,0,10,0)
+MSET_WEAPON(10,10,10,10,10,0)
+MSET_SPELL(10,0,0,0,0,0,5,10,5,10,10)
+position POSITION_STANDING
+default POSITION_STANDING
+
+end
+
+			lag199
+
+names {"monster", "lag monster", "lag"}
+descr "This is the massive lagmonster."
+title "Lag monster"
+extra {}
+"This Massive embodied form of the dreaded Lag Monster.  This has to be the
+largest creature that you have ever seen.  The razor sharp claws look as if
+they will easily tear your mortal hide to shreds.  Definitely this creature
+could slow down any mud in the world.  You better kill it now!!!!"
+race RACE_DR_BODY_REX
+level 199
+sex SEX_NEUTRAL
+money 4 GOLD_PIECE
+flags{UNIT_FL_NO_TELEPORT}
+height 800
+weight 9000
+NATURAL_DEF(WPN_CLAW, ARM_PLATE)
+exp 105            /* Set higher cause of size andspells */
+alignment -1000
+MSET_ABILITY(20,20,20,20,10,0,10,0)
+MSET_WEAPON(10,10,10,10,10,0)
+MSET_SPELL(10,0,0,0,0,0,5,10,5,10,10)
+position POSITION_STANDING
+default POSITION_STANDING
+special SFUN_COMBAT_MAGIC"cast energy drain"
+end
+
+/* ghost of rexor */
+ghost_rexor
+names {"ghost of rexor","image","ghost","rexor"}
+title "a ghostly image of Rexor"
+extra {}
+"As you look at the supenatural phenomenon, you realize that this is indeed
+an apparition of the old God Rexor. It would seem to you thet Rexor has not
+had much sleep as of lately. It would seem he spends his time elsewhere
+now."
+race RACE_HUMAN
+level 105
+height 120
+weight 135
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+exp -500
+alignment  1000
+sex SEX_MALE
+MSET_ABILITY(10,10,10,20,20,5,20,5)
+MSET_WEAPON(5,5,5,5,20,5)
+MSET_SPELL(0,0,0,5,5,5,5,5,5,5,20)
+position POSITION_STANDING
+default POSITION_STANDING
+dilbegin replace_sword();
+var
+
+        pcname :        unitptr;
+        item   :        unitptr;
+        pc     :        unitptr;
+        i      :        integer;
+        exdp   :        extraptr;
+code
+{
+on_activation((self.position <= POSITION_SLEEPING) or (self.position ==
+POSITION_FIGHTING),skip);
+:init:
+heartbeat := PULSE_SEC*5;
+:start:
+wait(SFB_DONE, activator.type & UNIT_ST_PC);
+pc:=activator;
+secure(pc,lostpc);
+if(KATANA_REPLACED in pc.quests)
+ {
+  unsecure(pc);
+  goto start;
+ }
+ else if(ROD_COMPLETE in pc.quests)
+ {
+  addextra(pc.quests, {KATANA_REPLACED}, "");
+  exec("say Hello adventurer.",self);
+  pause;
+  exec("say I finally have had the Sword of Truth repaired for you.",self);
+  pause;
+  exec("say Im sorry it took so long, I have been very busy.",self);
+  pause;
+  item := load("sword_truth@center");
+  item.height := pc.height;
+  link(item,pc);
+  exec("say I magically placed the sword in your inventory, use it
+well.",self);
+  unsecure(pc);
+  goto start;
+ }
+else
+{goto start;}
+:lostpc:
+exec("say Too bad, its a powerful weapon, stick around next time!",self);
+goto start;
+
+}
+dilend
+end
+
+
+
+
+
+
+
+
+%objects
+
+elemental_belt
+names {"belt", "elemental belt"}
+title "Elemental Belt"
+descr "an Elemental Belt lies in the dust here"
+ARMOUR_PLATE(0,0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_WAIST}
+weight 2
+cost 5 PLATINUM_PIECE
+rent 2 SILVER_PIECE
+extra {}
+"This fine belt is made of the best materials, finely jewled from gems
+about the elemental planes."
+dilcopy level_restrict@function(45,0,0,"");
+dilcopy abi_restrict@function (ABIL_STR,75,0,0,"");
+dilcopy abi_restrict@function (ABIL_DEX,75,0,0,"");
+dilcopy abi_restrict@function (ABIL_CHA,75,0,0,"");
+end
+
+
+                                elemental_plate
+
+names {"plate", "elemental plate"}
+title "Elemental Plate"
+descr "A Full set of  Elemental Plate Armor lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_PLATE(0, 0)
+weight 25
+cost 310 COPPER_PIECE
+rent 155 IRON_PIECE
+extra {}
+"This Elemental Plate Armor is clear and very light.  It is made from
+some of the strongest materials in the world.  You guess that it could even
+be made from diamonds from the world's core."
+dilcopy level_restrict@function(45,0,0,"");
+end
+
+
+        elemental_cloak
+
+names {"cloak", "elemental cloak"}
+title "Elemental Cloak"
+descr "An Elemental Cloak is here on the ground."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+weight 1
+cost 1 PLATINUM_PIECE
+rent 1 GOLD_PIECE
+extra {}
+"This cloak is clear in color, but seems to reflect light in an amazing
+way"
+STR_TRANSFER(+1)
+
+
+end
+
+                          elemental_helm
+
+names {"helm","elemental helm","helmet"}
+title "Elemental Helm"
+descr "An Elemental Helm lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+ARMOUR_PLATE(0,0)
+weight 10
+cost 310 COPPER_PIECE
+rent 155 IRON_PIECE
+extra {}
+"The helmet is made from diamonds from the earth."
+extra{"$identify"}
+"This helm will improve your intellectual prowess as well as your overall
+beauty
+"
+dilcopy level_restrict@function(45,0,0,"");
+end
+
+                elemental_boots
+
+names {"boots","elemental boots"}
+title "Elemental Boots"
+descr "A Pair of Elemental Boots are here on the ground."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+ARMOUR_PLATE(0,0)
+weight 10
+cost 310 COPPER_PIECE
+rent 155 IRON_PIECE
+extra {}
+"The boots are made from the rarest gemstones crafted to perfection."
+extra{"$identify"}
+"This boots will improve your combat speed and your overall health."
+end
+
+                elem_leggings
+
+names {"leggings","elemental leggings"}
+title "Elemental Leggings"
+descr "A Set of Elemental Leggings are in a heap on the floor"
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+ARMOUR_PLATE(0,0)
+weight 10
+cost 310 COPPER_PIECE
+rent 155 IRON_PIECE
+extra {}
+"These leggings are crafted for the maximum protection from the rarest of
+substances."
+dilcopy level_restrict@function(45,0,0,"");
+end
+
+        elem_sleeves
+
+names {"sleeves","elemental sleeves"}
+title "Elemental Sleeves"
+descr "A Set of Elemental Sleeves are here on the ground."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ARMS}
+ARMOUR_PLATE(0,0)
+weight 10
+cost 310 COPPER_PIECE
+rent 155 IRON_PIECE
+extra {}
+"These diamond sleeves are of the finest quality."
+dilcopy level_restrict@function(45,0,0,"");
+end
+
+
+        elem_gauntlets
+
+names {"gauntlets","elemental gauntlets"}
+title "Elemental Gauntlets"
+descr "A Pair of Elemental Gauntlets rest here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HANDS}
+ARMOUR_PLATE(0,0)
+weight 5
+cost 310 COPPER_PIECE
+rent 155 IRON_PIECE
+extra {}
+"These diamond gauntlets are the best that have ever been made."
+extra{"$identify"}
+"This sleeves will greatly improve your use of all weapons and your
+magical might."
+dilcopy level_restrict@function(45,0,0,"");
+end
+
+                        belt_power
+names {"belt"}
+title "Belt of Power"
+descr "The Belt of Power is here"
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_WAIST}
+weight 5
+cost 310 COPPER_PIECE
+extra {}
+"These fine belt emanates power that anyone can sense."
+extra{"$identify"}
+"This belt will greatly improve your strength."
+STR_TRANSFER(+3)
+dilcopy level_restrict@function(45,0,0,"");
+dilcopy quest_restrict@function(ROD_COMPLETE,0,25,"");
+end
+
+
+
+
+
+                                sword_truth
+names {"sword of truth","truth", "sword"}
+title "Sword of Truth"
+descr "The magnificent Sword of Truth is here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_GREAT_SWORD, +18, +12)
+weight 11
+cost 5 PLATINUM_PIECE
+dilcopy quest_restrict@function(ROD_COMPLETE,0,25,"");
+extra {}
+"This beautiful and elegant weapon looks quite deadly. It is perfectly
+balanced
+and seems razor sharp."
+extra {"$identify"}
+"This sword provides its wielder with a strength  and dexterity bonus,
+while seeming sharp enough to possibly cleave off someone's limbs. You also
+suspect this weapon containts a magical attack."
+extra {"$improved identify"}
+"This sword's craftmanship is +18, and its magical modifier is +12. It
+weighs 11 pounds. Wielding this sword will increase your skill with the
+category great sword by 10%, it will also increase your dexterity by +3
+as well as your strength. This sword seemingly has an appetite for human
+flesh. And you can activate the weapons special attacks if you try to
+SLICE your opponents."
+WEAPON_TRANSFER(WPN_GREAT_SWORD,+10)
+STR_TRANSFER(+3)
+DEX_TRANSFER(+3)
+spell 75
+dilbegin recall charger();
+code
+{
+:start:
+heartbeat:=PULSE_SEC*SECS_PER_MUD_DAY/8;
+wait (SFB_TICK,(self.equip==WEAR_WIELD));
+heartbeat:=PULSE_SEC*5;
+act ("&c+bYour $2N vibrates powerfully in your hand.&cw", A_ALWAYS, 
+self.outside,self,null,TO_CHAR);
+act ("&c+b$1n's $2N vibrates powerfully&cw.", A_ALWAYS, 
+self.outside,self,null,TO_REST); sendto ("add charge",self); goto start;
+}
+dilend
+
+
+dilbegin recall aware sword_slice();
+var
+        i : integer;
+        enemy : unitptr;
+        n : integer;
+        charge : integer;
+        pwr : integer;
+        recharge : integer;
+        sword_skill : integer;
+
+code
+{
+pwr:=10;
+:init:
+        heartbeat := PULSE_SEC*3;
+charge:=interrupt (SFB_MSG,((self==activator) and
+	(argument=="add charge")), charge);
+:start:
+wait (SFB_CMD,(command ("slice")) and
+			(self.equip==WEAR_WIELD));
+block;
+heartbeat := PULSE_SEC*3;
+sword_skill := self.outside.weapons[WPN_GREAT_SWORD];
+enemy:=findunit (self.outside,argument,FIND_UNIT_SURRO,null);
+if ((enemy==null) and( self.outside.fighting!=null))
+enemy:=self.outside.fighting;
+if (enemy==null) goto no_person;
+secure (enemy,start);
+
+
+
+if (pwr<=0) goto fail;
+pwr:=pwr-1;
+i := rnd (45,110);
+if (i < sword_skill)
+
+	 {
+          n:=cast_spell(SPL_ACIDBALL_1, self.outside, self,enemy, 
+"sword_aff@center");
+         }
+else
+ 	{
+         act ("You try despratley to slice $2n. But you split the air "+
+"with a wild slash", A_SOMEONE,self.outside,enemy,self,TO_CHAR);
+         act ("$1n tries slice you, but $1e splits the air with a wild "+
+"slash.", A_SOMEONE,self.outside,enemy,self,TO_VICT);
+         act ("$1n tries to slice $2n, but $1e splits the air with a wild "+
+"slash.", A_SOMEONE,self.outside,enemy,self,TO_NOTVICT);
+	}
+goto start;
+
+	:fail:
+        act ("You must wait for your weapon to be regenerated.", 
+A_SOMEONE, self.outside,enemy,self,TO_CHAR);
+        goto start;
+
+:charge:
+clear (charge);
+if (pwr<12)
+ pwr:=pwr+1;
+ goto init;
+  goto start;
+:no_person:
+act ("Nothing to slice by that name here.", A_ALWAYS, self.outside, null, null, TO_CHAR);
+goto start;
+}
+dilend
+
+dilbegin sword_death();
+var
+
+        limb : unitptr;
+        targ : unitptr;
+        whichlimb : integer;
+code
+{
+        heartbeat := PULSE_SEC*3;
+        :start:
+        targ:=self.outside.fighting;
+        wait(SFB_COM, command(CMD_AUTO_COMBAT) and
+                (self.equip == WEAR_WIELD) and
+                (self.outside.fighting.hp < 10));
+        act("$1n superbly gashes $3n, cleaving off a limb!!!!", A_SOMEONE,
+self.outside, self, self.outside.fighting, TO_NOTVICT);
+        act("Your $2N gashes $3n and cleaves off a limb!!!!", A_ALWAYS,
+self.outside, self, self.outside.fighting, TO_CHAR);
+        act("Excruciating pain engulfs your body.", A_ALWAYS, self.outside,
+self, self.outside.fighting, TO_VICT);
+        act("You realize now that one of your limbs has been cleaved off.", 
+A_ALWAYS, self.outside, self, self.outside.fighting, TO_VICT);
+        whichlimb := rnd (1,2);
+        if (whichlimb == 1)
+	  {
+           limb:=load("limb_arm@center");
+                   limb.title := "The severed arm of "+self.outside.fighting.name;
+           limb.outside_descr := "The bloodied arm of " +self.outside.fighting.name;
+           link (limb, self.outside.outside);
+          }
+	  if (whichlimb == 2)
+	  {
+           limb:=load("limb_leg@center");
+           limb.title := "The severed leg of "+self.outside.fighting.name;
+           limb.outside_descr := "The bloodied leg of " +self.outside.fighting.name;
+           link (limb, self.outside.outside);
+          }
+        targ.hp := -50;
+        pause;
+        goto start;
+}
+dilend
+end
+
+limb_arm
+names {"arm","club"}
+title "a severed arm"
+descr "a bloodied arm is lying here."
+extra {}
+"This arm was obvious cleaved off by the mighty Sword of Truth. The bone
+juts out the end of the limb. A slight warmth comes from the limb, as it
+has not lost its internal heat yet."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_CLUB, 0, 0)
+weight 5
+dilbegin rotarm();
+code
+{
+  heartbeat :=PULSE_SEC*300;
+  :rot:
+  pause;
+  if (self.outside.type == UNIT_ST_ROOM)
+   {
+     if (not isset(self.flags, UNIT_FL_BURIED))
+       {
+        act("A quivering horde of maggots consumes a bloody arm.", A_SOMEONE, self, null, null, TO_ROOM);
+       }
+     destroy(self);
+   }
+  goto rot;
+}
+dilend
+end
+
+limb_leg
+names {"leg","club"}
+title "a severed leg"
+descr "a bloodied leg is lying here."
+extra {}
+"This leg was obvious cleaved off by the mighty Sword of Truth. The bone
+juts out the end of the limb. A slight warmth comes from the limb, as it
+has not lost its internal heat yet."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_CLUB, 0, 0)
+weight 5
+dilbegin rotleg();
+code
+{
+  heartbeat :=PULSE_SEC*300;
+  :rot:
+  pause;
+  if (self.outside.type == UNIT_ST_ROOM)
+   {
+     if (not isset(self.flags, UNIT_FL_BURIED))
+       {
+        act("A quivering horde of maggots consumes a bloody leg.", A_SOMEONE, self, null, null, TO_ROOM);
+       }
+     destroy(self);
+   }
+  goto rot;
+}
+dilend
+end
+
+                                hilt
+
+names {"hilt"}
+title "Sword Hilt"
+descr "A Diamond sword hilt is lying here."
+manipulate {MANIPULATE_TAKE}
+weight 1
+cost 1 GOLD_PIECE
+rent 5 PLATINUM_PIECE
+extra {}
+"The hilt once was on one of the finest weapons ever crafted because of its
+divine origins."
+end
+                        airrod
+
+names {"airrod", "rod"}
+title "Rod of Power from the Air Plane"
+descr "The Rod of Power from the Air Plane"
+manipulate {MANIPULATE_TAKE}
+weight 1
+cost 1 GOLD_PIECE
+rent 3 GOLD_PIECE
+extra {}
+"The Rod has many inscriptions of unknown origin.  Very few people know how
+to
+unlock the power from the rod."
+end
+                waterrod
+
+names {"waterrod", "rod"}
+title "Rod of Power from the Water Plane"
+descr "The Rod of Power from the Water Plane"
+manipulate {MANIPULATE_TAKE}
+weight 1
+cost 1 GOLD_PIECE
+rent 3 GOLD_PIECE
+extra {}
+"The Rod has many inscriptions of unknown origin.  Very few people know how
+to
+unlock the power from the rod."
+end
+                earthrod
+
+names {"earthrod","rod"}
+title "Rod of Power from the Earth Plane"
+descr "The Rod of Power from the Earth Plane"
+manipulate {MANIPULATE_TAKE}
+weight 1
+cost 1 GOLD_PIECE
+rent 3 GOLD_PIECE
+extra {}
+"The Rod has many inscriptions of unknown origin.  Very few people know how
+to
+unlock the power from the rod."
+end
+                firerod
+
+names {"firerod","rod"}
+title "Rod of Power from the Fire Plane"
+descr "The Rod of Power from the Fire Plane"
+manipulate {MANIPULATE_TAKE}
+weight 1
+cost 1 GOLD_PIECE
+rent 3 GOLD_PIECE
+extra {}
+"The Rod has many inscriptions of unknown origin.  Very few people know how
+to
+unlock the power from the rod."
+end
+
+plat_anklet
+names {"a platinum anklet","anklet"}
+title "a platinum anklet"
+descr "a platinum anklet lies here, misbegotten."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ANKLE}
+extra {}
+"This anklet looks extremley powerful, and sturdy."
+rent 2 COPPER_PIECE
+dilcopy abi_restrict@function (ABIL_STR,10,0,0,"");
+end
+
+shimmering_robe
+names {"shimmering silk cloak","cloak"}
+title "a shimmering silk cloak"
+descr "a shimmering cloak lies on the ground, looking comfortable."
+extra {}
+"This robe is made of the finest blue silk. It has a magical aura about
+it. Wearing it would certainly feel comfortable"
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+dilcopy abi_restrict@function (ABIL_CHA,80,0,0,"");
+dilcopy abi_restrict@function (ABIL_DIV,20,0,0,"");
+end
+
+brass_earring
+names {"a brass earring","earring"}
+title "a brass earring"
+descr "a brass earring is here, gathering dust"
+extra {}
+"a small brass earring"
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_EAR}
+CHA_TRANSFER(+1)
+rent 2 SILVER_PIECE
+end
+
+pearl_necklace
+names {"pearl necklace","necklace"}
+title "a pearl necklace"
+descr "a pearl necklace glints in the light here."
+extra {}
+"This is a necklace, made of the finest pearls. The pearls are opaque
+and whitish."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_NECK}
+MAG_TRANSFER(+2)
+rent 2 SILVER_PIECE
+end
+
+obs_necklace
+names {"obsidian necklace","necklace"}
+title "an obsidian necklace"
+descr "an obsidian necklace lies here, sucking light into itself"
+extra {}
+"This necklace is made of pure obsidian, formed at the very center of this
+world. Your warped reflection stares back at you from within this shiny
+necklace."
+manipulate{MANIPULATE_TAKE, MANIPULATE_WEAR_NECK}
+rent 3 SILVER_PIECE
+dilcopy abi_restrict@function (ABIL_CHA,80,0,0,"");
+dilcopy abi_restrict@function (ABIL_BRA,70,0,0,"");
+end
+%reset
+
+load m_genie_earth into e3 max 2
+{equip plat_anklet position WEAR_ANKLE_L}
+load m_genie_earth into e5 max 2
+{equip plat_anklet position WEAR_ANKLE_L}
+load f_genie_earth into e7 max 2
+{equip plat_anklet position WEAR_ANKLE_R}
+load f_genie_earth into e11 max 2
+{equip plat_anklet position WEAR_ANKLE_R}
+load m_genie_air into a2 max 2
+{equip shimmering_robe position WEAR_ABOUT}
+load m_genie_air into a10 max 2
+{equip shimmering_robe position WEAR_ABOUT}
+load f_genie_air into a6 max 2
+{equip shimmering_robe position WEAR_ABOUT}
+load f_genie_air into a8 max 2
+{equip shimmering_robe position WEAR_ABOUT}
+load m_genie_fire into f11 max 2
+{equip brass_earring position WEAR_EAR_L}
+load m_genie_fire into f1 max 2
+{equip brass_earring position WEAR_EAR_L}
+load f_genie_fire into f8 max 2
+{equip brass_earring position WEAR_EAR_L}
+load f_genie_fire into f9 max 2
+{equip brass_earring position WEAR_EAR_L}
+load m_genie_water into w11 max 2
+{equip pearl_necklace position WEAR_NECK_1}
+load m_genie_water into w12 max 2
+{equip pearl_necklace position WEAR_NECK_1}
+load f_genie_water into w13 max 2
+{equip pearl_necklace position WEAR_NECK_1}
+load f_genie_water into w14 max 2
+{equip pearl_necklace position WEAR_NECK_1}
+load michael into pal3 max 1
+load elem_imp into stair1 local 1
+{equip elemental_belt position WEAR_WAIST max 20}
+load earth_el into e2 max 2
+load earth_el into e4 max 2
+load elem_imp into e16 local 1
+{equip obs_necklace position WEAR_NECK_1}
+load earth_el into e6 max 2
+load earth_el into e8 max 2
+load earth_el into e10 max 2
+load earth_el into e12 max 2
+load elem_imp into e4 local 1
+load earth_vor into e19 max 1
+{ load earthrod@center max 3
+  load elemental_cloak@center }
+load air_el into a3 max 2
+load elem_imp into a16
+load air_el into a7 max 2
+load air_el into a9 max 2
+load air_el into a11 max 2
+load air_el into a13 max 2
+load elem_imp into a4 local 1
+load air_el into a17 max 2
+load air_vor into a12 max 1
+{ load airrod@center max 3
+  load elem_gauntlets@center
+  load elem_sleeves@center }
+load water_el into w2 max 2
+load water_el into w4 max 2
+load water_el into w6 max 2
+load elem_imp into w5 local 1
+load water_el into w13 max 2
+load elem_imp into w8 local 1
+load water_el into w10 max 2
+load water_el into w16 max 2
+load elem_imp into w21 local 1
+load water_vor into w23 max 1
+{ load waterrod@center max 3
+  load elemental_plate@center
+  load elemental_boots@center }
+load fire_el into f2 max 2
+load fire_el into f4 max 2
+load fire_el into f6 max 2
+load fire_el into f7 max 2
+load elem_imp into f13 local 1
+load fire_el into f11 max 2
+load fire_el into f18 max 2
+load elem_imp into f4 local 1
+load fire_vor into f20 max 1
+{ load firerod@center max 3
+  load elemental_helm@center
+  load elem_leggings@center }
+load elem_imp into c1 max 2
+load elem_imp into c1 max 2
+load dr_body into c3 max 1
+{ load hilt@center }
+load  dr_fire_head into c3 max 1
+load dr_earth_head into c3 max 1
+load dr_water_head into c3 max 1
+load dr_air_head into c3 max 1
+load ghost_rexor into pal2
+%end
+
+
+

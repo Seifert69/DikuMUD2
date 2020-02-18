@@ -1,0 +1,3474 @@
+/*
+filename    function
+password    coke
+changedby   whistler
+EmailAdd     Whistler <whistler@blinksoft.com>
+request     
+version     69
+END HEADER*/
+#include <composed.h>
+
+%zone function
+title ""
+lifespan 20
+reset RESET_NOT
+creators {"bakka"}
+
+notes
+"&lThis Zone is not a zone at all.  Like basis.zon it is a intergral part of the
+mud containing nothing but reuseable dil code.  The code comes from various
+sources and is intended to allow builders to better utilize already created
+dil functions.  After all there is no need to reinvent the wheel.
+
+Changes
+12/07/95 - project started
+12/07/95 - wander_zones
+12/07/95 - scramble
+12/07/95 - guard_level
+12/10/95 - stealdil
+12/10/95 - safe_room
+01/06/95 - combat_mag
+03/20/96 - added General channel functions.   channel and recieve
+03/20/96 - added new timer on blow away function.
+04/09/96 - Added teach_q_block and shop_q_block.
+04/29/96 - Added direction
+05/08/96 - Added shopkeepers
+05/11/96 - Added generic 'give' routine which reacts on special players.
+15/10/96 - Added fido dil to take over for special
+10/23/96 - fixed bug in clan channel
+11/28/96 - Made it so that shopkeepers have their money stored on their home
+           room to assure a daily maxmoney
+           12/21/96 removed old channel1 and channel2 that are no longer used.
+02/05/97 - fixed clan channels to deal with new extra format
+"
+
+
+/* A short description of each function.  See comments next to each dil
+   for implementation notes.
+
+wander_zones -  Allows a mob to wander around more than one zone, but not
+                all zones.  You specify what zones they mob can wander.
+                Has optional intelligence which allows the opening and
+                closeing of doors.
+
+scramble     -  Scramble the exits on a room.  Simple way to turn a few
+                rooms into a major maze.  Use with extreem care, too much
+					 causes players to go nuts.
+
+guard_level  -  Guard an exit by a level range.
+
+stealdil     -  Randomly Steal an object from a player
+
+
+channel and recieve alternative channel updates made to be put on players.
+safe_room    -  Make a room safe from all sorts of attacks by pcs
+combat_mag   - Replaces the special fun COMBAT_MAGIC and COMBAT_HEAL
+direction    - Returns the direction in one of NORTH - DOWN.
+*/
+
+
+%dil
+
+
+
+/*
+function walk_room
+purpose: to allow a mob to walk to a room even if he/she has
+to unlock open and close doors.
+*/
+dilbegin integer walk_room (place:string, spd:integer);
+		      external
+			string dirstring@function (dr:integer);
+			integer rev_dir@function (i:integer);
+var
+rm:unitptr;
+rdir:integer;
+  dir : integer;
+  dir_string : string;
+  rdir_string : string;
+  dr_name : string;
+  heart : integer;
+  thing : unitptr;
+code
+{
+   :init:
+   on_activation(self.position <= POSITION_SLEEPING, skip);
+   log(itoa(spd));
+   if(( (spd*4) < 5) )
+   {
+      heartbeat := 5 * 3;
+   } else {
+      heartbeat := spd * 3;
+   }
+   heart := heartbeat;
+
+   :start:
+if (self.outside==thing) return (TRUE);
+   wait(SFB_TICK, TRUE);
+
+   /* Lets stand up if for some reason we are sitting */
+   if ((self.position == POSITION_RESTING) or
+       (self.position == POSITION_SITTING))
+   {
+      exec("stand", self);
+   }
+
+   /* if were not standing now then abort! */
+
+   if (self.position != POSITION_STANDING)
+     return (FALSE);
+
+   heartbeat := heart;
+   thing:=findroom(place);
+log(thing.name);
+
+dir:=pathto (self,thing);
+if (dir==DIR_IMPOSSIBLE) return (FALSE);
+dir_string:=dirstring@function (dir);
+rdir:=rev_dir@function(dir);
+      rdir_string :=dirstring@function (rdir);
+
+      if (isset (self.outside.exit_info[dir], EX_LOCKED))
+	goto locked;
+      if (isset (self.outside.exit_info[dir], EX_CLOSED))
+      {
+      exec ("open "+dir_string+" "+self.outside.exit_names[dir].[0],self);
+      exec (dir_string,self);
+      exec ("close "+rdir_string+" "+self.outside.exit_names[rdir].[0],self);
+	 goto start;
+      }
+
+   :locked:
+      if (isset (self.outside.exit_info[dir], EX_LOCKED))
+      {
+      rm:=self.outside;
+	 unset(rm.exit_info[dir], EX_LOCKED);
+      exec ("open "+dir_string+" "+self.outside.exit_names[dir].[0],self);
+      exec (dir_string,self);
+      exec ("close "+rdir_string+" "+self.outside.exit_names[rdir].[0],self);
+	 set(rm.exit_info[dir], EX_LOCKED);
+	 goto start;
+      }
+      if (dir== DIR_ENTER)
+      exec (dir_string+" "+self.outside.exit_names[dir].[0],self);
+else
+   exec(dir_string, self);
+   goto start;
+}
+dilend
+
+
+/*
+function dirstring
+purpose: use to return the string of a direction when you ahve its number value.
+for example if you have  DIR_NORTH you can use this like
+yourstring:=dirstring (DIR_NORTH);
+and it will return "north" in yourstring.
+*/
+
+
+dilbegin string dirstring (dr:integer);
+var
+  dirlist:stringlist;
+code
+{
+dirlist :={"north","east","south","west","up","down","enter","exit","impossible","here"};
+return (dirlist.[dr]);
+}
+dilend
+
+/*
+function rev_dir
+purpose This function returns the oposite direction so if you have  DIR_NORTH
+it will return the number value of south.
+*/
+dilbegin integer rev_dir(i : integer);
+var
+  rev_dir : stringlist;
+code
+{
+   rev_dir := {"2", "3", "0", "1", "5", "4"};
+   return (atoi(rev_dir.[i]));
+}
+dilend
+
+
+
+
+/*
+The following are the new restrict functions a doc called restrict.doc
+is in the valhalla doc directory for you to download and read to better
+understand how to use them.
+
+*/
+
+dilbegin guild_restrict (guilds:stringlist,damage:integer,percent:integer,action:string);
+var
+ amount:integer;
+code
+{
+:start:
+wait (SFB_DONE, ((activator.type==UNIT_ST_PC) and
+(self==medium)));
+
+if (activator.guild in guilds) goto start;
+if (self.outside.level>=IMMORTAL_LEVEL) goto start;
+
+if ((not( command (CMD_WEAR))) and
+(not(command (CMD_WIELD))) and
+(not(command (CMD_HOLD)))) goto start;
+
+if (action=="")
+  {
+act ("Your $2n burns you and you drop it to the ground.",
+A_ALWAYS,self.outside,self,null,TO_CHAR);
+act ("$1n's $2n burns $1m and $1e drops it to the ground.",
+A_SOMEONE,self.outside,self,null,TO_REST);
+act ("Being in the right guild might help.",
+A_ALWAYS,self.outside,null,null,TO_CHAR);
+}
+else action ();
+
+if (percent!=0)
+  amount:=(self.outside.hp*percent)/100;
+if (damage==-1)
+  damage:=openroll (100,5);
+if (percent!=0)
+  if (damage>amount)
+    damage:=amount;
+  else if (damage==0)
+  damage:=amount;
+
+
+self.outside.hp:=self.outside.hp-damage;
+position_update (self.outside);
+
+unequip (self);
+link (self,self.outside.outside);
+goto start;
+}
+dilend
+
+
+dilbegin anti_guild (guilds:stringlist,damage:integer,percent:integer,action:string);
+var
+ amount:integer;
+code
+{
+heartbeat:=PULSE_SEC*3;
+:start:
+
+wait (SFB_DONE, ((activator.type==UNIT_ST_PC) and
+(self==medium)));
+
+if (not (activator.guild in guilds)) goto start;
+
+if (self.outside.level>=IMMORTAL_LEVEL) goto start;
+
+if ((not( command (CMD_WEAR))) and
+(not(command (CMD_WIELD))) and
+(not(command (CMD_HOLD)))) goto start;
+
+if (action =="")
+  {
+  act ("Your $2n burns you and you drop it to the ground.",
+  A_ALWAYS,self.outside,self,null,TO_CHAR);
+  act ("$1n's $2n burns $1m and $1e drops it to the ground.",
+  A_SOMEONE,self.outside,self,null,TO_REST);
+  act ("Not being in this guild might help.",
+  A_ALWAYS,self.outside,null,null,TO_CHAR);
+  }
+else action ();
+
+if (percent!=0)
+  amount:=(self.outside.hp*percent)/100;
+if (damage==-1)
+  damage:=openroll (100,5);
+
+if (percent!=0)
+  if (damage>amount)
+    damage:=amount;
+  else if (damage==0)
+  damage:=amount;
+
+
+self.outside.hp:=self.outside.hp-damage;
+position_update (self.outside);
+
+unequip (self);
+link (self,self.outside.outside);
+goto start;
+}
+dilend
+
+dilbegin quest_restrict (quest:string,damage:integer,percent:integer,action:string);
+var
+ amount:integer;
+code
+{
+heartbeat:=PULSE_SEC*3;
+:start:
+wait (SFB_DONE, ((activator.type==UNIT_ST_PC) and
+(self==medium)));
+
+if (quest in activator.quests) goto start;
+
+if (self.outside.level>=IMMORTAL_LEVEL) goto start;
+
+if ((not( command (CMD_WEAR))) and
+(not(command (CMD_WIELD))) and
+(not(command (CMD_HOLD)))) goto start;
+
+if (action=="")
+  {
+  act ("Your $2n burns you and you drop it to the ground.",
+  A_ALWAYS,self.outside,self,null,TO_CHAR);
+  act ("$1n's $2n burns $1m and $1e drops it to the ground.",
+  A_SOMEONE,self.outside,self,null,TO_REST);
+  act ("Doing the right Quest might help.",
+  A_ALWAYS,self.outside,null,null,TO_CHAR);
+  }
+else action ();
+
+if (percent!=0)
+  amount:=(self.outside.hp*percent)/100;
+if (damage==-1)
+  damage:=openroll (100,5);
+if (percent!=0)
+  if (damage>amount)
+    damage:=amount;
+  else if (damage==0)
+  damage:=amount;
+
+self.outside.hp:=self.outside.hp-damage;
+position_update (self.outside);
+
+unequip (self);
+link (self,self.outside.outside);
+goto start;
+}
+dilend
+
+dilbegin quests_restrict (qts:stringlist,damage:integer,percent:integer,action:string);
+var
+ amount:integer;
+ i:integer;
+code
+{
+:start:
+wait (SFB_DONE, ((activator.type==UNIT_ST_PC) and
+(self==medium)));
+
+if (self.outside.level>=IMMORTAL_LEVEL) goto start;
+
+i:=0;
+while (qts.[i]!=null)
+  {
+  if (qts.[i]==null) break;
+  if (qts.[i] in activator.quests) goto start;
+  i:=i+1;
+  }
+
+if ((not( command (CMD_WEAR))) and
+(not(command (CMD_WIELD))) and
+(not(command (CMD_HOLD)))) goto start;
+
+if (action=="")
+  {
+  act ("Your $2n burns you and you drop it to the ground.",
+  A_ALWAYS,self.outside,self,null,TO_CHAR);
+  act ("$1n's $2n burns $1m and $1e drops it to the ground.",
+  A_SOMEONE,self.outside,self,null,TO_REST);
+  act ("Doing the right Quest might help.",
+  A_ALWAYS,self.outside,null,null,TO_CHAR);
+}
+else action ();
+
+if (percent!=0)
+  amount:=(self.outside.hp*percent)/100;
+if (damage==-1)
+  damage:=openroll (100,5);
+if (percent!=0)
+  if (damage>amount)
+    damage:=amount;
+  else if (damage==0)
+  damage:=amount;
+
+
+self.outside.hp:=self.outside.hp-damage;
+position_update (self.outside);
+
+unequip (self);
+link (self,self.outside.outside);
+goto start;
+}
+dilend
+
+
+dilbegin ali_restrict (max_ali:integer,min_ali:integer,
+  damage:integer,percent:integer,
+  action:string);
+  var
+  amount:integer;
+code
+{
+if (max_ali<min_ali)
+  {
+  amount:=max_ali;
+  max_ali:=min_ali;
+  min_ali:=amount;
+  }
+
+:start:
+wait (SFB_DONE, ((activator.type==UNIT_ST_PC) and
+(self==medium)));
+
+if ((self.outside.alignment<=max_ali) and
+(self.outside.alignment>=min_ali)) goto start;
+
+if (self.outside.level>=IMMORTAL_LEVEL) goto start;
+
+if ((not( command (CMD_WEAR))) and
+(not(command (CMD_WIELD))) and
+(not(command (CMD_HOLD)))) goto start;
+
+
+if (action=="")
+  {
+  act ("Your $2n burns you and you drop it to the ground.",
+  A_ALWAYS,self.outside,self,null,TO_CHAR);
+  act ("$1n's $2n burns $1m and $1e drops it to the ground.",
+  A_SOMEONE,self.outside,self,null,TO_REST);
+
+  if (activator.alignment>max_ali)
+    act ("You are to good to use $2n",
+    A_ALWAYS,self.outside,self,null,TO_CHAR);
+  else
+    act ("You are to evil to use $2n",
+  A_ALWAYS,self.outside,self,null,TO_CHAR);
+  }
+else action (max_ali,min_ali);
+
+if (percent!=0)
+  amount:=(self.outside.hp*percent)/100;
+if (damage==-1)
+  damage:=openroll (100,5);
+
+if (percent!=0)
+  if (damage>amount)
+    damage:=amount;
+  else if (damage==0)
+  damage:=amount;
+
+
+self.outside.hp:=self.outside.hp-damage;
+position_update (self.outside);
+
+unequip (self);
+link (self,self.outside.outside);
+goto start;
+}
+dilend
+
+dilbegin level_restrict (lvl:integer,damage:integer,percent:integer, action:string);
+var
+  amount:integer;
+
+code
+{
+:start:
+wait (SFB_DONE, ((activator.type==UNIT_ST_PC) and
+(self==medium)));
+
+if (activator.level>=lvl) goto start;
+
+if (self.outside.level>=IMMORTAL_LEVEL) goto start;
+
+if ((not( command (CMD_WEAR))) and
+(not(command (CMD_WIELD))) and
+(not(command (CMD_HOLD)))) goto start;
+
+  amount:=lvl-activator.level;
+
+if (action=="")
+  {
+act ("Your $2n burns you and you drop it to the ground.",
+A_ALWAYS,self.outside,self,null,TO_CHAR);
+act ("$1n's $2n burns $1m and $1e drops it to the ground.",
+A_SOMEONE,self.outside,self,null,TO_REST);
+  act ("You are not high enough level to use $3n.  $2t levels needed to use it.",
+  A_ALWAYS,self.outside,itoa (amount),self,TO_CHAR);
+  }
+else action (amount);
+
+if (percent!=0)
+  amount:=(self.outside.hp*percent)/100;
+if (damage==-1)
+  damage:=openroll (100,5);
+
+if (percent!=0)
+  if (damage>amount)
+    damage:=amount;
+  else if (damage==0)
+  damage:=amount;
+
+
+self.outside.hp:=self.outside.hp-damage;
+position_update (self.outside);
+
+unequip (self);
+link (self,self.outside.outside);
+goto start;
+}
+dilend
+
+dilbegin race_restrict (rc:integer,damage:integer,percent:integer,action:string);
+var
+  amount:integer;
+
+code
+{
+:start:
+wait (SFB_DONE, ((activator.type==UNIT_ST_PC) and
+(self==medium)));
+
+if (activator.race!=rc) goto start;
+
+if (self.outside.level>=IMMORTAL_LEVEL) goto start;
+
+if ((not( command (CMD_WEAR))) and
+(not(command (CMD_WIELD))) and
+(not(command (CMD_HOLD)))) goto start;
+
+if (action=="")
+  {
+act ("Your $2n burns you and you drop it to the ground.",
+A_ALWAYS,self.outside,self,null,TO_CHAR);
+act ("$1n's $2n burns $1m and $1e drops it to the ground.",
+A_SOMEONE,self.outside,self,null,TO_REST);
+act ("Being the right race might help.",
+A_ALWAYS,self.outside,null,null,TO_CHAR);
+}
+else action ();
+
+if (percent!=0)
+  amount:=(self.outside.hp*percent)/100;
+if (damage==-1)
+  damage:=openroll (100,5);
+
+if (percent!=0)
+  if (damage>amount)
+    damage:=amount;
+  else if (damage==0)
+  damage:=amount;
+
+
+self.outside.hp:=self.outside.hp-damage;
+position_update (self.outside);
+
+unequip (self);
+link (self,self.outside.outside);
+goto start;
+}
+dilend
+
+dilbegin string abistr (ability:integer);
+var
+ ablst:stringlist;
+code
+{
+ablst:={"magic" , "divinity" , "strength" , "dextarity","constitution" ,
+    "charisma" ,"brains" , "hit points"};
+return (ablst.[ability]);
+    }
+    dilend
+
+dilbegin abi_restrict (ab:integer,min_abi:integer,
+          damage:integer,percent:integer,
+          action:string);
+          external
+          string abistr (ability:integer);
+var
+  amount:integer;
+  abl:string;
+code
+{
+:start:
+wait (SFB_DONE, ((activator.type==UNIT_ST_PC) and
+(self==medium)));
+if (activator.abilities[ab]>=min_abi) goto start;
+
+if (self.outside.level>=IMMORTAL_LEVEL) goto start;
+
+if ((not( command (CMD_WEAR))) and
+(not(command (CMD_WIELD))) and
+(not(command (CMD_HOLD)))) goto start;
+
+if (action =="")
+  {
+  act ("Your $2n burns you and you drop it to the ground.",
+  A_ALWAYS,self.outside,self,null,TO_CHAR);
+  act ("$1n's $2n burns $1m and $1e drops it to the ground.",
+  A_SOMEONE,self.outside,self,null,TO_REST);
+
+    amount:=min_abi-activator.abilities[ab];
+  abl:=abistr (ab);
+  act ("You don't have enough "+abl+" to use $3n.",
+  A_ALWAYS,self.outside,itoa (amount),self,TO_CHAR);
+act ("$2t more "+abl+" needed to use it.",
+  A_ALWAYS,self.outside,itoa (amount),self,TO_CHAR);
+  }
+ else action (min_abi);
+
+if (percent!=0)
+  amount:=(self.outside.hp*percent)/100;
+if (damage==-1)
+  damage:=openroll (100,5);
+
+if (percent!=0)
+  if (damage>amount)
+    damage:=amount;
+  else if (damage==0)
+  damage:=amount;
+
+
+self.outside.hp:=self.outside.hp-damage;
+position_update (self.outside);
+
+unequip (self);
+link (self,self.outside.outside);
+goto start;
+}
+dilend
+
+dilbegin ski_restrict (ab:integer,min_abi:integer,
+          damage:integer,percent:integer,
+          action:string);
+var
+  amount:integer;
+  abl:string;
+code
+{
+:start:
+wait (SFB_DONE, ((activator.type==UNIT_ST_PC) and
+(self==medium)));
+if (activator.skills[ab]>=min_abi) goto start;
+
+if (self.outside.level>=IMMORTAL_LEVEL) goto start;
+
+if ((not( command (CMD_WEAR))) and
+(not(command (CMD_WIELD))) and
+(not(command (CMD_HOLD)))) goto start;
+
+if (action =="")
+  {
+  act ("Your $2n burns you and you drop it to the ground.",
+  A_ALWAYS,self.outside,self,null,TO_CHAR);
+  act ("$1n's $2n burns $1m and $1e drops it to the ground.",
+  A_SOMEONE,self.outside,self,null,TO_REST);
+
+    amount:=min_abi-activator.skills[ab];
+  act ("You are not skilled enough to use $3n.  $2t skill needed to use it.",
+  A_ALWAYS,self.outside,itoa (amount),self,TO_CHAR);
+  }
+ else action (min_abi);
+
+if (percent!=0)
+  amount:=(self.outside.hp*percent)/100;
+if (damage==-1)
+  damage:=openroll (100,5);
+
+if (percent!=0)
+  if (damage>amount)
+    damage:=amount;
+  else if (damage==0)
+  damage:=amount;
+
+
+self.outside.hp:=self.outside.hp-damage;
+position_update (self.outside);
+
+unequip (self);
+link (self,self.outside.outside);
+goto start;
+}
+dilend
+
+dilbegin sp_restrict (ab:integer,min_abi:integer,
+          damage:integer,percent:integer,
+          action:string);
+var
+  amount:integer;
+  abl:string;
+code
+{
+:start:
+wait (SFB_DONE, ((activator.type==UNIT_ST_PC) and
+(self==medium)));
+if (activator.spells[ab]>=min_abi) goto start;
+
+if (self.outside.level>=IMMORTAL_LEVEL) goto start;
+
+if ((not( command (CMD_WEAR))) and
+(not(command (CMD_WIELD))) and
+(not(command (CMD_HOLD)))) goto start;
+
+if (action =="")
+  {
+  act ("Your $2n burns you and you drop it to the ground.",
+  A_ALWAYS,self.outside,self,null,TO_CHAR);
+  act ("$1n's $2n burns $1m and $1e drops it to the ground.",
+  A_SOMEONE,self.outside,self,null,TO_REST);
+
+    amount:=min_abi-activator.spells[ab];
+  act ("You are not skilled enough to use $3n.  $2t skill needed to use it.",
+  A_ALWAYS,self.outside,itoa (amount),self,TO_CHAR);
+  }
+ else action (min_abi);
+
+if (percent!=0)
+  amount:=(self.outside.hp*percent)/100;
+if (damage==-1)
+  damage:=openroll (100,5);
+
+if (percent!=0)
+  if (damage>amount)
+    damage:=amount;
+  else if (damage==0)
+  damage:=amount;
+
+
+self.outside.hp:=self.outside.hp-damage;
+position_update (self.outside);
+
+unequip (self);
+link (self,self.outside.outside);
+goto start;
+}
+dilend
+
+dilbegin weap_restrict (ab:integer,min_abi:integer,
+          damage:integer,percent:integer,
+          action:string);
+var
+  amount:integer;
+  abl:string;
+code
+{
+:start:
+wait (SFB_DONE, ((activator.type==UNIT_ST_PC) and
+(self==medium)));
+if (activator.weapons[ab]>=min_abi) goto start;
+
+if (self.outside.level>=IMMORTAL_LEVEL) goto start;
+
+if ((not( command (CMD_WEAR))) and
+(not(command (CMD_WIELD))) and
+(not(command (CMD_HOLD)))) goto start;
+
+if (action =="")
+  {
+  act ("Your $2n burns you and you drop it to the ground.",
+  A_ALWAYS,self.outside,self,null,TO_CHAR);
+  act ("$1n's $2n burns $1m and $1e drops it to the ground.",
+  A_SOMEONE,self.outside,self,null,TO_REST);
+
+    amount:=min_abi-activator.weapons[ab];
+  act ("You are not skilled enough to use $3n.  $2t skill needed to use it.",
+  A_ALWAYS,self.outside,itoa (amount),self,TO_CHAR);
+  }
+ else action (min_abi);
+
+if (percent!=0)
+  amount:=(self.outside.hp*percent)/100;
+if (damage==-1)
+  damage:=openroll (100,5);
+
+if (percent!=0)
+  if (damage>amount)
+    damage:=amount;
+  else if (damage==0)
+  damage:=amount;
+
+
+self.outside.hp:=self.outside.hp-damage;
+position_update (self.outside);
+
+unequip (self);
+link (self,self.outside.outside);
+goto start;
+}
+dilend
+
+dilbegin sex_restrict (sx:integer,damage:integer,percent:integer, action:string);
+var
+amount:integer;
+code
+{
+:start:
+wait (SFB_DONE, ((activator.type==UNIT_ST_PC) and
+(self==medium)));
+
+if (activator.sex==sx) goto start;
+
+if (self.outside.level>=IMMORTAL_LEVEL) goto start;
+
+if ((not( command (CMD_WEAR))) and
+(not(command (CMD_WIELD))) and
+(not(command (CMD_HOLD)))) goto start;
+
+if (action=="")
+  {
+act ("Your $2n burns you and you drop it to the ground.",
+A_ALWAYS,self.outside,self,null,TO_CHAR);
+act ("$1n's $2n burns $1m and $1e drops it to the ground.",
+A_SOMEONE,self.outside,self,null,TO_REST);
+  act ("You are not the right sex to use $3n.",
+  A_ALWAYS,self.outside,null,self,TO_CHAR);
+  }
+else action ();
+
+if (percent!=0)
+  amount:=(self.outside.hp*percent)/100;
+if (damage==-1)
+  damage:=openroll (100,5);
+
+if (percent!=0)
+  if (damage>amount)
+    damage:=amount;
+  else if (damage==0)
+  damage:=amount;
+
+
+self.outside.hp:=self.outside.hp-damage;
+position_update (self.outside);
+
+unequip (self);
+link (self,self.outside.outside);
+goto start;
+}
+dilend
+
+dilbegin ply_restrict (person:string,damage:integer,percent:integer,action:string);
+var
+ amount:integer;
+code
+{
+heartbeat:=PULSE_SEC*3;
+:start:
+wait (SFB_DONE, ((activator.type==UNIT_ST_PC) and
+(self==medium)));
+
+if (person == activator.name) goto start;
+
+if (self.outside.level>=IMMORTAL_LEVEL) goto start;
+
+if ((not( command (CMD_WEAR))) and
+(not(command (CMD_WIELD))) and
+(not(command (CMD_HOLD)))) goto start;
+
+if (action=="")
+  {
+  act ("Your $2n burns you and you drop it to the ground.",
+  A_ALWAYS,self.outside,self,null,TO_CHAR);
+  act ("$1n's $2n burns $1m and $1e drops it to the ground.",
+  A_SOMEONE,self.outside,self,null,TO_REST);
+  act ("You realy shouldn't try to use someone elses personal item.",
+  A_ALWAYS,self.outside,null,null,TO_CHAR);
+  }
+else action ();
+
+if (percent!=0)
+  amount:=(self.outside.hp*percent)/100;
+if (damage==-1)
+  damage:=openroll (100,5);
+if (percent!=0)
+  if (damage>amount)
+    damage:=amount;
+  else if (damage==0)
+  damage:=amount;
+
+self.outside.hp:=self.outside.hp-damage;
+position_update (self.outside);
+
+unequip (self);
+link (self,self.outside.outside);
+goto start;
+}
+dilend
+
+/* This is an enhanced version of the Guard way SFUN. It will allow both
+   certain players to enter as well as certain mobs. An optional stopdil
+   can be supplied if you wish to do something special. It takes two
+   arguments, the activator and the direction.
+
+   Examples:
+
+
+dilcopy guard_dir@function(CMD_EAST, {"rejji"}, null, null);
+dilcopy guard_dir@function(CMD_SOUTH, {"papi", "whistler"},
+                           {"welmar", "guard", "captain", "bipbop@kingc");
+
+   Important: The guard dir is ONLY active in the room in which the
+              monster is initially loaded! Thus, if it is summoned
+              it will not block directions until it is back where it
+              was first created.
+*/
+
+dilbegin guard_dir(direction : integer,
+                   excludepc : stringlist,
+                   excludenpc : stringlist,
+                   stopdil : string);
+var
+  place : integer;
+code
+{
+   place := self.outside.idx;
+
+   :start:
+   wait(SFB_CMD, command(direction));
+
+   if (self.outside.idx != place)
+      goto start;
+
+   if (activator.type == UNIT_ST_PC)
+   {
+      if (activator.name in excludepc)
+	goto start;
+
+      goto stopit;
+   }
+
+   if (activator.name in excludenpc)
+     goto start;
+
+   :stopit:
+   block;
+
+   if (stopdil == "")
+   {
+      act ("$3n stops you and says, 'Members only!'",
+	   A_ALWAYS,activator,null,self,TO_CHAR);
+      act ("$3n stops $1n, and says, 'Members only!'",
+	   A_SOMEONE,activator,null,self,TO_REST);
+   }
+   else
+   {
+      stopdil(activator, direction);
+   }
+   goto start;
+}
+dilend
+
+
+
+/* The okdil & notokdil are optional and both take two arguments of
+   type unitptr - the activator and the key.
+
+   This DIL can be used for many other things than keys....
+
+Example:
+
+   dilcopy key_give@function({"hugo", "bent"}, "key2@house", "key", "", "");
+
+This will load the "key2@house" when either Bent or Hugo says "key".
+
+ */
+
+dilbegin key_give(pcnames : stringlist, keysym : string, word : string,
+                  okdil : string, notokdil : string);
+var
+  key:unitptr;
+
+code
+{
+   heartbeat := PULSE_SEC*5;
+   :start:
+   wait(SFB_DONE, command(CMD_SAY) and (word in argument));
+
+   if (activator.name in pcnames)
+   {
+      key := load (keysym);
+      link (key, activator);
+
+      if (okdil == "")
+      {
+	 act ("$3n gives $1n $2n.",
+	      A_SOMEONE, activator, key, self, TO_REST);
+	 act ("$3n gives you $2n.",
+	      A_SOMEONE,activator,key,self,TO_CHAR);
+      }
+      else
+      {
+	 okdil(activator, key);
+      }
+   }
+   else
+   {
+      if (notokdil == "")
+      {
+	 exec("say I don't know you.",self);
+      }
+      else
+      {
+	 notokdil(activator, key);
+      }
+   }
+
+   goto start;
+}
+dilend
+
+/*
+The following dils are the shopkeepers in dil.
+For more information look at the shopkeeper.doc.
+*/
+/******************************************************************************/
+#define STATE_OPEN   0
+#define STATE_CLOSED 1
+dilbegin integer isopen( times : stringlist );
+var
+ time1 : integer;
+ time2 : integer;
+code
+{
+    if( length( times ) < 2 )
+     return(STATE_OPEN);
+
+    time1 := atoi( times.[0] );
+    time2 := atoi( times.[1] );
+
+    if( time1 == time2 )
+     return(STATE_OPEN);
+
+    if( time1 < time2 )
+     if( ( mudhour >= time2 ) or ( mudhour < time1 ) )
+      return(STATE_CLOSED);
+
+    if( time1 > time2 )
+     if( ( mudhour >= time2 ) and ( mudhour < time1 ) )
+      return(STATE_CLOSED);
+
+    return(STATE_OPEN);
+}
+dilend
+/******************************************************************************/
+dilbegin string wpntype( obj : unitptr );
+code{
+     if( not( obj.type & UNIT_ST_OBJ ) )
+         return("");
+
+     if( obj.objecttype == ITEM_WEAPON )
+         on obj.value[0] goto root,axe,sword,club_mace,polearm,unarmed,special,
+         battle_axe,hand_axe,war_mattock,war_hammer,great_sword,scimitar,katana,
+         falchion,kopesh,broad_sword,long_sword,rapier,short_sword,dagger,
+         battle_mace,mace,battle_club,club,morning_star,flail,quarterstaff,
+         spear,halberd,bardiche,sickle,scythe,trident,
+         fist,kick,bite,sting,claw,crush,whip,wakizashi,bow,throw,blank0,blank1,
+         blank2,blank3,blank4;
+     return("");
+
+   :root:
+     return("[Root]");
+   :axe:
+     return("[Axe/Hammer]");
+   :sword:
+     return("[Sword]");
+   :club_mace:
+     return("[Club/Mace]");
+   :polearm:
+     return("[Polearm]");
+   :unarmed:
+     return("[Unarmed]");
+   :special:
+     return("[Special]");
+   :battle_axe:
+     return("[Battle Axe]");
+   :hand_axe:
+     return("[Hand Axe]");
+   :war_mattock:
+     return("[War Mattock]");
+   :war_hammer:
+     return("[War Hammer]");
+   :great_sword:
+     return("[Great Sword]");
+   :scimitar:
+     return("[Scimitar]");
+   :katana:
+     return("[Katana]");
+   :falchion:
+     return("[Falchion]");
+   :kopesh:
+     return("[Kopesh]");
+   :broad_sword:
+     return("[Broad Sword]");
+   :long_sword:
+     return("[Long Sword]");
+   :rapier:
+     return("[Rapier]");
+   :short_sword:
+     return("[Short Sword]");
+   :dagger:
+     return("[Dagger]");
+   :battle_mace:
+     return("[Battle Mace]");
+   :mace:
+     return("[Mace]");
+   :battle_club:
+     return("[Battle Club]");
+   :club:
+     return("[Club]");
+   :morning_star:
+     return("[Morning Star]");
+   :flail:
+     return("[Flail]");
+   :quarterstaff:
+     return("[Staff]");
+   :spear:
+     return("[Spear]");
+   :halberd:
+     return("[Halberd]");
+   :bardiche:
+     return("[Bardiche]");
+   :sickle:
+     return("[Sickle]");
+   :scythe:
+     return("[Scythe]");
+   :trident:
+     return("[Trident]");
+   :fist:
+     return("[Fist]");
+   :kick:
+     return("[Kick]");
+   :bite:
+     return("[Bite]");
+   :sting:
+     return("[Sting]");
+   :claw:
+     return("[Claw]");
+   :crush:
+     return("[Crush]");
+   :whip:
+     return("[Whip]");
+   :wakizashi:
+     return("[Wakizashi]");
+   :bow:
+     return("[Bow]");
+   :throw:
+     return("[Throw]");
+   :blank0:
+     return("[Blank0]");
+   :blank1:
+     return("[Blank1]");
+   :blank2:
+     return("[Blank2]");
+   :blank3:
+     return("[Blank3]");
+   :blank4:
+     return("[Blank4]");
+
+}
+dilend
+/******************************************************************************/
+/* Makes sure that the items sold are first in the list. */
+dilbegin shop_sort( );
+var
+ item : unitptr;
+ dest : unitptr;
+ nxt  : unitptr;
+code{
+     dest := load( "bag@midgaard" );/* Load something to store in */
+     item := self.inside;
+     while( item )                  /* Store all items that have a price tag */
+     {
+       nxt := item.next;
+       if( "$price" in item.extra )
+         link( item, dest );
+       item := nxt;
+     }
+     item := dest.inside;
+     while( item )                  /* Put all items back inside shopkeeper */
+     {
+       nxt := item.next;
+       link( item, self );
+       item := nxt;
+     }
+     destroy( dest );
+     return;
+}
+dilend
+/******************************************************************************/
+/* This is added to all shopitems so they wont have a pricetag when stolen or
+   is some gods forces them to drop the items... */
+dilbegin shopown( );
+var
+ owner : unitptr;
+code{
+     owner := self.outside;
+     secure( owner, gone );
+     heartbeat:= PULSE_SEC*5;
+   :loop:
+     wait( SFB_TICK, TRUE );
+     if( owner == self.outside ) goto loop;
+
+   :gone:
+     subextra( self.extra, "$price" );
+     quit;
+}
+dilend
+/******************************************************************************/
+#define LOG(_CMDSTR) log(self.nameidx+"/"+rom.nameidx+"Shop error - "+_CMDSTR)
+
+#define BUY_PRICE(u) ((u.cost * buyprofit)/100)
+#define SELL_PRICE(u) ((u.cost * sellprofit)/100)
+
+dilbegin aware shopkeeper(prod       : stringlist, custom_acts : stringlist,
+                          opentimes  : stringlist, itemtype    : string,
+                          sellprofit : integer,    buyprofit   : integer,
+                          maxcash    : integer,
+                          closedil   : string,     dilparams   : string );
+external
+        integer isopen( opentimes : stringlist );
+        integer carry_n_limit@basis( ch : unitptr );
+        integer carry_w_limit@basis( ch : unitptr );
+         string wpntype( obj : unitptr );
+                shop_sort( );
+var
+ temp_nitem : integer;    /* added to fix a bug with act */
+ sitem	    : integer;    /* Selected item */
+ citem      : integer;    /* Current item */
+ mitem      : integer;    /* Max item */
+
+ iteml      : stringlist; /* Item list */
+ items      : string;     /* Item symbolic */
+ itmsl      : stringlist; /* Items symbolc list */
+ itmsn      : stringlist; /* Itemlist including names */
+ nitml      : stringlist; /* Current number of items */
+ mitml      : stringlist; /* Max number of items */
+ produ      : stringlist; /* Copy of prod, but only functioning items */
+ cisl       : stringlist; /* Complete item symbolic list */
+ acts       : stringlist;
+
+ arg        : string;     /* Argument */
+ nitem      : integer;    /* Number of items */
+ clc        : integer;    /* Calculations integer */
+
+ tmps       : string;     /* Crap string */
+ u          : unitptr;    /* Crap unitptr */
+ rom        : unitptr;
+ pc         : unitptr;
+ tu         : unitptr;    /* Temporary unit */
+ ts         : stringlist; /* Temporary stringlist */
+ fitstr     : string;     /* Fit string */
+ wpnstr     : string;     /* Weapon string */
+
+ ti         : integer;    /* Temporary integer */
+ ts1        : string;     /* Temporary string */
+ ts2        : string;     /* Temporary string */
+ ext        : extraptr;   /* Temporary extraptr */
+ types      : stringlist; /* Extraptr holding item types traded. */
+
+
+ closed     : integer;    /* Open/Closed flag */
+
+ tm         : integer;    /* For cost calculation */
+
+ cc         : integer;    /* Cost */
+
+ openstat   : integer;    /* Current shop status: Open or Closed */
+ chgtime    : integer;    /* Time for next change of shop status */
+ choice     : integer;    /* Command choice */
+ foundany   : integer;    /* If any items was in list */
+
+ homes      : string;	  /* Symbolic of room where we were first loaded */
+ home	    : unitptr;    /* Home room where we were first loaded */
+ mys        : string;     /* Symbolic of the shopkeeper */
+ account    : extraptr;   /* Where we store our money */
+ noaccount  : integer;    /* Is there a account already? */
+
+code
+{
+
+:init:
+   /* Everything is handled by a price extra and an item list */
+   /* Any item in inv without a pricetag can't be sold! */
+
+   heartbeat := 3;
+   rom := self;
+   while( not( rom.type & UNIT_ST_ROOM ) )
+      rom := rom.outside;
+
+   /* Made it so that the shopkeeper stores the amount of money he has  */
+   /* left in an extra on his "home room". This way the shopkeeper does */
+   /* not have full money every time he is killed, only refreshed once  */
+   /* per day or after a reboot/crash as it should. (Nexus)             */
+
+   homes := rom.nameidx+"@"+rom.zoneidx;
+   mys := self.nameidx+"@"+self.zoneidx;
+   home := findroom(homes);
+   account := "$Shop Account" in home.extra;
+
+   if ((account) and (mys in account.names))
+      noaccount := 0;
+   else if (account)
+   {
+      log(self.nameidx+"/"+rom.nameidx+" Shop Error - Found other "+
+         "shopkeeper's account");
+      noaccount := 0;
+   }
+   else /* make account */
+   {
+      ts := {"$Shop Account"};
+      addstring(ts,mys);
+      addextra(home.extra,ts,"");
+      noaccount := 1;
+   }
+
+   if( length( custom_acts.[0] ) > 0 )
+      addstring( acts, custom_acts.[0] );
+   else
+      addstring( acts, "$1n says, 'I've got no such item!'" );
+
+   if( length( custom_acts.[1] ) > 0 )
+      addstring( acts, custom_acts.[1] );
+   else
+      addstring( acts, "$1n says, '$3n, you havn't even got it!'" );
+
+   if( length( custom_acts.[2] ) > 0 )
+      addstring( acts, custom_acts.[2] );
+   else
+      addstring( acts, "$1n says, 'I don't trade with things such as $2n'" );
+
+   if( length( custom_acts.[3] ) > 0 )
+      addstring( acts, custom_acts.[3] );
+   else
+      addstring( acts, "$1n says, '$3n, you can't afford $2n'" );
+
+   if( length( custom_acts.[4] ) > 0 )
+      addstring( acts, custom_acts.[4] );
+   else
+      addstring( acts, "$1n says, 'Here is $2n'" );
+
+   if( length( custom_acts.[5] ) > 0 )
+      addstring( acts, custom_acts.[5] );
+   else
+      addstring( acts, "$1n says, 'Thank you for $2n'" );
+
+   if( length( custom_acts.[6] ) > 0 )
+      addstring( acts, custom_acts.[6] );
+   else
+      addstring( acts, "$1n says, 'I don't seem to have that many $2ns in my stock'" );
+
+   if( length( custom_acts.[7] ) > 0 )
+      addstring( acts, custom_acts.[7] );
+   else
+      addstring( acts, "$1n says, 'The shop is closed, come back later'" );
+
+   if( length( custom_acts.[8] ) > 0 )
+      addstring( acts, custom_acts.[8] );
+   else
+      addstring( acts, "$1n says, '$3n, I have no use for $2n.'" );
+
+   if( length( custom_acts.[9] ) > 0 )
+      addstring( acts, custom_acts.[9] );
+   else
+      addstring( acts, "$1n says, 'It looks like i don't have enough cash for it.'" );
+
+   iteml := prod;                       /* Init. all needed system lists! */
+   itmsl := null;
+   produ := null;
+   itmsn := null;
+   mitml := null;
+   nitml := null;
+   citem := 0;
+   tm := 0;
+   while( citem < length( iteml ) )
+   {
+      tmps := iteml.[citem];
+      items := getword( tmps );
+      ts1 := getword( tmps );
+      ts2 := getword( tmps );
+      u := load( items );
+      secure( u, lost_u );
+      if( u )
+      {
+	 if( ( atoi( ts1 ) > 0 ) and ( atoi( ts2 ) > 0 ) )
+	 {
+	    if( not( items in itmsl ) )
+	    {
+	       if( not( u.name in itmsn ) )
+	       {
+		  addstring( produ, iteml.[citem] );
+		  addstring( itmsl, items         );
+		  addstring( nitml, ts2           );
+		  addstring( mitml, ts2           );
+		  addstring( itmsn, u.name        );
+		  tmps := moneystring( ( u.cost * sellprofit )/100, 0 );
+		  addextra( u.extra, {"$price"}, tmps );
+	       }
+	       else
+	       {
+		  LOG( "2 or more items with the same first name '" + u.name + "'" );
+		  destroy( u );
+	       }
+	    }
+	    else
+	    {
+	       LOG( "Duplicate items in shop, item '" + items + "'" );
+	       destroy( u );
+	    }
+	 }
+	 else
+	 {
+	    LOG( "Illegal unit definition '" + iteml.[citem] + "'" );
+	    destroy( u );
+	 }
+      }
+      else
+	 LOG( "Error loading item '" + items + "'" );
+
+   :lost_u:
+      unsecure( u );
+      citem := citem + 1;
+      tm := tm + 1;
+      if( tm == 5 )
+      {
+	 pause;
+	 tm := 0;
+      }
+   }
+   cisl := itmsl;
+
+   interrupt( SFB_DEAD, self==activator, destroy_items );
+
+   if( length( dilparams ) < 2 )
+      dilparams := "()";
+   else if( not ( "(" in dilparams ) ) /* No spaces in parameters.. add some */
+      dilparams := "(" + dilparams + ")";
+
+   types := null;
+   ts1   := itemtype;
+   while( length( ts1 ) > 0 )
+   {
+      ts2 := getword( ts1 );
+      if( atoi( ts2 ) > 0 )
+	 addstring( types, ts2 );
+   }
+   pause;
+   heartbeat := PULSE_SEC * 30;
+
+   if (noaccount)
+      goto newday;      /* credit account */
+   else
+      goto no_credit;   /* don't credit account */
+
+:check_open:
+   sendto( "closing", self );
+   heartbeat := PULSE_SEC * 30;
+   if( length( closedil ) > 0 )
+      if( not( "(" in closedil or ")" in closedil ) )
+         dilcopy( closedil + dilparams, self );
+
+:loop_closed:
+   wait( SFB_CMD|SFB_TICK|SFB_DONE, TRUE );
+
+   if( command( CMD_LIST    ) or
+       command( CMD_BUY     ) or
+       command( CMD_SELL    ) or
+       command( CMD_VALUE   ) or
+       command( CMD_REQUEST ) )
+   {
+      block;
+      act( acts.[7], A_SOMEONE, self, u, activator, TO_VICT );
+   }
+   else if( not( command( CMD_AUTO_TICK ) or command( CMD_GIVE ) ) )
+      goto loop_closed;
+
+   closed := isopen( opentimes );
+   if( closed == STATE_OPEN )
+   {
+      closed := dildestroy( closedil, self );
+      closed := STATE_OPEN;
+      goto newday;
+   }
+
+   if( ( atoi( opentimes.[0] ) - 1 ) == mudhour )
+      sendto( "opening", self );
+
+   if( command( CMD_GIVE ) and medium )
+   {
+      if( "$price" in medium.extra )
+	 subextra( medium.extra, "$price" );
+   }
+
+   shop_sort();
+   goto loop_closed;
+
+:loop:
+   closed := isopen( opentimes );
+   if( closed ) goto check_open;
+
+   shop_sort();
+   wait( SFB_CMD|SFB_TICK|SFB_DONE, TRUE );
+
+   closed := isopen( opentimes );
+   if( closed ) goto check_open;
+   if( command( CMD_AUTO_TICK ) ) goto loop;
+
+   if( command( CMD_GIVE ) )
+   {
+      if( not medium ) goto loop;
+      if( "$price" in medium.extra )
+	 subextra( medium.extra, "$price" );
+      goto loop;
+   }
+
+   if( ( self.position == POSITION_FIGHTING ) or
+       ( self.position < POSITION_RESTING ) )
+      goto loop;
+
+
+   if( command( CMD_LIST    ) ) choice := 0;
+   else if( command( CMD_BUY     ) ) choice := 1;
+   else if( command( CMD_SELL    ) ) choice := 2;
+   else if( command( CMD_VALUE   ) ) choice := 3;
+   else if( command( CMD_REQUEST ) ) choice := 4;
+   else if( command( "stock" ) and ( activator.level >= IMMORTAL_LEVEL ) )
+      choice := 5;
+   else
+      goto loop;
+
+   pc := activator;
+   if( not visible( pc, self ) )
+      goto loop;
+   block;
+   if( not visible( self, pc ) )
+   {
+      exec( "say I only do business with people i can see.", self );
+      goto loop;
+   }
+   arg := argument;
+   secure( pc, lost_pc );
+
+   on choice goto list,buy,sell,check_value,request,stock;
+
+   log( "Something is wrong, shop triggered on an unknown command." );
+   unsecure( pc );
+   goto loop;
+
+:stock:
+   mitem := length( produ );
+   citem := 0;
+   items := self.nameidx + "@" + self.zoneidx + " current stock:&n";
+   while( citem < mitem )
+   {
+      tmps := produ.[citem];
+      items := items + " " + getword( tmps ) + " P: " + getword( tmps ) + ", M: " + mitml.[citem];
+      items := items + ", C: " + nitml.[citem] + "&n";
+      citem := citem + 1;
+   }
+   sendtext( items, pc );
+   unsecure( pc );
+   goto loop;
+
+:newday:   /* New day, increase stock & load stolen/soldout goods */
+   home := findroom(homes);
+   account := "$Shop Account" in home.extra;
+   if ((account) and (mys in account.names))
+      account.descr := itoa(maxcash); /* fill daily account */
+   else if (account)
+      log(self.nameidx+"/"+rom.nameidx+"Shop Error - The account I found is not mine!");
+   else
+      log(self.nameidx+"/"+rom.nameidx+"Shop Error - Can't find a shop account!");
+
+:no_credit:   /* Go here if account should not be credited */
+   mitem := length( itmsl );
+   citem := 0;
+   while( citem < mitem )
+   {
+      items := produ.[citem];
+      tmps := getword( items );
+      tmps := itoa( atoi( nitml.[citem] ) + atoi( getword( items ) ) );
+      ts1  := getword( items );
+      if( atoi( tmps ) > atoi( ts1 ) )
+	 tmps := ts1;
+      nitml.[citem] := tmps;
+      u := findunit( self, itmsn.[citem], FIND_UNIT_INVEN, null );
+      if( ( u == null ) and ( atoi( tmps ) > 0 ) )
+      {
+	 u := load( itmsl.[citem] );
+	 tmps := moneystring( ( u.cost * sellprofit ) / 100, 0 );
+	 addextra( u.extra, {"$price"}, tmps );
+      }
+      else if( not( "$price" in u.extra ) and ( atoi( tmps ) != 0) )
+      {
+	 if( ( u.nameidx + "@" + u.zoneidx ) != itmsl.[citem] )
+	    u := load( itmsl.[citem] );
+	 tmps := moneystring( ( u.cost * sellprofit ) / 100, 0 );
+	 addextra( u.extra, {"$price"}, tmps );
+      }
+      citem := citem + 1;
+   }
+   goto loop;
+
+:request:   /* Price request on item in own inv. */
+   u := findunit( self, arg, FIND_UNIT_INVEN, null );
+   if( u == null)
+   {
+      act( acts.[0], A_SOMEONE, self, null, pc, TO_VICT );
+   }
+   else
+   {
+      ext := "$price" in u.extra;
+      if( ext )
+      {
+	 if( ext.descr == "" )
+	    act( "$1n says, 'I'll give $2n away for free'", A_SOMEONE, self, u, pc, TO_VICT);
+	 else
+	    act( "$1n says, 'I want "+ext.descr+" for $2n'", A_SOMEONE, self, u, pc, TO_VICT);
+      }
+      else
+	 act( acts.[0], A_SOMEONE, self, u, pc, TO_VICT );
+   }
+   unsecure( pc );
+   goto loop;
+
+:sell:   /* Sell routine for players to sell to shopkeeper */
+   u := findunit( pc, arg, FIND_UNIT_INVEN, null );
+   if( u == null )
+   {
+      act( acts.[1], A_SOMEONE, self, null, pc, TO_VICT );
+   }
+   else
+   {
+      if( "$no-sell" in u.extra )
+      {
+         act( acts.[8], A_SOMEONE, self, u, pc, TO_VICT );
+         unsecure( pc );
+         goto loop;
+      }
+
+      if( not( itoa( u.objecttype ) in types ) )
+      {
+	 act( acts.[2], A_SOMEONE, self, u, pc, TO_VICT );
+	 unsecure( pc );
+	 goto loop;
+      }
+
+      cc := u.cost;
+      if( cc < 0 )
+	 cc := 0;
+
+      tm := ( cc * buyprofit ) / 100;
+
+      home := findroom(homes);
+      account := "$Shop Account" in home.extra;
+      if ((account) and (mys in account.names)) /* do account stuff */
+      {
+         ti := atoi(account.descr);
+         if (tm > ti)
+         {
+            act( acts.[9], A_SOMEONE, self, u, pc, TO_VICT );
+            unsecure( pc );
+            goto loop;
+         }
+         ti := ti - tm;
+         account.descr := itoa(ti);
+      }
+      else /* if no account or other shopkeeper's, say can't afford */
+      {
+         act( acts.[9], A_SOMEONE, self, u, pc, TO_VICT );
+         unsecure( pc );
+         goto loop;
+         log(self.nameidx+"/"+rom.nameidx+ "Shop Error - Can't find my "+
+            "shop account!");
+      }
+      log(self.nameidx+"/"+rom.nameidx+ "Shop Error - Can't find my shop account!");
+
+      citem := transfermoney( null, pc, tm );
+
+      tmps := moneystring( ( cc * sellprofit ) / 100, FALSE );
+
+      if( not( "$price" in u.extra ) )
+         addextra( u.extra, {"$price"}, tmps );
+/*
+      act( acts.[5], A_SOMEONE, self, u, pc, TO_VICT );
+*/
+      tmps := moneystring( ( cc * buyprofit ) / 100, FALSE );
+      act( "$1n says, 'I paid you $2t for that $3n'",
+           A_SOMEONE, self, tmps, pc, TO_ALL );
+
+      link( u, self );
+
+      if( ( u.nameidx + "@" + u.zoneidx ) in itmsl )
+      {
+	 mitem := length( itmsl );
+	 citem := 0;
+	 sitem := ( u.nameidx + "@" + u.zoneidx ) in itmsl;
+
+	 nitml.[sitem - 1] := itoa( atoi( nitml.[sitem - 1] ) + 1 );
+
+	 destroy( u );
+      }
+      else if( ( u.nameidx + "@" + u.zoneidx ) in cisl )/* If already in store*/
+      {                                                 /* destroy new item. */
+	 destroy( u );
+      }
+      else                                  /* If not in store already */
+      {                                     /* add to store list */
+	 if( length( cisl ) >= 24 )         /* Allow only 24 items in list */
+	    destroy( u );
+	 else
+	    addstring( cisl, u.nameidx+"@"+u.zoneidx );
+      }
+   }
+   unsecure( pc );
+   goto loop;
+
+:check_value:   /* Check value of item in players inv. on request */
+   u := findunit( pc, arg, FIND_UNIT_INVEN, null);
+
+   if( "$no-sell" in u.extra )
+   {
+    act( acts.[8], A_SOMEONE, self, u, pc, TO_VICT );
+    unsecure( pc );
+    goto loop;
+   }
+
+   if( u != null )
+   {
+      tmps := moneystring( ( u.cost * buyprofit ) / 100, 0 );
+
+      act( "$1n says, 'I'll pay " + tmps + " for the $2N'",
+	 A_SOMEONE, self, u, pc, TO_VICT );
+   }
+   else
+     act( acts.[1], A_SOMEONE, self, null, pc, TO_VICT );
+   unsecure( pc );
+   goto loop;
+
+:buy:                /* Buy routine */
+   nitem := 0;
+   tm := 0;
+   nitem := atoi( getword( arg ) );
+
+   if (nitem < 0)
+   {
+      act("$1n says, 'How are you planning to buy a negative number of items?'",
+	 A_SOMEONE, self, null, pc, TO_ALL );
+   }
+   else if(( nitem > 1 ) and ( arg != "" ))
+   {
+      /* If bigger than 0, then a multiple number was requested */
+
+      if( nitem > 100 )
+      {
+	 act( "$1n says, 'I don't sell over 100 items at one time'",
+	    A_SOMEONE, self, null, pc, TO_ALL );
+	 unsecure( pc );
+	 goto loop;
+      }
+
+      u := findunit( self, arg, FIND_UNIT_INVEN, null ); /*Check inventory */
+
+      if( "$price" in u.extra )     /* If in inventory */
+      {
+	 clc := can_carry( pc, u, nitem );
+	 if( clc == 1 )
+	 {
+	    act("Your hands are full!", A_SOMEONE, self, null, pc, TO_VICT );
+	    unsecure( pc );
+	    goto loop;
+	 }
+	 else
+	   if( clc == 2 )
+	   {
+	      act("You can't carry the weight!",
+		 A_SOMEONE, self, null, pc, TO_VICT );
+	      unsecure( pc );
+	      goto loop;
+	   }
+
+	 cc := u.cost;                             /* Get item cost */
+	 items := u.nameidx + "@" + u.zoneidx;     /* Get symbolic name */
+	 sitem := items in itmsl;
+
+         if( sitem )
+	    cc := (cc * atoi( mitml.[sitem - 1] )) / atoi( nitml.[sitem - 1] );
+
+	 if( pc.level > IMMORTAL_LEVEL )
+	    tm := 1;
+	 else
+	    tm := transfermoney( pc, null, cc * nitem );
+
+         if ( tm )
+	 {
+	    if ( items in itmsl )              /* Check if standard item */
+	    {
+	       if( nitem <= atoi( nitml.[sitem - 1] ) )
+	       {
+	 	  nitml.[sitem - 1] := itoa(atoi( nitml.[sitem - 1] ) - nitem);
+		  if( nitml.[sitem - 1] == "0" )
+	 	     destroy( u );
+		  else
+		  {
+		     subextra( u.extra, "$price" );
+                     tmps := moneystring( ( u.cost * sellprofit * atoi( mitml.[sitem-1] ) / atoi( nitml.[sitem-1] ) ) / 100, 0 );
+		     addextra( u.extra, {"$price"}, tmps );
+		  }
+                  temp_nitem:=nitem;
+		  while( temp_nitem > 0 )      /* Load and link all items */
+		  {
+		     tu := load( items );
+		     tu.height := pc.height;
+		     link( tu, pc );
+		     temp_nitem := temp_nitem- 1;
+		  }
+                  tmps := moneystring( (cc * nitem), FALSE );
+                  act( "$1n says, 'Those cost you $2t", A_SOMEONE, self, tmps, pc, TO_ALL );
+		  act( "$1n gives you " + getword( argument ) + " $2n.",
+		     A_SOMEONE, self, u, pc, TO_VICT );
+		  act( "$1n gives $3n some $2ns.",
+		     A_SOMEONE, self, u, pc, TO_NOTVICT );
+               }
+	       else
+	       {
+		  if (transfermoney( null, pc, cc * nitem ) and FALSE)
+		     exec("grin",self);
+
+		  act( acts.[6], A_SOMEONE, self, u, pc, TO_ALL );
+	       }
+	    }
+	    else  /* Not standard item, can't buy multiple.. */
+	       act( acts.[6], A_SOMEONE, self, u, pc, TO_ALL );
+         }
+	 else
+         {
+	    act( acts.[3], A_SOMEONE, self, u, pc, TO_ALL );
+         }
+      }
+      else
+      {
+      	 act( acts.[0], A_SOMEONE, self, null, pc, TO_ALL );
+      }
+   }
+   else
+   {
+      if( nitem == 1 )
+	 u := findunit( self, arg,      FIND_UNIT_INVEN, null );
+      else
+	 u := findunit( self, argument, FIND_UNIT_INVEN, null );
+
+      if( "$price" in u.extra )
+      {
+	 clc := can_carry( pc, u, 1 );
+
+	 if( clc == 1 )
+	 {
+	    act("Your hands are full!", A_SOMEONE, self, null, pc, TO_VICT );
+	    unsecure( pc );
+	    goto loop;
+	 }
+	 else if( clc == 2 )
+	 {
+	    act("You can't carry the weight!",
+	       A_SOMEONE, self, null, pc, TO_VICT );
+	    unsecure( pc );
+	    goto loop;
+	 }
+
+         cc    := (u.cost * sellprofit) / 100;
+	 items := u.nameidx + "@" + u.zoneidx;
+	 sitem := items in itmsl;
+	 if( sitem )
+	    cc := (cc * atoi( mitml.[sitem - 1] )) / atoi( nitml.[sitem - 1] );
+
+	 /* If buyer is a god, don't take money */
+	 if( pc.level >= IMMORTAL_LEVEL )
+	    tm := 1
+	 else
+	    tm := transfermoney( pc, null, cc );
+
+         if( tm != 0)
+	 {
+	    if( items in itmsl )
+	    {
+	       mitem := length(itmsl);
+	       citem := 0;
+
+	       if( atoi( nitml.[sitem - 1] ) > 0 )
+	       {
+		  nitml.[sitem-1] := itoa( atoi( nitml.[sitem-1] ) - 1 );
+
+                  ext := "$price" in u.extra;
+
+                  tmps := ext.descr;
+
+                  act( "$1n says, 'That cost you $2t", A_SOMEONE, self, tmps, pc, TO_ALL );
+/*
+                  act( acts.[4], A_SOMEONE, self, u, pc, TO_ALL );
+*/
+
+                  if( nitml.[sitem-1] == "0" )
+		     destroy( u );
+		  else
+		  {
+		     subextra( u.extra, "$price" );
+		     tmps := moneystring( ( u.cost * sellprofit * atoi( mitml.[sitem-1] ) / atoi( nitml.[sitem-1] ) ) / 100, 0 );
+		     addextra( u.extra, {"$price"}, tmps );
+		  }
+
+                  tu := load( items );
+		  tu.height := pc.height;
+		  link( tu, pc );
+	       }
+	       else
+		  act( acts.[0], A_SOMEONE, self, null, pc, TO_ALL );
+	    }
+	    else
+	    {
+               tmps := moneystring( cc, FALSE );
+               act( "$1n says, 'That cost you $2t", A_SOMEONE, self, tmps, pc, TO_ALL );
+/*
+               act( acts.[4], A_SOMEONE, self, u, pc, TO_ALL );
+*/
+	       subextra( u.extra, "$price" );
+	       substring( cisl, u.nameidx+"@"+u.zoneidx );
+	       link( u, pc );
+	    }
+	 }
+         else
+         {
+	    act( acts.[3], A_SOMEONE, self, u, pc, TO_ALL );
+         }
+      }
+      else
+	 act( acts.[0], A_SOMEONE, self, null, pc, TO_ALL );
+   }
+   unsecure( pc );
+   goto loop;
+
+:list:
+   act( "Items in store:", A_SOMEONE, self, null, pc, TO_VICT );
+   u := self.inside;
+   sitem := 0;
+   foundany := 0;
+   while( u )
+   {
+      ext := "$price" in u.extra;
+      if( ext )
+      {
+	 if( u.minv <= pc.level )
+	 {
+	    tmps := ext.descr;
+	    if ( u.objecttype == ITEM_WEAPON )
+	    {
+	       wpnstr := wpntype( u );
+	       wpnstr := wpnstr + " ";
+            }
+	    else
+	       wpnstr := "";
+
+	    fitstr := fits( pc, u, -1 );
+	    foundany := 1;
+
+	    citem := ( u.nameidx + "@" + u.zoneidx ) in itmsl;
+
+	    if ( citem > 0 ) /* ( u.nameidx + "@" + u.zoneidx ) in itmsl )*/
+	    {
+	       act(" [" + nitml.[citem - 1] + "] $2N " + wpnstr + "at " + tmps + ".",
+		  A_ALWAYS, self, u, pc, TO_VICT );
+	    }
+	    else
+	    {
+               if (fitstr != "")
+                 fitstr := fitstr + " ";
+
+	       act( " [1] $2N " + wpnstr + "&c+c" + fitstr + "&cwat " + tmps + ".",
+		  A_ALWAYS, self, u, pc, TO_VICT );
+	    }
+	 }
+      }
+
+      sitem := sitem + 1;
+      if( sitem == 50 ) /* This shouldn't be required, but pause */
+      {                 /* to prevent destruction of dil */
+	 sitem := 0;
+	 secure( u, lost_unit);
+	 heartbeat := 2;
+	 wait(SFB_TICK, TRUE);
+	 heartbeat := PULSE_SEC * 30;
+	 unsecure( u );
+      }
+      u := u.next;
+   }
+   if( foundany == 0 )
+      act( "None!", A_SOMEONE, self, null, pc, TO_VICT );
+   unsecure( pc );
+   goto loop;
+
+:lost_unit:
+   unsecure( u );
+   goto loop;
+
+:lost_pc:
+   unsecure( pc );
+   goto loop;
+
+:destroy_items:    /* Wipe all units that shopkeeper used to sell */
+   u := self.inside;
+   while(u!=null)
+   {
+      pc := u.next;
+      subextra(u.extra,"$price");
+      if(((u.nameidx+"@"+u.zoneidx) in cisl) and (u.equip==0))
+ 	 destroy(u);
+      u := pc;
+   }
+   quit;
+
+}
+dilend /* shopkeeper */
+
+
+dilbegin integer direction(dir : string);
+code
+{
+   dir := " " + getword(dir);
+   if (dir in " north")
+     return (CMD_NORTH);
+   else if (dir in " east")
+     return (CMD_EAST);
+   else if (dir in " south")
+     return (CMD_SOUTH);
+   else if (dir in " west")
+     return (CMD_WEST);
+    else if (dir in " up")
+     return (CMD_UP);
+   else if (dir in " down")
+     return (CMD_DOWN);
+
+   return (-1);
+}
+dilend
+
+dilbegin busy (s:string);
+code
+{
+   :start:
+   wait (SFB_DONE, command(CMD_GIVE) and
+	 (self==target));
+   exec ("say "+s, self);
+   exec ("drop "+medium.name, self);
+   goto start;
+}
+dilend
+
+dilbegin string accept_dil (pc:unitptr,s:string);
+var
+   i:integer;
+code
+{
+   heartbeat := PULSE_SEC*7;
+   secure(pc,losthim);
+   exec ("say "+s,self);
+   i := 0;
+   while (i < 5)
+   {
+      wait(SFB_CMD, activator == pc);
+      if (command(CMD_NOD))
+	return ("yes");
+      else if (command(CMD_SAY) and
+	       (argument =="yes"))
+	return ("yes");
+      else if (command(CMD_SHAKE))
+	return ("no");
+      else if (command(CMD_SAY) and
+	       (argument =="no"))
+	return ("no");
+      else
+      {
+	 /*  This specifies what happens if the pc does something else*/
+	 pause;
+	 exec ("say "+s,self);
+      }
+
+      i := i+1;
+      pause;
+   }
+   :losthim:
+
+   return ("no");
+}
+dilend
+
+
+
+/*
+
+   Blocks the buy & sell commands unless he has completed the quest in the
+   string 'q'. If not, the string 's' is executed by owner (self).
+   For example:
+
+dilcopy teach_q_block@function("$Police Academy", "say Deputies only!");
+
+special SFUN_TEACH_INIT ...
+
+*/
+
+dilbegin shop_q_block(q : string, s : string);
+code
+{
+   :loop:
+   wait(SFB_CMD, command(CMD_BUY) or command(CMD_SELL));
+
+   if (not (q in activator.quests))
+   {
+      exec(s, self);
+      block;
+   }
+
+   goto loop;
+}
+dilend
+
+
+/*
+
+   Blocks the practice command unless he has completed the quest in the
+   string 'q'. If not, the string 's' is executed by owner (self).
+   For example:
+
+dilcopy teach_q_block@function("Mary's Pot Complete", "say Buggar ye off");
+
+special SFUN_TEACH_INIT ...
+
+*/
+
+dilbegin teach_q_block(q : string, s : string);
+code
+{
+   :loop:
+   wait(SFB_CMD, command(CMD_PRACTICE));
+
+   if (not (q in activator.quests))
+   {
+      exec(s, self);
+      block;
+   }
+
+   goto loop;
+}
+dilend
+
+
+
+/*
+function blowaway
+
+used on:  items and even mobs shiver
+
+example:
+ dilcopy blowaway (1500,"this is the act");
+*/
+
+dilbegin blowaway(seconds:integer,s : string);
+code
+{
+   heartbeat := PULSE_SEC *seconds;
+
+   :loop:
+   pause;
+
+   if (self.outside.type == UNIT_ST_ROOM)
+   {
+      if (not isset(self.flags, UNIT_FL_BURIED))
+        act(s, A_SOMEONE, self, null, null, TO_ROOM);
+      destroy(self);
+   }
+
+   goto loop;
+}
+dilend
+
+
+/* The climb skill as a special routine to be connected to ROOMS
+
+  Ticks  : None
+  Used on: ROOMS
+  Syntax : climb(destination:string, difficulty:integer,
+	         damage : integer, direction : integer);
+  Example: dilcopy climb@function("deck@ship", 17, 20, CMD_UP);
+
+     This special dil is used for the climb skill and should be set
+     on stationary objects (stationary mast, robe, tree, wall, etc).
+     The <difficulty> is the skill-amount required to climb. A skill of 100
+     would be a 50% chance for the expert thief / climber.
+     The <damage> is how much damage is given if you fail to climb the
+     object. When you fail, you "fall" to the <destination>, so you can
+     make gravity work correctly.
+     The destination can be the same room in which you started.
+     The <direction> is the direction in which a climb is required
+     (most usually it is up, which is macro UP == 5).
+*/
+
+dilbegin climb(destination:string, difficulty:integer,
+               damage:integer, direction:integer);
+external
+   integer skillresist@basis(aa : integer, ad : integer,
+                             sa : integer, sd : integer);
+var
+   dest : unitptr;
+   skilla : integer;
+   hm : integer;
+   doorname : string;
+code
+{
+   if (not self.exit_to[direction])
+   {
+      log("No such exit in climb dil.");
+      quit;
+   }
+
+   if (not findroom(destination))
+   {
+      log("No such room in climb dil.");
+      quit;
+   }
+
+   doorname := self.exit_names[direction].[0];
+   /* One could check for an empty name here... */
+
+dilcopy ("climb_cmd@function("+itoa(direction)+")",self);
+
+   :loop:
+   wait(SFB_CMD,command(direction));
+
+   if (activator.type == UNIT_ST_PC)
+   {
+      skilla := activator.skills[SKI_CLIMB];
+      if (skilla < 1)
+	skilla := -25;
+   }
+   else
+     skilla := activator.abilities[ABIL_DEX];
+
+   hm := skillresist@basis(skilla, 0,
+		     activator.abilities[ABIL_DEX], 0);
+
+   if (hm >= difficulty)
+   {
+      act("You easily climb the $2t.",
+	  A_ALWAYS, activator, doorname, null, TO_CHAR);
+      act("$1n easily climbs the $2t.",
+	  A_ALWAYS, activator, doorname, null, TO_ROOM);
+      goto loop;
+   }
+
+   dest := findroom(destination);
+
+   if (dest != activator.outside)
+   {
+      act("You fall and hit yourself!",
+	  A_ALWAYS, activator, doorname, null, TO_CHAR);
+
+      act("$1n failed to climb the $2t and takes a nasty fall...",
+	  A_ALWAYS, activator, doorname, null, TO_ROOM);
+
+      link(activator, dest);
+
+      act("$1n failed to climb the $2t and lands at your feet...",
+	  A_ALWAYS, activator, doorname, null, TO_ROOM);
+   }
+   else
+   {
+      act("You fail to climb the $2t!",
+	  A_ALWAYS, activator, doorname, null, TO_CHAR);
+
+      act("$1n failed to climb the $2t!",
+	  A_ALWAYS, activator, doorname, null, TO_ROOM);
+   }
+
+   if (activator.level < IMMORTAL_LEVEL)
+   {
+      activator.hp := activator.hp - damage;
+      position_update(activator);
+   }
+   block;
+   goto loop;
+}
+dilend
+
+dilbegin climb_cmd (direction:integer);
+external
+                        string dirstring (dr:integer);
+                        var
+                         dir:string;
+code
+{
+dir :=dirstring(direction);
+:start:
+wait (SFB_CMD, command (CMD_CLIMB));
+block;
+if (not(argument == dir))
+  {
+  act ("You can't seem to climb in that direction.",
+  A_ALWAYS,activator,null,null,TO_CHAR);
+  goto start;
+  }
+
+exec (dir,activator);
+goto start;
+}
+dilend
+
+
+
+/*
+Function:  combat_mag
+Descr:     Replaces the special function SFUN_COMBAT_MAGIC and
+           SFUN_COMBAT_HEAL that better uses the magic.
+use on:    mobiels
+arguments: atk_spl : string  (Attack spell ie "fireball" or "" for none)
+           def_spl : string  (Defense Spell ie "heal" or "" for none)
+			  def_pct : interger (At what % of hitpoints defense spell
+			                      will be cast)
+			  spd     : integer (speed at which mob will uses its attack magic
+			                     1 for all at once (every round) to
+										5 for every 5 rounds. I suggest 2.)
+
+Defense spells take priority when the hitpoints fall below the % specified,
+after (if) the hits have been restored above that number attack magic will
+resume.  If def_spl is used, function automaticly makes sure that it retains
+enough mana for at least one healing, ie it will attack 4 times if it don't
+need a healing.
+
+example:
+  special SFUN_DIL_COPY "combat_mag@function(harm, heal, 25, 2)"
+*/
+
+dilbegin combat_mag(atk_spl : string, def_spl : string, def_pct : integer,
+                    spd: integer);
+var
+  use_atk : integer;
+  use_def : integer;
+  can_cast : integer;
+  hp_trig : integer;
+  i : integer;
+  test : string;
+code
+{
+   :init:
+	use_atk := 0;
+	use_def := 0;
+	hp_trig := ((self.max_hp*def_pct)/100);
+	if (atk_spl != "")
+   {
+	/* Use for compatibility */
+	  if ("cast" in atk_spl)
+	  {
+	    test := getword(atk_spl);
+	  }
+	   use_atk := 1;
+	}
+	if (def_spl != "")
+	{
+	  if ("cast" in def_spl)
+	  {
+	    test := getword(def_spl);
+	  }
+	    use_def := 1;
+	}
+	heartbeat := 12;
+
+	:waitcom:
+	wait(SFB_COM, self.position == POSITION_FIGHTING);
+
+	:def_spl:
+	heartbeat := 3;
+	if (use_def != 1)
+	   goto atk_spl;
+
+	if (self.hp <= hp_trig)
+	{
+	   exec("cast " + def_spl + " self", self);
+		goto waitcom;
+	}
+
+	:atk_spl:
+	if (use_atk == 1)
+   {
+	 if(use_def == 1)
+	 {
+ 	   i := self.mana -20;
+		if (i >= 20) {
+		  can_cast := 1;
+		} else {
+		  can_cast := 0;
+		}
+	 } else {
+		if (self.mana >= 16) {
+  	     can_cast := 1;
+		} else {
+		  can_cast := 0;
+      }
+	 }
+
+	 if(can_cast == 1)
+	  {
+	     heartbeat := 12 * spd;
+	     pause;
+        exec("cast " + atk_spl + " " + self.fighting.name, self);
+	  }
+   }
+
+   if (self.mana <10)
+	{
+	  wait(SFB_TICK, TRUE);
+	}
+	  goto waitcom;
+}
+dilend
+
+/*
+function: fido
+descr this replaces the old fido special
+arguments:
+  txt1	: the text shown when mob finds and eats corpses, default:
+			'XXX savagely devours a corpse.'
+		  will be shown if txt1 is set to "".
+		  If txt1 is set to "stop", the mob will NOT devour corpses
+		  (convenient if you want your dogs to only eat food leftovers
+		  but not corpses).
+
+    txt2	: the text shown when mob finds and eats ITEM_FOOD, default:
+			'XXX hungrily devours YYY.'
+		  will be shown if txt2 is set to "".
+		  If txt2 is set to "stop", the mob will NOT devour
+		  ITEM_FOOD (convenient if you want to make a corpse-eating
+		  ghoul, who'd choke on normal food, etc).
+
+    In both cases $1n is the mob itself, $2n is the title of the
+    item devoured.
+
+   Example:
+
+dilcopy fido@function("$1n slowly devours $2n, crunching the bones.",
+		      "$1n grabs $2n and hungrily munches it.");
+
+*/
+
+
+dilbegin fido(txt1:string,txt2:string);
+var
+	u	: unitptr;
+code
+{
+	:start:
+heartbeat:=PULSE_SEC*rnd(5,15);
+wait(SFB_TICK,TRUE);
+wait(SFB_TICK,TRUE);
+foreach (UNIT_ST_OBJ,u)
+ {
+ if ((u.nameidx=="corpse")and(u.zoneidx=="basis")and
+    (u.flags!=UNIT_FL_BURIED)and(visible(self,u))and
+    (txt1!="stop") and
+  (self.value[2]!=1))
+	{
+	if (txt1=="")
+ 	 {
+	 exec("emote savagely devours a corpse.",self);
+         }
+	else
+     	 {
+	 act(""+txt1,A_SOMEONE,self,u,null,TO_ALL);
+	 }
+	while (u.inside) link(u.inside,self.outside);
+	destroy(u);
+	goto start;
+	}
+ if ((u.objecttype == ITEM_FOOD)and(txt2 != "stop")and
+    (u.flags!=UNIT_FL_BURIED)and(visible(self,u)))
+  	{
+	if (txt2=="")
+ 	 {
+	 exec("emote hungrily devours "+u.title+".",self);
+         }
+	else
+     	 {
+	 act(""+txt2,A_SOMEONE,self,u,null,TO_ALL);
+	 }
+	destroy(u);
+	goto start;
+	}
+ goto start;
+}
+goto start;
+}
+dilend
+
+
+
+
+/*
+Function:  safe_room
+Descr:     To make a room that disallows all forms of attacks.  Mainly used
+           for safehavens like the temple of udgaard.
+use on:    rooms
+arguments:  NONE
+
+example:
+
+dilcopy safe_room@function();
+*/
+dilbegin string laststring (s:string );
+var
+  i:integer;
+  s_list:stringlist;
+code
+{
+s_list:=getwords(s);
+i:=length(s_list);
+if (i==0)
+  return ("0");
+else
+  return (s_list.[(i-1)]);
+  }
+  dilend
+
+dilbegin safe_room();
+external
+  string laststring (s:string);/*returns last word in a string.*/
+var
+  tgt_string:string;
+  first_arg:string;
+  arg:string;
+  tgt:unitptr;
+code
+{
+   :there:
+   heartbeat := PULSE_SEC*3;
+   wait(SFB_CMD, TRUE and
+	((activator.type==UNIT_ST_PC) or
+	 (activator.type==UNIT_ST_NPC)));
+
+   if ((activator.type==UNIT_ST_NPC) and
+       (activator.master==null)) goto there;
+
+
+arg:=argument;
+first_arg:=getword(arg);
+tgt_string:=laststring (argument);
+if (tgt_string=="0") goto there;
+tgt:=findunit (activator,tgt_string,FIND_UNIT_SURRO,null);/*should probably think of a better return*/
+if ((tgt==null)and (first_arg!="command"))  goto there;
+
+   if ((POLICE_ACADEMY in activator.quests) and
+   ( tgt.type ==UNIT_ST_PC) and
+ (isset (tgt.charflags,CHAR_OUTLAW))) goto there;
+
+if (tgt==activator.master) goto there;
+   if ((command (CMD_STEAL)) or
+       (command (CMD_KILL)) or
+       (command (CMD_FILCH)) or
+       (command (CMD_PICK_POCKET)) or
+       (command (CMD_DISARM)) or
+       (command (CMD_TRIP)) or
+       (command (CMD_DRAG)) or
+       (command (CMD_BACKSTAB)) or
+       (command (CMD_HIT)) or
+       (command (CMD_RESCUE)) or
+       (command (CMD_KICK) ) or
+       (command (CMD_BASH)) or
+       (command (CMD_USE)) or
+       (command (CMD_RECITE)) or
+       (command (CMD_CAST)))
+   {
+      block;
+      act ("Spells and attacks are not allowed in safe rooms.",
+	   A_SOMEONE, activator, null, null, TO_CHAR);
+   }
+
+   goto there;
+}
+dilend
+
+
+/*
+Function:    wander_zones
+Description: Random Wander like the special function,
+             but allows more than one zone,
+             i.e.  Can have a mob only wander two or three zones.
+
+Arguments:
+ 	  zones : string  =   A string of zonenames seperated by spaces.
+	    spd : integer =   The speed (in seconds) at which the mob wanders.
+	                      Minumum = 5 secs (for process time).
+	  doors : integer =   Can open/close doors (0 = false, 1 = true)
+lckd_doors : integer =   Can open/closed locked doors (0=false, 1=true)
+
+Example:
+    special SFUN_DIL_COPY "wander_zones@function(halfzon haon_dor, 5, 1)"
+*/
+
+dilbegin wander_zones(zones : string, spd : integer, doors : integer,
+                      lckd_doors : integer);
+                      external
+                        string dirstring (dr:integer);
+                        integer rev_dir (i:integer);
+var
+i:integer;
+  dir : integer;
+  x : integer;
+  rm : unitptr;
+  dir_string : string;
+  op_string : string;
+  dr_name : string;
+  heart : integer;
+  zones_lst : stringlist;
+code
+{
+   :init:
+   on_activation(self.position <= POSITION_SLEEPING, skip);
+   zones_lst := getwords(zones);
+   if(( (spd*4) < 5) )
+   {
+      heartbeat := 5 * 3;
+   } else {
+      heartbeat := spd * 3;
+   }
+   heart := heartbeat;
+
+   :start:
+
+   wait(SFB_TICK, TRUE);
+
+   /* Make Sure we are in a leagl wander zone.*/
+   if (not(self.outside.zoneidx in zones_lst))
+     goto start;
+
+   /* Lets stand up if for some reason we are sitting */
+   if ((self.position == POSITION_RESTING) or
+       (self.position == POSITION_SITTING))
+   {
+      exec("stand", self);
+   }
+
+   /* if were not standing now then abort! */
+
+   if (self.position != POSITION_STANDING)
+     goto start;
+
+   /* Get a rnd dir and make sure it exists,
+      it is one of the zones we are allowed to wander, and
+      it is not a no_mob room  */
+
+   x := 0;  /* initilize loop counter, to prevent dil destroy */
+   :get_dir:
+   heartbeat := 3;
+   dir := rnd(0,5);
+
+   if ( (self.exit_to[dir] == null) or
+       ( not ((self.outside.exit_to[dir].zoneidx) in zones_lst )) or
+       ( isset( self.outside.exit_to[dir].flags, UNIT_FL_NO_MOB)))
+   {
+      x := x+1;
+      if (x > 20)
+      {
+	 x := 0;
+	 pause;
+      }
+      goto get_dir;
+   }
+   heartbeat := heart;
+
+dir_string:=dirstring (dir);
+i:=rev_dir(dir);
+      op_string :=dirstring (i);
+
+   if (doors == TRUE) {
+      if (isset (self.outside.exit_info[dir], EX_LOCKED))
+	goto locked;
+      if (isset (self.outside.exit_info[dir], EX_CLOSED))
+      {
+      exec ("open "+dir_string+" "+self.outside.exit_names[dir].[0],self);
+      exec (dir_string,self);
+      dir :=rev_dir (dir);
+      dir_string:=dirstring (dir);
+      exec ("close "+dir_string+" "+self.outside.exit_names[dir].[0],self);
+	 goto start;
+      }
+   }
+
+   :locked:
+   if (lckd_doors == TRUE) {
+      if (isset (self.outside.exit_info[dir], EX_LOCKED))
+      {
+	 unset(self.outside.exit_info[dir], EX_LOCKED);
+      exec ("open "+dir_string+" "+self.outside.exit_names[dir].[0],self);
+      exec (dir_string,self);
+      dir :=rev_dir (dir);
+      dir_string:=dirstring (dir);
+      exec ("close "+dir_string+" "+self.outside.exit_names[dir].[0],self);
+	 set(rm.exit_info[dir], EX_LOCKED);
+	 goto start;
+      }
+   }
+
+   exec(dir_string, self);
+   goto start;
+}
+dilend
+
+
+/* Basic Guard Function.  Hopefully will take care of all of the necessary
+   function of a law protecting function.  There are alot of options that
+   need to be passed:
+	                    Type              Example
+	                    -------------------------------------------------
+	zones             - string  : halfzon halfzon2
+	cont_proc         - string  : guard@halfzon     * symbolic main guard *
+        prot_prot         - integer : 1                 * 0 = false, 1= true *
+        captain           - string  : sherrif@halfzon   * symbolic name of captain*
+*/
+
+
+
+/* A guard door function by level, this blocks all previous holes,
+   drag, groups, etc. and allows greater flexibility.  Groups are allowed
+   to pass with out problem, only holding out those that do not meet the
+   level criteria.
+
+     dir          -  WEST, NORTH, EAST, WEST, UP, DOWN
+     g_room       -  symbolic name of room for guard function to work.
+     l_lvl        -  lowest level you want to allow through.
+     m_lvl        -  Max level you want to allow through.
+     disp_actions -  A dil function that is called when they fail the criteria
+*/
+
+
+dilbegin guard_level( dir : integer, g_room : string, l_lvl : integer,
+		     m_lvl : integer,  disp_actions : string );
+                      external
+                        string dirstring (dr:integer);
+                        integer rev_dir (i:integer);
+
+var
+   pc : unitptr;
+   folwr : unitptr;
+   cmd_dir : integer;
+   dir_string :string;
+   leave_string : string;
+   i:integer;
+code
+{
+   /* Ok lets set up the whole mess.   This is only run once when the function
+      is copied to the dil.  It does not change.  We have the dir_string and
+      leave_strings to help show the right messages for following pcs. */
+
+   on_activation(self.position <= POSITION_SLEEPING, sleep);
+   heartbeat := 3;
+
+      cmd_dir := dir;
+      dir_string := dirstring(dir);
+      i:=rev_dir(dir);
+      leave_string :=dirstring (i);
+   /* Now that that is all set up we can wait around for commands */
+
+   :start:
+
+   wait(SFB_CMD, ( (command(cmd_dir) or command(CMD_DRAG)) and
+		  (activator.type == UNIT_ST_PC) and
+		  (self.outside == findroom(g_room))));
+
+   pc := activator;
+   secure (pc, start);
+   block;
+
+   if((command(CMD_DRAG) and (dir_string in argument)) )
+   {
+      act("You stumble and fall down.",
+	  A_SOMEONE, pc,null, null, TO_CHAR);
+      act("$1n stumbles and falls down.",
+	  A_SOMEONE, pc,null, null, TO_REST);
+      pc.position := POSITION_SITTING;
+      goto start;
+   }
+
+   if( ( (pc.level < l_lvl) or (pc.level > m_lvl) ) )
+   {
+      disp_actions(self, pc);
+      goto start;
+   }
+
+   /* Loop through all players and mobs simulating the follow, etc */
+
+   foreach( UNIT_ST_PC|UNIT_ST_NPC, folwr )
+   {
+      if( ( (folwr.master == pc) and (folwr != pc) ) )
+      {
+	 if ( (folwr.level < l_lvl) or (folwr.level > m_lvl) )
+	 {
+	    disp_actions(self, folwr);
+	 } else {
+	    act("You follow $2n " + dir_string + ".",
+		A_SOMEONE, folwr, pc, null, TO_CHAR);
+	    if (folwr.minv <= pc.level)
+	    {
+	       act("$1n leaves " + dir_string + ".",
+		   A_SOMEONE, folwr, pc, null, TO_REST);
+	       act("$2n arrives from " + leave_string + ".",
+		   A_SOMEONE, pc, folwr, null, TO_CHAR);
+	    }
+	    link(folwr, self.outside.exit_to[dir]);
+	    exec("look", folwr);
+	 }
+      } else if (folwr == pc) {
+	 act("$1n leaves " + dir_string + ".",
+	     A_SOMEONE, pc, null, null, TO_REST);
+      }
+
+   }
+   link(pc, self.outside.exit_to[dir]);
+   exec("look", pc);
+
+   goto start;
+
+   :sleep:
+   heartbeat := 240; /* approx 1 min max sleeping time */
+   pause;
+   self.position := POSITION_STANDING;
+   exec("yawn", self);
+   heartbeat := 3;
+   walkto(findroom(g_room));  /* incase he was dragged away while asleep */
+   goto start;  /* Back to work */
+}
+dilend
+
+/*
+Function:    scramble
+Description: Scramble a rooms exits to make a ever changing maze.
+
+Arguments:
+   a_exit  =  string of exits to scramble
+	           valid are:   north  south  west  east  up  down
+Example:
+
+    special SFUN_DIL_COPY "scramble@function(north east south west)"
+*/
+
+dilbegin scramble(a_exit : string);
+var
+  dir : integer;
+  pc : unitptr;
+  fol_pc : unitptr;
+  dir_string : string;
+  leave_string :string;
+code
+{
+   heartbeat := 3;
+   if ("north" in a_exit)
+     interrupt(SFB_CMD,( (command(CMD_NORTH)) and
+			(activator.type == UNIT_ST_PC) and
+			(activator.level < IMMORTAL_LEVEL) ), scramble);
+   if ("south" in a_exit)
+     interrupt(SFB_CMD,( (command(CMD_SOUTH)) and
+			(activator.type == UNIT_ST_PC) and
+			(activator.level < IMMORTAL_LEVEL) ), scramble);
+   if ("east" in a_exit)
+     interrupt(SFB_CMD,( (command(CMD_EAST)) and
+			(activator.type == UNIT_ST_PC) and
+			(activator.level < IMMORTAL_LEVEL) ), scramble);
+   if ("west" in a_exit)
+     interrupt(SFB_CMD,( (command(CMD_WEST)) and
+			(activator.type == UNIT_ST_PC) and
+			(activator.level < IMMORTAL_LEVEL) ), scramble);
+   if ("up" in a_exit)
+     interrupt(SFB_CMD,( (command(CMD_UP)) and
+			(activator.type == UNIT_ST_PC) and
+			(activator.level < IMMORTAL_LEVEL) ), scramble);
+   if ("down" in a_exit)
+     interrupt(SFB_CMD,( (command(CMD_DOWN)) and
+			(activator.type == UNIT_ST_PC) and
+			(activator.level < IMMORTAL_LEVEL) ), scramble);
+
+   interrupt(SFB_CMD,( (command(CMD_DRAG)) and
+		      (activator.type == UNIT_ST_PC) and
+		      (activator.level < IMMORTAL_LEVEL) ), sorry);
+
+   interrupt(SFB_CMD,( (command(CMD_RIDE)) and
+		      (activator.type == UNIT_ST_PC) and
+		      (activator.level < IMMORTAL_LEVEL) ), sorry);
+   :start:
+   wait(SFB_MSG, "DESTROY" in argument );
+   quit;
+   goto start;
+
+   :sorry:
+   act("Sorry you can't do that here!",
+       A_SOMEONE, pc, null, null, TO_CHAR);
+   goto start;
+
+
+   :scramble:
+
+   pc := activator;
+   secure(pc, start);
+   block;
+
+   :get_dir:
+   dir := rnd(0,5);
+
+   if (self.exit_to[dir] == null) goto get_dir;
+
+   if (command(CMD_NORTH)) {
+      dir_string := "north";
+      leave_string := "south";
+   }
+
+   if (command(CMD_SOUTH)) {
+      dir_string := "south";
+      leave_string := "north";
+   }
+
+   if (command(CMD_EAST)) {
+      dir_string := "east";
+      leave_string := "west";
+   }
+
+   if (command(CMD_WEST)) {
+      dir_string := "west";
+      leave_string := "east";
+   }
+
+   if (command(CMD_UP)) {
+      dir_string := "up";
+      leave_string := "below";
+   }
+
+   if (command(CMD_DOWN)) {
+      dir_string := "down";
+      leave_string := "above";
+   }
+
+   foreach( UNIT_ST_PC|UNIT_ST_NPC, fol_pc )
+   {
+      if( (fol_pc.master == pc) and (fol_pc != pc) and
+	 (fol_pc.position==POSITION_STANDING))
+      {
+	 act("You follow $2n " + dir_string + ".",
+	     A_SOMEONE, fol_pc, pc, null, TO_CHAR);
+	 if (fol_pc.minv < pc.level) {
+	    act("$2n arrives from the " + leave_string + ".",
+		A_SOMEONE, pc, fol_pc, null, TO_CHAR);
+	 }
+	 link(fol_pc, self.exit_to[dir]);
+	 exec("look", fol_pc);
+      } else if (fol_pc != pc) {
+	 act("$2n leaves " + dir_string + ".",
+	     A_SOMEONE, fol_pc, pc, null, TO_CHAR);
+      }
+
+   }
+   link(pc, self.exit_to[dir]);
+   exec("look", pc);
+}
+dilend
+
+/*
+Function:    stealdil
+Description: Randomly steal from a player.
+Use On:      Mobs
+Arguments:
+   item  =  string of item to try to steal.
+	          ie   money  platinum  sword  hammer
+		 only one item may be passed
+
+Example:
+
+    special SFUN_DIL_COPY "stealdil@function(platinum)"
+*/
+
+dilbegin stealdil(item : string);
+var
+	i : integer;
+	pc : unitptr;
+code
+{
+	heartbeat := PULSE_SEC*5;
+	:start:
+	wait (SFB_CMD, (activator.type == UNIT_ST_PC));
+	pc := activator;
+	i := rnd(1,10);
+	if (i>2) goto start;
+	exec ("steal " + item + " from " + pc.name, self);
+	exec ("flee", self);
+	goto start;
+}
+dilend
+
+/*
+function  Channel and recieve to be used together.
+
+used on:  Players
+
+argume nts: none;
+
+example: dilcopy ("channel",pc);
+no need to copy recieve channel takes care of the recieve part.
+*/
+#define MAX_CHAN 25
+
+dilbegin recieve( slActive : stringlist, msg : string , talker : unitptr,
+                  jmode : integer, dmode : integer);
+var
+  nWizinv : integer;
+  sChan : string;
+  sName : string;
+  sKey : string;
+  sFirst : string;
+  slKeys : stringlist;
+  clan_rec:extraptr;
+  clan_send:extraptr;
+  rclanname:string;
+  sclanname:string;
+  garbage:string;
+code
+{
+  secure(talker, lost);
+  slKeys := {"@", "#", "1join1", "1left1"};
+  sKey := "";
+  sChan := getword(msg); /*Throw away the CHANNEL*/
+  sChan := getword(msg);
+  if(not(sChan in slActive))
+      return;
+if ((sChan=="gchat") and (not (self.guild==talker.guild)))
+return;
+
+if(sChan=="clan"){
+	if(self.type==UNIT_ST_PC)
+		clan_rec:="Clan Member" in self.quests;
+	else
+		clan_rec:="$Clan" in self.extra;
+
+	if(clan_rec==null){
+		return;
+	}
+
+	if(talker.type==UNIT_ST_PC)
+		clan_send:= "Clan Member" in talker.quests;
+	else
+		clan_send:= "$Clan" in talker.extra;
+
+	if(clan_send==null){
+		return;
+	}
+
+	rclanname:=clan_rec.names.[2];
+	sclanname:=clan_send.names.[2];
+
+/* this is to get rid of the "$ " added to the beginning of all the guard's extras */
+
+	if(self.type!=UNIT_ST_PC)
+		garbage:=getword(rclanname);
+
+	if(talker.type!=UNIT_ST_PC)
+		garbage:=getword(sclanname);
+
+	if(rclanname!=sclanname){
+		return;
+	}
+}
+
+
+
+  sFirst := getword(msg);
+  if ( sFirst in slKeys ) {
+    sKey := sFirst;
+  } else {
+    if (length(msg) > 0) {
+      msg := sFirst + " " + msg;
+	 } else {
+	   msg := Sfirst;
+	 }
+  }
+  if (sKey == "@") {
+    if (self.level >= talker.minv) {
+      sendtext("&c+w<"+sChan+ ">&cc " +talker.name+ "&c+w " +msg+"&bn&cw&n",self );
+    } else {
+      sendtext("&c+w<"+sChan+">&cc Someone &c+w"+msg+"&bn&cw&n",self );
+    }
+  }
+	else if (sKey == "#"){
+		if (self.minv <= talker.level ) {
+			if(self.type==UNIT_ST_PC){
+				if ((sChan=="clan") and (clan_send.names.[3]=="Master"))
+					sendtext("  &c+w "+self.name+" "+self.title+
+						" (Level "+itoa(self.level) +") (alignment/"+itoa(self.alignment)+
+						") (guild/"+self.guild+")&bn&cw&n", talker);
+				else
+					sendtext("  &c+w "+self.name+" "+self.title+
+						" (Level "+itoa(self.level) +")&bn&cw&n", talker);
+			}
+			else
+				sendtext("  &c+w "+self.title+"&bn&cw&n",talker);
+		}
+	} else if (sKey == "1join1" ) {
+     if (jmode ==1) {
+       if (self.level >= talker.minv ) {
+         sendtext("&c+w <"+sChan+">&cc " +talker.name + " has entered the channel.&bn&cw&n",self);
+       }
+     }
+  } else if (sKey == "1left1" ) {
+     if (dmode ==1) {
+       if (self.level >= talker.minv ) {
+         sendtext("&c+w <"+sChan+">&cc " +talker.name + " has left the channel.&bn&cw&n",self);
+       }
+     }
+  } else {
+    if (self.level >= talker.minv) {
+      sendtext("&c+w <"+sChan+">&cc " +talker.name+" says &c+w'" +msg+"'&bn&cw&n",self);
+    } else {
+      sendtext(" &c+w <"+sChan+">&cc Someone says &c+w'" +msg +"'&bn&cw&n",self);
+    }
+  }
+  :lost:
+  return;
+}
+dilend
+
+
+
+#define NOSHOUT_QUEST    "$noshout"
+#define  NOTELL_QUEST   "$notell"
+#define  NOCOMM_QUEST  "$nocomm"
+
+dilbegin aware recall channel( );
+external
+  recieve@function( slActive : stringlist, msg : string, talker : unitptr,
+                jmode:integer, dmode:integer);
+var
+time_string:string;
+targ:unitptr;
+  slActive : stringlist;
+  func:string;
+  msg : string;
+  words : stringlist;
+  nChan : integer;
+  nEcho : integer;
+  x : integer;
+  dmode : integer;
+  jmode : integer;
+code
+{
+  heartbeat := 3;
+  nEcho := 1;
+  dmode := 1;
+  jmode := 1;
+  if (self.level>=200)
+  interrupt (SFB_CMD, (command ("nocomm") and
+  (self==activator)),nochannel);
+  interrupt (SFB_CMD, (command (CMD_NOSHOUT) and
+  (self==activator)),noshout);
+  interrupt (SFB_CMD, (command (CMD_NOTELL) and
+  (self==activator)),notell);
+
+
+  interrupt (SFB_CMD, (command("comm") and
+                      (("add" in argument) or
+                      ("del" in argument)) and
+							 (activator == self)), add_del);
+  interrupt (SFB_CMD, (command("comm") and
+                      ("echo" in argument) and
+							 (activator == self)), echo_chan);
+  interrupt (SFB_CMD, (command("comm") and
+                      ("help" == argument) and
+							 (activator == self)), help_chan);
+  interrupt (SFB_CMD, (command("comm") and
+                      ("inform" in argument) and
+							 (activator == self)), inform);
+  interrupt (SFB_CMD, (command("comm") and
+                      ("#" == argument) and
+                      (activator == self)), show_chan);
+  interrupt (SFB_MSG, ("CHANNEL" in argument), recieve);
+
+:start:
+  wait (SFB_CMD, (cmdstr in slActive) and (activator == self));
+  block;
+
+if (NOCOMM_QUEST in self.quests)
+  {
+  act ("You have lost the privilege to use communication channels.",
+  A_ALWAYS,self,null,null,TO_CHAR);
+  goto start;
+  }
+  /*Channel has been recognized, take argument and send it to rest of dils*/
+  if( isset(self.pcflags, PC_NOTELLING)) {
+    act("Your telepathic ability has been lost.",
+	     A_SOMEONE, self, null, null, TO_CHAR);
+	 goto start;
+  }
+  msg := argument;
+  msg := "CHANNEL " + cmdstr + " " + msg;
+  if (argument=="#")
+    sendtext ("&n",self);
+
+  sendtoalldil(msg, "channel@function");
+  if (nEcho == 1) {
+    recieve@function(slActive, msg, self,jmode,dmode);
+  }
+  goto start;
+
+:recieve:
+if (not (NOCOMM_QUEST in self.quests))
+  recieve@function(slActive, argument, activator,jmode, dmode);
+  goto start;
+
+:add_del:
+func:=argument;
+words:=getwords(func);
+if ("add" in words.[0])
+  goto add_chan;
+  else if ("del" in words.[0])
+    goto del_chan;
+    else goto start;
+
+:add_chan:
+  block;
+  words := getwords(argument);
+  if (("add" in words.[0]) and (words.[1] !=null) ) {
+      if ( words.[1] in slActive ) {
+		   act("Channel "+words.[1] + " Already Active!",
+	      A_SOMEONE, self, null, null, TO_CHAR);
+			goto start;
+		}
+     addstring(slActive, words.[1]);
+	  act("Channel "+words.[1]+" activated.",
+	      A_SOMEONE, self, null, null, TO_CHAR);
+     msg := "CHANNEL " + words.[1] + " 1join1";
+     sendtoalldil(msg, "channel@function");
+     if (nEcho == 1) {
+       recieve@function(slActive, msg, self,jmode,dmode);
+     }
+  } else {
+     act("Unknown channel command or incorrect options.",
+	      A_SOMEONE, self, null, null, TO_CHAR);
+  }
+  goto start;
+
+:del_chan:
+  block;
+  words := getwords(argument);
+  if (("del" in words.[0]) and (words.[1] in slActive)) {
+      if (not(words.[1] in slActive) ) {
+		   act("Channel "+words.[1] + " is not on!",
+	      A_SOMEONE, self, null, null, TO_CHAR);
+			goto start;
+		}
+	  act("Channel "+words.[1]+" deactivated.",
+	      A_SOMEONE, self, null, null, TO_CHAR);
+     msg := "CHANNEL " + words.[1] + " 1left1";
+     sendtoalldil(msg, "channel@function");
+     if (nEcho == 1) {
+       recieve@function(slActive, msg, self,jmode,dmode);
+     }
+	  substring(slActive, words.[1]);
+  } else {
+     act("Unknown channel command or incorrect options.",
+	      A_SOMEONE, self, null, null, TO_CHAR);
+  }
+  goto start;
+
+:show_chan:
+  block;
+  nChan := length(slActive);
+  x := 0;
+  while (x < nChan)
+  {
+	  sendtext("&c+wChannel "+slActive.[x]+" is active.&bn&cw&n",self );
+     x:= x+1;
+  }
+goto start;
+
+:echo_chan:
+block;
+  if( nEcho == 1) {
+    act("Channel echoing in disabled, you will NOT see your own messages.",
+	      A_SOMEONE, self, null, null, TO_CHAR);
+    nEcho := 0;
+  } else {
+    act("Channel echoing in enabled, you will see your own messages.",
+	      A_SOMEONE, self, null, null, TO_CHAR);
+    nEcho := 1;
+  }
+goto start;
+
+:help_chan:
+block;
+sendtext ("&cc To add a channel type:&n"+
+"&c+wcomm add <channel name>&n&n"+
+"&cc  To delete a channel type:&n"+
+"&c+wcomm delete <channel name>&n&n"+
+"&cc  To see all your active channels type:&n"+
+"&c+wcomm #&n&n"+
+"&cc  To see who is on a specific channel type:&n"+
+"&c+w<channel name> #&n&n"+
+"&cc  To see who joins or departs a channel type:&n"+
+"&c+wcomm inform <on|off|depart|join> &n&n"+
+"&cc  To toggle echoing of your message type:&n"+
+"&c+wcomm echo&n"+
+"&cc  To do a channel emote type: &n"+
+"&c+w<channel name> @ <action>&n"+
+"&cc  The standard guild channel is gchat only members will here you&bn &cw &n&n",self);
+
+goto start;
+
+:inform:
+block;
+words := getwords(argument);
+if (words.[1] == "") {
+  act("Not enough arguments for inform command try 'chan help'",
+      A_SOMEONE, self, null, null, TO_CHAR);
+} else if (words.[1] == "on") {
+  act("Channel full inform on.",
+      A_SOMEONE, self, null, null, TO_CHAR);
+  jmode := 1;
+  dmode := 1;
+} else if (words.[1] == "off") {
+  act("Channel inform turned off.",
+     A_SOMEONE, self, null, null, TO_CHAR);
+  jmode := 0;
+  dmode := 0;
+} else if (words.[1] == "join" ){
+  act ("Channel inform Join Only set.",
+     A_SOMEONE, self, null, null, TO_CHAR);
+  jmode := 1;
+  dmode := 0;
+} else if (words.[1] == "depart" ){
+  act ("Channel inform Depart Only set.",
+     A_SOMEONE, self, null, null, TO_CHAR);
+  jmode := 1;
+  dmode := 0;
+}
+goto start;
+
+:noshout:
+targ:=findunit (self,argument,FIND_UNIT_WORLD,null);
+if (targ==null) goto start;
+
+if (not (NOSHOUT_QUEST in targ.quests))
+  {
+    time_string:=asctime(realtime);
+    time_string:=time_string+" "+self.name;
+  addextra (targ.quests,{NOSHOUT_QUEST},time_string);
+  }
+else
+  subextra (targ.quests,NOSHOUT_QUEST);
+
+goto start;
+
+:notell:
+targ:=findunit (self,argument,FIND_UNIT_WORLD,null);
+if (targ==null) goto start;
+
+if (not (NOTELL_QUEST in targ.quests))
+  {
+    time_string:=asctime(realtime);
+    time_string:=time_string+" "+self.name;
+  addextra (targ.quests,{NOTELL_QUEST},time_string);
+  }
+else
+  subextra (targ.quests,NOTELL_QUEST);
+
+goto start;
+
+
+
+
+:nochannel:
+block;
+targ:=findunit (self,argument,FIND_UNIT_WORLD,null);
+if (targ==null)
+  {
+  act ("No such person found.",
+  A_ALWAYS,self,null,null,TO_CHAR);
+  goto start;
+  }
+if (targ.level >=self.level)
+  {
+  act ("$2n would not like that very much.",
+  A_ALWAYS,self,targ,null,TO_CHAR);
+  goto start;
+  }
+
+  if (not(NOCOMM_QUEST in targ.quests))
+    {
+    time_string:=asctime(realtime);
+    time_string:=time_string+" "+self.name;
+  addextra (targ.quests,{NOCOMM_QUEST},time_string);
+  act ("You have lost the ability to use communication channels.",
+    A_ALWAYS,targ,null,null,TO_CHAR);
+  act ("$2n has lost the ability to use communication channels.",
+    A_ALWAYS,self,targ,null,TO_CHAR);
+  goto start;
+  }
+else
+  {
+  subextra (targ.quests,NOCOMM_QUEST);
+  act ("You have regained the privilege to use the communication channels.",
+    A_ALWAYS,targ,null,null,TO_CHAR);
+  act ("$2n can now use the communication channels again.",
+  A_ALWAYS,self,targ,null,TO_CHAR);
+  goto start;
+  }
+
+goto start;
+
+:leave:
+  quit;
+
+}
+dilend
+
+/*
+function: wstat_god
+purpose:  to allow you to wstat gods and see what is their work.
+*/
+dilbegin aware wstat_god ();
+external
+ wstat_gawk (s:string);
+var
+ s:stringlist;
+code
+{
+:start:
+wait (SFB_CMD,command (CMD_WSTAT) and
+(self==activator));
+s:=getwords(argument);
+if (s.[0]!="god") goto  start;
+if (activator.level<200) goto start;
+block;
+wstat_gawk (s.[1]);
+goto start;
+}
+dilend
+
+
+%rooms
+
+dil_chamber
+names {"dil"}
+title "Dil Chamber."
+descr
+"Magic of great power swirls and dances about you.  You stand on something
+yet nothing.  You feel everything  yet you touch nothing. Your full yet hungry.
+This you realize is where the life of the world is held.  Stand and fly,
+feel safe with no fear."
+
+flags {UNIT_FL_NO_TELEPORT}
+end
+
+
+
+%end
+

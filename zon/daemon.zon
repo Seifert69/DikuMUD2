@@ -1,0 +1,3768 @@
+/*
+filename    daemon
+password    funky
+changedby   Eirinn
+EmailAdd     Jpc (Gypsy) <clarej@tcd.ie>
+request     compile
+version     9
+END HEADER*/
+
+/* May 14 1997 - Brought into reasonable limits by Eirinn */
+
+/*pwd:funky*/
+
+#include <composed.h>
+
+%zone ishlor
+title "Castle of Ishlor"
+lifespan 20
+reset RESET_ANYHOW
+creators {"daemon","shai"}
+
+/* Abilities: Str, Dex, Con, Hpp, Bra, Cha, Mag, Div */
+/* Weapons: Axe_ham, Sword, Club_mace, Polearm, Unarmed, Special */
+/* Spells: Div, Pro, Det, Sum, Cre, Min, Hea, Col, Cel, Int, Ext */
+
+#define RACE_MARDAGG	       5050
+#define RACE_STONE_GUARDIAN    5051
+#define RACE_SHADOW_BEAST      6009
+#define RACE_DEATH_GHAST       6010
+
+#define BASE_GUARD_EQ(GUARD,WEAPON,LOCATION)		\
+load GUARD into LOCATION zonemax 10					\
+	{												\
+	equip WEAPON position WEAR_WIELD				\
+	equip dem_boots@ishlor position WEAR_FEET	\
+	equip dem_leggings@ishlor position WEAR_LEGS	\
+	equip dem_plate@ishlor position WEAR_BODY	\
+	equip dem_sleeves@ishlor position WEAR_ARMS	\
+	equip dem_helmet@ishlor position WEAR_HEAD		\
+	equip dem_gloves@ishlor position WEAR_HANDS		\
+	}												\
+
+/* ------------------------------------------------------------------- */
+%dil
+
+dilbegin recharge();
+code{
+     heartbeat := PULSE_SEC * 60 * 5;
+   :loop:
+     pause;
+     if( self.equip == 0 ) goto loop;
+     if( self.alignment >= 12 ) goto loop;
+     act( "$1n's $2n glows slightly.", A_SOMEONE, self.outside, self, null, TO_REST );
+     act( "Your $2n glows slightly.", A_SOMEONE, self.outside, self, null, TO_CHAR );
+     self.alignment := self.alignment + 1;
+     goto loop;
+}
+dilend
+
+dilbegin why_grass();
+code{
+   :start:
+    wait( SFB_CMD, command( CMD_GET ) and ( argument == "grass" ) );
+    act("No way! Why do you want some grass??",A_ALWAYS,activator,null,null,TO_CHAR);
+    block;
+    goto start;
+}
+dilend
+
+
+dilbegin scythe_dam( medi : unitptr, tar : unitptr, hm : integer );
+var
+	random : integer;
+	enemy : unitptr;
+code
+{
+	enemy := self.outside.fighting;
+	if( hm < 20 )
+	{
+		act("Your $2N SMASHES $3n HARD!", A_ALWAYS,self,medi,tar,TO_CHAR);
+		act("$1n's $2N SMASHES you HARD!",A_ALWAYS,self,medi,tar,TO_VICT);
+		act("$1n's $2N SMASHES $3n HARD!",A_ALWAYS,self,medi,tar,TO_NOTVICT);
+		return;
+	}
+	if( hm < 30 )
+	{
+		act("$3n screams out in pain as you MUTILATE $3s legs with your $2N!", A_ALWAYS,self,medi,tar,TO_CHAR);
+		act("A scream escapes your lips as $1n MUTILATES your legs with $1s $2N!",A_ALWAYS,self,medi,tar,TO_VICT);
+		act("$3n screams out in pain as $1n MUTILATES $3s legs with $1s $2N!",A_ALWAYS,self,medi,tar,TO_NOTVICT);
+		return;
+	}
+	if( hm < 40 )
+	{
+		act("You THRUST the blade on your $2N HARD into $3n's stomach!", A_ALWAYS,self,medi,tar,TO_CHAR);
+		act("$1n THRUSTS the blade on $1s $2N HARD into your stomach!",A_ALWAYS,self,medi,tar,TO_VICT);
+		act("$1n THRUSTS the blade on $1s $2N HARD into $3n's stomach!",A_ALWAYS,self,medi,tar,TO_NOTVICT);
+		return;
+	}
+
+	if( hm >= 40 )
+	{
+		act("You brutally SLAUGHTER $3n with your $2N!", A_ALWAYS,self,medi,tar,TO_CHAR);
+		act("$1n brutally SLAUGHTER you with $1s $2N!",A_ALWAYS,self,medi,tar,TO_VICT);
+		act("That really did HURT!",A_ALWAYS,self,medi,tar,TO_VICT);
+		act("$1n brutally SLAUGHTER $3n with $1s $2N!",A_ALWAYS,self,medi,tar,TO_NOTVICT);
+		act("$3n screams out in pain!",A_ALWAYS,self,medi,tar,TO_NOTVICT);
+		return;
+	}
+	return;
+}
+dilend
+
+dilbegin dagger_dam( medi : unitptr, tar : unitptr, hm : integer );
+code{
+	return;
+}
+dilend
+/* ------------------------------------------------------------------- */
+%rooms
+
+	mobys_cloud
+names {"mobys cloud","cloud"}
+title "Moby's cloud."
+descr
+"A small white and fluffy little cloud is located under your feets. Above
+your head you can see an endless blue sky. To the east you can see a shimmering
+and colourful rainbow. In the north you can see the sun spreading a beautiful
+bright light."
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	bridge
+names {"bridge"}
+title "At the bridge"
+descr
+"You are standing on a small wooden bridge which leads over a small calm
+river with dark water. The bridge does not look to safe to stand on as you
+hear a slight *crack* from it. When you look down into the water you start to
+shiver as you see a large black shadow swim by in the deep. You get the
+feeling that you shouldn't be standing on this bride to long. The only ways
+leading of the bridge are north and south."
+
+extra {"bridge"}
+"The bridge seems to be build of oak wood a very long time ago. It seems
+like it will shatter into pieces any second."
+
+extra {"water","river"}
+"Your skin curls as you look down into the dark water. You see the shadow
+swim around below the river surface. The shadow seems to be atleast four
+meter long and one meter in width. You would definatly fear for your life
+if you would end up in the river."
+
+extra {"shadow"}
+"This looks like the contours of a huge worm like animal swimming deep in the river.
+The shadow seems to be atleast four meter long and one meter in width."
+
+movement SECT_FIELD
+
+north to corridor_1 descr "A large corridor.";
+south to cas_entrance@demon_realm open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"gate"};
+
+ALWAYS_LIGHT
+flags(UNIT_FL_NO_WEATHER)
+end
+/* ---------------------------------------- */
+
+	corridor_1
+names {"corridor"}
+title "A large corridor"
+descr
+"You are standing in a immense corridor with a shiny white marble floor.
+The walls are decorated with various paintings. As you move along the
+corridor you feel that the temperature is slowly rising. Two doors are
+located on the east and west wall. Exits leads ot to the
+north, south, east and west."
+
+extra {"floor"}
+"The floor looks like a marble like floor. But, yet it isn't. The material it
+is made of is very resemblance to marble."
+
+extra {"walls"}
+"The walls looks like marble like walls. But, yet it isn't. The material they
+are made of is very resemblance to marble. A slight glowing aura is surounding
+the walls spreading a comfortable light over the area."
+
+extra {"door","doors"}
+"These doors looks like ordinary doors made out of oak wood."
+
+extra {"paintings","painting","wall","walls"}
+"There are several paintings of great war battles between humans and the
+army of darkness. As you watch closer on one of the paintings you can see
+a city in the background which seems familiar. After a few seconds of
+thinking you reallise that it is the city of Midgaard defending it's city-
+walls against an enormous army of the dark."
+
+movement SECT_CITY
+
+north to split_1 descr "A split in the corridor.";
+south to bridge descr "The bridge";
+east to outeast_1 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+west to outwest_1 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	outeast_1
+names {"outercourt"}
+title "The outercourt of the castle"
+descr
+"You are standing outside the castle on a green grassy path that leads on
+to the west. To the south is the castle walls raising about eight meters up
+keeping any intruders out and to the north there is a rocky wall of the
+castle building. Exits leads of to the east and west."
+
+extra{"grass"}
+"This looks like ordinary grass."
+
+movement SECT_CITY
+
+east to outeast_2 descr "The outercourt of the castle.";
+west to corridor_1 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_TELEPORT}
+
+dilcopy why_grass();
+
+end
+/* ---------------------------------------- */
+
+	outeast_2
+names {"outercourt"}
+title "The outercourt of the castle"
+descr
+"You are standing outside the castle on a green grassy path that leads on
+to the west. To the south is the castle walls raising about eight meters up
+keeping any intruders out and to the north there is a rocky wall of the
+castle building. Exits leads of to the east and west."
+
+extra{"grass"}
+"This looks like ordinary green grass."
+
+movement SECT_CITY
+
+east to outeast_3 descr "The outercourt of the castle.";
+west to outeast_1 descr "The outercourt of the castle.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_TELEPORT}
+
+dilcopy why_grass();
+
+end
+/* ---------------------------------------- */
+
+	outeast_3
+names {"outercourt"}
+title "The outercourt of the castle"
+descr
+"You are standing outside the castle on a green grassy path that leads on
+to the west. To the south is the castle walls raising about eight meters up
+keeping any intruders out and to the north there is a rocky wall of the
+castle building. In the east you can see a door leading in to the south east
+watch tower of the castle. Exits leads of to the east and west."
+
+extra{"grass"}
+"This looks like ordinary grass."
+
+movement SECT_CITY
+
+east to se_tower_1 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+west to outeast_2 descr "The outercourt of the castle.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_TELEPORT}
+
+dilcopy why_grass();
+
+end
+/* ---------------------------------------- */
+
+	outwest_1
+names {"outercourt"}
+title "The outercourt of the castle"
+descr
+"You are standing outside the castle on a green grassy path that leads on
+to the west. To the south is the castle walls raising about eight meters up
+keeping any intruders out and to the north there is a rocky wall of the
+castle building. Exits leads of to the east and west."
+
+extra{"grass"}
+"This looks like ordinary grass."
+
+movement SECT_CITY
+
+east to corridor_1 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+west to outwest_2 descr "The outercourt of the castle.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_TELEPORT}
+
+dilcopy why_grass();
+
+end
+/* ---------------------------------------- */
+
+	outwest_2
+names {"outercourt"}
+title "The outercourt of the castle"
+descr
+"You are standing outside the castle on a green grassy path that leads on
+to the west. To the south is the castle walls raising about eight meters up
+keeping any intruders out and to the north there is a rocky wall of the
+castle building. Exits leads of to the east and west."
+
+extra{"grass"}
+"This looks like ordinary grass."
+
+movement SECT_CITY
+
+east to outwest_1 descr "The outercourt of the castle.";
+west to outwest_3 descr "The outercourt of the castle.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_TELEPORT}
+
+dilcopy why_grass();
+
+end
+/* ---------------------------------------- */
+
+	outwest_3
+names {"outercourt"}
+title "The outercourt of the castle"
+descr
+"You are standing outside the castle on a green grassy path that leads on
+to the west. To the south is the castle walls raising about eight meters up
+keeping any intruders out and to the north there is a rocky wall of the
+castle building. In the west you can see a door leading in to the south west
+watch tower of the castle. Exits leads of to the east and west."
+
+extra{"grass"}
+"This looks like ordinary grass."
+
+movement SECT_CITY
+
+east to outwest_2 descr "The outercourt of the castle.";
+west to sw_tower_1 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_TELEPORT}
+
+dilcopy why_grass();
+
+end
+/* ---------------------------------------- */
+
+	split_1
+names {"a split in the corridor","split"}
+title "A split in the corridor"
+descr
+"You are standing in a split in the corridor. The walls and floor are
+made of shiny white marble material. The walls are decorated with various
+old paintings. You can see a small crystal-ball hanging down from the roof
+giving a strange flaming red and yellow light just like an open fire, making
+your shadow dance on the wall. Suddenly you get a strange feeling that someone
+is watching you. Exits leads off to the north, south, east and west."
+
+extra {"ball"}
+"The crystal ball seems to be some kind of strange light. Perhaps it's used to
+lit up the corridor."
+
+extra {"paintings","painting","wall","walls"}
+"There are several paintings of great war battles between humans and the army
+of darkness."
+
+movement SECT_CITY
+
+north to corridor_2 descr "A large corridor.";
+east to corridor_3 descr "A large corridor.";
+south to corridor_1 descr "A large corridor.";
+west to corridor_4 descr "A large corridor.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+
+dilbegin ball();
+code {
+   :start:
+	wait(SFB_CMD,(command("get")) and ("ball" in argument));
+	act("You can't reach the crystal ball. You are too short.",A_ALWAYS,activator,null,null,TO_CHAR);
+	act("$1n tries to get the crystal ball, but fails since $1e is too short.",A_ALWAYS,activator,null,null,TO_REST);
+	block;
+	goto start;
+}
+dilend
+end
+/* ---------------------------------------- */
+
+	corridor_2
+names {"corridor"}
+title "A large corridor"
+descr
+"You are standing in a immense corridor. The walls and floor are
+made of shiny white marble material. You can see no lanterns or torches
+in the corridor, yet the corridor is very bright. You can see that
+the walls themselves are glowing, giving a very soft and comfortable light
+over the area. The walls are decorated with various old paintings.
+Exits leads of to the north and south. "
+
+extra {"paintings","painting","wall","walls"}
+"There are several paintings of great war battles between humans and the army
+of darkness."
+
+movement SECT_CITY
+
+north to split_2 descr "A split in the corridor.";
+south to split_1 descr "A split in the corridor.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+
+dilbegin corrid_2();
+code
+{
+:start:
+	wait(SFB_CMD,command(CMD_GET));
+	if ( "painting" in argument )
+	{
+	act("Nah!! I can't let you do that! They are fine where they are..",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	goto start;
+}
+dilend
+end
+/* ---------------------------------------- */
+
+	corridor_3
+names {"corridor"}
+title "A large corridor"
+descr
+"You are standing in a immense corridor. The walls and floor are
+made of shiny white marble material. You can see no lanterns or torches
+in the corridor, yet the corridor is very bright. You can see that
+the walls themselves are glowing, giving a very soft and comfortable light
+over the area. Exits leads of to the east and west."
+
+movement SECT_CITY
+
+east to corridor_5 descr "A large corridor.";
+west to split_1 descr "A split in the corridor.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	corridor_5
+names {"corridor"}
+title "A large corridor"
+descr
+"You are standing in a immense corridor. The walls and floor are
+made of shiny white marble material. You can see no lanterns or torches
+in the corridor, yet the corridor is very bright. You can see that
+the walls themselves are glowing, giving a very soft and comfortable light
+over the area. A door is located in the east. The only other exit is to the west."
+
+movement SECT_CITY
+
+east to eat_quarter open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+west to corridor_3 descr "A large corridor.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	corridor_4
+names {"corridor"}
+title "A large corridor"
+descr
+"You are standing in a immense corridor. The walls and floor are
+made of shiny white marble material. You can see no lanterns or torches
+in the corridor, yet the corridor is very bright. You can see that
+the walls themselves are glowing, giving a very soft and comfortable light
+over the area. Exits leads of to the east and west."
+
+extra {"floor"}
+"The floor looks like a marble like floor. But, yet it isn't. The material it
+is made of is very resemblance to marble."
+
+extra {"walls"}
+"The walls looks like marble like walls. But, yet it isn't. The material they
+are made of is very resemblance to marble. A slight glowing aura is surounding
+the walls spreading a soft and comfortable light over the area."
+
+movement SECT_CITY
+
+west to corridor_6 descr "A large corridor.";
+east to split_1 descr "A split in the corridor.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	corridor_6
+names {"corridor"}
+title "A large corridor"
+descr
+"You are standing in a immense corridor. The walls and floor are made
+of shiny white marble material. You can see no lanterns or torches
+in the corridor, yet the corridor is very bright. You can see that the
+walls themselves are glowing, giving a very soft and comfortable light
+over the area. A door is located in the west. The only other exit is to
+the east."
+
+extra {"floor"}
+"The floor looks like a marble like floor. But, yet it isn't. The material it
+is made of is very resemblance to marble."
+
+extra {"walls"}
+"The walls looks like marble like walls. But, yet it isn't. The material they
+are made of is very resemblance to marble. A slight glowing aura is surounding
+the walls spreading a soft and comfortable light over the area."
+
+movement SECT_CITY
+
+west to slp_quarter open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+east to corridor_4 descr "A large corridor.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	slp_quarter
+names {"sleep quarter","quarter","sleeping quarter"}
+title "The guards sleeping quarter"
+descr
+"You enter a very large room with eighteen beds. The walls are made of grey
+and rocky stone and the floor is made of wooden planks. There is a foul smell
+in the room. At the north wall there is a small board placed. To the east
+you can se a door leading out to a immense corridor."
+
+extra {"board"}
+"You can not understand the language which this board is written in.
+But it seems like it is some kind of schedule for the guards."
+
+extra {"beds","bed"}
+"This is an ordinary bed stuffed with a thick layer of hay."
+
+movement SECT_CITY
+
+east to corridor_6 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+
+dilbegin slp_quart();
+code
+{
+:start:
+	wait(SFB_CMD,command(CMD_GET));
+	if (argument $= "board")
+	{
+	act("The board is stuck to the wall.",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	if ((argument $= "bed") or (argument $= "beds"))
+	{
+	act("Hmmm. You are wierd! Why do you want to go around with a bed?",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	goto start;
+}
+dilend
+end
+/* ---------------------------------------- */
+
+	eat_quarter
+names {"eating quarter","quarter"}
+title "The guards eating quarter"
+descr
+"This is the guards eating quarter. You can see ten wooden tables placed in the
+room with four chairs at each table. The floor is made out of wood and is very
+well used. The walls are made of grey and rocky stone. The only way out of here
+is to the west."
+
+extra {"tables","table"}
+"This is an ordinary wooden table."
+
+extra {"chairs","chair"}
+"This is an ordinary wooden chair."
+
+movement SECT_CITY
+
+west to corridor_5 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+
+dilbegin eat_quart();
+code
+{
+:start:
+	wait(SFB_CMD,command(CMD_GET));
+	if ((argument $= "chair") or (argument $= "chairs"))
+	{
+	act("You want the chair?? Forget it!",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	if ((argument $= "table") or (argument $= "tables"))
+	{
+	act("You want the table?? Forget it!",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	goto start;
+}
+dilend
+end
+/* ---------------------------------------- */
+
+	split_2
+names {"a split in the corridor","split"}
+title "A split in the corridor"
+descr
+"You are standing in a split in the corridor. You can see no lanterns or torches
+in the corridor, yet the corridor is very bright. You can see that the walls
+themselves are glowing, giving a very soft and comfortable light over the area.
+Exits leads of to the north, south, east and west."
+
+movement SECT_CITY
+
+north to entrance descr "Entrance to the great hall.";
+east to corridor_8 descr "A large corridor.";
+south to corridor_2 descr "A large corridor.";
+west to corridor_9 descr "A large corridor.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	entrance
+names {"entrance to the great hall","entrance"}
+title "Entrance to the great hall"
+descr
+"A huge double door is located in front of you to the north. The doors are
+made of old oak wood. On the doors you can see a massive golden weapon
+shield with a black skull and two crossed swords upon. Next to the large
+door is two large blood-red tapestrys covering walls."
+
+extra {"shield","weapon shield"}
+"This looks like an weapon shiled of an great army."
+
+extra {"tapestrys","tapestry"}
+"This is some ordinary tapestrys made of cloth."
+
+extra {"door"}
+"The door is made of old oak wood and seems very stable. It would probably
+take much to break this door down."
+
+movement SECT_CITY
+
+north to sc_ghall open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+south to split_2 descr "A split in the corridor.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+
+dilbegin entran();
+code
+{
+:start:
+	wait(SFB_CMD,command(CMD_GET));
+	if ((argument $= "tapestry"))
+	{
+	act("Eek! no way!",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	goto start;
+}
+dilend
+end
+/* ---------------------------------------- */
+
+	corridor_8
+names {"corridor"}
+title "A large corridor"
+descr
+"You are standing in a immense corridor. The walls and floor are
+made of shiny white marble material. You can see no lanterns or torches
+in the corridor, yet the corridor is very bright. You can see that
+the walls themselves are glowing, giving a very soft and comfortable light
+over the area. Exits leads of to the north, east
+and west."
+
+extra {"floor"}
+"The floor looks like a marble like floor. But, yet it isn't. The material it
+is made of is very resemblance to marble."
+
+extra {"walls"}
+"The walls looks like marble like walls. But, yet it isn't. The material they
+are made of is very resemblance to marble. A slight glowing aura is surounding
+the walls spreading a soft and comfortable light over the area."
+
+movement SECT_CITY
+
+north to stairway descr "Stairway leading up and down.";
+east to corridor_10 descr "A large corridor.";
+west to split_2 descr "A split in the corridor.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	corridor_9
+names {"corridor"}
+title "A large corridor"
+descr
+"You are standing in a immense corridor. The walls and floor are
+made of shiny white marble material. You can see no lanterns or torches
+in the corridor, yet the corridor is very bright. You can see that
+the walls themselves are glowing, giving a very soft and comfortable light
+over the area. Exits leads of to the east and west."
+
+extra {"floor"}
+"The floor looks like a marble like floor. But, yet it isn't. The material it
+is made of is very resemblance to marble."
+
+extra {"walls"}
+"The walls looks like marble like walls. But, yet it isn't. The material they
+are made of is very resemblance to marble. A slight glowing aura is surounding
+the walls spreading a soft and comfortable light over the area."
+
+movement SECT_CITY
+
+east to split_2 descr "A split in the corridor.";
+west to corridor_11 descr "A large corridor.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	corridor_11
+names {"corridor"}
+title "A large corridor"
+descr
+"You are standing in a immense corridor. The walls and floor are
+made of shiny white marble material. You can see no lanterns or torches
+in the corridor, yet the corridor is very bright. You can see that
+the walls themselves are glowing, giving a very soft and comfortable light
+over the area. A door is located in the west. The only other exit out of
+here is to the east."
+
+extra {"floor"}
+"The floor looks like a marble like floor. But, yet it isn't. The material it
+is made of is very resemblance to marble."
+
+extra {"walls"}
+"The walls looks like marble like walls. But, yet it isn't. The material they
+are made of is very resemblance to marble. A slight glowing aura is surounding
+the walls spreading a soft and comfortable light over the area."
+
+movement SECT_CITY
+
+east to corridor_9 descr "A large corridor..";
+west to beast_cell open {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED} key treasury_key keyword {"door"};
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	beast_cell
+names {"cell"}
+title "In a dark cell"
+descr
+"You are in a small filthy cell. It seems like this is the holding of some
+awefull creature. The floor in the cell is very filthy. As you are standing
+in the cell, you feel a discousting smell making your stomach twist and turn.
+You get a slight feeling of danger in this room. Perhaps you should not stay
+in here for to long. The only exit out of this room is to the east."
+
+movement SECT_CITY
+
+east to corridor_11 open {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED} key treasury_key keyword {"door"};
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	corridor_10
+names {"corridor"}
+title "A large corridor"
+descr
+"You are standing in a immense corridor. The walls and floor are
+made of shiny white marble material. You can see no lanterns or torches
+in the corridor, yet the corridor is very bright. You can see that
+the walls themselves are glowing, giving a very soft and comfortable light
+over the area. Exits leads of to the east and west."
+
+extra {"floor"}
+"The floor looks like a marble like floor. But, yet it isn't. The material it
+is made of is very resemblance to marble."
+
+extra {"walls"}
+"The walls looks like marble like walls. But, yet it isn't. The material they
+are made of is very resemblance to marble. A slight glowing aura is surounding
+the walls spreading a soft and comfortable light over the area."
+
+movement SECT_CITY
+
+east to turn_1 descr "A turn in the corridor.";
+west to corridor_8 descr "A large corridor.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	turn_1
+names {"turn"}
+title "A turn in the corridor"
+descr
+"You are standing in a immense corridor. The walls and floor are
+made of shiny white marble material. You can see no lanterns or torches
+in the corridor, yet the corridor is very bright. You can see that
+the walls themselves are glowing, giving a very soft and comfortable light
+over the area. Exits leads of to the north and west."
+
+extra {"floor"}
+"The floor looks like a marble like floor. But, yet it isn't. The material it
+is made of is very resemblance to marble."
+
+extra {"walls"}
+"The walls looks like marble like walls. But, yet it isn't. The material they
+are made of is very resemblance to marble. A slight glowing aura is surounding
+the walls spreading a soft and comfortable light over the area."
+
+movement SECT_CITY
+
+north to corridor_21 descr "A large corridor.";
+west to corridor_10 descr "A large corridor.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	corridor_21
+names {"corridor"}
+title "A large corridor"
+descr
+"You are standing in a immense corridor. The walls and floor are
+made of shiny white marble material. You can see no lanterns or torches
+in the corridor, yet the corridor is very bright. You can see that
+the walls themselves are glowing, giving a very soft and comfortable light
+over the area. Exits leads of to the north and south."
+
+extra {"floor"}
+"The floor looks like a marble like floor. But, yet it isn't. The material it
+is made of is very resemblance to marble."
+
+extra {"walls"}
+"The walls looks like marble like walls. But, yet it isn't. The material they
+are made of is very resemblance to marble. A slight glowing aura is surounding
+the walls spreading a soft and comfortable light over the area."
+
+movement SECT_CITY
+
+north to turn_2 descr "A turn in the corridor.";
+south to turn_1 descr "A turn in the corridor.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	turn_2
+names {"turn"}
+title "A turn in the corridor"
+descr
+"You are standing in a immense corridor. The walls and floor are
+made of shiny white marble material. You can see no lanterns or torches
+in the corridor, yet the corridor is very bright. You can see that
+the walls themselves are glowing, giving a very soft and comfortable light
+over the area. Exits leads of to the east and south."
+
+extra {"floor"}
+"The floor looks like a marble like floor. But, yet it isn't. The material it
+is made of is very resemblance to marble."
+
+extra {"walls"}
+"The walls looks like marble like walls. But, yet it isn't. The material they
+are made of is very resemblance to marble. A slight glowing aura is surounding
+the walls spreading a soft and comfortable light over the area."
+
+movement SECT_CITY
+
+east to turn_3 descr "A turn in the corridor.";
+south to corridor_21 descr "A large corridor.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	turn_3
+names {"turn"}
+title "A turn in the corridor"
+descr
+"You are standing in a immense corridor. The walls and floor are
+made of shiny white marble material. You can see no lanterns or torches
+in the corridor, yet the corridor is very bright. You can see that
+the walls themselves are glowing, giving a very soft and comfortable light
+over the area. Exits leads of to the north and west."
+
+extra {"floor"}
+"The floor looks like a marble like floor. But, yet it isn't. The material it
+is made of is very resemblance to marble."
+
+extra {"walls"}
+"The walls looks like marble like walls. But, yet it isn't. The material they
+are made of is very resemblance to marble. A slight glowing aura is surounding
+the walls spreading a soft and comfortable light over the area."
+
+movement SECT_CITY
+
+north to corridor_12 descr "A large corridor.";
+west to turn_2 descr "A turn in the corridor.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	corridor_12
+names {"corridor"}
+title "A large corridor"
+descr
+"You are standing in a immense corridor. The walls and floor are
+made of shiny white marble material. You can see no lanterns or torches
+in the corridor, yet the corridor is very bright. You can see that
+the walls themselves are glowing, giving a very soft and comfortable light
+over the area. Exits leads of to the north and south."
+
+extra {"floor"}
+"The floor looks like a marble like floor. But, yet it isn't. The material it
+is made of is very resemblance to marble."
+
+extra {"walls"}
+"The walls looks like marble like walls. But, yet it isn't. The material they
+are made of is very resemblance to marble. A slight glowing aura is surounding
+the walls spreading a soft and comfortable light over the area."
+
+movement SECT_CITY
+
+north to turn_4 descr "A turn in the corridor.";
+south to turn_3 descr "A turn in the corridor.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	turn_4
+names {"turn"}
+title "A turn in the corridor"
+descr
+"You are standing in a immense corridor. The walls and floor are
+made of shiny white marble material. You can see no lanterns or torches
+in the corridor, yet the corridor is very bright. You can see that
+the walls themselves are glowing, giving a very soft and comfortable light
+over the area. A door is located in the north. Exits leads of to the west
+and south."
+
+extra {"floor"}
+"The floor looks like a marble like floor. But, yet it isn't. The material it
+is made of is very resemblance to marble."
+
+extra {"walls"}
+"The walls looks like marble like walls. But, yet it isn't. The material they
+are made of is very resemblance to marble. A slight glowing aura is surounding
+the walls spreading a soft and comfortable light over the area."
+
+movement SECT_CITY
+
+north to ne_tower_1 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"door"};
+west to corridor_13 descr "A large corridor.";
+south to corridor_12 descr "A large corridor.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	corridor_13
+names {"corridor"}
+title "A large corridor"
+descr
+"You are standing in a immense corridor. The walls and floor are
+made of shiny white marble material. You can see no lanterns or torches
+in the corridor, yet the corridor is very bright. You can see that
+the walls themselves are glowing, giving a very soft and comfortable light
+over the area. Exits leads of to the east and west."
+
+extra {"floor"}
+"The floor looks like a marble like floor. But, yet it isn't. The material it
+is made of is very resemblance to marble."
+
+extra {"walls"}
+"The walls looks like marble like walls. But, yet it isn't. The material they
+are made of is very resemblance to marble. A slight glowing aura is surounding
+the walls spreading a soft and comfortable light over the area."
+
+movement SECT_CITY
+
+west to corridor_14 descr "A large corridor.";
+east to turn_4 descr "A turn in the corridor.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	corridor_14
+names {"corridor"}
+title "A large corridor"
+descr
+"You are standing in a immense corridor. The walls and floor are
+made of shiny white marble material. You can see no lanterns or torches
+in the corridor, yet the corridor is very bright. You can see that
+the walls themselves are glowing, giving a very soft and comfortable light
+over the area. Exits leads of to the east and west."
+
+extra {"floor"}
+"The floor looks like a marble like floor. But, yet it isn't. The material it
+is made of is very resemblance to marble."
+
+extra {"walls"}
+"The walls looks like marble like walls. But, yet it isn't. The material they
+are made of is very resemblance to marble. A slight glowing aura is surounding
+the walls spreading a soft and comfortable light over the area."
+
+movement SECT_CITY
+
+west to corridor_15 descr "A large corridor.";
+east to corridor_13 descr "A large corridor.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	corridor_15
+names {"corridor"}
+title "A large corridor"
+descr
+"You are standing in a immense corridor. The walls and floor are
+made of shiny white marble material. You can see no lanterns or torches
+in the corridor, yet the corridor is very bright. You can see that
+the walls themselves are glowing, giving a very soft and comfortable light
+over the area. Exits leads of to the east and west."
+
+extra {"floor"}
+"The floor looks like a marble like floor. But, yet it isn't. The material it
+is made of is very resemblance to marble."
+
+extra {"walls"}
+"The walls looks like marble like walls. But, yet it isn't. The material they
+are made of is very resemblance to marble. A slight glowing aura is surounding
+the walls spreading a soft and comfortable light over the area."
+
+movement SECT_CITY
+
+west to corridor_16 descr "A large corridor.";
+east to corridor_14 descr "A large corridor.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	corridor_16
+names {"corridor"}
+title "A large corridor"
+descr
+"You are standing in a immense corridor. The walls and floor are
+made of shiny white marble material. You can see no lanterns or torches
+in the corridor, yet the corridor is very bright. You can see that
+the walls themselves are glowing, giving a very soft and comfortable light
+over the area. Exits leads of to the east and west."
+
+extra {"floor"}
+"The floor looks like a marble like floor. But, yet it isn't. The material it
+is made of is very resemblance to marble."
+
+extra {"walls"}
+"The walls looks like marble like walls. But, yet it isn't. The material they
+are made of is very resemblance to marble. A slight glowing aura is surounding
+the walls spreading a soft and comfortable light over the area."
+
+movement SECT_CITY
+
+west to corridor_17 descr "A large corridor.";
+east to corridor_15 descr "A large corridor.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	corridor_17
+names {"corridor"}
+title "A large corridor"
+descr
+"You are standing in a immense corridor. The walls and floor are
+made of shiny white marble material. You can see no lanterns or torches
+in the corridor, yet the corridor is very bright. You can see that
+the walls themselves are glowing, giving a very soft and comfortable light
+over the area. Exits leads of to the east and west."
+
+extra {"floor"}
+"The floor looks like a marble like floor. But, yet it isn't. The material it
+is made of is very resemblance to marble."
+
+extra {"walls"}
+"The walls looks like marble like walls. But, yet it isn't. The material they
+are made of is very resemblance to marble. A slight glowing aura is surounding
+the walls spreading a soft and comfortable light over the area."
+movement SECT_CITY
+
+west to corridor_18 descr "A large corridor.";
+east to corridor_16 descr "A large corridor.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	corridor_18
+names {"corridor"}
+title "A large corridor"
+descr
+"You are standing in a immense corridor. The walls and floor are
+made of shiny white marble material. You can see no lanterns or torches
+in the corridor, yet the corridor is very bright. You can see that
+the walls themselves are glowing, giving a very soft and comfortable light
+over the area. Exits leads of to the east and west."
+
+extra {"floor"}
+"The floor looks like a marble like floor. But, yet it isn't. The material it
+is made of is very resemblance to marble."
+
+extra {"walls"}
+"The walls looks like marble like walls. But, yet it isn't. The material they
+are made of is very resemblance to marble. A slight glowing aura is surounding
+the walls spreading a soft and comfortable light over the area."
+
+movement SECT_CITY
+
+west to turn_5 descr "A turn in the corridor.";
+east to corridor_17 descr "A large corridor.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	turn_5
+names {"turn"}
+title "A turn in the corridor"
+descr
+"You are standing in a immense corridor. The walls and floor are
+made of shiny white marble material. You can see no lanterns or torches
+in the corridor, yet the corridor is very bright. You can see that
+the walls themselves are glowing, giving a very soft and comfortable light
+over the area. In the north you can see the entrance to the northwest guard
+tower. Exits leads of to the north, south and east."
+
+extra {"floor"}
+"The floor looks like a marble like floor. But, yet it isn't. The material it
+is made of is very resemblance to marble."
+
+extra {"walls"}
+"The walls looks like marble like walls. But, yet it isn't. The material they
+are made of is very resemblance to marble. A slight glowing aura is surounding
+the walls spreading a soft and comfortable light over the area."
+
+movement SECT_CITY
+
+north to nw_twr_ent descr "Entrance to the northwest tower";
+south to corridor_19 descr "A large corridor.";
+east to corridor_18 descr "A large corridor.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	corridor_19
+names {"corridor"}
+title "A large corridor"
+descr
+"You are standing in a immense corridor. The walls and floor are
+made of shiny white marble material. You can see no lanterns or torches
+in the corridor, yet the corridor is very bright. You can see that
+the walls themselves are glowing, giving a very soft and comfortable light
+over the area. Exits leads of to the north and south."
+
+extra {"floor"}
+"The floor looks like a marble like floor. But, yet it isn't. The material it
+is made of is very resemblance to marble."
+
+extra {"walls"}
+"The walls looks like marble like walls. But, yet it isn't. The material they
+are made of is very resemblance to marble. A slight glowing aura is surounding
+the walls spreading a soft and comfortable light over the area."
+
+movement SECT_CITY
+
+south to corridor_20 descr "A large corridor.";
+north to turn_5 descr "A turn in the corridor.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	corridor_20
+names {"corridor"}
+title "A large corridor"
+descr
+"You are standing in a immense corridor. The walls and floor are
+made of shiny white marble material. You can see no lanterns or torches
+in the corridor, yet the corridor is very bright. You can see that
+the walls themselves are glowing, giving a very soft and comfortable light
+over the area. Exits leads of to the north and south."
+
+extra {"floor"}
+"The floor looks like a marble like floor. But, yet it isn't. The material it
+is made of is very resemblance to marble."
+
+extra {"walls"}
+"The walls looks like marble like walls. But, yet it isn't. The material they
+are made of is very resemblance to marble. A slight glowing aura is surounding
+the walls spreading a soft and comfortable light over the area."
+
+movement SECT_CITY
+
+south to deadend_1 descr "A dead end in the corridor.";
+north to corridor_19 descr "A turn in the corridor.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	deadend_1
+names {"deadend"}
+title "A dead end in the corridor"
+descr
+"You are standing in a immense corridor. The walls and floor are
+made of shiny white marble material. You can see no lanterns or torches
+in the corridor, yet the corridor is very bright. You can see that
+the walls themselves are glowing, giving a very soft and comfortable light
+over the area. A door is located in the east, the only other exit is back north."
+
+extra {"floor"}
+"The floor looks like a marble like floor. But, yet it isn't. The material it
+is made of is very resemblance to marble."
+
+extra {"walls"}
+"The walls looks like marble like walls. But, yet it isn't. The material they
+are made of is very resemblance to marble. A slight glowing aura is surounding
+the walls spreading a soft and comfortable light over the area."
+
+movement SECT_CITY
+
+east to monster_room open {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED} keyword {"door"};
+north to turn_5 descr "A turn in the corridor.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	nw_twr_ent
+names {"entrance","tower entrance"}
+title "Entrance to the northwest tower"
+descr
+"A small and badly lit room with dark marble walls of stone. On the walls are
+four torches hanging spreading a small light in the room. A door in the
+west leads to the base of the tower, while another door in the south
+leads out to a large corridor."
+
+extra {"walls"}
+"four torches, spreading a flickering light over the room are located on the dark
+marble walls. The walls are made of ordinary marble, except that they are darker
+than usual marble walls."
+
+movement SECT_CITY
+
+west to nw_tower_1 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"door"};
+south to turn_5 descr "A turn in the corridor.";
+
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	nw_tower_1
+names {"tower","base of tower"}
+title "The base of the northwest tower"
+descr
+"As you walk in to the room you feel the wind blowing down from above
+cooling you down. The walls are made of old weather thorned dark stones.
+A stairway of grey stones is located in the west part of the room leadig
+upwards."
+
+extra {"stairs"}
+"the stairs looks to be made by the finest builder ever exsisted. They
+lead smoothly around in a small half circle up to the top of the tower."
+
+movement SECT_CITY
+
+east to nw_twr_ent open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"door"};
+up to nw_tower_2 descr "Top floor of the northwest tower.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+
+dilbegin nw_tw();
+code
+{
+:start:
+	wait(SFB_CMD,command(CMD_GET));
+	if ((argument $= "stairway"))
+	{
+	act("Dude!! You are really wierd!! Trying to get a stairway!",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	goto start;
+}
+dilend
+end
+/* ---------------------------------------- */
+
+	nw_tower_2
+names {"tower","top of tower"}
+title "At the top of the northwest tower"
+descr
+"The top of the tower is made of stones and marble. You can feel the cold wind
+blowing here making you freeze from top to toe. Perhaps you should leave down
+before you catch a cold. The only exit out of here is down."
+
+movement SECT_CITY
+
+down to nw_tower_1 descr "The base of the northwest tower.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	ne_tower_1
+names {"tower","base of tower"}
+title "The base of the northeast tower"
+descr
+"As you walk in to the room you feel the wind blowing down from above
+cooling you down. The walls are made of old weather thorned dark stones.
+A stairway of grey stones is located in the west part of the room leadig
+upwards."
+
+extra {"stairway","stairs"}
+"the stairs looks to be made by the finest builder ever exsisted. They
+lead smoothly around in a small half circle up to the top of the tower."
+movement SECT_CITY
+
+south to turn_4 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"door"};
+up to ne_tower_2 descr "Top of the northeast tower.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+
+dilbegin ne_tw();
+code
+{
+:start:
+	wait(SFB_CMD,command(CMD_GET));
+	if ((argument $= "stairway"))
+	{
+	act("Dude!! You are really wierd!! Trying to get a stairway!",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	goto start;
+}
+dilend
+end
+/* ---------------------------------------- */
+
+	ne_tower_2
+names {"tower","top of tower"}
+title "The top of the northeast tower"
+descr
+"The top of the tower is made of stones and marble. You can feel the cold wind
+blowing here making you freeze from top to toe. Perhaps you should leave down
+before you catch a cold. The only exit out of here is down."
+
+movement SECT_CITY
+
+down to ne_tower_1 descr "The base of the northeast tower.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	se_tower_1
+names {"tower","base of tower"}
+title "The base of the southeast tower"
+descr
+"As you walk in to the room you feel the wind blowing down from above
+cooling you down. The walls are made of old weather thorned dark stones.
+A stairway of grey stones is located in the west part of the room leadig
+upwards."
+
+extra {"stairway","stairs"}
+"the stairs looks to be made by the finest builder ever exsisted. They
+lead smoothly around in a small half circle up to the top of the tower."
+
+movement SECT_CITY
+
+west to outeast_3 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+up to se_tower_2 descr "Top of the southeast tower.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+
+dilbegin se_tw();
+code
+{
+:start:
+	wait(SFB_CMD,command(CMD_GET));
+	if ((argument $= "stairway"))
+	{
+	act("Dude!! You are really wierd!! Trying to get a stairway!",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	goto start;
+}
+dilend
+end
+/* ---------------------------------------- */
+
+	se_tower_2
+names {"tower","top of tower"}
+title "The top of the southeast tower"
+descr
+"The top of the tower is made of stones and marble. You can feel the cold wind
+blowing here making you freeze from top to toe. Perhaps you should leave down
+before you catch a cold. The only exit out of here is down."
+
+movement SECT_CITY
+
+down to se_tower_1 descr "The base of the southeast tower.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	sw_tower_1
+names {"tower","base of tower"}
+title "The base of the southwest tower"
+descr
+"As you walk in to the room you feel the wind blowing down from above
+cooling you down. The walls are made of old weather thorned dark stones.
+A stairway of grey stones is located in the west part of the room leadig
+upwards."
+
+extra {"stairway","stairs"}
+"the stairs looks to be made by the finest builder ever exsisted. They
+lead smoothly around in a small half circle up to the top of the tower."
+
+movement SECT_CITY
+
+east to outwest_3 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+up to sw_tower_2 descr "Top of the southwest tower.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+
+dilbegin sw_tw();
+code
+{
+:start:
+	wait(SFB_CMD,command(CMD_GET));
+	if ((argument $= "stairway"))
+	{
+	act("Dude!! You are really wierd!! Trying to get a stairway!",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	goto start;
+}
+dilend
+end
+/* ---------------------------------------- */
+
+	sw_tower_2
+names {"tower","top of tower"}
+title "The top of the southwest tower"
+descr
+"The top of the tower is made of stones and marble. You can feel the cold wind
+blowing here making you freeze from top to toe. Perhaps you should leave down
+before you catch a cold. The only exit out of here is down."
+
+movement SECT_CITY
+
+down to sw_tower_1 descr "The base of the southwest tower.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	sc_ghall
+names {"great hall","main hall","hall"}
+title "The great hall"
+descr
+"As you enter the great hall you feel a sudden heat hit you. You are
+having more and more problems with your breathing. The heat in this
+room is very high. But you decide to bite your teeths together and
+continue. The walls in this room are made of some unknow material that
+is very similar to marble. The floor in this room is made out of
+black and white marble, creating a perfect chess board on the floor.
+You see ways leading off in all four directions."
+
+extra{"floor"}
+"The floor is extremly shiny. You can see a perfect reflection of yourself on it.
+The marble plates are about 2 times 2 feets large and are forming a perfect white and black
+chess board."
+
+extra{"walls","wall"}
+"The walls are truly strange. They look like ordinary marble, but, yet they aren't made of that.
+You have never seen anything like it. It is truly a remarkable workmanship."
+
+movement SECT_CITY
+
+north to nc_ghall descr "By the throne.";
+south to entrance open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+east to se_ghall descr "The great hall.";
+west to sw_ghall descr "The great hall.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	se_ghall
+names {"great hall","main hall","hall"}
+title "The great hall"
+descr
+"You are standing in the south-east part of the great hall room. To the
+east is a small wodden door placed. The walls in this room are made of some
+unknow material that is very smiliar to marble. The floor is made out
+of black and white marble, creating a perfect chess board on the floor.
+Exits leads off to the north and west."
+
+extra{"walls","wall"}
+"The walls are truly strange. They look like ordinary marble, but, yet they aren't made of that.
+You have never seen anything like it. It is truly a remarkable workmanship."
+
+extra {"door"}
+"This looks lika an ordinary small wodden door"
+
+extra{"floor"}
+"The floor is extremly shiny. You can see a perfect reflection of yourself on it.
+The marble plates are about 2 times 2 feets large and are forming a perfect white and black
+chess board."
+
+movement SECT_CITY
+
+north to ne_ghall descr "The great hall.";
+east to library open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"door"};
+west to sc_ghall descr "The great hall.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	sw_ghall
+names {"great hall","main hall","hall"}
+title "The great hall"
+descr
+"This is the south-west part of the great hall. A small wooden door is
+located in the west. The walls in this room are made of some unknow material that
+is very similar to marble. The floor is made out of black and white marble, creating
+a perfect chess board on the floor. Exits leads off to the north and east."
+
+extra{"floor"}
+"The floor is extremly shiny. You can see a perfect reflection of yourself on it.
+The marble plates are about 2 times 2 feets large and are forming a perfect white and black
+chess board."
+
+extra{"walls","wall"}
+"The walls are truly strange. They look like ordinary marble, but, yet they aren't made of that.
+You have never seen anything like it. It is truly a remarkable workmanship."
+
+extra {"door"}
+"This looks lika an ordinary small wodden door"
+
+movement SECT_CITY
+
+north to nw_ghall descr "The great hall.";
+east to sc_ghall descr "The great hall.";
+west to tactic_room open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"door"};
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	nw_ghall
+names {"great hall","main hall","hall"}
+title "The great hall"
+descr
+"You are standing in the north-west part of the great hall. On the west wall
+there is a massive oak wood door. The walls in this room are made of some
+unknow material that is very similar to marble. The floor is made out of black
+and white marble, creating a perfect chess board on the floor. The door doesn's seem
+to be used to often and looks very stable. Exits leads off to the south and east."
+
+extra{"floor"}
+"The floor is extremly shiny. You can see a perfect reflection of yourself on it.
+The marble plates are about 2 times 2 feets large and are forming a perfect white and black
+chess board."
+
+extra{"walls","wall"}
+"The walls are truly strange. They look like ordinary marble, but, yet they aren't made of that.
+You have never seen anything like it. It is truly a remarkable workmanship."
+
+extra {"door"}
+"This is an massive oak door with a very small inscription on. As you look
+closer on the inscription you see the word 'Treasury Chamber'."
+
+movement SECT_CITY
+
+south to sw_ghall descr "The great hall.";
+east to nc_ghall descr "By the throne.";
+west to treasury_room open {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED} key treasury_key keyword {"door"};
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	ne_ghall
+names {"great hall","main hall","hall"}
+title "The great hall"
+descr
+"The north-east corner of the grate hall. The walls in this room are
+made of some unknow material that is very similar to marble. The floor
+is made out of black and white marble, creating a perfect chess board
+on the floor. To the east you can se a small door of oak wood. Exits
+leads off to the south and west."
+
+extra{"floor"}
+"The floor is extremly shiny. You can see a perfect reflection of yourself on it.
+The marble plates are about 2 times 2 feets large and are forming a perfect white and black
+chess board."
+
+extra{"walls","wall"}
+"The walls are truly strange. They look like ordinary marble, but, yet they aren't made of that.
+You have never seen anything like it. It is truly a remarkable workmanship."
+
+extra{"door"}
+"This looks lika an ordinary small wodden door"
+
+movement SECT_CITY
+
+south to se_ghall descr "The great hall.";
+west to nc_ghall descr "By the throne.";
+east to witch_room_1 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"door"};
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	nc_ghall
+names {"great hall","main hall","hall"}
+title "By the throne"
+descr
+"At the throne of Ishlor the demon prince. The throne it self is made
+of pure gold with diamonds and rubys. Above the throne there is a gigantic
+blood-red tapestry hanging with a golden emblem on. The emblem is a large
+weapon shield with a black skull and two crossed swords. On the east side
+of the throne you can see a large pile of chains that is attatched to the
+throne. It seems like they where ment to hold some fearsome animals.
+In front of the throne there is a large red carpet with golden edges
+stretching towards the south part of the great hall. The walls in this room
+are made of some unknow material that is very similar to marble. The floor
+is made out of black and white marble, creating a perfect chess board on
+the floor. A small three steps stair made of marble is leading up to the
+throne itself. To the south, east and west you can see the other parts of
+the great hall."
+
+extra {"throne"}
+"The throne itself seems to be made by the finest gold smiths in the land.
+Large diamonds and rubys is placed on the edges. This throne is truly on of
+the most impressive once you have ever seen."
+
+extra {"chains"}
+"These chains seems to be used for holdin an fearsome animal chained to
+the throne. Perhaps the animals were ment to be used as throne guards."
+
+extra {"stairs","stair"}
+"A small stairway is leading up to the throne consisting of three steps.
+The stairway is made out of shiny white marble."
+
+extra {"carpet"}
+"The carpet is blood-red and extremly clean (until you stepped on it that
+is). Small golden bands are marking the carpets edges."
+
+extra {"tapestry"}
+"The tapestry is made of the finest cloth ever seen. The marking on the
+tapestry is the weapon shield of Ishlor the demon prince."
+
+extra{"floor"}
+"The floor is extremly shiny. You can see a perfect reflection of yourself on it.
+The marble plates are about 2 times 2 feets large and are forming a perfect white and black
+chess board."
+
+extra{"walls","wall"}
+"The walls are truly strange. They look like ordinary marble, but, yet they aren't made of that.
+You have never seen anything like it. It is truly a remarkable workmanship."
+
+movement SECT_CITY
+
+south to sc_ghall descr "The great hall.";
+east to ne_ghall descr "The great hall.";
+west to nw_ghall descr "The great hall.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+
+dilbegin throne();
+code
+{
+:start:
+	wait(SFB_CMD,command(CMD_GET));
+	if ((argument $= "throne"))
+	{
+	act("Yeah! Right. Forget it.. It's stuck to the floor!",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	if ((argument $= "chain") or (argument $= "chains"))
+	{
+	act("Hey! They are stuck to the throne! So forget it.",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	if ((argument $= "tapestry"))
+	{
+	act("No way! You don't need it!",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	if ((argument $= "carpet"))
+	{
+	act("Do you think you have any use for it? I don't think so..",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	goto start;
+}
+dilend
+end
+/* ---------------------------------------- */
+
+	witch_room_1
+names {"the three withes","witches"}
+title "At the three witches"
+descr
+"A small discusting room with old furnitures. In the east corner a small
+lantern is placed on a small table. in the center of the room you see a
+huge pot of discusting bubbling green slime. To the east and west you can
+see small doors. The floor in this room is not made of marble like the
+other rooms you have seen. Instead it is covered with a thick layer of
+dark soil."
+
+extra {"furnitures"}
+"Yes, ofcourse. But can't you be more specific? Look on what furniture?"
+
+extra {"door","doors"}
+"This is a simple ordinary wooden door."
+
+extra {"floor","soil"}
+"The floor you are standing on is made of a thick layer of hard trampled dark soil."
+
+extra {"table"}
+"A completly ordinary wooden table."
+
+extra {"slime","pot"}
+"A huge pot with bubbling green slime! so? Nothing more to it than that.
+Perhaps dinner? nah.. To revulting. Something magical? Perhaps.. Anyhow.
+You have no idea what it can be used for."
+
+movement SECT_CITY
+
+east to witch_room_2 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"door"};
+west to ne_ghall open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"door"};
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+
+dilbegin witch_1();
+code
+{
+:start:
+	wait(SFB_CMD,command(CMD_GET));
+	if ((argument $= "table"))
+	{
+	act("Yeah! Right. Forget it.. You don't need it!",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	if ((argument $= "slime"))
+	{
+	act("YUCK! You refuse to get that!",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	if ((argument $= "pot"))
+	{
+	act("It's to heavy for you!",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	goto start;
+}
+dilend
+end
+/* ---------------------------------------- */
+
+	witch_room_2
+names {"sleeping quarter"}
+title "The three witches sleeping quarter"
+descr
+"A dim room with three beds placed along the walls. On the walls there is
+three mirrors placed. The beds seems to be well used and old. The floor
+in this room is coverd with a thick layer of dark soil just like the other
+room. In the middle of the room there is a small table with three chairs
+placed."
+
+extra {"door","doors"}
+"This is a simple ordinary wooden door."
+
+extra {"floor","soil"}
+"The floor you are standing on is made of a thick layer of hard trampled dark soil."
+
+extra {"mirror","mirrors"}
+"They look like ordinary mirrors coverd in lots of spider-web and dust.
+Hey! Behind the web and dust you can see yourself!! cool!!"
+
+extra {"table","chairs","chair"}
+"You see a completly ordinary wooden table with three totally ordinary
+wooden chairs."
+
+extra {"beds"}
+"Three beds along the walls. Very well used.. They are stuffed with a large
+amount of hay. Other than that they are very normal beds."
+
+movement SECT_CITY
+
+west to witch_room_1 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"door"};
+
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+
+dilbegin witch_2();
+code
+{
+:start:
+	wait(SFB_CMD,command(CMD_GET));
+	if ((argument $= "mirror"))
+	{
+	act("Hmm.. You have no need for it..",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	if ((argument $= "table"))
+	{
+	act("Forgett it! You don't need it.",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	if ((argument $= "chair"))
+	{
+	act("Forget it! You don't need it.",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	if ((argument $= "bed"))
+	{
+	act("Just incase you get tired? Nah! don't think so. Forget it...",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	goto start;
+}
+dilend
+end
+/* ---------------------------------------- */
+
+	library
+names {"library","the library"}
+title "At the private library of Ishlor"
+descr
+"You are standing in a small library. Huge shelfs filled with books are
+covering the walls. The books seems to be about great war battles and
+strategic war fair. Small doors are placed in the west and south."
+
+extra {"books"}
+"These books seems very old and well used. They are all about the same
+topic.. War! Strategic war fair. Great battles etc. etc."
+
+extra {"shelfs","shelf"}
+"Ordinary wooden shelf containing lot's of books."
+movement SECT_CITY
+west to se_ghall open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"door"};
+south to study_room descr "The study room.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+
+dilbegin library();
+code
+{
+:start:
+	wait(SFB_CMD,command(CMD_GET));
+	if ((argument $= "book") or (argument $= "books"))
+	{
+	act("You have no use for the books!",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	if ((argument $= "shelf"))
+	{
+	act("Yeah, right!! In your wildest dreams!",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	goto start;
+}
+dilend
+end
+/* ---------------------------------------- */
+
+	study_room
+names {"study room","study","the study room"}
+title "At the private study room of Ishlor"
+descr
+"This room seems to be a study and working room. Books and paper notes
+has been thrown arond in the room making a real mess. In the middle of
+the room you see a large table of old dark polished wood. A wooden chair
+is placed behind the table. A small door is located to the north."
+
+extra {"books"}
+"Lot's of old books has been thrown all over the room."
+
+extra {"table"}
+"This looks like a ordinary writing table."
+
+extra {"chair"}
+"An ordinary wooden chair!"
+
+extra {"notes","note"}
+"These are notes taken from some of the books. The text is written in a
+very wierd language."
+
+movement SECT_CITY
+
+north to library descr "The library.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+
+dilbegin study();
+code
+{
+:start:
+	wait(SFB_CMD,command(CMD_GET));
+	if ((argument $= "book") or (argument $= "books"))
+	{
+	act("You have no use for the books!",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	if ((argument $= "table"))
+	{
+	act("Forget it! You don't need it..",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	if ((argument $= "chair"))
+	{
+	act("Forget it! You don't need it..",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	if ((argument $= "note") or (argument $= "notes"))
+	{
+	act("Why do you want the notes? You can't even read them! So forget it!",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	goto start;
+}
+dilend
+end
+/* ---------------------------------------- */
+
+	treasury_room
+names {"treasury room","treasury","the treasury room"}
+title "The great treasury room"
+descr
+"A small cold room. The walls in this room is cold and clean. The room
+itself contains no furnitures at all what so ever. The floor is made of
+shiny white marble. A door is placed to the east."
+
+extra {"floor"}
+"The floor is made of a shiny white marble and is very clean. You can't see even one
+single trace of dust in here."
+
+extra {"floor","soil"}
+"The floor you are standing on is made of a thick layer of hard trampled dark soil."
+
+movement SECT_CITY
+
+east to nw_ghall open {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED} key treasury_key keyword {"door"};
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+end
+/* ---------------------------------------- */
+
+	tactic_room
+names {"tactic room","tactic","the tactic room"}
+title "The war tactics room"
+descr
+"A large room with eight torches hanging on the walls. The floor is
+covered with a lare blue carpet. In the center of the room there is a
+very large table placed with papers and maps upon. Books has been thrown
+in a large pile at the southwest corner of the room. There is no chairs
+in this room. A door is placed to the east."
+
+extra {"torches"}
+"Eight ordinary wood torches has been places on the walls across the room."
+
+extra {"floor","soil"}
+"The floor you are standing on is made of a thick layer of hard trampled dark soil."
+
+extra {"map","maps"}
+"These are maps over Midgaard and some incomplete maps over Asgaard.
+It seems like these are war tactics maps and there will be an invasion
+of midgaard any moment."
+
+extra {"table"}
+"This is a very large wooden table with lot's of maps upon."
+
+extra {"books","pile"}
+"A large pile of war and battle strategic books has been thrown in the corner."
+
+extra {"carpet"}
+"This is a very large blue carped made of cloth. The carpet covers almost
+the entire floor in the room."
+
+movement SECT_CITY
+
+east to sw_ghall open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"door"};
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+
+dilbegin tactic();
+code
+{
+:start:
+	wait(SFB_CMD,command(CMD_GET));
+	if ((argument $= "book") or (argument $= "books") or (argument $= "pile"))
+	{
+	act("You have no use for the books!",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	if ((argument $= "table"))
+	{
+	act("Forget it! You don't need it..",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	if ((argument $= "map") or (argument $= "maps"))
+	{
+	act("No!! You have no use for the maps!",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	if ((argument $= "carpet"))
+	{
+	act("You are truly a wierd person! You wan't the carpet? Forget it!",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	goto start;
+}
+dilend
+end
+/* ---------------------------------------- */
+
+	monster_room
+names {"monster room","the monster room"}
+title "The monster creation room"
+descr
+"A dim room. You feel a discusting smell as you enter the room. The
+walls are covered with shelfs which contains various potions and brews.
+This room look much lika a small laboratory. in the center of the room
+there is a large pentagram risted into the floor. A large mirror is located
+on the south wall. The only exit out of this room is to the east."
+
+extra {"mirror"}
+"They look like ordinary mirrors coverd in lots of spider-web and dust.
+Hey! behind the web and dust you can see yourself! Cool!"
+
+extra {"pentagram","floor"}
+"A large black pentagram has been risted into the floor with some strange
+and unreadable runes in it."
+
+extra {"shelfs","shelf"}
+"These are ordinary wooden shelfs for holding all the potions and brews."
+
+extra {"potions","brews"}
+"Lot's of potions and brews are located in the shelfs. They are of lot's of
+different colors. You have no idea what so ever what they are used for."
+
+movement SECT_CITY
+
+west to deadend_1 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"door"};
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+
+dilbegin monster();
+code
+{
+:start:
+	wait(SFB_CMD,command(CMD_GET));
+	if ((argument $= "mirror"))
+	{
+	act("It's stuck to the wall!",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	if ((argument $= "pentagram"))
+	{
+	act("What do you want to do? Digg up the floor? I don't think so!",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	if ((argument $= "shelf") or (argument $= "shelfs"))
+	{
+	act("No way!",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	if ((argument $= "potion") or (argument $= "brew"))
+	{
+	act("You have no need for it!",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	goto start;
+}
+dilend
+end
+/* ---------------------------------------- */
+
+	stairway
+names {"stairs","stairway"}
+title "The stairway"
+descr
+"This is a very small room with dark grey and rock walls. You can feel a
+moistness in the room. In the north part of the room there is a small stairway
+made of grey and rockys stone, leading down into the dark dungeons.
+Exits leads of to the south and down."
+
+extra {"stairway","stairs","stair"}
+"Huh? why do you want to look at the stairway? It's a very normal stairway
+made of stone..."
+
+movement SECT_CITY
+
+down to dungeon_1 descr "Stairway leading down into the dungeons.";
+south to corridor_8 descr "A large corridor.";
+
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+
+dilbegin stairway();
+code
+{
+:start:
+	wait(SFB_CMD,command(CMD_GET));
+	if ((argument $= "stair") or (argument $= "stairway") or (argument $= "stairs"))
+	{
+	act("Are you crazy?? Forget it!",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	goto start;
+}
+dilend
+end
+/* ---------------------------------------- */
+
+	dungeon_1
+title "Entrance to the dungeon"
+descr
+"A small stairway leading up to the ground floor of the castle. In the north
+there is an old wooden door located. On the walls there are small torches casting
+a flickering light over the room. Exits leads of to the north and up."
+
+extra {"door"}
+"An ordinary wooden door is what it is!"
+
+extra {"torches","torch"}
+"Four torches are stuck into the walls. Casting a weak light in the room."
+
+extra {"stairway","stairs","stair"}
+"This is a very normal stairway made of stone, leading up to the ground floor of the castle."
+
+movement SECT_CITY
+
+up to stairway descr "A stairway leading up.";
+north to dungeon_2 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"door"};
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+dilbegin dungeon_1();
+code
+{
+:start:
+	wait(SFB_CMD,command(CMD_GET));
+	if ((argument $= "torch") or (argument $= "torches"))
+	{
+	act("Can't let you do that! They are stuck into the wall! Besides, they are needed to lit up the room.",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	goto start;
+}
+dilend
+end
+/* ---------------------------------------- */
+
+	dungeon_2
+title "A dark corridor"
+descr
+"You are standing in a dark creepy corridor that has been carved into the
+mountain ground below the castle. The corridor is very dark and damp. Exits
+are leading of to the north and south."
+
+movement SECT_CITY
+
+south to dungeon_1 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"door"};
+north to dungeon_3 descr "A dark corridor.";
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+IN_ALWAYS_DARK
+end
+/* ---------------------------------------- */
+
+	dungeon_3
+title "A dark corridor"
+descr
+"You are standing in a dark creepy corridor that has been carved into the
+mountain ground below the castle. The corridor is very dark and damp. To
+the west you can see the bars to a small damp prison cell. Exits leads of
+to the south and north."
+
+extra {"bars"}
+"These are ordinary steel bars. They are ther to keep whomever that is in
+the cell from getting out. And viceversa."
+
+movement SECT_CITY
+
+north to dungeon_4 descr "A dark corridor.";
+south to dungeon_2 descr "A dark corridor.";
+west to cell_1 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"bars"};
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+IN_ALWAYS_DARK
+end
+/* ---------------------------------------- */
+
+	cell_1
+title "A small prison cell"
+descr
+"You are standing in a small damp prison cell. The floor is covered this
+a thick layer of hay. A large pile of bones and skulls are located in the
+northwest corner of the cell. The cell is very cold and dark. A foul smell
+is floating around in the room. The ceiling is very rough and looks like
+it's going to fall appart any second. The only exit out is to the east."
+
+extra {"skulls","pile","bones"}
+"It looks like they belonged to a human race and seems to have been here for
+quite some time."
+
+extra {"bars"}
+"These are ordinary steel bars. They are ther to keep whomever that is in
+the cell from getting out. And viceversa."
+
+extra {"hay"}
+"It's ordinary hay. It looks like it's been here for quite some time though."
+
+extra {"floor"}
+"The floor is very filthy and covered up with a thick layer of hay."
+
+movement SECT_CITY
+
+east to dungeon_3 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"bars"};
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+IN_ALWAYS_DARK
+
+dilbegin skulls_dil1();
+code
+{
+:start:
+	wait(SFB_CMD,command(CMD_GET));
+	if ((argument $= "bones") or (argument $= "skulls") or (argument $= "pile"))
+	{
+	act("You don't need it for anything! It's just old bones and skulls!",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	goto start;
+}
+dilend
+end
+/* ---------------------------------------- */
+
+	dungeon_4
+title "A dark corridor"
+descr
+"You are standing in a dark creepy corridor that has been carved into the
+mountain ground below the castle. The corridor is very dark and damp. To
+the west you can see the bars to a small damp prison cell. Exits leads of
+to the south and east."
+
+extra {"bars"}
+"These are ordinary steel bars. They are ther to keep whomever that is in
+the cell from getting out. And viceversa."
+
+movement SECT_CITY
+
+east to dungeon_5 descr "A dark corridor.";
+south to dungeon_3 descr "A dark corridor.";
+west to cell_2 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"bars"};
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+IN_ALWAYS_DARK
+end
+/* ---------------------------------------- */
+
+	cell_2
+title "A small prison cell"
+descr
+"You are standing in a small damp prison cell. The floor is covered this
+a thick layer of hay. A large pile of bones and skulls are located in the
+middle of the cell. The cell is very cold and dark. A foul smell
+is floating around in the room. The ceiling is very rough and looks like
+it's going to fall appart any second. The only exit out is to the east."
+
+extra {"skulls","pile","bones"}
+"It looks like they belonged to a human race and seems to have been here for
+quite some time."
+
+extra {"bars"}
+"These are ordinary steel bars. They are ther to keep whomever that is in
+the cell from getting out. And viceversa."
+
+extra {"hay"}
+"It's ordinary hay. It looks like it's been here for quite some time though."
+
+extra {"floor"}
+"The floor is very filthy and covered up with a thick layer of hay."
+
+movement SECT_CITY
+
+east to dungeon_4 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"bars"};
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+IN_ALWAYS_DARK
+
+dilbegin skulls_dil2();
+code
+{
+:start:
+	wait(SFB_CMD,command(CMD_GET));
+	if ((argument $= "bones") or (argument $= "skulls") or (argument $= "pile"))
+	{
+	act("You don't need it for anything! It's just old bones and skulls!",A_ALWAYS,activator,null,null,TO_CHAR);
+	block;
+	}
+	goto start;
+}
+dilend
+end
+/* ---------------------------------------- */
+
+	dungeon_5
+title "A dark corridor"
+descr
+"You are standing in a dark creepy corridor that has been carved into the
+mountain ground below the castle. The corridor is very dark and damp. Exits
+leads of to the east and west."
+
+movement SECT_CITY
+
+west to dungeon_4 descr "A dark corridor.";
+east to dungeon_6 descr "A dark corridor.";
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+IN_ALWAYS_DARK
+end
+/* ---------------------------------------- */
+
+	dungeon_6
+title "A dark corridor"
+descr
+"You are standing in a dark creepy corridor that has been carved into the
+mountain ground below the castle. The corridor is very dark and damp. Exits
+leads of to the west and south."
+
+movement SECT_CITY
+
+west to dungeon_5 descr "A dark corridor.";
+south to dungeon_7 descr "A dark corridor.";
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+IN_ALWAYS_DARK
+end
+/* ---------------------------------------- */
+
+	dungeon_7
+title "A dark corridor"
+descr
+"You are standing in a dark creepy corridor that has been carved into the
+mountain ground below the castle. The corridor is very dark and damp. To
+the west you can see the bars to a small damp prison cell. Exits leads of
+to the north and south."
+
+extra {"bars"}
+"These are ordinary steel bars. They are ther to keep whomever that is in
+the cell from getting out. And viceversa."
+
+movement SECT_CITY
+
+north to dungeon_6 descr "A dark corridor.";
+south to dungeon_8 descr "A dark corridor.";
+west to cell_3 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"bars"};
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+IN_ALWAYS_DARK
+end
+/* ---------------------------------------- */
+
+	cell_3
+title "A small prison cell"
+descr
+"You are standing in a small damp prison cell. The floor is covered this
+a thick layer of hay. The cell is very cold and dark. A foul smell
+is floating around in the room. The ceiling is very rough and looks like
+it's going to fall appart any second. The only exit out is to the east."
+
+extra {"bars"}
+"These are ordinary steel bars. They are ther to keep whomever that is in
+the cell from getting out. And viceversa."
+
+extra {"hay"}
+"It's ordinary hay. It looks like it's been here for quite some time though."
+
+extra {"floor"}
+"The floor is very filthy and covered up with a thick layer of hay."
+
+movement SECT_CITY
+
+east to dungeon_7 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"bars"};
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+IN_ALWAYS_DARK
+end
+/* ---------------------------------------- */
+
+	dungeon_8
+title "A dark corridor"
+descr
+"You are standing in a dark creepy corridor that has been carved into the
+mountain ground below the castle. The corridor is very dark and damp. To
+the west you can see the bars to a small damp prison cell. Exits leads of
+to the north."
+
+extra {"bars"}
+"These are ordinary steel bars. They are ther to keep whomever that is in
+the cell from getting out. And viceversa."
+
+movement SECT_CITY
+
+north to dungeon_7 descr "A dark corridor.";
+west to cell_4 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"bars"};
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+IN_ALWAYS_DARK
+end
+/* ---------------------------------------- */
+
+	cell_4
+title "A small prison cell"
+descr
+"You are standing in a small damp prison cell. The floor is covered this
+a thick layer of hay. The cell is very cold and dark. A foul smell
+is floating around in the room. The ceiling is very rough and looks like
+it's going to fall appart any second. The only exit out is to the east."
+
+extra {"bars"}
+"These are ordinary steel bars. They are ther to keep whomever that is in
+the cell from getting out. And viceversa."
+
+extra {"hay"}
+"It's ordinary hay. It looks like it's been here for quite some time though."
+
+extra {"floor"}
+"The floor is very filthy and covered up with a thick layer of hay."
+
+movement SECT_CITY
+
+east to dungeon_8 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"bars"};
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+IN_ALWAYS_DARK
+end
+
+/* ------------------------------------------------------------------- */
+%mobiles
+
+/* Abilities: Str, Dex, Con, Hpp, Bra, Cha, Mag, Div */
+/* Weapons: Axe_ham, Sword, Club_mace, Polearm, Unarmed, Special */
+/* Spells: Div, Pro, Det, Sum, Cre, Min, Hea, Col, Cel, Int, Ext */
+
+	inhaas
+names {"inhaas"}
+title "Inhaas"
+descr "Inhaas the creator is standing here."
+extra {}
+"He look's like a normal human. He seems to be arond 65 years old with long
+white hair and a big white cloak wrapped around his body."
+
+	level 65
+	exp 100
+	alignment -400
+	race RACE_HUMAN
+	sex SEX_MALE
+	height 180
+	weight 160
+	money 3 SILVER_PIECE
+	NATURAL_DEF(WPN_FIST, ARM_CHAIN)
+	MSET_ABILITY(12,10,11,20,10,10,12,15)
+	MSET_WEAPON(0,0,0,0,0,0)
+	MSET_SPELL(20,10,10,5,5,10,20,5,5,5,5)
+
+dilbegin inhaas();
+var
+	pc : unitptr;
+	wraith : unitptr;
+code
+{
+	on_activation(self.position == POSITION_FIGHTING,loop);
+
+:start:
+	heartbeat := PULSE_SEC * 6;
+	pause;
+	pc := findrndunit(self,FIND_UNIT_SURRO,UNIT_ST_PC);
+	if ( pc == null ) goto start;
+	if (pc.level >= IMMORTAL_LEVEL) goto start;
+	secure(pc,start);
+	wraith := findsymbolic("wraith@ishlor");
+	if (wraith == null) goto nowraith;
+	if (wraith.position <= POSITION_SLEEPING) goto nowraith;
+	if (wraith.outside.idx != self.outside.idx) goto nowraith;
+	exec("say Hey! What are you doing here "+pc.name+"?",self);
+	pause;
+	exec("say This is a private area! Go away!",self);
+	pause;
+	exec("say Go away now! Or i will have the wraith kill you!",self);
+	pause;
+	exec("grin "+pc.name,self);
+	pause;
+	exec("say As you wish! Prepare to die moron!!!",self);
+	heartbeat := PULSE_SEC * 3;
+	pause;
+	exec("emote whispers something to the wraith!",self);
+	heartbeat := PULSE_SEC * 2;
+	pause;
+	sendto(pc.name, findsymbolic("wraith@ishlor"));
+	goto loop;
+:nowraith:
+	exec("say No!! Please don't kill me "+pc.name+"!",self);
+	pause;
+	exec("say I'm just an incompetent wussy... please!",self);
+	pause;
+	exec("cry "+pc.name,self);
+	pause;
+	exec("say I beg you to spare my life..",self);
+	pause;
+	exec("wor "+pc.name,self);
+	pause;
+	exec("smile",self);
+	pause;
+:loop:
+	heartbeat := PULSE_SEC * 2;
+	pause;
+	if (self.position == POSITION_FIGHTING) goto loop;
+	if (wraith == null) goto loop2;
+	if (wraith.position == POSITION_FIGHTING) goto loop;
+:loop2:
+	heartbeat := PULSE_SEC * 60;
+	pause;
+	goto start;
+
+}
+dilend
+end
+/* ------------------------------------------------------------------- */
+	wraith
+names {"wraith"}
+title "the wraith"
+descr "A very powerfull looking wraith is standing here."
+extra {}
+"The wraith have no material form. It appears before you in a dark, misty
+humanoid shape with burning red eyes."
+	level 75
+	exp 115 /* teamwork/rescue/aggression dil */
+	alignment -1000
+	race RACE_SPIRIT
+	sex SEX_NEUTRAL
+	height 180
+	weight 160
+	NATURAL_DEF(WPN_FIST, ARM_PLATE)
+	MSET_ABILITY(20,15,10,15,10,10,10,10)
+	MSET_WEAPON(10,23,10,5,5,20)
+	MSET_SPELL(1,1,1,1,1,1,1,5,5,5,5)
+	special SFUN_TEAMWORK "inhaas"
+	special SFUN_RESCUE "inhaas"
+
+dilbegin wraith_dil();
+var
+	pc_name : string;
+code
+{
+:start:
+	heartbeat := PULSE_SEC * 2;
+	on_activation(self.position <= POSITION_SLEEPING, skip);
+	wait(SFB_MSG, activator.nameidx == "inhaas");
+	pc_name := argument;
+	act("The wraith's eyes starts to glow more intense.",A_ALWAYS,self,null,null,TO_ALL);
+	pause;
+	exec("moo",self);
+	heartbeat := PULSE_SEC * 1;
+	pause;
+	exec("kill "+pc_name, self);
+	pause;
+	goto start;
+}
+dilend
+
+end
+/* ------------------------------------------------------------------- */
+	fire_witch
+names {"witch of fire","witch","othea"}
+title "Othea the witch of fire"
+descr "Othea the witch of fire is standing here."
+extra {}
+"The witch of fire has long red burning hair. She looks very old and have
+lot's of wrinkles in her face."
+	level 70
+	exp 120 /* spell casting */
+	alignment -1000
+	race RACE_HUMAN
+	sex SEX_FEMALE
+	height 180
+	weight 130
+	money 2 SILVER_PIECE
+	NATURAL_DEF(WPN_FIST, ARM_CHAIN)
+	MSET_ABILITY(12,10,11,10,17,10,15,15)
+	MSET_WEAPON(0,0,0,0,0,0)
+	MSET_SPELL(20,10,10,5,5,10,20,5,5,5,5)
+dilcopy combat_mag@function("fireball", "heal", 25, 1);
+end
+/* ------------------------------------------------------------------- */
+	frost_witch
+names {"witch of frost","witch","izena"}
+title "Izena the witch of frost"
+descr "Izena the witch of frost is standing here."
+extra {}
+"The witch of frost has long snow-white hair. She looks very old and have
+lot's of wrinkles in her face."
+	level 70
+	exp 120 /* spell casting */
+	alignment -1000
+	race RACE_HUMAN
+	sex SEX_FEMALE
+	height 180
+	weight 130
+	money 2 SILVER_PIECE
+	NATURAL_DEF(WPN_FIST, ARM_CHAIN)
+	MSET_ABILITY(12,10,11,10,17,10,15,15)
+	MSET_WEAPON(0,0,0,0,0,0)
+	MSET_SPELL(20,10,10,5,5,10,5,20,5,5,5)
+dilcopy combat_mag@function("frostball", "heal", 25, 1);
+end
+/* ------------------------------------------------------------------- */
+	death_witch
+names {"witch of death","witch","acoral"}
+title "Acoral the witch of death"
+descr "Acoral the witch of death is standing here."
+extra {}
+"The witch of death has long black hair and a beautiful face compared to the
+other two witches. She looks very young. You would guess her age to be around
+25 years old."
+	level 75
+	exp 140 /* spellcasting/special attack dil */
+	alignment -1000
+	race RACE_HUMAN
+	sex SEX_FEMALE
+	height 180
+	weight 130
+	money 1 GOLD_PIECE
+	NATURAL_DEF(WPN_FIST, ARM_CHAIN)
+	MSET_ABILITY(10,10,10,20,15,10,15,10)
+	MSET_WEAPON(0,0,0,0,0,0)
+	MSET_SPELL(15,10,10,5,10,10,5,10,15,5,5)
+dilcopy combat_mag@function("lightning", "heal", 25, 2);
+
+dilbegin death_dil();
+var
+	u : unitptr;
+	random : integer;
+code
+{
+:start:
+	heartbeat := PULSE_SEC * 1;
+	pause;
+	if (self.position != POSITION_FIGHTING) goto start;
+
+	random := rnd(2,5);
+	act("$1n utters the words 'fehi uxarh ehlzasd'",A_ALWAYS,self,null,null,TO_ALL);
+	act("A large portal appears from nowhere.",A_ALWAYS,self,null,null,TO_ALL);
+:wfight:
+	if (random == 0) goto wfight2;
+	random := random - 1;
+	u := load("black_spirit@ishlor");
+	act("A black spirit exits the portal.",A_ALWAYS,self,null,null,TO_ALL);
+	link(u,self.outside);
+	setweight(u,100);
+	exec("kill "+self.fighting.name,u);
+	pause;
+	goto wfight;
+:wfight2:
+	pause;
+	if (self.position == POSITION_FIGHTING) goto wfight2;
+	goto start;
+}
+dilend
+end
+/* ------------------------------------------------------------------- */
+	black_spirit
+names {"black spirit","spirit"}
+title "a black spirit"
+descr "A black spirit hovers above the floor."
+extra {}
+"The spirit looks like an translucent human, floating in the air. It seems
+like it has been an ancient warrior from the old world."
+
+	weight 0
+   	exp 115 /* summoned mob/spellcasting/dil armor */
+	height 150
+	level 50
+	race RACE_SPIRIT
+	sex SEX_NEUTRAL
+	alignment -600
+	NATURAL_DEF(WPN_FIST, ARM_PLATE)
+	MSET_ABILITY (20,20,15,5,5,5,5,25)
+	MSET_WEAPON(20,6,6,6,6,6)
+	MSET_SPELL(2,2,2,2,2,2,2,2,2,20,12)
+	special SFUN_AGGRESSIVE "$1n attacks $3n!!!" time PULSE_SEC*3 bits SFB_RANTIME
+dilcopy combat_mag@function("toxicate", "heal", 0, 2);
+
+dilbegin spirit();
+var
+	u : unitptr;
+code
+{
+:start:
+	u := load("spirit_boots@ishlor");
+	u.height := self.height;
+	addequip( u, WEAR_FEET );
+	u := load("spirit_sleeves@ishlor");
+	u.height := self.height;
+	addequip( u, WEAR_ARMS );
+	u := load("spirit_leggings@ishlor");
+	u.height := self.height;
+	addequip( u, WEAR_LEGS );
+	u := load("spirit_plate@ishlor");
+	u.height := self.height;
+	addequip( u, WEAR_BODY );
+	u := load("spirit_helmet@ishlor");
+	u.height := self.height;
+	addequip( u, WEAR_HEAD );
+	u := load("spirit_gloves@ishlor");
+	u.height := self.height;
+	addequip( u, WEAR_HANDS );
+	u := load("spirit_hammer@ishlor");
+	u.height := self.height;
+	addequip( u, WEAR_WIELD );
+
+	heartbeat := PULSE_SEC * 5;
+	wait(SFB_TICK,TRUE);
+:loop:
+	heartbeat := PULSE_SEC * 1;
+	pause;
+	if (self.position == POSITION_FIGHTING) goto loop;
+	if (self.position <= POSITION_STUNNED) goto loop;
+	act("$1n disappears in a puff of smoke.",A_ALWAYS,self,null,null,TO_ALL);
+	destroy(self);
+}
+dilend
+end
+/* ------------------------------------------------------------------- */
+/* Abilities: Str, Dex, Con, Hpp, Bra, Cha, Mag, Div */
+/* Weapons: Axe_ham, Sword, Club_mace, Polearm, Unarmed, Special */
+/* Spells: Div, Pro, Det, Sum, Cre, Min, Hea, Col, Cel, Int, Ext */
+
+	ra /* this is taken as the mob which is up to 50 above zone standard level */
+names {"ra","angel"}
+title "Ra the angel of death"
+descr "Ra the angel of death is standing here."
+extra {}
+"As you watch closer you see a huge skeletal creature. Over three
+meters tall. The eyes is glowing with a red light. You feel a sudden
+chill running through your body as he turns his head towards you."
+level 100
+exp 105 /* aggression dil */
+alignment -1000
+race RACE_MARDAGG
+sex SEX_MALE
+height 310
+weight 300
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+MSET_ABILITY(20,17,7,20,10,6,10,10)
+MSET_WEAPON(5,5,4,15,7,4)
+MSET_SPELL(1,1,1,15,6,1,1,11,11,11,1)
+special SFUN_RANDOM_GLOBAL_MOVE time PULSE_SEC*40 bits SFB_RANTIME
+
+dilbegin ra();
+var
+	pc : unitptr;
+	random : integer;
+	timer : integer;
+	timerdly : integer;
+	unitcnt : integer;
+	cnt : integer;
+
+code
+{
+	timer := 0;
+	timerdly := (rnd(2,10));
+	on_activation(self.position == POSITION_FIGHTING,fight);
+:start:
+	heartbeat:=PULSE_SEC*1;
+	pause;
+	if (self.position <= POSITION_STUNNED) goto start;
+	if (self.position != POSITION_FIGHTING) self.position := POSITION_STANDING;
+	if (timer == timerdly)
+	{
+		act("$1n utters the words 'zaxh xnijha yadafah'.",A_ALWAYS,self,null,null,TO_ALL);
+		act("Suddenly $1n disappears in a cloud of dark dust.",A_ALWAYS,self,null,null,TO_ALL);
+		if (self.zone != "ishlor")
+		{
+			link(self, findroom("split_2@ishlor"));
+			act("$1n appears in a puff of black smoke.",A_ALWAYS,self,null,null,TO_ALL);
+			timerdly := (rnd(20,50));
+			timer := -1;
+			goto start;
+		}
+		random := rnd(1,3);
+		if (random == 1) link(self, findroom("market_sq@midgaard"));
+		if (random == 2) link(self, findroom("ent_gate@garden"));
+		if (random == 3) link(self, findroom("vil_path1@urland"));
+		act("$1n appears in a puff of black smoke.",A_ALWAYS,self,null,null,TO_ALL);
+		timerdly := (rnd(1,3));
+		timer := -1;
+	}
+	heartbeat := PULSE_SEC * (rnd(15,30));
+	wait(SFB_TICK, TRUE);
+	unitcnt := 0;
+	timer := timer + 1;
+	cnt := 0;
+:newname:
+	heartbeat := PULSE_SEC * 1;
+	pause;
+	if( self.zone in {"ishlor","demon_realm"} )
+	{
+		pc := findrndunit(self,FIND_UNIT_SURRO,UNIT_ST_PC);
+		unitcnt := unitcnt + 1;
+		if (unitcnt >= 10) goto start;
+		if (pc.level > IMMORTAL_LEVEL) goto newname;
+		if (isaff(pc,ID_SANCTUARY)) goto newname;
+		secure(pc,newname);
+		if (cnt == 0) act("$1n screams 'PATHETIC MORTAL! YOU'RE MINE!!!'",A_ALWAYS,self,null,null,TO_ALL);
+		cnt := 1;
+		exec("kill "+pc.name,self);
+		goto fight2;
+	}
+	goto start;
+
+	:fight:
+	heartbeat := PULSE_SEC * 3;
+	pc := self.fighting;
+	secure(pc,start);
+	pause;
+	exec("moo", self);
+	pause;
+	exec("say MORTAL FOOLS! You can't kill me! I am almost an immortal!", self);
+	pause;
+	exec("grin " + pc.name, self);
+	pause;
+	pause;
+	exec("say Prepare to DIE! Dissbelieving mortals!", self);
+	pause;
+	exec("moo", self);
+	pause;
+	pause;
+	exec("say Doomsday is here!! Your time is up mortal! NOW YOU DIE!", self);
+	pause;
+	exec("moo",self);
+	pause;
+	pause;
+	exec("slap "+pc.name,self);
+:fight2:
+	pause;
+	if (pc.position <= POSITION_SITTING) exec("kick "+pc.name,self);
+	if (self.position == POSITION_FIGHTING) goto fight2;
+	unsecure(pc);
+	goto fight;
+
+}
+dilend
+end
+/*--------------------*/
+/* Abilities: Str, Dex, Con, Hpp, Bra, Cha, Mag, Div */
+/* Weapons: Axe_ham, Sword, Club_mace, Polearm, Unarmed, Special */
+/* Spells: Div, Pro, Det, Sum, Cre, Min, Hea, Col, Cel, Int, Ext */
+
+	shadow_beast
+names {"shadow beast","shadow","beast"}
+title "a shadow beast"
+descr "A huge dark shadow is moving arond here, making a low growling sound."
+extra {}
+"The shadow is huge, you guess it's size to approximately five meters long
+and three meters high. The shadow has much resemblance of a huge sable toothed
+tiger covered in a dark thick shadow."
+race RACE_SHADOW_BEAST
+sex SEX_NEUTRAL
+level 75
+exp 105 /* aggressive */
+weight 500
+height 300
+NATURAL_DEF(WPN_CLAW, ARM_PLATE)
+MSET_ABILITY(20,20,10,10,10,10,10,10)
+MSET_WEAPON(0,0,0,10,15,0)
+MSET_SPELL(10,10,10,10,10,10,10,5,0,0,0)
+alignment -1000
+special SFUN_AGGRESSIVE "$1n attacks!!!" time PULSE_SEC*6 bits SFB_RANTIME
+end
+/*--------------------*/
+	treasure_guard
+names {"stone guardian","guardian","guard"}
+title "a stone guardian"
+descr "A stone guardian is standing here."
+extra {}
+"The guardian seems to be huge minotaur that has been turned into stone.
+The guardian's body looks like a normal human, while the head looks like a
+bull's with two long sharp looking horns sticking out."
+race RACE_STONE_GUARDIAN
+sex SEX_NEUTRAL
+level 75
+exp 110 /* teamwork/rescue */
+weight 650
+height 250
+NATURAL_DEF(WPN_CRUSH, ARM_CHAIN)
+MSET_ABILITY(20,10,15,10,15,10,10,10)
+MSET_WEAPON(10,10,4,2,16,2)
+MSET_SPELL(7,1,1,1,6,1,7,2,16,10,4)
+alignment 0
+default POSITION_STANDING
+special SFUN_GUARD_DOOR "nw_ghall@west door@ishlor@$1n stops you.@$1n prevents $3n from opening the door."
+special SFUN_TEAMWORK "ishlor"
+special SFUN_RESCUE "ishlor"
+
+dilbegin guardian();
+code
+{
+:start:
+	heartbeat := PULSE_SEC * 3;
+	pause;
+	if (self.position == POSITION_SLEEPING)
+	{
+		exec("wake",self);
+		exec("stand",self);
+	}
+	if (self.position == POSITION_RESTING)
+		exec("stand",self);
+	if (self.position == POSITION_SITTING)
+		exec("stand",self);
+	if (self.outside.nameidx != "nw_ghall")
+	{
+	 walkto(findroom("nw_ghall@ishlor"));
+	}
+	goto start;
+}
+dilend
+end
+/*--------------------*/
+/* Abilities: Str, Dex, Con, Hpp, Bra, Cha, Mag, Div */
+/* Weapons: Axe_ham, Sword, Club_mace, Polearm, Unarmed, Special */
+/* Spells: Div, Pro, Det, Sum, Cre, Min, Hea, Col, Cel, Int, Ext */
+
+	death_ghast
+names {"death ghast","ghast"}
+title "a death ghast"
+descr "A death ghast is standing here."
+extra {}
+"The ghast looks like a skelleton with glowing red eyes and rotten scraps
+of flesh hanging out from the various parts of the body."
+	race RACE_DEATH_GHAST
+	sex SEX_NEUTRAL
+	level 75
+	exp 105 /* aggressive */
+	weight 180
+	height 180
+	NATURAL_DEF(WPN_FIST, ARM_PLATE)
+	MSET_ABILITY(20,15,15,15,10,5,10,10)
+	MSET_WEAPON(13,13,2,2,12,2)
+	MSET_SPELL(7,6,6,6,6,1,7,2,5,6,4)
+	alignment -1000
+	special SFUN_RANDOM_ZONE_MOVE time 120 bits SFB_RANTIME
+	special SFUN_AGGRESSIVE "$1n attacks $3n!!!" time PULSE_SEC*15 bits SFB_RANTIME
+
+dilbegin ghast_dil();
+var
+	pc : unitptr;
+	t : integer;
+code
+{
+	heartbeat := PULSE_SEC * 1;
+	on_activation(self.position == POSITION_FIGHTING,loop);
+
+:start:
+	heartbeat := PULSE_SEC * (rnd(5,10));
+	pause;
+	pc := findrndunit(self,FIND_UNIT_SURRO,UNIT_ST_PC);
+	if (pc == null) goto start;
+	secure(pc,start);
+	exec("growl",self);
+	pause;
+:loop:
+	heartbeat := PULSE_SEC * 1;
+	pause;
+	if (self.position != POSITION_FIGHTING) goto start;
+	goto loop;
+}
+dilend
+end
+/* ------------------------------------------------------------------- */
+	guard_50
+names {"demon guard","guard","demon"}
+title "a demon guard"
+descr "A demon guard is standing here, keeping an eye on the surroundings."
+extra {}
+"The demon has dark grey skin and long black nails looking a lot like claws.
+The eyes are glowing with a bright white light. The mouth on the guard is
+equiped with white long sharp teeths that seems to be able to bite through
+anything."
+race RACE_LESSER_DEMON
+sex SEX_NEUTRAL
+level 65
+exp 110 /* teamwork/rescue */
+weight 250
+height 180
+NATURAL_DEF(WPN_CLAW, ARM_CHAIN)
+MSET_ABILITY(20,20,14,15,10,1,10,10)
+MSET_WEAPON(13,13,2,2,12,2)
+MSET_SPELL(7,1,1,1,1,1,7,2,25,6,4)
+alignment -1000
+special SFUN_RANDOM_ZONE_MOVE time 450 bits SFB_RANTIME
+special SFUN_TEAMWORK "guard/ishlor/guardian"
+special SFUN_RESCUE "guard/ishlor/guardian"
+end
+/* ------------------------------------------------------------------- */
+	guard_51
+names {"demon lieutenant","lieutenant","guard","demon"}
+title "a demon lieutenant"
+descr "A demon lieutenant is standing here, keeping an eye on the surroundings."
+extra {}
+"The demon has dark grey skin and long black nails looking a lot like claws.
+The eyes are glowing with a bright white light. The mouth is filled with a lot
+of white, long and sharp teeths that seems to be able to bite through just about
+anything."
+race RACE_LESSER_DEMON
+sex SEX_NEUTRAL
+level 70
+exp 110 /* teamwork/rescue */
+weight 250
+height 180
+NATURAL_DEF(WPN_CLAW, ARM_CHAIN)
+MSET_ABILITY(20,20,14,15,10,1,10,10)
+MSET_WEAPON(13,13,2,2,12,2)
+MSET_SPELL(7,1,1,1,1,1,7,2,25,6,4)
+alignment -1000
+special SFUN_RANDOM_ZONE_MOVE time 540 bits SFB_RANTIME
+special SFUN_TEAMWORK "guard/ishlor/guardian"
+special SFUN_RESCUE "guard/ishlor/guardian"
+end
+/* ------------------------------------------------------------------- */
+	guard_52
+names {"demon sergeant","sergeant","guard","demon"}
+title "a demon sergeant"
+descr "A demon sergeant is standing here, keeping an eye on the surroundings."
+extra {}
+"The demon has dark grey skin and long black nails looking a lot like claws.
+The eyes are glowing with a bright white light. The mouth is filled with a lot
+of white, long and sharp teeths that seems to be able to bite through just about
+anything."
+race RACE_LESSER_DEMON
+sex SEX_NEUTRAL
+level 68
+exp 110 /* teamwork/rescue */
+weight 250
+height 180
+NATURAL_DEF(WPN_CLAW, ARM_CHAIN)
+MSET_ABILITY(20,20,14,15,10,1,10,10)
+MSET_WEAPON(13,13,2,2,12,2)
+MSET_SPELL(7,1,1,1,1,1,7,2,25,6,4)
+alignment -1000
+special SFUN_RANDOM_ZONE_MOVE time 450 bits SFB_RANTIME
+special SFUN_TEAMWORK "guard/ishlor/guardian"
+special SFUN_RESCUE "guard/ishlor/guardian"
+end
+/* ------------------------------------------------------------------- */
+	guard_53
+names {"demon captain","captain","guard","demon"}
+title "a demon captain"
+descr "A demon captain is standing here, keeping an eye on the surroundings."
+extra {}
+"The demon has dark grey skin and long black nails looking a lot like claws.
+The eyes are glowing with a bright white light. The mouth is filled with a lot
+of white, long and sharp teeths that seems to be able to bite through just about
+anything."
+race RACE_LESSER_DEMON
+sex SEX_NEUTRAL
+level 73
+exp 110 /* teamwork/rescue */
+weight 250
+height 180
+NATURAL_DEF(WPN_CLAW, ARM_CHAIN)
+MSET_ABILITY(20,20,14,15,10,1,10,10)
+MSET_WEAPON(13,13,2,2,12,2)
+MSET_SPELL(7,1,1,1,1,1,7,2,25,6,4)
+alignment -1000
+special SFUN_RANDOM_ZONE_MOVE time 450 bits SFB_RANTIME
+special SFUN_TEAMWORK "guard/ishlor/guardian"
+special SFUN_RESCUE "guard/ishlor/guardian"
+end
+/* ------------------------------------------------------------------- */
+	guard_54
+names {"demon general","general","guard","demon"}
+title "a demon general"
+descr "A demon general is standing here, keeping an eye on the surroundings."
+extra {}
+"The demon has dark grey skin and long black nails looking a lot like claws.
+The eyes are glowing with a bright white light. The mouth is filled with a lot
+of white, long and sharp teeths that seems to be able to bite through just about
+anything."
+race RACE_LESSER_DEMON
+sex SEX_NEUTRAL
+level 75
+exp 110 /* teamwork/rescue */
+weight 250
+height 180
+NATURAL_DEF(WPN_CLAW, ARM_CHAIN)
+MSET_ABILITY(20,20,14,15,10,1,10,10)
+MSET_WEAPON(13,13,2,2,12,2)
+MSET_SPELL(7,1,1,1,1,1,7,2,25,6,4)
+alignment -1000
+special SFUN_RANDOM_ZONE_MOVE time 450 bits SFB_RANTIME
+special SFUN_TEAMWORK "guard/ishlor/guardian"
+special SFUN_RESCUE "guard/ishlor/guardian"
+end
+/* ------------------------------------------------------------------- */
+%objects
+
+	treasury_key
+names {"treasury key","key"}
+title "the Key to treasury room"
+descr "A small golden key is lying here on the ground."
+extra {}
+"This looks like a small shining golden key. On the key there is the
+inscription 'Treasury Chamber'."
+type ITEM_KEY
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD, MANIPULATE_WEAR_NECK}
+MATERIAL_METAL("A shiny gold metal")
+weight 1
+end
+/*--------------------*/
+	death_plate
+names {"breast plate","breastplate","plate"}
+title "the breastplate of death"
+descr "A dark breastplate is lying here on the ground."
+extra {}
+"This looks like an ordinary breastplate. But as you watch closer you can
+see a small inscription on the plate.
+&l
+  The inscription says:
+      The plate of Death.
+      Beware! This plate belongs
+      to Ra The angel of death.&n"
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+MATERIAL_METAL("A dark metal")
+ARMOUR_PLATE(2, 2)
+CHA_TRANSFER(-4)
+weight 10
+cost 1 PLATINUM_PIECE
+rent 6 GOLD_PIECE
+dilcopy level_restrict@function (40,0,25,"");
+end
+/*--------------------*/
+	guard_sword
+names {"guard sword","sword"}
+title "a guard sword"
+descr "A sharp looking guard sword is left here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD, MANIPULATE_HOLD}
+WEAPON_DEF(WPN_LONG_SWORD, 2, 2)
+MATERIAL_METAL("A shiny black metal")
+weight 12
+rent 3 GOLD_PIECE
+end
+/*--------------------*/
+	guard_hammer
+names {"guard hammer","hammer"}
+title "a guard hammer"
+descr "A guard hammer has been left here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD, MANIPULATE_HOLD}
+WEAPON_DEF(WPN_WAR_HAMMER, +1, 1)
+MATERIAL_METAL("A large iron head")
+MATERIAL_WOOD("A wooden handle")
+weight 20
+cost 7 GOLD_PIECE
+rent 3 GOLD_PIECE
+end
+/*--------------------*/
+	d_scythe
+names {"scythe of death","scythe"}
+title "the scythe of death"
+descr "A sharp looking scythe with a glowing aura is lying here."
+flags {UNIT_FL_MAGIC}
+extra {}
+"The Scythe looks extremly sharp. A green aura is glowing arond it."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+
+WEAPON_DEF(WPN_SCYTHE, +1, 1)
+MATERIAL_METAL("A dull black metal")
+STR_TRANSFER(+3)
+DEX_TRANSFER(+2)
+CHA_TRANSFER(-3)
+weight 30
+cost 1444 "cp"
+rent 722  "cp"
+dilcopy ali_restrict@function (-1000,-350,0,25,"");
+dilcopy level_restrict@function (50,0,25,"");
+spell 70
+
+dilbegin  deathscythe();
+var
+	n : integer;
+code{
+   :loop:
+     wait( SFB_CMD, command( "slay" ) );
+     if( activator != self.outside ) goto loop;
+     if( self.equip != WEAR_WIELD ) goto loop;
+     block;
+     if( self.alignment <= 0 )
+     {
+      act( "Your $2n glows slightly, but nothing happens.", A_SOMEONE, self.outside, self, null, TO_CHAR );
+      goto loop;
+     }
+     self.alignment := self.alignment - 1;
+     n := cast_spell( SPL_FIREBALL_1, self.outside, self, self.outside.fighting, "scythe_dam@ishlor" );
+     goto loop;
+}
+dilend
+
+dilcopy recharge();
+
+dilbegin slay_dil();
+code{
+   :loop:
+     wait( SFB_COM, command( CMD_AUTO_COMBAT ) );
+     if( self.equip != WEAR_WIELD ) goto loop;
+     if( self.outside.fighting == null ) goto loop;
+     if( self.outside.fighting.hp > 10 ) goto loop;
+     act( "$1n's $2N rips $3n into pieces.", A_SOMEONE, self.outside, self, self.outside.fighting, TO_REST );
+     act( "Your $2n rips $3n into pieces.", A_SOMEONE, self.outside, self, self.outside.fighting, TO_CHAR );
+     act( "$1n's $2N rips you into pieces, it's time to see odin.", A_SOMEONE, self.outside, self, self.outside.fighting, TO_VICT );
+     self.outside.fighting.hp := -11;
+     goto loop;
+}
+dilend
+
+end
+/*--------------------*/
+lth_leg
+names {"leggings"}
+title "hard leather leggings"
+descr "A pair of hard leather leggings has been left here."
+MATERIAL_LEATHER("A hard leather")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+ARMOUR_HRD_LEATHER(0,0)
+cost 10 IRON_PIECE
+end
+/*--------------------*/
+lth_sleeves
+names {"sleeves"}
+title "hard leather sleeves"
+descr "A pair of hard leather sleeves has been left here."
+MATERIAL_LEATHER("A hard leather")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ARMS}
+ARMOUR_HRD_LEATHER(0, 0)
+cost 10 IRON_PIECE
+end
+/*--------------------*/
+lth_boots
+names {"boots"}
+title "hard leather boots"
+descr "A pair of hard leather boots has been left here."
+MATERIAL_LEATHER("A hard leather")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+ARMOUR_HRD_LEATHER(0, 0)
+cost 10 IRON_PIECE
+end
+/*--------------------*/
+lth_gloves
+names {"gloves"}
+title "hard leather gloves"
+descr "A pair of hard leather gloves has been left here."
+MATERIAL_LEATHER("A hard leather")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HANDS}
+ARMOUR_HRD_LEATHER(0, 0)
+cost 3 IRON_PIECE
+end
+/*--------------------*/
+black_cloak
+names {"cloak"}
+title "a black cloak"
+descr "A black cloak has been left here."
+MATERIAL_CLOTH("cloth")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+ARMOUR_HRD_LEATHER(0, 0)
+cost 3 IRON_PIECE
+end
+/*--------------------*/
+white_cloak
+names {"cloak"}
+title "a white cloak"
+descr "A white cloak has been left here."
+MATERIAL_CLOTH("cloth")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+ARMOUR_CLOTHES(0, 0)
+cost 1 IRON_PIECE
+end
+/*--------------------*/
+spirit_gloves
+names {"spiritual gloves","gloves"}
+title "spiritual gloves"
+descr "A pair of spiritual gloves has been left here."
+MATERIAL_MAGIC("A unknow magical material")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HANDS}
+ARMOUR_PLATE(0, 0)
+cost 6 GOLD_PIECE
+dilcopy level_restrict@function (40,0,25,"");
+end
+/*--------------------*/
+spirit_boots
+names {"spiritual boots","boots"}
+title "spiritual boots"
+descr "A pair of spiritual boots has been left here."
+MATERIAL_MAGIC("A unknow magical material")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+ARMOUR_PLATE(0, 0)
+cost 6 GOLD_PIECE
+dilcopy level_restrict@function (40,0,25,"");
+end
+/*--------------------*/
+spirit_sleeves
+names {"spiritual sleeves","sleeves"}
+title "spiritual sleeves"
+descr "A pair of spiritual sleeves has been left here."
+MATERIAL_MAGIC("A unknow magical material")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ARMS}
+ARMOUR_PLATE(0, 0)
+cost 6 GOLD_PIECE
+dilcopy level_restrict@function (40,0,25,"");
+end
+/*--------------------*/
+spirit_leggings
+names {"spiritual leggings","leggings"}
+title "spiritual leggings"
+descr "A pair of spiritual leggings has been left here."
+MATERIAL_MAGIC("A unknow magical material")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+ARMOUR_PLATE(0, 0)
+cost 6 GOLD_PIECE
+dilcopy level_restrict@function (40,0,25,"");
+end
+/*--------------------*/
+spirit_helmet
+names {"spiritual helmet","helmet"}
+title "spiritual helmet"
+descr "A spiritual helmet has been left here."
+MATERIAL_MAGIC("A unknow magical material")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+ARMOUR_PLATE(0, 0)
+cost 6 GOLD_PIECE
+dilcopy level_restrict@function (40,0,25,"");
+end
+/*--------------------*/
+spirit_plate
+names {"spiritual plate","breast plate","breastplate","plate"}
+title "spiritual breastplate"
+descr "A spiritual breastplate has been left here."
+MATERIAL_MAGIC("A unknow magical material")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_PLATE(0, 0)
+cost 7 GOLD_PIECE
+dilcopy level_restrict@function (40,0,25,"");
+end
+/*--------------------*/
+spirit_hammer
+names {"spiritual hammer","war hammer","hammer"}
+title "a spiritual war hammer"
+descr "A spiritual war hammer has been left here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD, MANIPULATE_HOLD}
+WEAPON_DEF(WPN_WAR_HAMMER, 0, 0)
+MATERIAL_MAGIC("A unknown magical material")
+weight 20
+cost 4 GOLD_PIECE
+dilcopy level_restrict@function (40,0,25,"");
+end
+/*--------------------*/
+witch_dagger
+names {"witch dagger","dagger"}
+title "a witch dagger"
+descr "A witch dagger has been left here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD, MANIPULATE_HOLD}
+WEAPON_DEF( WPN_DAGGER, 0, 0)
+MATERIAL_METAL("A shiny metal")
+weight 5
+cost 2 GOLD_PIECE
+rent 1 GOLD_PIECE
+dilcopy level_restrict@function (40,0,25,"");
+spell 45
+
+dilbegin w_dagger();
+var
+	enemy : unitptr;
+	random : integer;
+	n : integer;
+code{
+   :loop:
+     wait( SFB_CMD, command( "toxicate" ) );
+     if( ( activator != self.outside ) or
+	 ( self.equip != WEAR_WIELD  ) or
+	 ( self.alignment <= 0 ) )
+      goto loop;
+     block;
+     n := cast_spell(SPL_POISON,self.outside,self,self.outside.fighting,"dagger_dam@ishlor" );
+     goto loop;
+}
+dilend
+
+dilcopy recharge();
+
+
+end
+/*--------------------*/
+wraith_sword
+names {"wraith sword","sword"}
+title "a wraith sword"
+descr "A wraith sword has been left here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD, MANIPULATE_HOLD}
+WEAPON_DEF(WPN_GREAT_SWORD, 0, 0)
+MATERIAL_METAL("A shiny black metal")
+weight 20
+cost 4 GOLD_PIECE
+dilcopy level_restrict@function (40,0,25,"");
+end
+/*--------------------*/
+black_sword
+names {"black sword","sword"}
+title "a black sword"
+descr "A black sword has been left here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD, MANIPULATE_HOLD}
+WEAPON_DEF(WPN_LONG_SWORD, 0, 0)
+MATERIAL_METAL("A dull black metal")
+weight 20
+cost 2 GOLD_PIECE
+dilcopy level_restrict@function (40,0,25,"");
+end
+/*--------------------*/
+dem_plate
+names {"demonic breastplate","demonic plate","breast plate","breastplate","plate"}
+title "demonic breastplate"
+descr "A demonic breastplate has been left here."
+MATERIAL_METAL("A dull black metal")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_PLATE(0,0)
+cost 6 GOLD_PIECE
+dilcopy level_restrict@function (40,0,25,"");
+end
+/*--------------------*/
+dem_sleeves
+names {"demonic sleeves","sleeves"}
+title "demonic sleeves"
+descr "A pair of demonic sleeves has been left here."
+MATERIAL_METAL("A dull black metal")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ARMS}
+ARMOUR_PLATE(0,0)
+cost 4 GOLD_PIECE
+dilcopy level_restrict@function (40,0,25,"");
+end
+/*--------------------*/
+dem_leggings
+names {"demonic leggings","leggings"}
+title "demonic leggings"
+descr "A pair of demonic leggings has been left here."
+MATERIAL_METAL("A dull black metal")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+ARMOUR_PLATE(0,0)
+cost 4 GOLD_PIECE
+dilcopy level_restrict@function (40,0,25,"");
+end
+/*--------------------*/
+dem_boots
+names {"demonic boots","boots"}
+title "demonic boots"
+descr "A pair of demonic boots has been left here."
+MATERIAL_METAL("A dull black metal")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+ARMOUR_PLATE(0,0)
+cost 4 GOLD_PIECE
+dilcopy level_restrict@function (40,0,25,"");
+end
+/*--------------------*/
+dem_gloves
+names {"demonic gloves","gloves"}
+title "demonic gloves"
+descr "A pair of demonic gloves has been left here."
+MATERIAL_METAL("A dull black metal")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HANDS}
+ARMOUR_PLATE(0,0)
+cost 4 GOLD_PIECE
+dilcopy level_restrict@function (40,0,25,"");
+end
+/*--------------------*/
+dem_helmet
+names {"demonic helmet","helmet","helm"}
+title "demonic hemlet"
+descr "A demonic helmet has been left here."
+MATERIAL_METAL("A dull black metal")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+ARMOUR_PLATE(0, 0)
+cost 4 GOLD_PIECE
+dilcopy level_restrict@function (40,0,25,"");
+end
+/*--------------------*/
+board_1
+names {"board"}
+descr "A bulletin board is floating around in the air."
+special SFUN_BULLETIN_BOARD "citizen"
+end
+/*--------------------*/
+%reset
+
+load board_1 into mobys_cloud local 1
+
+load inhaas into monster_room zonemax 1
+  {
+	equip white_cloak position WEAR_ABOUT
+  }
+
+load wraith into monster_room zonemax 1
+  {
+	equip wraith_sword position WEAR_WIELD
+  }
+
+load death_witch into witch_room_1 zonemax 1
+  {
+	equip witch_dagger position WEAR_WIELD
+	equip black_cloak position WEAR_ABOUT
+  }
+load frost_witch into witch_room_1 zonemax 1
+  {
+	equip witch_dagger position WEAR_WIELD
+	equip black_cloak position WEAR_ABOUT
+  }
+load fire_witch into witch_room_1 zonemax 1
+  {
+	equip witch_dagger position WEAR_WIELD
+	equip black_cloak position WEAR_ABOUT
+  }
+
+load ra into split_2 max 1
+  {
+	equip d_scythe position WEAR_WIELD
+	equip lth_boots position WEAR_FEET
+	equip lth_gloves position WEAR_HANDS
+	equip lth_leg position WEAR_LEGS
+	equip death_plate position WEAR_BODY
+	equip lth_sleeves position WEAR_ARMS
+	equip black_cloak position WEAR_ABOUT
+  }
+
+load treasure_guard into nw_ghall zonemax 1
+
+load quill@midgaard into study_room zonemax 1
+load paper@midgaard into study_room zonemax 10
+load paper@midgaard into study_room zonemax 10
+load paper@midgaard into study_room zonemax 10
+load paper@midgaard into study_room zonemax 10
+load paper@midgaard into study_room zonemax 10
+load paper@midgaard into study_room zonemax 10
+load paper@midgaard into study_room zonemax 10
+load paper@midgaard into study_room zonemax 10
+load paper@midgaard into study_room zonemax 10
+load paper@midgaard into study_room zonemax 10
+
+load lantern@midgaard into witch_room_1 local 1
+
+load death_ghast into cell_1 zonemax 10
+	{
+	equip black_sword position WEAR_WIELD
+	}
+load death_ghast into cell_2 zonemax 10
+load death_ghast into cell_3 zonemax 10
+load death_ghast into cell_3 zonemax 10
+load death_ghast into cell_4 zonemax 10
+	{
+	equip black_sword position WEAR_WIELD
+	}
+load death_ghast into dungeon_2 zonemax 10
+load death_ghast into dungeon_4 zonemax 10
+load death_ghast into dungeon_5 zonemax 10
+	{
+	equip black_sword position WEAR_WIELD
+	}
+load death_ghast into dungeon_6 zonemax 10
+load death_ghast into dungeon_8 zonemax 10
+	{
+	equip black_sword position WEAR_WIELD
+	}
+
+BASE_GUARD_EQ(guard_50,guard_sword,split_1)
+BASE_GUARD_EQ(guard_51,guard_sword,split_1)
+BASE_GUARD_EQ(guard_50,guard_sword,eat_quarter)
+BASE_GUARD_EQ(guard_50,guard_sword,eat_quarter)
+BASE_GUARD_EQ(guard_50,guard_sword,eat_quarter)
+BASE_GUARD_EQ(guard_53,guard_hammer,eat_quarter)
+BASE_GUARD_EQ(guard_50,guard_sword,slp_quarter)
+BASE_GUARD_EQ(guard_52,guard_hammer,slp_quarter)
+BASE_GUARD_EQ(guard_50,guard_sword,deadend_1)
+BASE_GUARD_EQ(guard_50,guard_sword,corridor_20)
+BASE_GUARD_EQ(guard_50,guard_sword,turn_1)
+BASE_GUARD_EQ(guard_51,guard_sword,nw_tower_2)
+BASE_GUARD_EQ(guard_50,guard_sword,nw_tower_1)
+BASE_GUARD_EQ(guard_50,guard_sword,ne_tower_2)
+BASE_GUARD_EQ(guard_50,guard_sword,ne_tower_2)
+BASE_GUARD_EQ(guard_51,guard_sword,se_tower_1)
+BASE_GUARD_EQ(guard_50,guard_sword,se_tower_2)
+BASE_GUARD_EQ(guard_50,guard_sword,sw_tower_2)
+BASE_GUARD_EQ(guard_50,guard_sword,sw_tower_2)
+BASE_GUARD_EQ(guard_52,guard_hammer,outeast_1)
+BASE_GUARD_EQ(guard_50,guard_sword,outwest_1)
+BASE_GUARD_EQ(guard_53,guard_hammer,turn_2)
+BASE_GUARD_EQ(guard_50,guard_sword,turn_4)
+BASE_GUARD_EQ(guard_50,guard_sword,sw_ghall)
+BASE_GUARD_EQ(guard_54,guard_hammer,sw_ghall)
+BASE_GUARD_EQ(guard_52,guard_hammer,ne_ghall)
+BASE_GUARD_EQ(guard_51,guard_sword,ne_ghall)
+BASE_GUARD_EQ(guard_51,guard_sword,corridor_4)
+BASE_GUARD_EQ(guard_50,guard_sword,corridor_6)
+BASE_GUARD_EQ(guard_53,guard_hammer,corridor_8)
+
+load shadow_beast into beast_cell zonemax 1
+
+door bridge SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+
+door sc_ghall SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door entrance NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+
+door outwest_1 EAST {EX_OPEN_CLOSE, EX_CLOSED}
+door se_tower_1 WEST {EX_OPEN_CLOSE, EX_CLOSED}
+
+door outeast_1 WEST {EX_OPEN_CLOSE, EX_CLOSED}
+door sw_tower_1 EAST {EX_OPEN_CLOSE, EX_CLOSED}
+
+door corridor_5 EAST {EX_OPEN_CLOSE, EX_CLOSED}
+door eat_quarter WEST {EX_OPEN_CLOSE, EX_CLOSED}
+
+door corridor_6 WEST {EX_OPEN_CLOSE, EX_CLOSED}
+door slp_quarter EAST {EX_OPEN_CLOSE, EX_CLOSED}
+
+door corridor_11 WEST {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+door beast_cell EAST {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+
+door turn_4 NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+door ne_tower_1 SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+
+door deadend_1 EAST {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+door monster_room WEST {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+
+door nw_twr_ent WEST {EX_OPEN_CLOSE,EX_CLOSED}
+door nw_tower_1 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+
+door se_ghall EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door library WEST {EX_OPEN_CLOSE,EX_CLOSED}
+
+door sw_ghall WEST {EX_OPEN_CLOSE,EX_CLOSED}
+door tactic_room EAST {EX_OPEN_CLOSE,EX_CLOSED}
+
+door nw_ghall WEST {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+door treasury_room EAST {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+
+door ne_ghall EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door witch_room_1 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+
+door witch_room_1 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door witch_room_2 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+
+door dungeon_1 NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+door dungeon_2 SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+
+door dungeon_3 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+door cell_1 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+
+door dungeon_4 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+door cell_2 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+
+door dungeon_7 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+door cell_3 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+
+door dungeon_8 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+door cell_4 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+
+/* ------------------------------------------------------------------- */
+%end
+
+

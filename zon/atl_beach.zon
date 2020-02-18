@@ -1,0 +1,5326 @@
+/*
+filename    atl_beach
+password    tritium
+changedby   Saor
+EmailAdd     Morgan Schafer <saor@Maestro.COM>
+request     compile
+version     29
+END HEADER*/
+
+/* The lost city of Atlantis....and environs */
+#include "composed.h"
+
+/* More horrors of the deep to come :-) */
+
+/* North beach creature :
+  small crab		level 29      number 3
+  small scorpion	level 27      number 1
+  lycan			level 20      number 1
+  werewolf		level 30      number 1 (if lycan attacked)
+  dryad			level 28      number 3
+  naiad			level 29      number 3
+  chameleon		level 26      number 3
+  thothratep		level 30      number 1
+  akhenaten		level 32      number 1
+  
+ South beach creatures :
+  cliff hugger          level 33      number 5
+  sand crawler          level 34      number 4
+  giant crab            level 33      number 5
+  giant scorpion        level 35      number 1
+  river leech           level 32      number 3
+  algae man             level 37      number 1
+  sand spider           level 34      number 1
+  giant bat             level 31      number 4 (if door not oiled)
+*/
+
+#define OILCAN_COMPLETE "Oil-can complete"
+#define LYCAN_KILL_ONGOING "Lycan Killing Quest On-Going"
+#define LYCAN_KILL_COMPLETE "Lycan Killing Quest Complete"
+
+%zone atl_beach
+title "Atlantis"
+lifespan 30
+reset RESET_ANYHOW
+creators {"anubis"}
+
+notes
+"A zone created by Anubis (phorth@argonet.co.uk)
+to implement the lost city of Atlantis.
+This north beach area is part of the total zone which also includes
+the south beach area, the sea, the tunnels down and atlantis itself.
+
+The north beach area is for level 20-25 players.
+The south beach area is for level 25-30 players.
+"
+
+%dil
+dilbegin farter();
+var 
+	counter		: integer;
+code
+{
+	heartbeat := (rnd(0,5)*20) + (100 * PULSE_SEC);
+	counter := 5;
+	
+	:start:
+	
+	wait(SFB_TICK, TRUE);
+	counter := counter - 1;
+	act("You lift your leg to let out a particularly vicious-smelling fart.",
+	     A_SOMEONE, self, null, null, TO_CHAR);
+	act("$1n lifts $1s leg and lets out a particularly vicious-smelling fart.",
+	     A_SOMEONE, self, null, null, TO_ROOM);
+	
+	if (counter == 0) {
+		quit;
+	}
+	goto start;
+}
+dilend
+
+%rooms
+/* The northern beach area */
+        tunnel_1
+title "In a dark tunnel"
+descr
+"This dank and gloomy tunnel leads southwards where you can smell a
+distinct briney breeze, or northwards, further into the gloom."
+
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER}
+
+south to cliff_hole1 descr
+"A glimmer of light and the cries of seagulls can be heard to the south.";
+north to tunnel_2 descr
+"You cannot pierce the gloom.";
+end
+
+
+        tunnel_2
+title "In a dark tunnel"
+descr
+"This eerie tunnel leads southwards into more darkness. You catch
+a distinct whiff of brine from that direction. The tunnel also
+leads northwards into further gloom.
+To the north is a huge, rusty iron gate set firmly into the wall
+of the tunnel."
+extra{"rusty iron gate","iron gate","rusty gate","gate"}
+"This gate looks very rusty, and unless it is oiled, will probably
+squeak VERY loudly when opened...and who knows what that would
+disturb."
+
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER}
+
+south to tunnel_1 descr
+"You cannot pierce the gloom.";
+north to tunnel_3 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+key orange_key
+keyword {"iron gate","gate","door"}
+descr
+"This large iron gate looks quite rusty, probably from the action
+of damp and salt over many years. Unless you oiled it, it would
+probably squeak terribly when you opened it.";
+end
+
+
+	tunnel_3
+title "In a dark tunnel"
+descr
+"Interesting patterns of rose and white whorls adorn this otherwise
+gloomy tunnel. The tunnel continues north and south. To the north
+you catch a breeze of woods and other growing things.
+To the south is a huge, rusty iron gate set firmly into the wall
+of the tunnel."
+extra{"rusty iron gate","iron gate","rusty gate","gate"}
+"This gate looks very rusty, and unless it is oiled, will probably
+squeak VERY loudly when opened...and who knows what that would
+disturb."
+extra {"whorls"}
+"It looks as if this tunnel goes straight through a very large piece
+of rose-quartz."
+
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER}
+
+south to tunnel_2 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+key orange_key
+keyword {"iron gate","gate","door"}
+descr
+"This large iron gate looks quite rusty, probably from the action
+of damp and salt over many years. Unless you oiled it, it would
+probably squeak terribly when you opened it.";
+north to tunnel_4 descr
+"You cannot pierce the gloom.";
+end
+
+	tunnel_4
+title "In a gloomy hole in the cliff"
+descr
+"You have to duck down as you enter this hole in the cliff. (Yes..I
+know that duck down should really be called eiderdown!). To the north
+you can see a light wood and you catch your breath as you smell its
+sweet odours. The hole opens up into a higher tunnel to the south. You
+cannot see further than a few feet into the gloom."
+
+movement SECT_INSIDE
+OUT_DARK_NON_NOON
+
+flags {UNIT_FL_NO_MOB, UNIT_FL_NO_WEATHER}
+
+south to tunnel_3 descr
+"You cannot pierce the gloom.";
+north to wood_1 descr
+"You can see an idyllic wood...very peaceful!";
+end
+
+	wood_1
+title "A beautiful wood"
+descr
+"You are in a beautiful wood, surrounded to the south, east and west by
+high, dominating cliffs. To the south a dark and gloomy hole can be seen
+in the rock face. A small path meanders peacefully northwards."
+extra {"trees", "tree", "larch", "poplar"}
+"The trees make a wonderful sight : dazzling leaf colours,
+shimmering spider's webs in the branches, and bark that has
+delicate shades of brown and silver interlaced into a
+mesmerising pattern. You wish you had bought your paints,
+canvas and easel."
+extra{"cliff", "cliffs"}
+"Over 100 feet tall and very steep, they seem impossible to climb
+without rope and pitons...bad luck that you have none!"
+extra{"path"}
+"This path looks to be well-kept, the bushes to either side clipped
+back and even the leaves seem to have been swept up!"
+
+movement SECT_FOREST
+flags {UNIT_FL_NO_TELEPORT}
+
+south to tunnel_4 descr
+"A small, dark tunnel leads southwards through the cliff face.";
+north to wood_2 descr
+"The idyllic wood stretches further northwards.";
+end
+
+	wood_2
+title "A beautiful wood"
+descr
+"You are in a beautiful wood, surrounded to the east and west by
+high, dominating cliffs. Lilacs and daffodils send their sweet scent
+into the still soporific air. A small path meanders peacefully south
+and northwards."
+extra {"trees", "tree", "larch", "poplar"}
+"The trees make a wonderful sight : dazzling leaf colours,
+shimmering spider's webs in the branches, and bark that has
+delicate shades of brown and silver interlaced into a
+mesmerising pattern. You wish you had bought your paints,
+canvas and easel."
+extra {"lilacs", "daffodils"}
+"These flowers are extraordinarily beautiful, almost as if the colours
+in them had been touched up by a divine hand."
+extra{"cliff", "cliffs"}
+"Over 100 feet tall and very steep, they seem impossible to climb
+without rope and pitons...bad luck that you have none!"
+extra{"path"}
+"This path looks to be well-kept, the bushes to either side clipped
+back and even the leaves seem to have been swept up!"
+extra {"squirrel"}
+"He's gone now."
+extra {"nightingale"}
+"Can't see her...only hear her."
+
+movement SECT_FOREST
+
+south to wood_1 descr
+"The idyllic wood stretches further southwards.";
+north to wood_4 descr
+"The idyllic wood stretches further northwards.";
+
+dilbegin effect1();
+var
+i : integer;
+code
+{
+      heartbeat := PULSE_SEC*60;
+
+      :start:
+      on_activation(self.inside #= null, skip);
+      wait(SFB_TICK, not(self.inside #= null));
+      i := rnd(1,20);
+
+      if (i < 3) {
+	    act(" A squirrel scoots out of a tree to your right," +
+		 " spots you, squeaks in fright, then hurtles back " +
+		 "from whence he came.",
+		    A_SOMEONE,self.inside,null,null,TO_ALL);
+      }
+      if (i > 18) {
+	    act(" A nightingale sings sweetly in a tree high above you.",
+		    A_SOMEONE,self.inside,null,null,TO_ALL);
+      }
+      goto start;
+}
+dilend
+
+end
+
+	wood_3
+title "A beautiful wood"
+descr
+"You are in a beautiful wood, surrounded to the south and west by
+high, dominating cliffs. A small path meanders peacefully north
+and eastwards. Primroses and old-man's beard can be seen poking
+above the undergrowth. You hear peaceful insect thrumming noises
+coming from all around. What a lovely place!"
+extra {"trees", "tree", "larch", "poplar"}
+"The trees make a wonderful sight : dazzling leaf colours,
+shimmering spider's webs in the branches, and bark that has
+delicate shades of brown and silver interlaced into a
+mesmerising pattern. You wish you had bought your paints,
+canvas and easel."
+extra {"cliff", "cliffs"}
+"Over 100 feet tall and very steep, they seem impossible to climb
+without rope and pitons...bad luck that you have none!"
+extra {"path"}
+"This path looks to be well-kept, the bushes to either side clipped
+back and even the leaves seem to have been swept up!"
+extra {"primroses", "old-man's beard", "old-mans beard", "flowers", "beard"}
+"These flowers are extraordinarily beautiful, almost as if the colours
+in them had been touched up by a divine hand."
+extra {"insects", "insect"}
+"You can only hear them, not see them."
+
+movement SECT_FOREST
+
+east to wood_4 descr
+"The idyllic wood stretches further eastwards.";
+north to wood_6 descr
+"The idyllic wood stretches further northwards.";
+
+
+
+end
+
+	wood_4
+title "A beautiful wood"
+descr
+"You are in a beautiful wood of larch and poplar. Two neat paths meet
+here at a crossroads. Tiny mushrooms grow in a circle on the grassy
+verge and small animal noises can be heard from the undergrowth. To the
+south can be seen some dark brooding cliffs."
+extra {"trees", "tree", "larch", "poplar"}
+"The trees make a wonderful sight : dazzling leaf colours,
+shimmering spider's webs in the branches, and bark that has
+delicate shades of brown and silver interlaced into a
+mesmerising pattern. You wish you had bought your paints,
+canvas and easel."
+extra {"cliff", "cliffs"}
+"Difficult to see from here, but they look over 100 feet tall, and
+very steep."
+extra {"path", "paths"}
+"These paths look to be well-kept, the bushes to either side clipped
+back and even the leaves seem to have been swept up!"
+extra {"tiny mushrooms", "mushrooms", "circle"}
+"They look cute, sitting there in a little circle like fairy's
+stools."
+extra {"animals"}
+"You can only hear them, not see them."
+extra {"bee", "bumblebee"}
+"He's gone now."
+
+movement SECT_FOREST
+
+east to wood_5 descr
+"The idyllic wood stretches further eastwards.";
+north to wood_7 descr
+"The idyllic wood stretches further northwards.";
+west to wood_3 descr
+"The idyllic wood stretches further westwards.";
+south to wood_2 descr
+"The idyllic wood stretches further southwards.";
+
+dilbegin effect2();
+var
+i : integer;
+code
+{
+      heartbeat := PULSE_SEC*60;
+
+      :start:
+      on_activation(self.inside #= null, skip);
+      wait(SFB_TICK, TRUE);
+      i := rnd(1,20);
+
+      if (i < 3) {
+	    act(" A bee bumbles about busily, buzzing about benignly.",
+		    A_SOMEONE,self.inside,null,null,TO_ALL);
+      }
+      if (i > 18) {
+	    act(" A bumblebee busily buzzes about benignly.",
+		    A_SOMEONE,self.inside,null,null,TO_ALL);
+      }
+      goto start;
+}
+dilend
+end
+
+	wood_5
+title "A beautiful wood"
+descr
+"You are in a beautiful wood of larch and poplar. To the south a
+high cliff dominates the skyline. A path meanders peacefully between
+the trees to the west and north. A small pool can be seen to the
+east and you could push through the wet bracken to get to it. You are
+not sure, but you think you can hear girlish giggles coming from the
+pool."
+extra {"trees", "tree", "larch", "poplar"}
+"The trees make a wonderful sight : dazzling leaf colours,
+shimmering spider's webs in the branches, and bark that has
+delicate shades of brown and silver interlaced into a
+mesmerising pattern. You wish you had bought your paints,
+canvas and easel."
+extra {"cliff", "cliffs"}
+"Over 100 feet tall and very steep, they seem impossible to climb
+without rope and pitons...bad luck that you have none!"
+extra {"path", "bracken"}
+"The path here is not so carefully kept, the bracken, intrudes onto
+it from either side and makes you clothes damp and slippery."
+extra {"pool"}
+"You only catch glimpses of it through the bracken, but it appears
+peaceful enough."
+
+movement SECT_FOREST
+
+east to pool_3 descr
+"A small, peaceful pond lies to the east.";
+north to wood_8 descr
+"The idyllic wood stretches further northwards.";
+west to wood_4 descr
+"The idyllic wood stretches further westwards.";
+south descr
+"You would never scale these cliffs.";
+end
+
+	wood_6
+title "A beautiful wood"
+descr
+"You are in a beautiful wood of larch and poplar. To the west a
+high cliff dominates the skyline. A path meanders peacefully between
+the trees to the south and north. A small offshoot of this path
+cuts through the trees to your east. The strident cry of some
+crickets breaks the silence as you disturb the undergrowth."
+extra {"trees", "tree", "larch", "poplar"}
+"The trees make a wonderful sight : dazzling leaf colours,
+shimmering spider's webs in the branches, and bark that has
+delicate shades of brown and silver interlaced into a
+mesmerising pattern. You wish you had bought your paints,
+canvas and easel."
+extra {"cliff", "cliffs"}
+"Over 100 feet tall and very steep, they seem impossible to climb
+without rope and pitons...bad luck that you have none!"
+extra {"path", "paths"}
+"These paths look to be well-kept, the bushes to either side clipped
+back and even the leaves seem to have been swept up!"
+extra {"cricket", "crickets"}
+"You can only hear them, not see them."
+
+movement SECT_FOREST
+
+east to wood_7 descr
+"The idyllic wood stretches further eastwards via a small path.";
+north to wood_9 descr
+"The idyllic wood stretches further northwards.";
+west descr
+"The cliff is totally unscalable, I am afraid.";
+south to wood_3 descr
+"The idyllic wood stretches further southwards.";
+end
+
+	wood_7
+title "A beautiful wood"
+descr
+"You are in a beautiful wood of larch and poplar. Two neat paths meet
+here at a crossroads. Straggly briar and blackthorn choke the
+undergrowth nearby. Rabbits can be heard scurrying about through
+the bushes. To the south can be seen some dark brooding cliffs."
+extra {"trees", "tree", "larch", "poplar"}
+"The trees make a wonderful sight : dazzling leaf colours,
+shimmering spider's webs in the branches, and bark that has
+delicate shades of brown and silver interlaced into a
+mesmerising pattern. You wish you had bought your paints,
+canvas and easel."
+extra {"cliff", "cliffs"}
+"Difficult to see from here, but they look over 100 feet tall, and
+very steep."
+extra {"path", "paths"}
+"These paths look to be well-kept, the bushes to either side clipped
+back and even the leaves seem to have been swept up!"
+extra {"briar", "blackthorn"}
+"They look rather prickly. you decide not to touch them."
+extra {"rabbits"}
+"You can only hear them, not see them."
+
+
+movement SECT_FOREST
+
+east to wood_8 descr
+"The idyllic wood stretches further eastwards.";
+north to wood_10 descr
+"The idyllic wood stretches further northwards.";
+west to wood_6 descr
+"The idyllic wood stretches further westwards.";
+south to wood_4 descr
+"The idyllic wood stretches further southwards.";
+
+dilbegin effect3();
+var
+i : integer;
+code
+{
+      heartbeat := PULSE_SEC*60;
+
+      :start:
+      on_activation(self.inside #= null, skip);
+      wait(SFB_TICK, TRUE);
+      i := rnd(1,20);
+
+      if (i < 3) {
+	    act("You hear the faint call of a sparrow to your north.",
+		    A_SOMEONE,self.inside,null,null,TO_ALL);
+      }
+      if (i > 18) {
+	    act("A strange cry reverberates through the still air.",
+		    A_SOMEONE,self.inside,null,null,TO_ALL);
+      }
+      goto start;
+}
+dilend
+end
+
+	wood_8
+title "A beautiful wood"
+descr
+"You are in a beautiful wood of larch and poplar. A small path
+wends its way north and southward, whilst you could follow a
+smaller track westwards. A small pool can be seen to the
+east and you could push through the wet bracken to get to it.
+You are not sure, but you think you can hear girlish giggles
+coming from the pool. High cliffs can be seen to the south."
+extra {"trees", "tree", "larch", "poplar"}
+"The trees make a wonderful sight : dazzling leaf colours,
+shimmering spider's webs in the branches, and bark that has
+delicate shades of brown and silver interlaced into a
+mesmerising pattern. You wish you had bought your paints,
+canvas and easel."
+extra {"cliff", "cliffs"}
+"Difficult to see from here, but they look over 100 feet tall, and
+very steep."
+extra {"path", "track", "bracken"}
+"The path here is not so carefully kept, the bracken, intrudes onto
+it from either side and makes you clothes damp and slippery."
+extra {"pool"}
+"You only catch glimpses of it through the bracken, but it appears
+peaceful enough."
+
+movement SECT_FOREST
+
+east to pool_2 descr
+"A small, peaceful pond lies to the east.";
+north to wood_11 descr
+"The idyllic wood stretches further northwards.";
+west to wood_7 descr
+"The idyllic wood stretches further westwards.";
+south to wood_5 descr
+"The idyllic wood stretches further southwards.";
+end
+
+	wood_9
+title "A beautiful wood"
+descr
+"You are in a beautiful wood of larch and poplar. To the west a
+high cliff dominates the skyline. A path meanders peacefully between
+the trees to the south. A small offshoot of this path cuts through
+the trees to your east.  To the north you can just glimpse a tiny
+beach through the undergrowth.Droopy vinewort and boledangler
+entwine themselves around the trees and send an exotic perfume into
+the still air."
+extra {"beach"}
+"You can't make out much, but it does look tiny."
+extra {"trees", "tree", "larch", "poplar"}
+"The trees make a wonderful sight : dazzling leaf colours,
+shimmering spider's webs in the branches, and bark that has
+delicate shades of brown and silver interlaced into a
+mesmerising pattern. You wish you had bought your paints,
+canvas and easel."
+extra {"droopy vinewort", "vinewort", "boledangler"}
+"These strange plants resemble your mother-in-laws face - uergh!
+but the perfume from them reminds you of that whore-house in
+old Gazha."
+extra {"cliff", "cliffs"}
+"Over 100 feet tall and very steep, they seem impossible to climb
+without rope and pitons...bad luck that you have none!"
+extra {"path", "paths"}
+"These paths look to be well-kept, the bushes to either side clipped
+back and even the leaves seem to have been swept up!"
+
+movement SECT_FOREST
+flags {UNIT_FL_NO_MOB}
+
+east to wood_10 descr
+"The idyllic wood stretches further eastwards via a small path.";
+north to n_beach_1 descr
+"The path leads through the undergrowth onto a tiny beach.";
+west descr
+"The cliff is totally unscalable, I am afraid.";
+south to wood_6 descr
+"The idyllic wood stretches further southwards.";
+end
+
+	wood_10
+title "A beautiful wood"
+descr
+"You are in a beautiful wood of larch and poplar. An east-west path
+meets a path from the south. To the north you can just glimpse
+a tiny beach through the undergrowth. Delicate orchid blossoms
+abound in the undergrowth and send a heady perfume to assault
+your nostrils. In the distance to the south can be seen some
+dark, brooding cliffs."
+extra {"trees", "tree", "larch", "poplar"}
+"The trees make a wonderful sight : dazzling leaf colours,
+shimmering spider's webs in the branches, and bark that has
+delicate shades of brown and silver interlaced into a
+mesmerising pattern. You wish you had bought your paints,
+canvas and easel."
+extra {"cliff", "cliffs"}
+"Difficult to see from here, but they look over 100 feet tall, and
+very steep."
+extra {"beach"}
+"You can't make out much, but it does look tiny."
+extra {"path", "paths"}
+"These paths look to be well-kept, the bushes to either side clipped
+back and even the leaves seem to have been swept up!"
+extra {"orchids", "orchid"}
+"Their delicate orange and pink blossoms are a sight for eyes that
+have seen too much blood and mayhem in this crazy world."
+extra {"rabbits"}
+"You can only hear them, not see them."
+
+
+movement SECT_FOREST
+flags {UNIT_FL_NO_MOB}
+
+east to wood_11 descr
+"The idyllic wood stretches further eastwards.";
+north to n_beach_2 descr
+"The path leads through the undergrowth onto a tiny beach.";
+west to wood_9 descr
+"The idyllic wood stretches further westwards.";
+south to wood_7 descr
+"The idyllic wood stretches further southwards.";
+
+dilbegin effect4();
+var
+i : integer;
+code
+{
+      heartbeat := PULSE_SEC*60;
+
+      :start:
+      on_activation(self.inside #= null, skip);
+      wait(SFB_TICK, TRUE);
+      i := rnd(1,20);
+
+      if (i < 3) {
+	    act("A rabbit rapidly runs from the underbrush, " +
+		"recoils, and rebounds back.",
+		    A_SOMEONE,self.inside,null,null,TO_ALL);
+      }
+      if (i > 18) {
+	    act("Small twittering noises can be heard from the branches above.",
+		    A_SOMEONE,self.inside,null,null,TO_ALL);
+      }
+      goto start;
+}
+dilend
+end
+
+	wood_11
+title "A beautiful wood"
+descr
+"You are in a beautiful wood of larch and poplar. To the east a
+high cliff dominates the skyline. A path meanders peacefully between
+the trees to the south. A small offshoot of this path cuts through
+the trees to your west.  To the north you can just glimpse a tiny
+beach through the undergrowth. Droopy vinewort and boledangler
+entwine themselves around the trees and send an exotic perfume into
+the still air."
+extra {"beach"}
+"You can't make out much, but it does look tiny."
+extra {"trees", "tree", "larch", "poplar"}
+"The trees make a wonderful sight : dazzling leaf colours,
+shimmering spider's webs in the branches, and bark that has
+delicate shades of brown and silver interlaced into a
+mesmerising pattern. You wish you had bought your paints,
+canvas and easel."
+extra {"droopy vinewort", "vinewort", "boledangler"}
+"These strange plants resemble your mother-in-laws face - uergh!
+but the perfume from them reminds you of that whore-house in
+old Gazha."
+extra {"cliff", "cliffs"}
+"Difficult to see from here, but they look over 100 feet tall, and
+very steep."
+extra {"path", "paths"}
+"These paths look to be well-kept, the bushes to either side clipped
+back and even the leaves seem to have been swept up!"
+
+movement SECT_FOREST
+flags {UNIT_FL_NO_MOB}
+
+west to wood_10 descr
+"The idyllic wood stretches further westwards via a small path.";
+north to n_beach_3 descr
+"The path leads through the undergrowth onto a tiny beach.";
+east descr
+"The cliff is totally unscalable, I am afraid.";
+south to wood_8 descr
+"The idyllic wood stretches further southwards.";
+end
+
+	n_beach_1
+title "On the Tiny Beach"
+descr
+"This tiny beach only extends about 30 feet in any direction. The only
+feature of notice is a small pier to the north-east which juts out into
+a cold, uninviting, murky sea. To to the south a small beautiful wood
+can be seen. Further south you see some high cliffs, dominating the
+skyline. Craggy rocks and boulders prevent any movement west, but
+the beach continues eastwards. A small banana tree juts from the sand
+here."
+extra{"banana tree","banana","tree"}
+"Clumps of lovely yellow bananas hang down from the tree."
+extra{"pier"}
+"It looks a bit shambolic, made from old bamboo, cork and pieces
+of string : not too sturdy you would say."
+extra {"sea"}
+"Not a place for swimming in!"
+extra{"wood","woods"}
+"Very peaceful looking indeed. A stroll here would do you a
+world of good you think."
+extra {"rocks", "boulders"}
+"Razor sharp : you would be ripped to shreds if you tried to clamber
+on them."
+extra{"cliffs"}
+"Difficult to see from here, but they look over 100 feet tall, and
+very steep."
+
+movement SECT_DESERT
+
+east to n_beach_2 descr
+"The beach continues eastwards across yellowish/green sand.";
+south to wood_9 descr
+"To your south you see a beautiful wood, and beyond that, the cliffs.";
+end
+
+	n_beach_2
+title "On the Tiny Beach"
+descr
+"This tiny beach only extends about 30 feet in any direction. The only
+feature of notice is a small pier to the north which juts out into
+a cold, uninviting, murky sea. To to the south a small beautiful wood
+can be seen. Further south you see some high cliffs, dominating the
+skyline. The beach continues east and west.
+The burnt-out remains of a small campfire catch your attention."
+extra {"camp fire", "fire"}
+"It has been scuffed over with sand. The faint smell of woodsmoke
+tells you that whoever made the fire had left only a couple of
+hours ago."
+extra{"pier"}
+"It looks a bit shambolic, made from old bamboo, cork and pieces
+of string : not too sturdy you would say."
+extra {"sea"}
+"Not a place for swimming in!"
+extra{"wood","woods"}
+"Very peaceful looking indeed. A stroll here would do you a
+world of good you think."
+extra{"cliffs"}
+"Difficult to see from here, but they look over 100 feet tall, and
+very steep."
+
+movement SECT_DESERT
+
+north to pier descr
+"A small pier lies northwards.";
+south to wood_10 descr
+"To your south you see a beautiful wood, and beyond that, the cliffs.";
+east to n_beach_3 descr
+"The beach continues eastwards over yellowish/green sand.";
+west to n_beach_1 descr
+"The beach continues westwards over yellowish/green sand.";
+
+end
+
+	n_beach_3
+title "On the Tiny Beach"
+descr
+"This tiny beach only extends about 30 feet in any direction. The only
+feature of notice is a small pier to the north-west which juts out into
+a cold, uninviting, murky sea. To to the south a small beautiful wood
+can be seen. Further south you see some high cliffs, dominating the
+skyline. Craggy rocks and boulders prevent any movement east, but
+the beach continues westwards."
+extra{"pier"}
+"It looks a bit shambolic, made from old bamboo, cork and pieces
+of string : not too sturdy you would say."
+extra {"sea"}
+"Not a place for swimming in!"
+extra{"wood","woods"}
+"Very peaceful looking indeed. A stroll here would do you a
+world of good you think."
+extra {"rocks", "boulders"}
+"Razor sharp : you would be ripped to shreds if you tried to clamber
+on them."
+extra{"cliffs"}
+"Difficult to see from here, but they look over 100 feet tall, and
+very steep."
+
+movement SECT_DESERT
+
+west to n_beach_2 descr
+"The beach continues eastwards across yellowish/green sand.";
+south to wood_11 descr
+"To your south you see a beautiful wood, and beyond that, the cliffs.";
+end
+
+
+	pier
+title "On the pier"
+names {"atlantis pier"}
+descr
+"You are on a small, rickety pier that appears to have been built from
+bamboo and cork...not very strong you think!. You can go southwards
+onto a tiny beach."
+extra{}
+"Tied together with bits of string, this does not look a very
+professional job!"
+
+movement SECT_FIELD
+flags {UNIT_FL_NO_MOB}
+
+south to n_beach_2 descr
+"You can go south onto the tiny beach";
+end
+
+      pool_2
+
+title "Wading in a small pond"
+descr
+"You are wading knee-deep in a small pond. Small ripples break the
+surface at regular intervals, even though you keep absolutely still.
+You feel very happy and peaceful here. It is probably a good place to rest.
+Gorgeous lilies float upon the water and the deep croaking of frogs 
+can be heard from the
+bullrushes to the east. You could get back to dry land to the west
+or wade southwards. High cliffs prevent you from going north,
+whilst the bullrushes resist all attempts to wade through them."
+extra{"cliffs"}
+"Over 100 feet tall and very steep, they seem impossible to climb
+without rope and pitons...bad luck that you have none!"
+extra{"bullrushes"}
+"The same type that the baby Moses was found in. They look very
+thick and matted along here."
+extra{"lilies"}
+"These water-lilies are a joy to behold, their colours are
+magnificent!"
+extra{"frogs"}
+"You can only hear them, not see them."
+
+movement SECT_SWAMP
+
+flags {UNIT_FL_SACRED, UNIT_FL_NO_MOB}
+
+south to pool_3 descr
+"The pool continues southwards.";
+west to wood_8 descr
+"You could push through the undergrowth into the beautiful wood.";
+end
+
+      pool_3
+
+title "Wading in a small pond"
+descr
+"You are wading knee-deep in a small pond. Small ripples break the
+surface at regular intervals, even though you keep absolutely still.
+You feel very happy and peaceful here. It is probably a good place
+to rest. Gorgeous lilies float upon
+the water and the deep croaking of frogs can be heard from the
+bullrushes to the east. You could get back to dry land to the west
+or wade northwards. High cliffs prevent you from going south,
+whilst the bullrushes resist all attempts to wade through them."
+extra{"cliffs"}
+"Over 100 feet tall and very steep, they seem impossible to climb
+without rope and pitons...bad luck that you have none!"
+extra{"bullrushes"}
+"The same type that the baby Moses was found in. They look very
+thick and matted along here."
+extra{"lilies"}
+"These water-lilies are a joy to behold, their colours are
+magnificent!"
+extra{"frogs"}
+"You can only hear them, not see them."
+
+movement SECT_SWAMP
+
+flags {UNIT_FL_SACRED, UNIT_FL_NO_MOB}
+
+north to pool_2 descr
+"The pool continues northwards.";
+west to wood_5 descr
+"You could push through the undergrowth into the beautiful wood.";
+end
+
+/**** The South Beach Area ****/
+
+        s_beach_1
+
+title "On the Beach"
+descr
+"This part of the beach abuts directly onto a large cliff to the north
+which is dotted about with numerous small holes and a very large one.
+The beach continues to the south, west and east. To the south you glimpse
+the flickering of the foam-flecked waves."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north."
+extra {"cliffs", "cliff", "hole", "holes"}
+"The cliff rises at least 100 feet above you and is obviously unclimbable.
+It is dotted by holes near the bottom which have resulted from the waves
+acting upon softer material within the rock strata. There is one hole
+which is easily 6 foot in diameter."
+
+movement SECT_DESERT
+
+south to s_beach_2 descr
+"The beach continues to the south where you can just make out the
+flickering of foam-flecked waves.";
+west to s_beach_3 descr
+"The beach continues westwards across yellowish/green tinged sand.";
+east to s_beach_4 descr
+"The beach continues eastwards across yellowish/green tinged sand.";
+north to cliff_hole1 descr
+"You gaze in vain into the dark hole in the cliff, but see nothing
+in its cavernous gloom.";
+
+dilbegin popeyes();
+var
+i : integer;
+code
+{
+      heartbeat := PULSE_SEC*60;
+
+      :start:
+      on_activation(self.inside #= null, skip);
+      wait(SFB_CMD | SFB_TICK, TRUE);
+      i := rnd(1,20);
+
+      if (i < 2) {
+            act(" A small pair of eyes on stalks pops out of" +
+                 " the sand and stares at you. It quickly pops back.",
+                    A_SOMEONE,self.inside,null,null,TO_ALL);
+      }
+      goto start;
+}
+dilend
+end
+
+        s_beach_2
+
+title "On the Beach"
+descr
+"This part of the beach spreads out in all directions across
+yellowish/green tinged sand. As you glance northwards you
+are reminded of those unscalable cliffs and wish that you had
+packed some rope and pitons."
+
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north."
+extra {"cliffs", "cliff", "hole", "holes"}
+"In the distance a cliff rises at least 100 feet and looks to be
+unclimbable."
+
+movement SECT_DESERT
+
+south to s_beach_13 descr
+"The beach continues to the south where you can see the flickering
+of foam-flecked waves.";
+west to s_beach_6 descr
+"The beach continues westwards across yellowish/green tinged sand.";
+east to s_beach_5 descr
+"The beach continues eastwards across yellowish/green tinged sand.";
+north to s_beach_1 descr
+"The beach continues northwards towards some high, menacing cliffs";
+end
+
+
+        s_beach_3
+
+title "On the Beach"
+descr
+"This part of the beach abuts directly onto a large cliff to the north
+which is dotted about with numerous small holes. The beach continues
+to the south and east. Off to the west you see a small limpid pool,
+its surface is shimmering slightly for some unknown reason."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north."
+extra {"cliffs", "cliff", "hole", "holes"}
+"The cliff rises at least 100 feet above you and is obviously unclimbable.
+It is dotted by holes near the bottom which have resulted from the waves
+acting upon softer material within the rock strata."
+extra{"small", "limpid", "shimmering", "pool"}
+"This small limpid pool has formed in the rocks at the base of the cliff.
+Its surface is shimmering and rippling, though there is no wind here."
+
+movement SECT_DESERT
+
+east to s_beach_1 descr
+"The beach continues eastwards across yellowish/green tinged sand.";
+west to pool_1 descr
+"The beach continues westwards towards a small limpid pool
+that has formed in the rocks at the base of the cliff.
+Its surface is shimmering and rippling, though there is no wind here.";
+south to s_beach_6 descr
+"The beach continues southwards across yellowish/green tinged sand.";
+end
+
+
+        s_beach_4
+title "On the Beach"
+descr
+"This part of the beach abuts directly onto a large cliff to the north
+which is dotted about with numerous small holes. The beach continues
+to the south, west and east.
+To the south you glimpse the flickering of the foam-flecked waves."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north. It is slightly
+tinged with gritty brown particles."
+extra {"cliffs", "cliff", "hole", "holes"}
+"In the distance a cliff rises at least 100 feet and looks to be
+unclimbable."
+
+movement SECT_DESERT
+
+west to s_beach_1 descr
+"The beach continues westwards across yellowish/green tinged sand.";
+south to s_beach_5 descr
+"The beach continues to the south where you can just make out the
+flickering of foam-flecked waves.";
+east to s_beach_10 descr
+"The beach continues eastwards across sand that is starting to
+turn distinctly brackish brown.";
+end
+
+
+        s_beach_5
+title "On the Beach"
+descr
+"This part of the sandy beach stretches out in all directions. To the
+south you can see that the sand dips downwards into a deep depression.
+As you glance northwards you are reminded of those unscalable cliffs
+and wish that you had packed some rope and pitons."
+extra {"depression"}
+"You notice the depression has quite steep sides and you wonder
+if you could get back up if you went into it."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north.  It is slightly
+tinged with gritty brown particles."
+extra {"cliffs", "cliff", "hole", "holes"}
+"In the distance a cliff rises at least 100 feet and looks to be
+unclimbable."
+
+movement SECT_DESERT
+
+flags {UNIT_FL_NO_MOB}
+
+north to s_beach_4 descr
+"The beach continues to the north where some strange cliffs rise
+to dominate the shoreline.";
+west to s_beach_2 descr
+"The beach continues westwards across yellowish/green tinged sand.";
+east to s_beach_11 descr
+"The beach continues eastwards across sand that is distinctly starting
+to turn a brackish brown.";
+south to depression_1 keyword{"depression"} descr
+"The beach continues south to a deep depression. You wonder if
+you could get back up if you went into it.";
+down to depression_1 keyword {"depression"} descr
+"The beach continues south to a deep depression. You wonder if
+you could get back up if you went into it.";
+end
+
+
+        s_beach_6
+title "On the Beach"
+descr
+"This part of the sandy beach stretches out in all directions.
+As you glance west and north you are reminded of those unscalable
+cliffs and wish that you had packed some rope and pitons."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north.  It is slightly
+tinged with gritty brown particles."
+extra {"cliffs", "cliff", "hole", "holes"}
+"In the distance cliffs rise at least 100 feet and looks to be
+unclimbable."
+
+movement SECT_DESERT
+
+north to s_beach_3 descr
+"The beach continues to the north where some strange cliffs rise
+to dominate the shoreline.";
+west to s_beach_7 descr
+"The beach continues westwards across yellowish/green tinged sand.
+Unscalable cliffs can be seen in the distance.";
+east to s_beach_2 descr
+"The beach continues eastwards across yellowish/green tinged sand.";
+south to s_beach_12 descr
+"The beach continues to the south across yellowish/green tinged sand.";
+end
+
+
+        s_beach_7
+
+title "On the Beach"
+descr
+"This part of the beach abuts directly onto a large cliff to the west,
+its surface is slick and damp to the touch. The beach continues
+to the south and east. Off to the north you see a small limpid pool,
+its surface is shimmering slightly for some unknown reason.
+Small pebbles randomly jut from the sand."
+extra {"pebbles"}
+"These yellowy/green pebbles seem to be the result of
+hundreds of thousands of years of waves smoothing the
+jagged splinters from the cliff."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your west."
+extra {"cliffs", "cliff", "hole", "holes"}
+"The cliff rises at least 100 feet above you and is obviously unclimbable,
+especially as the surface is extremely moist and slippery from the
+spume-tossed spray."
+extra{"small", "limpid", "shimmering", "pool"}
+"This small limpid pool has formed in the rocks at the base of the cliff.
+Its surface is shimmering and rippling, though there is no wind here."
+
+movement SECT_DESERT
+
+east to s_beach_6 descr
+"The beach continues eastwards across yellowish/green tinged sand.";
+north to pool_1 descr
+"The beach continues northwards towards a small limpid pool
+that has formed in the rocks at the base of the cliff.
+Its surface is shimmering and rippling, though there is no wind here.";
+south to s_beach_8 descr
+"The beach continues southwards across yellowish/green tinged sand.";
+end
+
+
+        s_beach_8
+
+title "On the Beach"
+descr
+"This part of the beach abuts directly onto a large cliff to the west,
+its surface is slick and damp to the touch. The beach continues
+to the south, north and east. Small pebbles randomly jut from the sand."
+extra {"pebbles"}
+"These yellowy/green pebbles seem to be the result of
+hundreds of thousands of years of waves smoothing the
+jagged splinters from the cliff."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your west."
+extra {"cliffs", "cliff", "hole", "holes"}
+"The cliff rises at least 100 feet above you and is obviously unclimbable,
+especially as the surface is extremely moist and slippery from the
+spume-tossed spray."
+
+movement SECT_DESERT
+
+east to s_beach_12 descr
+"The beach continues eastwards across yellowish/green tinged sand.";
+north to s_beach_7 descr
+"The beach continues northwards across yellowish/green tinged sand.";
+south to s_beach_9 descr
+"The beach continues southwards across yellowish/green tinged sand.
+Far to the south you see the flickering of foam-flecked waves.";
+end
+
+
+        s_beach_9
+
+title "On the Beach"
+descr
+"This part of the beach abuts directly onto a large cliff to the west,
+its surface is slick and damp to the touch. About 2 foot off the
+ground a dank smelly hole leads off to the west. The beach continues
+to the south and east. Small pebbles randomly jut from the sand."
+extra {"pebbles"}
+"These yellowy/green pebbles seem to be the result of
+hundreds of thousands of years of waves smoothing the
+jagged splinters from the cliff."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your west."
+extra {"cliffs", "cliff", "hole", "holes"}
+"The cliff rises at least 100 feet above you and is obviously unclimbable,
+especially as the surface is extremely moist and slippery from the
+spume-tossed spray. A dank, smelly hole, two foot off the ground,
+leads westwards."
+
+movement SECT_DESERT
+
+east to s_beach_15 descr
+"The beach continues eastwards across yellowish/green tinged sand.";
+north to s_beach_8 descr
+"The beach continues northwards across yellowish/green tinged sand.";
+south to s_beach_16 descr
+"The beach continues southwards across yellowish/green tinged sand.
+Far to the south you see the flickering of foam-flecked waves.";
+west /* to cliff_hole2@atl_tunnels XXX */ descr
+"Unfortunately a huge landslide has blocked the entrance.";
+end
+
+        s_beach_10
+title "On the Beach"
+descr
+"This part of the beach abuts directly onto a large cliff to the north
+which is dotted about with numerous small holes. The beach continues
+to the south, west and east. Off to the east you hear the rushing of
+the mighty river which cascades down from the cliffs to your north.
+Green, slimy algae grip the rocks and pebbles which are strewn about.
+To the south you glimpse the flickering of the foam-flecked waves."
+extra {"pebbles", "rocks"}
+"These yellowy/green pebbles seem to be the result of
+hundreds of thousands of years of waves smoothing the
+jagged splinters from the cliff."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north. It is heavily
+tinged with gritty brown particles."
+extra {"cliffs", "cliff", "hole", "holes"}
+"In the distance a cliff rises at least 100 feet and looks to be
+unclimbable."
+extra {"algae", "slimy algae", "green algae"}
+"You pick up a rock to examine the algae. A slimy exudant covers
+your hand. You throw the rock away in disgust and wipe your hands
+on your clothing....Yech!"
+
+movement SECT_DESERT
+
+west to s_beach_4 descr
+"The beach continues westwards across yellowish/green tinged sand.";
+south to s_beach_11 descr
+"The beach continues to the south where you can just make out the
+flickering of foam-flecked waves.";
+east to rbank_1 descr
+"The beach continues eastwards, across sand that is brackish brown,
+towards the banks of a mighty river.";
+end
+
+
+        s_beach_11
+title "On the Beach"
+descr
+"This part of the beach stretches off in all directions.
+Off to the east you hear the rushing of the mighty river which
+cascades down from the cliffs to your north.
+Green, slimy algae grip the rocks and pebbles which are strewn about.
+To the south you glimpse the flickering of the foam-flecked waves."
+extra {"pebbles", "rocks"}
+"These yellowy/green pebbles seem to be the result of
+hundreds of thousands of years of waves smoothing the
+jagged splinters from the cliff."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north. It is heavily
+tinged with gritty brown particles."
+extra {"cliffs", "cliff", "hole", "holes"}
+"In the distance a cliff rises at least 100 feet and looks to be
+unclimbable."
+extra {"algae", "slimy algae", "green algae"}
+"You pick up a rock to examine the algae. A slimy exudant covers
+your hand. You throw the rock away in disgust and wipe your hands
+on your clothing....Yech!"
+
+movement SECT_DESERT
+
+west to s_beach_5 descr
+"The beach continues westwards across yellowish/green tinged sand.";
+south to s_beach_14 descr
+"The beach continues to the south where you can just make out the
+flickering of foam-flecked waves.";
+east to rbank_2 descr
+"The beach continues eastwards, across sand that is brackish brown,
+towards the banks of a mighty river.";
+north to s_beach_10 descr
+"The beach continues northward towards the high, dominating cliffs.";
+end
+
+
+        s_beach_12
+title "On the Beach"
+descr
+"This part of the sandy beach stretches out in all directions.
+As you glance west and north you are reminded of those unscalable
+cliffs and wish that you had packed some rope and pitons."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north.  It is slightly
+tinged with gritty brown particles."
+extra {"cliffs", "cliff", "hole", "holes"}
+"In the distance cliffs rise at least 100 feet and looks to be
+unclimbable."
+
+movement SECT_DESERT
+
+north to s_beach_6 descr
+"The beach continues to the north where some strange cliffs rise
+to dominate the shoreline.";
+west to s_beach_8 descr
+"The beach continues westwards across yellowish/green tinged sand.
+Unscalable cliffs can be seen in the distance.";
+east to s_beach_13 descr
+"The beach continues eastwards across yellowish/green tinged sand.";
+south to s_beach_15 descr
+"The beach continues to the south across yellowish/green tinged sand.";
+end
+
+
+        s_beach_13
+title "On the Beach"
+descr
+"This part of the sandy beach stretches out in all directions. To the
+east you can see that the sand dips downwards into a deep depression.
+As you glance northwards you are reminded of those unscalable cliffs
+and wish that you had packed some rope and pitons.
+To the south you can see the waves of a mighty ocean crashing
+against the shore and you ponder the old sea-dog tales of a colossal
+city residing beneath those huge breakers."
+extra {"depression"}
+"You notice the depression has quite steep sides and you wonder
+if you could get back up if you went into it."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north."
+extra {"cliffs", "cliff", "hole", "holes"}
+"In the distance a cliff rises at least 100 feet and looks to be
+unclimbable."
+extra {"ocean", "sea", "waves"}
+"You gaze at the mighty Numorean ocean and wonder how far you
+would have to travel across it, before you came to the edge of the
+world and fell off. Surely these waves are hurling themselves onto
+the shore in an attempt to avoid such a fate."
+
+movement SECT_DESERT
+
+flags {UNIT_FL_NO_MOB}
+
+north to s_beach_2 descr
+"The beach continues to the north where some strange cliffs rise
+to dominate the shoreline.";
+west to s_beach_12 descr
+"The beach continues westwards across yellowish/green tinged sand.";
+south to shore_1 descr
+"You gaze southwards towards the shore, impressed by the huge
+breakers rolling in from the ocean.";
+east to depression_1 keyword{"depression"} descr
+"The beach continues south to a deep depression. You wonder if
+you could get back up if you went into it.";
+down to depression_1 keyword{"depression"} descr
+"The beach continues south to a deep depression. You wonder if
+you could get back up if you went into it.";
+end
+
+
+        s_beach_14
+title "On the Beach"
+descr
+"This part of the sandy beach stretches out in all directions. To the
+west you can see that the sand dips downwards into a deep depression.
+As you glance northwards you are reminded of those unscalable cliffs
+and wish that you had packed some rope and pitons. Off to the east
+you hear the rushing of the mighty river which cascades down from
+the cliffs to your north."
+extra {"depression"}
+"You notice the depression has quite steep sides and you wonder
+if you could get back up if you went into it."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north.  It is slightly
+tinged with gritty brown particles."
+extra {"cliffs", "cliff", "hole", "holes"}
+"In the distance a cliff rises at least 100 feet and looks to be
+unclimbable."
+
+movement SECT_DESERT
+
+flags {UNIT_FL_NO_MOB}
+
+north to s_beach_11 descr
+"The beach continues to the north where some strange cliffs rise
+to dominate the shoreline.";
+east to rbank_3 descr
+"The beach continues eastwards, across sand that is brackish brown,
+towards the banks of a mighty river.";
+south to s_beach_18 descr
+"The beach continues southwards across yellowish/green sand.";
+west to depression_1 keyword{"depression"} descr
+"The beach continues west to a deep depression. You wonder if
+you could get back up if you went into it.";
+down to depression_1 keyword {"depression"} descr
+"The beach continues west to a deep depression. You wonder if you
+could get back up if you went into it.";
+end
+
+
+        s_beach_15
+title "On the Beach"
+descr
+"This part of the sandy beach stretches out in all directions.
+As you glance northwards you are reminded of those unscalable cliffs
+and wish that you had packed some rope and pitons.
+To the south and east you can see the waves of a mighty ocean crashing
+against the shore and you ponder the old sea-dog tales of a colossal
+city residing beneath those huge breakers."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north."
+extra {"cliffs", "cliff", "hole", "holes"}
+"In the distance a cliff rises at least 100 feet and looks to be
+unclimbable."
+extra {"ocean", "sea", "waves"}
+"You gaze at the mighty Numorean ocean and wonder how far you
+would have to travel across it, before you came to the edge of the
+world and fell off. Surely these waves are hurling themselves onto
+the shore in an attempt to avoid such a fate."
+
+movement SECT_DESERT
+
+north to s_beach_12 descr
+"The beach continues to the north where some strange cliffs rise
+to dominate the shoreline.";
+west to s_beach_9 descr
+"The beach continues westwards across yellowish/green tinged sand.";
+south to shore_2 descr
+"You gaze southwards towards the shore, impressed by the huge
+breakers rolling in from the ocean.";
+east to shore_1 descr
+"You gaze eastwards towards the shore, impressed by the huge
+breakers rolling in from the ocean.";
+end
+
+
+        s_beach_16
+
+title "On the Beach"
+descr
+"This part of the beach abuts directly onto a large cliff to the west,
+its surface is slick and damp to the touch. The beach continues
+to the south, north and east. Small pebbles randomly jut from the sand.
+To the east you can see the waves of a mighty ocean crashing
+against the shore and you ponder the old sea-dog tales of a colossal
+city residing beneath those huge breakers."
+extra {"pebbles"}
+"These yellowy/green pebbles seem to be the result of
+hundreds of thousands of years of waves smoothing the
+jagged splinters from the cliff."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your west."
+extra {"cliffs", "cliff", "hole", "holes"}
+"The cliff rises at least 100 feet above you and is obviously unclimbable,
+especially as the surface is extremely moist and slippery from the
+spume-tossed spray."
+extra {"ocean", "sea", "waves"}
+"You gaze at the mighty Numorean ocean and wonder how far you
+would have to travel across it, before you came to the edge of the
+world and fell off. Surely these waves are hurling themselves onto
+the shore in an attempt to avoid such a fate."
+
+movement SECT_DESERT
+
+east to shore_2 descr
+"You gaze eastwards towards the shore, impressed by the huge
+breakers rolling in from the ocean.";
+north to s_beach_9 descr
+"The beach continues northwards across yellowish/green tinged sand.";
+south to s_beach_19 descr
+"The beach continues southwards across yellowish/green tinged sand.";
+end
+
+
+        s_beach_17
+title "On the Beach"
+descr
+"This part of the sandy beach stretches out in all directions. To the
+north you can see that the sand dips downwards into a deep depression.
+To the south and west you can see the waves of a mighty ocean crashing
+against the shore and you ponder the old sea-dog tales of a colossal
+city residing beneath those huge breakers."
+extra {"depression"}
+"You notice the depression has quite steep sides and you wonder
+if you could get back up if you went into it."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north."
+extra {"cliffs", "cliff", "hole", "holes"}
+"In the distance a cliff rises at least 100 feet and looks to be
+unclimbable."
+extra {"ocean", "sea", "waves"}
+"You gaze at the mighty Numorean ocean and wonder how far you
+would have to travel across it, before you came to the edge of the
+world and fell off. Surely these waves are hurling themselves onto
+the shore in an attempt to avoid such a fate."
+
+movement SECT_DESERT
+
+flags {UNIT_FL_NO_MOB}
+
+east to s_beach_2 descr
+"The beach continues eastwards across yellowish/green tinged sand.";
+west to s_beach_12 descr
+"You gaze westwards towards the shore, impressed by the huge
+breakers rolling in from the ocean.";
+south to shore_1 descr
+"You gaze southwards towards the shore, impressed by the huge
+breakers rolling in from the ocean.";
+north to depression_1 keyword{"depression"} descr
+"The beach continues north to a deep depression. You wonder if
+you could get back up if you went into it.";
+down to depression_1 keyword{"depression"} descr
+"The beach continues north to a deep depression. You wonder if
+you could get back up if you went into it.";
+end
+
+
+        s_beach_18
+title "On the Beach"
+descr
+"This part of the beach stretches off in all directions.
+Off to the east you hear the rushing of the mighty river which
+cascades down from the cliffs to your north.
+Green, slimy algae grip the rocks and pebbles which are strewn about.
+To the south you glimpse the flickering of the foam-flecked waves."
+extra {"pebbles", "rocks"}
+"These yellowy/green pebbles seem to be the result of
+hundreds of thousands of years of waves smoothing the
+jagged splinters from the cliff."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north. It is heavily
+tinged with gritty brown particles."
+extra {"cliffs", "cliff", "hole", "holes"}
+"In the distance a cliff rises at least 100 feet and looks to be
+unclimbable."
+extra {"algae", "slimy algae", "green algae"}
+"You pick up a rock to examine the algae. A slimy exudant covers
+your hand. You throw the rock away in disgust and wipe your hands
+on your clothing....Yech!"
+
+movement SECT_DESERT
+
+west to s_beach_17 descr
+"The beach continues westwards across yellowish/green tinged sand.";
+south to s_beach_20 descr
+"The beach continues to the south where you can just make out the
+flickering of foam-flecked waves.";
+east to rbank_4 descr
+"The beach continues eastwards, across sand that is brackish brown,
+towards the banks of a mighty river.";
+north to s_beach_14 descr
+"The beach continues northward towards the high, dominating cliffs.";
+end
+
+
+        s_beach_19
+
+title "On the Beach"
+descr
+"This part of the beach abuts directly onto a large cliff to the west,
+its surface is slick and damp to the touch. The beach continues
+to the south, north and east. Small pebbles randomly jut from the sand.
+To the east you can see the waves of a mighty ocean crashing
+against the shore and you ponder the old sea-dog tales of a colossal
+city residing beneath those huge breakers."
+extra {"pebbles"}
+"These yellowy/green pebbles seem to be the result of
+hundreds of thousands of years of waves smoothing the
+jagged splinters from the cliff."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your west."
+extra {"cliffs", "cliff", "hole", "holes"}
+"The cliff rises at least 100 feet above you and is obviously unclimbable,
+especially as the surface is extremely moist and slippery from the
+spume-tossed spray."
+extra {"ocean", "sea", "waves"}
+"You gaze at the mighty Numorean ocean and wonder how far you
+would have to travel across it, before you came to the edge of the
+world and fell off. Surely these waves are hurling themselves onto
+the shore in an attempt to avoid such a fate."
+
+movement SECT_DESERT
+
+east to shore_4 descr
+"You gaze eastwards towards the shore, impressed by the huge
+breakers rolling in from the ocean.";
+north to s_beach_16 descr
+"The beach continues northwards across yellowish/green tinged sand.";
+south to s_beach_21 descr
+"The beach continues southwards across yellowish/green tinged sand.";
+end
+
+
+        s_beach_20
+title "On the Beach"
+descr
+"This part of the sandy beach stretches out in all directions.
+Off to the east you hear the rushing of the mighty river which
+cascades down from the cliffs to your north.
+Green, slimy algae grip the rocks and pebbles which are strewn about.
+To the south and east you can see the waves of a mighty ocean crashing
+against the shore and you ponder the old sea-dog tales of a colossal
+city residing beneath those huge breakers."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north."
+extra {"cliffs", "cliff", "hole", "holes"}
+"In the distance a cliff rises at least 100 feet and looks to be
+unclimbable."
+extra {"ocean", "sea", "waves"}
+"You gaze at the mighty Numorean ocean and wonder how far you
+would have to travel across it, before you came to the edge of the
+world and fell off. Surely these waves are hurling themselves onto
+the shore in an attempt to avoid such a fate."
+extra {"algae", "slimy algae", "green algae"}
+"You pick up a rock to examine the algae. A slimy exudant covers
+your hand. You throw the rock away in disgust and wipe your hands
+on your clothing....Yech!"
+
+movement SECT_DESERT
+
+north to s_beach_18 descr
+"The beach continues to the north where some strange cliffs rise
+to dominate the shoreline.";
+west to shore_3 descr
+"You gaze westwards towards the shore, impressed by the huge
+breakers rolling in from the ocean.";
+south to shore_5 descr
+"You gaze southwards towards the shore, impressed by the huge
+breakers rolling in from the ocean.";
+east to rbank_5 descr
+"The beach continues eastwards, across sand that is brackish brown,
+towards the banks of a mighty river.";
+end
+
+
+        s_beach_21
+
+title "On the Beach"
+descr
+"The cliffs that were to the west now peel away westwards to reveal
+another stretch of beach. The beach now continues in all directions.
+Small pebbles randomly jut from the sand.
+To the east you can see the waves of a mighty ocean crashing
+against the shore and you ponder the old sea-dog tales of a colossal
+city residing beneath those huge breakers."
+extra {"pebbles"}
+"These yellowy/green pebbles seem to be the result of
+hundreds of thousands of years of waves smoothing the
+jagged splinters from the cliff."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your west."
+extra {"cliffs", "cliff", "hole", "holes"}
+"The cliff rises at least 100 feet above you and is obviously unclimbable,
+especially as the surface is extremely moist and slippery from the
+spume-tossed spray."
+extra {"ocean", "sea", "waves"}
+"You gaze at the mighty Numorean ocean and wonder how far you
+would have to travel across it, before you came to the edge of the
+world and fell off. Surely these waves are hurling themselves onto
+the shore in an attempt to avoid such a fate."
+
+movement SECT_DESERT
+
+east to shore_7 descr
+"You gaze eastwards towards the shore, impressed by the huge
+breakers rolling in from the ocean.";
+north to s_beach_19 descr
+"The beach continues northwards across yellowish/green tinged sand.";
+south to s_beach_22 descr
+"The beach continues southwards across yellowish/green tinged sand.";
+west to s_beach_23 descr
+"As you gaze west acroos the sand, you see the towering cliffs again
+in the distance.";
+end
+
+
+        s_beach_22
+title "On the Beach"
+descr
+"This part of the sandy beach stretches out in all directions.
+To the west you catch sight of a huge solitary boulder.
+To the south and east you can see the waves of a mighty ocean crashing
+against the shore and you ponder the old sea-dog tales of a colossal
+city residing beneath those huge breakers."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north."
+extra {"cliffs", "cliff", "hole", "holes"}
+"In the distance a cliff rises at least 100 feet and looks to be
+unclimbable."
+extra {"ocean", "sea", "waves"}
+"You gaze at the mighty Numorean ocean and wonder how far you
+would have to travel across it, before you came to the edge of the
+world and fell off. Surely these waves are hurling themselves onto
+the shore in an attempt to avoid such a fate."
+extra {"boulder", "huge boulder", "solitary boulder"}
+"It is difficult to make anything out about the boulder from
+this distance."
+
+movement SECT_DESERT
+
+north to s_beach_21 descr
+"The beach continues to the north where some strange cliffs rise
+to dominate the shoreline.";
+west to boulder_1 descr
+"The beach continues westwards across yellowish/green tinged sand,
+towards a huge solitary boulder.";
+south to shore_10 descr
+"You gaze southwards towards the shore, impressed by the huge
+breakers rolling in from the ocean.";
+east to shore_11 descr
+"You gaze eastwards towards the shore, impressed by the huge
+breakers rolling in from the ocean.";
+end
+
+
+        s_beach_23
+
+title "On the Beach"
+descr
+"This part of the beach abuts directly onto a large cliff to the north,
+its surface is slick and damp to the touch. The beach continues
+to the south, west and east. To the south you catch sight of a huge
+solitary boulder."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north."
+extra {"cliffs", "cliff", "hole", "holes"}
+"The cliff rises at least 100 feet above you and is obviously unclimbable,
+especially as the surface is extremely moist and slippery from the
+spume-tossed spray."
+extra {"boulder", "huge boulder", "solitary boulder"}
+"It is difficult to make anything out about the boulder from
+this distance."
+
+movement SECT_DESERT
+
+east to s_beach_21 descr
+"The beach continues eastwards across yellowish/green tinged sand.";
+west to s_beach_24 descr
+"The beach continues westwards across yellowish/green tinged sand.";
+south to boulder_1 descr
+"The beach continues southwards across yellowish/green tinged sand,
+towards a huge solitary boulder.";
+end
+
+
+        s_beach_24
+
+title "On the Beach"
+descr
+"The cliff to the north swings sharply round to make any hope of
+continuing west futile. The surface of the cliff is slick and damp
+to the touch. The beach continues to the south and east."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north."
+extra {"cliffs", "cliff", "hole", "holes"}
+"The cliff rises at least 100 feet above you and is obviously unclimbable,
+especially as the surface is extremely moist and slippery from the
+spume-tossed spray."
+
+movement SECT_DESERT
+
+east to s_beach_23 descr
+"The beach continues eastwards across yellowish/green tinged sand.";
+south to s_beach_25 descr
+"The beach continues southwards across yellowish/green tinged sand.";
+end
+
+
+        s_beach_25
+
+title "On the Beach"
+descr
+"This part of the beach abuts directly onto a large cliff to the west,
+it's surface is slick and damp to the touch. The beach continues
+to the south, north and east. To the east you catch sight of a huge
+solitary boulder. To the south you can see the waves of
+a mighty ocean crashing against the shore and you ponder the old
+sea-dog tales of a colossal city residing beneath those huge breakers."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north."
+extra {"cliffs", "cliff", "hole", "holes"}
+"The cliff rises at least 100 feet above you and is obviously unclimbable,
+especially as the surface is extremely moist and slippery from the
+spume-tossed spray."
+extra {"boulder", "huge boulder", "solitary boulder"}
+"It is difficult to make anything out about the boulder from
+this distance."
+extra {"ocean", "sea", "waves"}
+"You gaze at the mighty Numorean ocean and wonder how far you
+would have to travel across it, before you came to the edge of the
+world and fell off. Surely these waves are hurling themselves onto
+the shore in an attempt to avoid such a fate."
+
+movement SECT_DESERT
+
+north to s_beach_24 descr
+"The beach continues eastwards across yellowish/green tinged sand.";
+east to boulder_1 descr
+"The beach continues eastwards across yellowish/green tinged sand,
+towards a huge solitary boulder.";
+south to shore_8 descr
+"You gaze southwards towards the shore, impressed by the huge
+breakers rolling in from the ocean.";
+end
+
+/* The magic pool */
+        pool_1
+
+title "A Small limpid Pool"
+descr
+"This lovely deep blue/green pool is a harbour of tranquility,
+sheltered by the towering cliffs to your north and west. As you
+dip your toes in and feel the sand oozing between them, you feel
+somehow invigorated. You notice its surface rippling and shimmering
+in the light. Small rocks dot the bottom of the pool and a few poke
+above the surface which don't look too sharp to sit upon.
+The beach continues to the south and east."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north."
+extra {"rocks"}
+"The rocks are probably the home of small aquatic animals."
+extra {"cliffs", "cliff", "hole", "holes"}
+"The cliff rises at least 100 feet above you and is obviously unclimbable.
+It is dotted by holes near the bottom which have resulted from the waves
+acting upon softer material within the rock strata."
+extra{"small", "limpid", "shimmering", "pool"}
+"This small limpid pool has formed in the rocks at the base of the cliff.
+Its surface is shimmering and rippling, though there is no wind here."
+
+movement SECT_SWAMP
+
+flags {UNIT_FL_SACRED, UNIT_FL_NO_TELEPORT, UNIT_FL_NO_MOB}
+
+east to s_beach_3 descr
+"The beach continues eastwards across yellowish/green tinged sand.";
+south to s_beach_7 descr
+"The beach continues southwards across yellowish/green tinged sand.";
+
+dilbegin bubbles();
+var
+i : integer;
+code
+{
+         heartbeat := PULSE_SEC*60;
+         :start:
+         on_activation(self.inside #= null, skip);
+         wait(SFB_CMD | SFB_TICK,TRUE);
+         i := rnd(1,20);
+
+         if (i < 2) {
+                    act(" A flurry of bubbles explodes to the surface and" +
+                    " you are sure something dark and long flicks away" +
+                    " to hide under a rock in the pool.",
+                    A_SOMEONE,self.inside,null,null,TO_ALL);
+         }
+         goto start;
+}
+dilend
+end
+
+/* The sand-spider's depression */
+
+        depression_1
+
+title "Tumbling down a Depression"
+descr
+"As you step onto the top of the depression, you realise it was a mistake
+as the powdery sand fails to support your weight."
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_MOB}
+
+down to depression_2 descr
+"You seem to be only able to go down towards some kind of evil-looking lair.";
+
+dilbegin meal_coming();
+var
+   a:unitptr;
+code
+{             /* Tell the sand-spider that a meal is coming :-) */
+         :start:
+         wait(SFB_CMD,(activator.type == UNIT_ST_PC));
+         a := activator;
+         sendto(a.names.[0], findsymbolic("sand_spider@atl_beach"));
+         goto start;
+
+}
+dilend
+
+special SFUN_FORCE_MOVE
+"depression_2@atl_beach!You tumble head over heels towards the
+bottom.@$1n tumbles head over heels towards the bottom."
+ time PULSE_SEC*20
+end
+
+        depression_2
+
+title "The Lair of the Sand-Spider"
+descr
+"You are at the bottom of a deep depression in the sand. As you
+peruse the unstable slopes, you wonder how you are going to get back up."
+extra {"sand"}
+"You notice white knobbly bones sticking from the yellowish/green
+tinged sand."
+extra {"bones"}
+"Obviously human!"
+extra {"door", "trapdoor"}
+"It is just about possible to make out the outlines of a door in the
+sand, but it is wedged tightly shut against all your heaving and pulling."
+
+flags {UNIT_FL_NO_TELEPORT}
+
+up to s_beach_17 descr
+"You hope you can scramble up to the top";
+south to s_beach_17 descr
+"You hope you can scramble up to the top";
+north to s_beach_5 descr
+"You hope you can scramble up to the top";
+west to s_beach_13 descr
+"You hope you can scramble up to the top";
+east to s_beach_14 descr
+"You hope you can scramble up to the top";
+
+dilbegin meal_here();
+var
+   a:unitptr;
+code
+{             /* Tell the sand-spider that a meal is here :-) */
+         :start:
+         wait(SFB_CMD,(activator.type == UNIT_ST_PC));
+         a := activator;
+         sendto(a.names.[0], findsymbolic("sand_spider@atl_beach"));
+         goto start;
+
+}
+dilend
+end
+
+
+        lair_1
+
+title "Underneath the Trapdoor" /* Shouldn't be able to get here */
+descr
+"Somehow or other you are in the trap-door spider's hidey-hole."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER}
+IN_ALWAYS_DARK
+up to depression_2 descr
+"You think you see a way out above you.";
+end
+
+/* The boulder with the algae-man */
+      boulder_1
+
+title "On top of the boulder"
+descr
+"You are perched precariously on top of a slippery, algae-encrusted
+boulder. The algae here stinks to high heaven and is probably the
+most disgustingly slimey, glutinous algae you have ever seen.
+You could drop (or slither) back onto the beach from any direction."
+extra {"boulder"}
+"As you look closely, you could almost swear that this boulder is
+a part of a pillar from some ancient temple - Yes...it is! You can
+just make out some strange carvings around the base of the pillar."
+extra {"carvings", "pillar", "base"}
+"You scrape away the covering algae to reveal a sequence of
+geometrical shapes - a triangle, a square, a pentagon, a hexagon,
+a ... dammit!...what's the next one?...Ah well! you never did listen
+very carefully to your geometry lessons."
+extra {"alga", "algae"}
+"As you examine the algae it wriggles in a revolting manner and
+almost seems to try and wrap itself round your hand!"
+
+movement SECT_HILLS
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_MOB}
+
+north to s_beach_23 descr
+"You can slither northwards to the beach with the imposing cliffs
+towering above you.";
+south to shore_9@atl_beach descr
+"You can slither south onto the wave-tossed shore with the mighty
+Numorean Ocean churning before you.";
+west to s_beach_25 descr
+"You can slither eastwards to the beach with the dark brooding
+cliffs towering above you.";
+east to s_beach_22 descr
+"You can slither east towards the pebble-flecked beach.";
+down to s_beach_22 descr
+"You can slither down towards the pebble-flecked beach.";
+end
+
+
+/* The shore line */
+
+         shore_1
+
+title "On the Shore"
+descr
+"You are right on the shore of a mighty ocean. The waves crash
+in from the south and wet your feet. With difficulty you lift
+your feet from the quaggy, sucking sand to avoid further
+drenching. The beach continues north, east and west. The Numorean
+ocean is right by your feet to the south...but you would certainly
+be knocked about by the waves if you entered the water."
+extra {"ocean", "sea", "waves"}
+"You gaze at the mighty Numorean ocean and wonder how far you
+would have to travel across it, before you came to the edge of the
+world and fell off. Surely these waves are hurling themselves onto
+the shore in an attempt to avoid such a fate."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north."
+
+movement SECT_SWAMP
+
+flags {UNIT_FL_NO_TELEPORT}
+
+north to s_beach_13 descr
+"The beach continues to the north where some strange cliffs rise
+to dominate the shoreline.";
+west to s_beach_15 descr
+"The beach continues westwards across yellowish/green tinged sand.";
+east to s_beach_17 descr
+"The beach continues eastwards across yellowish/green tinged sand.";
+south to sea_1@atl_sea keyword {"sea", "ocean", "waves"} descr
+"You can enter the sea to the south and certainly get drenched.";
+end
+
+
+         shore_2
+
+title "On the Shore"
+descr
+"You are right on the shore of a mighty ocean. The waves crash
+in from the east and wet your feet. With difficulty you lift
+your feet from the quaggy, sucking sand to avoid further
+drenching. The beach continues north, south and west. The Numorean
+ocean is right by your feet to the east...but you would certainly
+be knocked about by the waves if you entered the water."
+extra {"ocean", "sea", "waves"}
+"You gaze at the mighty Numorean ocean and wonder how far you
+would have to travel across it, before you came to the edge of the
+world and fell off. Surely these waves are hurling themselves onto
+the shore in an attempt to avoid such a fate."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north."
+
+movement SECT_SWAMP
+
+flags {UNIT_FL_NO_TELEPORT}
+
+north to s_beach_15 descr
+"The beach continues to the north where some strange cliffs rise
+to dominate the shoreline.";
+west to s_beach_16 descr
+"The beach continues westwards across yellowish/green tinged sand.";
+east to sea_1@atl_sea keyword {"sea", "ocean", "waves"} descr
+"You can enter the sea to the east and certainly get drenched.";
+south to shore_4 descr
+"You can continue along the shore to the south.";
+end
+
+
+         shore_3
+
+title "On the Shore"
+descr
+"You are right on the shore of a mighty ocean. The waves crash
+in from the south and west to wet your feet. With difficulty you lift
+your feet from the quaggy, sucking sand to avoid further
+drenching. The beach continues north and east. The Numorean
+ocean swells in from the south and west...but you would certainly
+be knocked about by the waves if you entered the water."
+extra {"ocean", "sea", "waves"}
+"You gaze at the mighty Numorean ocean and wonder how far you
+would have to travel across it, before you came to the edge of the
+world and fell off. Surely these waves are hurling themselves onto
+the shore in an attempt to avoid such a fate."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north."
+
+movement SECT_SWAMP
+
+flags {UNIT_FL_NO_TELEPORT}
+
+north to s_beach_17 descr
+"The beach continues to the north where some strange cliffs rise
+to dominate the shoreline.";
+west to sea_1@atl_sea keyword {"sea", "ocean", "waves"} descr
+"You can enter the sea to the west and certainly get drenched.";
+east to s_beach_20 descr
+"The beach continues eastwards across yellowish/green tinged sand.";
+south to sea_3@atl_sea keyword {"sea", "ocean", "waves"} descr
+"You can enter the sea to the south and certainly get drenched.";
+end
+
+
+         shore_4
+
+title "On the Shore"
+descr
+"You are right on the shore of a mighty ocean. The waves crash
+in from the east and wet your feet. With difficulty you lift
+your feet from the quaggy, sucking sand to avoid further
+drenching. The beach continues north, south and west. The Numorean
+ocean is right by your feet to the east...but you would certainly
+be knocked about by the waves if you entered the water."
+extra {"ocean", "sea", "waves"}
+"You gaze at the mighty Numorean ocean and wonder how far you
+would have to travel across it, before you came to the edge of the
+world and fell off. Surely these waves are hurling themselves onto
+the shore in an attempt to avoid such a fate."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north."
+
+movement SECT_SWAMP
+
+flags {UNIT_FL_NO_TELEPORT}
+
+north to shore_2 descr
+"You can continue along the shore to the north.";
+west to s_beach_19 descr
+"The beach continues westwards across yellowish/green tinged sand.";
+east to sea_2@atl_sea keyword {"sea", "ocean", "waves"} descr
+"You can enter the sea to the east and certainly get drenched.";
+south to shore_7 descr
+"You can continue along the shore to the south.";
+end
+
+
+         shore_5
+
+title "On the Shore"
+descr
+"You are right on the shore of a mighty ocean. The waves crash
+in from the south and west to wet your feet. With difficulty you lift
+your feet from the quaggy, sucking sand to avoid further
+drenching. The beach continues north and east. The Numorean
+ocean swells in from the south and west...but you would certainly
+be knocked about by the waves if you entered the water."
+extra {"ocean", "sea", "waves"}
+"You gaze at the mighty Numorean ocean and wonder how far you
+would have to travel across it, before you came to the edge of the
+world and fell off. Surely these waves are hurling themselves onto
+the shore in an attempt to avoid such a fate."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north."
+
+movement SECT_SWAMP
+
+flags {UNIT_FL_NO_TELEPORT}
+
+north to s_beach_20 descr
+"The beach continues to the north where some strange cliffs rise
+to dominate the shoreline.";
+west to sea_3@atl_sea keyword {"sea", "ocean", "waves"} descr
+"You can enter the sea to the west and certainly get drenched.";
+east to shore_6 descr
+"You can continue along the shore to the east.";
+south to sea_6@atl_sea keyword {"sea", "ocean", "waves"} descr
+"You can enter the sea to the south and certainly get drenched.";
+end
+
+
+         shore_6
+
+title "On the Shore"
+descr
+"You are right on the shore of a mighty ocean. The waves crash
+in from the south and wet your feet. With difficulty you lift
+your feet from the quaggy, sucking sand to avoid further
+drenching. The shore continues westwards. The Numorean
+ocean is right by your feet to the south...but you would certainly
+be knocked about by the waves if you entered the water. To your east
+a mighty river pours down into the ocean and strange patterns form
+as the warmer fresh water mixes with the cold salty water. The river
+bank continues northward."
+extra {"ocean", "sea", "waves"}
+"You gaze at the mighty Numorean ocean and wonder how far you
+would have to travel across it, before you came to the edge of the
+world and fell off. Surely these waves are hurling themselves onto
+the shore in an attempt to avoid such a fate."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north."
+extra {"river"}
+"This vast river sweeps down from the north and enters the ocean
+in a swirling vortex of brown and green."
+
+movement SECT_SWAMP
+
+flags {UNIT_FL_NO_TELEPORT}
+
+north to rbank_5 descr
+"The shore continues to the north along the river bank.";
+west to shore_5 descr
+"You can continue along the shore to the west.";
+east to river_6 descr
+"If you feel foolhardy enough, you can enter the river to your east.";
+south to sea_7@atl_sea keyword {"sea", "ocean", "waves"} descr
+"You can enter the sea to the south and certainly get drenched.";
+end
+
+
+         shore_7
+
+title "On the Shore"
+descr
+"You are right on the shore of a mighty ocean. The waves crash
+in from the east and wet your feet. With difficulty you lift
+your feet from the quaggy, sucking sand to avoid further
+drenching. The beach continues north, south and west. The Numorean
+ocean is right by your feet to the east...but you would certainly
+be knocked about by the waves if you entered the water."
+extra {"ocean", "sea", "waves"}
+"You gaze at the mighty Numorean ocean and wonder how far you
+would have to travel across it, before you came to the edge of the
+world and fell off. Surely these waves are hurling themselves onto
+the shore in an attempt to avoid such a fate."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north."
+
+movement SECT_SWAMP
+
+flags {UNIT_FL_NO_TELEPORT}
+
+north to shore_4 descr
+"You can continue along the shore to the north.";
+west to s_beach_21 descr
+"The beach continues westwards across yellowish/green tinged sand.";
+east to sea_4@atl_sea keyword {"sea", "ocean", "waves"} descr
+"You can enter the sea to the east and certainly get drenched.";
+south to shore_11 descr
+"You can continue along the shore to the south.";
+end
+
+
+         shore_8
+
+title "On the Shore"
+descr
+"You are right on the shore of a mighty ocean. The waves crash
+in from the south to wet your feet. With difficulty you lift
+your feet from the quaggy, sucking sand to avoid further
+drenching. The beach continues north and east. The Numorean
+ocean swells in from the south...but you would certainly
+be knocked about by the waves if you entered the water.
+To the west is a large cliff, it's surface is slick and damp
+to the touch."
+extra {"cliffs", "cliff", "hole", "holes"}
+"The cliff rises at least 100 feet above you and is obviously unclimbable,
+especially as the surface is extremely moist and slippery from the
+spume-tossed spray."
+extra {"ocean", "sea", "waves"}
+"You gaze at the mighty Numorean ocean and wonder how far you
+would have to travel across it, before you came to the edge of the
+world and fell off. Surely these waves are hurling themselves onto
+the shore in an attempt to avoid such a fate."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north."
+
+movement SECT_SWAMP
+
+flags {UNIT_FL_NO_TELEPORT}
+
+north to s_beach_25 descr
+"The beach continues to the north where some strange cliffs rise
+to dominate the shoreline.";
+east to shore_6 descr
+"You can continue along the shore to the east.";
+south to sea_19@atl_sea keyword {"sea", "ocean", "waves"} descr
+"You can enter the sea to the south and certainly get drenched.";
+end
+
+
+         shore_9
+
+title "On the Shore"
+descr
+"You are right on the shore of a mighty ocean. The waves crash
+in from the south and wet your feet. With difficulty you lift
+your feet from the quaggy, sucking sand to avoid further
+drenching. The shore continues east and westwards. The Numorean
+ocean is right by your feet to the south...but you would certainly
+be knocked about by the waves if you entered the water. Across
+the beach to the north you catch a glimpse of a huge, solitary boulder."
+extra {"boulder", "huge boulder", "solitary boulder"}
+"It is difficult to make anything out about the boulder from
+this distance."
+extra {"ocean", "sea", "waves"}
+"You gaze at the mighty Numorean ocean and wonder how far you
+would have to travel across it, before you came to the edge of the
+world and fell off. Surely these waves are hurling themselves onto
+the shore in an attempt to avoid such a fate."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north."
+
+movement SECT_SWAMP
+
+flags {UNIT_FL_NO_TELEPORT}
+
+north to boulder_1 descr
+"The beach continues eastwards across yellowish/green tinged sand,
+towards a huge solitary boulder.";
+west to shore_8 descr
+"You can continue along the shore to the west.";
+east to shore_10 descr
+"You can continue along the shore to the east.";
+south to sea_20@atl_sea keyword {"sea", "ocean", "waves"} descr
+"You can enter the sea to the south and certainly get drenched.";
+end
+
+
+         shore_10
+
+title "On the Shore"
+descr
+"You are right on the shore of a mighty ocean. The waves crash
+in from the south and east to wet your feet. With difficulty you lift
+your feet from the quaggy, sucking sand to avoid further
+drenching. The beach continues north and west. The Numorean
+ocean is right by your feet...but you would certainly
+be knocked about by the waves if you entered the water."
+extra {"ocean", "sea", "waves"}
+"You gaze at the mighty Numorean ocean and wonder how far you
+would have to travel across it, before you came to the edge of the
+world and fell off. Surely these waves are hurling themselves onto
+the shore in an attempt to avoid such a fate."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north."
+
+movement SECT_SWAMP
+
+flags {UNIT_FL_NO_TELEPORT}
+
+north to s_beach_22 descr
+"The beach continues to the north where some strange cliffs rise
+to dominate the shoreline.";
+west to shore_9 descr
+"You can continue along the shore to the west.";
+east to sea_14@atl_sea keyword {"sea", "ocean", "waves"} descr
+"You can enter the sea to the east and certainly get drenched.";
+south to sea_21@atl_sea keyword {"sea", "ocean", "waves"} descr
+"You can enter the sea to the south and certainly get drenched.";
+end
+
+
+         shore_11
+
+title "On the Shore"
+descr
+"You are right on the shore of a mighty ocean. The waves crash
+in from the south and east to wet your feet. With difficulty you lift
+your feet from the quaggy, sucking sand to avoid further
+drenching. The beach continues north and west. The Numorean
+ocean is right by your feet...but you would certainly
+be knocked about by the waves if you entered the water."
+extra {"ocean", "sea", "waves"}
+"You gaze at the mighty Numorean ocean and wonder how far you
+would have to travel across it, before you came to the edge of the
+world and fell off. Surely these waves are hurling themselves onto
+the shore in an attempt to avoid such a fate."
+extra {"sand"}
+"This yellowish/green sand is obviously the result of many millions
+of years of tidal action on the cliffs to your north."
+
+movement SECT_SWAMP
+
+flags {UNIT_FL_NO_TELEPORT}
+
+north to shore_7 descr
+"You can continue along the shore to the north.";
+west to s_beach_22 descr
+"The beach continues westwards across yellowish/green tinged sand.";
+east to sea_9@atl_sea keyword {"sea", "ocean", "waves"} descr
+"You can enter the sea to the east and certainly get drenched.";
+south to sea_14@atl_sea keyword {"sea", "ocean", "waves"} descr
+"You can enter the sea to the south and certainly get drenched.";
+end
+
+/* The river bank */
+
+       rbank_1
+
+title "On the river bank"
+descr
+"You are on a muddy bank by the river. The mighty river Urwent hurtles
+out of a rock face to your north-east and churns on towards tthe sea to
+your south. You could, if fool-hardy enough, enter the river to your
+east. A dominating cliff-face prevents movement north but you can go
+west onto the beach or south along the river bank."
+
+east to river_1 descr
+"The river bank dips eastward into the churning Urwent river.";
+west to s_beach_10 descr
+"To your west you can see the yellowish/green tinged sand of the beach.";
+south to rbank_2 descr
+"You can continue along the brackish brown bank parallel to the river.";
+
+
+movement SECT_SWAMP
+
+flags {UNIT_FL_NO_TELEPORT}
+end
+
+
+       rbank_2
+
+title "On the river bank"
+descr
+"You are on a muddy bank by the river. The mighty river Urwent hurtles
+out of a rock face to your north-east and churns on towards tthe sea to
+your south. You could, if fool-hardy enough, enter the river to your
+east. You can go north or south along the river bank, or west onto
+the beach."
+
+east to river_2 descr
+"The river bank dips eastward into the churning Urwent river.";
+west to s_beach_11 descr
+"To your west you can see the yellowish/green tinged sand of the beach.";
+south to rbank_3 descr
+"You can continue along the brackish brown bank parallel to the river.";
+north to rbank_1 descr
+"You can continue along the brackish brown bank parallel to the river.";
+
+
+movement SECT_SWAMP
+
+flags {UNIT_FL_NO_TELEPORT}
+end
+
+
+       rbank_3
+
+title "On the river bank"
+descr
+"You are on a muddy bank by the river. The mighty river Urwent hurtles
+out of a rock face to your north-east and churns on towards tthe sea to
+your south. You could, if fool-hardy enough, enter the river to your
+east. You can go north or south along the river bank, or west onto
+the beach."
+
+east to river_3 descr
+"The river bank dips eastward into the churning Urwent river.";
+west to s_beach_14 descr
+"To your west you can see the yellowish/green tinged sand of the beach.";
+south to rbank_4 descr
+"You can continue along the brackish brown bank parallel to the river.";
+north to rbank_2 descr
+"You can continue along the brackish brown bank parallel to the river.";
+
+
+movement SECT_SWAMP
+
+flags {UNIT_FL_NO_TELEPORT}
+end
+
+
+       rbank_4
+
+title "On the river bank"
+descr
+"You are on a muddy bank by the river. The mighty river Urwent hurtles
+out of a rock face to your north-east and churns on towards tthe sea to
+your south. You could, if fool-hardy enough, enter the river to your
+east. You can go north or south along the river bank, or west onto
+the beach."
+
+east to river_4 descr
+"The river bank dips eastward into the churning Urwent river.";
+west to s_beach_18 descr
+"To your west you can see the yellowish/green tinged sand of the beach.";
+south to rbank_5 descr
+"You can continue along the brackish brown bank parallel to the river.";
+north to rbank_3 descr
+"You can continue along the brackish brown bank parallel to the river.";
+
+
+movement SECT_SWAMP
+
+flags {UNIT_FL_NO_TELEPORT}
+end
+
+
+
+       rbank_5
+
+title "On the river bank"
+descr
+"You are on a muddy bank by the river. The mighty river Urwent hurtles
+out of a rock face to your north-east and churns on towards tthe sea to
+your south. You could, if fool-hardy enough, enter the river to your
+east. You can go north along the river bank, south onto the shore
+or west onto the beach."
+
+east to river_5 descr
+"The river bank dips eastward into the churning Urwent river.";
+west to s_beach_20 descr
+"To your west you can see the yellowish/green tinged sand of the beach.";
+south to shore_6 descr
+"To the south you see the shore line and the huge breakers of the
+Numorean Ocean crashing against the sand.";
+north to rbank_4 descr
+"You can continue along the brackish brown bank parallel to the river.";
+
+
+movement SECT_SWAMP
+
+flags {UNIT_FL_NO_TELEPORT}
+end
+
+
+/* The river */
+
+       river_1
+
+title "On the river"
+descr
+"The mighty river Urwent hurtles out of the rock face about 10 feet
+above you and cascades down to the Numorean ocean to your south.
+You are rocked about and cling precipitously to your boat. Large
+looming cliffs stop any thought of going east, whilst a river bank
+beckons invitingly to your west."
+extra {}
+"A mighty river indeed!...the swirling brown water rocks your boat
+and spins it around as the water gushes past."
+extra {"cliffs"}
+"You can barely see the face of the cliff with all the spattering
+water, but it sure looks slippery!"
+extra {"river bank", "bank"}
+"The river bank looks a haven of calm compared to where you are."
+extra {"ocean", "sea", "waves"}
+"You can just make out the flickering of the foam-flecked waves
+to your south."
+
+movement SECT_WATER_SAIL
+
+flags {UNIT_FL_NO_TELEPORT}
+
+special SFUN_FORCE_MOVE
+"river_2@atl_beach!You quickly float downstream.@$1n floats downstream."
+ time WAIT_SEC*5
+
+south to river_2 descr
+"The river continues rushing southwards.";
+west to rbank_1 descr
+"You see the banks of the river.";
+end
+
+
+       river_2
+
+title "On the river"
+descr
+"The mighty river Urwent rushes southwards towards the Numorean ocean.
+You are rocked about and cling precipitously to your boat. Large
+looming cliffs stop any thought of going east, whilst a river bank
+beckons invitingly to your west."
+extra {}
+"A mighty river indeed!...the swirling brown water rocks your boat
+and spins it around as the water gushes past."
+extra {"cliffs"}
+"You can barely see the face of the cliff with all the spattering
+water, but it sure looks slippery!"
+extra {"river bank", "bank"}
+"The river bank looks a haven of calm compared to where you are."
+extra {"ocean", "sea", "waves"}
+"You can just make out the flickering of the foam-flecked waves
+to your south."
+
+movement SECT_WATER_SAIL
+
+flags {UNIT_FL_NO_TELEPORT}
+
+special SFUN_FORCE_MOVE
+"river_3@atl_beach!You quickly float downstream.@$1n floats downstream."
+ time WAIT_SEC*10
+
+south to river_3 descr
+"The river continues rushing southwards.";
+west to rbank_2 descr
+"You see the banks of the river.";
+end
+
+
+       river_3
+
+title "On the river"
+descr
+"The mighty river Urwent continues to rush southwards towards
+the Numorean ocean with its huge waves.
+You are rocked about and cling precipitously to your boat. Large
+looming cliffs stop any thought of going east, whilst a river bank
+beckons invitingly to your west."
+extra {}
+"A mighty river indeed!...the swirling brown water rocks your boat
+and spins it around as the water gushes past."
+extra {"cliffs"}
+"You can barely see the face of the cliff with all the spattering
+water, but it sure looks slippery!"
+extra {"river bank", "bank"}
+"The river bank looks a haven of calm compared to where you are."
+extra {"ocean", "sea", "waves"}
+"The huge breakers are now clearly visible."
+
+movement SECT_WATER_SAIL
+
+flags {UNIT_FL_NO_TELEPORT}
+
+special SFUN_FORCE_MOVE
+"river_4@atl_beach!You quickly float downstream.@$1n floats downstream."
+ time WAIT_SEC*15
+
+south to river_4 descr
+"The river continues rushing southwards.";
+west to rbank_3 descr
+"You see the banks of the river.";
+end
+
+
+       river_4
+
+title "On the river"
+descr
+"The mighty river Urwent continues to rush southwards towards
+the Numorean ocean with its huge waves. The force of the water seems
+to be slowing somewhat. Large looming cliffs stop any thought of going
+east, whilst a river bank beckons invitingly to your west."
+extra {}
+"A mighty river indeed!...the swirling brown water gently rocks your
+boat."
+extra {"cliffs"}
+"You can barely see the face of the cliff with all the spattering
+water, but it sure looks slippery!"
+extra {"river bank", "bank"}
+"The river bank looks a haven of calm compared to where you are."
+extra {"ocean", "sea", "waves"}
+"The huge breakers are now clearly visible."
+
+movement SECT_WATER_SAIL
+
+flags {UNIT_FL_NO_TELEPORT}
+
+special SFUN_FORCE_MOVE
+"river_5@atl_beach!You quickly float downstream.@$1n floats downstream."
+ time WAIT_SEC*20
+
+south to river_5 descr
+"The river continues southwards at a gentler pace.";
+west to rbank_4 descr
+"You see the banks of the river.";
+end
+
+
+       river_5
+
+title "On the river"
+descr
+"The mighty river Urwent slows down considerably as if considering
+if it wants to meet the rolling waves of the Numorean ocean.
+Large looming cliffs stop any thought of going east, whilst a
+river bank beckons invitingly to your west."
+extra {}
+"A mighty river indeed!...the swirling brown water gently rocks your
+boat."
+extra {"cliffs"}
+"You can barely see the face of the cliff with all the spattering
+water, but it sure looks slippery!"
+extra {"river bank", "bank"}
+"The river bank looks a haven of calm compared to where
+you are going to be."
+extra {"ocean", "sea", "waves"}
+"The huge breakers are now clearly visible."
+
+movement SECT_WATER_SAIL
+
+flags {UNIT_FL_NO_TELEPORT}
+
+special SFUN_FORCE_MOVE
+"river_6@atl_beach!You float downstream.@$1n floats downstream."
+ time WAIT_SEC*30
+
+south to river_6 descr
+"The river continues southwards at a gentler pace - towards a
+storm-tossed ocean.";
+west to rbank_5 descr
+"You see the banks of the river.";
+end
+
+
+       river_6
+
+title "On the river"
+descr
+"The mighty river Urwent slows down considerably as if considering
+if it wants to meet the rolling waves of the Numorean ocean which are
+directly to your south. Your boat rocks from these tidal waves coming
+up the estuary.
+Large looming cliffs stop any thought of going east, whilst the
+shore beckons to your west."
+extra {}
+"A mighty river indeed!...the swirling brown water gently rocks your
+boat."
+extra {"cliffs"}
+"You can barely see the face of the cliff with all the spattering
+water, but it sure looks slippery!"
+extra {"river bank", "bank"}
+"The river bank looks a haven of calm compared to where you are
+going to be."
+extra {"ocean", "sea", "waves"}
+"The huge breakers are now clearly visible."
+
+movement SECT_WATER_SAIL
+
+flags {UNIT_FL_NO_MOB}
+
+special SFUN_FORCE_MOVE
+"sea_8@atl_sea!You float downstream into a choppy ocean.@$1n floats downstream into a choppy ocean."
+ time WAIT_SEC*30
+
+south to sea_8@atl_sea descr
+"The river continues southwards at a gentler pace - towards a
+storm-tossed ocean.";
+west to shore_6 descr
+"You see the banks of the river.";
+end
+
+/* The entrance cliff tunnels from civilisation */
+        cliff_hole1
+
+title "In the Hole in the Cliff"
+descr
+"A six foot diameter hole has been worn into the cliff face by the
+tidal wave action on the softer material in the rock here.
+Glutinous, slimy green algae hang from the wall.
+The beach is to the south and luckily it looks like the tide is out.
+The hole continues to the north into a stygian gloom."
+
+extra{"slimy algae", "green algae", "glutinous algae", "algae"}
+"The slimy algae hangs in putrescent drapes from the ceiling and walls...
+most unpleasant!"
+
+movement SECT_INSIDE
+OUT_DARK_NON_NOON
+
+flags {UNIT_FL_NO_MOB, UNIT_FL_NO_WEATHER}
+
+south to s_beach_1 descr
+"With relief you see an exit from this dank cave onto the sandy beach.";
+north to tunnel_1 descr
+"A 6 foot hole continues into the stygian gloom";
+end
+
+
+
+
+%mobiles
+/* North beach and wood creatures - level 25-30 */
+
+	small_scorpion
+names {"small scorpion", "scorpion"}
+title "a small scorpion"
+descr "A small scorpion eyes you hungrily and flexes its little sting."
+extra {}
+"This little scorpion scuttles towards you, though small, it looks very
+nasty. A wicked looked spike on the end of the tail glistens slightly
+with what is obviously an extremely nasty venom."
+race RACE_SCORPION
+level 27
+sex SEX_NEUTRAL
+NATURAL_DEF(WPN_STING,ARM_HLEATHER)
+weight 15
+height 20
+exp 150 /* High dex + venom */
+MSET_ABILITY(20,35,20,15,5,0,5,0)
+MSET_SPELL(0,0,0,0,0,28,2,2,2,30,0)
+MSET_WEAPON(5,5,2,2,20,2)
+money 2 COPPER_PIECE
+special SFUN_AGGRESSIVE time WAIT_SEC*90 bits SFB_RANTIME
+special SFUN_RANDOM_ZONE_MOVE time PULSE_SEC*40 bits SFB_RANTIME
+special SFUN_COMBAT_POISON
+end
+
+
+	chameleon_log  /* Originally in log form  */
+
+names {"old log","log", "chameleon"}
+title "an old log"
+descr "A gnarled old log lies here."
+extra {}
+"You could almost have sworn that this log moved!"
+race RACE_CHAMELEON
+level 26
+sex SEX_NEUTRAL
+NATURAL_DEF(WPN_CLAW,ARM_LEATHER)
+weight 50
+height 110
+MSET_ABILITY(20,20,20,20,20,0,0,0)
+MSET_WEAPON(10,10,10,10,50,10)
+
+dilbegin chameleon();
+var
+	chameleon : unitptr;
+code
+{
+	heartbeat := PULSE_SEC*60;
+	:start:
+	on_activation(self.position <= POSITION_FIGHTING, skip);
+	nopriority;
+	wait(SFB_TICK, TRUE);
+	priority;
+	/* Turn into a chameleon */
+	act(" You are surprised to see the log sprout legs and "
+	  + "waddle along by itself. Aha..it's a chameleon.",
+		A_SOMEONE,self,null,null,TO_ALL);
+	chameleon := load("chameleon@atl_beach");
+	link(chameleon,self.outside);
+	destroy(self);
+}
+dilend
+end
+
+	chameleon  /* Originally in log form  */
+
+names {"chameleon"}
+title "a chameleon"
+descr "A chameleon basks here."
+extra {}
+"It is extremely difficult to get a good look at this chameleon,
+so closely do its colours match the surroundings."
+race RACE_CHAMELEON
+level 26
+sex SEX_NEUTRAL
+NATURAL_DEF(WPN_CLAW,ARM_LEATHER)
+weight 50
+height 110        
+MSET_ABILITY(20,20,20,20,20,0,0,0)
+MSET_WEAPON(10,10,10,10,50,10)
+
+special SFUN_RANDOM_ZONE_MOVE time WAIT_SEC*60 bits SFB_RANTIME
+
+dilbegin changelog();
+var
+	clog : unitptr;
+code
+{
+	heartbeat := PULSE_SEC*120;
+	:start:
+	on_activation((self.position <= POSITION_FIGHTING) , skip);
+	nopriority;
+	wait(SFB_TICK, TRUE);
+	priority;
+	/* Turn into a log */
+	act(" The chameleon colours change, it is very difficult "
+	  + "to see now.",
+	    A_SOMEONE,self,null,null,TO_ALL);
+	clog := load("chameleon_log@atl_beach");
+	link(clog,self.outside);
+	destroy(self);
+}
+dilend
+end
+
+	naiad
+names {"giggling naiad", "naiad", "pond nymph", "nymph"}
+title "a giggling naiad"
+descr "A naiad stands here giggling."
+extra{}
+"You remember the tales of these little pond nymphs and how they like
+to hide in the water and play jokes on mortals. Harmless really,
+but slightly irritating."
+
+race RACE_NAIAD
+alignment 100
+level 29
+exp 150 /* Because of colourspray and 3 friends to rescue her */
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+weight 42
+height 91
+money 3 COPPER_PIECE
+romflags {CHAR_DETECT_INVISIBLE}
+MSET_ABILITY(15,10,5,15,25,10,2,18)
+MSET_WEAPON(5,5,5,5,5,5)
+MSET_SPELL(20,3,3,3,3,23,3,3,3,3,3)
+
+dilcopy combat_mag@function("colourspray","cure light wounds",25,2);  
+
+dilbegin give_potion();
+code
+{
+    heartbeat := PULSE_SEC * 40;
+    :start:
+    
+    wait(SFB_CMD, activator.type == UNIT_ST_PC);
+    if (dilfind("spl_poison@basis", activator)) {
+	if (findunit(self, "potion", FIND_UNIT_INVEN, null) and
+		not(findunit(activator, "remove poison potion", FIND_UNIT_INVEN, null))) {
+		exec("say "+activator.names.[0]+"! You seem to be very ill."+
+			" Please accept this.", self);
+		exec("give potion to "+activator.names.[0], self);
+	}
+    } 
+}
+dilend
+special SFUN_RESCUE "naiad"
+special SFUN_TEAMWORK "naiad"
+
+special SFUN_PAIN_INIT time WAIT_SEC*20 bits SFB_RANTIME "
+100	S100@
+120	ASomebody sprays you with water!@
+130	d100giggle@
+140	d100hide@
+150	J100@
+"
+end
+
+	thothratep
+names {"thothratep", "egyptian warrior", "warrior"}
+title "Thothratep"
+descr "Thothratep, an egyptian warrior, stands here and eyes you haughtily."
+extra{}
+"This bronze-skinned scarred egyptian warrior idly fingers his top-knot
+and peers back at you with suspicion."
+
+money 1 SILVER_PIECE
+M_HUMAN_WARRIOR_SWORD(30, SEX_MALE)
+exp 200 /* Because of partnership with akhenaten */
+special SFUN_RESCUE "akhenaten"
+special SFUN_RANDOM_ZONE_MOVE time PULSE_SEC*60 bits SFB_RANTIME
+
+
+dilbegin egypt_warrior();
+var
+	a	:	unitptr;
+	akhen	:	unitptr;
+	i1	:	integer;
+	pc	:	string;
+code {
+	:init:
+	i1 := interrupt(SFB_CMD, activator.type == UNIT_ST_PC, pccmd);
+	:start:
+	heartbeat := PULSE_SEC * 3;
+
+	wait(SFB_DONE, activator.type == UNIT_ST_NPC);
+	if ("Leave our sacred" in argument) {
+		pause;
+		exec("say These infidel should not be here!", self);
+		pause;
+		exec("say Shall we kill them?", self);
+		goto start;
+	}
+	if ("Mine says" in argument) {
+		pause;
+		exec("say So does mine :-)", self);
+		pause;
+		exec("say Let's kill them", self);
+		pause;
+		exec("kill "+pc, self);
+		goto start;
+	}
+	pause;
+	goto start;
+	
+:pccmd:
+	clear(i1);
+	a := activator;
+	secure(a, lostpc);
+	pc := a.names.[0];
+	akhen := findunit(self, "akhenaten", FIND_UNIT_SURRO, null);
+	if (akhen != null) {
+		exec("Say Who are these people Akhenaten?", self);
+	}
+	goto start;
+	
+:lostpc:
+	exec("say Good Riddance!", self);
+	goto init;
+}
+dilend  
+end 
+
+	akhenaten
+names {"akhenaten","egyptian priest","priest"}
+title "Akhenaten"
+descr "Akhenaten, an egyptian priest, stands here and eyes you haughtily."
+extra{}
+"This bald-headed bronze-skinned priest eyes you through slightly-slitted
+eyes."
+extra{"tattoo"}
+"It appears to be a large Golden Ankh symbol."
+
+money 1 SILVER_PIECE
+race RACE_HUMAN
+level 32
+sex SEX_MALE
+NATURAL_DEF(WPN_FIST,ARM_CLOTHES)
+weight 160
+height 140
+MSET_ABILITY(5,8,7,20,25,10,0,25)
+MSET_WEAPON(12,2,2,2,5,2)
+MSET_SPELL(25,5,5,5,5,5,5,5,5,5,5)
+alignment 400
+exp 200 /* Because of partnership with thothratep + spells */
+special SFUN_TEAMWORK "thothratep"
+
+dilbegin akh_combat();
+var
+	thoth		:	unitptr;
+	half_hp		:	integer;
+code {
+	:init:
+	heartbeat := PULSE_SEC * 3;
+
+	:start:
+	nopriority;
+	wait(SFB_COM, (self.position == POSITION_FIGHTING));
+	priority;
+	half_hp := self.max_hp / 2;
+	if (self.hp < half_hp) { /* We're in trouble */
+		if (self.mana < 20) {
+			exec("flee", self);
+			pause;
+			goto start;
+		}
+		else {
+			exec("cast heal", self);
+			pause;
+		}
+	}
+	/* Check if my mate thothratep is OK */
+	thoth := findsymbolic("thothratep@atl_beach");
+	if (thoth == null) {
+		nopriority;
+		goto start;
+	}
+	if (thoth.outside != self.outside) { /* He's not here anyway */
+		nopriority;
+		goto start;
+	}
+	half_hp := thoth.max_hp / 2;
+	if (thoth.hp < half_hp) { /* He's in trouble */
+		exec("cast heal thothratep", self);
+		pause;
+		goto start;
+	}
+
+	/* Try to hit the bugger with a spell */
+	if (self.mana > 60) { /* Only if we have enough for a heal */
+		exec("cast harm " +
+			self.fighting.names.[0], self);
+	}
+	pause;
+	goto start;
+}
+dilend
+
+dilbegin akh_clock();
+var
+	thoth		:	unitptr;
+	half_hp		:	integer;
+code {
+	heartbeat := PULSE_SEC * 60;
+	on_activation(self.position == POSITION_FIGHTING, skip);
+	:start:
+	wait(SFB_TICK, self.position != POSITION_FIGHTING);
+	thoth := findsymbolic("thothratep@atl_beach");
+	if (thoth == null) {
+		goto start;
+	}
+	if (self.position == POSITION_SLEEPING) {
+		exec("wake", self);
+	}
+	if ((thoth.outside != self.outside)
+		& (self.position == POSITION_STANDING)) {
+		heartbeat := 3 * PULSE_SEC;
+		walkto(thoth.outside);
+		exec("follow thothratep", self);
+		heartbeat := PULSE_SEC * 60;
+	}
+	half_hp := thoth.max_hp / 2;
+	if (thoth.hp < half_hp) { 
+		exec("cast heal thothratep", self);
+	}
+	goto start; 
+}
+dilend
+
+dilbegin akh_natter();
+code {
+	heartbeat := PULSE_SEC * 3;
+	:start:
+	on_activation(self.position <= POSITION_FIGHTING, skip);
+	wait(SFB_DONE, (command(CMD_SAY) &
+			(activator.names.[0] == "thothratep")));
+	log("akhenaten : activated by " +cmdstr);
+	log("akhenaten : argument is " +argument);
+	if ("Who are these" in argument) {
+		pause;
+		exec("frown", self);
+		pause;
+		exec("say I have no idea!", self);
+		pause;
+		exec("say Leave our sacred isle stranger!", self);
+		goto start;
+	}
+	if ("Shall we kill" in argument) {
+		pause;
+		exec("say Have you con'd them?", self);
+		pause;
+		exec("say Mine says 'Plenty of time to flee' :-)", self);
+		goto start;
+	}
+	if ("Let's kill them" in argument) {
+		pause;
+		exec("say Die scum!", self);
+	}
+	goto start;
+}
+dilend
+end
+
+
+
+	dryad
+names {"small dryad", "coy dryad", "dryad", "tree nymph", "nymph"}
+title "a coy dryad"
+descr "A small dryad looks at you coyly."
+extra{}
+"You remember the tales of these little tree nymphs and how they like
+to hide in their trees and gaze at mortals, who they think are
+very nice. (Unfortunately they are very shy.)"
+
+race RACE_DRYAD
+alignment 200
+level 28
+exp 120 /* Because of stinking cloud */
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+weight 50
+height 105
+money 1 COPPER_PIECE
+romflags {CHAR_DETECT_INVISIBLE}
+MSET_ABILITY(5,15,5,15,25,10,2,23)
+MSET_WEAPON(5,5,5,5,5,5)
+MSET_SPELL(5,5,5,5,5,5,5,5,5,20,5)
+
+dilcopy combat_mag@function("stinking cloud","cure serious wounds",25,2);
+
+special SFUN_RESCUE "dryad"
+special SFUN_TEAMWORK "dryad"
+special SFUN_RANDOM_ZONE_MOVE time WAIT_SEC*40 bits SFB_RANTIME
+
+special SFUN_PAIN_INIT time WAIT_SEC*20 bits SFB_RANTIME "
+100	S100@
+120	d100kiss %s@
+130	d100giggle@
+140	d100hide@
+150	J100@
+"
+
+dilbegin wave_wand();
+code
+{
+	:start:
+	wait(SFB_COM, TRUE);
+	exec("use wand "+activator.names.[0], self);
+	goto start;
+}
+dilend
+
+end
+
+
+	lycan  /* Originally in human form  */
+
+names {"lycan","human"}
+title "Lycan the human"
+descr "Lycan - a spindly looking human, stands here picking his nose."
+extra {}
+"He looks pretty weedy...it seems you could easily kill him."
+race RACE_WEREWOLF
+level 20
+sex SEX_MALE
+NATURAL_DEF(WPN_FIST,ARM_CLOTHES)
+weight 96
+height 110
+money 4 COPPER_PIECE
+MSET_ABILITY(20,20,20,20,20,0,0,0)
+MSET_WEAPON(10,10,10,10,50,10)
+
+
+dilbegin lycan();
+var
+	wolf	:	unitptr;
+	relay	:	unitptr;
+	a	:	unitptr;
+	e	:	unitptr;
+	res	:	integer;
+	expd	:	extraptr;
+code
+{
+	heartbeat := PULSE_SEC*2;
+	:start:
+	on_activation(self.position <= POSITION_SLEEPING, skip);
+	nopriority;
+	wait(SFB_COM, self.position == POSITION_FIGHTING);
+	priority;
+	a := activator;
+	e := findunit(a, "silver dagger", FIND_UNIT_EQUIP, null);
+	expd := LYCAN_KILL_ONGOING in a.quests;
+	if ((e != null) &
+		(expd != null)) {
+		act("Your silver dagger skillfully pierces Lycan's heart.",
+			A_SOMEONE, a, null, null, TO_CHAR);
+		act("$1n's silver dagger skillfully pierces Lycan's heart.",
+			A_SOMEONE, a, null, null, TO_ROOM);
+		exec("emote looks extremely grateful.", self);
+		exec("say Thank you "+a.names.[0]+"! You have given me "+
+			"eternal rest.", self);
+		exec("say I am sure you are 8000 points more experienced for this", self);
+		exec("emote gives one last breath.", self);
+		experience(8000, a);
+		subextra(a.quests, LYCAN_KILL_ONGOING);
+		addextra(a.quests, {LYCAN_KILL_COMPLETE},"");
+		self.hp := -10;
+		position_update(self);
+		pause;
+		res := dildestroy("lycan", self);
+	}
+	else {
+               	wolf := load("werewolf@atl_beach");
+               	if (wolf == null) {
+               	   goto start;
+               	}
+               	/* Turn into a werewolf */
+               	act(" You are amazed to see this spindly human start to sprout" +
+               		" a profusion of body hair and pointed ears." +
+               		" He squats down on all fours and howls." +
+               		" By the Gods!....it's a wolf!" ,
+               		A_SOMEONE,self,null,null,TO_ALL);
+               	link(wolf,self.outside);
+               	relay := findsymbolic("relay@atl_beach");
+               	sendto(activator.names.[0], relay);
+               	destroy(self);
+	}
+}
+dilend
+
+
+dilbegin lychelp();
+var
+	a	: unitptr;
+	i	: integer;
+code
+{
+	:start:
+	heartbeat := 5 * PULSE_SEC;
+	wait(SFB_CMD, activator.type == UNIT_ST_PC);
+	a := activator;
+	secure(a, lostpc);
+	if (LYCAN_KILL_COMPLETE in activator.quests) {
+		goto start;
+	}
+	if (LYCAN_KILL_ONGOING in activator.quests) {
+		exec("say Aha "+a.names.[0]+"! Have you " +
+			"come back to kill me?", self);
+		pause;
+		exec("emote looks at you hopefully.", self);
+		heartbeat := PULSE_SEC * 30;
+		pause;
+		goto start;
+	}
+	exec("emote looks at you with pleading eyes.", self);
+	pause;
+	exec("say Hello "+a.names.[0]+". I warn you, though I look " +
+		"weak, I am cursed with a dreadful affliction.",
+		self);
+	pause;
+	exec("say For if I am attacked, I will turn into a werewolf " +
+		"and surely slay you!", self);
+	pause;
+	exec("say There is, however, one way of slaying me and giving "+
+		"me eternal peace. Would you be willing to kill " +
+		"me...and give me rest?", self);
+		
+	i := 0;
+	while (i < 5) {
+		wait(SFB_CMD, activator == a);
+		if (command(CMD_NOD))
+	  		goto yes_quest;
+		else if (command(CMD_SHAKE))
+	  		goto no_quest;
+		i := i+1;
+  		pause;
+		exec("say Please nod if you accept " +
+			"or shake if you reject.", self);
+	}
+	
+	goto no_quest;
+	
+:yes_quest:
+	exec("Say Thank you "+a.names.[0]+"! To be successful " +
+		"in killing me AND removing the curse, you must " +
+		"find a special weapon.", self);
+	pause;
+	exec("Say I am not sure what or where it is, but I have " +
+		"been told it exists on this island somewhere.",
+		self);
+	pause;
+	exec("say Go quickly now and find this weapon please", self);
+	addextra(a.quests, {LYCAN_KILL_ONGOING}, "");
+	unsecure(a);
+	heartbeat := PULSE_SEC * 30;
+	pause;
+	goto start;
+	
+:no_quest:
+:lostpc:
+	exec("cry", self);
+	heartbeat := PULSE_SEC * 30;
+	goto start;
+	
+}
+dilend
+end
+			     
+	werewolf /* Now in wolf form */
+
+names {"werewolf", "lycan", "wolf"}
+title "Lycan the wolf"
+descr "An extremely dangerous looking wolf is slavering at you."
+extra {}
+"He looks like he could gobble you down in one gulp, little Red Riding Hood."
+race RACE_WEREWOLF
+level 30
+sex SEX_MALE
+NATURAL_DEF(WPN_BITE,ARM_LEATHER)
+weight 154
+height 70
+exp 120 /* For the shock */
+MSET_ABILITY(20,20,20,20,20,0,0,0)
+MSET_WEAPON(10,10,10,10,50,10)
+
+special SFUN_AGGRESSIVE time WAIT_SEC*20
+
+dilbegin wolf();
+var
+	human : unitptr;
+	key   : unitptr;
+code
+{
+	heartbeat := PULSE_SEC * 30;
+	:start:
+	on_activation(self.position == POSITION_FIGHTING, skip);
+	wait(SFB_MSG | SFB_TICK,TRUE);
+	if (command(CMD_AUTO_MSG)) {
+	   exec("kill " + argument, self);
+	   goto start;
+	}
+	pause;
+
+	act(" You are very surprised to see the wolf's shape blur" +
+		" - his hair (and claws) receding. In his place " +
+		" stands a spindly looking human!",
+		A_SOMEONE, self, null, null, TO_ALL);
+	human := load("lycan@atl_beach");
+	link(human,self.outside);
+	destroy(self);
+}
+dilend
+end
+
+	chaos_mummy
+names {"chaos mummy", "mummy"}
+title "a chaos mummy"
+descr "A chaos mummy, swathed in bandages looms menacingly near you."
+extra {}
+"Definitely one of Sislik's creations, this chaos mummy may have no
+mind of its own, but you can be sure it is doing Sislik's evil bidding."
+BASE_MUMMIE(50, SEX_NEUTRAL)
+money 6 COPPER_PIECE
+
+special SFUN_RANDOM_ZONE_MOVE time WAIT_SEC*60 bits SFB_RANTIME
+special SFUN_AGGRESSIVE "The chaos mummy grips its head and wails. Suddenly $1e attacks $3n." time WAIT_SEC*20 bits SFB_RANTIME
+special SFUN_TEAMWORK "mummy"
+
+dilbegin wave_wand2();
+code
+{
+	:start:
+	heartbeat := PULSE_SEC * 60;
+	wait (SFB_TICK, self.position == POSITION_STANDING);
+	exec("hold wand", self);
+	heartbeat := PULSE_SEC * 5;
+	pause;
+	exec("carnage", self);
+	pause;
+	exec("remove wand", self);
+	goto start;
+}
+dilend
+
+end
+
+
+	small_crab
+
+names {"small crab", "crab"}
+title "the small crab"
+descr "A small crab is here flexing it nasty-looking claws."
+extra {}
+"A relatively small crab, but it looks nasty with its serrated claws
+and tough with its chitinous exoskeleton."
+alignment 0
+race RACE_CRAB
+romflags CHAR_MUTE
+level 29
+sex SEX_NEUTRAL
+NATURAL_DEF(WPN_CLAW,ARM_LEATHER)
+weight 28 /* Chitin weighs a lot */
+height 13
+money 4 IRON_PIECE
+MSET_ABILITY(25,20,20,20,15,0,0,0)
+MSET_WEAPON(10,10,10,10,50,10)
+special SFUN_RANDOM_ZONE_MOVE time WAIT_SEC*30 bits SFB_RANTIME
+end
+
+	killer_bat
+names {"giant bat", "bat"}
+title "a giant bat"
+descr "A giant bat swoops towards you, sharp fangs aglistening."
+extra{}
+"This huge creature flaps its leathery black wings, creating a
+miniature tornado. Its sharp fangs glisten in the dim light and
+its eyes seem determinedly fixed upon your jugular vein."
+alignment -400
+level 31
+sex SEX_NEUTRAL
+weight 42
+height 152
+NATURAL_DEF(WPN_BITE,ARM_HLEATHER)
+money 4 COPPER_PIECE
+MSET_ABILITY(15,35,15,30,5,0,0,0)
+MSET_WEAPON(10,10,10,10,50,10)
+special SFUN_AGGRESSIVE time WAIT_SEC*60 bits SFB_RANTIME
+special SFUN_RESCUE "giant bat"
+special SFUN_TEAMWORK "giant bat"
+special SFUN_PAIN_INIT time WAIT_SEC*10 bits SFB_RANTIME "
+100 S100@
+200 d100follow %s@
+300 J100@
+"
+end
+
+/* Southern beach mobiles lvl 30-37 */
+	dealer
+names {"dealer", "archeologist"}
+title "the dealer"
+descr "A dealer in treasures stands here, ready to buy any artifacts
+from you."
+extra {}
+"This dealer is an archeologist authorised by King Welmar
+to purchase antiquities and artifacts for the treasure rooms of King Welmar."
+level 90
+race RACE_HUMAN
+sex SEX_FEMALE
+alignment 500
+MSET_ABILITY(20, 20, 10, 20, 20, 0, 5, 5)
+MSET_WEAPON(10, 10, 10, 10, 10, 17)
+MSET_SPELL(3,3,3,3,3,3,3,3,3,3,3)
+money 1 PLATINUM_PIECE
+	
+special SFUN_SHOP_INIT
+"Profit sell = 120
+Profit buy = 80
+Trade types = "+ITEM_TREASURE+" "+ITEM_ARMOR+" "+ITEM_WEAPON+"
+Hours1 = 2 12
+Hours2 = 13 23"
+
+special SFUN_RANDOM_ZONE_MOVE time WAIT_SEC*60 bits SFB_RANTIME
+
+dilbegin tripper();
+code {
+	:start:
+	wait(SFB_COM, self.position == POSITION_FIGHTING);
+	if (rnd(1,20) < 7) {
+		exec("trip " + activator.names.[0], self);
+	}
+	goto start;
+}
+dilend
+
+special SFUN_PAIN_INIT time WAIT_SEC*20 bits SFB_RANTIME "
+100 S100@
+110 d120look at %s@
+120 d130say Hello %s, have you got any interesting things for me to buy?@
+130 d100smile@
+140 J100@
+"
+end
+
+	archeo_1
+names {"archeologist"}
+title "an archeologist"
+descr "An archeologist stands here, idly dusting away at an old 
+piece of pottery."
+extra {}
+"One of King Welmar's archeologists, renowned for their knowledge
+of bygone kingdoms and their prowess at poker."
+sex SEX_MALE
+level 40
+alignment 400
+MSET_ABILITY(18, 22, 10, 20, 15, 5, 5, 5)
+MSET_WEAPON(10, 28, 10, 10, 10, 10)
+MSET_SPELL(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2)
+special SFUN_TEAMWORK "archeo_1/archeo_2"
+special SFUN_RESCUE "archeo_1/archeo_2"
+special SFUN_RANDOM_ZONE_MOVE time PULSE_SEC*140 bits SFB_RANTIME
+end
+
+        cliff_hugger
+names {"cliff hugger", "hugger"}
+title "a cliff hugger"
+descr "A cliff hugger clings tightly to the cliff here."
+extra{}
+"A peculiar creature by any standard, its flat amoebous shape blends
+in to the cliff, as if it was extracting nutrients from the rock itself."
+race RACE_CLIFF_HUGGER
+level 33
+money 4 COPPER_PIECE
+sex SEX_NEUTRAL
+NATURAL_DEF(WPN_BITE, ARM_CLOTHES)
+weight 80
+height 80
+MSET_ABILITY(20,10,20,50,0,0,0,0)
+MSET_WEAPON(20,20,20,20,20,0)
+end
+
+        sand_crawler
+names {"sand crawler", "crawler"}
+title "a sand crawler"
+descr
+"A hideous sand crawler pokes its gaping maw out from the sand here."
+extra{}
+"Though half of it is hidden by the sand, you have no wish to see more...
+its top half resembles something you may have eaten and regurgitated
+after a long viking drinking session followed by a goat curry. Its maw
+gapes and closes in an all-consuming search for food."
+race RACE_SAND_CRAWLER
+sex SEX_NEUTRAL
+level 34
+money 3 COPPER_PIECE
+NATURAL_DEF(WPN_BITE,ARM_LEATHER)
+weight 200
+height 200
+MSET_ABILITY(40,15,20,5,5,5,5,5)
+MSET_WEAPON(20,20,20,20,20,0)
+special SFUN_AGGRESSIVE time WAIT_SEC*60 bits SFB_RANTIME
+special SFUN_RANDOM_ZONE_MOVE time PULSE_SEC*40 bits SFB_RANTIME
+end
+
+        giant_scorpion
+names {"giant scorpion", "scorpion"}
+title "a giant scorpion"
+descr "A giant scorpion eyes you hungrily and flexes its mighty sting."
+extra {}
+"This monstrous scorpion is at least 4ft high with a tail that towers
+above you. A wicked looked spike on the end of the tail glistens slightly
+with what is obviously an extremely nasty venom."
+race RACE_SCORPION
+level 35
+money 4 COPPER_PIECE
+sex SEX_NEUTRAL
+NATURAL_DEF(WPN_STING,ARM_HLEATHER)
+weight 150
+height 121
+exp 150 /* High dex + venom */
+MSET_ABILITY(20,35,20,15,5,0,5,0)
+MSET_SPELL(0,0,0,0,0,28,2,2,2,30,0)
+MSET_WEAPON(5,5,2,2,20,2)
+special SFUN_AGGRESSIVE time WAIT_SEC*60 bits SFB_RANTIME
+special SFUN_RANDOM_ZONE_MOVE time PULSE_SEC*40 bits SFB_RANTIME
+special SFUN_COMBAT_POISON
+end
+
+        river_leech
+
+names {"river leech", "leech"}
+title "a hideous river leech"
+descr "A hideous 3-foot river leech slimes and oozes its way towards you.
+Its gelatinous antennae waving wildly in your direction."
+extra {}
+"A more slimey and disgusting creature it would be difficult to imagine."
+alignment 0
+race RACE_RIVER_LEECH
+romflags CHAR_MUTE
+level 32
+money 2 COPPER_PIECE
+sex SEX_NEUTRAL
+NATURAL_DEF(WPN_BITE,ARM_CLOTHES)
+weight 170
+height 150
+MSET_ABILITY(40,25,10,20,5,0,0,0)
+MSET_WEAPON(10,10,10,10,50,10)
+end
+
+        giant_crab
+
+names {"giant crab", "crab"}
+title "the giant crab"
+descr "A giant crab is here, flexing its huge claws."
+extra {}
+"This must be the biggest crab you have ever seen! Over 4 feet tall
+with a 7 foot diameter and huge serrated claws. It waves its antennae
+angrily and scuttles sideways towards you."
+alignment 0
+race RACE_CRAB
+romflags CHAR_MUTE
+level 33
+money 3 COPPER_PIECE
+sex SEX_NEUTRAL
+NATURAL_DEF(WPN_CLAW,ARM_CHAIN)
+weight 280 /* Chitin weighs a lot */
+height 130
+MSET_ABILITY(25,20,20,20,15,0,0,0)
+MSET_WEAPON(10,10,10,10,50,10)
+special SFUN_RANDOM_ZONE_MOVE time WAIT_SEC*30 bits SFB_RANTIME
+special SFUN_AGGRESSIVE time WAIT_SEC*20 bits SFB_RANTIME
+end
+
+        sand_spider
+
+names {"sand spider", "trapdoor spider", "spider"}
+title "the trapdoor spider"
+descr "An enormous trapdoor spider is here, flexing its mandibles
+and gazing at you through its multi-faceted eyes."
+extra {}
+"You nervously eye this trapdoor spider, carefully noting the eight
+powerful legs with needle-sharp hairs, the muscular mandibles, and
+the fangs dripping in venom. You see your reflection in its
+arachnid eyes and know its not missing a thing!"
+alignment -300
+race RACE_SAND_SPIDER
+level 34
+money 4 COPPER_PIECE
+exp 150 /*Poison attack */
+sex SEX_NEUTRAL
+NATURAL_DEF(WPN_BITE,ARM_LEATHER)
+weight 150  /* We ignore the scientific impossiblity of spiders this large :-) */
+height 110
+MSET_ABILITY(20,20,12,12,12,12,12,0)
+MSET_WEAPON(10,10,10,10,50,10)
+
+special SFUN_AGGRESSIVE time WAIT_SEC*30 bits SFB_RANTIME
+special SFUN_COMBAT_POISON
+romflags {CHAR_MUTE, CHAR_DETECT_INVISIBLE}
+
+dilbegin spider1();
+var
+         s : string;
+code
+{
+         heartbeat := PULSE_SEC * 3; /* It springs out fast */
+         :start:
+         nopriority;
+         on_activation(self.position <= POSITION_SLEEPING, skip);
+         wait(SFB_MSG, (self.outside #= findroom("lair_1@atl_beach")));
+            /* If we got the message that lunch was arriving and we are in
+          our lair....*/
+         priority;
+         s := argument;
+         walkto(findroom("depression_2@atl_beach"));
+         act("A trapdoor springs open in front of you and an enormous" +
+            " spider bounds out, mandibles slavering and fangs dripping.",
+            A_SOMEONE,self,null,null,TO_ALL);
+         exec("kill "+s, self);
+         pause;
+         goto start;
+}
+dilend
+
+dilbegin spider2();
+code
+{
+         heartbeat := PULSE_SEC*40;
+         :start:
+         on_activation((self.position <= POSITION_SLEEPING) or
+           (self.outside #= findroom("lair_1@atl_beach")), skip);
+         wait(SFB_TICK,(self.position == POSITION_STANDING));
+         act(" A trapdoor springs open in front of you and the spider" +
+             "pops down, slamming the door behind it.",
+              A_SOMEONE,self,null,null,TO_ALL);
+         link(findsymbolic("sand_spider@atl_beach"), findroom("lair_1@atl_beach"));
+         goto start;
+}
+dilend
+end
+
+        algae_man
+
+names {"algae man", "algae-man", "algae", "algy"}
+title "Algy the algae-man"
+descr "A hideous abomination looms before you - Algy the algae man"
+extra {}
+"Your stomach heaves as you look closer at this abomination - there
+appear to be the partially digested remnants of previous adventurers
+visible within the algae."
+
+alignment -500
+race RACE_ALGAE_MAN
+level 37
+money 4 COPPER_PIECE
+sex SEX_NEUTRAL
+NATURAL_DEF(WPN_FIST,ARM_CLOTHES)
+weight 170
+height 200
+MSET_ABILITY(10,10,10,20,20,10,10,10)
+MSET_WEAPON(2,2,2,2,23,2)
+MSET_SPELL(10,3,3,3,3,3,3,3,3,3,30)
+
+dilcopy combat_mag@function("acid ball", "cure serious wounds", 25, 2);
+
+exp 150 /* Because of nastiness of acid ball + heal */
+
+end
+
+
+%objects
+        stormbringer /* This is IT - THE eater of souls */
+names {"stormbringer", "sword", "eater of souls", "eater"}
+title "Stormbringer, Eater of souls"
+descr "A strange black sword lies here, throbbing and moaning.
+It is covered in evil-looking runes."
+extra {}
+"An evil-looking sword if ever there was one...it is throbbing and
+moaning to itself as it searches for someone's soul."
+extra {"$eaten"} "Yes"
+WEAPON_DEF(WPN_GREAT_SWORD, 7, 5)
+WEAPON_SLAYER(RACE_HUMAN)
+romflags OBJ_TWO_HANDS
+cost 5 PLATINUM_PIECE
+rent 1 GOLD_PIECE
+spell 20
+weight 100
+WEAPON_TRANSFER(WPN_GREAT_SWORD,4)
+STR_TRANSFER(+4)
+DEX_TRANSFER(+4)
+CURSED_OBJECT
+
+
+dilbegin soul_suck();
+var
+        hismana : integer;
+        mymana  : integer;
+        difmana : integer;
+        hishp : integer;
+        myhp  : integer;
+        difhp : integer;
+        eaten : extraptr;
+code
+{
+        heartbeat := PULSE_SEC * 20;
+        :start:
+        wait(SFB_COM,(self.outside.position == POSITION_FIGHTING)
+                and (self.equip == WEAR_WIELD));
+        eaten := "$eaten" in self.extra;
+        eaten.descr := "Yes";
+        
+        if (rnd(1,20) < 5) {
+                hismana := self.outside.fighting.mana;
+                mymana := self.outside.mana;
+                difmana := hismana / 10;
+                if (difmana < 0) {
+                        difmana := 0 - difmana;
+                }
+                self.outside.fighting.mana := hismana - difmana;
+                self.outside.mana := self.outside.mana + difmana;
+                if (self.outside.mana > self.outside.max_mana) {
+                        self.outside.mana := self.outside.max_mana;
+                }
+                hishp := self.outside.fighting.hp;
+                myhp := self.outside.hp;
+                difhp := hishp / 10;
+                if (difhp < 0) {
+                        difhp := 0 - difhp;
+                }
+                self.outside.fighting.hp := hishp - difhp;
+                self.outside.hp := self.outside.hp + difhp;
+                if (self.outside.hp > self.outside.max_hp) {
+                        self.outside.hp := self.outside.max_hp;
+                }
+                act("Stormbringer moans with lust as it drinks your soul! " +
+                    "$1n laughs hideously as the energy pours into $1m",
+                A_ALWAYS, self.outside, null, self.outside.fighting,
+                TO_VICT);
+                act("Stormbringer moans with lust as it drinks $3n's soul! " +
+                    "$1n laughs hideously as the energy pours into $1m",
+                A_ALWAYS, self.outside, null, self.outside.fighting,
+                TO_NOTVICT);
+                act("Stormbringer moans in lust as it drinks $3n's soul. " +
+		    "You laugh hideously as the energy pours into you.", 
+                A_ALWAYS, self.outside, null, self.outside.fighting,
+                TO_CHAR);
+        }
+        goto start;
+}
+dilend
+
+dilbegin no_put();
+var
+	putee		:	string;
+code {
+	:start:
+	heartbeat := PULSE_SEC * 20;
+	wait(SFB_CMD, command(CMD_PUT));
+		putee := getword(argument);
+		if (putee in self.names) {
+			act("You struggle vainly to put Stormbringer " +
+			    "into some form of captivity...to no avail.",
+			    A_SOMEONE, activator, null, null, TO_CHAR);
+			block;
+		}
+		goto start;
+}
+dilend
+
+dilbegin no_flee();
+code {
+	:start:
+	on_activation((self.outside.position != POSITION_FIGHTING) |
+		      (self.equip != WEAR_WIELD), skip);
+	wait(SFB_CMD, command(CMD_FLEE));
+	act("The sheer ecstasy of killing is too much to want to try " +
+	    "and run away from it!",
+	    A_SOMEONE, self.outside, null, null, TO_CHAR);
+	block;
+	goto start;
+}
+dilend    
+
+dilbegin suck_friends();
+var
+	victim		:	unitptr;
+	u		:	unitptr;
+	counter		:	integer;
+	eaten		:	extraptr;
+code {
+	counter := 0;
+	:start:
+	heartbeat := rnd(20, 200) * PULSE_SEC;
+	on_activation((self.outside.position == POSITION_FIGHTING), skip);
+	wait(SFB_TICK, TRUE);
+	if (self.outside.type == UNIT_ST_ROOM) {
+		victim := findrndunit(self, FIND_UNIT_SURRO, UNIT_ST_PC | UNIT_ST_NPC);
+		if (victim != null) {
+			act("You notice an evil, throbbing sword here. Suddenly " +
+			    "a dark cloud passes over your mind and before you " +
+			    "realise what is happening...",
+			    A_SOMEONE, victim, null, null, TO_CHAR);
+			exec("get stormbringer", victim);
+		}
+	}
+	
+	if (self.outside.position == POSITION_FIGHTING) {
+		goto start;
+	}
+
+	if (self.equip != WEAR_WIELD) {
+		set(self.objectflags, OBJ_NO_UNEQUIP);
+/*		addaff(self, ID_CURSE, -1, TIF_NONE, TIF_NONE, TIF_NONE, APF_MOD_OBJ_FLAGS); */
+		act("You feel Stormbringer writhe obscenely and a strange " +
+		    "overpowering feeling takes over your mind. You struggle " +
+		    "valiantly but you cannot avoid wielding the sword.",
+		    A_SOMEONE, self.outside, null, null, TO_CHAR);
+		foreach (UNIT_ST_OBJ, u) {
+			if ((u.equip == WEAR_WIELD) |
+				(u.equip == WEAR_HOLD)) {
+				exec("rem "+u.names.[0], self.outside);
+			}
+		}
+		exec("wield stormbringer", self.outside);
+	}
+	if (self.equip != WEAR_WIELD) {
+		goto start;
+	}
+	
+	eaten := "$eaten" in self.extra;
+	if (eaten.descr == "Yes") {
+		act("You quiver as Stormbringer moans softly and " +
+		    "shudders in your hand as if searching for " +
+		    "another soul. You have a feeling it needs " +
+		    "feeding...soon!",
+		    A_SOMEONE, self.outside, null, null, TO_CHAR);
+		act("You shudder as $1n's sword murmers softly and " +
+		    "seems to twitch in your direction.",
+		    A_SOMEONE, self.outside, null, null, TO_ROOM);
+		eaten := "$eaten" in self.extra;
+		eaten.descr := "No";
+		goto start;
+	}
+	
+	victim := self.outside.outside.inside;
+	while ( (victim != null) &
+		((victim == self.outside) |
+		 (victim.type == UNIT_ST_ROOM) |
+		 (victim.type == UNIT_ST_OBJ))) {
+		 victim := victim.next;
+	}
+	if (victim == null) {
+		goto start;
+	}
+	act("Stormbringer howls in bloodlust and your mind goes " +
+	    "darkly blank. The gorge rises in your throat as, " +
+	    "puppet-like, your limbs twitch to another's control.",
+	    A_SOMEONE, self.outside, null, null, TO_CHAR);
+	act("$1n's sword howls in bloodlust and twists wildly " +
+	    "in $1s hand. You notice $1s eyes go darkly blank " +
+	    "and realise that, friend or not, $1e has no control " +
+	    "over his weapon.",
+	    A_SOMEONE, self.outside, null, null, TO_ROOM);
+	    
+	if (self.outside.position == POSITION_SLEEPING) {
+		exec("wake", self.outside);
+	}
+	if (self.outside.position < POSITION_STANDING) {
+		exec("stand", self.outside);
+	}
+	heartbeat := PULSE_SEC * 1;
+	pause;
+	if (self.outside.position == POSITION_STANDING) {
+		act("An uncontrollable bloodlust comes over you " +
+		    "and you forget all in the orgiastic sheer " +
+		    "pleasure of killing someone...anyone.",
+		    A_SOMEONE, self.outside, null, null, TO_CHAR);
+		victim := self.outside.outside.inside;
+		while ( (victim != null) &
+			((victim == self.outside) |
+			 (victim.type == UNIT_ST_ROOM) |
+			 (victim.type == UNIT_ST_OBJ))) {
+			 victim := victim.next;
+		}
+		if (victim == null) {
+			goto start;
+		} 
+		exec("kill " + victim.names.[0], self.outside);
+	}
+	goto start;
+}
+dilend
+end
+
+
+/* Northern beach objects */
+	comb
+names {"beach comb", "comb"}
+title "a beach comb"
+descr "A beach comb has been carelessly dropped here."
+extra {}
+"A comb made from hard metal spines. It doesn't look suitable for your hair.
+It seems more suitable for sifting through sand or something."
+type ITEM_OTHER
+cost 1 SILVER_PIECE
+manipulate {MANIPULATE_TAKE}
+end
+
+	old_can
+names {"old can", "can"}
+title "an old can"
+descr "An old can lies discarded in a corner here."
+extra {}
+"An old battered can that looks like it may have contained some greasy food."
+type ITEM_OTHER
+manipulate {MANIPULATE_TAKE}
+weight 1
+end
+
+	hourglass
+names {"hourglass"}
+title "an hourglass"
+descr "A lovely hourglass, tilted on its side, lies here."
+extra {}
+"An exquisitely made hourglass, crafted from ebon wood and 
+chalcedony. It is full of a fine silvery sand which slowly
+trickles from one of its ends to the other."
+type ITEM_TREASURE
+manipulate {MANIPULATE_TAKE}
+weight 2
+cost 1 PLATINUM_PIECE
+
+dilbegin turnover();
+code
+{
+	heartbeat := PULSE_SEC * 120;
+	:start:
+	wait(SFB_TICK, TRUE);
+	act("The last trickles of silvery sand in the hourglass enter " +
+	    "one end of it completely. Magically the hourglass turns " +
+	    "itself over!",
+	    A_SOMEONE, self, null, null, TO_ALL);
+	goto start;
+}
+dilend
+end
+
+	toga
+names {"egyptian toga", "toga"}
+title "an egyptian toga"
+descr "A toga is screwed up in the corner here."
+extra {}
+"A nicely made cotton toga. From the cut and material you
+suspect it to be of egyptian origin."
+ARMOUR_CLOTHES(-5,0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+weight 2
+end
+
+	sandals
+names {"egyptian sandals", "sandals"}
+title "a pair of egyptian sandals"
+descr "A pair of sandals are lying here."
+extra {}
+"This pair of sandals has a peculiar ankh-shaped leather cross-pattern
+that runs over the whole of their top half."
+ARMOUR_LEATHER(0, -2)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+weight 1
+end
+
+	cloak
+names {"egyptian cloak", "cloak"}
+title "an egyptian cloak"
+descr "A cloak lies neatly folded on the floor nearby."
+extra {}
+"This fine silk cloak has a large red ankh cross embroided onto
+the back."
+ARMOUR_CLOTHES(0, 0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+weight 5
+end
+
+	greaves
+names {"greaves"}
+title "a pair of hard leather greaves"
+descr "A pair of greaves lie in the corner here."
+extra {}
+"This pair of egyptian warrior's greaves look well used."
+extra {"$identify"}
+"These greaves improve the wearer's brain power."
+extra {"$improved identify"}
+"The improvement in brain power is +1."
+ARMOUR_HRD_LEATHER(0, 1)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HANDS}
+weight 6
+BRA_TRANSFER(+1)
+cost 50 COPPER_PIECE
+rent 5 IRON_PIECE
+end
+
+	top_piece
+names {"shiny copper top piece", "copper top piece", "top piece"}
+title "a copper top piece"
+descr "A shiny copper top piece lies here twinkling in the dim light."
+extra {}
+"As you examine this copper top piece, you notice the faint engraving
+of an ankh cross on its inner surface. There is a hole in its centre
+for your top-knot to hang through (if you had one)."
+ARMOUR_CHAIN(0, 0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+weight 1
+cost 5 COPPER_PIECE
+end
+
+	leather_boots
+names {"leather boots", "boots"}
+title "a pair of leather boots"
+descr "A neatly maintained pair of leather boots stand here."
+extra {}
+"Well worn but maintained in a military fashion."
+ARMOUR_LEATHER(0, 0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+weight 9
+cost 2 COPPER_PIECE
+end
+
+	leather_kilt
+names {"leather kilt", "kilt"}
+title "a tough leather kilt"
+descr "A tough leather kilt has been flung onto the ground here."
+extra {}
+"Tough and blood-stained!"
+ARMOUR_HRD_LEATHER(0, 0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+weight 5
+cost 4 COPPER_PIECE
+end
+
+	leather_cuirass
+names {"leather cuirass", "cuirass"}
+title "a leather cuirass"
+descr "a leather cuirass has been discarded nearby."
+extra {}
+"Though blood-stained, it still looks like it could protect your
+body from damage."
+ARMOUR_LEATHER(1, 0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+weight 22
+cost 10 COPPER_PIECE
+end
+
+	hemp_jerkin
+names {"hemp jerkin", "jerkin"}
+title "a hemp jerkin"
+descr "A rough hemp jerkin is scrunched up on the floor here."
+extra {}
+"An exceedingly rough and itchy looking jerkin."
+ARMOUR_CLOTHES(0, -3)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+weight 6
+CURSED_OBJECT
+
+dilbegin itch();
+code
+{
+	heartbeat := 60 * PULSE_SEC;
+	:start:
+	wait(SFB_TICK, self.equip == WEAR_BODY);
+	if (rnd(0,20) < 7) {
+		act("The rough hemp jerkin makes you feel extremely uncomfortable. " +
+		    "You vainly scratch to try and relieve the itching.",
+		    A_SOMEONE, self.outside, null, null, TO_CHAR);
+		act("$1n scratches $1mself in a vain attempt to relieve the itching " +
+		    "from $1s hemp jerkin.", 
+		    A_SOMEONE, self.outside, null, null, TO_ROOM);
+	}
+	goto start;
+}
+dilend
+end
+
+	
+
+	relay /* Used to relay kill message to wolf */
+names {"relay"}
+type ITEM_OTHER
+minv 200
+
+dilbegin killmess();
+var
+	wolf	: unitptr;
+	arg	: string;
+code
+{
+	heartbeat := PULSE_SEC*15;
+	:start:
+	wait(SFB_MSG, TRUE);
+	arg := argument;
+	pause; /* Wait for wolf's DIL to hit its wait(SFB_MSG...*/
+	wolf := findsymbolic("werewolf@atl_beach");
+	sendto(arg, wolf);
+	goto start;
+}
+dilend
+end
+
+
+	sign
+names {"large sign", "sign"}
+title "a large sign"
+descr "A large sign on a piece of timberwood is at the beach end of
+the pier. The timberwood is firmly embedded into the sand."
+extra{}
+"&lThe sign says :
+
+			  Atlantis Island
+			  ---------------
+
+This island has been recently discovered by King Welmar's explorers.
+>From their preliminary explorations they think that the northern
+beach and wood area are suitable for level 20-25 people, the southern
+beach area (through the tunnel) is suitable for level 30-40 people,
+and the sea to the south for level 40-50 people.
+Welmar's archeologists are quite excited with evidence that suggests
+that the fabled lost city of Atlantis may have sunk off the coasts
+of this island....work progresses to locate it exactly.
+The Golden Ankh will sail from here at regular intervals, back
+to pier two in Torsbay.
+ N.B. Please be aware of a very dangerous siren in the southern beach
+area. Only earmuffs will protect you from her singing which will
+hold you in a trance otherwise. Rumour has it that repeatedly trying
+'kill siren' may eventually work.&f
+"
+
+type ITEM_NOTE
+weight 100
+end
+
+	sign2
+names {"large sign", "sign"}
+title "a large sign"
+descr "A large sign on a piece of timberwood is firmly embedded into
+the ground here."
+extra {}
+"&l
+                ------------------------------ 
+                |   The Golden Ankh leaves   |
+                |     here for the island    |
+                |    of Atlantis at regular  |
+                |          intervals.        |
+                |      Levels 20+ welcome.   |
+                ------------------------------
+                              | |
+                              | |
+                            =======&f"
+type ITEM_NOTE
+weight 100
+end
+
+	fountain
+names {"sparkling fountain", "fountain", "water"}
+title "a sparkling fountain"
+descr "A sparkling fountain of pure water gushes upwards here."
+
+LIQ_DEF(LIQ_WATER, 1000, 1000, 1000, 0)
+end 
+
+	potion_cure
+names {"remove poison potion", "potion"}
+title "a bottle of remove poison potion"
+descr "A bottle of remove poison potion lies here."
+extra {}
+"The bottle, and its contents, positively radiate an aura of healing."
+
+flags {UNIT_FL_MAGIC}
+POTION_DEF(50, SPL_REMOVE_POISON, SPL_REMOVE_POISON, SPL_REMOVE_POISON)
+weight 2
+cost 1 GOLD_PIECE
+rent 1 COPPER_PIECE
+end
+
+                            
+
+	orange_key
+names {"orange key", "key"}
+title "the orange key"
+descr "An ankh shaped orange key lies here."
+extra{}
+"An extremely odd-shaped key, it is also coloured a very bright
+shade of orange."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+type ITEM_KEY
+weight 1
+end
+
+	 oil_can
+names {"oil can", "can"}
+title "a small can, full of oil"
+descr "a small can, full of oil, lies on the ground nearby."
+extra{}
+"A small burnished-copper oil-can with a delicate spout for applying
+the oil in all those difficult-to-get-at places."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+cost 5 COPPER_PIECE
+
+dilbegin oilcan();
+var
+	room1	  : unitptr;
+	room2	  : unitptr;
+	a	 : unitptr;
+	amount	  : integer;
+	oil	  : integer;
+	gate	  : unitptr;
+code
+{
+	amount:=2;
+	:start:
+	oil := 0;
+	wait(SFB_CMD,TRUE);
+	if (command(CMD_AUTO_UNKNOWN)) {
+	   if ((argument $= "gate") or
+	       (argument $= "the gate")) {
+	      oil := 1;
+	      block;
+	   }
+	   else {
+	      goto start;
+	   }
+	}
+	if (command(CMD_POUR)) {
+	   if (argument $= "oil on gate") {
+	      oil := 1;
+	      block;
+	   }
+	   else {
+	      goto start;
+	   }
+	}
+	if (oil==0) {
+	   goto start;
+	}
+	a:=activator;
+	room1:=findroom("tunnel_2@atl_beach");
+	room2:=findroom("tunnel_3@atl_beach");
+	if (self.equip == WEAR_HOLD) {
+	   if (amount == 0) {
+	      act("You feel embarrassed as you attempt to pour "
+		+ "oil from an empty oil-can.",
+		A_SOMEONE,a,null,null,TO_CHAR);
+	      act("$1n foolishly attempts to pour oil from an "
+		+ "empty oil-can.",
+		A_SOMEONE,a,null,null,TO_ROOM);
+	      goto start;
+	   }
+	   if ((self.outside.outside #= room1) or
+	       (self.outside.outside #= room2)) {
+	      act("You carefully oil the squeaky hinges on the "
+		+ "rusty iron gate.",
+		A_SOMEONE,a,null,null,TO_CHAR);
+	      act("$1n carefully oils the squeaky hinges on the "
+		+ "rusty iron gate",
+		A_SOMEONE,a,null,null,TO_ROOM);
+
+	      amount:=amount-1;
+	      if (amount==1) {
+		 self.title:="a small can, half full of oil";
+		 self.outside_descr:="a small can, half full of oil, lies on the ground nearby.";
+	      }
+	      if (amount==0) {
+		 self.title:="a small empty oil-can";
+		 self.outside_descr:="a small empty oil-can lies on the ground nearby.";
+	      }
+	      gate := findsymbolic("n_tunnel_gate@atl_beach");
+	      sendto("oiled",gate);
+	      gate := findsymbolic("s_tunnel_gate@atl_beach");
+	      sendto("oiled",gate);
+	      if (OILCAN_COMPLETE in a.quests) {
+		 goto start;
+	      }
+	      addextra(a.quests,{OILCAN_COMPLETE},"");
+	      experience(4000,a);
+	      act("Succesfully figuring out what to do here makes "
+		+ "you feel a lot more experienced.",
+		A_SOMEONE,a,null,null,TO_CHAR);
+	      goto start;
+	   }
+	   else {
+	      act("I'm afraid that doesn't work here.",
+		  A_SOMEONE,a,null,null,TO_CHAR);
+	   }
+	}
+	else {
+	   act("You need to be holding the oil-can to do that.",
+	       A_SOMEONE,a,null,null,TO_CHAR);
+	}
+}
+dilend
+end
+
+	 n_tunnel_gate /* Invisible gate for squeaking purposes */
+dilbegin n_tunnel();
+var
+	oiled	 : integer;
+	count	 : integer;
+	room	 : unitptr;
+	a	: unitptr;
+	bat	 : unitptr;
+code
+{
+	count:=0;
+	heartbeat:=PULSE_SEC*5;
+	:start:
+	wait(SFB_CMD | SFB_MSG | SFB_TICK, TRUE);
+	if (command(CMD_OPEN)) {
+	   room := findroom("tunnel_3@atl_beach");
+	   if (isset(room.exit_info[SOUTH],EX_LOCKED)) {
+	      goto start;
+	   }
+	   if (isset(room.exit_info[SOUTH],EX_CLOSED)) {
+	      if (oiled == 0) { /* It's not oiled..so it will squeak */
+		 act("With an deafening, prolonged squeak the rusty gate "
+		   + "slowly opens. An angry fluttering can be heard "
+		   + "from nooks and crannies in the ceiling. You have "
+		   + "a strange feeling that something doesn't like "
+		   + "being woken up like that!",
+		   A_SOMEONE,self,null,null,TO_ALL);
+		 bat := load("killer_bat@atl_beach");
+		 link(bat,self.outside);
+		 bat := load("killer_bat@atl_beach");
+		 link(bat,self.outside);
+
+	      }
+	      else {
+		 act("The huge rusty iron gate silently swings open "
+		   + "on its well-oiled hinges.",
+		   A_SOMEONE,self,null,null,TO_ALL);
+	      }
+	   }
+	   goto start;
+	}
+
+	if (command(CMD_AUTO_MSG)) { /* Get the oiled message */
+	   oiled:=1;
+	   goto start;
+	}
+
+	if (command(CMD_AUTO_TICK)) { /* 'unoil' the gate */
+	   count:=count+1;
+	   if (count>25) {
+	     oiled:=0;
+	     heartbeat:=PULSE_SEC*30;
+	     count:=0;
+	   }
+	   goto start;
+	}
+	goto start;
+}
+dilend
+end
+
+         s_tunnel_gate /* Invisible gate for squeaking purposes */
+dilbegin s_tunnel();
+var
+        oiled    : integer;
+        count    : integer;
+        room     : unitptr;
+        a       : unitptr;
+        bat      : unitptr;
+code
+{
+        count:=0;
+        heartbeat:=PULSE_SEC*5;
+        :start:
+        wait(SFB_CMD | SFB_MSG | SFB_TICK, TRUE);
+        if (command(CMD_OPEN)) {
+           room := findroom("tunnel_2@atl_beach");
+           if (isset(room.exit_info[NORTH],EX_LOCKED)) {
+              goto start;
+           }
+           if (isset(room.exit_info[NORTH],EX_CLOSED)) {
+              if (oiled == 0) { /* It's not oiled..so it will squeak */
+                 act("With an deafening, prolonged squeak the rusty gate "
+                   + "slowly opens. An angry fluttering can be heard "
+                   + "from nooks and crannies in the ceiling. You have "
+                   + "a strange feeling that something doesn't like "
+                   + "being woken up like that!",
+                   A_SOMEONE,self,null,null,TO_ALL);
+                 bat := load("killer_bat@atl_beach");
+                 link(bat,self.outside);
+                 bat := load("killer_bat@atl_beach");
+                 link(bat,self.outside);
+
+              }
+              else {
+                 act("The huge rusty iron gate silently swings open "
+                   + "on its well-oiled hinges.",
+                   A_SOMEONE,self,null,null,TO_ALL);
+              }
+           }
+           goto start;
+        }
+
+        if (command(CMD_AUTO_MSG)) { /* Get the oiled message */
+           oiled:=1;
+           goto start;
+        }
+
+        if (command(CMD_AUTO_TICK)) { /* 'unoil' the gate */
+           count:=count+1;
+           if (count>25) {
+             oiled:=0;
+             heartbeat:=PULSE_SEC*30;
+             count:=0;
+           }
+           goto start;
+        }
+}
+dilend
+end
+
+
+	hammer
+names {"egyptian war hammer", "egyptian hammer", "war hammer", "hammer"}
+title "an egyptian war hammer"
+descr "An egyptian war hammer lies in the corner nearby."
+extra{}
+"The first thing you notice about this egyptian war hammer is that it is
+completely covered in hieroglyphs. The second thing you notice is a faint
+but unmistakeable odour of embalming fluid that is coming from it."
+extra{"$identify"}
+"This weapon is enchanted to increase the wielder's strength."
+extra{"$improved identify"}
+"This weapon is enchanted to improve the wielder's strength by one 
+point. It cannot be wielded by anyone with a strength less than 40."
+
+WEAPON_DEF(WPN_WAR_HAMMER, 0, 0)
+flags {UNIT_FL_MAGIC}
+cost 10 SILVER_PIECE
+rent 1 COPPER_PIECE
+weight 40
+STR_TRANSFER(+1)
+
+end
+
+	silver_dagger /* a dagger for the naiads */
+names {"silver dagger","dagger"}
+title "a silver dagger"
+descr "An delicate dagger made of silver lies here."
+extra{}
+"This dagger doesn't seem to be of much use...made of silver it would be
+quite soft."
+extra{"$identify"}
+"Made for creatures that don't like silver."
+extra{"$improved identify"}
+"This dagger is very good at slaying werewolves."
+
+WEAPON_DEF(WPN_DAGGER,-2,-3)
+WEAPON_SLAYER(RACE_WEREWOLF)
+flags {UNIT_FL_MAGIC}
+cost 10 COPPER_PIECE
+rent 1 IRON_PIECE
+weight 1
+special SFUN_RESTRICT_OBJ "Dex = 15"
+end
+
+	wand_carnage
+names {"wand of carnage", "carnage wand", "wand"}
+title "an evil-looking wand"
+descr "A wand of carnage glowers in a corner here."
+extra {}
+"This wand of carnage is used to cause mayhem in a room. Just say
+'carnage'"
+
+flags {UNIT_FL_MAGIC}
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+
+type ITEM_WAND
+cost 1 GOLD_PIECE
+rent 1 COPPER_PIECE
+
+dilbegin carnage();
+var             
+	thingptr	: unitptr;
+	a		: unitptr;
+	descrlist	: stringlist;
+	i		: integer;
+	
+code
+{
+	descrlist := {"You notice small patches of a weird-looking blackness floating about.",
+		      "Large patches of chaos seem to suck the reality out of this place!",
+		      "Huge rents in reality bend and twist this place into a mind-numbing chaos!"
+		     };
+	heartbeat := 5 * PULSE_SEC;
+	:start:
+	wait (SFB_CMD, command("carnage"));
+	a := activator;
+	block;
+	if (self.equip != WEAR_HOLD) {
+		act("You need to be holding the wand to do that.",
+			A_SOMEONE, a, null, null, TO_CHAR);
+		goto start;
+	}
+	thingptr := self;
+	while (thingptr.type != UNIT_ST_ROOM) {
+		thingptr := thingptr.outside;
+	}
+	act("You wave this evil wand of carnage about and strange whirls of chaos " +
+	    "writhe from its end. Visions of hamsters, Saturn V rockets and old " +
+	    "copies of The Reader's Digest swim before your eyes. This place now " +
+	    "looks subtly different.",
+	    A_SOMEONE, a, null, null, TO_CHAR);
+	act("$1n waves $1s evil wand of carnage about and strange whirls of chaos " +
+	    "writhe from its end. Visions of hamsters, Saturn V rockets and old " +
+	    "copies of The Reader's Digest swim before your eyes. This place now " +
+	    "looks subtly different.",
+	    A_SOMEONE, a, null, null, TO_ROOM);
+	 
+	if (descrlist.[0] in thingptr.inside_descr or
+	    descrlist.[1] in thingptr.inside_descr or
+	    descrlist.[2] in thingptr.inside_descr) {
+		thingptr.inside_descr := "It is difficult to believe this place is "+
+		"in the same plane of existence as your own, huge chunks of chaos "+
+		"float randomly about and very little can be seen of any structures "+
+		"that used to be here. You recognise the handiwork of Sislik and his "+
+		"chaos Mummies and curse loudly. You turn round and try and ascertain "+
+		"which way you ought to go in.";
+		goto start;
+	}
+	i := rnd(0,2);
+	thingptr.inside_descr := thingptr.inside_descr + descrlist.[i];
+	goto start;
+}
+dilend
+end
+
+	wand_flatulence
+names {"wand of flatulence", "flatulence wand", "wand"}
+title "a wand of flatulence"
+descr "A wand of flatulence lies stinking in a corner."
+extra{}
+"This wand of flatulence is brown and very, very smelly."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+type ITEM_WAND
+cost 3 COPPER_PIECE
+rent 1 IRON_PIECE
+
+dilbegin flatulate();
+var
+	com	: string;
+	enemy	: unitptr;
+	fart	: integer;
+code
+{
+	:start:
+	wait(SFB_CMD, command("use") and (self.equip == WEAR_HOLD));
+	com := getword(argument);
+	if (com == "wand") {
+		enemy := findunit(self.outside, argument, FIND_UNIT_SURRO, null);
+		fart := dilfind("farter@atl_beach", enemy);
+		if (fart) {
+			act("You wave the wand vainly...nothing happens.",
+				A_SOMEONE, activator, null, null, TO_CHAR);
+			block;
+			goto start;
+		}
+		dilcopy("farter@atl_beach", enemy);
+		act("You are not sure, but it appears as if a stream of evil-smelling " +
+		    "particles is emitted from your wand and hits $3n fairly in the " +
+		    "intestines.",
+		    A_SOMEONE, activator, null, enemy, TO_CHAR);
+		act("You are not sure, but it appears as if a stream of evil-smelling " +
+		    "particles is emitted from $1n's wand and hits $3n fairly in the " +
+		    "intestines.",
+		    A_SOMEONE, activator, null, enemy, TO_NOTVICT);
+		act("You are not sure, but it appears as if a stream of evil-smelling " +
+		    "particles is emitted from $1n's wand and hits you fairly in the " +
+		    "intestines.",
+		    A_SOMEONE, activator, null, enemy, TO_VICT);    
+	}
+	block;
+	goto start;
+}
+dilend
+end
+
+
+	staff_confusion
+names {"confusing staff", "staff"}
+title "a confusing staff"
+descr "A confusing staff lies here."
+extra {}
+"This staff looks very confusing, weird knobs and protuberences
+spout from it at all angles."
+STAFF_DEF(1,0,SPL_CONFUSION,SPL_CONFUSION)
+cost 50 COPPER_PIECE
+rent 5 IRON_PIECE
+end
+
+	sword_singing
+names {"singing sword", "sword"}
+title "a singing sword"
+descr "An ornate sword lies point down in the ground here. It is singing
+a beautiful melody from Prokofiev."
+extra {}
+"The sword is fashioned from a beautiful onyx, ornately gilded with
+ormulu and chromium inlays. It is singing a beautiful
+melody from Prokofiev in a high tenor voice."
+extra {"$identify"}
+"This sword is enchanted by a sorceress to sing for all eternity. When roused
+by battle it has been known to sing so loud as to hurt the opponent."
+
+WEAPON_DEF(WPN_LONG_SWORD, 0, -1)
+flags {UNIT_FL_MAGIC}
+cost 60 COPPER_PIECE
+rent 6 IRON_PIECE
+weight 20
+special SFUN_RESTRICT_OBJ "Lvl = 15"
+
+dilbegin sing();
+var
+	hishp		: integer;
+	killmusic	: stringlist;
+	descmusic	: stringlist;
+	choice		: integer;
+	standesc	: string;
+	extradesc	: string;
+code
+{
+	killmusic := {	"Elastica's latest rock hit.", "a segment from Wagner's Ring Trilogy.",
+			"a particularly sugary Cliff Richard 1960s hit.",
+			"an incredibly bad piece of supermarket Muzak.",
+			"an electronic rendition of Melton Sorbrezki's 'Twilight Serenade'.",
+			"'chopsticks for the oboe' by Kropotnik.",
+			"the 'Alan Parson's Project'.",
+			"'I Heard it Through the Grapevine' by Marvin Gaye." };
+	
+	descmusic := {	"a joyful extract of 'O Fortuna' from Carmina Burana by Orff.",
+			"a hauntingly beautiful Summer from 'The Four Seasons' by Vivaldi.",
+			"a softly lilting melody of Tchaikovsky's 'Waltz of the Flowers' from 'The Nutcracker Suite'.",					"a full-volume orchestral playing of Wagner's Prelude to Act III of 'Lohengrin'.",
+			"a wonderfully vibrant 'Jupiter' from Holst's Planet Suite.",
+			"a lyrical rendition of 'The Skater's Waltz' by Waldteufel.",
+			"a poignant interpretation of Beethoven's 'Shepherd's Hymn'.",
+			"a lively counterpoint to Rossini's 'The Thieving Magpie'." };
+			
+	standesc := "An ornate sword lies point down in the ground here. It is singing ";
+	extradesc := "The sword is fashioned from a beautiful onyx, ornately gilded with
+ormulu and chromium inlays. It is singing ";
+ 
+	heartbeat := PULSE_SEC * 60;
+	:start:
+	
+	wait(SFB_COM | SFB_TICK, TRUE);
+	if (command(CMD_AUTO_COMBAT)) {
+         	if ((self.outside.position == POSITION_FIGHTING) and
+         	    (self.equip == WEAR_WIELD)) {
+         		hishp := self.outside.fighting.hp;
+         		if (hishp < 50) {
+         			if (rnd(1,20) < 7) {
+         				choice := rnd(0,7);
+         				act("Your singing sword emits a deep thrum and severely" +
+         				    " damages $3n with a loud burst of " +
+         				    killmusic.[choice],
+         				    A_SOMEONE, self.outside, null, self.outside.fighting,
+         				    TO_CHAR);
+          				    
+         				act("$1n's singing sword emits a deep thrum and severely" +
+         				    " damages $3n with a loud burst of " +
+         				    killmusic.[choice],
+         				    A_SOMEONE, self.outside, null, self.outside.fighting,
+         				    TO_NOTVICT);
+          				    
+         				act("$1n's singing sword emits a deep thrum and severely" +
+         				    " damages you with a loud burst of " +
+         				    killmusic.[choice],
+         				    A_SOMEONE, self.outside, null, self.outside.fighting,
+         				    TO_VICT);
+          				    
+         				self.outside.fighting.hp := hishp - 10;
+         				position_update(self.outside.fighting);
+         				goto start;
+         			}
+         		}
+         		if (rnd(1,20) < 7) {
+         			choice := rnd(0,7);
+         			act("$1n's singing sword joyfully bursts into a" +
+         			    " battle cry of " +
+         			    killmusic.[choice],
+         			    A_SOMEONE, self.outside, null, null, TO_ROOM);
+         			act("Your singing sword joyfully bursts into a" +
+         			    " battle cry of " +
+         			    killmusic.[choice],
+         			    A_SOMEONE, self.outside, null, null, TO_CHAR);         			    
+         		}
+         		goto start;
+         	}
+        }
+	if (command(CMD_AUTO_TICK)) {
+   	   	if (rnd(1,50) < 5) {
+    	  		choice := rnd(0,8);
+      			self.outside_descr := standesc + descmusic.[choice];
+      			subextra(self.extra, "singing sword");
+      			addextra(self.extra, {"singing sword", "sword"}, extradesc +
+      						descmusic.[choice]);
+      		}
+      	}
+	goto start;
+}
+dilend
+end				
+
+     banana
+names {"yellow banana","banana"}
+title "a bright yellow banana"
+descr "A banana hangs down from the tree."
+extra{}
+"A lovely-looking, bright yellow banana. It certainly looks good
+enough to eat."
+manipulate{MANIPULATE_TAKE,MANIPULATE_HOLD}
+FOOD_DEF(4,0)
+weight 1
+cost 1 IRON_PIECE
+end
+
+/* Southern beach objects */
+	crystal_flower
+names {"crystal flower", "petrified flower", "flower"}
+title "a crystal flower"
+descr "A crystal flower has been delicately laid here."
+extra {}
+"It appears to be made of crystal, though on closer examination
+you realise that it is a real flower that has somehow been
+petrified."
+type ITEM_TREASURE
+manipulate {MANIPULATE_TAKE}
+weight 1
+cost 1 GOLD_PIECE
+flags {UNIT_FL_BURIED}
+end
+
+	pottery_shard
+names {"shard of pottery", "shard"}
+title "a shard of pottery"
+descr "An extremely old shard of pottery lies here."
+extra {}
+"As you examine the shard you get a feeling of extreme age
+from it. From its shape you guess it was part of something
+like a chamber-pot. If you were an archeologist you might
+have gotten more excited about it."
+type ITEM_TREASURE
+manipulate {MANIPULATE_TAKE}
+weight 1
+cost 2 GOLD_PIECE
+flags {UNIT_FL_BURIED}
+end
+
+	pastry_knife
+names {"pastry knife", "knife"}
+title "a pastry knife"
+descr "A flat-bladed pastry knife has been embedded into the ground here."
+extra {}
+"One of those spatula-like flat bladed pastry knives, as used by bakers."
+type ITEM_OTHER
+manipulate {MANIPULATE_TAKE}
+cost 5 IRON_PIECE
+weight 1
+end
+
+	box
+names {"jewelled box", "box"}
+title "a jewelled box"
+descr "An exquisite jewelled box twinkles in a corner nearby."
+extra {}
+"Encrusted with precious jewels."
+type ITEM_TREASURE
+manipulate {MANIPULATE_TAKE}
+cost 1 PLATINUM_PIECE
+weight 1
+end
+
+	shampoo
+names {"bottle of shampoo", "bottle", "shampoo"}
+title "a bottle of shampoo"
+descr "A bottle of shampoo has been discarded here."
+extra {}
+"You recognise this as a bottle of shampoo though, of course,
+you have never used such a thing yourself. The namby-pamby townies
+in Midgaard do use such things though."
+type ITEM_OTHER
+manipulate {MANIPULATE_TAKE}
+cost 6 IRON_PIECE
+weight 1
+end
+
+	
+       
+	flagon
+names {"water flagon", "flagon", "water"}
+title "a flagon of water"
+descr "A water flagon flops on the ground nearby."
+extra {}
+"A floppy flagon made from some skin-like material that has
+been made water-tight with what appears to be some kind
+of plant resin."
+LIQ_DEF(LIQ_WATER, 2, 5, 5, 0)
+manipulate {MANIPULATE_TAKE}
+cost 1 COPPER_PIECE
+end
+
+	shield_prot
+names {"shield of protection", "shield"}
+title "a shield of protection"
+descr "As shield of protection has been carelessly left here."
+extra {}
+"Made from a strange silvery metal, this shield looks like
+it could stop a whole army!"
+extra {"$identify"}
+"This shield increases the wearer's resistance to being damaged"
+extra {"$improved identify"}
+"The hit point points are increased by +4"
+extra {"$wear_s"}
+"As you strap the shield to your arm, it pulses a deep orange colour.
+An orange light slowly envelopes you then fades away."
+extra {"$wear_o"}
+"As $1n straps the shield to $1s arm, $1e becomes surrounded
+with an orange glow which slowly fades away."
+extra {"$rem_s"}
+"As your remove the shield it seems that a cloud of orange forms
+around your body which then gets sucked into the shield."
+extra {"$rem_o"}
+"As $1n removes the shield from $1s arm, a cloud of orange
+forms around $1m which then gets sucked into the shield."
+SHIELD_DEF(SHIELD_LARGE, 0, 1)
+HIT_TRANSFER(+2)
+special SFUN_RESTRICT_OBJ "Str=40
+			  Dex=30"
+cost 4 GOLD_PIECE, 5 SILVER_PIECE
+rent 5 COPPER_PIECE
+weight 7
+end
+
+
+       
+	whip
+names {"knotted leather whip", "knotted whip", "leather whip", "whip"}
+title "a knotted leather whip"
+descr "A knotted leather whip lies curled up here."
+extra {}
+"Made from darkly stained knotted leather, this whip looks like it could 
+inflict some serious damage."
+WEAPON_DEF(WPN_WHIP, 1, 0)
+cost 1 SILVER_PIECE, 7 COPPER_PIECE, 1 IRON_PIECE
+weight 3
+special SFUN_RESTRICT_OBJ "Dex=30"
+
+end 
+
+	dagger
+names {"thin bladed dagger", "dagger"}
+title "a thin bladed dagger"
+descr "A thin bladed dagger lies here."
+extra {}
+"Made from some tough metal that you don't recognise, 
+it looks fairly lethal."
+WEAPON_DEF(WPN_DAGGER, 0, -1)
+cost 3 COPPER_PIECE
+weight 1
+special SFUN_RESTRICT_OBJ "Dex=25"
+
+dilbegin dagg_kill();
+var
+	a	:	unitptr;
+code {
+	:start:
+	wait(SFB_COM, TRUE);
+	a := activator;
+	if (rnd(0,20) < 4) {
+		act("Your dagger slips through $3n's defences " +
+		    "with consummate ease and pierces deep within " +
+		    "$3s body.",
+		    A_SOMEONE, self, null, a, TO_CHAR);
+		act("$1n's dagger slips through $3n's defences " +
+		    "with consummate ease and pierces deep within " +
+		    "$3s body.",
+		    A_SOMEONE, self, null, a, TO_NOTVICT);
+		act("$1n's dagger slips through your defences " +
+		    "with consummate ease and pierces deep within " +
+		    "your body. That HURT!",
+		    A_SOMEONE, self, null, a, TO_VICT);
+	}
+	goto start;
+}
+dilend
+end		
+
+
+	culottes
+names {"kharki culottes", "culottes"}
+title "a neat pair of kharki culottes"
+descr "A neat pair of kharki culottes lies folded in the corner here."
+extra {}
+"A very neat pair of kharki culottes. They have been woven from some
+silky material, though you can't tell which."
+extra {"$wear_s"}
+"The culottes feel extra smooth as you slip them on."
+extra{"$rem_s"}
+"The culottes smoothly slip off."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+ARMOUR_CLOTHES(-3, 0)
+weight 2
+cost 1 SILVER_PIECE, 3 COPPER_PIECE, 4 IRON_PIECE
+end
+
+	blouse
+names {"silk blouse", "blouse"}
+title "a lovely silk blouse"
+descr "A lovely silk blouse has been scrunched up in a corner here."
+extra {}
+"Made from an unidentifiable fibre, but very silky to the touch."
+extra {"$wear_s"}
+"The silky smoothness of the blouse makes you feel very decadent indeed!"
+extra {"$rem_s"}
+"You regretfully remove the silky smooth blouse."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_CLOTHES(-3, 0)
+weight 1
+cost 2 SILVER_PIECE, 5 COPPER_PIECE
+end
+
+	sandals_trip
+names {"leather sandals", "sandals"}
+title "a pair of leather sandals"
+descr "A strong pair of leather sandals have been thrown in a corner here."
+extra {}
+"This pair of leather sandles looks especially tough."
+extra {"$identify"}
+"You get the distinct impression that these sandals
+are good for tripping people up."
+flags {UNIT_FL_MAGIC}
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+ARMOUR_HRD_LEATHER(-1,0)
+weight 1
+SKILL_TRANSFER(SKI_TRIP, +4) 
+cost 3 SILVER_PIECE, 4 COPPER_PIECE, 2 IRON_PIECE
+rent 3 IRON_PIECE
+end
+
+	shorts
+names {"khaki shorts", "shorts"}
+title "a pair of khaki shorts"
+descr "A nicely creased pair of khaki shorts have been left here."
+extra {}
+"Very nice shorts, very elegant!"
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+ARMOUR_CLOTHES(-4, 0)
+weight 2
+cost 6 COPPER_PIECE
+end
+
+	shirt
+names {"cotton shirt", "shirt"}
+title "a cotton shirt"
+descr "A well-made cotton shirt has been left here."
+extra {}
+"Made from nice quality cotton."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_CLOTHES(-4, 0) 
+weight 1
+cost 4 COPPER_PIECE
+end
+                                                  
+	canvas_shoes
+names {"canvas shoes", "shoes"}
+title "a pair of canvas shoes"
+descr "A worn pair of canvas shoes lies here."
+extra {}
+"They look well-worn, but quite comfortable."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+ARMOUR_CLOTHES(-3, 0)
+weight 1
+cost 2 COPPER_PIECE
+end
+
+	hat
+names {"sun hat", "hat"}
+title "a sun hat"
+descr "A wide-brimmed sun hat lies here."
+extra {}
+"This wide-brimmed hat looks ideal for protecting you
+against the sun's hot rays."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+ARMOUR_CLOTHES(-2, 0)
+weight 1
+cost 1 COPPER_PIECE
+end
+
+        earmuffs
+
+names {"earmuffs"}
+title "a pair of very effective looking earmuffs"
+descr "A very effective looking pair of earmuffs is lying here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD, MANIPULATE_HOLD}
+weight 1
+type ITEM_ARMOR
+flags {UNIT_FL_MAGIC}
+ARMOUR_LEATHER(0,-2)
+extra {}
+"You feel that, if you wore these earmuffs on your head, they would
+very effectively block out most sounds."
+extra{"$identify"}
+"These earmuffs will increase intelligence. Also they are very good at
+blocking out sounds."
+extra{"$improved identify"}
+"The increase in intelligence is +2."
+extra{"$wear_s"}
+"As you put on the earmuffs, all outside sounds become very distant.
+You distinctly hear the thumping of your own heart."
+extra{"$rem_s"}
+"As you take the earmuffs off, the normal outside sounds assault your ears."
+BRA_TRANSFER(+2)
+special SFUN_RESTRICT_OBJ "Cha=10
+                           Lvl=20"
+                           
+MATERIAL_LEATHER("A broad strap of leather.")
+MATERIAL_ORGANIC("Large pieces of fur where the ears are.")                           
+cost 1 GOLD_PIECE
+rent 1 COPPER_PIECE
+end
+
+	onyx_pyramid
+names {"onyx pyramid", "pyramid"}
+title "an onyx pyramid"
+descr "An onyx pyramid perkily thrusts upwards here."
+extra {}
+"A 1 foot tall, brightly polished onyx pyramid. It glints
+in the reflected light and you notice deep red flecks
+that float seemingly below the surface."
+extra {"$identify"}
+"This looks quite valuable."
+manipulate {MANIPULATE_TAKE}
+weight 15
+cost 10 GOLD_PIECE
+flags {UNIT_FL_BURIED}
+type ITEM_TREASURE
+MATERIAL_STONE("A green onyx with deep red flecks.")
+end
+
+        large_shell
+
+names {"large shell", "shell"}
+title "a large conch shell"
+descr "a large conch shell has been left here."
+manipulate {MANIPULATE_TAKE}
+weight 2
+cost 3 GOLD_PIECE
+type ITEM_TREASURE
+flags {UNIT_FL_BURIED}
+extra{}
+"It is a beautiful, delicate-pink conch shell. As you hold it to
+your ear you swear you could hear the sea."
+extra{"$get_s"}
+"You automatically put the shell to your ear like a child. Yes,
+you remember, you CAN hear the sea."
+extra{"$get_o"}
+"As $1n picks up the shell $1e puts it to $1s ear. A child-like
+look comes over $1m and you are convinced $1e can hear the sea."
+extra {"$identify"}
+"This looks quite valuable."
+MATERIAL_STONE("Made from the calcium deposit of a long-dead sea-creature.")
+end
+
+
+%reset
+/* Northern beach area */
+
+load old_can into n_beach_2 zonemax 2
+
+load comb into n_beach_1 zonemax 2
+
+door tunnel_3 SOUTH {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+door tunnel_2 NORTH {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+
+
+load oil_can into ankh_hold@atl_misc local 2
+
+load lycan into wood_6 zonemax 1 {
+     equip hemp_jerkin position WEAR_BODY
+     load orange_key zonemax 8
+}
+
+load relay into wood_6 zonemax 1
+
+load hourglass into wood_3 zonemax 1
+
+load akhenaten into wood_4 zonemax 1 {
+	equip hammer position WEAR_WIELD
+	load staff_confusion
+	equip toga position WEAR_BODY
+	equip sandals position WEAR_FEET
+	equip cloak position WEAR_ABOUT 
+}
+
+load thothratep into wood_5 zonemax 1 {
+	equip sword_singing position WEAR_WIELD
+	equip greaves position WEAR_HANDS
+	equip top_piece position WEAR_HEAD
+	equip leather_boots position WEAR_FEET
+	equip leather_kilt position WEAR_LEGS
+	equip leather_cuirass position WEAR_BODY
+}
+
+load sign into pier zonemax 1
+load sign2 into pier_two@torsbay max 1
+
+load small_scorpion into wood_5 zonemax 1
+
+load chameleon_log into wood_3 zonemax 3
+load chameleon_log into wood_2 zonemax 3
+load chameleon_log into wood_4 zonemax 3
+
+load fountain into pool_2 zonemax 1
+
+load naiad into pool_3 zonemax 3 {
+     load silver_dagger
+}
+load naiad into pool_3 zonemax 3 {
+	load potion_cure 
+}
+
+load naiad into pool_3 zonemax 3 {
+	load potion_cure
+}
+
+load dryad into wood_9 zonemax 3 {
+	equip wand_flatulence position WEAR_HOLD
+}
+
+load dryad into wood_7 zonemax 3 {
+	equip wand_flatulence position WEAR_HOLD
+}
+
+load dryad into wood_3 zonemax 3 {
+	equip wand_flatulence position WEAR_HOLD
+}
+
+load small_crab into n_beach_1 zonemax 3
+load small_crab into n_beach_1 zonemax 3
+load small_crab into n_beach_1 zonemax 3
+
+load banana into n_beach_1 zonemax 4
+load banana into n_beach_1 zonemax 4
+load banana into n_beach_1 zonemax 4
+load banana into n_beach_1 zonemax 4
+
+load n_tunnel_gate into tunnel_3 zonemax 1
+load s_tunnel_gate into tunnel_2 zonemax 1
+
+/* Southern beach area */
+
+load large_shell into s_beach_1 zonemax 2
+load large_shell into rbank_2 zonemax 2
+
+
+load onyx_pyramid into s_beach_18 zonemax 1
+
+load crystal_flower into shore_5 zonemax 1
+
+load dealer into s_beach_12 zonemax 1 {
+	equip culottes position WEAR_LEGS
+	equip blouse position WEAR_BODY
+	equip whip position WEAR_WIELD
+	equip sandals_trip position WEAR_FEET
+	equip shield_prot position WEAR_SHIELD
+}
+
+load archeo_1 into s_beach_15 zonemax 5 {
+	equip shorts position WEAR_LEGS
+	equip shirt position WEAR_BODY
+	equip hat position WEAR_HEAD
+	equip canvas_shoes position WEAR_FEET
+	equip dagger position WEAR_WIELD
+	load flagon 
+}
+load archeo_1 into s_beach_15 zonemax 5 {
+	equip shorts position WEAR_LEGS
+	equip shirt position WEAR_BODY
+	equip hat position WEAR_HEAD
+	equip canvas_shoes position WEAR_FEET
+	equip dagger position WEAR_WIELD
+	load flagon 
+}
+load archeo_1 into s_beach_15 zonemax 5 {
+	equip shorts position WEAR_LEGS
+	equip shirt position WEAR_BODY
+	equip hat position WEAR_HEAD
+	equip canvas_shoes position WEAR_FEET
+	equip dagger position WEAR_WIELD
+	load flagon 
+}
+load archeo_1 into s_beach_15 zonemax 5 {
+	equip shorts position WEAR_LEGS
+	equip shirt position WEAR_BODY
+	equip hat position WEAR_HEAD
+	equip canvas_shoes position WEAR_FEET
+	equip dagger position WEAR_WIELD
+	load flagon 
+}
+load archeo_1 into s_beach_15 zonemax 5 {
+	equip shorts position WEAR_LEGS
+	equip shirt position WEAR_BODY
+	equip hat position WEAR_HEAD
+	equip canvas_shoes position WEAR_FEET
+	equip dagger position WEAR_WIELD
+	load flagon 
+}
+	
+
+load giant_crab into s_beach_24 zonemax 5
+load giant_crab into shore_9    zonemax 5
+load giant_crab into shore_3    zonemax 5 {
+	load pastry_knife
+}
+load giant_crab into shore_3    zonemax 5
+load giant_crab into s_beach_14 zonemax 5
+
+load cliff_hugger into s_beach_4  zonemax 5
+load cliff_hugger into s_beach_3  zonemax 5
+load cliff_hugger into s_beach_8  zonemax 5
+load cliff_hugger into s_beach_16 zonemax 5
+load cliff_hugger into s_beach_23 zonemax 5
+
+load sand_crawler into s_beach_18 zonemax 4
+load sand_crawler into s_beach_16 zonemax 4 {
+	load box
+}
+load sand_crawler into s_beach_22 zonemax 4
+load sand_crawler into s_beach_7  zonemax 4
+
+load giant_scorpion into s_beach_5 zonemax 1
+
+load large_shell into s_beach_1 zonemax 1
+
+load sand_spider into lair_1 zonemax 1
+
+load river_leech into rbank_1 zonemax 3
+load river_leech into rbank_5 zonemax 3
+load river_leech into rbank_3 zonemax 3
+
+load algae_man into boulder_1 zonemax 1 {
+        load earmuffs zonemax 1
+}
+
+%end
+

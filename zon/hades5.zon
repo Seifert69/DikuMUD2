@@ -1,0 +1,2173 @@
+/*
+filename    hades5
+password    2wsl5
+changedby   Tyk
+EmailAdd     Palio <palio@blinksoft.com>
+request     compile
+version     8
+END HEADER*/
+
+#include "composed.h"
+#include "values.h"
+#include "wmacros.h"
+
+%zone hades5
+title ""
+lifespan 20
+reset RESET_ANYHOW
+creators {"tyk", "icculus", "ford"}
+
+notes
+"&l A complete history of the Nine Planes of Hades area can be found in the 
+notes section of Hades1.  All maintenance, creation, and coding of this zone 
+is currently coordinated by Tyk.  Direct all questions and comments to Tyk 
+(Dan Banick) at ddb2@po.cwru.edu.  Any information following this paragraph 
+is original notes by the zones first creator, and may not be current.
+
+The Hades Zone rewrites! Most of the original file has been discarded
+since it didn't reflect a gothic enough Hell for Valhalla. This file
+contains the Midgaard Connections made by Ford, and planes 1,3 and 5
+made by Icculus (Andrew Cowan). All remaining planes will be connected
+accordingly and will be found in the files: hades2.zon, hades3.zon,
+hades4.zon and possibly hades6.zon. Any modifications, suggestions or
+comments should be sent to me, my current email: agcowan@turing.uncg.edu.
+These addresses won't last forever though but you can assuredly find me on
+Valhalla."
+help
+"&lThe Nine Planes of Hades generally contain the following level mobiles:
+	Tiamat Temple  30-40          Hades5      80-90
+	Hades1         40-50          Hades6      90-100
+	Hades2         50-60          Hades7     100-110
+	Hades3         60-70          Hades8     110-120
+	Hades4         70-80          Hades9     120-130
+
+The entirety is a NO SUM/NO TELE area with the exception of Hades 5 and the
+occasional special item or room.  Once inside, you generally need to walk
+to either the first, fifth, or ninth plane to exit."
+
+#define         HOLD            wait(SFB_TICK, TRUE);
+#define         HELD            "Player Held"
+
+%rooms
+
+
+/* ************************* Plane 5 of Hell ************************** */
+
+				plane5_rm1
+names {"fifth plane"}
+title "The Entrance to the fifth plane"
+descr
+"   You descend from the plane of shadows onto the embankment of
+a shimmering lake of fire. This place looks to be the northwest
+corner of the perimeter of land surrounding the lake. As close as
+you are to the scorching flames you would normally have burst into
+a fiery blaze by now, unexplainably you are unharmed! Off to the
+southeast in the center of the firelake you see a small island, at
+least it looks to be an island but it is hard to tell from here.
+There doesn't seem to be any way across the lake from here though,
+maybe somewhere along the perimeter you can find a means of transport."
+extra {"embankment", "perimeter"}
+"You stand along the edge of the firelake, the flames writhing at
+you from very nearby. The ground here looks charred deeply, all life
+once inhabiting this soil has surely perished."
+extra {"lake of fire", "firelake", "lake", "fire", "flames"}
+"The firelake looks somewhat small but not small enough to keep you
+from getting to the island in its center. The lake constantly sends
+fiery arms towards your body, as if they are reaching out to grab you
+and pull you into an agonizing death."
+extra {"island"}
+"It looks very small, almost completely consumed by the flames
+surrounding it. You do notice a strange glow emitted from this
+island, your suspision heightens."
+flags {UNIT_FL_NO_MOB, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+east to plane5_rm12;
+south to plane5_rm2;
+ALWAYS_LIGHT
+end
+
+				plane5_rm2
+title "The Fifth Plane"
+descr
+"   You are standing on the embankment which makes up the perimeter
+of the lake of fire. The ground underfoot is well charred and has grown
+black as tar over the eons from the constant scorching of the lake. In
+the center of the lake you see a small island which has a slight glow
+hovering above it.
+    There are many scattered bones lying about, from the looks of it
+probably enough to make up the skeletons of a medium sized expedition.
+One bone lies next to what appears to be a rather large crevice in the
+rock wall. There is a foul stench coming from above, it seems like you
+could climb up to see what is there."
+extra {"large crevice", "crevice", "rock wall", "wall"}
+"It looks large enough to house a large and dangerous creature."
+extra {"scattered bones", "bones"}
+"There are several of these here, all seemingly picked clean of any
+flesh. Though there is not one skeleton left whole you can tell there
+are enough bones to make at least four or five complete skeletons."
+extra {"lake of fire", "firelake", "lake", "fire", "flames"}
+"The firelake looks somewhat small but not small enough to keep you
+from getting to the island in its center. The lake constantly sends
+fiery arms towards your body, as if they are reaching out to grab you
+and pull you into an agonizing death."
+extra {"island"}
+"It looks very small, almost completely consumed by the flames
+surrounding it. You do notice a strange glow emitted from this
+island, your suspision heightens."
+extra {"embankment", "perimeter"}
+"You stand along the edge of the firelake, the flames writhing at
+you from very nearby. The ground here looks charred deeply, all life
+once inhabiting this soil has surely perished."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to plane5_rm1;
+south to plane5_rm3;
+up to pit_despair;
+ALWAYS_LIGHT
+
+/* Dil to load our friendly fire lizard to add danger */
+
+dilbegin prg6();
+var
+	pc      :       unitptr;
+	npc     :       unitptr;
+	item    :       unitptr;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*5;
+
+   :start:
+   wait(SFB_CMD, command(CMD_LOOK));
+
+   if (not("fire lizard" in self.inside.names))
+   {
+      pc := activator;
+      secure(pc, lost_pc);
+      wait(SFB_TICK, TRUE);
+      act("You hear a soft stirring..", A_ALWAYS, pc, null, null, TO_ALL);
+      wait(SFB_TICK, TRUE);
+      act("There is a noticeable rustling noise coming from the hole.",
+	  A_ALWAYS, pc, null, null, TO_ALL);
+      pause;
+      act("Suddenly a large blackish green shape bursts from the hole!",
+	  A_ALWAYS, pc, null, null, TO_ALL);
+      npc := load("fire_lizard@hades5");
+      item := load("gold_gem@hades1");
+      link(item, npc);
+      exec("hit "+pc.name, npc);
+      unsecure(pc);
+    }
+    goto start;
+
+    :lost_pc:
+    pause;
+    goto start;
+}
+dilend
+
+end
+
+				plane5_rm3
+title "The Fifth Plane"
+descr
+"   You are standing on the embankment which makes up the perimeter
+of the lake of fire. The ground underfoot is well charred and has grown
+black as tar over the eons from the constant scorching of the lake. In
+the center of the lake you see a small island which has a slight glow
+hovering above it."
+extra {"lake of fire", "firelake", "lake", "fire", "flames"}
+"The firelake looks somewhat small but not small enough to keep you
+from getting to the island in its center. The lake constantly sends
+fiery arms towards your body, as if they are reaching out to grab you
+and pull you into an agonizing death."
+extra {"island"}
+"It looks very small, almost completely consumed by the flames
+surrounding it. You do notice a strange glow emitted from this
+island, your suspision heightens."
+extra {"embankment", "perimeter"}
+"You stand along the edge of the firelake, the flames writhing at
+you from very nearby. The ground here looks charred deeply, all life
+once inhabiting this soil has surely perished."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to plane5_rm2;
+south to plane5_rm4;
+ALWAYS_LIGHT
+end
+
+				plane5_rm4
+title "The Fifth Plane"
+descr
+"   You are standing on the embankment which makes up the perimeter
+of the lake of fire. The ground underfoot is well charred and has grown
+black as tar over the eons from the constant scorching of the lake. In
+the center of the lake you see a small island which has a slight glow
+hovering above it.
+    The flames, which jut persistently from the lake, begin to spin
+and swirl in the air until they come together to form a large shape
+resembling a human arm. "
+extra {"flames", "human arm", "arm", "large shape", "shape"}
+"You could swear it sits motionlessly before you pointing the way
+east, like an arrow on a sign."
+extra {"lake of fire", "firelake", "lake", "fire"}
+"The firelake looks somewhat small but not small enough to keep you
+from getting to the island in its center. The lake constantly sends
+fiery arms towards your body, as if they are reaching out to grab you
+and pull you into an agonizing death."
+extra {"island"}
+"It looks very small, almost completely consumed by the flames
+surrounding it. You do notice a strange glow emitted from this
+island, your suspision heightens."
+extra {"embankment", "perimeter"}
+"You stand along the edge of the firelake, the flames writhing at
+you from very nearby. The ground here looks charred deeply, all life
+once inhabiting this soil has surely perished."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to plane5_rm3;
+east to plane5_rm5;
+ALWAYS_LIGHT
+end
+
+				plane5_rm5
+title "The Fifth Plane"
+descr
+"   You are standing on the embankment which makes up the perimeter
+of the lake of fire. The ground underfoot is well charred and has grown
+black as tar over the eons from the constant scorching of the lake. In
+the center of the lake you see a small island which has a slight glow
+hovering above it. You notice a large crevice in the rock wall."
+extra {"large crevice", "crevice", "hole", "rock wall", "wall"}
+"It seems large enough to house any sort of horrid beast the
+imagination could think up."
+extra {"lake of fire", "firelake", "lake", "fire", "flames"}
+"The firelake looks somewhat small but not small enough to keep you
+from getting to the island in its center. The lake constantly sends
+fiery arms towards your body, as if they are reaching out to grab you
+and pull you into an agonizing death."
+extra {"island"}
+"It looks very small, almost completely consumed by the flames
+surrounding it. You do notice a strange glow emitted from this
+island, your suspision heightens."
+extra {"embankment", "perimeter"}
+"You stand along the edge of the firelake, the flames writhing at
+you from very nearby. The ground here looks charred deeply, all life
+once inhabiting this soil has surely perished."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+west to plane5_rm4;
+east to plane5_rm6;
+ALWAYS_LIGHT
+
+/* Load a fire lizard to add excitement */
+
+dilbegin prg7();
+var
+	pc      :       unitptr;
+	npc     :       unitptr;
+	item    :       unitptr;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*5;
+
+   :start:
+   wait(SFB_CMD, command(CMD_LOOK));
+
+   if (not("fire lizard" in self.inside.names))
+   {
+      pc := activator;
+      secure(pc, lost_pc);
+      wait(SFB_TICK, TRUE);
+      act("You hear a soft stirring..", A_ALWAYS, pc, null, null, TO_ALL);
+      wait(SFB_TICK, TRUE);
+      act("There is a noticeable rustling noise coming from the hole.",
+	  A_ALWAYS, pc, null, null, TO_ALL);
+      pause;
+      act("Suddenly a large blackish green shape bursts from the hole!",
+	  A_ALWAYS, pc, null, null, TO_ALL);
+      npc := load("fire_lizard@hades5");
+      item := load("gold_gem@hades1");
+      link(item, npc);
+      exec("hit "+pc.name, npc);
+      unsecure(pc);
+    }
+    goto start;
+
+    :lost_pc:
+    pause;
+    goto start;
+}
+dilend
+
+end
+
+				plane5_rm6
+title "The Fifth Plane"
+descr
+"   You are standing on the embankment which makes up the perimeter
+of the lake of fire. The ground underfoot is well charred and has grown
+black as tar over the eons from the constant scorching of the lake. In
+the center of the lake you see a small island which has a slight glow
+hovering above it.
+    You see the first signs of recent life since your descent from
+the shadow plane, a heap of blood and gore splattered to the wall
+behind you. Your judgement tells you whatever it was has been killed
+only a few hours ago, a tingle races up your spine."
+extra {"heap of blood and gore", "heap", "blood", "gore"}
+"This is truly disgusting and the coppery smell of death is still
+strong here. As you force your gaze upon the carnage you realize it
+is impossible to determine what creature this heap might have been."
+extra {"lake of fire", "firelake", "lake", "fire", "flames"}
+"The firelake looks somewhat small but not small enough to keep you
+from getting to the island in its center. The lake constantly sends
+fiery arms towards your body, as if they are reaching out to grab you
+and pull you into an agonizing death."
+extra {"island"}
+"It looks very small, almost completely consumed by the flames
+surrounding it. You do notice a strange glow emitted from this
+island, your suspision heightens."
+extra {"embankment", "perimeter"}
+"You stand along the edge of the firelake, the flames writhing at
+you from very nearby. The ground here looks charred deeply, all life
+once inhabiting this soil has surely perished."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+west to plane5_rm5;
+east to untouched;
+ALWAYS_LIGHT
+end
+
+				untouched
+names {"untouched room", "untouched"}
+title "The Untouched Room"
+descr
+"   You seem to have found one place along the perimeter immune to
+the fiery tendrils shot from the lake. You can visibly notice the
+flames approach and recede, defeated by some unseen force guarding
+this section of the embankment. Your view of the island in the center
+of the lake is much clearer here, perhaps that indicates some form
+of connection from here. You notice a sign which has been sculpted
+directly into the rock wall.
+The sign reads:
+
+			Adventurers Beware!
+	Turn back while your blood still remains, travel
+	any further will beckon the ultimate forces of
+	true evil to your presence. Take this as your
+	final warning, the flesh of mortals has no place
+	here! Begone at once!"
+extra {"lake of fire", "firelake", "lake", "fire", "flames"}
+"The firelake looks somewhat small but not small enough to keep you
+from getting to the island in its center. The lake constantly sends
+fiery arms towards your body, as if they are reaching out to grab you
+and pull you into an agonizing death."
+extra {"island"}
+"It looks very small, almost completely consumed by the flames
+surrounding it. You do notice a strange glow emitted from this
+island, your suspision heightens."
+extra {"embankment", "perimeter"}
+"You stand along the edge of the firelake, the flames writhing at
+you from very nearby. The ground here looks charred deeply, all life
+once inhabiting this soil has surely perished."
+flags {UNIT_FL_NO_MOB, UNIT_FL_NO_MOB}
+flags {UNIT_FL_SACRED}
+movement SECT_INSIDE
+west to plane5_rm6;
+north to plane5_rm8;
+special SFUN_FORCE_MOVE
+"hades5/island!You are sucked into the flames!" time WAIT_SEC*15 bits SFB_RANTIME ALWAYS_LIGHT
+end
+
+				plane5_rm8
+title "The Fifth Plane"
+descr
+"   You are standing on the embankment which makes up the perimeter
+of the lake of fire. The ground underfoot is well charred and has grown
+black as tar over the eons from the constant scorching of the lake. In
+the center of the lake you see a small island which has a slight glow
+hovering above it. In the corner there is a large crack in the rock
+wall, looks big enough for something nasty to fit through."
+extra {"corner", "large crack", "crack", "rock wall", "wall", "hole"}
+"It seems to have been there for a very long time, as if it were
+a natural feature to the rock. It is certainly big enough for a
+horrid beast to jut forth at any moment!"
+extra {"lake of fire", "firelake", "lake", "fire", "flames"}
+"The firelake looks somewhat small but not small enough to keep you
+from getting to the island in its center. The lake constantly sends
+fiery arms towards your body, as if they are reaching out to grab you
+and pull you into an agonizing death."
+extra {"island"}
+"It looks very small, almost completely consumed by the flames
+surrounding it. You do notice a strange glow emitted from this
+island, your suspision heightens."
+extra {"embankment", "perimeter"}
+"You stand along the edge of the firelake, the flames writhing at
+you from very nearby. The ground here looks charred deeply, all life
+once inhabiting this soil has surely perished."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to plane5_rm9;
+south to untouched;
+ALWAYS_LIGHT
+
+/* Dil to load firelizard for room */
+
+dilbegin prg8();
+var
+	pc      :       unitptr;
+	npc     :       unitptr;
+	item    :       unitptr;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*5;
+
+   :start:
+   wait(SFB_CMD, command(CMD_LOOK));
+
+   if (not("fire lizard" in self.inside.names))
+   {
+      pc := activator;
+      secure(pc, lost_pc);
+      wait(SFB_TICK, TRUE);
+      act("You hear a soft stirring..", A_ALWAYS, pc, null, null, TO_ALL);
+      wait(SFB_TICK, TRUE);
+      act("There is a noticeable rustling noise coming from the hole.",
+	  A_ALWAYS, pc, null, null, TO_ALL);
+      pause;
+      act("Suddenly a large blackish green shape bursts from the hole!",
+	  A_ALWAYS, pc, null, null, TO_ALL);
+      npc := load("fire_lizard@hades5");
+      item := load("gold_gem@hades1");
+      link(item, npc);
+      exec("hit "+pc.name, npc);
+      unsecure(pc);
+    }
+    goto start;
+
+    :lost_pc:
+    pause;
+    goto start;
+}
+dilend
+
+end
+
+				plane5_rm9
+title "The Fifth Plane"
+descr
+"   You are standing on the embankment which makes up the perimeter
+of the lake of fire. The ground underfoot is well charred and has grown
+black as tar over the eons from the constant scorching of the lake. In
+the center of the lake you see a small island which has a slight glow
+hovering above it."
+extra {"lake of fire", "firelake", "lake", "fire", "flames"}
+"The firelake looks somewhat small but not small enough to keep you
+from getting to the island in its center. The lake constantly sends
+fiery arms towards your body, as if they are reaching out to grab you
+and pull you into an agonizing death."
+extra {"island"}
+"It looks very small, almost completely consumed by the flames
+surrounding it. You do notice a strange glow emitted from this
+island, your suspision heightens."
+extra {"embankment", "perimeter"}
+"You stand along the edge of the firelake, the flames writhing at
+you from very nearby. The ground here looks charred deeply, all life
+once inhabiting this soil has surely perished."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to plane5_rm10;
+south to plane5_rm8;
+ALWAYS_LIGHT
+end
+
+				plane5_rm10
+title "The Fifth Plane"
+descr
+"   You are standing on the embankment which makes up the perimeter
+of the lake of fire. The ground underfoot is well charred and has grown
+black as tar over the eons from the constant scorching of the lake. In
+the center of the lake you see a small island which has a slight glow
+hovering above it.
+    As you take in your surroundings, suddenly a large fiery tendril
+emerges from the lake, twisting and writhing just inches from your
+face"
+extra {"large fiery tendril", "fiery tendril", "tendril"}
+"It writhes in the air right in front of you and seems too form the
+shape of a humanlike arm. The arm slowly twists around until it becomes
+stationary, pointing like an arrow to the south."
+extra {"lake of fire", "firelake", "lake", "fire", "flames"}
+"The firelake looks somewhat small but not small enough to keep you
+from getting to the island in its center. The lake constantly sends
+fiery arms towards your body, as if they are reaching out to grab you
+and pull you into an agonizing death."
+extra {"island"}
+"It looks very small, almost completely consumed by the flames
+surrounding it. You do notice a strange glow emitted from this
+island, your suspision heightens."
+extra {"embankment", "perimeter"}
+"You stand along the edge of the firelake, the flames writhing at
+you from very nearby. The ground here looks charred deeply, all life
+once inhabiting this soil has surely perished."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+west to plane5_rm11;
+south to plane5_rm9;
+ALWAYS_LIGHT
+end
+
+				plane5_rm11
+title "The Fifth Plane"
+descr
+"   You are standing on the embankment which makes up the perimeter
+of the lake of fire. The ground underfoot is well charred and has grown
+black as tar over the eons from the constant scorching of the lake. In
+the center of the lake you see a small island which has a slight glow
+hovering above it.
+    A very large skeleton is crumpled in the corner, but try as you
+might you cannot place what creature could possibly have such a bone
+structure."
+extra {"skeleton", "bones"}
+"This skeleton is very large and seems to be intact. Whatever caused
+the death of this creature, it sure was hungry."
+extra {"corner"}
+"The skeleton of a strange creature lies crumpled here."
+extra {"lake of fire", "firelake", "lake", "fire", "flames"}
+"The firelake looks somewhat small but not small enough to keep you
+from getting to the island in its center. The lake constantly sends
+fiery arms towards your body, as if they are reaching out to grab you
+and pull you into an agonizing death."
+extra {"island"}
+"It looks very small, almost completely consumed by the flames
+surrounding it. You do notice a strange glow emitted from this
+island, your suspision heightens."
+extra {"embankment", "perimeter"}
+"You stand along the edge of the firelake, the flames writhing at
+you from very nearby. The ground here looks charred deeply, all life
+once inhabiting this soil has surely perished."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+west to plane5_rm12;
+east to plane5_rm10;
+ALWAYS_LIGHT
+end
+
+				plane5_rm12
+title "The Fifth Plane"
+descr
+"   You are standing on the embankment which makes up the perimeter
+of the lake of fire. The ground underfoot is well charred and has grown
+black as tar over the eons from the constant scorching of the lake. In
+the center of the lake you see a small island which has a slight glow
+hovering above it. In the wall right next to you there is a very large
+hole, it seems menacing."
+extra {"very large hole", "large hole", "hole"}
+"It is quite dark inside, and you could swear you hear some strange
+scratching noise from within."
+extra {"lake of fire", "firelake", "lake", "fire", "flames"}
+"The firelake looks somewhat small but not small enough to keep you
+from getting to the island in its center. The lake constantly sends
+fiery arms towards your body, as if they are reaching out to grab you
+and pull you into an agonizing death."
+extra {"island"}
+"It looks very small, almost completely consumed by the flames
+surrounding it. You do notice a strange glow emitted from this
+island, your suspision heightens."
+extra {"embankment", "perimeter"}
+"You stand along the edge of the firelake, the flames writhing at
+you from very nearby. The ground here looks charred deeply, all life
+once inhabiting this soil has surely perished."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+west to plane5_rm1;
+east to plane5_rm11;
+ALWAYS_LIGHT
+
+/* Dil to load firelizard for room */
+
+dilbegin prg9();
+var
+	pc      :       unitptr;
+	npc     :       unitptr;
+	item    :       unitptr;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*5;
+
+   :start:
+   wait(SFB_CMD, command(CMD_LOOK));
+
+   if (not("fire lizard" in self.inside.names))
+   {
+      pc := activator;
+      secure(pc, lost_pc);
+      wait(SFB_TICK, TRUE);
+      act("You hear a soft stirring..", A_ALWAYS, pc, null, null, TO_ALL);
+      wait(SFB_TICK, TRUE);
+      act("There is a noticeable rustling noise coming from the hole.",
+	  A_ALWAYS, pc, null, null, TO_ALL);
+      wait(SFB_TICK, TRUE);
+      act("Suddenly a large blackish green shape bursts from the hole!",
+	  A_ALWAYS, pc, null, null, TO_ALL);
+      npc := load("fire_lizard@hades5");
+      item := load("green_gem@hades1");
+      link(item, npc);
+      exec("hit "+pc.name, npc);
+      unsecure(pc);
+    }
+    goto start;
+
+    :lost_pc:
+    pause;
+    goto start;
+}
+dilend
+
+end
+
+				island
+names {"island"}
+title "The Small Island"
+descr
+"   It seems you have found the way afterall, though now that you
+are here, you realize there is no turning back! As you take in
+your new surroundings you hear a shrill scream building from
+below you. As the scream subsides the faint muffled sound of
+moaning replaces it and quickly dominates your conscious, driving
+fear deep into your heart."
+flags {UNIT_FL_NO_MOB, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+/* Dil to make transfer of chars to next section of fifth plane,
+   the section of illusion. */
+
+dilbegin prg10();
+var
+	pc      :       unitptr;
+	npc     :       unitptr;
+	num     :       integer;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*5;
+
+   :start:
+   wait(SFB_CMD, command(CMD_LOOK));
+
+   npc := findunit(activator, "injured man", FIND_UNIT_SURRO, null);
+   if (npc.nameidx $= "mortal_man") goto start;
+
+   pc := activator;
+   secure(pc, lost_pc);
+   wait(SFB_TICK, TRUE);
+   act("The lake of fire stirs restlessly...",
+       A_ALWAYS, pc, null, null, TO_ALL);
+   pause;
+   act("All at once the flames emerging from the firelake grow " +
+       "violent!", A_ALWAYS, pc, null, null, TO_ALL);
+   wait(SFB_TICK, TRUE);
+   act("Before you have time to react you are overcome by the " +
+       "flames, they engulf you.", A_ALWAYS, pc, null, null, TO_CHAR);
+   act("The fires calm and you suddenly realize you are standing in " +
+       "a new location!", A_ALWAYS, pc, null, null, TO_CHAR);
+   act(pc.name+" is overcome by the flames and engulfed within.",
+       A_SOMEONE, pc, null, null, TO_REST);
+   num := rnd(0, 99);
+   unsecure(pc);
+   if (num < 25)
+	link(pc, findroom("hades5/under_lake1"));
+   else if ((num >= 25) and (num < 50))
+	link(pc, findroom("hades5/under_lake2"));
+   else if ((num >= 50) and (num < 75))
+	link(pc, findroom("hades5/under_lake3"));
+   else if ((num >= 75) and (num < 100))
+	link(pc, findroom("hades5/under_lake4"));
+
+   :lost_pc:
+   goto start;
+}
+dilend
+
+end
+
+				under_lake1
+names {"under lake"}
+title "Under the FireLake"
+descr
+"   You are defying the laws of physics just by being here! You
+can clearly see the lake of fire directly overhead, yet you are
+unharmed and seem to be standing on solid ground. The shimmering
+of the flames above provide enough of a light source to guide your
+way. The only noticeable exit is south."
+extra {"lake of fire", "firelake", "lake"}
+"It is directly above you and somehow you are not affected by
+it. There is some great power at work here keeping the flames
+overhead and not on you, I would seek an exit soon!"
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+south to throne;
+ALWAYS_LIGHT
+end
+
+				under_lake2
+names {"under lake"}
+title "Under the FireLake"
+descr
+"   You are defying the laws of physics just by being here! You
+can clearly see the lake of fire directly overhead, yet you are
+unharmed and seem to be standing on solid ground. The shimmering
+of the flames above provide enough of a light source to guide your
+way. The only noticeable exit is east."
+extra {"lake of fire", "firelake", "lake"}
+"It is directly above you and somehow you are not affected by
+it. There is some great power at work here keeping the flames
+overhead and not on you, I would seek an exit soon!"
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+east to accuse_illusion;
+ALWAYS_LIGHT
+end
+
+				under_lake3
+names {"under lake"}
+title "Under the FireLake"
+descr
+"   You are defying the laws of physics just by being here! You
+can clearly see the lake of fire directly overhead, yet you are
+unharmed and seem to be standing on solid ground. The shimmering
+of the flames above provide enough of a light source to guide your
+way. The only noticeable exit is north."
+extra {"lake of fire", "firelake", "lake"}
+"It is directly above you and somehow you are not affected by
+it. There is some great power at work here keeping the flames
+overhead and not on you, I would seek an exit soon!"
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to altar_illusion;
+ALWAYS_LIGHT
+end
+
+				under_lake4
+names {"under lake"}
+title "Under the FireLake"
+descr
+"   You are defying the laws of physics just by being here! You
+can clearly see the lake of fire directly overhead, yet you are
+unharmed and seem to be standing on solid ground. The shimmering
+of the flames above provide enough of a light source to guide your
+way. The only noticeable exit is west."
+extra {"lake of fire", "firelake", "lake"}
+"It is directly above you and somehow you are not affected by
+it. There is some great power at work here keeping the flames
+overhead and not on you, I would seek an exit soon!"
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+west to cave_illusion;
+ALWAYS_LIGHT
+end
+
+				throne
+names {"throne room"}
+title "the Throne Room"
+descr
+"   You arrive into a wonderous room filled with all the splendor a
+king such as Welmar would own. A majestic throne fills the entire west
+wall. On the east wall two large bardiches are mounted in a criss
+cross fashion, a symbol of the war torn planes above-ground. In the
+center of the room a large oak table rests with a beautiful  glossy
+surface. There are wonderfully upholstered chairs lining the oak table."
+extra {"wonderous room", "room"}
+"The room before you is magnificent, it reeks o riches beyond any you have
+seen."
+extra {"majestic throne", "throne"}
+"It is completely covered with the finest gold found in the realms, it
+sparkles with a fiery brilliance."
+extra {"two bardiches", "bardiches"}
+"They are huge and seem to be mounted to the eastern wall. They are
+clearly out of reach, though if sold they could bring you quite a
+fortune."
+extra {"large oak table", "large table", "oak table", "table"}
+"This table sits in the center of the room and leaves little room
+to maneuver around. It is made of the finest oak and its glossy
+surface looks flawless. There are four beautiful chairs around the
+table."
+extra {"chairs", "chair"}
+"They are upholstered with a magnificent fabric, it is very soft to
+the touch."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+south to sm_path1;
+ALWAYS_LIGHT
+end
+
+				altar_illusion
+
+title "The Wizard's Personal Altar"
+descr
+"    You stand before the personal altar of worship of Tobas of Telven.
+There is a small dias with a statue of Odin resting at its center. As you
+stand here, you feel less fatigued. You notice the spring is slowly creeping
+back into your step, and that your spirits are lifting. Somehow you get the
+feeling you stand in a living illusion!"
+extra {"dias"}
+"It fades in and out of focus as you view it! Something is
+not right here!"
+extra {"statue"}
+"The statue looks real enough but then again, it too fades
+in and out of focus! It just may be illusion."
+flags {UNIT_FL_NO_MOB, UNIT_FL_INDOORS}
+flags {UNIT_FL_SACRED}
+movement SECT_INSIDE
+north to sm_path2;
+ALWAYS_LIGHT
+end
+
+				 lair
+names {"lair"}
+title "The lair"
+descr
+"   The odor in this room is unbearable.  Smoke fills the room from the river
+of lava that bubbles through it.  Small, green mushrooms grow all over the
+banks of the river, sheding a green hue to the entire room.  Human skeletons
+and half burned corpses litter the floor from wall to wall.  Then, just
+as you thought this nightmare might be completely harmless to you......"
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+extra {"river of lava", "river", "lava"}
+"The river seems to just start and stop at the room boundaries
+but nonetheless it is right here in front of you. At least it
+seems to be here, or could it be another illusion."
+extra {"skeletons", "burned corpses", "corpses"}
+"They are scattered everywhere and it is pretty much impossible
+to avoid walking on them."
+movement  SECT_INSIDE
+north to sm_path1;
+east to sm_path2;
+west to accuse_illusion;
+
+/* Dil to load the lava_demons */
+
+dilbegin prg11();
+var
+	pc      :       unitptr;
+	npc     :       unitptr;
+	item    :       unitptr;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*5;
+
+   :start:
+   wait(SFB_CMD, command(CMD_LOOK));
+
+   if ((not("lava demon" in self.inside.names)) and
+      (not("corpse" in self.inside.names)))
+   {
+      pc := activator;
+      secure(pc, lost_pc);
+      wait(SFB_TICK, TRUE);
+      act("The Lava river bubbles noisily...", A_ALWAYS, pc,null, null, TO_ALL);
+      wait(SFB_TICK, TRUE);
+      act("Suddenly a form seems to rise slowly from the river of lava.",
+	  A_ALWAYS, pc, null, null, TO_ALL);
+      pause;
+      act("A demonic form now fully emerges from the river and turns your way.",
+	  A_ALWAYS, pc, null, null, TO_ALL);
+      npc := load("lava_demon@hades5");
+      item := load("lava_rock@hades5");
+      link(item, npc);
+      exec("hit "+pc.name, npc);
+      unsecure(pc);
+    }
+    goto start;
+
+    :lost_pc:
+    pause;
+    goto start;
+}
+dilend
+
+end
+
+				 sm_path1
+
+names {"smouldering path","path"}
+title "The smouldering path"
+descr
+"   You now stand in a landscape so different from where you
+just were. It seems everywhere you turn you wind up in a new
+setting and some seem impossible to comprehend. The path you
+walk now smoulders from the heat radiating all around, it leads
+north, east and south."
+movement SECT_MOUNTAIN
+east to grave_ent;
+north to throne;
+south to lair;
+end
+
+				 sm_path2
+
+names {"smouldering path","path"}
+title "The smouldering path"
+descr
+"   You now stand in a landscape so different from where you
+just were. It seems everywhere you turn you wind up in a new
+setting and some seem impossible to comprehend. The path you
+walk now smoulders from the heat radiating all around, it leads
+north, west and south."
+movement  SECT_MOUNTAIN
+north to grave_ent;
+south to altar_illusion;
+west to lair;
+end
+
+				  accuse_illusion
+
+title "Guard's Office"
+descr
+"   You are inside the guards office. Through the window in the northern
+wall you see the Bank beyond the village road. There is a sign hanging
+on the wall. You get the feeling the walls around you are a living
+illusion."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+south to jail_illusion open {EX_OPEN_CLOSE, EX_CLOSED}
+      descr "You see the heavy steel door." keyword {"steel door", "door"};
+east to lair;
+ALWAYS_LIGHT
+extra {"village road", "road", "window"}
+"As you look out you are sure you gaze upon your hometown of Udgaard
+but something just doesn't seem right!"
+extra {"bank"}
+"Yes, it sure looks like the bank of Udgaard out there!"
+extra {"sign", "wall"}
+"The sign says:
+
+	Only tattle tales use accuse anyway, why would we
+	want to hear your stories of abuse. We feel you
+	deserve what you get and we do not want to hear
+	about it. We may laugh at you anyhow! Begone you
+	miserable nerfish freak."
+end
+
+				   jail_illusion
+names {"jail"}
+title "The Jail"
+descr
+"   You are in a dark and humid jail.  The dark stone walls are hard and cold
+to the touch.  A heavy steel door, supposed to keep prisoners inside the jail,
+is in the north stone wall. The very fabric of reality here seems all too
+bleak, this seems like an illusion!"
+extra {"wall","walls"}
+"The walls are marked with lots of scratches.  Some of them spell sentences
+like `ASMODEUS STRIKES AGAIN'."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to accuse_illusion keyword {"steel door", "door"}
+     open {EX_OPEN_CLOSE, EX_CLOSED} descr
+     "You see the heavy steel door.";
+ALWAYS_LIGHT
+end
+
+				cave_illusion
+names {"mountain cave"}
+title "The Fiery Cave"
+descr
+"    Ouch!...Hot Hot Hot!  Great amounts of flame and steam issue forth from
+the floor of the cave.  To the north you can see a great wooden doorway,
+however it looks pretty solidly bolted. I doubt you could get through and
+you might not want to anyway! As you stand here pondering your next move
+you get the overwhelming feeling that this very room is merely illusion!"
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+extra {"wooden doorway", "wooden door", "door"}
+"It seems very solidly bolted and there seems no possibility
+of it opening."
+extra {"flame", "steam"}
+"The floor spews out large quantities of flame. The heat is
+nearly unbareable and the steam forming seems to cover the
+length of the cave floor."
+movement SECT_INSIDE
+west to grave_ent;
+ALWAYS_LIGHT
+end
+
+				 grave_ent
+
+names {"graveyard entrance"}
+title "The graveyard entrance"
+descr
+"   You stand before a HUGE iron gate that makes the city walls of Midgaard
+look like a childs' sand castle.  The wrought iron fence is over 15 feet tall
+and is topped with towers that shine blue flame from one to the next, making
+it impossible to ever cross over the top.  The only way in is through the
+front gates. Atop the towers holding the gate are a pair of well-crafted
+black statues. You see what appears to be a cave to the east and the graveyard
+continues through the gates to the north. The feeling that you stand in
+mere illusion grows stronger."
+movement  SECT_CITY
+north to open_plot open {EX_CLOSED, EX_OPEN_CLOSE} keyword {"gates", "gate"};
+east to cave_illusion;
+south to sm_path2;
+west to sm_path1;
+down to pit_despair;
+extra {"gate","gates","iron gates"}
+"   The gate is as big as you've ever seen.  The bars are too close to sneak
+through if the gate was closed, and no one in their right mind would even
+think of trying to climb over the gate unless they were looking to get impaled
+by the spikes at the top."
+end
+
+				     open_plot
+
+names {"open plot","plot"}
+title "An open plot"
+descr
+"  There are several holes dug waiting to be filled with coffins.  A strange
+mist covers the land here and flows in and out of the holes.  To the north
+you see the barren land marking the end of this plane.  To the south you can
+return back to the entrance of this God forsaken place. You feel an evil
+presence nearby, maybe it is just an illusion. One of these strange plots
+looks like you could Enter it if you tried, but I doubt that would be a great
+idea."
+extra {"holes","hole"}
+"They are all over the place, must be some corpses are expected
+to befall this land soon. Hmm, could one of them be yours perhaps?"
+extra {"barren land"}
+"It is bleak and only serves its purpose all too well. You feel
+like returning home might be a great idea, although at this point
+who knows which direction that could be?"
+movement  SECT_FIELD
+north to eotp_2;
+south to grave_ent open {EX_CLOSED, EX_OPEN_CLOSE} keyword {"gates", "gate"};
+
+/* dil to transfer player to cemetery zone */
+
+dilbegin prg12();
+var
+	pc      :       unitptr;
+code
+{
+    :init:
+    heartbeat := PULSE_SEC*5;
+
+    :start:
+    wait(SFB_CMD, ((command(CMD_ENTER)) and (("plot" in argument) or
+	("hole" in argument))));
+
+    pc := activator;
+    secure(pc, lost_pc);
+    block;
+    pause;
+    act("You are sucked down below the surface.",
+	A_ALWAYS, pc, null, null, TO_CHAR);
+    act(pc.name+" is sucked down below the surface.",
+	A_SOMEONE, pc, null, null, TO_REST);
+    link(pc, findroom("cemetery/giant_hillock"));
+    act("You are transferred to the Giant Hillock in the Cemetery.",
+	A_ALWAYS, pc, null, null, TO_CHAR);
+    act(pc.name+" seemingly disappears from the open grave plot, now " +
+	"completely desserted.", A_SOMEONE, pc, null, null, TO_REST);
+    goto start;
+
+    :lost_pc:
+    pause;
+    goto start;
+}
+dilend
+
+end
+
+				 eotp_1
+
+names {"edge of the plane","edge"}
+title "The edge of the plane"
+descr
+"   You walk over and can literally peer off into the fire of Hades as
+you enter the dark region marking the edge of this plane of Hades.  All
+life is barred from this area of land and all liquid boils away faster
+than thought possible.  It seems so hot, you're surprised that your blood
+doesn't start to boil right in your veins!  All exits out of this place
+seem better than staying here except the one that leads off of the frying
+pan and into the fire."
+movement SECT_FIELD
+north to off_plane;
+west to off_plane;
+south to off_plane;
+east to eotp_2;
+end
+
+				 eotp_2
+
+names {"edge of the plane","edge"}
+title "The edge of the plane"
+descr
+"   You walk over and can literally peer off into the fire of Hades as
+you enter the dark region marking the edge of this plane of Hades.  All
+life is barred from this area of land and all liquid boils away faster
+than thought possible.  It seems so hot, you're surprised that your blood
+doesn't start to boil right in your veins!  All exits out of this place
+seem better than staying here except the one that leads off of the frying
+pan and into the fire. The feeling that you walk the planes of illusion
+is still near but drifting as you move towards the north."
+movement SECT_FIELD
+east to eotp_3;
+south to open_plot;
+west to eotp_1;
+north to off_plane;
+end
+
+				 eotp_3
+
+names {"edge of the plane","edge"}
+title "The edge of the plane"
+descr
+"   You walk over and can literally peer off into the fire of Hades as
+you enter the dark region marking the edge of this plane of Hades.  All
+life is barred from this area of land and all liquid boils away faster
+than thought possible.  It seems so hot, you're surprised that your blood
+doesn't start to boil right in your veins!  All exits out of this place
+seem better than staying here except the one that leads off of the frying
+pan and into the fire."
+movement SECT_FIELD
+west to eotp_2;
+north to off_plane;
+south to off_plane;
+east to off_plane;
+end
+
+				 off_plane
+
+names {"off plane","off of plane"}
+title "Off the plane"
+descr
+"   As you leap from the edge you get a last glimpse of the
+planes of illusion far behind you now. You tumble head over
+down into the blackness below. As you near the end of your fall
+you seem to float slowly so that your touchdown into the next
+plane will not crush you instantly. Apparently forces are at
+work seeing to your safe landing. You finally reach the planes
+of souls."
+flags {UNIT_FL_NO_MOB, UNIT_FL_INDOORS}
+movement SECT_CITY
+down to entrance@hades6;
+end
+
+				under_ground1
+names {"underground"}
+title "under the ground"
+descr
+"   You have been dragged down beneath the surface and left
+here to fend for yourself. The Horseman is nowhere in sight
+now and you notice the only exit is down."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+down to under_ground2;
+end
+
+				under_ground2
+names {"underground"}
+title "under the ground"
+descr
+"   You have been dragged down beneath the surface and are
+being brought to stand forth before the evil lord Asmodeus.
+There does not seem to be any way to escpae.
+    There are some corpses here with you, perhaps you
+are not the first to be taken down into the depths of hell."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+down to under_ground3;
+end
+				 under_ground3
+names {"underground"}
+title "under the ground"
+descr
+"   You have come to what seems a dead end. The only thing
+that looks promising is a small crevice in the wall, it looks
+big enough to perhaps allow you entrance.
+    The temperature grows increasingly hotter as you descend
+at the will of the Horseman. It does not seem to affect him
+but you don't think you can take much more!"
+extra {"crevice", "hole", "wall"}
+"This crevice is indeed small, yet you believe you just
+may fit through, it looks more promising than any other
+alternatives you see."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+/* Dil to transport players based on random number */
+
+dilbegin prg13();
+var
+	pc      :       unitptr;
+	num     :       integer;
+code
+{
+   :start:
+   wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and
+       (command(CMD_ENTER)) and (("crevice" in argument) or
+       ("hole" in argument) or ("wall" in argument))));
+
+   block;
+   pc := activator;
+   secure(pc, lost_pc);
+   num := rnd(1, 99);
+
+   act("Immediately upon entering the crevice you emerge on the other side.",
+	A_ALWAYS, pc, null, null, TO_CHAR);
+   act("Immediately upon entering the crevice "+pc.name+" vanishes completely.",
+	A_SOMEONE, pc, null, null, TO_REST);
+
+   if ((num >= 1) and (num < 26))
+	link(pc, findroom("plane3_rm7@hades3"));
+   else if ((num >= 26) and (num < 51))
+	link(pc, findroom("pit_despair@hades5"));
+   else if ((num >= 51) and (num < 76))
+	link(pc, findroom("plane5_rm1@hades5"));
+   else if ((num >=76) and (num < 100))
+	link(pc, findroom("island@hades5"));
+
+
+   :lost_pc:
+   goto start;
+}
+dilend
+
+end
+
+				pit_despair
+names {"pit of despair", "despair pit", "pit"}
+title "The Pit of Despair"
+descr
+"   You have emerged from the underground into what looks
+like a cavernous ledge of sorts. This place reminds you of
+the rocky planes of hell, but you have never ventured into
+anything that looked like this. There are several full corpses
+in one corner and many scattered bones in the others. Which pile
+will your bones lay to rest?"
+extra {"full corpses", "corpses", "corpse", "bones", "bone"}
+"They look like most have been here for quite a while, but you
+notice some fresh blood on the ground in several large clumps."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+down to plane5_rm2;
+
+/* Dil to block movement for people with HELD flag */
+dilbegin prg14();
+var
+	npc     :       unitptr;
+code
+{
+   :start:
+   wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and
+       (HELD in activator.quests) and (not(command(CMD_TELL))) and
+       (not(command(CMD_SAY))) and (not(command(CMD_SHOUT))) and
+       (not(command(CMD_LOOK)))));
+
+   npc := findunit(activator, "pit guard", FIND_UNIT_SURRO, null);
+   if (not(npc.nameidx $= "pit_guard")) goto start;
+
+   if (activator.alignment > 100)
+   {
+      act("The Pit of Despair releases the Horseman's hold of your " +
+	  "will, you are free to leave.",
+	  A_ALWAYS, activator, null, null, TO_CHAR);
+      subextra(activator.quests, HELD);
+      goto start;
+   }
+
+   block;
+   act("You are being held by the Pit of Despair, you can not.",
+	A_ALWAYS, activator, null, null, TO_CHAR);
+   act(activator.name+" tries in vain to break the bonds of the pit.",
+	A_SOMEONE, activator, null, null, TO_REST);
+}
+dilend
+
+end
+
+/* ******************** Mobiles of plane 5 ********************* */
+
+
+
+%mobiles
+
+/* ********************** Mobiles for Plane 5 ***************** */
+
+				mortal_man
+names {"injured man", "human", "man"}
+title "a mortally injured man"
+descr "a mortally injured man lies on the ground suffering."
+extra {}
+"He looks very near death and he suffers terribly as you look him over.
+>From what you can tell, something has chewed on his mid-section to the
+point of disembowling him. His feet and legs are charred mostly, probably
+as a result of lying so near the firelake."
+level 55
+flags {UNIT_FL_NO_TELEPORT}
+alignment 400
+race RACE_HUMAN
+sex SEX_MALE
+MSET_ABILITY (10,10,10,10,10,10,10,30)
+MSET_WEAPON (5,5,5,5,5,5)
+MSET_SPELL (5,5,5,5,5,5,5,5,5,15,10)
+money 6 SILVER_PIECE, 2 COPPER_PIECE
+position POSITION_STUNNED
+default POSITION_STUNNED
+
+/* Dil to activate man to tell his story and give his gem */
+
+dilbegin prg19();
+var
+	pc      :       unitptr;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*5;
+
+   :start:
+   wait(SFB_CMD, activator.type == UNIT_ST_PC);
+
+   pc := activator;
+   secure(pc, lost_pc);
+
+   self.hp := 10;
+   exec("cough", self);
+   exec("say Please...you must listen to me before I die...", self); pause;
+   exec("say I am the last survivor of my party, and my time grows " +
+	"very short as you can see.", self); pause;
+   exec("say The evil one must be slain once again! He has risen after " +
+	"a long slumber and his wrath will be mighty unless he is once " +
+	"again put to death.", self); pause;
+   exec("say I am talking about Asmodeus in case you are clueless..." +
+	"it was some time ago since he last rose from the fiery depths " +
+	"to wreak havok in the planes of mortals..", self); pause;
+   exec("say A brave adventurer must rise up and fulfill the prophesy " +
+	"once again, to put our planes at ease for another short period " +
+	"of time.", self); pause;
+   exec("emote coughs up a large heap of blood, it drools down his " +
+	"chin as he tries to regain his composure..", self); pause;
+   exec("say This person must find the five sacred gems which are carefully " +
+	"guarded by the disciples of hell!", self); pause;
+   exec("say You will know you have found one of these gems if you hold " +
+	"it in your hand...it will let you know...", self); pause;
+   exec("say Beware, there are many forgeries, and I can assure you " +
+	"this journey will be challenging...", self); pause;
+   exec("emote coughs violently and cringes in the pain of his near " +
+	"death!", self); pause;
+   exec("say Once you have found these gems you must bring them to " +
+	"the gypsy. She can be found wandering in the vicinity of " +
+	"the firepit, in the halfling village.", self); pause;
+   exec("say After she confirms your offer, she will conjure up the " +
+	"molshitar!!! The only weapon which can penetrate the dark " +
+	"lord's flesh, the only chance to rid this world of his evil " +
+	"until his next rebirth!", self); pause;
+   exec("emote winces in agony...he looks up at you with pleading eyes " +
+	"as he breathes his last breath.", self); pause;
+   act("The Lake of Fire stirs restlessly...",
+	A_ALWAYS, pc, null, null, TO_ALL); pause;
+   act("The flames shoot forth from the lake and engulf the man.",
+	A_ALWAYS, pc, null, null, TO_ALL);
+   act("When the flames recede, the man and his corpse are gone.",
+	A_ALWAYS, pc, null, null, TO_ALL);
+   link(self, self.outside);
+
+   :lost_pc:
+   destroy(self);
+   goto start;
+
+}
+dilend
+
+end
+
+				fire_lizard
+names {"fire lizard", "lizard"}
+title "a fire lizard"
+descr "a fire lizard slithers forward ready to strike!"
+extra {}
+"This amphibian is small in comparison to his dragon ancestors, yet
+he is quite brave, perhaps he knows something you do not! There are
+large black scales running the length of his torso and he has a jagged
+spike on the end of his tail."
+level 56
+alignment -700
+flags {UNIT_FL_NO_TELEPORT}
+race RACE_LIZARD
+sex SEX_NEUTRAL
+weight 900
+NATURAL_DEF(WPN_BITE, ARM_PLATE)
+MSET_ABILITY (5,5,5,25,10,20,5,25)
+MSET_WEAPON (5,5,5,5,5,5)
+MSET_SPELL (0,0,0,0,0,20,50,0,0,0,0)
+exp 130
+special SFUN_AGGRESSIVE time WAIT_SEC*4  bits SFB_RANTIME
+dilcopy combat_mag@function("fire breath", "", 25, 2);
+money 7 SILVER_PIECE
+
+end
+
+				fake_asmodeus
+names {"fake asmodeus", "asmodeus"}
+title "the evil lord Asmodeus"
+descr "the evil lord Asmodeus towers before you grinning evilly."
+extra {}
+"The dark lord stands nine feet in height and is very well built.
+He is extremely handsome and one look into his eyes causes immediate
+hypnosis, you feel captured and drawn into his charmed gaze."
+romflags {CHAR_DETECT_INVISIBLE, CHAR_DETECT_LIFE}
+level 57
+alignment -1000
+flags {UNIT_FL_NO_TELEPORT}
+race RACE_OTHER_UNDEAD
+sex SEX_MALE
+MSET_ABILITY (10,10,10,40,5,5,10,10)
+MSET_WEAPON (5,5,5,5,5,5)
+MSET_SPELL (5,5,10,10,10,10,10,5,5,0,0)
+position POSITION_STANDING
+default POSITION_STANDING
+
+money 6 SILVER_PIECE, 2 COPPER_PIECE
+/* Dil to cause asmodeus to hold chars and give his speech */
+
+dilbegin prg20();
+var
+	pc      :       unitptr;
+code
+{
+    :init:
+    heartbeat := PULSE_SEC*5;
+
+    :start:
+    wait(SFB_CMD, activator.type == UNIT_ST_PC);
+
+    pc := activator;
+    secure(pc, lost_pc);
+    wait(SFB_TICK, TRUE);
+    exec("cac", self); pause;
+    exec("laugh "+pc.name, self); pause;
+    exec("say Well well well....", self); pause;
+    exec("say A spot of trouble you got yourself into eh? You'll " +
+	 "notice you cannot go anywhere....let's have a chat shall " +
+	 "we!?!", self); pause;
+    exec("say I will give you one more chance to flee before it is " +
+	 "too late! I sense in you some evil, just what I could use " +
+	 "working for me in the mortal world!", self); pause;
+    exec("say This is your chance to save your soul and return to " +
+	 "the meager world you call home! The next time you may not " +
+	 "be so lucky!", self); pause;
+    exec("say I will leave you to your decision, make your choice " +
+	 "and choose wisely! It could cost you dearly!", self); pause;
+    act("In a blinding flash of light the evil lord vanishes!",
+	A_ALWAYS, pc, null, null, TO_ALL);
+    link(self, findroom("void@basis"));
+    pause;
+
+    :lost_pc:
+    destroy(self);
+    goto start;
+}
+dilend
+
+/* Dil to block while asmodeus speaks */
+
+dilbegin prg21();
+code
+{
+   :start:
+   wait(SFB_CMD, (activator.type == UNIT_ST_PC));
+
+   block; /* They cannot do anything */
+   act("You are under Asmodeus' control, you cannot do anything!",
+       A_ALWAYS, activator, null, null, TO_CHAR);
+   goto start;
+}
+dilend
+
+end
+
+				welmar
+names {"king welmar", "welmar"}
+title "King Welmar"
+descr "King Welmar is here."
+extra {}
+"The fair and just King Welmar is a handsome man. His wisdom has
+been a great asset to the rebuilding of Midgaard and his rule will
+be known as a great success."
+level 56
+alignment 750
+flags {UNIT_FL_NO_TELEPORT}
+race RACE_HUMAN
+sex SEX_MALE
+weight 2000
+NATURAL_DEF(WPN_BITE, ARM_PLATE)
+position POSITION_SITTING
+default POSITION_SITTING
+
+money 7 SILVER_PIECE
+
+/* Dil to load lifeguards, talke a bit and load the sloths */
+
+dilbegin prg22();
+var
+	pc      :       unitptr;
+	npc     :       unitptr;
+	npc1    :       unitptr;
+	npc2    :       unitptr;
+	npc3    :       unitptr;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*5;
+
+   :start:
+   wait(SFB_CMD, activator.type == UNIT_ST_PC);
+
+   pc := activator;
+   secure(pc, lost_pc);
+   npc := findunit(pc, "tim", FIND_UNIT_SURRO, null);
+   if (not(npc.nameidx $= "tim"))
+   {
+      npc := findunit(pc, "sloth", FIND_UNIT_SURRO, null);
+      if (not(npc.nameidx $= "sloth"))
+      {
+	 act("Tim, the king's lifeguard, has arrived.",
+	     A_ALWAYS, pc, null, null, TO_CHAR);
+	 npc1 := load("tim@hades5");
+	 link(npc1, self.outside);
+       }
+       else goto start;
+   }
+   npc := findunit(pc, "tom", FIND_UNIT_SURRO, null);
+   if (not(npc.nameidx $= "tom"))
+   {
+      act("Tom, the king's lifeguard, has arrived.",
+	  A_ALWAYS, pc, null, null, TO_CHAR);
+      npc2 := load("tom@hades5");
+      link(npc2, self.outside);
+   }
+   exec("stand", self); pause;
+   exec("smile "+pc.name, self); pause;
+   exec("say Welcome, you finally made it!", self); pause;
+   exec("hug "+pc.name, self); pause;
+   exec("say We must talk! Please, stay and talk with me!", self); pause;
+   exec("say Please! Take a seat in that fantastic looking chair!", self); pause;
+   exec("emote points to the beautiful chair.", self); pause;
+   if (not(pc.position == POSITION_SITTING))
+   {
+      exec("say Please sit down.", self);
+      :try_again:
+      wait(SFB_CMD, activator #= pc);
+      if (not command(CMD_SIT))
+      {
+	 pause;
+	 exec("say Please, we cannot begin until you sit down!", self);
+	 goto try_again;
+      }
+    }
+   pause;
+   exec("say Ahh, you listen well I see...good...let us begin our chat..", self); pause;
+   exec("grin "+pc.name, self);
+   npc3:= findunit(pc, "tim", FIND_UNIT_SURRO, null);
+   destroy(npc3);
+   npc3:= findunit(pc, "tom", FIND_UNIT_SURRO, null);
+   destroy(npc3);
+   act("You notice the skin on the lifeguards seems to pulsate.",
+	A_ALWAYS, pc, null, null, TO_ALL); pause;
+   npc1 := load("sloth@hades5");
+   npc2 := load("sloth@hades5");
+   link(npc1, self.outside);
+   link(npc2, self.outside);
+   act("Their skin peels off revealing the true identities below!",
+	A_ALWAYS, pc, null, null, TO_ALL); pause;
+   exec("say You see, you have a made a bit of a mistake!", self);
+   npc3 := load("sloth@hades5");
+   link(npc3, self.outside);
+   exec("say This is my true identity you see, and I am HUNGRY!", npc3);
+   exec("hit "+pc.name, npc3);
+   link(self, findroom("void@basis"));
+   pause;
+
+   :lost_pc:
+   destroy(self);
+   goto start;
+}
+dilend
+
+end
+
+				tim
+names {"tim", "lifeguard"}
+title "Tim"
+descr "Tim, the king's lifeguard."
+extra {}
+"He is a thin young man, but no doubt he is well trained with his
+weapon. He is prepared to die for Welmar if need be."
+level 55
+alignment 700
+flags {UNIT_FL_NO_TELEPORT}
+race RACE_HUMAN
+sex SEX_MALE
+weight 2000
+NATURAL_DEF(WPN_BITE, ARM_PLATE)
+position POSITION_STANDING
+default POSITION_STANDING
+money 6 SILVER_PIECE , 7 COPPER_PIECE
+end
+
+				tom
+names {"tom", "lifeguard"}
+title "Tom"
+descr "Tom, the king's lifeguard."
+extra {}
+"He is a thin young man, but no doubt he is well trained with his
+weapon. He is prepared to die for Welmar if need be."
+flags {UNIT_FL_NO_TELEPORT}
+level 55
+alignment 700
+race RACE_HUMAN
+sex SEX_MALE
+weight 2000
+NATURAL_DEF(WPN_BITE, ARM_PLATE)
+position POSITION_STANDING
+default POSITION_STANDING
+money 6 SILVER_PIECE , 7 COPPER_PIECE
+end
+
+				sloth
+names {"sloth"}
+title "a sloth"
+descr "a sloth is here, looking fierce"
+extra {}
+"He is a giant creature which towers well over your head. He is
+humaniod in form yet his feet have only two large toes, or claws
+rather and his skin looks slimy, like that of a gnewt."
+level 57
+alignment -800
+flags {UNIT_FL_NO_TELEPORT}
+race RACE_OTHER_UNDEAD
+sex SEX_MALE
+weight 1800
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+MSET_ABILITY (35,35,0,30,0,0,0,0)
+MSET_WEAPON (0,0,0,0,70,0)
+MSET_SPELL (0,0,0,0,0,30,0,0,0,0,0)
+special SFUN_AGGRESSIVE time WAIT_SEC*4  bits SFB_RANTIME
+special SFUN_RESCUE "sloth"
+position POSITION_STANDING
+default POSITION_STANDING
+money 7 SILVER_PIECE , 1 COPPER_PIECE
+end
+
+				 gargoyle
+
+names {"stone gargoyle","gargoyle","statue"}
+title "a stone gargoyle"
+descr
+"Atop the pillar stands a statue of a gargoyle carved of jet black stone."
+romflags {CHAR_DETECT_INVISIBLE}
+extra {}
+"   You are amazed at the intricate detail given to these sculputures.  The
+stone is so smooth it seems to be painted onto the figure.  Also, you're
+amazed on how the artist who made these could give the illusion of slight
+movement as they stand there.  And how in earth did he get their eyes to
+glow that color red??  You don't think....maybe....they're not statues?!?"
+level 59
+alignment -800
+
+flags {UNIT_FL_NO_TELEPORT}
+weight 1600
+race RACE_GARGOYLE
+sex SEX_MALE
+NATURAL_DEF(WPN_STING, ARM_CHAIN)
+MSET_ABILITY (20,30,15,20,5,0,0,10)
+MSET_WEAPON (0,30,0,15,20,0)
+MSET_SPELL (15,0,0,0,0,0,0,0,0,20,0) /*defend vs div and good in poison*/
+exp 130
+money 7 SILVER_PIECE , 3 COPPER_PIECE
+
+special SFUN_TEAMWORK "gargoyle" time 60 bits SFB_RANTIME
+special SFUN_COMBAT_POISON
+special SFUN_AGGRESSIVE time WAIT_SEC*4  bits SFB_RANTIME
+
+/* Dil to give extra fighting power */
+
+dilbegin prg23();
+var
+	pc      :       unitptr;
+	num     :       integer;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*5;
+
+   :start:
+   wait(SFB_COM, ((activator.type == UNIT_ST_PC) and
+       (activator.name $= self.fighting.name)));
+
+   pc := activator;
+   secure(pc, lost_pc);
+   num := rnd(0,99);
+   act("The Gargoyle creates a spray of poison aimed at you.",
+       A_ALWAYS, pc, null, null, TO_CHAR);
+   act("The Gargoyle creates a spray of poison aimed towards "+pc.name,
+       A_SOMEONE, pc, null, null, TO_REST);
+   if (num < 65){
+      pc.hp := pc.hp - 20;
+      act("The poison splatters over your body causing an instant agony.",
+	  A_ALWAYS, pc, null, null, TO_CHAR);
+      act("The poison splatters over "+pc.name+" causing a loud shriek.",
+	  A_SOMEONE, pc, null, null, TO_REST);
+   }else
+    {
+       act("The poison shoots off to the side missing you entirely.",
+	  A_ALWAYS, pc, null, null, TO_CHAR);
+       act("The poison spray misses "+pc.name+" completely.",
+	   A_SOMEONE, pc, null, null, TO_REST);
+    }
+   unsecure(pc);
+   goto start;
+
+   :lost_pc:
+   goto start;
+}
+dilend
+end
+			tobas_illusion
+names {"tobas", "wizard"}
+title "Tobas"
+descr
+"Tobas the wizard is standing here, trying to work out the finer points of
+his newest spell to open jars. Somehow this does not seem like Tobas, this
+person appears a bit too calm and reserved to be the wizard!"
+extra {}
+"He doesn't seem to be having much luck with his new jaropening spell. He
+keeps mumbling some thing about it being much too powerful still."
+race RACE_HUMAN
+sex SEX_MALE
+level 58
+height 180
+weight 350
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+alignment 0
+
+flags {UNIT_FL_NO_TELEPORT}
+MSET_ABILITY(12,12,12,12,12,12,12,16)
+MSET_WEAPON(5,5,6,6,6,6)
+MSET_SPELL(6,6,6,6,6,6,6,6,6,6,6)
+money 7 SILVER_PIECE, 2 COPPER_PIECE
+
+/* Dil to change the tobas illusion into the shapeshifter */
+
+dilbegin prg24();
+var
+	pc      :       unitptr;
+	npc     :       unitptr;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*5;
+
+   :start:
+   wait(SFB_CMD, activator.type == UNIT_ST_PC);
+
+   pc := activator;
+   secure(pc, lost_pc);
+   npc := findunit(pc, "shapeshifter", FIND_UNIT_SURRO, null);
+   if (not(npc.nameidx $= "shapeshifter"))
+   {
+	exec("say Welcome, you have come in time for my magic!", self);
+	pause;
+	exec("say I think I have finally perfected those jar-openers!", self);
+	pause;
+	exec("say Come watch as I demonstrate!", self);
+	pause;
+	exec("emote stares hard at the objects in front of him.", self);
+	pause;
+	act("Suddenly Tobas begins to waver in front of you, almost " +
+	    "like he is fading in and out of focus.",
+	    A_ALWAYS, pc, null, null, TO_ALL);
+	pause;
+	npc := load("hades5/shapeshifter");
+	link(npc, self.outside);
+	act("The Shapeshifter stands before you where Tobas just was.",
+	    A_ALWAYS, pc, null, null, TO_ALL);
+	exec("cast acid ball "+pc.name, npc);
+	link(self, findroom("basis/void"));
+   }else
+	goto start;
+   :lost_pc:
+   destroy(self);
+   goto start;
+}
+dilend
+
+end
+				shapeshifter
+names {"shapeshifter", "shifter"}
+title "a glowing shapeshifter"
+descr "The Shapeshifter glows and seemingly hovers before you."
+extra {}
+"Its tough getting fixed on the flesh of this thing, it seems to
+change right before your eyes and never stays still for very long."
+race RACE_OTHER_UNDEAD
+sex SEX_MALE
+level 57
+height 280
+weight 1850
+NATURAL_DEF(WPN_STING, ARM_PLATE)
+alignment -850
+flags {UNIT_FL_NO_TELEPORT}
+
+MSET_ABILITY(12,12,12,12,12,12,12,16)
+MSET_WEAPON(5,5,6,6,6,6)
+MSET_SPELL(6,6,6,6,6,6,6,6,6,6,6)
+special SFUN_COMBAT_MAGIC "cast acid ball"
+money 7 SILVER_PIECE, 1 COPPER_PIECE
+end
+
+			   adolf_illusion
+
+names {"captain", "adolf"}
+title "the Captain"
+descr "Adolf the Captain of the guard is here."
+extra {}
+"He looks like a tall, muscular, athletic fighter. You notice that there is
+an electric blue aura around his black eyes. There is something just not
+right with Adolf, and why is he here in hell?"
+romflags {CHAR_PROTECTED, CHAR_DETECT_INVISIBLE}
+M_HUMAN_WARRIOR_SWORD(35, SEX_MALE)
+flags {UNIT_FL_NO_TELEPORT}
+
+alignment 1000
+money 4 SILVER_PIECE, 2 COPPER_PIECE
+/* Dil to change the adolf illusion into izicul */
+
+dilbegin prg25();
+var
+	pc      :       unitptr;
+	npc     :       unitptr;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*5;
+
+   :start:
+   wait(SFB_CMD, activator.type == UNIT_ST_PC);
+
+   pc := activator;
+   secure(pc, lost_pc);
+   npc := findunit(pc, "izicul", FIND_UNIT_SURRO, null);
+   if (not(npc.nameidx $= "demon_izicul"))
+   {
+	exec("say Yes, you have come to accuse someone?", self);
+	pause;
+	exec("emote mumbles something about worthless squealers.", self);
+	pause;
+	exec("say Ok, what shall thee report?", self);
+	pause;
+	exec("emote looks you in the eyes with a surprising look of " +
+	     "hatred.", self);
+	pause;
+	act("Adolf begins to contort, his features growing more obscured.",
+	    A_ALWAYS, pc, null, null, TO_ALL);
+	pause;
+	act("The creature before you no longer resembles the captain!",
+	    A_ALWAYS, pc, null, null, TO_ALL);
+	npc := load("hades5/demon_izicul");
+	link(npc, self.outside);
+	act("You now gaze into the cold stare of the demon Izicul!",
+	    A_ALWAYS, pc, null, null, TO_ALL);
+	exec("cast fireball "+pc.name, npc);
+	link(self, findroom("basis/void"));
+   }else
+	goto start;
+   :lost_pc:
+   destroy(self);
+   goto start;
+}
+dilend
+
+end
+
+				demon_izicul
+names {"izicul", "demon"}
+title "the demon izicul"
+descr "The izicul demon stares coldly at you."
+extra {}
+"This beast reaks of evil, and his cold stare peels away
+your calm compusure as he prepares to strike!"
+race RACE_OTHER_UNDEAD
+sex SEX_MALE
+level 59
+height 280
+weight 1950
+NATURAL_DEF(WPN_BITE, ARM_PLATE)
+flags {UNIT_FL_NO_TELEPORT}
+
+alignment -900
+exp 130
+money 7 SILVER_PIECE
+MSET_ABILITY(12,12,12,12,12,12,12,16)
+MSET_WEAPON(5,5,6,6,6,6)
+MSET_SPELL(6,6,6,6,6,6,6,6,6,6,6)
+special SFUN_COMBAT_MAGIC "cast fireball"
+
+dilbegin prg26();
+var
+	pc      :       unitptr;
+	num     :       integer;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*5;
+
+   :start:
+   wait(SFB_COM, ((activator.type == UNIT_ST_PC) and
+       (activator.name $= self.fighting.name)));
+
+   pc := activator;
+   secure(pc, lost_pc);
+   num := rnd(0,99);
+   act("Izicul conjures a giant ball of acid and hurtles it towards you.",
+       A_ALWAYS, pc, null, null, TO_CHAR);
+   act("Izicul conjures a giant ball of acid and hurtles it towards "+pc.name,
+       A_SOMEONE, pc, null, null, TO_REST);
+   if (num < 90){
+      pc.hp := pc.hp - 30;
+      act("The acid showers over your body causing instant corrosion.",
+	  A_ALWAYS, pc, null, null, TO_CHAR);
+      act("The acid showers over "+pc.name+" causing a loud shriek.",
+	  A_SOMEONE, pc, null, null, TO_REST);
+   }else
+    {
+       act("The acid shoots off to the side missing you entirely.",
+	  A_ALWAYS, pc, null, null, TO_CHAR);
+       act("The acid misses "+pc.name+" completely.",
+	   A_SOMEONE, pc, null, null, TO_REST);
+    }
+   unsecure(pc);
+   goto start;
+
+   :lost_pc:
+   goto start;
+}
+dilend
+
+end
+
+				lava_demon
+names {"lava demon", "demon", "lava"}
+title "the lava demon"
+descr "The lava demon approaches you slowly."
+extra {}
+"It appears to be made of nothing more than slightly
+solidified lava. Small fiery chunks of itself drops as it
+moves closer to you."
+race RACE_OTHER_UNDEAD
+sex SEX_MALE
+level 60
+height 280
+weight 1750
+exp 130
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+flags {UNIT_FL_NO_TELEPORT}
+
+alignment -700
+MSET_ABILITY(12,12,12,12,12,12,12,16)
+MSET_WEAPON(5,5,6,6,6,6)
+MSET_SPELL(6,6,6,6,6,6,6,6,6,6,6)
+special SFUN_COMBAT_MAGIC "cast fireball"
+special SFUN_AGGRESSIVE time WAIT_SEC*4  bits SFB_RANTIME
+money 7 SILVER_PIECE, 7 COPPER_PIECE
+
+/* Dil to give more power */
+
+dilbegin prg27();
+var
+	pc      :       unitptr;
+	num     :       integer;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*5;
+
+   :start:
+   wait(SFB_COM, ((activator.type == UNIT_ST_PC) and
+       (activator.name $= self.fighting.name)));
+
+   pc := activator;
+   secure(pc, lost_pc);
+   num := rnd(0,99);
+   act("The lava demon conjures a giant ball of flame and " +
+       "hurtles it towards you.", A_ALWAYS, pc, null, null, TO_CHAR);
+   act("The lava demon conjures a giant ball of flame and " +
+       "hurtles it towards "+pc.name, A_SOMEONE, pc, null, null, TO_REST);
+   if (num < 80){
+      pc.hp := pc.hp - 30;
+      act("The fireball showers over your body causing an instant agony.",
+	  A_ALWAYS, pc, null, null, TO_CHAR);
+      act("The fireball showers over "+pc.name+" causing a loud shriek.",
+	  A_SOMEONE, pc, null, null, TO_REST);
+   }else
+    {
+       act("The fireball flies off to the side missing you entirely.",
+	  A_ALWAYS, pc, null, null, TO_CHAR);
+       act("The fireball misses "+pc.name+" completely.",
+	   A_SOMEONE, pc, null, null, TO_REST);
+    }
+   unsecure(pc);
+   goto start;
+
+   :lost_pc:
+   goto start;
+}
+dilend
+
+end
+
+				pit_guard
+names {"pit guard", "guard"}
+title "a pit guard"
+descr "The brutish Pit Guard waits glaring at you."
+extra {}
+"   This thing is large indeed, but it looks rather sluggish
+and unarmed. Wonder why it is put as guard of this place."
+level 58
+NATURAL_DEF(WPN_FIST, ARM_CHAIN)
+height 500
+weight 2500
+flags {UNIT_FL_NO_TELEPORT}
+
+money 7 SILVER_PIECE,2 COPPER_PIECE
+alignment -500
+race RACE_OTHER_UNDEAD
+sex SEX_MALE
+exp 130
+MSET_ABILITY(12,12,12,12,12,12,12,16)
+MSET_WEAPON(5,5,6,6,6,6)
+MSET_SPELL(6,6,6,6,6,6,6,6,6,6,6)
+special SFUN_COMBAT_MAGIC "cast colourspray"
+position POSITION_STANDING
+default POSITION_STANDING
+
+special SFUN_PAIN_INIT time WAIT_SEC*25 bits SFB_RANTIME
+"  100 Csnarl@
+   110 AThe pit guard eyes you and licks his lips.@
+   120 Csay Oooglboyloye? Arrrgyarak!! *sthunk*@
+   130 AThe pit guard opens his mouth and slobbers all over you.@
+   140 AThe guard shuffles his feet and moans deeply, must be lonely.@
+"
+end
+
+/* *********************** Objects Section ********************** */
+
+%objects
+
+/* ********************** Objects for plane 5 ********************** */
+
+				cloth_tunic
+names {"cloth tunic", "tunic"}
+title "a cloth tunic"
+descr "A cloth tunic lies at your feet."
+extra {}
+"It looks like an ordinary tunic, yet the color is quite faded, most
+likely from the searing heat of the nearby firelake. It is medium in
+size and could have belonged to any ordinary human person."
+type ITEM_WORN
+weight 5
+cost 2 IRON_PIECE
+rent 1 IRON_PIECE
+
+/* Dil to destroy tunic as it gets picked up. */
+dilbegin prg35();
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*4;
+
+   :start:
+   wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and (command(CMD_GET))));
+
+   if (("cloth tunic" in argument) or ("tunic" in argument) or
+      ("all" in argument))
+   {
+      block;  /* Can't take it anyway so block this */
+      act("As you grab the tunic it disintegrates instantly into ash.",
+	  A_ALWAYS, activator, null, null, TO_CHAR);
+      act("As "+activator.name+" grabs the tunic, it disintegrates.",
+	  A_SOMEONE, activator, null, null, TO_REST);
+      destroy(self);
+    }
+}
+dilend
+
+end
+
+				goblets
+names {"golden goblet", "goblet", "golden goblets", "goblets"}
+title "two golden goblets"
+descr "two golden goblets rest on the table before you."
+extra {}
+"They are inlaid with a brilliant golden plate, there beauty is
+just for a king such as Welmar."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+type ITEM_TREASURE
+weight 5
+cost 2 GOLD_PIECE
+rent 2 IRON_PIECE
+end
+
+				lava_rock
+names {"lava rock", "lava", "rock"}
+title "a lava rock"
+descr "There is a rock appears to be formed of hardened lava."
+extra {}
+"It is simply a rock, yet it might do something to your
+ability to flee from battle if you hold it."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+type ITEM_OTHER
+weight 5
+cost 240 SILVER_PIECE
+rent 120 COPPER_PIECE
+SKILL_TRANSFER(SKI_FLEE, 7)
+end
+
+/* ************************* Reset Section ************************* */
+
+%reset
+
+/* ********************** Door Reset Section *********************** */
+
+door accuse_illusion SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door jail_illusion NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door grave_ent NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door open_plot SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+
+/* ********************** Reset for Plane 5 ************************* */
+
+load cloth_tunic into plane5_rm3 max 2
+load cloth_tunic into plane5_rm9 max 2
+load goblets into throne max 1
+
+load mortal_man into island max 1
+
+load fake_asmodeus into under_lake1 local 1 max 4
+load fake_asmodeus into under_lake2 local 1 max 4
+load fake_asmodeus into under_lake3 local 1 max 4
+load fake_asmodeus into under_lake4 local 1 max 4
+
+load welmar into throne max 1
+load gargoyle into grave_ent local 2 max 2
+load gargoyle into grave_ent local 2 max 2
+
+load tobas_illusion into altar_illusion max 1
+load adolf_illusion into accuse_illusion max 1
+
+load pit_guard into pit_despair max 1
+/* ********************** End of Reset Section ********************** */
+
+%end
+

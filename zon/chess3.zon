@@ -1,0 +1,3901 @@
+/*
+filename    chess3
+password    dreamer1
+changedby   palio
+EmailAdd     Palio <palio@blinksoft.com>
+request     
+version     20
+END HEADER*/
+
+
+
+
+#include <composed.h>
+
+#define WHITE_ARMY \
+                dilcopy black_agr@blcastle();
+ #define WHITE_ARMOR \
+dilcopy ali_restrict@function (1000,350,0,0,"");\
+                flags {UNIT_FL_MAGIC}   \
+                extra {" $white army"}   \
+                        "This makes the white army aggressive"
+
+
+%zone wcastle
+title ""
+lifespan 20
+reset RESET_ANYHOW
+creators {"palio"}
+
+notes
+"Long time ago before the times of destruction and despair, The Blanche
+and  the Noir clans were close friends. A budding romance rose up
+between the beautiful Lanairia and  the handsome Burtonious. Both
+kingdoms were pleased with the bonding of their children and their
+upcoming marriage would serve to join the kingdoms for all time. Both
+kingdoms prepared for months and months  to be ready for this auspicious
+occasion. Burtinious presented his wife to be with a small golden dagger
+as his wedding gift to her. His words to here were 'My love take this
+dagger and if every I stray from your love use it on me, for I never want
+to be far from your sweetness. The wedding day dawned on a gentle  summer
+day with not a  cloud to mar the sky. As the wedding was about to proceed
+it was noticed  that Burtonious was no where to be see. Groups from both
+kingdoms were  sent out in search of the  wayward prince but he was
+never found. Trackers found horse prints in the ground indicating
+someone had galloped away from the castle at an outstanding speed. The
+princess  Lanairia was inconsolable and eventually took her own life with
+the very dagger that her love had given her as a wedding gift. Her father
+King Blanche was  furious and declared war on King Noir. To this day the
+two kingdoms fight bloody battles when ever they meet. The fields between
+the kingdoms eventually becoming named 'the killing fields'"
+help
+"&l
+
+
+
+  &cgX-X-X-X-X-X-X-&crF-F-F-F-F-&cgX-X-X-X-X-X-X&cw
+  &cgX-X-X-X-X-X-X-&crF-F-F-F-F-&cgX-X-X-X-X-X-X&cw
+  &cgX-&cbM-M-M-M-M-&crF-F-F-F-F-F-F-&cbM-M-M-M-M-&cgX&cw
+  &cgX-&cbM&cw Black &cbM-&crF-F-F-F-F-F-F-&cbM&cw White &cbM-&cgX&cw
+  &cgX-&cbM&cw Castle&cbM-&crF-F-F-F-F-F-F-&cbM&cw Castle&cbM-&cgX&cw
+  &cgX-&cbM&cw       &cbM-&crF-F-F-F-F-F-F-&cbM&cw       &cbM-&cgX&cw
+  &cgX-&cbM-M-M-M-M-&crF-F-F-F-F-F-F-&cbM-M-M-M-M-&cgX&cw
+  &cgX-X-X-X-X-X-X-&crF-F-F-F-F-&cgX-X-X-X-X-X-X&cw
+  &cgX-X-X-X-X-X-X-&crF-F-F-F-F-&cgX-X-X-X-X-X-X&cw
+
+
+
+&cgGreen = Forest&cw
+&cbBlues = Moat&cw
+&crRed = Fields&cw
+
+
+
+History Of The Killing Fields
+===============================
+&f
+Long time ago before the times of destruction and despair, The Blanche
+and  the Noir clans were close friends. A budding romance rose up
+between the beautiful Lanairia and  the handsome Burtonious. Both
+kingdoms were pleased with the bonding of their children and their
+upcoming marriage would serve to join the kingdoms for all time. Both
+kingdoms prepared for months and months  to be ready for this auspicious
+occasion. Burtinious presented his wife to be with a small golden dagger
+as his wedding gift to her. His words to here were 'My love take this
+dagger and if every I stray from your love use it on me, for I never want
+to be far from your sweetness'. The wedding day dawned on a gentle summer
+day with not a cloud to mar the sky. As the wedding was about to proceed
+it was noticed that Burtonious was no where to be see. Groups from both
+kingdoms were sent out in search of the  wayward prince but he was
+never found. Trackers found horse prints in the ground indicating
+someone had galloped away from the castle at an outstanding speed. The
+princess  Lanairia was inconsolable and eventually took her own life with
+the very dagger that her love had given her as a wedding gift. Her father
+King Blanche was  furious and declared war on King Noir. To this day the
+two kingdoms fight bloody battles when ever they meet. The fields between
+the kingdoms eventually becoming named 'the killing fields'
+
+version  1
+"
+
+
+
+
+%dil
+
+
+
+
+dilbegin packer(s :string);
+var
+        i : integer;
+        pc : unitptr;
+        enemy : unitptr;
+code
+{
+        heartbeat := PULSE_SEC*35;
+        :start:
+        unsecure(pc);
+        unsecure(enemy);
+      wait(SFB_COM,(command(CMD_AUTO_COMBAT)) and
+        (self.equip == WEAR_WIELD));
+
+        pc := activator;
+        enemy := self.outside.fighting;
+        secure(enemy,lost);
+        secure(pc,lost);
+        i := rnd(1,100);
+        if (i < 10)
+         {
+        act("Brown slimy stuff flies off $1n's  $2N and hits $3n in the "+
+        "face.",A_SOMEONE, pc, self, enemy, TO_ALL);
+         if(0==dilfind("stink@blcastle",enemy))
+             {
+              dilcopy(s,enemy);
+              }
+         goto start;
+         }
+
+        if (i < 15)
+         {
+        act("A strange odor wafts up from $1n's $2N.",
+        A_SOMEONE, pc, self, enemy, TO_ALL);
+        goto start;
+           }
+        if (i < 20)
+         {
+        act("A blob of brown matter drops from  $1n's $2N.",
+        A_SOMEONE, pc, self, enemy, TO_ALL);
+        goto start;
+           }
+
+
+
+:lost:
+goto start;
+
+
+}
+dilend
+
+
+
+dilbegin shitter();
+
+ var
+pc :unitptr;
+code
+{
+
+:init:
+heartbeat := PULSE_SEC*5;
+
+:start:
+wait(SFB_CMD, (command(CMD_SIT)));
+block;
+     pc := activator;
+     secure(pc,losthim);
+
+ act("Pulling down your leggings and grabbing a parchment you settle in "+
+"for a stay.",
+  A_SOMEONE, pc, null, null, TO_CHAR);
+exec("sit",pc);
+pause;
+exec("fart",pc);
+pause;
+exec("blush",pc);
+unsecure(pc);
+
+goto start;
+:losthim:
+unsecure(pc);
+goto start;
+}
+dilend
+
+
+
+
+
+
+
+
+
+dilbegin bridge_e (utime:integer,dtime:integer);
+var
+u:unitptr;
+cdescr:extraptr;
+code
+{
+heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+goto boot_up;
+
+:loop:
+wait (SFB_TICK,TRUE);
+:boot_up:
+if ((mudhour>=dtime) and (mudhour<=utime))
+	{
+	if (self.movement==SECT_CITY) goto loop;
+	act ("You here the gears on the castle bridge grind as it begins to open",
+		A_ALWAYS,self.exit_to[WEST].inside,null,null,TO_ALL);
+	act ("The castle bridge quickly opens and hits the ground with a loud, 'BOOM!'",
+		A_ALWAYS,self.exit_to[WEST].inside,null,null,TO_ALL);
+	act ("You here the gears on the castle bridge grind as it begins to open",
+		A_ALWAYS,self.exit_to[EAST].inside,null,null,TO_ALL);
+	act ("The castle bridge quickly opens and hits the ground with a loud, 'BOOM!'",
+		A_ALWAYS,self.exit_to[EAST].inside,null,null,TO_ALL);
+	u:=null;
+	foreach (UNIT_ST_OBJ | UNIT_ST_PC | UNIT_ST_NPC, u)
+		{
+		if (u==self) continue;
+		act ("You here the gears on the draw bridge begin to creak as it  starts to open.",
+			A_ALWAYS, u,null,null,TO_CHAR);
+		act ("A safety net sweeps you south out from under the opening bridge.",
+			A_ALWAYS, u,null,null,TO_CHAR);
+		if (u.outside==self)
+			{
+			link (u,self.exit_to [SOUTH]);
+			act ("$2t is swept in from the north.",
+				A_ALWAYS, u,u.title,null,TO_REST);
+			}
+		}
+	self.movement:=SECT_CITY;
+	cdescr:="$tbridge" in self.extra;
+	self.title:=cdescr.descr;
+	cdescr:="$bridge" in self.extra;
+	self.inside_descr:=cdescr.descr;
+	unset(self.exit_info[EAST], EX_CLOSED);
+	unset(self.exit_to[EAST].exit_info[WEST], EX_CLOSED);
+	}
+else
+	{
+	if (self.movement==SECT_WATER_SAIL) goto loop;
+	act ("You here the gears on the castle bridge grind as it begins to close.",
+		A_ALWAYS,self.exit_to[WEST].inside,null,null,TO_ALL);
+	act ("The castle bridge quickly closes and shuts with with a loud, 'BOOM!'",
+		A_ALWAYS, self.exit_to[WEST].inside,null,null,TO_ALL);
+	act ("You here the gears on the castle bridge grind as it begins to close.",
+		A_ALWAYS,self.exit_to[EAST].inside,null,null,TO_ALL);
+	act ("The castle bridge quickly closes and shuts with with a loud, 'BOOM!'",
+		A_ALWAYS,self.exit_to[EAST].inside,null,null,TO_ALL);
+
+	u:=null;
+	foreach (UNIT_ST_OBJ | UNIT_ST_PC | UNIT_ST_NPC, u)
+		{
+		if (u==self) continue;
+		act ("You start to slide as the draw bridge begins quickly raising.",
+			A_ALWAYS, u,null,null,TO_CHAR);
+		act ("The quick draw bridge jolts and sends you tumbling east.",
+			A_ALWAYS, u,null,null,TO_CHAR);
+		link (u,self.exit_to [EAST]);
+		if (u.type==UNIT_ST_OBJ)
+		act ("$2t tumbles down the raising draw bridge.",
+			A_ALWAYS, u,u.title,null,TO_REST);
+		else
+		act ("$1n tumbles down the raising draw bridge.",
+			A_ALWAYS, u,null,null,TO_REST);
+	}
+
+	self.movement:=SECT_WATER_SAIL;
+	cdescr:="$tmoat" in self.extra;
+	self.title:=cdescr.descr;
+	cdescr:="$moat" in self.extra;
+	self.inside_descr:=cdescr.descr;
+	  set(self.exit_info[EAST], EX_CLOSED);
+	set(self.exit_to[EAST].exit_info[WEST], EX_CLOSED);
+	unset(self.exit_info[EAST], EX_OPEN_CLOSE);
+	unset(self.exit_to[EAST].exit_info[WEST], EX_OPEN_CLOSE);
+	}
+
+
+goto loop;
+}
+dilend
+
+%rooms
+
+/*--------------------------WHITE CASTLE--------------------------------*/
+/*wbridge
+title "Drawbridge"
+names {"drawbridge","bridge"}
+descr
+"The drawbridge consists of a large wooden platform that can be lowered
+down to allow people access in and out of the castle. When in the upright
+position the bridge effectively cuts the  castle off from the rest if
+the world. The bridge spans a large moat that seems to be filled with
+alligators and other frightening animals."
+extra {"platform" ,"bridge"}
+"The bridge platform is made from wood."
+west to field_21@fields descr
+"You see the killing fields to the west.";
+east to wcastle_wall descr
+"You see a large white castle to the east."
+ open {EX_CLOSED}
+ keyword {"drawbridge","bridge","gate"};
+end*/
+
+wcastle_wall
+title "Entrance To The Courtyard."
+names {"entrance"}
+descr
+"You are standing along side the walls that protect the castle from
+enemies. The drawbridge is directly to the west of you, and two doors
+lead into the wall towers to the north and south. You can see a large
+courtyard to the east."
+extra {"wall"}
+"The wall is formed from large stones."
+north to wwall3 descr
+"You see a door into the wall.";
+south to wwall4 descr
+"You see a door into the wall.";
+west to wmoat_15@forest descr
+"The drawbridge is to the west."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"drawbridge","gate"};
+
+east to wcastle_1 descr
+"The courtyard is to the east.";
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER}
+end
+
+wcastle_1
+title "White  Courtyard"
+names {"white courtyard"}
+descr
+"The courtyard is very large with white cobble stones in  decorative
+patterns around the yard. A small garden is growing on the north side of
+the courtyard, in it almost every version of white flowers known to man
+kind grows. The only  odd flower out is a beautiful white rose that has
+what looks like blood droplet on its petals. The path leads east into
+the castle or north and south around the castle."
+extra {"blood droplets","white rose","flower","rose"}
+"This rose bush was planted in honor of the upcoming wedding of Lanairia
+and Burtonious. Upon the death of the beautiful Lanairia, the rose
+started to weep blood tears and it is rumored that it will not stop until
+the love of the young couple has been fulfilled."
+extra {"wall"}
+"The wall is formed from large stones."
+north to wpath_1 descr
+"The path leads off to the north.";
+south to wpath_4 descr
+"The path leads off to the south.";
+west to wcastle_wall descr
+"The drawbridge is to the west.";
+east to wcastle_ent descr
+"Huge stone arches lead into the castle to the east.";
+ end
+
+wwall1
+title "Tower"
+names {"Tower","wall"}
+descr
+"You are standing in a small dreary circular room. Little light gets in
+here, stone steps lead up to the top of the wall and down to the ground.
+There  is a small hole that is well covered over. It can be opened
+up so that  people in the castle can get a clear view of those
+approaching the castle."
+extra {"wall"}
+"The wall is formed from large stones."
+extra {"hole"}
+"A hole in the wall."
+
+extra {"stairs","steps"}
+"Stone stairs lead up to the top of the wall"
+up to wtop1 descr
+"You see stairs leading up to the top of the wall.";
+down to wwall3 descr
+"The the stairs lead down";
+south to w_in1 descr
+"A passage continues to the south.";
+east to w_in2 descr
+"A passage continues to the east.";
+end
+
+wwall2
+title "Tower"
+names {"tower","wall"}
+descr
+"You are standing in a small dreary circular room. Little light gets in
+here, stone steps leading up to the top of the wall and down to the ground.
+There is a small hole that is well covered over. It can be opened  up so
+that people in the castle can get a clear view of those approaching the
+castle."
+extra {"hole"}
+"A hole in the wall."
+extra {"wall"}
+"The wall is formed from large stones."
+
+extra {"stairs","steps"}
+"Stone stairs lead up to the top of the wall"
+up to wtop3 descr
+"You see stairs leading up to the top of the wall.";
+down to wwall4 descr
+"The courtyard is visible to the north.";
+north to w_in1 descr
+"A passage continues to the north.";
+east to w_in6 descr
+"A passage continues to the east.";
+end
+
+wwall3
+title "Tower"
+names {"Tower","wall"}
+descr
+"You are standing in a small dreary circular room. Little light gets in
+here, you  can see a flight of stone steps leading up to the top of the
+wall. There  is a small hole that is well covered over. It can be opened
+up so that  people in the castle can get a clear view of those
+approaching the castle."
+extra {"hole"}
+"A hole in the wall."
+extra {"wall"}
+"The wall is formed from large stones."
+
+extra {"stairs","steps"}
+"Stone stairs lead up to the top of the wall"
+up to wwall1 descr
+"You see stairs leading up to the top of the wall.";
+south to wcastle_wall descr
+"The exit is to the south";
+flags {UNIT_FL_NO_MOB}
+
+end
+
+wwall4
+title "Tower"
+names {"Tower","wall"}
+descr
+"You are standing in a small dreary circular room. Little light gets in
+here, you  can see a flight of stone steps leading up to the top of the
+wall. There  is a small hole that is well covered over. It can be opened
+up so that  people in the castle can get a clear view of those
+approaching the castle."
+extra {"hole"}
+"A hole in the wall."
+extra {"wall"}
+"The wall is formed from large stones."
+
+extra {"stairs","steps"}
+"Stone stairs lead up to the top of the wall"
+up to wwall2 descr
+"You see stairs leading up to the top of the wall.";
+north to wcastle_wall descr
+"The exit from the wall is to the north.";
+flags {UNIT_FL_NO_MOB}
+end
+
+w_in1
+title "Inside The Castle Wall"
+names {"in wall"}
+descr
+"You are inside the castle walls. Small holes allow you to peer through
+them and see the killing fields but they are by no means big enough to
+put a weapon through. The passages look like they were made to provide
+safe travel to the soldiers when the castle was under siege."
+extra {"hole"}
+"A hole in the wall."
+extra {"wall"}
+"The wall is formed from large stones."
+
+north to wwall1 descr
+"You see the tower stairs to the north.";
+south to wwall2 descr
+"You see the tower stairs to the south.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+w_in2
+title "Inside The Castle Wall"
+names {"in wall"}
+descr
+"You are inside the castle walls. Small holes allow you to peer through
+them and see the killing fields but they are by no means big enough to
+put a weapon through. The passages look like they were made to provide
+safe travel to the soldiers when the castle was under siege."
+extra {"hole"}
+"A hole in the wall."
+extra {"wall"}
+"The wall is formed from large stones."
+
+west to wwall1 descr
+"You see a flight of stone stairs to the west.";
+east to w_in3 descr
+"The passage continues to the east.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+w_in3
+title "Inside The Castle Wall"
+names {"in wall"}
+descr
+"You are inside the castle walls. Small holes allow you to peer through
+them and see the killing fields but they are by no means big enough to
+put a weapon through. The passages look like they were made to provide
+safe travel to the soldiers when the castle was under siege."
+extra {"hole"}
+"A hole in the wall."
+extra {"wall"}
+"The wall is formed from large stones."
+
+east to wtower_1 descr
+"You see the tower stairs to the east.";
+west to w_in2 descr
+"The passage continues to the west.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+w_in4
+title "Inside The Castle Wall"
+names {"in wall"}
+descr
+"You are inside the castle walls. Small holes allow you to peer through
+them and see the killing fields but they are by no means big enough to
+put a weapon through. The passages look like they were made to provide
+safe travel to the soldiers when the castle was under siege."
+extra {"hole"}
+"A hole in the wall."
+extra {"wall"}
+"The wall is formed from large stones."
+south to wtower_2 descr
+"You see the tower stairs to the south.";
+north to wtower_1 descr
+"You see the tower stairs to the north.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+w_in5
+title "Inside The Castle Wall"
+names {"in wall"}
+descr
+"You are inside the castle walls. Small holes allow you to peer through
+them and see the killing fields but they are by no means big enough to
+put a weapon through. The passages look like they were made to provide
+safe travel for the soldiers when the castle was under siege."
+extra {"hole"}
+"A hole in the wall."
+extra {"wall"}
+"The wall is formed from large stones."
+
+west to w_in6 descr
+"The passage continues to the west.";
+east to wtower_2 descr
+"You see a flight of stone stairs to the east.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+w_in6
+title "Inside The Castle Wall"
+names {"in wall"}
+descr
+"You are inside the castle walls. Small holes allow you to peer through
+them and see the killing fields but they are by no means big enough to
+put a weapon through. The passages look like they were made to provide
+safe travel to the soldiers when the castle was under siege."
+extra {"hole"}
+"A hole in the wall."
+extra {"wall"}
+"The wall is formed from large stones."
+
+west to wwall2 descr
+"You see the tower stairs to the west.";
+east to w_in5 descr
+"The passage continues to the east.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+wtower_1
+title "Tower"
+names {"Tower","wall"}
+descr
+"You are standing in a small dreary circular room. Little light gets in
+here, you  can see a flight of stone steps leading up to the top of the
+wall. There  is a small hole that is well covered over. It can be opened
+up so that  people in the castle can get a clear view of those
+approaching the castle."
+extra {"hole"}
+"A hole in the wall."
+extra {"wall"}
+"The wall is formed from large stones."
+
+extra {"stairs","steps"}
+"Stone stairs lead up to the top of the wall"
+up to wtop6  descr
+"You see stairs leading up to the top of the wall.";
+south to w_in4  descr
+"The passage continues to the south.";
+west to w_in3 descr
+"The passage continues to the west.";
+down to wbottom_1 descr
+"You see stairs leading down";
+end
+
+wtower_2
+title "Tower"
+names {"Tower","wall"}
+descr
+"You are standing in a small dreary circular room. Little light gets in
+here, you  can see a flight of stone steps leading up to the top of the
+wall. There  is a small hole that is well covered over. It can be opened
+up so that  people in the castle can get a clear view of those
+approaching the castle."
+extra {"hole"}
+"A hole in the wall."
+extra {"wall"}
+"The wall is formed from large stones."
+
+extra {"stairs","steps"}
+"Stone stairs lead up to the top of the wall"
+up to wtop8  descr
+"You see stairs leading up to the top of the wall.";
+north to w_in4  descr
+"The passage continues to the north.";
+west to w_in5 descr
+"The passage continues to the west.";
+down to wbottom_2 descr
+"You see stairs leading downwards.";
+end
+
+
+wtop1
+title "Tower"
+names {"tower"}
+descr
+"You are at the top of the tower which serves as a junction between the
+north and east walls that surround the castle. Windows allow you  to look
+out over the  killing fields to the north. Doors lead to a fairly wide walk
+way along the walls to the south and east."
+ extra {"cauldrons"}
+"Large black containers to pour oil onto the heads of attackers."
+extra {"wall"}
+"The wall is formed from large stones."
+south to wtop2 descr
+"The wall continues to the south.";
+down to wwall1 descr
+"You see steps leading down into the wall.";
+east to wtop4 descr
+"The wall continues to the east";
+ end
+
+wtop2
+title "On Top Of The Castle Wall"
+names {"on the wall"}
+descr
+"Walking along the top of the wall you can see for miles over the killing
+fields. The wall itself has a stone barrier on either side to prevent
+falling off. There are large cauldrons positioned along the outer
+wall, used to pour boiling oil onto attacking forces if and when necessary.
+The wall continues to the north and south."
+extra {"wall"}
+"The wall is formed from large stones."
+ extra {"cauldrons"}
+"Large black containers to pour oil onto the heads of attackers."
+north to wtop1 descr
+"The wall continues to the north.";
+south to wtop3 descr
+"The wall continues to the south.";
+end
+
+wtop3
+title "Tower"
+names {"tower"}
+descr
+"You are at the top of the tower which serves as a junction between
+the north and west walls that surround the castle. Windows allow you  to
+look out over the  killing fields to the north. Doors to the north and
+east lead to a fairly wide walk way along the outer walls."
+extra {"windows","hole"}
+"A hole in the wall."
+extra {"wall"}
+"The wall is formed from large stones."
+extra
+{"cauldrons"}
+"Large black containers to pour oil onto the heads of attackers."
+east to wtop10 descr
+"The wall continues to the east.";
+north to wtop2 descr
+"The wall continues to the north.";
+down to wwall2 descr
+"You see steps leading down into the wall.";
+end
+
+wtop4
+title "On Top Of The Castle Wall"
+names {"on the wall"}
+descr
+"Walking along the top of the wall you can see for miles over the killing
+fields to the west. The wall itself has a stone barrier on either side to
+prevent falling off. There are large cauldrons positioned along the
+outer wall, used to pour boiling oil onto attacking forces if and when
+necessary. You notice some scratching in the wall that are barely
+readable."
+extra {"wall"}
+"The wall is formed from large stones."
+extra {"cauldrons"}
+"Large black containers to pour oil onto the heads of attackers."
+extra {"scratching","scratches","words","writing"}
+"Looking closely you can just barely make out the words 'When will the
+pain end?'"
+west to wtop1 descr
+"The wall continues to the west.";
+east to wtop5 descr
+"The wall continues to the east.";
+end
+
+wtop5
+title "On Top Of The Castle Wall"
+names {"on the wall"}
+descr
+"Walking along the top of the wall you can see for miles over the killing
+fields to the west. The wall itself has a stone barrier on either side to
+prevent falling off. There are large cauldrons positioned along the
+outer wall, used to  pour boiling oil onto attacking forces if and when
+necessary. The wall continues to the east and west."
+extra {"wall"}
+"The wall is formed from large stones."
+extra {"cauldrons"}
+"Large black containers to pour oil onto the heads of attackers."
+east to wtop6 descr
+"The wall continues to the east.";
+west to wtop4 descr
+"The wall continues to the west.";
+end
+
+wtop6
+title "Tower"
+names {"tower"}
+descr
+"You are at the top of the tower which serves as a junction between the
+north and east walls that surround the castle. Windows allow you  to look
+out over the  killing fields to the north. Doors lead south and west to a
+fairly wide walk way."
+extra {"wall"}
+"The wall is formed from large stones."
+extra {"cauldrons"}
+"Large black containers to pour oil onto the heads of attackers."
+west to wtop5 descr
+"The wall continues to the west.";
+south to wtop7 descr
+"The wall continues to the south.";
+down to wtower_1 descr
+"Stone stairs lead downwards.";
+
+end
+
+wtop7
+title "On Top Of The Castle Wall"
+names {"on the wall"}
+descr
+"Walking along the top of the wall you can see for miles east. With the
+killing fields to the west of you. The wall itself forms a  stone barrier
+on either side to prevent falling off. There are large  cauldrons
+positioned along the outer wall, used to pour boiling oil onto  attacking
+forces if and when necessary."
+extra {"wall"}
+"The wall is formed from large stones."
+ extra {"cauldrons"}
+"Large black containers to pour oil onto the heads of attackers."
+north to wtop6 descr
+"The wall continues to the north.";
+south to wtop8 descr
+"The wall continues to the south.";
+end
+
+wtop8
+title "Tower"
+names {"tower"}
+descr
+"You are at the top of the tower which serves as a junction between the
+south and west walls that surround the castle. Windows allow you  to look
+out over the  killing fields to the north. Two doors lead to a fairly wide
+walk way leads along the walls to the north and west."
+extra {"wall"}
+"The wall is formed from large stones."
+extra {"cauldrons"}
+"Large black containers to pour oil onto the heads of attackers."
+west to wtop9 descr
+"The wall continues to the west.";
+north to wtop7 descr
+"The wall continues to the north.";
+down to wtower_2 descr
+"Stone stairs lead downward.";
+end
+
+wtop9
+title "On Top Of The Castle Wall"
+names {"on the wall"}
+descr
+"Walking along the top of the wall you can see for miles around the castle.
+With the killing fields to the west of you. The wall itself has a
+stone barrier on either side to prevent falling off. There are large
+cauldrons positioned along the outer wall, used to pour boiling oil onto
+attacking forces if and when necessary."
+extra {"wall"}
+"The wall is formed from large stones."
+ extra {"cauldrons"}
+"Large black containers to pour oil onto the heads of attackers."
+west to wtop10 descr
+"The wall continues to the west.";
+east to wtop8 descr
+"The wall continues to the east.";
+end
+
+wtop10
+title "On Top Of The Castle Wall"
+names {"on the wall"}
+descr
+"Walking along the top of the wall you can see for miles around the castle.
+With the killing fields to the west of you. The wall itself has a
+stone barrier on either side to prevent falling off. There are large
+cauldrons positioned along the outer wall, used to pour boiling oil onto
+attacking forces if and when necessary."
+extra {"wall"}
+"The wall is formed from large stones."
+ extra {"cauldrons"}
+"Large black containers to pour oil onto the heads of attackers."
+west to wtop3 descr
+"The wall continues to the west.";
+east to wtop9 descr
+"The wall continues to the east.";
+end
+
+wcastle_ent
+title "Castle Entrance"
+names {"castle entrance"}
+descr
+"The entrance to the castle has two stations for guards to be positioned.
+>From this location the guards can clearly see the courtyard and the
+drawbridge. There are huge stone arches over the large path into the
+castle at the top of which resides a huge stone dragon, Its tail curling
+down the north side of the arch. The arches house the two huge wooden doors
+that allow entrance into the castle."
+extra {"arches","doors"}
+"The arches are constructed from a pure white stone and span the
+east-west road that leads into the castle. At the top of the arches
+perches a huge white dragon, its tail curling down the arch way. Two
+wooden doors when open allow entrance into the castle"
+extra {"road"}
+"The road is made from white flag stones. and leads from the drawbridge
+into the castle."
+west to wcastle_1 descr
+"A large courtyard stretches out the west.";
+east to wfoyer descr
+"Doors lead to a foyer to the east."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+end
+
+wfoyer
+title "White Foyer"
+names {"white foyer","foyer"}
+descr
+"The foyer is a large hall with a royal red carpet running the length or
+if. Along the west wall stands the most spectacular suit of armor you
+have ever seen. Small torches line the walls, providing light to the
+room. Doors lead off in all directions and a deep red carpet contrasts
+the white of the room majestically. To the east you notice the door
+out into the courtyard has two metal hooks so that a huge wooden beam can
+be slide into place to lock the castle in event of attack."
+extra {"carpet"}
+"The carpet is a deep royal red"
+extra {"suit of armor","armor","suit"}
+"This suit was obviously placed here in honor of some great warrior. It
+is larger then the average suit of armor making you wonder who or WHAT
+could have worn it. The suit is pure white plate armor with a large bastard
+sword in  front of it. As you glance at the sword you notice it seems to
+glow as if it were alive, breathing even. A faint hum is emitted from the
+sword."
+
+extra {"hooks","door"}
+"The doors has metal hooks to allow the door to be locked in event of an
+attack on the castle."
+east to whall_1 descr
+"You see a hall to the east.";
+west to wcastle_ent descr
+"Doors lead to the courtyard."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+
+south to wrecieve_1 descr
+"A large room is visible to the south."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+north to wrecieve_2 descr
+"A large room is visible to the north."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+wrecieve_1
+title "White Receiving Room."
+names {"receiving room","room"}
+descr
+"The room is large with all the comforts one could desire. Visitors to the
+castle are left here to wait while the person they came to see it sought
+out. Very regal looking tapestries hang on the wall, each depicting a
+great battle. The chairs are all hand embroidered with such designs as
+can be pleasing to most eyes. A large picture window with a wooden seat
+padded in the finest silk allows one to sit and look out over the castle
+gardens. A large arched door leads north to the foyer and a smaller
+door leads east, out of the receiving room."
+extra {"tapestries"}
+"The tapestries are made of the finest material and are obviously made
+for royalty, the work on them was embroidered with spectacular care.
+Most of the the tapestries depict great battles won by the kings army. One
+how ever shows a lonely, sad looking girl sitting by a pond with tear
+drops adorning her face."
+extra {"chairs"}
+"The chairs are made of the finest oak wood with embroidered silk
+cushions  on the seat. They have such designs as the kings garden in bloom."
+extra {"picture window","window"}
+"The window looks out over the royal gardens which even in this time of
+war are kept up with a multitude of flowers. In the middle of the garden
+is a small pond, you notice it is surprisingly similar to the one seen in
+the tapestry."
+north to wfoyer descr
+"An arched doorway leads to the foyer.";
+east to wsitting_1 descr
+"A small door leads east.";
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+
+
+wrecieve_2
+title "White Receiving room"
+names {"receiving room","room"}
+descr
+"The room is large with all the comforts one could desire. Visitors to the
+castle are left here to wait while the person they came to see it sought
+out. Very regal looking tapestries hang on the wall, each depicting a
+great battle. The chairs are all hand embroidered with such designs as
+can be pleasing to most eyes. A large picture window with a wooden seat
+padded in the finest silk allows one to sit and look out over a huge
+fountain. A large arched door leads south to the foyer and a smaller
+door leads east, out of the receiving room."
+extra {"tapestries"}
+"The tapestries are made of the finest material and are obviously made
+for royalty, the work on them was embroidered with spectacular care.
+Most of the the tapestries depict great battles won by the kings army."
+extra {"chairs"}
+"The chairs are made of the finest oak wood with embroidered silk
+cushions  on the seat. They have such designs as the kings garden in bloom."
+extra {"picture window","window"}
+"The window looks out over a huge fountain, In the middle of it a statue
+of a dove, It was to have been the location of the marriage that was not."
+
+south to wfoyer descr
+"An arched doorway leads to the foyer.";
+east to wsitting_2 descr
+"A small door leads east.";
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+wsitting_1
+title "Sitting Room"
+names {"sitting room","room"}
+descr
+"The room is smaller then the previous one you were in. It has a
+fireplace at one end  and various chairs placed about the room. In the
+center of the room is two special looking chairs with a table in the
+center. A window looks out over the gardens and portraits of the king and
+queen hang on the wall."
+extra {"chairs","table"}
+"chairs are spaced about the room but two special chairs in the center of
+the room. These obviously are for the royal couple to sit in when they
+are receiving guests. There is a deep red/brown table in front of the
+chairs prepared for tea."
+extra {"window","garden"}
+"The window looks out over the garden which even in this time of war is
+kept up."
+west to wrecieve_1 descr
+"You see the receiving rooms to the west.";
+east to whall_3 descr
+"A hall leads to the east."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+wsitting_2
+title "Sitting Room"
+names {"sitting room","room"}
+descr
+"The room is smaller then the previous one you were in. It has a
+fireplace at one end  and various chairs placed about the room. In the
+center of the room is two special looking chairs with a table in the
+center. A window looks out over a huge fountain and portraits of the king
+and queen hang on the wall."
+extra {"chairs","table"}
+"chairs are spaced about the room but two special chairs in the center of
+the room. These obviously are for the royal couple to sit in when they
+are receiving guests. There is a deep red/brown table in front of the
+chairs prepared for tea."
+extra {"window","garden"}
+"The window looks out over a hug fountain."
+west to wrecieve_2 descr
+"You see the receiving rooms to the west.";
+east to whall_5 descr
+"A door leads off to the east."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+whall_1
+title "A Large Hall"
+names {"hall"}
+descr
+"The hall is a fair size, big enough for a large party to proceed
+through. There is a suite of armor displayed in the hall. A deep red
+carpet contrasts the white of the room beautifully."
+extra {"suite of armor","armor"}
+"A spectacular set of full plate armor made for a king."
+extra {"carpet"}
+"The carpet is a royal red."
+west to wfoyer descr
+"You see the foyer to the west.";
+east to wgr_hall descr
+"You see a grandhall to the east";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+wstair_1
+title "Top Of The Stairs."
+names {"stairs"}
+descr
+"You are at the top of a grand flight of stairs made from a dark w They
+red wood. They are wide and well lit with royal red carpeting leading up
+them. Below you can see the grand hall below you were people wait for an
+audience with the king."
+
+extra {"carpet"}
+"A royal red carpet."
+down to wgr_hall descr
+"A flight of deep brown stairs with a red carpet lead down to the
+grandhall.";
+west to whall_2 descr
+"A hall leads to the west.";
+east to whall_4 descr
+"A hall leads to the east.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+wstair_2
+title "A Stair Well"
+names {"stair well"}
+descr
+"The stairs lead down into  the castle basement."
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+down to wbot_stair descr
+"The stairs lead down.";
+south to whall_6 descr
+"You see the hall to the south.";
+end
+
+wwater_cl
+title "Water Closet"
+names {"water closet"}
+descr
+"The royal water closet looks much the same as any other water closet
+that one has seen except that the royal seats are covered in a soft
+padding to provide its user with the utmost comfort, and the room has a
+small wood stove to provide heat on those chilly mornings."
+extra {"stove"}
+"Just a small plain black stove."
+extra {"seat"}
+"softly padded to provide comfort to those tender royal tush's"
+south to whall_3
+descr "You see the hall to the south."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+dilcopy shitter@wcastle();
+
+end
+
+
+wroyal_ch
+title "Royal Sleeping Chamber"
+names {"royal chamber","chamber"}
+descr
+"In the center of this huge room is a large four poster bed netting draped
+around it and royal red curtains over the netting. At the foot of the bed
+is a large cedar hope chest covered with an angora rug. The floor is
+covered in plush carpeting and along one wall is an elegant wash basin and
+pitcher. A huge fire blazes in the fireplace in front of which is two
+comfortable looking chairs."
+extra {"fireplace"}
+"The fire place has a huge fire burning in it to keep the room warm in
+readiness so that the royal couple may retire to their room at any time."
+extra {"hope chest","chest"}
+"The chest is made from cedar and contains memories."
+extra {"netting","curtains","bed"}
+"The bed is a huge four poster bed. It is enclosed totally in netting and
+over the netting hangs thick red curtains that provide not only privacy
+but warmth in the chilly night."
+extra {"angora rug"}
+"The rug is made from the softest material known to man, and lays over
+the hope chest."
+extra {"wash basis","pitcher"}
+"The washbasin is filled ever morning noon and night with warm water so
+that the royal couple may cleanse themselves."
+extra {"carpet"}
+"The carpet is plush to protect the royal feet on chilly mornings"
+south to whall_2 descr
+"You see the hall to the south.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+wguest_ch
+title "Guest Chambers"
+names {"guest chambers","chambers"}
+descr
+"The room is large with a comfortable looking four poster bed which is
+enclosed in netting. Two chairs sit on a braided rug in front of a crackling
+fire. Well painted pictures hang on the wall, depicting a peasant girl
+running bare foot through a field of flowers."
+extra {"bed"}
+"A comfortable four poster bed."
+extra {"fireplace"}
+"A fire crackles happily in the fireplace."
+extra {"chairs","chair"}
+"Two chairs sit in front of a crackling fire."
+extra {"rug"}
+"Obviously hand braided"
+extra {"netting"}
+"It keeps the bugs off those in the bed."
+extra {"paintings","pictures"}
+"A peasant girl runs bare foot through some flower fields."
+north to whall_2 descr
+"You see the hall to the north.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+wball_room
+title "Ball Room"
+names {"ball room"}
+descr
+"The ball room is huge with ceilings that seem to be a mile high,
+royal red curtains cover the walls of the room and torches hang along
+the walls providing light for the room. The  floors are polished to a
+shine and at the east end of the hall is a large stage for  the royal
+orchestra.  "
+extra {"stage"}
+"A large stage big enough to hold an orchestra."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER}
+south to whall_4 descr
+"You see a hall the south.";
+end
+
+
+wport_room
+title "Portrait Room"
+names {"portrait room","portrait"}
+descr
+"The room is fairly large, spaced closely together along the walls are
+portraits of past kings and queens of the castle"
+extra {"portraits"}
+"The portraits are all painted by the best artists in the land. Your eye
+is drawn to the  most current portraits, those of the king, queen and
+princess."
+
+extra {"queen's portrait","queen"}
+"The queen is a very regal looking woman with her golden hair put up into
+a bun under her crown."
+extra {"king's portrait","king"}
+"The king is a regal looking man. He has a handsome face with his shoulder
+length hair tied back in a pony tail under his crown."
+extra {"princess's portrait","princess"}
+"The portrait of Lanairia shows you the utter beauty of the princess. In
+the portrait she has flowing black hair that reaches almost to the floor,
+a creamy smooth complexion and perfectly formed features. Almost as if
+she was created for perfection."
+north to whall_4 descr
+"You see a hall to the north.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER}
+end
+
+
+
+whall_2
+title "A Hall"
+names {"hall"}
+descr
+"The hall Continues east from here, a deep royal red carpet
+leading the way. A window at the west end of the hall
+lets in some light during the day and hanging on the walls, the large
+torches provide light for the people who travel the halls at night. A
+There are doors to the north  and south, they look like they may be some
+sort of sleeping chambers. "
+extra {"window"}
+"You can look out over the killing fields."
+east to wstair_1 descr
+"You see the staircase to the east.";
+north to wroyal_ch descr
+"You see a majestic room to the north.";
+south to wguest_ch descr
+"You see a sleeping chamber to the south.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER}
+end
+
+whall_3
+title "A Hall"
+names {"hall"}
+descr
+"The hall Continues east and west from here, a deep royal red carpet
+leading the way. There are doors in all directions except south. Hanging
+on the walls, the large torches provide light for the people who walk
+this way."
+north to wwater_cl descr
+"You see what looks like a water closet to the north"
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+west to wsitting_1 descr
+"A sitting room is to the west.";
+east to whall_7 descr
+"The hall continues to the east.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER}
+end
+
+
+
+whall_4
+title "A Hall"
+names {"hall"}
+descr
+"The hall Continues west from here, a deep royal red carpet
+leading the way. A window at the east end of the hall
+lets in some light during the day and hanging on the walls, the large
+torches provide light for the people who travel the halls at night. A
+There are doors to the north  and south."
+extra {"window"}
+"You can look out over the killing fields."
+west to wstair_1 descr
+"You see the staircase to the west.";
+north to wball_room descr
+"You see a majestic room to the north.";
+south to wport_room descr
+"You see a sleeping chamber to the south.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER}
+end
+
+
+
+
+
+
+
+whall_5
+title "A Hall"
+names {"hall"}
+descr
+"The hall Continues east and west from here, a deep royal red carpet
+leading the way. There are doors in all directions except north. Hanging
+on the walls, the large torches provide light for the people who walk
+this way."
+south to wwater_cl2 descr
+"You see what looks like a water closet to the south"
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+west to wsitting_2 descr
+"A sitting room is to the west.";
+east to whall_6 descr
+"The hall continues to the east.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER}
+
+end
+
+
+
+whall_6
+title "A Hall"
+names {"hall"}
+descr
+"The hall Continues to the west from here, a deep royal red carpet
+leading the way. Large torches provide light for the people who walk
+this way. There is a small door to the south and a set of stairs to the
+north."
+north to wstair_2 descr
+"A flight of stairs.";
+south to wthrone descr
+"The throne room is the south."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+west to whall_5 descr
+"The hall continues to the west.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER}
+end
+
+whall_7
+title "A Hall"
+names {"hall"}
+descr
+"The hall Continues to the west and south from here, a deep royal red carpet
+leading the way. Large torches provide light for the people who walk
+this way. A door leads north to the throne room."
+north to wthrone descr
+"The throne room is the north."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+south to whall_8 descr
+"The hall continues to the south.";
+west to whall_3 descr
+"The hall continues to the west.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+whall_8
+title "A  Servants Hall"
+names {"Hall"}
+descr
+"The hall Continues to the north from here. Large torches provide light
+for the people who walk this way. A door leads east to the kitchens"
+north to whall_7 descr
+"The hall leads to the north.";
+east to wkitchen descr
+"The kitchens are to the east.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+wkitchen
+title "White Kitchen"
+names {"kitchen"}
+descr
+"The kitchen is huge with many workers scurrying about  preparing for the
+next meal. Pots and pans hang from the roof on long hooks and large wooden
+spoons line  the walls. Wood stoves continually burn making the room
+almost unbearably  warm. Large Ice closets keep the perishable foods from
+going bad. One head  servant  is very obviously in charge of the whole
+kitchen as she walks  around checking everything and barking orders to
+those around her."
+extra {"stoves","stove"}
+"Large and very hot"
+extra {"ice closets"}
+"A large cupboard with a block of ice to keep perishable foods cool"
+extra {"pots","pans"}
+"Pots and pans hang from the roof on long hooks."
+extra {"wooden spoons","spoons"}
+"Wooden spoons line the walls."
+west to  whall_8 descr
+"You see the hall to the west.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+casket_room
+title "The Shrine of Sorrow"
+names {"shrine"}
+descr
+"The room is fairly bright, lite by scented candles. On the floor is a
+plush red carpet. The windows are covered with thick royal red curtains.
+There is a feeling of sorrow that seems to cover every inch of the room."
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+west to wthrone descr
+"You see the throne room through the door."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+end
+
+wthrone
+title "The Throne Room"
+names {"throne room"}
+descr
+"Huge thrones take up pride of position in this room, accessible to the
+rest of the room by going up a few steps, obviously made this way to
+set their owners a bit above the rest. The chairs each a  royal red with
+a white dove on the back of each, the crest of the castle. Hanging behind
+the throne is a thick curtain of the richest red fabric you have ever
+seen, on each side of the curtain is a huge dove, exquisitely
+embroidered so that each and every feather is visible. Huge double doors
+lead out into the grand hall and to smaller doors are hardly noticeable to
+the north and south."
+extra {"throne"}
+"Each thrown is encrusted in jewels and has a soft seat of silk."
+extra {"curtains"}
+"blood red curtains with a snow white dove on each side of it."
+extra {"steps"}
+"The steps look like they were made to keep the king and queen above the
+common folk"
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+ south to whall_7 descr
+"A hall is to the south."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+
+north to whall_6 descr
+"A hall is to the north."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+
+west to wgr_hall descr
+"You see a grand hall to the west."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+east to casket_room descr
+"The curtain is made from thick material."
+         open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+         keyword {"curtain","door","wall"};
+         SECRET_DOOR_DIFFICULTY(EAST,40)
+
+end
+
+wgr_hall
+title "Grand Hall"
+names {"grand hall"}
+descr
+"A very large room with many seats. This is the place that the people sit
+and wait for tiers audience with the king and queen. Tapestries line the
+walls and a deep red carpet cushions your step beneath your feet. Huge
+double doors to the east lead to the throne room while the hall leads
+back to the east and a grand staircase twirls up to the second floor of the
+castle."
+extra {"tapestries"}
+"The tapestries depict great battles fought and won by the kings army."
+up to wstair_1 descr
+"You see a grand staircase leading up to the second floor.";
+east to wthrone descr
+"You see the throne room to the east."
+open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+west to whall_1 descr
+"The hall continues to the west.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+wwater_cl2
+title "Water Closet"
+names {"water closet"}
+descr
+"The royal water closet looks much the same as any other water closet
+that one has seen except that the royal seats are covered in a soft
+padding to provide its user with the utmost comfort, and the room has a
+small wood stove to provide heat on those chilly mornings."
+extra {"stove"}
+"Just a small plain black stove."
+extra {"seat"}
+"softly padded to provide comfort to those tender royal tush's"
+
+north to whall_5
+descr "You see the hall to the north."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+dilcopy shitter@wcastle();
+end
+
+wpath_1
+title "A Path Around The Castle"
+names {"path"}
+descr
+"The path, which is composed of crushed white rocks, leads along side the
+castle front. Trees provide shade from the scorching daytime sun for
+those whole stroll the path during the day and torches line the path to
+provide light for night time strollers. To the south a large courtyard is
+visible, the path continues north."
+extra {"torch"}
+"Torches are placed in the ground to provide light in the evenings."
+extra {"rocks","path"}
+"The path is made up of tiny crushed white rocks."
+extra {"trees"}
+"Large weeping willows provide shade from the sun."
+movement SECT_FIELD
+ALWAYS_LIGHT
+north to wpath_2 descr
+"The path continues to the north.";
+south to wcastle_1 descr
+"To the south you see a large courtyard.";
+end
+
+wpath_2
+title "A Path Around The Castle"
+names {"path"}
+descr
+"The path curves here, you can follow it south or east and torches line
+the path providing light for evening strollers. In the corner of
+the curve someone has planted a small rose garden. The roses are very
+beautiful but you notice they have tiny red spots marring the pure white
+of the rose. Weeping willows cover the path and the mournful swaying of
+their leaves seem to cry for some lost love."
+extra {"torch"}
+"Torches are placed in the ground to provide light in the evenings."
+extra {"weeping willow","willow"}
+"The weeping willows are large trees with branches that droop down over
+the path."
+extra {"rocks","path"}
+"The path is made up of tiny crushed white rocks."
+extra {"trees"}
+"Large weeping willows provide shade from the sun."
+extra {"rose garden","roses","rose"}
+"The rose garden has pure white roses growing in it, each rose however is
+touched by a blood droplet, as if they morn for innocent death."
+movement SECT_FIELD
+ south to wpath_1 descr
+"The path continues south.";
+east to wpath_3 descr
+"The path continues to the east";
+end
+
+wpath_3
+title "Fountain"
+names {"fountain"}
+descr
+"The path opens up here to a large clearing. In the clearing is a
+fountain with a statue of a dove. The fountain is very large and has
+stone seats carved into it. Sitting on these seats you can feel a gentle
+spray of water as the wind gently lifts it and sprays it through the air.
+Oddly enough, for the beauty of this place very few people actually
+come here, maybe because although beautiful in every way, is filled with
+a grief so strong one can feel it. You notice a small plaque on one of
+the stone seats around the fountain."
+movement SECT_FIELD
+ALWAYS_LIGHT
+
+west to wpath_2 descr
+"The path continues to the west.";
+end
+
+
+
+wpath_4
+title "A Path Around The Castle"
+names {"path"}
+descr
+"The path, which is composed of crushed white rocks, leads along side the
+castle front. Trees provide shade from the scorching daytime sun for
+those whole stroll the path and torches  line the path to provide light
+for evening strollers. To the north a large courtyard is visible, the path
+continues south." extra {"rocks","path"}
+"The path is made up of tiny crushed white rocks."
+extra {"trees"}
+"Large weeping willows provide shade from the sun."
+movement SECT_FIELD
+ALWAYS_LIGHT
+extra {"torch"}
+"Torches are placed in the ground to provide light in the evenings."
+ south to wpath_5 descr
+"The path continues to the south.";
+north to wcastle_1 descr
+"To the north you see a large courtyard.";
+end
+
+wpath_5
+title "A Path Around The Castle"
+names {"path"}
+descr
+"The path curves here, you can follow it south or east. Weeping willows
+cover the path and the mournful swaying of their leaves seem to cry for
+some lost love. You can follow the path north and east from here."
+extra {"rocks","path"}
+"The path is made up of tiny crushed white rocks."
+extra {"weeping willow","willow"}
+"The weeping willows are large trees with branches that droop down over
+the path."
+extra {"trees"}
+"Large weeping willows provide shade from the sun."
+movement SECT_FIELD
+ALWAYS_LIGHT
+north to wpath_4 descr
+"The path continues north.";
+east to wpath_6 descr
+"The path continues to the east";
+end
+
+wpath_6
+title "Royal Gardens"
+names {"gardens"}
+descr
+"The royal gardens are kept up with the utmost pride. A multitude of
+spectacular flowers shine forth, their spray of colors trying to add some
+gaiety to the bleak, bleary world of war and destruction. Benches
+around the gardens provide places for people to sit under the weeping
+willows that provide a shady respite from the blazing sun. In the middle
+of the gardens is a small pond, stocked with silver and gold fish that
+glimmer when the sun hits them in the right way. The path leads back to
+the west or you can follow it to the stables to the east."
+ALWAYS_LIGHT
+extra {"flowers"}
+"The flowers are available in a multitude of colors."
+extra {"pond"}
+"A small pond well stocked with silver and gold fish."
+extra {"weeping willow","willow"}
+"The weeping willows are large trees with branches that droop down over
+the path."
+extra {"silver fish","gold fish","fish"}
+"The fish are very large and shimmer  when the sun hits them."
+extra {"trees"}
+"Weeping willows provide shade for the area."
+west to wpath_5 descr
+"The path leads to the west.";
+east to wpath_7 descr
+"The path leads to the east.";
+movement SECT_FIELD
+end
+
+
+
+wpath_7
+title "A Path Around The Castle"
+names {"path"}
+descr
+"The path, which is composed of crushed white rocks, leads along side the
+side of the castle. Trees provide shade from the scorching daytime sun for
+those whole stroll the path and torches  line the path to provide light
+for evening strollers. To the west is a large garden and pond, to the
+east a stable."
+extra {"rocks","path"}
+"The path is made up of tiny crushed white rocks."
+extra {"trees"}
+"Large weeping willows provide shade from the sun."
+movement SECT_FIELD
+ALWAYS_LIGHT
+extra {"torch"}
+"Torches are placed in the ground to provide light in the evenings."
+ west to wpath_6 descr
+"The path continues to the west.";
+east to wout_stable descr
+"You see a stable to the east.";
+south to wpath_8 descr
+"The path continues to the south.";
+end
+
+
+wpath_8
+title "A Path Around The Castle"
+names {"path"}
+descr
+"The path, which is composed of crushed white rocks, leads along side the
+side of the castle. Trees provide shade from the scorching daytime sun for
+those whole stroll the path and torches  line the path to provide light
+for evening strollers. The path leads north and south from here."
+extra {"rocks","path"}
+"The path is made up of tiny crushed white rocks."
+extra {"trees"}
+"Large weeping willows provide shade from the sun."
+movement SECT_FIELD
+ALWAYS_LIGHT
+extra {"torch"}
+"Torches are placed in the ground to provide light in the evenings."
+north to wpath_7 descr
+"The path continues to the west.";
+south to wpath_9 descr
+"The path continues to the south.";
+end
+
+wpath_9
+title "A Path Around The Castle"
+names {"path"}
+descr
+"The path, which is composed of crushed white rocks, leads along side the
+side of the castle. Trees provide shade from the scorching daytime sun for
+those whole stroll the path and torches  line the path to provide light
+for evening strollers. The path leads off to the north and a square is to
+the south."
+extra {"rocks","path"}
+"The path is made up of tiny crushed white rocks."
+extra {"trees"}
+"Large weeping willows provide shade from the sun."
+movement SECT_FIELD
+ALWAYS_LIGHT
+extra {"torch"}
+"Torches are placed in the ground to provide light in the evenings."
+ north to wpath_8 descr
+"The path continues to the north.";
+south to went_square descr
+"You see a square ahead.";
+end
+
+went_square
+title "Path Before The Square"
+names {"path"}
+descr
+"Two paths meet here and lead on as one to the square. A large building
+to the east is the stables with many fine riding animals. To the north a
+path leads off on a nice quiet walkway and to the west a small square
+provides the necessities of life to the people who live within the castle
+walls."
+movement SECT_FIELD
+ALWAYS_LIGHT
+extra {"path"}
+"Just an ordinary path of crushed white rock."
+north to wpath_9 descr
+"The path continues to the north.";
+east to wout_stable2 descr
+"You see the stables to the east.";
+west to wsquare_se descr
+"You see the square to the west.";
+end
+
+
+wout_stable
+title "Out Side A Stable"
+names {"stable"}
+descr
+"A huge building to the east is obviously the royal stables. Neighs can
+be heard as horses talk to each other. Surprisingly the smell here is not
+as bad as one would expect. You  may enter the stables to the south or
+follow the path back to the west."
+extra {"stable"}
+"A large building"
+west to wpath_7 descr
+"The path continues to the west.";
+south to wstable_1 descr
+"The stables are to the south.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+wout_stable2
+title "Castle Yards"
+names {"stables"}
+descr
+"The royal stables are to the east and a large square that is the center
+of life in the castle is to the west.  On the ground is a huge pile of
+hay, looking up you see the hay loft above you."
+extra {"hay"}
+"The hay is in a huge pile and has been thrown down from the loft to feed
+the horses."
+east to wstable_4 descr
+"The stables are to the east.";
+west to went_square descr
+"A square is to the west.";
+end
+
+wstable_1
+title "White Castle Stables"
+names {"stables"}
+descr
+"The stables are clean and well kept. There is none of that 'barnyard'
+smell one has come to expect from a barn. Bales of hay are stacked neatly
+along the walls. To the east is a tack room and to the west is the home
+of the stable boy. Further to the south you can see some stalls."
+extra {"hay"}
+"The bales of hay are stacked neatly along the wall"
+east to wtack_room descr
+"You see a tack room to the east.";
+west to wstable_3 descr
+"The the west you see a living area of sorts.";
+north to wout_stable descr
+"The door to the north leads out of the stables.";
+south to wstable_2 descr
+"You see stalls to the south.";
+up to whay_loft descr
+"You see a hay loft above you";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+wstable_2
+title "White Castle Stables"
+names {"stables"}
+descr
+"Stalls are to the east and west from here. Bales of hay line the walls
+and the stables continue to the south and north."
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+west to wstall_1 descr
+"A stall"
+open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"stall door","door"};
+east to wstall_2 descr
+"A stall"
+open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"stall door","door"};
+south to wstable_4 descr
+"The stable continues to the south.";
+north to wstable_1 descr
+"You see the stable entrances.";
+end
+
+wstable_3
+title "Stable Boy's Home"
+names {"stable"}
+descr
+"This room is were the stable boy lives. A single bed takes up most of
+this small room. A small wood heater provides warmth for the cold
+nights."
+extra {"bed"}
+"A small comfortable looking bed."
+extra {"wood heater"}
+"a small stove"
+east to wstable_1 descr
+"The entrance of the stables is to the east.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+
+wstable_4
+title "White Castle Stables"
+names {"stables"}
+descr
+"Bales of hay line the south wall, You see a half door which leads
+into a stall to the east. You may leave to the north or west."
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+east to wstall_3 descr
+"A stall"
+open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"stall door","door"};
+west to wout_stable2 descr
+"The door leads out of the stable.";
+north to wstable_2 descr
+"The stables continue to the north.";
+end
+
+
+wtack_room
+title "Tack Room"
+names {"tack room"}
+descr
+"The tack room  has every imaginable type of tack perfectly cleaned and
+hanging neatly on the wall. Saddles are stacked along one wall, all oiled
+to a gleaming shine. There is a bench for riders to sit on while they
+prepare for their ride. One end of the room has every imaginable barding
+available for the horses that go to battle. The door leads out to the west."
+extra {"saddles"}
+"Saddles for the horses are stacked neatly against one wall."
+extra {"bench"}
+"A fairly uncomfortable looking bench."
+extra {"barding"}
+"The armor for the mounts comes in all manor of materials including
+padded barding, leather barding, scale barding, ring barding, chain
+barding, splint barding, and of corpse for the royal riders full plate
+barding to name just a few."
+extra {"tack"}
+"Harnesses, bits, reins, stirrups and more hang neatly on the walls."
+west to wstable_1 descr
+"The entrance to the stables is to the west.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+wstall_1
+title "In A Stall"
+names {"stall"}
+descr
+"You are standing in a large stall. The floor is covered with clean straw
+and a water trough. The door to the east is a half door that allows the
+horse to look out into the stables."
+extra {"straw"}
+"clean straw provides a comfortable carpeting  on the floor."
+extra {"water trough"}
+"A water trough provides clean water for the horse."
+east to wstable_2 descr
+"You can leave the stall to the east."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"stall door","door"};
+open {EX_OPEN_CLOSE, EX_CLOSED}
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+wstall_2
+title "In A Stall"
+names {"stall"}
+descr
+"You are standing in a large stall. The floor is covered with clean straw
+and a water trough. The door to the west is a half door that allows the
+horse to look out into the stables."
+extra {"straw"}
+"clean straw provides a comfortable carpeting  on the floor."
+extra {"water trough"}
+"A water trough provides clean water for the horse."
+west to wstable_2 descr
+"You can leave the stall to the west."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"stall door","door"};
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+wstall_3
+title "In A Stall"
+names {"stall"}
+descr
+"You are standing in a large stall. The floor is covered with clean straw
+and a water trough. The door to the north is a half door that allows the
+horse to look out into the stables."
+extra {"straw"}
+"clean straw provides a comfortable carpeting  on the floor."
+extra {"water trough"}
+"A water trough provides clean water for the horse."
+west to wstable_4 descr
+"You can leave the stall to the north."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"stall door","door"};
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+whay_loft
+title "A Hay Loft"
+names {"hay loft"}
+descr
+"The hay loft is a large room the size of the entire barn. There is hay
+piled all over the place and you hear a faint rustling making you think
+there must be some small creature that has made its home up here. The
+south end of the hay loft opens up so that the hay can be thrown out to
+the ground below. Looking down you notice a large pile of hay below you."
+extra {"hay"}
+"The hay is all over and takes up a large majority of the room. Looking
+out the end of the hay loft you notice a pile of hay on the ground."
+down to wstable_1 descr
+"You see the main floor of the stables below you.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+
+
+dilbegin jump(); var
+        pc : unitptr;
+        pc_name : string;
+
+code
+{
+
+:init:
+heartbeat := PULSE_SEC*5;
+
+:start:
+       wait(SFB_CMD, (command("jump")) );
+        block;
+        pc := activator;
+        secure(pc,losthim);
+     {
+      act("You jump out the opening at the end of the loft and aim for "+
+      "the hay pile below."
+      ,A_SOMEONE,pc,null,null,TO_CHAR);
+     act("$1n jumps out the opening at the end of the loft to the pile "+
+     "of hay below",
+      A_SOMEONE,pc,null,null,TO_REST);
+      pause;
+      act("WWWWWWWWEEEEEEEEEEEEEEEEEE."
+      ,A_SOMEONE,pc,null,null,TO_CHAR);
+
+      pause;
+      act("You land safety in the pile of hay."
+      ,A_SOMEONE,pc,null,null,TO_CHAR);
+      link(pc, findroom("wout_stable2@wcastle"));
+      exec("look",pc);
+      pause;
+      unsecure(pc);
+      goto start;
+      }
+
+
+
+:losthim:
+goto start;
+}
+dilend
+
+end
+
+wsquare_se
+title "White Castle Square"
+names {"square"}
+descr
+"The square is very large and has most of the stuff one would need to
+live within the castle walls. To the south you see a large building that
+looks like it may house soldiers. The square continues to the north and
+west."
+south to wbunk1 descr
+"You see the bunk house to the south.";
+north to wsquare_ne descr
+"The square continues north.";
+west to wsquare_sw descr
+"The square continues to the west.";
+east to went_square descr
+"You see the entrance to the square to the east.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+wsquare_sw
+title "White Castle Square"
+names {"square"}
+descr
+"The square is very large and has most of the stuff one would need to
+live within the castle walls. To the south is the castle store house and
+to the west is another bunk house."
+west to wbunk2 descr
+"You see the bunk house to the west.";
+north to wsquare_nw descr
+"The square continues north.";
+east to wsquare_se descr
+"The square continues to the east.";
+south to wstores descr
+"The store house is to the south.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+wsquare_ne
+title "White Castle Square"
+names {"square"}
+descr
+"The square is very large and has most of the stuff one would need to
+live within the castle walls. The blacksmith is to the north and the
+square continues to the south and west"
+south to wsquare_se descr
+"The square continues to the south.";
+north to wblacksmith descr
+"The blacksmith is to the north.";
+west to wsquare_nw descr
+"The square continues to the west.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+wsquare_nw
+title "White Castle Square"
+names {"square"}
+descr
+"The square is very large and has most of the stuff one would need to
+live within the castle walls. To the north is an armorer shop and a food
+store is to the west."
+south to wsquare_sw descr
+"The square continues to the south.";
+north to warmor descr
+"The armorer is to the north.";
+east to wsquare_ne descr
+"The square continues to the east.";
+west to wfood descr
+"The food store is to the west.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+wstores
+title "White Stores Room"
+names {"stores"}
+descr
+"The stores room has everything needed to run the castle from blankets to
+plates and silverware. The goods here are not for sale to the general
+population and are only available to the people with in the castle walls."
+extra {"blankets"}
+"comfortable looking blankets."
+extra {"plates"}
+"A regular plate."
+extra {"silverware"}
+"Forks knives spoons"
+north to wsquare_sw descr
+"The square is to the north.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+wbunk1
+title "Bunk House"
+names {"bunk house"}
+descr
+"The bunk house is a large room with bunk beds 6 high to the ceiling.
+Between each set of bunks stands cubbies for those living in this hall to
+store personal items. In the center of the room is a long table that the
+residents use to do everything from gambling to just sitting around
+talking. A large pot bellied stove provided heat for the room when they
+remember to stoke  the fire. the square is to the north."
+extra {"bunks"}
+"The reach the ceiling 6 bunks high."
+extra {"stove"}
+"A pot bellied stove for heat."
+extra {"table"}
+"a long multi-purposed table."
+extra {"cubbies"}
+"Used to store personal items."
+north to wsquare_se descr
+"You see the square to the north.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+wbunk2
+title "Bunk House"
+names {"bunk house"}
+descr
+"The bunk house is a large room with bunk beds 6 high to the ceiling.
+Between each set of bunks stands cubbies for those living in this hall to
+store personal items. In the center of the room is a long table that the
+residents use to do everything from gambling to just sitting around
+talking. A large pot bellied stove provided heat for the room when they
+remember to stoke  the fire. the square is to the east."
+extra {"bunks"}
+"The reach the ceiling 6 bunks high."
+extra {"stove"}
+"A pot bellied stove for heat."
+extra {"table"}
+"a long multi-purposed table."
+extra {"cubbies"}
+"Used to store personal items."
+east to wsquare_sw descr
+"You see the square to the east.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+wfood
+title "White Food Store"
+names {"food"}
+descr
+"This is were the castle food stores are kept. It is exclusively for use
+by those living within the castle walls. Boxes of non-perishable foods
+line shelves to the ceiling."
+extra {"boxes"}
+"boxes are stacked to the ceiling."
+east to wsquare_nw descr
+"You see the square to the east.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+warmor
+title "White Armor"
+names {"Armor"}
+descr
+"The armor has suites of every kind of armor imaginable  ready to be
+given out at a moments notice. The shop however is for exclusive use by
+those from within the castle walls."
+extra {"armor"}
+"There is everything from leather to full plate armor ready to wear into
+battle."
+south to wsquare_nw descr
+"The square is to the south.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+wblacksmith
+title "White Blacksmith"
+names {"blacksmith"}
+descr
+"The blacksmith shop is kind of of sooty due to the hot fires that must be
+kept burning. Along the building you see a couple of horses tethered,
+patiently waiting for new horseshoes. The 'ting ting' of hammer hitting
+hot metal telling you that it is being worked on at this moment. There is
+all manor of metal objects hanging from the walls and ceiling but most of
+them you have no idea what they are. A huge Anvil sits in the center of
+the shop next to the fire. You can leave to the south."
+extra {"anvil"}
+"A huge metal anvil used to place the hot metal being pounded into shape on."
+extra {"horseshoe"}
+"wow you wish you could find a luck horse show."
+extra {"fire"}
+"The fire is kept burning extra hot with coals."
+extra {"objects"}
+"Some of them seem to be nails others you have no idea...they look like
+some sort of torture devices"
+south to wsquare_ne descr
+"The square continues to the south.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+
+
+
+
+
+wbot_stair
+title "Bottom Of The Stairs"
+names {"stairs"}
+descr
+"It is kind of dark and dreary down here. Torches hang on the walls
+giving off a low light due to the moisture in the air. There is a hall to
+the south."
+south to wbas_hall1 descr
+"A hall";
+up to wstair_2 descr
+"Stairs lead up";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+wbas_hall1
+title "A Hall"
+names {"hall"}
+descr
+"The hall runs east to west from here. Torches hang on the walls to
+provide what little light is down here. Listening very closely you hear
+what sounds like rats or mice running around probably sharing the cells
+with the prisoners."
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+east to wbas_hall3 descr
+"The hall continues to the east.";
+west to wbas_hall2 descr
+"The hall continues to the west.";
+north to wbot_stair descr
+"There are stairs to the north.";
+end
+
+
+wbas_hall2
+title "A Hall"
+names {"hall"}
+descr
+"The hall runs east from here. Torches hang on the walls to
+provide what little light is down here. Listening very closely you hear
+what sounds like rats or mice running around probably sharing the cells
+with the prisoners."
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+north to wcell_1 descr
+"You see a cell to the north."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"cell door","door"};
+
+west to wcell_2 descr
+"You see a cell to the west."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"cell door","door"};
+
+east to wbas_hall1 descr
+"The hall continues to the east.";
+/*south to wtort_1 descr
+"A torture chamber is to the south.";*/
+end
+
+wbas_hall3
+title "A Hall"
+names {"hall"}
+descr
+"The hall runs north and west from here. Torches hang on the walls to
+provide what little light is down here. Listening very closely you hear
+what sounds like rats or mice running around probably sharing the cells
+with the prisoners."
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+south to wcell_3 descr
+"You see a cell to the south."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"cell door","door"};
+
+west to wbas_hall1 descr
+"The hall continues to the west.";
+north to wbas_hall4 descr
+"The hall continues to the north.";
+east to wcell_4 descr
+"You see a cell to the east."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"cell door","door"};
+
+end
+
+wbas_hall4
+title "A Hall"
+names {"hall"}
+descr
+"The hall runs to the south from here. Torches hang on the walls to
+provide what little light is down here. Listening very closely you hear
+what sounds like rats or mice running around probably sharing the cells
+with the prisoners."
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+north to wcell_6 descr
+"You see a cell to the north"
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"cell door","door"};
+
+east to wcell_5 descr
+"You see a cell to the east."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"cell door","door"};
+
+west to wcell_7 descr
+"You see a cell to the west."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"cell door","door"};
+south to wbas_hall3 descr
+"The hall continues to the south.";
+end
+
+wcell_1
+title "A Dirty Cell"
+names {"cell"}
+descr
+"The cell is small and dirty with filthy straw on the floor. The prisoners
+live in their own feces with the rats and mice. Light filters in from
+the hall to show scratching some prisoner has made at some time."
+extra {"scratching","markings"}
+"H#LP #E! #h #OD ##LP M#!"
+extra {"straw"}
+"The straw is  dirty and blood stained amongst other things."
+extra {"feces"}
+"Shit what did you think  it was?"
+south to wbas_hall2 descr
+"The hall is to the south."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"cell door","door"};
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+
+end
+
+wcell_2
+title "A Dirty Cell"
+names {"cell"}
+descr
+"The cell is small and dirty with filthy straw on the floor. The prisoners
+live in their own feces with the rats and mice. Light filters in from
+the hall to show scratching some prisoner has made at some time."
+extra {"scratching","markings"}
+"Mine King will free me"
+extra {"straw"}
+"The straw is  dirty and blood stained amongst other things."
+extra {"feces"}
+"Shit what did you think  it was?"
+east to wbas_hall2 descr
+"The hall is to the east."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"cell door","door"};
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+
+end
+
+wcell_3
+title "A Dirty Cell"
+names {"cell"}
+descr
+"The cell is small and dirty with filthy straw on the floor. The prisoners
+live in their own feces with the rats and mice. Light filters in from
+the hall to show scratching some prisoner has made at some time."
+extra {"scratching","markings"}
+"Freedom comes to those who survive."
+extra {"straw"}
+"The straw is  dirty and blood stained amongst other things."
+extra {"feces"}
+"Shit what did you think  it was?"
+north to wbas_hall3 descr
+"The hall is to the north."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"cell door","door"};
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+wcell_4
+title "A Dirty Cell"
+names {"cell"}
+descr
+"The cell is small and dirty with filthy straw on the floor. The prisoners
+live in their own feces with the rats and mice. Light filters in from
+the hall to show scratching some prisoner has made at some time."
+extra {"scratching","markings"}
+"H#LP"
+extra {"straw"}
+"The straw is  dirty and blood stained amongst other things."
+extra {"feces"}
+"Shit what did you think  it was?"
+west to wbas_hall3 descr
+"The hall is to the west."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"cell door","door"};
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+
+end
+
+wcell_5
+title "A Dirty Cell"
+names {"cell"}
+descr
+"The cell is small and dirty with filthy straw on the floor. The prisoners
+live in their own feces with the rats and mice. Light filters in from
+the hall to show scratching some prisoner has made at some time on the
+all ready cracked walls."
+extra {"scratching","markings"}
+"H#LP #E! #h #OD ##LP M#!"
+extra {"straw"}
+"The straw is  dirty and blood stained amongst other things."
+extra {"feces"}
+"Shit what did you think  it was?"
+west to wbas_hall4 descr
+"The hall is to the west."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"cell door","door"};
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+
+end
+
+
+
+wcell_6
+title "A Dirty Cell"
+names {"cell"}
+descr
+"The cell is small and dirty with filthy straw on the floor. The prisoners
+live in their own feces with the rats and mice. Light filters in from
+the hall to show scratching some prisoner has made at some time."
+extra {"scratching","markings"}
+"3789 days"
+extra {"straw"}
+"The straw is  dirty and blood stained amongst other things."
+extra {"feces"}
+"Shit what did you think  it was?"
+south to wbas_hall4 descr
+"The hall is to the south."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"cell door","door"};
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+
+end
+
+
+wcell_7
+title "A Dirty Cell"
+names {"cell"}
+descr
+"The cell is small and dirty with filthy straw on the floor. The prisoners
+live in their own feces with the rats and mice. Light filters in from
+the hall to show scratching some prisoner has made at some time."
+extra {"scratching","markings"}
+"GOD #ELP M#!"
+extra {"straw"}
+"The straw is  dirty and blood stained amongst other things."
+extra {"feces"}
+"Shit what did you think  it was?"
+east to wbas_hall4 descr
+"The hall is to the east."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"cell door","door"};
+
+
+
+
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+
+wbottom_1
+title "Bottom Of The Stairs"
+names {"stairs","bottom"}
+descr
+"You are standing at the bottom of a flight of stairs. The air down here
+is old and stale with a definite dampness. You can follow the
+passage to the north or go up the stairs."
+north to wpassage_3 descr
+"The passage continues  to the north.";
+up to wtower_1 descr
+"Stairs lead upward.";
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+end
+
+wbottom_2
+title "Bottom Of The Stairs"
+names {"stairs","bottom"}
+descr
+"You are standing at the bottom of a flight of stairs. The air down here
+is old and stale with a definite dampness. You can follow the
+passage to the south or go up the stairs."
+south to wpassage_5 descr
+"The passage continues  to the south.";
+up to wtower_2 descr
+"Stairs lead upward.";
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+end
+
+
+ wpassage_1
+title "A Dark Passage."
+names {"passage"}
+descr
+"You are in a dark passage way inside the castle wall. The air is stale
+and seems to just hang there. You hear a rat scurry by and think it may
+be a good idea to leave quickly."
+east to wmoat_7@forest descr
+"The crack in the wall seems to lead to a passage."
+         open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+         keyword {"crack","door","wall"};
+         SECRET_DOOR_DIFFICULTY(EAST,40)
+south to wpassage_2 descr
+"The passage continues to the south.";
+north to wpassage_4 descr
+"The passage continues to the north.";
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+end
+
+wpassage_2
+title "A Dark Passage"
+names {"passage"}
+descr
+"The passage way is dark, dreary and damp. The sounds of some rodents out
+looking for supper offer little comfort to those who pass by this way.
+You may continue to the north or south."
+north to wpassage_1 descr
+"The passage continues to the north.";
+south to wpassage_3 descr
+"The passage continues to the south.";
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+end
+
+wpassage_3
+title "A Dark Passage"
+names {"passage"}
+descr
+"The passage way is dark, dreary and damp. The sounds of some rodents out
+looking for supper offer little comfort to those who pass by this way.
+You may continue to the north or south."
+north to wpassage_2 descr
+"The passage continues to the north.";
+south to wbottom_1 descr
+"The passage continues to the south.";
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+end
+
+wpassage_4
+title "A Dark Passage"
+names {"passage"}
+descr
+"The passage way is dark, dreary and damp. The sounds of some rodents out
+looking for supper offer little comfort to those who pass by this way.
+You may continue to the north or south."
+north to wpassage_5 descr
+"The passage continues to the north.";
+south to wpassage_1 descr
+"The passage continues to the south.";
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+end
+
+wpassage_5
+title "A Dark Passage"
+names {"passage"}
+descr
+"The passage way is dark, dreary and damp. The sounds of some rodents out
+looking for supper offer little comfort to those who pass by this way.
+You may continue to the north or south."
+north to wbottom_2 descr
+"The passage continues to the north.";
+south to wpassage_4 descr
+"The passage continues to the south.";
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+end
+
+
+%mobiles
+
+/*---------------------White Mobs-------------------*/
+king
+title "the White King"
+names {"white king","white","king"}
+descr "The white king is sitting on his throne."
+extra {}
+"The kings is a very regal looking man with a kind face and few extra
+pounds, he obviously likes to eat well."
+M_HUMAN_MAGE_MIND(50,SEX_MALE, "colourbeam")
+MSET_ABILITY( 20, 20, 3, 20, 15, 2, 20, 0)
+
+alignment 1000
+special SFUN_RESCUE "guard/queen"
+special SFUN_TEAMWORK "guard/queen"
+WHITE_ARMY
+end
+
+queen
+title "the White Queen"
+names {"white queen","queen","white"}
+descr "The White Queen is sitting on her throne."
+extra {}
+"The queen is a regal looking woman with flowing white gown and cape and
+a spectacular crown of sparkling white gems"
+M_HUMAN_MAGE_FIRE(50, SEX_FEMALE,"fireball" )
+MSET_ABILITY( 20, 20, 3, 20, 15, 2, 20, 0)
+special SFUN_RESCUE "guard/king"
+special SFUN_TEAMWORK "guard/king"
+WHITE_ARMY
+alignment 1000
+end
+
+guard1
+title "a White Castle Guard"
+names {"castle guard","guard"}
+descr "A white castle guard is standing here."
+extra {}
+"The guard is a very large man with an impressive set of armor. He looks
+like he would lay down his very life to protect the castle from harm."
+M_HUMAN_WARRIOR_SWORD(50,SEX_MALE)
+special SFUN_RANDOM_ZONE_MOVE time 80 bits SFB_RANTIME
+special SFUN_RESCUE "king/queen"
+special SFUN_TEAMWORK "king/queen"
+WHITE_ARMY
+alignment 1000
+
+end
+
+
+
+horse
+title "a White Stallion"
+names {"stallion","white"}
+descr "A white stallion is pawing the ground."
+extra {}
+"The most magnificent looking horse you have ever seen. It is well over
+20 hands tall with a pure white mane and tail. It dances in place because
+it has so much pent up energy it cant stay still. It would take a very
+skilled rider to handle such a horse."
+special SFUN_RANDOM_ZONE_MOVE time 80 bits SFB_RANTIME
+M_HORSE_HEAVY(SEX_MALE)
+level 45
+alignment 1000
+end
+
+
+mare
+title "a White Mare"
+names {"mare","white"}
+descr "A white mare is standing here."
+extra {}
+"The mare is a fair size but looks to be very calm. She is a beautiful
+white color with no marks to mar her coat."
+M_HORSE_MEDIUM(SEX_FEMALE)
+special SFUN_RANDOM_ZONE_MOVE time 80 bits SFB_RANTIME
+level 40
+alignment 1000
+end
+
+dancer
+title "a Dancer"
+names {"dancer"}
+descr "A woman is here practicing her dance steps."
+extra {}
+"In a long white gown the woman seems to float around the room."
+M_HUMAN_WARRIOR_NATURAL(41, SEX_FEMALE)
+WHITE_ARMY
+alignment 1000
+end
+
+citizen1
+title "Darshevia"
+names {"darshevia","woman"}
+descr "Darshevia is standing here."
+extra {}
+"Darshevia is a very pretty member of the white court."
+M_HUMAN_WARRIOR_SWORD(39, SEX_FEMALE)
+WHITE_ARMY
+alignment 1000
+end
+
+citizen2
+title "Drasnia"
+names {"drasnia","woman"}
+descr "Drasnia is sitting here waiting for a visitor."
+extra {}
+"A very pretty woman, quite petite with flowing long golden hair."
+M_HUMAN_WARRIOR_SWORD(39, SEX_FEMALE)
+WHITE_ARMY
+alignment 1000
+end
+
+citizen3
+title "Farnof"
+names {"farnof","man"}
+descr "Farnof is standing here."
+extra {}
+"Farnof is very obviously of the courts nobility. his hands are smooth as
+a babies bottom."
+M_HUMAN_WARRIOR_SWORD(39, SEX_MALE)
+WHITE_ARMY
+alignment 1000
+end
+
+citizen4
+title "Lasnoff"
+names {"lasnoff","man"}
+descr "Lasnoff is standing here."
+M_HUMAN_WARRIOR_SWORD(39, SEX_MALE)
+WHITE_ARMY
+alignment 1000
+end
+
+
+citizen5
+title "Leandra"
+names {"leandra"}
+descr "Leandra is sitting here with her stockings down about her knees."
+extra {}
+"Leandra looks like she really does not want to be disturbed right now.
+She is using the water closet"
+M_HUMAN_WARRIOR_CLUB(39, SEX_FEMALE)
+alignment 1000
+
+dilbegin prg2();
+var
+        pc : unitptr;
+code
+{
+        heartbeat := PULSE_SEC * 7;
+        interrupt(SFB_COM, self.position == POSITION_FIGHTING, combat);
+
+        :start:
+   wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and (self.position
+!= POSITION_FIGHTING)));
+        pc := activator;
+        secure(pc, lost);
+         exec("scream",self);
+         pause;
+         exec("say How dare you come in when I am using the "+
+         "facilities?!?!?!?", self);
+         pause;
+         exec("say get out!",self);
+         pause;
+         exec("say I said get out NOW!",self);
+         pause;
+         exec("shout " +pc.name+ " is a sicko pervert!",self);
+         pause;
+         exec("emote screams 'GUAAAAAAAAAAAAAAAAAARDS!!!!!!!!!!!!'",self);
+         pause;
+         exec("emote stands up as she pulls up her stockings.",self);
+         pause;
+         exec("emote reaches over and grabs the shit packer that is "+
+         "leaning against the wall.",self);
+         pause;
+         exec("wield packer",self);
+         pause;
+         exec("kill "+pc.name, self);
+         unsecure(pc);
+         goto start;
+
+        :lost:
+        pause;
+        unsecure(pc);
+        goto start;
+
+        :combat:
+        exec("emote screams 'MASHER!'",self);
+        goto start;
+}
+dilend
+end
+
+
+
+smith
+title "Drenik"
+names {"blacksmith","drenik","smith"}
+descr "Drenik is standing here"
+extra {}
+"Drenik is a very large man, strong from many years of lifting heavy
+weapons."
+WHITE_ARMY
+
+alignment 1000
+M_HUMAN_WARRIOR_NATURAL(35, SEX_MALE)
+special SFUN_SHOP_INIT
+"Profit sell = 180
+Profit buy = 35
+Production = ~dagger@wcastle~ ~short_sword@wcastle~ ~guard_sword@wcastle~
+  ~sword0@midgaard~ ~lsword0@midgaard~ ~ham0@midgaard~
+  ~flail1@midgaard~ ~spear0@midgaard~
+
+Trade types = "+ITEM_WEAPON+ITEM_FIREWEAPON+"
+Msg1 = ~$1n says, 'I've got no such weapon.'~
+Msg2 = ~$1n says, '$3n, you haven't even got such a weapon!'~
+Msg3 = ~$1n says, 'I don't trade with things such as $2n'~
+Msg4 = ~$1n says, 'I can't afford that great weapon, sorry!'~
+Msg5 = ~$1n says, '$3n, you can't afford this fabulous $2n'~
+Msg6 = ~$1n says, 'That's %s for $2n'~
+Msg7 = ~$1n says, 'You get %s for $2n, you blood sucker.'~
+Hours1 = 6 12
+Hours2 = 13 23"
+end
+
+
+groc
+title "Tilley"
+names {"tilley"}
+descr "Tilley is standing here."
+extra {}
+"Tilley is a no-nonsense type person who can tell you were everything is
+right down to the the last bag of flour."
+M_HUMAN_WARRIOR_NATURAL(30, SEX_FEMALE)
+alignment 1000
+special SFUN_SHOP_INIT
+"Profit sell = 180
+Profit buy = 35
+Production = ~beef@blcastle~ ~pork@bLcastle~ ~chicken@blcastle~
+~pot_pie@blcastle~ ~bread@blcastle~
+Trade types = "+ITEM_DRINKCON+ITEM_FOOD+"
+Msg1 = ~$1n says, 'I've got no such item.'~
+Msg2 = ~$1n says, 'Why you haven't got it, $3n?'~
+Msg3 = ~$1n says, 'Would you like to buy something or not?'~
+Msg4 = ~$1n says, 'I wont buy that!'~
+Msg5 = ~$1n says, 'This item $2n is too expensive for beggars like you,
+$3n.'~
+Msg6 = ~$1n says, 'That's %s for $2n.'~
+Msg7 = ~$1n says, 'That will be %s for your $2n.'~
+Hours1 = 4 10
+Hours2 = 11 23"
+WHITE_ARMY
+end
+
+gen
+title "Harnot"
+names {"harnot"}
+descr "Harnot is standing here."
+extra {}
+"Harnot is a older man and seems to be very helpful."
+M_HUMAN_WARRIOR_NATURAL(35, SEX_MALE)
+alignment 1000
+special SFUN_SHOP_INIT
+"Profit sell = 180
+Profit buy = 70
+Production = ~belt_bag@wcastle~  ~dictionary@basis~
+~torch@midgaard~ ~lantern@midgaard~ ~bag@midgaard~
+~paper@midgaard~ ~quill@midgaard~
+
+Trade types = "+ITEM_LIGHT + ITEM_OTHER + ITEM_CONTAINER + ITEM_NOTE +
+ ITEM_DRINKCON + ITEM_KEY + ITEM_PEN+"
+Msg1 = ~$1n says, 'I've got no such item!'~
+Msg2 = ~$1n says, '$3n, you haven't even got it!'~
+Msg3 = ~$1n says, 'I don't trade with things such as $2n'~
+Msg4 = ~$1n says, 'I can't afford it, sorry!'~
+Msg5 = ~$1n says, '$3n, you can't afford $2n'~
+Msg6 = ~$1n says, 'That's %s for $2n'~
+Msg7 = ~$1n says, 'Thank you $3n, here are %s for $2n.'~
+Hours1 = 6 12
+Hours2 = 13 23"
+WHITE_ARMY
+end
+
+arm
+title "Lantof"
+names {"lantof","armoror"}
+descr "Lantof is here checking over his armor."
+extra {}
+"An man with extraordinarily big arms, built up form year after year of
+working with heavy armor."
+M_HUMAN_WARRIOR_NATURAL(35, SEX_MALE)
+alignment 1000
+special SFUN_SHOP_INIT
+"Profit sell = 180
+Profit buy = 30
+Production = ~linnen_trousers@wcastle~ ~linnen_shirt@wcastle~
+   ~sandals@wcastle~ ~plain_dress@wcastle~ ~lady_gloves@wcastle~
+   ~belt_bag@wcastle~ ~cannon@wcastle~ ~doublet@wcastle~
+   ~shoes@wcastle~
+
+Trade types = "+ITEM_ARMOR+ITEM_SHIELD+"
+Msg1 = ~$1n says, 'I've got no such item!'~
+Msg2 = ~$1n says, '$3n, you haven't even got it!'~
+Msg3 = ~$1n says, 'I don't trade with things such as $2n'~
+Msg4 = ~$1n says, 'I can't afford it, sorry!'~
+Msg5 = ~$1n says, '$3n, you can't afford $2n'~
+Msg6 = ~$1n says, 'That's %s for $2n'~
+Msg7 = ~$1n says, 'Thank you $3n, here are %s for $2n.'~
+Hours1 = 6 12
+Hours2 = 13 23"
+WHITE_ARMY
+end
+
+
+maid
+title "a Maid"
+names {"woman","maid","girl"}
+descr "A maid is here cleaning."
+extra {}
+"The maid is a small woman with a white uniform on."
+M_HUMAN_WARRIOR_NATURAL(30, SEX_FEMALE)
+alignment 1000
+special SFUN_RANDOM_ZONE_MOVE time 80 bits SFB_RANTIME
+WHITE_ARMY
+alignment 1000
+end
+
+
+cook
+title "the White Castle Cook"
+names {"cook"}
+descr "The cook for the white castle is standing here."
+extra {}
+"The cook is a fairly plump man. It is obvious that he insists on
+tasting everything  that leaves his kitchen."
+M_HUMAN_WARRIOR_SWORD(40,SEX_MALE)
+alignment 1000
+end
+
+
+
+branik
+title "Branik"
+names {"branik"}
+descr "Branik is standing here tending to the tack."
+extra  {}
+"Branik is a large man, well able to toss around bails of hay when needed."
+M_HUMAN_WARRIOR_SWORD(37, SEX_MALE)
+WHITE_ARMY
+alignment 1000
+end
+
+
+guard
+title "a White Castle Guard"
+names {"castle guard","guard"}
+descr "A white castle guard is standing here."
+extra {}
+"The guard is a very large man with an impressive set of armor. He looks
+like he would lay down his very life to protect the castle from harm."
+M_HUMAN_WARRIOR_SWORD(50,SEX_MALE)
+special SFUN_RANDOM_ZONE_MOVE time 80 bits SFB_RANTIME
+WHITE_ARMY
+alignment 1000
+end
+
+%objects
+
+water_fountain
+names {"fountain", "water"}
+title "a fountain"
+descr "A fountain with a large statue is here."
+extra {}
+"The fountain has a statue of a large dove in the center of it. Stone
+seats encircle the falling water letting those who sit in them be sprayed
+lightly with water. A small plaque is on one of the stone seats"
+extra {"plaque"}
+"In loving memory of Lanairia"
+LIQ_DEF(LIQ_WATER, 20000, 20000, 20000, 0)
+end
+
+
+
+
+shit_packer
+title "a shit packer"
+names {"shit packer","shit","packer"}
+descr "A shit packer  is laying here."
+extra {}
+"The shit packer is a long pole with a round flat board at one end that
+is stained brown and smells fairly bad. It is used to pack down the
+crap in the outhouse."
+WEAPON_DEF(WPN_CLUB, 1,1)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+MATERIAL_WOOD("smelly wood")
+dilcopy packer@wcastle("stink@blcastle");
+
+dilbegin smell();
+code
+{
+        heartbeat := PULSE_SEC * 50;
+        :start:
+        pause;
+        if (self.equip == WEAR_WIELD)
+                exec("emote emits a strange odor...Phewwww", self.outside);
+        goto start;
+}
+dilend
+end
+short_sword
+title "a Short Sword"
+names {"short sword","short","sword"}
+descr "A short sword has been left here."
+extra {}
+"A plain short sword"
+WEAPON_DEF(WPN_SHORT_SWORD,1,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+weight 5
+MATERIAL_METAL("Sharp hard metal")
+cost 8 SILVER_PIECE
+end
+
+
+knife
+title "a butcher knife"
+names {"butcher knife","dagger"}
+descr "A butcher knife has been left here."
+extra {}
+"A cooks butcher knife, made to cut through bone."
+WEAPON_DEF(WPN_DAGGER,0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+weight 5
+MATERIAL_METAL("Sharp hard metal")
+cost 8 SILVER_PIECE
+WHITE_ARMOR
+end
+
+
+guard_sword
+title "a Bastard Sword"
+names {"bastard sword","sword"}
+descr "The hand and a half sword is laying here."
+WEAPON_DEF(WPN_LONG_SWORD,1,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+romflags OBJ_TWO_HANDS
+
+dilbegin two_handed ();
+var
+item:unitptr;
+code
+{
+:start:
+wait (SFB_CMD,((self.outside==activator) and
+(command (CMD_WIELD)) and
+((self.names.[0] in argument) or
+(self.names.[1] in argument)) and
+("two" in argument) and
+(self.equip==0)));
+block;
+item:=activator.inside;
+while (item!=null)
+{
+if ((item.equip==WEAR_WIELD) or (item.equip==WEAR_HOLD) or
+                (item.equip==WEAR_SHIELD)) goto fail;
+item:=item.next;
+ }
+
+addequip (self,WEAR_WIELD);
+     self.objectflags := OBJ_TWO_HANDS;
+
+act ("You wield your $2N two handedly.",
+A_ALWAYS,self.outside,self,null,TO_CHAR);
+act ("$1n wields his $2N two handedly",
+A_SOMEONE,self.outside,self,null,TO_REST);
+
+goto start;
+
+:fail:
+act ("You need two free hands to do that.",
+A_ALWAYS,self.outside,self,null,TO_CHAR);
+
+goto start;
+}
+dilend
+
+end
+
+
+
+
+
+dagger
+title "a dainty dagger"
+names {"dainty dagger","dagger"}
+descr "A tiny dagger has been left here."
+extra {}
+"A tiny dagger with emeralds set in the handle"
+WEAPON_DEF(WPN_DAGGER,0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+weight 5
+MATERIAL_METAL("Sharp hard metal")
+MATERIAL_STONE("emeralds")
+cost 8 SILVER_PIECE
+end
+
+
+royal_dagger
+title "a jewel encrusted dagger"
+names {"dagger"}
+descr "A small dagger encrusted with jewels has been left here."
+extra {}
+"A small dagger with all manor of jewels set in the handle"
+WEAPON_DEF(WPN_DAGGER,0,2)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+weight 5
+MATERIAL_METAL("Sharp hard metal")
+MATERIAL_STONE("all manor of gems")
+cost 5 PLATINUM_PIECE
+rent 75 IRON_PIECE
+DEX_TRANSFER(+3)
+dilcopy abi_restrict@function (ABIL_CHA,37,0,0,"");
+
+WHITE_ARMOR
+end
+
+
+/*-------------clothes & armor----------------*/
+chef_hat
+title "a Chef's Hat"
+names {"chefs hat","hat"}
+descr "A white chef's hat is laying here."
+extra {}
+"A large white hat in the shape of a mushroom."
+ARMOUR_CLOTHES(0,0)
+MATERIAL_CLOTH("cloth")
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_HEAD}
+weight 1
+WHITE_ARMOR
+cost 1 SILVER_PIECE
+end
+
+
+       linnen_trousers
+names {"trousers"}
+title "plain trousers"
+descr "A pair of plain trousers lies here in a heap."
+extra {}
+"Plain white linnen trousers."
+ARMOUR_CLOTHES(0,0)
+MATERIAL_CLOTH("cloth")
+WHITE_ARMOR
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_LEGS}
+weight 1
+cost 4 SILVER_PIECE
+end
+
+
+        linnen_shirt
+names {"shirt"}
+title "a plain shirt"
+descr "A plain shirt lies here."
+extra {}
+"A simple shirt of white linnen."
+ARMOUR_CLOTHES(0,0)
+MATERIAL_CLOTH("cloth")
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+weight 1
+cost 4 SILVER_PIECE
+WHITE_ARMOR
+end
+
+
+
+        sandals
+names {"sandals","shoes"}
+title "a pair of sandals"
+descr "A pair of sandals lies here."
+extra {}
+"A pair of sandals, the soles are made of hard leather."
+ARMOUR_LEATHER(0,0)
+MATERIAL_SKIN("soft leather")
+
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_FEET}
+weight 1
+cost 3 SILVER_PIECE
+end
+
+
+plain_dress
+names {"plain dress","dress","cloth"}
+title "a plain white dress"
+descr "A pile of cloth is laying here."
+extra {}
+"A simple dress of white linnen."
+ARMOUR_CLOTHES(0,0)
+MATERIAL_CLOTH("white cloth")
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+weight 4
+cost 4 SILVER_PIECE
+end
+
+
+dress
+names {"emerald green dress","green dress","dress","cloth"}
+title "an emerald green dress"
+descr "A pile of green cloth is laying here."
+extra {}
+"An emerald green dress."
+ARMOUR_CLOTHES(0,0)
+MATERIAL_CLOTH("green cloth")
+
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+weight 4
+cost 4 SILVER_PIECE
+end
+
+dress1
+names {"yellow dress","dress","cloth"}
+title "a yellow dress"
+descr "A pile of yellow cloth is laying here."
+extra {}
+"A yellow dress."
+MATERIAL_CLOTH("yellow cloth")
+
+ARMOUR_CLOTHES(0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+weight 4
+cost 4 SILVER_PIECE
+end
+
+dress2
+names {"blue dress","dress","cloth"}
+title "a blue dress"
+descr "A pile of blue cloth is laying here."
+extra {}
+"A blue dress."
+ARMOUR_CLOTHES(0,0)
+MATERIAL_CLOTH("blue cloth")
+
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+weight 4
+cost 4 SILVER_PIECE
+end
+
+
+queen_dress
+names {"royal red dress","red dress","dress","cloth"}
+title "a royal red dress"
+descr "A pile of red cloth is laying here."
+extra {}
+"A royal red dress, made from only the best materials."
+MATERIAL_CLOTH("red cloth")
+
+ARMOUR_CLOTHES(0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+weight 4
+cost 4 SILVER_PIECE
+WHITE_ARMOR
+end
+
+
+ball_dress
+names {"ball room dress","ball dress","dress","cloth"}
+title "a fancy white dress"
+descr "A pile of expensive looking cloth is laying here."
+extra {}
+"A fancy white dress with lace. It is has intricate designs beaded with
+tiny beads of pure silver and gold."
+ARMOUR_CLOTHES(0,0)
+MATERIAL_CLOTH("white cloth")
+MATERIAL_METAL("gold and silver beads")
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+weight 4
+cost 4 SILVER_PIECE
+end
+
+
+                     lady_gloves
+names{"gloves"}
+title "a white silk gloves"
+descr "A pair of white silk gloves is lying on the ground."
+extra {}
+"The gloves cover the arms up to the elbows and are made from white silk."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HANDS}
+ARMOUR_CLOTHES(0,0)
+MATERIAL_CLOTH("White Silk")
+weight 2
+cost 4 SILVER_PIECE
+WHITE_ARMOR
+end
+
+
+  stockings
+names {"stockings"}
+title "a Pair of stockings"
+descr "A pair of stockings lies here in a heap."
+extra {}
+"White silk stockings."
+ARMOUR_CLOTHES(0,0)
+MATERIAL_CLOTH("silk")
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_LEGS}
+weight 1
+cost 4 SILVER_PIECE
+end
+
+lady_cap
+title "a Ferronniere"
+names {"ferronniere","hat","cap"}
+descr "Some thin chains are laying here."
+extra {}
+"A thin chain worn across the forehead with a tiny red jewel in its
+center hold a chain cap on the head."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_HEAD}
+weight 4
+ARMOUR_CHAIN(0,0)
+MATERIAL_METAL("tiny chains")
+dilcopy abi_restrict@function (ABIL_CHA,37,0,0,"");
+
+rent 75 IRON_PIECE
+cost 1 PLATINUM_PIECE
+end
+
+earrings
+title "a Diamond Earring"
+names {"diamond earring","diamond","earring"}
+descr "A diamond is laying here glittering in the light."
+extra {}
+"The earring is very small and pretty"
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_EAR}
+weight 1
+MAG_TRANSFER (+1)
+MATERIAL_METAL("Gold")
+rent 1 COPPER_PIECE
+end
+
+belt_bag
+title "a Baldric"
+names {"baldric","belt","bag"}
+descr "A belt with a pouch is laying here."
+extra {}
+"The baldric is made from a white silk pouch attached to a belt woven
+with gold."
+cost 1 PLATINUM_PIECE
+weight 3
+MATERIAL_CLOTH("silk pouch")
+MATERIAL_CLOTH("white belt woven with gold")
+
+ARMOUR_CLOTHES(0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_CHEST,MANIPULATE_ENTER}
+CONTAINER_DEF (90)
+end
+
+cannon
+title "a pair of cannons"
+names {"cannons","pants"}
+descr "A pair of pants are laying here."
+extra {}
+"A pair of tight fitting pants that cover the legs down to the knee. They
+are embroidered with gold silk."
+MATERIAL_CLOTH("white cloth")
+ARMOUR_CLOTHES(0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_LEGS}
+end
+
+
+
+doublet
+names {"doublet"}
+title "a white doublet"
+descr "A pile of cloth is laying here."
+extra {}
+"The doublet is a shirt with buttons to fasten up the front. The buttons
+are made from silver and each have a small dove on them."
+ARMOUR_CLOTHES(0,0)
+MATERIAL_CLOTH("white cloth")
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+weight 4
+cost 4 GOLD_PIECE
+WHITE_ARMOR
+end
+
+        shoes
+names {"shoes"}
+title "a pair of shoes"
+descr "A pair of shoe lies here."
+extra {}
+"A pair of leather shoes with pointed toes that curl up."
+ARMOUR_LEATHER(0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_FEET}
+weight 1
+MATERIAL_SKIN("soft leather")
+cost 5 SILVER_PIECE
+end
+
+
+royal_robes
+title "a Royal Robe"
+names {"royal robe","white robe","robe"}
+descr "A white robe is laying here."
+extra {}
+"The robe is obviously made for royalty. It is pure white and richly
+embroidered with thread spun from real gold."
+ARMOUR_CLOTHES(0,0)
+dilcopy abi_restrict@function (ABIL_CHA,50,0,0,"");
+CHA_TRANSFER(+1)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+MATERIAL_CLOTH("white cloth")
+rent 98 IRON_PIECE
+cost 196 COPPER_PIECE
+WHITE_ARMOR
+end
+
+royal_hose
+names {"royal hose","hose"}
+title "Royal Hose"
+descr "A pair of  hose are laying here in a heap."
+extra {}
+"The hose are obviously meant for royalty. The were made with silver
+threads running through them."
+ARMOUR_CLOTHES(0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_LEGS}
+MATERIAL_CLOTH("made from cloth")
+MATERIAL_METAL("silver threads")
+weight 1
+cost 4 SILVER_PIECE
+WHITE_ARMOR
+end
+
+
+queen_crown
+title "the White Queen's Crown"
+names {"white crown","crown"}
+descr "A white crown is laying here."
+extra {}
+"The crown is made from pure gold and decorated elaborately with diamond,
+ruby's and other rare gems."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_HEAD}
+weight 10
+ARMOUR_PLATE(0,0)
+dilcopy level_restrict@function (37,0,0,"");
+rent 75 IRON_PIECE
+cost 10 PLATINUM_PIECE
+MATERIAL_METAL("Gold crown")
+MATERIAL_STONE("Various gems")
+WHITE_ARMOR
+end
+
+
+king_crown
+title "the White King's Crown"
+names {"white crown","crown"}
+descr "A white crown is laying here."
+extra {}
+"The crown is made from pure gold and decorated elaborately with diamond,
+ruby's and other rare gems."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_HEAD}
+weight 10
+ARMOUR_PLATE(0,0)
+dilcopy level_restrict@function (37,0,0,"");
+rent 75 IRON_PIECE
+cost 1 PLATINUM_PIECE
+MATERIAL_METAL("Gold crown")
+MATERIAL_STONE("Various gems")
+WHITE_ARMOR
+end
+
+
+scepter
+title "the Kings Scepter"
+names {"white scepter","kings scepter","scepter"}
+descr "The white kings scepter is laying here."
+extra {}
+"The scepter is very large and heavy looking. It is encrusted with jewels
+of every kind known to man. When the sun light hits it colors jump from
+it to bath everything that is close to it. It looks very heavy and only
+the strongest of warriors can lift it."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+dilcopy abi_restrict@function (ABIL_DEX,37,0,0,"");
+weight 50
+MATERIAL_METAL("heavy iron shaft")
+MATERIAL_STONE("Every gem stone known to man")
+WHITE_ARMOR
+end
+
+
+                guard_boots
+names{"boots"}
+title "a pair of white boots"
+descr "A pair white boots are lying on the ground."
+extra {}
+"The boots are made from white rings."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+ARMOUR_CHAIN(0,0)
+MATERIAL_METAL("White rings")
+weight 5
+cost 8 SILVER_PIECE
+WHITE_ARMOR
+end
+
+
+
+	          guard_leggings
+names{"leggings"}
+title "a pair of white leggings"
+descr "A pair of white leggings is lying on the ground."
+extra {}
+"The leggings are made from white rings."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+ARMOUR_CHAIN(0,0)
+MATERIAL_METAL("White rings")
+weight 7
+cost 8 SILVER_PIECE
+WHITE_ARMOR
+end
+
+         guard_bplate
+names{"breast plate","breastplate","plate"}
+title "a white breast plate"
+descr "A breast plate is lying on the ground."
+extra {}
+"The breast plate is made from white rings ."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_CHAIN(0,0)
+MATERIAL_METAL("White rings")
+weight 10
+cost 8 SILVER_PIECE
+WHITE_ARMOR
+end
+
+                      guard_gloves
+names{"gloves"}
+title "a pair of white gloves"
+descr "A pair of white gloves is lying on the ground."
+extra {}
+"The gloves are made from white rings ."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HANDS}
+ARMOUR_CHAIN(0,0)
+MATERIAL_METAL("White rings")
+weight 8
+cost 8 SILVER_PIECE
+WHITE_ARMOR
+end
+                 guard_bracers
+names{"bracer"}
+title "a pair of white bracers"
+descr "A pair of white bracers are lying on the ground."
+extra {}
+"The bracers are made of white rings."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ARMS}
+MATERIAL_METAL("white rings")
+ARMOUR_CHAIN(0,0)
+weight 6
+cost 8  SILVER_PIECE
+rent 144 IRON_PIECE
+WHITE_ARMOR
+end
+            guard_helmet
+names{"helmet"}
+title "a white helmet"
+descr "A white helmet is lying on the ground."
+extra {}
+"The helmet is made of white rings ."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+MATERIAL_METAL("white rings")
+ARMOUR_CHAIN(0,0)
+weight 5
+cost 8 SILVER_PIECE
+rent 144 IRON_PIECE
+WHITE_ARMOR
+end
+
+
+
+
+ %reset
+
+
+#define GUARD_ARM \
+        equip guard_bracers position WEAR_ARMS    \
+        equip guard_bplate position WEAR_BODY \
+        equip guard_helmet position WEAR_HEAD  \
+        equip guard_gloves position WEAR_HANDS  \
+        equip guard_boots position WEAR_FEET \
+        equip guard_leggings position WEAR_LEGS    \
+        equip guard_sword position WEAR_WIELD\
+
+#define COMMON_ARM \
+        equip linnen_shirt position WEAR_BODY \
+        equip sandals position WEAR_FEET \
+        equip linnen_trousers position WEAR_LEGS    \
+        equip short_sword position WEAR_WIELD\
+
+door wpassage_1 EAST {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door wthrone EAST {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+
+
+load water_fountain into wpath_3
+load citizen5 into wwater_cl zonemax 1
+{
+load shit_packer
+        equip dress position WEAR_BODY
+        equip sandals position WEAR_FEET
+        equip stockings position WEAR_LEGS
+        equip lady_cap position WEAR_HEAD
+
+}
+
+load dancer into wball_room zonemax 2
+{
+        equip ball_dress position WEAR_BODY
+        equip stockings position WEAR_LEGS
+        equip dagger position WEAR_WIELD
+        equip sandals position WEAR_FEET
+        equip lady_gloves position WEAR_HANDS
+        equip earrings position WEAR_EAR_L
+
+}
+load dancer into wball_room zonemax 2
+{
+        equip ball_dress position WEAR_BODY
+        equip stockings position WEAR_LEGS
+        equip dagger position WEAR_WIELD
+        equip sandals position WEAR_FEET
+        equip lady_gloves position WEAR_HANDS
+        equip earrings position WEAR_EAR_R
+}
+
+load citizen1 into wpath_3 zonemax 1
+{
+        equip dress1 position WEAR_BODY
+        equip sandals position WEAR_FEET
+        equip stockings position WEAR_LEGS
+        equip dagger position WEAR_WIELD
+        equip lady_cap position WEAR_HEAD
+
+}
+
+load citizen2 into wsitting_1 zonemax 1
+{
+       equip dress2 position WEAR_BODY
+        equip sandals position WEAR_FEET
+        equip stockings position WEAR_LEGS
+        equip dagger position WEAR_WIELD
+        equip lady_cap position WEAR_HEAD
+
+}
+load citizen3 into wsitting_2 zonemax 1
+{
+equip belt_bag position WEAR_CHEST
+equip short_sword position WEAR_WIELD
+equip cannon position WEAR_LEGS
+equip doublet position WEAR_BODY
+equip shoes position WEAR_FEET
+
+}
+load citizen4 into wpath_6 zonemax 1
+{
+equip belt_bag position WEAR_CHEST
+
+equip short_sword position WEAR_WIELD
+equip cannon position WEAR_LEGS
+equip doublet position WEAR_BODY
+equip shoes position WEAR_FEET
+}
+
+
+load cook into wkitchen zonemax 1
+{
+equip knife position WEAR_WIELD
+equip chef_hat position WEAR_HEAD
+equip doublet position WEAR_BODY
+equip shoes position WEAR_FEET
+load chicken@blcastle
+}
+
+
+
+load maid into whall_1 zonemax 3
+{
+        equip plain_dress position WEAR_BODY
+        equip sandals position WEAR_FEET
+}
+load maid into whall_2 zonemax 3
+{
+        equip plain_dress position WEAR_BODY
+        equip sandals position WEAR_FEET
+}
+load maid into whall_3 zonemax 3
+{
+        equip plain_dress position WEAR_BODY
+        equip sandals position WEAR_FEET
+}
+
+load branik into wstable_2
+{
+COMMON_ARM
+}
+
+load smith into wblacksmith zonemax 1
+{
+COMMON_ARM
+load dagger@wcastle
+load short_sword@wcastle
+load guard_sword@wcastle
+load sword0@midgaard
+load lsword0@midgaard
+load ham0@midgaard
+ load flail1@midgaard
+load spear0@midgaard
+
+}
+load arm into warmor zonemax 1
+{
+COMMON_ARM
+load linnen_trousers@blcastle
+load linnen_shirt@blcastle
+load sandals@blcastle
+load plain_dress@blcastle
+load lady_gloves@blcastle
+load belt_bag@blcastle
+load cannon@blcastle
+load doublet@blcastle
+load shoes@blcastle
+
+
+}
+load groc into wfood zonemax 1
+{
+COMMON_ARM
+load bread@blcastle
+load beef@blcastle
+load pot_pie@blcastle
+load pork@blcastle
+load chicken@blcastle
+}
+load gen into wstores zonemax 1
+{
+COMMON_ARM
+}
+
+load horse into wstall_1 zonemax 3
+load horse into wstall_2 zonemax 3
+load horse into wstall_3 zonemax 3
+
+load mare into wstall_1 zonemax 3
+load mare into wstall_2 zonemax 3
+load mare into wstall_3 zonemax 3
+
+load guard into wtop2 zonemax 8
+{
+GUARD_ARM
+}
+load guard into wtop10 zonemax 8
+{
+GUARD_ARM
+}
+load guard into wtop7 zonemax 8
+{
+GUARD_ARM
+}
+load guard into wtop4 zonemax 8
+{
+GUARD_ARM
+}
+
+load guard into w_in1 zonemax 8
+{
+GUARD_ARM
+}
+load guard into w_in3 zonemax 8
+{
+GUARD_ARM
+}
+load guard into w_in5 zonemax 8
+{
+GUARD_ARM
+}
+load guard into w_in6 zonemax 8
+{
+GUARD_ARM
+}
+
+load king into wthrone zonemax 1
+{
+equip royal_hose position WEAR_LEGS
+equip doublet position WEAR_BODY
+equip shoes position WEAR_FEET
+equip king_crown position WEAR_HEAD
+equip royal_robes position WEAR_ABOUT
+equip royal_dagger position WEAR_WIELD
+equip scepter position WEAR_HOLD
+
+}
+
+load queen into wthrone zonemax 1
+{
+       equip queen_dress position WEAR_BODY
+        equip sandals position WEAR_FEET
+        equip stockings position WEAR_LEGS
+        equip dagger position WEAR_WIELD
+        equip queen_crown position WEAR_HEAD
+        equip royal_robes position WEAR_ABOUT
+        equip royal_dagger position WEAR_WIELD
+        equip lady_gloves position WEAR_HANDS  \
+
+}
+
+load guard1 into wthrone zonemax 1
+{
+GUARD_ARM
+}
+
+%end
+
+
+

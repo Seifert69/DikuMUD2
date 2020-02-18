@@ -1,0 +1,3827 @@
+/*
+filename    citadel
+password    darkone
+changedby   Saor
+EmailAdd     Morgan Schafer <saor@Maestro.COM>
+request     compile
+version     10
+END HEADER*/
+
+#include <composed.h>
+
+#define APOC_ONGOING  "Apocalypse Quest Ongoing"
+#define APOC_COMPLETE "Apocalypse Quest Complete"
+
+%zone     citadel
+title  "Citadel"
+lifespan 40
+reset RESET_IFEMPTY
+creators {"saor", "vanyel", "marky"}
+
+notes
+"&l    This is the Citadel Realm. This zone is for lvl 20+ only, and anyone
+    caught sneaking in will be punished severely. We do not want to hear 
+    any complaints!
+    Saor made levels 1 and 4 in the Citadel, and the Rainbow Tower, as well
+    as the entrance rooms. The dil level checks was done by him too.
+    Vanyel made the Black Caves, and the Plains, as well as the dil-quest.
+    Marky made levels 2 and 3 in the Citadel. Marky also conceptualized
+    some of the more...unusual ideas in this zone. Comments to 
+    saor@maestro.com."
+
+%dil
+
+dilbegin apoc_rest();
+code
+{
+act("A terrible pain shoots through your body as you touch the $2N!&n"+
+"You have not earned the right to use this item, you drop it hastily.",
+A_ALWAYS,self.outside,self,null,TO_CHAR);
+act("$1n screams in pain as frost forms on $1s arms and drops the $2N!&n",
+A_ALWAYS,self.outside,self,null,TO_REST);
+return;
+}
+dilend
+
+dilbegin syr(medi : unitptr, targ : unitptr, hm : integer);
+code
+{
+       act("$1n's $2N whines softly. It sprays a green liquid at $3n.",
+           A_SOMEONE, self.outside, self, self.outside.fighting, TO_REST);
+       act("Your $2N begins to whine softly, and it fills itself with "+
+           "a sickly green liquid.", A_ALWAYS, self.outside, self, null, 
+           TO_CHAR);
+       act("$1n's $2N whines and sprays you with an ill-smelling green "+
+           "substance.", A_SOMEONE, self.outside, self, null, TO_VICT);
+       return;
+}
+dilend
+
+%rooms
+
+                           stairs4
+
+title "Fourth Floor"
+descr
+"You are standing in front of a door with a large number four painted on
+it. There is a small sign hung on the door."
+extra{"sign"}
+"ADMINISTRATION - Authorized Personnel Only - Security Clearance 4"
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_MOB}
+ALWAYS_LIGHT
+movement SECT_INSIDE
+north to corridor1_4 descr "You see the hallway."
+                     open {EX_OPEN_CLOSE, EX_CLOSED}
+                     keyword {"door"};       
+down to stairs3_up descr "The stairway leads down to the 3rd level.";  
+end 
+
+                           corridor1_4
+
+title "A Corridor North"
+descr
+"This corridor leads north, and you cannot see where it ends. It is
+dark up here, and extremely cold. Typical of bureaucrats, eh, not to have
+lights or heat?"
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+IN_ALWAYS_DARK
+movement SECT_INSIDE
+south to stairs4 descr "You see the stairwell."
+                 open {EX_OPEN_CLOSE, EX_CLOSED}
+                 keyword {"door"};
+north to corridor2_4 descr "The corridor continues on.";
+end
+
+                           corridor2_4
+
+title "A Corridor North and South"
+descr
+"You can see the turn in the corridor now to the north going east, but 
+it is still far off. Oddly enough, you don not see any offices. The corridor
+continues north and south here."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+IN_ALWAYS_DARK
+movement SECT_INSIDE
+north to corr_turn1_4 descr "Ahead is a turn in the corridor.";
+south to corridor1_4 descr "The hallway leads on that way.";
+end
+
+                           corr_turn1_4
+
+title "A Turn in the Corridor"
+descr
+"This place is truely boring you. The corridor goes south and east 
+here. To the east it just keeps going on and on..."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+IN_ALWAYS_DARK
+movement SECT_INSIDE
+south to corridor2_4 descr "The hallway towards the stairs.";
+east to corridor3_4 descr "The hall seems dark and lonely that way.";
+end
+
+                           corridor3_4
+
+title "A Corridor Going East and West"
+descr
+"Now, you see something more interesting. It's a sign. This corridor
+leads west to a turn south, and east into darkness."
+extra {"sign"}
+"The sign is dusty, but you can still read it. It says:&l
+                                  
+                   PLEASE EXCUSE THE LACK OF OFFICE SPACE.
+     WE HAVE BEEN INCONVENIENCED BY THE DISAPPEARANCE OF THE DARK DEITY. 
+                       PLEASE WAIT A THOUSAND YEARS."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+IN_ALWAYS_DARK
+movement SECT_INSIDE
+west to corr_turn1_4 descr "A turn in the corridor.";
+east to corridor4_4 descr "The end of the corridor is that way.";
+end
+
+                           corridor4_4
+
+title "The Corridor End"
+descr
+"This is the end of the corridor, and you remember the sign from the 
+previous room, so you know why. There appears to be a room to south."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+IN_ALWAYS_DARK
+movement SECT_INSIDE
+west to corridor3_4 descr "The corridor continues on.";
+south to monochrome descr "A strange wan light comes from that room.";
+end
+
+                           monochrome
+
+title "Monochrome"
+descr
+"This room is interesting, you think, considering it has no colors
+whatsoever. The walls are a stark grey, and the floor looks like no one
+has ever tread upon it. There is a sign by the exit leading up."
+extra {"sign"}
+"It reads:&l
+                             The Rainbow Tower
+                              Have a Nice Day"
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_MOB}
+IN_ALWAYS_DARK
+movement SECT_INSIDE
+north to corridor4_4 descr "A corridor lies in that direction.";
+up to red_room descr "A rosy red glow emanates from above.";
+end
+
+/* end of citadel lvl 4 */
+/* 
+   This is Citadel Level 1. It consists of a Great Hall, in which the 
+   conquests of Dark Deity's Armies are displayed.
+*/
+
+                     ent_foyer
+
+title "The Entrance Foyer"
+descr
+"This is a large room, in which you can see murals painted on the north
+and south walls. You also see ridges in the floor, leading to what appears 
+to be drainage vents at the base of the walls. Exits lead east and west."
+extra {"murals", "mural", "walls", "wall"}
+"You are looking at large paintings of what appears to be either 
+demolition or very sloppy construction of various buildings being performed
+by people clad in black metallic uniforms. A collage is formed by the many
+scenes, and you wonder why anyone would want to display any of it. A door 
+in one of the muralas holds special interest." 
+extra {"ridges", "ridge"}
+"These are carved deeply into the floor, and curve slightly downward
+towards the walls to the north and south. There is a red encrustation in 
+the ridges which appears to be dried blood."
+extra {"drainage vents", "drainage vent", "vents", "vent"}
+"More of the dried blood can be seen. These vents, as you look more         
+closely, are really runoff channels leading to actual drains in the corners
+of the room."
+flags {UNIT_FL_NO_MOB, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS}
+ALWAYS_LIGHT
+movement SECT_INSIDE
+east to plains5 descr "You can leave the Citadel and go to the plains.";
+west to great_hall2 descr "It appears to be a museum.";
+end
+
+                     
+                     great_hall1
+
+title "The Great Hall"
+descr
+"This is the southeast corner of the Great Hall. You can see three
+displays of battle here. The first is on a table, the second on the south
+wall, and the third on the east wall. The Great Hall continues north and 
+west."
+extra {"displays", "display"}
+"The first one is a magical representation of a battle on a table. The 
+second and third are on the south and east walls."
+extra {"first", "table"}
+"This is a large flat table about 10 feet to a side, and on it is a
+model of a battle. A model only in the sense that the figures are only half 
+an inch tall on the average, because the figures are actually moving and
+fighting! The scene is bloody and frantic. The humanoids wearing black
+uniforms are battling what look like fairy-folk. Both sides seem to be 
+taking heavy losses. The black-clads are using various weapons, but very
+little magic, and the fairies using mainly magic for offense. Atrociously
+enough, the black-clads are definitely winning.&l
+A small plaque reads:
+                    
+                    THE CONQUEST OF THE SIDHE"
+extra {"second", "south wall"}
+"Hung on the south wall are what look like dessicated fairy corpses.
+They look very old and some of them are damaged as if by bladed weapons.
+There is quite a large variety of forms present, covering the entire wall.
+There are small plaques that have the different names of each type;&l
+       'PIXIE'  'BROWNIE'  'BANSHEE'  'LEPRECHAUN'  'WOOD FAIRY'
+are just a few of the names you can recognize."
+extra {"third", "east wall"}
+"There is a single dried-out husk hung here. It used to be what looked
+like a strong male of the Sky-Fairy variety. The corpse has a single large
+wound in the center of the chest that looks like a impalation from a sword.
+A plaque reads:&l
+                                  OGMIOS
+                    THE VALIANTLY FUTILE EFFORTS OF THIS
+                    SIDHE LEADER WERE THWARTED AFTER SIX
+                    YEARS OF WAR. THE SIDHE ARE NOW JUST
+                    A MEMORY, WITH A FEW SURVIVORS ALIVE
+                    FROM THE VARIOUS RACES THAT MANAGED
+                    TO ESCAPE THE ARMIES OF THE DARK ONE
+                    ------------------------------------"
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS}
+ALWAYS_LIGHT
+movement SECT_INSIDE
+north to great_hall2 descr "The Great Hall continues on.";
+west to great_hall5 descr "The Great Hall continues on.";
+end
+
+                     great_hall2
+
+title "The Great Hall"
+descr
+"This place seems to be some sort of museum! Exactly what it's supposed
+to show is not yet clear to you. There is a pedestal here with some kind of
+artifact on it. Exits lead in the four cardinal directions."
+extra {"pedestal"}
+"This is a large pedestal, about four feet high, and three feet around.
+It has a small inscription:&l
+
+                  A representation of the Citadellian Realms
+
+                   Key:    White - Clouds and Ice
+                           Blue  - Water
+                           Green - Lands Known
+                           Black - Unknown"
+                           
+extra {"artifact"}
+"This is a globe, suspended above the pedestal. It is five feet across,
+slightly bulged at the bottom, and as if it wasn't amazing enough, it is 
+rotating! As you take a closer look, you can see areas of white, blue, 
+green, and black. Much of the globe is blackened, and you wonder what this
+strange object is, since you KNOW that the world is obviously flat!"
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS}
+ALWAYS_LIGHT
+movement SECT_INSIDE
+east to ent_foyer descr "You can go on out to the Entrance Foyer.";
+west to great_hall6 descr "The Great Hall continues on.";
+south to great_hall1 descr "The Great Hall continues on.";
+north to great_hall3 descr "The Great Hall continues on.";
+end
+
+                     great_hall3
+
+title "The Great Hall"
+descr
+"There is a platform here with a white skull on it. The wall has a 
+hanging tapestry depicting battles between small humanoids dressed in 
+black and what appears to be giants. A banner is hung over the tapestry.
+Exits lead west north and south."
+extra {"platform", "white skull", "skull"}
+"The platform is rather big, about five feet to a side, and a foot high.
+What you noticed first, however, was the skull. It's humongous! The eye
+sockets alone must be six inches across! The teeth are jagged, and the
+incisors are enlongated slightly. You wonder what could kill something like
+this, and then you see the great fractures spider-webbing across the back
+of the skull. This poor beast died in terrible agony!"
+extra {"tapestry"}
+"Stretching across the wall is a very large tapestry. The artwork is
+beautiful, but the scene displayed is not. The smaller fighters are using 
+axes to chop the legs of the giants, crippling them effectively, and then
+slaughtering them cruelly."
+extra {"banner"}
+"The banner spans the width of the tapestry, and reads:&l
+
+                          THE FALL OF THE GIANTS"
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS}                        
+ALWAYS_LIGHT
+movement SECT_INSIDE
+south to great_hall2 descr "The Great Hall continues on.";
+west to great_hall7 descr "The Great Hall continues on.";
+north to great_hall4 descr "The Great Hall continues on.";
+end
+
+                     great_hall4
+
+title "The Great Hall"
+descr
+"This room appears to be an exhibit of elven arms and armor. You see
+two full suits of elven chainmail armor hung on the walls, and in a display
+case in the center of the room are about twenty to thirty different weapons.
+Over the display case there is a sign. The Great Hall continues west and 
+south."
+extra {"display case", "case", "arms", "weapons", "weapon"}
+"These weapons are in varying states of disrepair. You can see just 
+about every type accounted for. Underneath each one is a tiny plaque 
+denoting what it is, and how and when it was acquired (you think, as you
+can't identify the names or times)."
+extra {"suits", "suit", "chainmail armor", "armor"}
+"This armor is most definitely damaged. It looks like it's been through
+a war or two. You can make a very good assumption that it was."
+extra {"sign"}
+"The sign simply reads:&l
+
+                    REMNANTS FROM THE ELVEN CONFLICTS"
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS}                        
+ALWAYS_LIGHT
+movement SECT_INSIDE
+south to great_hall3 descr "The Great Hall continues on."; 
+west to great_hall8 descr "The Great Hall continues on.";
+end
+
+                     great_hall5
+
+title "The Great Hall"
+descr
+"This room is different from the others, only because there are no
+exhibits here. Other than that fact, it looks just like every other part
+of the Great Hall. You suspect it is in bad taste to put any displays near
+a staircase anyway. The Great Hall continues east and north."
+extra {"staircase"}
+"It leads up, to the second floor."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS}                        
+ALWAYS_LIGHT
+movement SECT_INSIDE
+up to stairs2 descr "You can go up into the stairwell.";
+north to great_hall6 descr "The Great Hall continues on.";
+east to great_hall1 descr "The Great Hall continues on.";
+end
+
+                     great_hall6
+
+title "The Great Hall"
+descr
+"There is a platform here, with a suit of black armor, and you see a  
+plaque on the bottom of the platform. The Great Hall continues in all 
+directions but west."
+extra {"platform", "plaque"}
+"The platform is about two feet high, and the plaque on it reads:&l
+
+               The Finest Armor Made in the Citadellian Realms
+                              Black-Steel Armor!
+          This Armor is Worn Only by Elite Troops of the Dark Deity"
+extra {"armor"}
+"This armor is made of the finest steel known to man, Black-Steel. Only to 
+be found in the realm of the citadel, it is highly sought after and praised
+for its protective capabilities, and resistance to wear."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS}                        
+ALWAYS_LIGHT
+movement SECT_INSIDE
+north to great_hall7 descr "The Great Hall continues on.";
+south to great_hall5 descr "The Great Hall continues on.";
+east to great_hall2 descr "The Great Hall continues on.";
+end
+
+                     great_hall7
+
+title "The Great Hall"
+descr
+"This place is similar to the one south of here, with a platform and
+armor. The armor looks slightly different, but made of the same metal. A
+plaque is on the platform as well. The Great Hall continues in all 
+directions but west, where there is a blank wall with hooks on it."
+extra {"platform", "plaque"}
+"The platform is exactly like the one south of here, but the plaque here 
+reads:&l
+
+                      Citadellian Pre-Fabricated Armor"
+extra {"metal"}
+"This is Black-Steel, but for some reason, the armor it is crafted into is
+of lesser quality than regular Black-Steel Armor."
+extra {"armor"}
+"This armor looks rather generally made, unlike the custom fitted Black-
+Steel Armor you have seen to south."
+extra {"hooks", "hook"}
+"These look like mounting hooks for exhibits. Obviously, they had not    
+decided to put anything here yet. Either that, or they're just plain sloppy."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS}                        
+ALWAYS_LIGHT
+movement SECT_INSIDE
+south to great_hall6 descr "The Great Hall continues on.";
+east to great_hall3 descr "The Great Hall continues on.";
+north to great_hall8 descr "The Great Hall continues on.";
+end
+
+                     great_hall8
+
+title "The Great Hall"
+descr
+"This room is obviously the dwarven exhibit. You see only a tapestry
+and a sign. The Great Hall continues east and south."
+extra {"tapestry"}
+"This displays a three-dimensional image of a fight between a black-clad
+soldier and a gnarled, bearded dwarf. The dwarf is bleeding badly, and
+the armor of the black-clad is cracked in several places."
+extra {"sign"}
+"It reads:&l
+
+                        THE DEFEAT OF THE DWARVES"
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS}                        
+ALWAYS_LIGHT
+movement SECT_INSIDE
+east to great_hall4 descr "The Great Hall continues on.";
+south to great_hall7 descr "The Great Hall continues on.";
+end
+
+/* end of citadel lvl 1 */
+
+/*level_2*/
+
+                           stairs2
+
+title "Second Floor"
+descr
+"You are standing in front of a door with a large number two painted on
+it. To the west you see stairs leading up. There is a small sign hung on
+the door."
+extra{"sign"}
+"ARMED FORCES - Authorized Personnel Only - Security Clearance 2"
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+north to corridor1_2 descr "You can enter the corridor."
+                     open {EX_OPEN_CLOSE, EX_CLOSED}
+                     keyword {"door"};
+west to stairs2_up descr "The stairwell goes on that way.";
+down to great_hall5 descr "The Great Hall lies that way.";
+end 
+
+                           corridor1_2
+
+title "Long Corridor"
+descr
+"You are standing at the beginning of a very large and long corridor. It 
+goes north and you can barely see it turning west down further. There is a
+security room to west and you can hear music and laughter coming from the
+east."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+north to corridor2_2;
+west to guard1_2 descr "It appears to be a security guard office.";
+east to mercenary1 descr "Eww. Stinky.";
+south to stairs2 descr "The stairwell allows you to go to other parts of
+                       the Citadel."
+                 open {EX_OPEN_CLOSE, EX_CLOSED}
+                 keyword {"door"};
+end
+
+                          corridor2_2
+
+title "Long Corridor"
+descr
+"You are somewhere in the middle of the second floor. You can still hear
+sounds of laughter coming from somewhere south-east. To the north you see
+another security room. The corridor turns west."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+north to guard2_2 descr "That is a guard office.";
+west to corridor3_2 descr "The hallway continues on to the west.";
+south to corridor1_2 descr "The hallway continues on to the south.";
+end
+
+                         mercenary1
+
+title "Mercenary Barracks"
+descr
+"You see rows and rows of beds towards the north. A bunch of beer bottles 
+are lying on the floor. The beds are unmade. You see uniforms of different 
+armies and nations thrown around on the floor. This is obviously the barracks
+of hired and unsupervised ex-soldiers."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+north to mercenary2 descr "Oy. It smells worse that way.";
+west to corridor1_2 descr "Wanna go back out where you can breathe, eh?";
+end
+
+                           mercenary2
+
+title "Mercenary Barracks"
+descr
+"You see pretty much the same picture as in the room south from here.
+Unmade beds, beer bottles on the floor, women's underwear: the regular 
+entertaiment of hired armies. There is a door lying on the floor here with
+a sign reading 'Weapons and Armor'."   
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+north to weapon_room descr "A deserted armory.";
+south to mercenary1 descr "More of this pigsty lies to the south.";
+end
+
+                             weapon_room
+
+title"Weapon and Armor Storage"
+descr
+"You wouldn't expect those soldiers to have such a nice arsenal of armor
+and weapons. This room is full of nice equipment from different places and 
+countries. You realize that when sober and organized those mercenaries can 
+be a very, very powerful force."
+extra {"armor", "weapons", "weapon", "equipment"}
+"This stuff is as varied as the uniforms! You can see things like katana,
+scimitars, and morning stars hanging on the walls. The armor shows just as
+much diversity as the weapons!"
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+south to mercenary2 descr "You have no choice but to go back south.";
+end
+
+                           
+                           guard1_2
+
+title "Security Room"
+descr
+"The people taking care of security in this place are very serious. This
+room has exits leading everywhere on this floor so the security guards can
+get anywhere on this floor in seconds. To the south there is a window 
+through which you can see the stairs."
+extra {"window"}
+"This window is obviously here so the guards can monitor whoever comes
+through the stairway."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+east to corridor1_2 descr "The spartan hallway is visible that way.";
+north to corridor3_2 descr "The athenian hallway is visible that way.";
+west to receive_room descr "There is a room over there, wonder what it is?"
+                     open {EX_OPEN_CLOSE, EX_CLOSED}
+                     keyword {"door"};
+end
+
+                         guard2_2
+
+title "Security Room II"
+descr
+"This room is slightly different from the other security room. It only has
+one exit and is obviously designed to keep an eye on the mercenaries. The
+people in charge here don't want anyone to get into the eastern part of this 
+floor."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+south to corridor2_2 descr "You can go back out into the hall.";
+end
+
+                           corridor3_2
+
+title "End of the Corridor"
+descr
+"You just stepped into the eastern part of this floor. This place is 
+drastically different from the western part. It's much colder and it's 
+extremely quiet. To the south you can see a security room."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+south to guard1_2 descr "You see a guard station.";
+east to corridor2_2 descr "The hallway goes on in that direction.";
+west to package_room descr "'Packaging', or so the stencil on the floor 
+                           says."
+                     open {EX_OPEN_CLOSE, EX_CLOSED}
+                     keyword {"door"};
+end
+
+                        receive_room
+
+title "Receiving"
+descr
+"You can see a large hole high in the ceiling. This tube is used to drop
+off the newly made soldiers from the third floor. This place is very spooky. 
+You can hear some sounds from upstairs through the open hole."
+extra{"tube", "hole"}
+"This is a large circular hole just large enough for a human to fit through."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+east to guard1_2 descr "Easy access to the guard office."
+                 open {EX_OPEN_CLOSE, EX_CLOSED}
+                 keyword {"door"};
+north to package_room descr "A large portal to the Packaging area.";
+end
+
+                          package_room
+
+title "Packaging"
+descr
+"Here newly made soldiers are put in uniforms and moved north to storage.
+This room is very cold and clean. There are stacks of uniforms all the same
+size on the shelves all around here. There is a door to the east leading to 
+the corridor."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+north to storage1 descr "This is a storage room.";
+south to receive_room descr "A stencil on the floor says 'Receiving'.";
+east to corridor3_2 descr "Back out to the hallway."
+                    open {EX_OPEN_CLOSE, EX_CLOSED}
+                    keyword {"door"};
+end
+
+                          storage1
+
+title "Storage Room"
+descr
+"You've just entered a storage room for this newly made soldiers. This 
+room is cold and very large. To the east you see another storage room. You 
+feel cold air coming from there but you are interested in exactly how many 
+soldiers they are planning to produce."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+south to package_room descr "A stencil reads 'Packaging'.";
+east to storage2 descr "The storage room leads on that way.";
+end
+
+                             storage2
+
+title "Storage Room"
+descr
+"Oh my God! This room is somehow been magically enlarged. You can go in
+any direction and you can see thousands and thousands of freshly made 
+soldiers. What evil plans do fester here? You suddenly stop worrying about 
+your own safety and think about the danger the rest of the world faces when 
+they meet this army face to face."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+west to storage1 descr "The storage room appears endless.";
+north to storage2 descr "The storage room appears endless.";
+east to storage2 descr "The storage room appears endless.";
+south to storage2 descr "The storage room appears endless.";
+end
+
+
+                            stairs2_up
+
+title "Stairs leading to the third level"
+descr
+"You can go east to enter the second level and you can go up to the third
+level. There is a small window in the north wall through which you can see
+the security room."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+up to stairs3 descr "Up to the third floor.";
+east to stairs2 descr "Down to the second floor.";
+end
+
+/* level_3 */
+
+                          stairs3
+
+title "Third Floor"
+descr
+"You are standing on the third floor. There is a door with a sign leading
+north. To the east you see stairs leading up. You can go down to the second 
+floor."
+extra{"sign"}
+"CLINIC - Authorized Personnel Only - Security Clearance 3"
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+east to stairs3_up descr "The stairwell goes on to the east.";          
+down to stairs2_up descr "Back down to the second floor.";
+north to corridor1_3 descr "To enter the third floor proper."
+                     open {EX_OPEN_CLOSE, EX_CLOSED}
+                     keyword {"door"};
+end
+
+
+                         corridor1_3
+
+title "Corridor"
+descr
+"You are standing on the third floor. There are security rooms located to 
+the west and east. The location of the security rooms is different from 
+those on the second floor. Here, they are designed to keep people from 
+entering here, not for control of things on the floor."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+south to stairs3 descr "The stairwell allows access to other parts of the
+                       Citadel."
+                 open {EX_OPEN_CLOSE, EX_CLOSED}
+                 keyword {"door"};
+west to guard1_3 descr "It appears to be a security guard office.";
+east to guard2_3 descr "It appears to be a security guard office.";
+north to corridor2_3 descr "The hallway continues on to the north.";
+end
+
+                        guard1_3
+
+title "Security Room"
+descr
+"The security in this place is very well organized. The guards in this 
+room have a good view of the entrance to this level. The room is very clean 
+and bright. Through a small window on the north wall you can see what's 
+going on in the other room."
+extra{"window"}
+"You can see people sending some kind of packages down a tube."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+east to corridor1_3 descr "It leads back out into the hallway.";
+end
+
+                       guard2_3
+
+title "Security Room"
+descr
+"There is only one exit to the west, but there are windows leading in all
+other directions, so guards here can see what's going on all around. Through
+the northern window you can see people at work."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+west to corridor1_3 descr "It leads back out into the hallway.";
+end
+
+                       corridor2_3
+
+title "Corridor"
+descr
+"This is the end of the corridor from the entrance to this floor. You 
+can hear people doing manual labor to the west of here and more 
+sophisticated work being performed to the east. You can hear some kind of 
+noise behind the north wall. This place is very clean and fairly chilly."
+extra {"noise", "north wall", "wall"}
+"This noise is muffled slightly by the wall, but it sounds distinctly
+mechanical in nature."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+south to corridor1_3 descr "The hallway continues on to the south.";
+west to shipping descr "A stencil says 'Shipping'.";
+east to lab1 descr "To the east lies a clean laboratory.";
+end
+
+                          
+                       lab1
+
+title "Laboratory"
+descr
+"You are standing in a huge laboratory. This laboratory isn't designed 
+for experiments but for regular production of some sort. You can see 
+slide-chutes to the other parts of the lab."
+extra {"slide-chutes", "slide-chute", "slide", "chute"}
+"These seem to be sending various objects from one part of the facility
+to another."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+west to corridor2_3 descr "Back out into the corridor.";
+east to lab2 descr "Ooohh. Big Lab!";
+north to lab3 descr "Ooohh. Big Lab!";
+end
+
+                        lab2
+
+title "Laboratory"
+descr
+"You see slide-chutes in this middle room going north and south. To the 
+south, there is a door with the word 'Receiving' written on it. The slide-
+chute has rollers on it as if to speed things up. There is an inscription 
+on the side of the slide-chute."
+extra{"inscription"}
+"Made by Marky Enterprises, Inc."
+extra{"slide-chute", "slide", "chute"}
+"This device is a little bit too evil even by the standards of this realm,
+but no one seems to object. Perhaps the rollers on the slide-chute are for 
+those who do object to the use of this thing."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+south to arrival_room descr "A stencil marks the room as 'Arrival'."
+                      open {EX_OPEN_CLOSE, EX_CLOSED}
+                      keyword {"door"};
+east to maintenance descr "This seems to be a broom closet."
+                    open {EX_OPEN_CLOSE, EX_CLOSED}
+                    keyword {"door"};
+north to lab4 descr "Ooohh. Big Lab!";
+west to lab1 descr "Ooohh. Big Lab!";
+end
+
+                          lab4
+
+title "Laboratory"
+descr
+"Here, next to the slide-chute stand tables with some kind of medication,
+knives and trays. There are boxes of medication on the floor with an 
+inscription on them saying 'Made by Marky Enterprises Inc.'. Here the 
+unlucky patients are; you hope they are sedated, but as you look at the 
+medication you realize that it is some kind of acid that must cause enormous 
+pain."
+extra {"patients", "patient"}
+"They are writhing in agony! You hope that whoever did this to them does
+not find you."
+extra {"medication", "knives", "trays"}
+"These are all made by Marky Enterprises, and while crude, they serve 
+their purpose well."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+south to lab2 descr "Ooohh. Big Lab!";
+west to lab3 descr "Ooohh. Big Lab!";
+end
+
+                         lab3
+
+title "Laboratory"
+descr
+"You are standing in the northwestern corner of this huge lab. Slide-
+chutes lead north into the small entrance made in the west wall. The
+entrance is too small for you to fit into. Before the entrance there is 
+a small device. As you realized what it's made for you start to puke.
+You can take a closer look at this device."
+extra{"small device", "device"}
+"This device is used to castrate people manually. You suppose that they 
+don't believe in separating the sexes here, and that sickens you."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+east to lab4 descr "Ooohh. Big Lab!";
+south to lab1 descr "Ooohh. Big Lab!";
+end
+
+                         
+                         maintenance
+
+title "Maintenance Closet"
+descr
+"This is a small closet. There are lots of brooms and mops lying around
+here. There is a chair and a bed in the corner. Apparently someone actually 
+lives here."
+extra {"brooms and mops", "brooms", "broom", "mops", "mop"}
+"These are dirty, grimy cleaning instruments. Typically found in a place
+like this."
+extra {"chair"}
+"A rickety old thing, it serves to degrade the image of the room."
+extra {"bed"}
+"Gross. The mattress is disgusting. You refuse to go near it."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+west to lab2 descr "Back out into the laboratory."
+             open {EX_OPEN_CLOSE, EX_CLOSED}
+             keyword {"door"};
+end
+
+
+                       shipping
+
+title "Shipping"
+descr
+"There is a large hole in the middle of the room through which newly made
+soldiers are sent down to storage. The soldiers are brought from north
+and sent down. You can jump in the hole to get down but you are not sure 
+what the point of this would be."
+extra{"hole", "tube"}
+"This hole is just large enough to fit you."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+down to receive_room descr "Down to the reception area. Watch your step."
+        open {EX_OPEN_CLOSE, EX_CLOSED}
+        keyword {"hatch", "hole", "tube"};
+east to corridor2_3 descr "You can go back out into the hallway.";
+north to quality_check descr "A stencil reads 'Quality Control'.";
+end
+
+                          quality_check
+
+title "Quality Control"
+descr
+"This room is used to check if the newly made soldier is up to the 
+standards of the Dark Deity. There is a very large shredding device is the 
+corner for the ones that aren't up to snuff. The slide-chute comes from the
+small entrance in the east wall and ends here. The soldiers that qualify are 
+sent south to shipping."
+extra{"device", "shredding"}
+"Made by Marky Enterprises, Inc."
+extra {"slide-chute", "slide", "chute"}
+"This ends in the centre of the room, inside a circle painted on the floor
+about three feet wide."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+south to shipping descr "This way back to the Shipping Room.";
+end
+
+                        arrival_room
+
+title "Arrival Room"
+descr
+"Here, the poor souls that are going to be either killed or transformed 
+into an evil force, are summoned. There is a wand affixed to the wall that 
+summons them and by the bunch of ripped clothes lying on the floor you 
+realize that the poor people are undressed and sent north to the lab. You 
+see clothes from all different nations, races and sexes. At least they 
+aren't discriminatory about who goes into this army. But when you get here, 
+you are here to stay. You feel that it's actually a good place to rest for 
+a little while."
+extra {"wand", "wall"}
+"This is an odd wand. It summons things at random, and you hope it doesn't
+grab anything too nasty while you are here."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+flags {UNIT_FL_SACRED}
+movement SECT_INSIDE    
+north to lab2 descr "Easy access to the laboratory."
+              open {EX_OPEN_CLOSE, EX_CLOSED}
+              keyword {"door"};
+end
+
+                        stairs3_up
+
+title "Stairs leading to fourth floor"
+descr
+"You can go up to the fourth floor or west to enter the third level. 
+There is a small window through which you can see a security room. You 
+don't feel safe around here, not that you should."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+west to stairs3 descr "The stairwell continues on that way.";
+up to stairs4 descr "Up to the fourth floor.";
+end
+
+/* done by Marky :) */
+
+/* Vanyel's Room Section - Black Caves */
+
+                                blackcave1
+
+title "The Entrance to the Black Caves"
+descr
+"You come through the doorway into a large cave entrance, as you look back
+you notice nothing but a dark, black wall. As you look at the wall, you 
+realize that you have never seen a substance quite like the one this wall
+is made up of. As you turn around, a sense of dread fills your bones. You 
+realize that you'd better be strong to venture any further. The only way 
+out of here is through a small portal leading east."
+extra {"wall","stone","stones","substance"}
+"This stuff is rough and unyielding. You've never seen anything like it 
+before in your life. You think how much the craftsmen in your town would
+love to see this stuff, but you realize chances are you won't get out alive."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+east to blackcave2 descr "It is very dark, and hard to see.";
+end
+
+
+                                blackcave2
+
+title "A Room in the Black Caves"
+descr
+"You come through the small portal and find yourself in a equally small
+cavern... it is still made of the same unexplicable stuff as the cavern
+you have just left. There are three portals, one leading south as the 
+others lead from east to west."
+extra {"wall","stone","stones","substance"}
+"This stuff is rough and unyielding. You've never seen anything like it 
+before in your life. You think how much the craftsmen in your town would
+love to see this stuff, but you realize chances are you won't get out alive."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+east to blackcave3 descr "It is very dark, and hard to see.";
+west to blackcave1 descr "It is very dark, and hard to see.";
+south to blackcave5 descr "It is very dark, and hard to see.";
+end
+                                
+                                blackcave3
+
+title "A Room in the Black Caves"
+descr
+"You come through the small portal and find yourself in a equally small
+cavern... it is still made of the same unexplainable stuff as the cavern
+you have just left.There are two portals, one west and another leading  
+north."
+extra {"wall","stone","stones","substance"}
+"This stuff is rough and unyielding. You've never seen anything like it 
+before in your life. You think how much the craftsmen in your town would
+love to see this stuff, but you realize chances are you won't get out alive."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+west to blackcave2 descr "It is very dark, and hard to see.";
+north to blackcave4 descr "It is very dark, and hard to see.";
+end
+                                
+                                blackcave4
+
+title "A Large Room in the Black Caves"
+descr
+"You have come to a dead end in your path through the caves. Just like the
+rooms before it, this room is as black as night, although your sense of dread
+heightens that much more here. You see some scratches on the wall."
+extra {"stone","stones","substance"}
+"This stuff is rough and unyielding. You've never seen anything like it 
+before in your life. You think how much the craftsmen in your town would
+love to see this stuff, but you realize chances are you won't get out alive."
+extra {"scratches"}
+"These scratches go so deep you can put your hand in them with room to 
+spare. Something large must have made these!"
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+south to blackcave3 descr "It is very dark, and hard to see.";
+end
+
+                                blackcave5
+
+title "A Room in the Black Caves"
+descr
+"You come through the small portal and find yourself in a equally small
+cavern... it is still made of the same unexplainable stuff as the cavern
+you have just left. There are two portals, one leading north while another
+leads south."
+extra {"wall","stone","stones","substance"}
+"This stuff is rough and unyielding. You've never seen anything like it 
+before in your life. You think how much the craftsmen in your town would
+love to see this stuff, but you realize chances are you won't get out alive."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to blackcave2 descr "It is very dark, and hard to see.";
+south to blackcave6 descr "It is very dark, and hard to see.";
+end
+
+                                blackcave6
+
+title "A Turning Point in the Black Caves"
+descr
+"You come through the path to find yourself at a turning point. This place
+is confusing you to no end. The unrelenting black stone is making you  
+wonder just who would want to live here. The exits lead west, north, and
+south."
+extra {"wall","stone","stones","substance"}
+"This stuff is rough and unyielding. You've never seen anything like it 
+before in your life. You think how much the craftsmen in your town would
+love to see this stuff, but you realize chances are you won't get out alive."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+west to blackcave7 descr "A faint red glow comes from that direction.";
+north to blackcave5 descr "It is very dark, and hard to see.";
+south to blackcave8 descr "It is very dark, and hard to see.";
+end
+
+                                blackcave7
+
+title "A Large Cavern in the Black Caves"
+descr
+"You come through the path to find yourself in a large cavern. It seems to
+stretch for miles in every direction. The only problem is, is that there is
+a lava flow in all directions around you. Impossible to cross! The only way 
+out is back the way you came, east."
+extra {"wall","stone","stones","substance"}
+"This stuff is rough and unyielding. You've never seen anything like it 
+before in your life. You think how much the craftsmen in your town would
+love to see this stuff, but you realize chances are you won't get out alive."
+extra {"lava flow","lava", "flow"}
+"This lava is extremely hot. You know for a fact there is no way to get 
+across it without getting hurt!"
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+east to blackcave6 descr "It is very dark, and hard to see.";
+end
+
+                                blackcave8
+
+title "A Room in the Black Caves"
+descr
+"You come through the small portal and find yourself in a equally small
+cavern... it is still made of the same unexplainable stuff as the cavern
+you have just left. There is a bench carved out of the wall here. There are 
+two portals, one leading north while another leads east."
+extra {"wall","stone","stones","substance"}
+"This stuff is rough and unyielding. You've never seen anything like it 
+before in your life. You think how much the craftsmen in your town would
+love to see this stuff, but you realize chances are you won't get out alive."
+extra {"bench"}
+"This bench has been roughly hewn out of the pure rock face.  you wonder 
+what tremendous power was needed to create it."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to blackcave6 descr "It is very dark, and hard to see.";
+east to blackcave9 descr "It is very dark, and hard to see.";
+end
+
+                                blackcave9
+
+title "A Room in the Black Caves"
+descr
+"You come through the small portal and find yourself in a equally small
+cavern... it is still made of the same unexplainable stuff as the cavern
+you have just left. There are two portals, one leading west while another 
+leads east."
+extra {"wall","stone","stones","substance"}
+"This stuff is rough and unyielding. You've never seen anything like it 
+before in your life. You think how much the craftsmen in your town would
+love to see this stuff, but you realize chances are you won't get out alive."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+west to blackcave8 descr "It is very dark, and hard to see.";
+east to blackcave10 descr "It is very dark, and hard to see.";
+end
+                            
+                            blackcave10
+
+title "A Room in the Black Caves"
+descr
+"You come through the small portal and find yourself in a equally small
+cavern... it is still made of the same unexplainable stuff as the cavern
+you have just left. There are two portals, one leading west while another 
+leads north. At the last second, you notice some burrow holes in the floor."
+extra {"wall","stone","stones","substance"}
+"This stuff is rough and unyielding. You've never seen anything like it 
+before in your life. You think how much the craftsmen in your town would
+love to see this stuff, but you realize chances are you won't get out alive."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+west to blackcave8 descr "It is very dark, and hard to see.";
+north to blackcave11 descr "It is very dark, and hard to see.";
+down to burrow descr "Darker than night, but you can smell animals.";
+end
+                                
+                                burrow
+
+title "A Small Mole's Burrow"
+descr
+"You enter the burrow to find absolutely nothing here. It is very clean,
+but you can't help but wonder, what kind of moles could tunnel through the 
+hard stuff this place is made out of. "
+extra {"wall","stone","stones","substance"}
+"This stuff is rough and unyielding. You've never seen anything like it 
+before in your life. You think how much the craftsmen in your town would
+love to see this stuff, but you realize chances are you won't get out alive."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+up to blackcave10 descr "It is very dark, and hard to see.";
+end
+
+                            blackcave11
+
+title "A Serene Room in the Black Caves"
+descr
+"You come through the small portal and find yourself in a equally small
+cavern... it is still made of the same unexplainable stuff as the cavern
+you have just left. There are two portals, one leading east while another 
+leads south. Somehow, you feel safe here."
+extra {"wall","stone","stones","substance"}
+"This stuff is rough and unyielding. You've never seen anything like it 
+before in your life. You think how much the craftsmen in your town would
+love to see this stuff, but you realize chances are you won't get out alive."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+flags {UNIT_FL_SACRED}
+south to blackcave10 descr "It is very dark, and hard to see.";
+east to blackcave12 descr "It is very dark, and hard to see.";
+end
+                            
+                            blackcave12
+
+title "A Large Room in the Black Caves"
+descr
+"You come through the small portal and find yourself in a large cavern... 
+it is still made of the same unexplainable stuff as the cavern you have just 
+left. You can faintly smell a very foul odor. There are two portals, one 
+leading west while another leads north."
+extra {"wall","stone","stones","substance"}
+"This stuff is rough and unyielding. You've never seen anything like it 
+before in your life. You think how much the craftsmen in your town would
+love to see this stuff, but you realize chances are you won't get out alive."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+west to blackcave11 descr "It is very dark, and hard to see.";
+north to blackcave13 descr "It is very dark, and hard to see.";
+end
+                            
+                            blackcave13
+
+title "A Large Room in the Black Caves"
+descr
+"You come through the small portal and find yourself in a large cavern... 
+it is still made of the same unexplainable stuff as the cavern you have just 
+left. You can faintly smell a very foul odor. There are two portals, one 
+leading east while another leads south."
+extra {"wall","stone","stones","substance"}
+"This stuff is rough and unyielding. You've never seen anything like it 
+before in your life. You think how much the craftsmen in your town would
+love to see this stuff, but you realize chances are you won't get out alive."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+south to blackcave12 descr "It is very dark, and hard to see.";
+east to blackcave14 descr "It is very dark, and hard to see.";
+end
+
+                            blackcave14
+
+title "A Large Room in the Black Caves"
+descr
+"You come through the small portal and find yourself in a large cavern... 
+it is still made of the same unexplainable stuff as the cavern you have just 
+left. You can smell a very foul odor more strongly. There are two portals, 
+one leading north while another leads west."
+extra {"wall","stone","stones","substance"}
+"This stuff is rough and unyielding. You've never seen anything like it 
+before in your life. You think how much the craftsmen in your town would
+love to see this stuff, but you realize chances are you won't get out alive."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+west to blackcave13 descr "It is very dark, and hard to see.";
+north to blackcave15 descr "It is very dark, and hard to see.";
+end
+                            
+                            blackcave15
+
+title "A Junction in the Black Caves"
+descr
+"You come through the small portal and find yourself in a large cavern... 
+it is still made of the same unexplainable stuff as the cavern you have just 
+left. The odor is now overpowering, it seems to be from the north. Here are 
+two large portals, one leading north while another leads east."
+extra {"wall","stone","stones","substance"}
+"This stuff is rough and unyielding. You've never seen anything like it 
+before in your life. You think how much the craftsmen in your town would
+love to see this stuff, but you realize chances are you won't get out alive."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+east to blackcave16 descr "It is very dark, and hard to see.";
+north to blackcave17 descr "You can almost see the evil coming from there.";
+south to blackcave14 descr "It is very dark, and hard to see.";
+end
+/* guardians are here. */
+                            
+                            blackcave16
+       
+title "A Large Cavern in the Black Caves"
+descr
+"You come through the small portal and find yourself in a large cavern... 
+it is still made of the same unexplainable stuff as the cavern you have just 
+left. You can smell a very foul odor more strongly. You feel that you are 
+safe here, that your journey is over and the way out will become apparent to 
+you very soon. There is only one exit, leading back west."
+extra {"wall","stone","stones","substance"}
+"This stuff is rough and unyielding. You've never seen anything like it 
+before in your life. You think how much the craftsmen in your town would
+love to see this stuff, but you realize chances are you won't get out alive."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+west to blackcave15 descr "It is very dark, and hard to see.";
+east to blackcave18 descr "It is very dark, and hard to see.";
+end
+                        
+                        blackcave17
+
+title "A Dark and Dank Black Cave"
+descr
+"You have found yourself in a room that smells so bad, your eyes water. In
+one corner, you can see a shelf on which there are books, you realize the 
+bookends are human skulls! A boiling cauldron is in the center of the room 
+over a fire. The only exit out is back south, and you feel you should take 
+it while you still can!"
+extra {"shelf"}
+"This shelf has been cut out of the sheer black rock face, and is very 
+crude. It looks alot like a smaller version of the bench you saw."
+extra {"skull", "skulls", "bookend", "bookends"}
+"These skulls look real! You feel bad for the person that gave up their head
+to keep some books in place."
+extra {"boiling cauldron", "cauldron"}
+"This cauldron is black as night, filled to the brim with some sort of
+viscous green ooze. It smells disgusting, you have to back away and catch
+your breath, but before doing so you notice human bones floating around."
+extra {"fire", "flames"}
+"This fire dosn't look normal. It isn't being fed by anything! Something
+of great power must keep this going."
+extra {"books","book"}
+"These books have such titles as '101 Ways to Stuff a Man','Diabetics Guide 
+to Eating Diabetics','Microwaving Your Man' and other similar titles."
+extra {"bones", "bone"}
+"These bones look like they might have belonged to the same guy that holds
+up those books."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+south to blackcave15 descr "You think you want to get out of here.";
+end
+
+                             blackcave18
+
+title "A Circular Room in the Black Caves"
+descr
+"This room is perfectly circular, and appears to have been carved out of
+that odd black rock. There is nothing in here at all except for some
+candles and a large pentagram on the floor."
+extra {"candles", "candle"}
+"These are black candles, burning with a strange dull black flame."
+extra {"black rock", "rock"}
+"This rock is the exact same stuff you've seen all throughout the Black
+Caves."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+west to blackcave16 descr "It is very dark, and hard to see.";
+end
+
+/* end of black caves section */
+
+/* Desolate Plains Section - Vanyel */                             
+                             
+                             plains1
+
+title "The Desolate Plains"
+descr
+"You are on a desolate and rocky plain. Around you is nothing. In the sky 
+above you see a myriad of gleaming white stars; you wonder about the absence 
+of the sun you have seen every morning since your birthing day."
+extra {"stars", "star"}
+"These stars are brilliant twinkles in the sky. You could gaze at them for
+hours."
+extra {"sun"} 
+"What sun?"
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+OUT_ALWAYS_DARK
+movement SECT_DESERT
+east to plains1 descr "The Desolate Plains continue on to the horizon.";
+west to plains4 descr "The Desolate Plains continue on to the horizon.";
+south to plains3 descr "The Desolate Plains continue on to the horizon.";
+north to plains2 descr "The Desolate Plains continue on to the horizon.";
+end
+                             plains2
+
+title "The Beginning of the Desolate Plains"
+descr
+"As you step out of the doorway, you turn to find that it isn't there. You
+whirl around to find that you are in the middle of nowhere. In the distance,
+you see the distinct outline of a tower. As it's the only thing in sight, 
+you feel you should make your way towards it."
+extra {"tower", "outline"}
+"It rises high into the blackness of the sky. A single, glowing spire of   
+all the colours of the rainbow seems to explode from the top of the edifice,
+piercing the inky darkness."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+OUT_ALWAYS_DARK
+movement SECT_DESERT
+west to plains7 descr "The Desolate Plains continue on to the horizon.";
+south to plains1 descr "The Desolate Plains continue on to the horizon.";
+north to plains3 descr "The Desolate Plains continue on to the horizon.";
+end
+                             plains3
+
+title "The Desolate Plains"
+descr
+"You are on a desolate and rocky plain. Around you is nothing. In the sky 
+above you see a myriad of gleaming white stars; you wonder about the absence 
+of the sun you have seen every morning since your birthing day."
+extra {"stars", "star"}
+"These stars are brilliant twinkles in the sky. You could gaze at them for
+hours."
+extra {"sun"} 
+"What sun?"
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+OUT_ALWAYS_DARK
+movement SECT_DESERT
+east to plains3 descr "The Desolate Plains continue on to the horizon.";
+west to plains6 descr "The Desolate Plains continue on to the horizon.";
+south to plains2 descr "The Desolate Plains continue on to the horizon.";
+north to plains1 descr "The Desolate Plains continue on to the horizon.";
+end
+                             plains4
+
+title "The Desolate Plains"
+descr
+"You are on a desolate and rocky plain. Around you is nothing. In the sky 
+above you see a myriad of gleaming white stars; you wonder about the absence 
+of the sun you have seen every morning since your birthing day."
+extra {"stars", "star"}
+"These stars are brilliant twinkles in the sky. You could gaze at them for
+hours."
+extra {"sun"} 
+"What sun?"
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+OUT_ALWAYS_DARK
+movement SECT_DESERT
+east to plains1 descr "The Desolate Plains continue on to the horizon.";
+west to plains4 descr "The Desolate Plains continue on to the horizon.";
+south to plains6 descr "The Desolate Plains continue on to the horizon.";
+north to plains5 descr "The Desolate Plains continue on to the horizon.";
+end
+                              plains5
+
+title "The Entrance to the Citadel"
+descr
+"You are on a desolate and rocky plain. In front of you is a large castle,
+dark and evil looking. You can tell that your destiny lies within. On the
+ground are the bleached bones of things long dead. You hope that you don't 
+join them soon."
+extra {"castle"}
+"This castle is huge and black. Way up near the top, you can make out a
+glimmer of colour."
+extra {"bleached bones", "bones"}
+"These bones are indescribable. You can barely tell they are bones; of what
+you don't know. You fervently hope they aren't human bones." 
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+OUT_ALWAYS_DARK
+movement SECT_DESERT
+east to plains7 descr "The Desolate Plains continue on to the horizon.";
+west to ent_foyer descr "You can enter the Citadel that way.";
+south to plains4 descr "The Desolate Plains continue on to the horizon.";
+north to plains6 descr "The Desolate Plains continue on to the horizon.";
+end
+                             plains6
+
+title "The Desolate Plains"
+descr
+"You are on a desolate and rocky plain. Around you is nothing. In the sky 
+above you see a myriad of gleaming white stars; you wonder about the absence 
+of the sun you have seen every morning since your birthing day."
+extra {"stars", "star"}
+"These stars are brilliant twinkles in the sky. You could gaze at them for
+hours."
+extra {"sun"} 
+"What sun?"
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+OUT_ALWAYS_DARK
+movement SECT_DESERT
+east to plains3 descr "The Desolate Plains continue on to the horizon.";
+west to plains6 descr "The Desolate Plains continue on to the horizon.";
+south to plains5 descr "The Desolate Plains continue on to the horizon.";
+north to plains4 descr "The Desolate Plains continue on to the horizon.";
+end
+                             plains7
+
+title "The Desolate Plains"
+descr
+"You are on a desolate and rocky plain. Around you is nothing. In the sky 
+above you see a myriad of gleaming white stars; you wonder about the absence 
+of the sun you have seen every morning since your birthing day."
+extra {"stars", "star"}
+"These stars are brilliant twinkles in the sky. You could gaze at them for
+hours."
+extra {"sun"} 
+"What sun?"
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+OUT_ALWAYS_DARK
+movement SECT_DESERT
+east to plains2 descr "The Desolate Plains continue on to the horizon.";
+west to plains5 descr "The Desolate Plains continue on to the horizon.";
+south to plains1 descr "The Desolate Plains continue on to the horizon.";
+north to plains3 descr "The Desolate Plains continue on to the horizon.";
+end
+
+/* end of plains rooms */
+
+
+                           sentinel
+
+names {"sentinel"}
+title "Sentinel Room"
+descr
+"You get an odd feeling from this room. You can't see much, but there
+is definitely a very strange looking black sphere pulsing slowly on one 
+side of this chamber. There is a sign on the wall."
+extra {"black sphere", "sphere"}
+"This is an indistinct sphere of darkness. It seems to be blacker than
+black, and it hurts your eyes."
+extra {"sign", "wall"}
+"The sign reads:&l
+
+                      BEWARE OF THE CITADELLIANS 
+                        ENTER HOLE AT OWN RISK"
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_MOB}
+IN_ALWAYS_DARK
+north to cavern4 descr "Back out into the rough-hewn cavern.";
+end
+
+                           transition
+
+title "Transition"
+descr
+"This room is bare as bare can be. You can see only three exits, west,
+east, and north. You must choose your destiny, adventurer!"
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+ALWAYS_LIGHT
+movement SECT_INSIDE
+west to plains2 descr "There is a wall of mist obscuring your view."
+                open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+                key trans_key
+                keyword {"door numbered 1", "door"};     
+east to blackcave1 descr "There is a wall of mist obscuring your view."
+                   open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+                   key trans_key
+                   keyword {"door numbered 3", "door"};
+north to market_sq@midgaard descr "There is a wall of mist obscuring your 
+                                  view." 
+                            open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+                            key trans_key
+                            keyword {"door numbered 2", "door"};
+end
+
+
+                           cavern1
+
+title "A Small Dark Cavern"
+descr
+"This is a very small dark cavern. It looks as if it has just been
+formed, since the walls don't look weathered at all. As you peer through
+the darkness, you can see another opening to the east, as well as the pool
+of light from outside to the west."
+extra {"walls", "wall"}
+"The walls are made of a dark rock, veined with the native soil. It looks
+very unstable, and you feel you should not touch them."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+IN_ALWAYS_DARK
+movement SECT_INSIDE
+west to sm_pth15@hills descr "Ahhh. Back out into the open Drabar Hills.";
+east to cavern2 descr "The tight little cavern continues to the east.";
+end
+
+                           cavern2
+
+title "A Large Cavernous Chamber"
+descr
+"This is a very large chamber with very little to see in it. There is
+not much light, and you can barely make out a shaft leading down. You think
+to yourself 'Should I go back? Surely that's still an option...'"
+extra {"shaft"}
+"This is simply a hole in the floor, leading to who knows where."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+IN_ALWAYS_DARK
+movement SECT_INSIDE
+west to cavern1 descr "To the west the cavern continues."; 
+down to cavern3 descr "Down a fissure in the rock.";
+end
+
+                           cavern3
+
+title "An Inclined Cavern"
+descr
+"This cavern is tilted downward towards the south. You must be careful
+of slipping on the loose dirt and stones. Above, you see a large open
+shaft, and to the south is another opening."
+extra {"shaft"}
+"This is simply a hole in the ceiling, and you cannot see into it."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+IN_ALWAYS_DARK
+movement SECT_INSIDE
+up to cavern2 descr "A hard climb back up.";
+south to cavern4 descr "Easy walking, if you can see.";
+end
+
+                           cavern4
+
+title "A Very Small Cavern"
+descr
+"You are feeling quite claustrophobic now, since this cavern seems to
+be so small it appears as if it would crush you if you did not get out of
+here in time. Backing out of here would bring you back north, and south
+is a tiny opening. You can feel air being sucked into this opening, and 
+it looks just big enough for you to fit."
+extra {"opening"}
+"This opening is just large enough for a person to fit through."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+IN_ALWAYS_DARK
+movement SECT_INSIDE
+north to cavern3 descr "The wind makes it difficult to go back.";
+south to sentinel descr "A strong wind is blowing that way.";
+end
+
+/* 
+   This is the rooms section for the Rainbow Tower, which will contain
+   8 mobs: Red, Orange, Yellow, Green, Blue, Indigo, Violet, and the 
+   Rainbow Hydra.
+*/
+
+                         red_room
+
+title "The Red Room"
+descr
+"You are amazed that there could be this many shades of a single color.
+The whole room is almost sparkling with...RED! You can see the intense 
+permeation of the light from the myriad stars in the sky through the rosy
+crystalline walls. This eerie effect makes you sure that no one will need
+to clean up any spilt blood. You can barely make out the exits through the
+red haze, leading up and down."
+extra {"light", "stars", "star"}
+"The light given off by these stars is cold, harsh, and glaring, but
+only if you look at them straight on. There seems to be thousands upon
+thousands of them visible!"
+extra {"crystalline walls", "walls", "wall"}
+"The walls are made of a pink, almost transparent substance which 
+appears to diffuse the light from the stars in the sky."
+extra {"haze"}
+"This haze seems to be a dense, moist reddish mist that seems to the
+very air itself."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+ALWAYS_LIGHT
+movement SECT_INSIDE
+down to monochrome descr "For those of you who are colourblind."
+                   open {EX_OPEN_CLOSE, EX_CLOSED}
+                   keyword {"door"};
+up to orange_room descr "Orange.";
+end
+
+                         orange_room
+
+title "The Orange Room"
+descr
+"You are no less amazed by this room than you were about the previous.
+It is warm in this room, but you think the shards of orange crystal lend 
+little to this effect, since there are orange flames of every hue imaginable
+sprouting from the tips of every one of those shards. Exits lead up and
+down."
+extra {"shards", "shard"}
+"These are crystal shards, of a varied range of colors, all of them 
+being orange. You do not get bored watching the changing patterns of light
+caused by the flames."
+extra {"flames", "flame"}
+"These flames are orange too. While most of them are no bigger than a
+candle flame, they add an incredible amount of light to the room, possibly
+due to the refractive effects of the crystal shards."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+ALWAYS_LIGHT
+movement SECT_INSIDE
+down to red_room descr "Red.";
+up to yellow_room descr "Yellow.";
+end
+
+                         yellow_room
+
+title "The Yellow Room"
+descr
+"This rooms feels almost good, being bright and sunny. After a couple
+of minutes, you realize why. There is a large, blinding globe near the
+ceiling radiating an aura of immense power that fills the room. Other than
+that, the room is bare. You also notice that the walls, floor and ceiling
+are all mirrors, and they reflect the light and warmth a thousandfold. You
+forgot to bring your sunblock and you feel you should move on. Exits are
+up and down."
+extra {"globe"}
+"A globe of light; a globe of warmth; this could easily be compared to
+the sun."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+ALWAYS_LIGHT
+movement SECT_DESERT
+down to orange_room descr "Orange.";
+up to green_room descr "Green.";
+end
+
+                         green_room
+
+title "The Green Room"
+descr
+"A frenzied mass of greenery pervades this room. All the plants here 
+are of some shade of green, and you cannot even see the floor, since it is
+covered with a thick carpet of moss. Even the air seems to have chlorophyll
+wafting through it. You don't think anything here is edible, despite the
+gross number of fruits and berries visible. They're all GREEN! Exits are up
+and down."
+extra {"fruits", "fruit", "berries"}
+"While you know some fruits are supposed to be green, you are wary of
+them being too unripe to eat."
+extra {"moss"}
+"Soft and resilient, this moss seems like a good place to rest."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+ALWAYS_LIGHT
+movement SECT_FOREST
+down to yellow_room descr "Yellow.";
+up to blue_room descr "Blue.";
+end
+
+                         blue_room
+
+title "The Blue Room"
+descr
+"You find yourself standing waist-deep in the bluest water you've ever
+laid eyes on. The water is of a clear blue hue, with hundreds of thousands
+of marine animals swimming around in it. Not surprisingly, all the animals
+are of a blue color. You are dying to know why all the water doesn't rush
+out of the exit leading down. There is also an exit leading up, almost
+indistinguishable from the sky-blue ceiling."
+extra {"water"}
+"The water is clear, and very calm, or at least it was until you got 
+here!"
+extra {"animals", "animal", "fish"}
+"Too many to count, you know that there is little sense in even trying
+to count them, much less trying to catch these quick, flitting bluish 
+shadows."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+ALWAYS_LIGHT
+movement SECT_WATER_SWIM
+down to green_room descr "Green.";
+up to indigo_room descr "Indigo.";
+end
+
+                         indigo_room
+
+title "The Indigo Room"
+descr
+"This room is almost indescribable. Suffice it to say, this has got to 
+be the most indigo you've ever seen in your whole entire life. The room is
+filled with indigo streamers, drapes, curtains, and even a set of venetian 
+blinds hanging from the ceiling. This room is certainly gloomy! Exits are
+up and down."
+extra {"streamers", "streamer", "drapes", "drape", "curtains", "curtain",
+        "venetian blinds"}
+"These are all common household decorative items, and they're all 
+colored indigo. You are glad that your own home is not this monotonous."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+ALWAYS_LIGHT
+movement SECT_INSIDE
+down to blue_room descr "Blue.";
+up to violet_room descr "Violet.";
+end
+
+                         violet_room
+
+title "The Violet Room"
+descr
+"This room is royal. Royally purple that is. There are violet crystal
+tables with violet crystal cups, glasses, and chalices on them. You feel 
+like a bull in a china shop. The crystal itself seems to create a deep 
+violet light, which adds a very regal aura to the room. The ceiling is a
+very dark shade of violet, and you can make out the faint outline of 
+something there. The exit leads down."
+extra {"table"}
+"Made of the finest crystal, these tables don't look strong enough to 
+be holding all these objects."
+extra {"cups", "cup", "glasses", "glass", "chalices", "chalice"}
+"These are the most delicate looking drinking containers you have ever
+encountered. You feel it would be a crime to touch them."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+ALWAYS_LIGHT
+movement SECT_INSIDE
+down to indigo_room descr "Indigo.";
+up to prism descr "Ooohh. Pretty colors!"
+            open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_PICKPROOF, EX_HIDDEN}
+            key prism_key
+            keyword {"door"};
+end
+
+                         prism
+
+title "Prism"
+descr
+"You are almost blinded by the sheer irridescence of this room. After
+a moment you notice that you are standing on the colors themselves! There
+is only one exit leading up."
+extra {"colors", "color"}
+"The colors! The colors! You wonder if you've been eating certain kinds
+of mushrooms again."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT} 
+ALWAYS_LIGHT
+movement SECT_INSIDE 
+up to nightfall descr "A solid black door is blocking you way."
+                open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+                key night_key
+                keyword {"black door", "door"};
+end
+
+                         nightfall
+
+names {"nightfall"}
+title "Nightfall"
+descr
+"The thunder of complete and utter silence buffets your ears as you
+look around. You realize that you are also standing on absolutely nothing.
+In fact, you cannot see anything even remotely resembling the Citadel, or
+anything else for that matter. All you see are stars. Lots of them, in all
+directions. The only visible break in the star field is a ominous blacker
+than black spot directly overhead."
+extra {"star field", "stars", "star"}
+"You can see millions of them. Their light is cold and unrelenting, and
+it seems to bore deep within your very soul. You never thought stars could
+be evil, but now you know...&l
+All the stars seem to be laughing at you coldly. There is nowhere to run,
+nowhere to hide...
+Your mind is being twisted into something quite unrecognizable."
+extra {"black spot", "spot"}
+"This patch of inky darkness makes you feel even more paranoid than the
+stars do. The reason for this is that the stars closest to it seem to be
+stretched inwards toward it. As you stare into the spot, your mind is 
+paralyzed with fear at your final recognition of this object. This is a huge
+black hole, and you feel it is very much larger than the one that brought
+you to this realm."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS} 
+ALWAYS_LIGHT
+movement SECT_INSIDE 
+up to nightfall descr "Oh my god! It's full of stars!";
+down to nightfall descr "Oh my god! It's full of stars!";
+north to nightfall descr "Oh my god! It's full of stars!";
+west to nightfall descr "Oh my god! It's full of stars!";
+south to nightfall descr "Oh my god! It's full of stars!";
+east to nightfall descr "Oh my god! It's full of stars!";
+end
+
+
+                        marky_rm1 
+
+title "Marky's Office"  
+descr 
+"You are in the working place of obviously a poor and unimportant person.  
+You see a small desk with some papers on it.  To your left you see a pile of
+babies shoes. You wonder 'what does this person do for a living?' To your
+right you see a sofa. This place looks pretty boring, and you feel safe in
+here."  
+extra {"desk"} 
+"The desk looks pretty old. You can see a small inscription on its 
+side."  
+extra {"inscription"} 
+"'Made in #####.' You feel, actually, that you don't want to know where 
+it was made."  
+extra {"sofa"} 
+"You see a comfortable leather sofa. You can pull it open to make
+it into a bed."  
+extra {"shoe", "shoes", "pile"} "As you take a closer look at the pile of 
+shoes, you realize that some of them still have feet inside.  You don't 
+feel that safe anymore in here." 
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS} 
+movement SECT_INSIDE
+west to marky_rm2 descr "A plain white door."
+        open {EX_OPEN_CLOSE, EX_CLOSED}
+        keyword {"door"};
+down to nightfall descr "Oh my god! It's full of stars!";
+end
+
+                      marky_rm2 
+
+title "Marky's Bathroom"  
+descr 
+"This is Marky's bathroom. It's got shabby white tile on the walls, 
+a white porcelain sink and toilet (with not-too-shabby gold trim), and a 
+large shower stall. The sink has two faucets, each marked 'B'. The toilet 
+looks rather unclean, while the shower stall looks too clean. " 
+extra {"shower","stall"} 
+"The door is made of glass, which is cracked badly, and looks
+like it would shatter if you tried to open it. You decide that this would
+not be wise."  
+extra {"sink"}
+"This sink is very dirty. Inside you can see somekind of red fluid."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS} 
+movement SECT_INSIDE
+east to marky_rm1 descr "A plain white door."
+        open {EX_OPEN_CLOSE, EX_CLOSED}
+        keyword {"door"}; 
+end
+
+%mobiles
+
+/* lvl 4 mobs */                                
+                                
+                                black
+
+names {"black"}
+title "Black"
+descr "Black is here."
+extra {}
+"Black. She's black. Darker than white, she's black! What else can you say?!"
+level 39
+alignment -800
+race RACE_AUTOMATON
+sex SEX_FEMALE
+height 300
+weight 450
+money 4 SILVER_PIECE
+exp 120  /* for teamwork */
+NATURAL_DEF(WPN_CLAW, ARM_CHAIN)
+MSET_ABILITY(25,25,15,25,5,5,0,0)
+MSET_WEAPON(5,5,5,5,20,12)
+MSET_SPELL(3,3,3,3,3,3,6,6,6,6,6)
+special SFUN_TEAMWORK "white/grey"
+special SFUN_PAIN_INIT time WAIT_SEC*25 bits SFB_RANTIME
+"  100 Cemote looks at her siblings.@
+   110 Csay Would you guys be quiet!@
+   120 Cslap white@
+   130 Cpoke grey@
+   150 Csigh@
+   160 Csay You guys always make me do all the work.@
+   170 Csay Look, we've even got a visitor, and you still make fools of 
+       yourselves!@
+   180 Cpunch white@
+   190 Ccackle@
+"
+end                                
+                                white
+
+names {"white"}
+title "White"
+descr "White is here."
+extra {}
+"He's white. Lighter than black, he's white, you can barely see him, he's
+so white. You want him to go sit in the sun, he's so white."
+level 39
+alignment 800
+race RACE_AUTOMATON
+sex SEX_MALE
+height 300
+weight 450
+money 4 SILVER_PIECE
+exp 120 /* for teamwork */
+NATURAL_DEF(WPN_CLAW, ARM_CHAIN)
+MSET_ABILITY(25,25,15,25,5,5,0,0)
+MSET_WEAPON(5,5,5,5,20,12)
+MSET_SPELL(3,3,3,3,3,3,6,6,6,6,6)
+special SFUN_TEAMWORK "black/grey"
+special SFUN_PAIN_INIT time WAIT_SEC*25 bits SFB_RANTIME
+"  100 Cspit black@
+   110 Cslap white@
+   120 Cpoke grey@
+   130 Claugh@
+   150 Cemote throws a pie at Black. It hits her right in the face!@
+   160 Cemote pokes out Grey's eyes.@
+   170 Cgiggle@
+   180 Csay OWW!@
+   190 Cflip@
+"
+end
+                                grey
+
+names {"grey"}
+title "Grey"
+descr "Grey is here."
+extra {}
+"It's grey. What do you want? It's not white, it's not black. It's grey!!!
+There's not much else!"
+level 39
+alignment 0
+race RACE_AUTOMATON
+sex SEX_NEUTRAL
+height 300
+weight 450
+money 4 SILVER_PIECE
+exp 120 /* for teamwork */
+NATURAL_DEF(WPN_CLAW, ARM_CHAIN)
+MSET_ABILITY(25,25,15,25,5,5,0,0)
+MSET_WEAPON(5,5,5,5,20,12)
+MSET_SPELL(3,3,3,3,3,3,6,6,6,6,6)
+special SFUN_TEAMWORK "white/black"
+special SFUN_PAIN_INIT time WAIT_SEC*25 bits SFB_RANTIME
+"  100 Cgiggle@
+   110 Csay OUCH! Quit it!@
+   120 Cslap grey@
+   130 Cpoke black@
+   140 Csay You all suck.@
+   150 Cgrowl@
+   160 Csnarl white@
+"
+end
+
+/* end of lvl 4 mobs */
+
+/* lvl 1 mobs */                                
+
+                                hall_guard
+
+names {"hall guard", "guard"}
+title "a hall guard"
+descr "A hall guard is patrolling here."
+extra {}
+"A large, mean looking hall guard is patrolling here. You think it might be 
+wise to tread silently, seeing as you are a trespasser here."
+level 35
+alignment -800
+race RACE_HUMAN
+sex SEX_MALE
+height 210
+weight 200
+money 1 SILVER_PIECE
+exp 135 /* for teamwork (20) and rescue (15) */
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+MSET_ABILITY(25,25,20,25,0,5,0,0)
+MSET_WEAPON(5,20,10,5,10,5)
+MSET_SPELL(3,3,3,3,3,3,3,6,6,6,6)
+special SFUN_TEAMWORK "guard"
+special SFUN_RESCUE "guard"
+special SFUN_RANDOM_ZONE_MOVE time 100 bits SFB_RANTIME
+end
+
+                                foyer_guard
+
+names {"foyer guard", "guard"}
+title "a foyer guard"
+descr "A foyer guard is standing here."
+extra {}
+"A huge, ugly foyer guard is standing here. You think it might be wise to 
+tread silently, since you are a trespasser here."
+level 35
+alignment -900
+race RACE_HUMAN
+sex SEX_MALE
+height 200
+weight 185
+money 1 SILVER_PIECE
+exp 110 /* for rescue */
+NATURAL_DEF(WPN_FIST, ARM_HLEATHER)
+MSET_ABILITY(25,25,20,25,0,5,0,0)
+MSET_WEAPON(5,20,10,5,10,5)
+MSET_SPELL(3,3,3,3,3,3,3,6,6,6,6)
+special SFUN_RESCUE "guard"
+end
+
+/* end of lvl 1 mobs */
+
+/* mobiles for plains */
+
+                                living_cactus
+
+names {"huge cactus", "cactus"}
+title "a huge cactus"
+descr "A huge cactus is tip-toeing around here."
+extra {}
+"This cactus doesn't look so life giving. As a matter of fact, it looks 
+like it takes away life!"
+level 30
+alignment -500
+race RACE_TREE
+sex SEX_NEUTRAL
+height 600
+weight 150
+money 3 SILVER_PIECE
+NATURAL_DEF(WPN_CLAW, ARM_CHAIN)
+MSET_ABILITY(30,25,10,25,5,5,0,0)
+MSET_WEAPON(5,5,5,5,25,10)
+MSET_SPELL(3,5,3,4,5,4,4,3,7,4,3)
+special SFUN_RANDOM_ZONE_MOVE time 70 bits SFB_RANTIME
+end
+                                
+                                sand_snake
+
+names {"sand snake", "snake"}
+title "a large sand snake"
+descr "A large snake slithers around your feet."
+extra {}
+"This snake looks deadlier than any other snake you've seen before."
+level 30
+alignment -500
+race RACE_SNAKE
+sex SEX_NEUTRAL
+height 50
+weight 100
+money 2 SILVER_PIECE
+exp 120 /* poison bite */
+NATURAL_DEF(WPN_BITE, ARM_CHAIN)
+MSET_ABILITY(30,30,10,30,0,0,0,0)
+MSET_WEAPON(5,5,5,5,25,10)
+MSET_SPELL(3,5,3,4,5,4,4,3,7,4,3)
+special SFUN_COMBAT_POISON
+special SFUN_RANDOM_ZONE_MOVE time 60 bits SFB_RANTIME
+end
+
+/* end of plains mob section */
+
+/* Quest made by Vanyel */
+
+                                shriveled_man
+names {"shriveled man", "shriveled", "man"}
+title "a shriveled up man"
+descr "A shriveled up husk of a man is here."
+extra {}
+"You see a shriveled up old man here."
+alignment -1000
+level 5
+money 5 IRON_PIECE
+sex SEX_MALE
+weight 50
+height 10
+exp 0 /* quest mob! */
+race RACE_HUMAN
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+MSET_ABILITY(45,25,10,15,5,0,0,0)
+MSET_WEAPON(2,2,2,2,15,2)
+MSET_SPELL(10,10,10,10,5,5,5,5,5,5,5)
+position POSITION_SITTING
+default POSITION_SITTING
+dilbegin shriveled_prg1();
+var
+  item   : unitptr;
+  pc     : unitptr;
+  ti     : unitptr;
+  i      : integer;
+  exdp   : extraptr;
+  dd     : unitptr;
+code
+{
+
+   :init:
+   heartbeat := PULSE_SEC*4;
+   on_activation((self.position <= POSITION_SLEEPING) or
+                (self.position == POSITION_FIGHTING), skip);
+
+
+   :start:
+   wait(SFB_CMD,(activator.type == UNIT_ST_PC) and (not command(CMD_GIVE)));
+
+    if (APOC_COMPLETE in activator.quests)
+     goto waitawhile;
+
+   pc := activator;
+   secure(pc, lostpc);
+
+   if (not (APOC_ONGOING in pc.quests))
+   {  
+      pause;
+      exec("emote appears to shimmer and take on a more substantial form.", self);
+      pause;
+      exec("emote clears his throat.", self);
+      pause;
+      exec("say Hello...", self);
+      pause;
+      exec("say Welcome...", self);
+      pause;
+      exec("say You must be a strong and valiant fighter to make it to where " +
+           "you are...", self);
+      pause;
+      exec("cackle", self);
+      pause;
+      pause;
+      exec("say And one of us now, too I see... welcome to the dark, my, how " +
+           "it becomes you!", self);
+      pause;
+      pause;
+      exec("say Now, I think that the time has finally come, since my eons-old"+
+           " security has been breached... and since you were the one to do it,"+
+           " I choose you as my champion.", self);
+      pause;
+      exec("grin", self);
+      pause;
+      pause;
+      exec("say Since my last battles, i have become as you see me... bereft of "+
+           "power, a mere husk of my former fine self.", self);
+      pause;
+      pause;
+      exec("It has taken me thousands of years to find the spell which would "+
+           "return to me the powers so ruthlessly ripped from my grasp by the "+
+           "gods in asgaard, puny as they may be, as one, they are a force to"+
+           " make my whole world tremble, but fear not- for i will have the"+
+           " last word...", self);
+      pause;
+      pause;
+      exec("say I will require a few things to facilitate my return.", self);
+      pause;
+      pause;
+      exec("say The all seeing eye of the women three which will help me see my" +
+           " way back to my home...", self);
+      pause;
+      pause;
+      exec("say One of my most favorite students, and the last of my kind to"+
+           " to leave this place has hired himself out as a guard, I require"+
+           " his sword, to fight my way back through the path of good.", self);
+      pause;
+      pause;
+      exec("say The god of gods holds the last of my mighty magical armour,"+
+           " he has had the gall to wear it in triumpth, and I shall wear it"+
+           " as i rip his still beating heart from his chest.", self);
+      pause;
+      exec("say You will bring me these things NOW!.",self);
+      pause;
+      exec("say Nod your head.", self);
+
+      i := 0;
+      while (i < 5)
+       {
+         wait(SFB_CMD, (activator #= pc));
+
+         if (command(CMD_NOD))
+         {
+            goto quest_accepted; 
+         }
+         else if (command(CMD_SAY))
+         {
+            pause;
+            exec("say Nod if you accept my challenge, shake your head "+
+                 "otherwise.", self);
+         }
+         else if (command(CMD_SHAKE))
+           goto no_quest;
+
+         i := i+1;
+      }
+
+      :no_quest:
+      pause;
+      exec("say You shall pay for your insolence! BEGONE!!", self);
+      pause;
+      exec("emote waves his hands in a mystical gesture.", self);
+      exec("emote touches his index finger to your forehead.", self);
+      link(pc, findroom("temple@udgaard"));
+      unsecure(pc);
+      goto waitawhile;
+
+      :quest_accepted:
+      pause;
+      exec("say Then go, and only return when you have what I require. You"+
+           " will be rewarded sufficiently...", self);
+      pause;
+      exec("cackle", self);
+      addextra(pc.quests, {APOC_ONGOING}, "");
+      unsecure(pc);
+      goto start;
+   }
+   else
+   {
+      exdp := APOC_ONGOING in pc.quests;
+      if (("eye" in exdp.names) and ("blood sword" in exdp.names) and
+          ("kirtle" in exdp.names))
+      {          
+         pause;
+         subextra(pc.quests, APOC_ONGOING);
+         addextra(pc.quests, {APOC_COMPLETE}, "");
+         pause;
+         exec("emote grasps the eye and begins to look through it.", self);
+         pause;           
+         exec("emote wields the blood sword two-handedly.", self);
+         exec("scream", self);
+         pause;
+         exec("emote wears the kirtle on his body.", self);
+         pause;
+         exec("say Now I shall be reborn!", self);
+         pause;
+         exec("emote throws his hands up to the sky and screams.", self);
+         pause;
+         exec("emote dissolves into a ball of eerie light and shoots towards "+
+              "the heavens.", self);
+         experience(3000, pc);
+         dd := load("deity@citadel");
+         ti := load("dark_mjollnir@citadel");
+         ti.height := dd.height;
+         link(ti, dd);
+         addequip(ti, WEAR_WIELD);
+         link(dd, findroom("nightfall@citadel"));
+         exec("emote coalesces from the Darkness!", dd);
+         exec("say Now DIE!", dd);
+         exec("kill "+pc.name, dd);
+         destroy(self);
+      }
+   }
+
+   unsecure(pc);
+   goto start;
+
+   :waitawhile:
+   heartbeat := PULSE_SEC*60;
+   pause;
+   goto init;
+
+   :lostpc:
+   pause;
+   exec("say You cannot leave me, I command you!", self);
+   pause;
+   goto start;
+
+}
+dilend  
+
+dilbegin shriveled_prg2();
+var
+  pc     : unitptr;
+  item   : unitptr;
+  exdp   : extraptr;
+
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*5;
+   on_activation((self.position <= POSITION_SLEEPING) or
+                (self.position == POSITION_FIGHTING), skip);
+
+   :start:
+   wait(SFB_CMD, command(CMD_GIVE) and (activator.type == UNIT_ST_PC));
+
+   :give:
+   if (not (APOC_ONGOING in activator.quests))
+     goto start;
+
+   pc := activator;
+   item := self.inside;
+   secure(pc, labsecure);
+   secure(item, labsecure);
+
+   wait(SFB_CMD | SFB_TICK, TRUE);
+
+   if (not (item #= self.inside))
+   {
+      unsecure(item);
+      exdp := APOC_ONGOING in pc.quests;
+
+
+      if ("white eye" in self.inside.names)
+      {
+         addstring(exdp.names, "eye");
+         exec("say Ahah! You hath defeated the witches, I see!", self);
+         destroy(self.inside);
+      }
+      else if ("blood sword" in self.inside.names)
+      {
+         addstring(exdp.names, "blood sword");
+         exec("say You are indeed worthy!", self);
+         destroy(self.inside);
+      }
+      else if ("kirtle" in self.inside.names)
+      {
+         addstring(exdp.names, "kirtle");
+         exec("say Excellent! You hath destroyed Odin!", self);
+         destroy(self.inside);
+      }
+      else
+      {
+         pause;
+         exec("say I did not ask for this, you moron!", self);
+         pause;
+         exec("say Take it back!", self);
+         link(self.inside, pc);
+      }
+   }
+   unsecure(pc);
+
+   if ((command(CMD_GIVE)) and (activator.type == UNIT_ST_PC))
+   {
+      goto give;
+   }
+   else
+     goto start;
+
+   :labsecure:
+   exec("say They will not get far!", self);
+   goto start;
+}
+dilend
+end
+
+
+                                deity
+
+names {"dark deity", "deity", "saor"}
+title "the Dark Deity"
+descr "The Dark Deity is standing over you."
+extra {}
+"The Dark Deity is glaring you in the eyes, you can tell your time on this 
+plane of existence is coming to an end, FAST!"
+alignment -1000
+level 55
+money 3 SILVER_PIECE
+sex SEX_MALE
+weight 500  
+height 600
+exp 125 /* Ambush in dil */
+race RACE_NORSE_GOD
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+MSET_ABILITY(25,20,15,20,10,10,0,0)
+MSET_WEAPON(16,13,15,15,15,11)
+MSET_SPELL(1,1,1,1,1,1,1,1,2,1,4)
+position POSITION_STANDING
+default POSITION_STANDING
+end
+
+                             bum
+
+names {"bum"}                        
+title "Bum"
+descr "A poor old bum is looking at your purse here."
+extra{}
+"Upon a closer look you can see that he is not as defenseless as he seemed
+at first. You can see that he has a weapon and you can see that he'll be 
+comfortable using in cutting your guts out. Maybe you should stay away 
+from this one."
+level 29
+alignment -350
+race RACE_HUMAN
+sex SEX_MALE
+height 170
+weight 150
+exp 100
+NATURAL_DEF(WPN_FIST, ARM_CHAIN)
+MSET_ABILITY(10,20,20,15,10,10,15,0)
+MSET_WEAPON(10,20,14,15,15,15)
+MSET_SPELL(1,1,1,1,1,1,1,1,1,1,1)
+end
+                                
+                                
+                                scientist
+
+names {"scientist"}
+title "a scientist"
+descr "A smart-looking scientist is here checking some figures."
+extra {}
+"This man is a scientist, smart as hell. His muscles are like jello. You
+think you are scaring him by breathing on him."
+level 30
+alignment -1000
+race RACE_HUMAN
+sex SEX_MALE
+height 200
+weight 300
+money 6 COPPER_PIECE
+exp 110 /* magic */
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+MSET_ABILITY(10,15,10,20,15,20,10,0)
+MSET_WEAPON(5,25,5,5,5,5)
+MSET_SPELL(3,6,3,4,5,4,3,4,4,9,5)
+special SFUN_COMBAT_MAGIC "cast tox"
+end
+                                
+                                doctor
+
+names {"doctor"}
+title "a doctor"
+descr "A smart-looking doctor is here looking the men over."
+extra {}
+"This man is a doctor. smart as hell. His muscles are like jello. You
+think you are scaring him by breathing on him. You also think that the 
+scientist would take him in a fight."
+level 29
+alignment -1000
+race RACE_HUMAN
+sex SEX_MALE
+height 190
+weight 265
+money 1 SILVER_PIECE
+exp 110 /* magic */
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+MSET_ABILITY(10,15,10,20,15,20,10,0)
+MSET_WEAPON(5,25,5,5,5,5)
+MSET_SPELL(3,6,3,4,5,4,3,4,4,9,5)
+special SFUN_COMBAT_MAGIC "cast tox"
+end
+                              
+
+                           security_guard
+
+names {"security guard", "guard"}
+title "a security guard"
+descr "A security guard is carefully watching the area here."
+extra{}
+"This man is very big and strong. He is wearing a uniform with a big 'S' 
+printed on it. He would be a very formidable opponent."
+race RACE_HUMAN
+level 35
+sex SEX_MALE
+height 199
+weight 300
+alignment -500
+exp 130 /* teamwork/rescue */
+NATURAL_DEF(WPN_FIST, ARM_HLEATHER)
+MSET_ABILITY(30,29,10,15,10,5,1,0)
+MSET_WEAPON(10,15,10,0,10,0)
+MSET_SPELL(5,0,0,0,5,10,5,5,5,5,15)
+special SFUN_TEAMWORK "guard/officer"
+special SFUN_RESCUE "guard/officer/doctor/scientist"
+special SFUN_RANDOM_ZONE_MOVE time 80 bits SFB_RANTIME
+end
+
+                       security_off
+
+names {"security officer", "officer"}
+title "the security officer"
+descr "The security officer watches over his guards."
+extra{}
+"This specimen looks very impressive. He is almost seven feet tall and 
+weighs more than 300 pounds. He isn't wielding a weapon, but it doesn't
+look like he needs one. His fists can probably crush you or anyone else 
+who crosses him."
+race RACE_HUMAN
+level 40
+sex SEX_MALE
+height 220
+weight 400
+alignment -600
+exp 120 /* teamwork/rescue */
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+MSET_ABILITY(26,29,15,20,10,0,0,0)
+MSET_WEAPON(5,10,5,5,20,5)
+MSET_SPELL(5,0,0,0,5,5,5,5,5,5,15)
+special SFUN_TEAMWORK "guard"
+special SFUN_RESCUE "guard"
+end
+
+                    mercenary
+
+names {"mercenary"}
+title "a mercenary"
+descr "A mercenary is here waiting to be called on to kill."
+extra{}
+"This man is strong and very experienced. He has seen action all around this
+small world and he knows how much his skills are worth. His knowledge of
+weapons is supreme though he might lack the spiritual training. He kills for
+money and he is good at it. Be careful, he might think you are worth 
+something."
+race RACE_HUMAN
+level 37
+sex SEX_MALE
+height 185
+weight 190
+alignment -325 
+NATURAL_DEF(WPN_FIST, ARM_CHAIN)
+MSET_ABILITY(25,25,10,20,10,5,5,0)
+MSET_WEAPON(20,20,10,10,10,5)
+MSET_SPELL(0,0,0,0,0,0,5,0,5,5,10)
+end
+
+                    prefab_sold
+
+names {"pre-fab soldier", "pre-fab", "soldier"}
+title "a pre-fab soldier"
+descr "A pre-fabricated soldier is here, waiting for orders."
+extra {}
+"This is a pre-fabricated soldier. It looks like every single other one
+around here, and you can't help wondering if there is something odd about
+them."
+race RACE_HUMAN
+level 33
+sex SEX_NEUTRAL
+height 185
+weight 250
+alignment 0
+exp 105 /* rescue */
+NATURAL_DEF(WPN_FIST, ARM_HLEATHER)
+MSET_ABILITY(25,25,10,20,10,5,5,0) 
+MSET_WEAPON(25,25,10,10,10,5) 
+MSET_SPELL(0,0,0,0,0,0,5,0,0,0,10) 
+special SFUN_RESCUE "soldier"
+end
+
+
+                                skeleton
+names {"skeleton"}
+title "a large human skeleton"
+descr "A large human skeleton is propped against a wall here."
+extra {}
+"This is a skeleton, plain and simple.  All bones and angles, no flesh."
+level 37
+alignment -800
+race RACE_HUMAN
+sex SEX_NEUTRAL
+height 200
+weight 120
+money 1 SILVER_PIECE
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+MSET_ABILITY(25,25,15,20,5,10,0,0)
+MSET_WEAPON(10,20,14,15,15,15)
+MSET_SPELL(1,1,1,1,1,1,1,1,1,1,1)
+end
+                                
+                                wolverine
+names {"wolverine", "ball", "fur"}
+title "a huge black wolverine"
+descr "A huge black ball of fur is rolled up in the corner here."
+extra {}
+"This is a ferocious animal, with 6 inch long claws. it looks like a worthy
+and deadly opponent."
+level 32
+alignment -500
+race RACE_BADGER
+sex SEX_MALE
+height 120
+weight 225
+money 3 SILVER_PIECE
+exp 105 /* rescue */
+NATURAL_DEF(WPN_CLAW, ARM_CHAIN)
+MSET_ABILITY(25,25,20,20,5,5,0,0)
+MSET_WEAPON(15,15,15,14,25,5)
+MSET_SPELL(1,1,1,1,1,1,1,1,1,1,1)
+special SFUN_RESCUE "wolverine"
+end
+                                
+                                magma_man
+
+names {"magma man", "magma", "man"}
+title "a man made out of magma"
+descr "A large man that seems to be made out of magma is here."
+extra {}
+"This man seems to be in constant agony.  You can only call him a man 
+because he has 2 arms, 2 legs and a head, and looks like a man, although
+he seems to have more kin in the lava that flows beneath him."
+level 40
+alignment 0
+race RACE_HUMAN
+sex SEX_MALE
+height 200
+weight 350
+money 2 SILVER_PIECE
+exp 120  /* magic */
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+MSET_ABILITY(25,25,10,20,5,5,10,0)
+MSET_WEAPON(5,10,5,5,15,10)
+MSET_SPELL(1,1,1,1,1,6,15,1,11,6,6)
+special SFUN_COMBAT_MAGIC "cast firestorm"
+end
+                                
+                                bguard
+
+names {"black caves guard", "black guard", "caves guard", "guard"}
+title "the Black Caves Guard"
+descr "A large black-clad man is patrolling the caves here."
+extra {}
+"This man looks extremely deadly. Once one of the greatest fighters of the
+Citadel, he gave his mortal body to become the guardian of the black caves in
+the hope that his master would come and he would be there to greet him."
+level 42
+alignment -1000
+race RACE_HUMAN
+sex SEX_MALE
+height 200
+weight 500
+money 3 SILVER_PIECE
+exp 115  /* teamwork */
+NATURAL_DEF(WPN_FIST, ARM_HLEATHER)
+MSET_ABILITY(25,25,15,20,5,10,0,0)
+MSET_WEAPON(16,15,14,15,15,13)
+MSET_SPELL(1,1,1,1,1,1,1,1,2,1,1)
+special SFUN_TEAMWORK "guardian"
+special SFUN_RANDOM_ZONE_MOVE time 60 bits SFB_RANTIME
+end
+                                
+                                bmole
+names {"black mole", "mole"}
+title "a large Black Mole"
+descr "A large Black Mole is here digging through the ground."
+extra {}
+"These moles look more hardy than your average mole- as a matter of fact,
+they look downright mean! "
+level 28
+alignment 0
+race RACE_BADGER
+sex SEX_FEMALE
+height 100
+weight 150
+money 7 SILVER_PIECE
+exp 90  /* blind negates rescue bonus (100-15+5) */
+NATURAL_DEF(WPN_CLAW, ARM_PLATE)
+MSET_ABILITY(25,20,20,25,5,5,0,0)
+MSET_WEAPON(15,15,14,10,20,15)
+MSET_SPELL(1,1,1,1,1,1,1,1,1,1,1)
+romflags(CHAR_BLIND)
+special SFUN_RESCUE "mole"
+end
+                                guardian
+
+names {"guardians", "guardian"}
+title "the Guardian"
+descr "A deadly looking guardian is standing here."
+extra {}
+"This woman looks extremely deadly. She seems to be guarding someone,
+and she is good at her job!"
+level 50
+alignment -1000
+race RACE_HUMAN
+sex SEX_FEMALE
+height 200
+weight 250
+money 3 SILVER_PIECE
+exp 130 /* teamwork/rescue/guard_way */
+NATURAL_DEF(WPN_FIST, ARM_HLEATHER)
+MSET_ABILITY(25,20,15,20,10,10,0,0)
+MSET_WEAPON(13,16,15,15,15,14)
+MSET_SPELL(1,1,1,1,1,1,1,1,1,1,2)
+special SFUN_GUARD_WAY "0@blackcave17@$1n stops you.@$1n prevents $3n from going north."
+special SFUN_TEAMWORK "guardian/black caves guard"
+special SFUN_RESCUE "guardian"
+end                                
+                                witch
+
+names {"blind hag", "witch", "hag"}
+title "the Blind Witch"
+descr "A scrawny witch is huddled here over a pot."
+extra {}
+"This woman looks extremely ugly. She reminds you of Stanley the dog in  
+drag. She seems extremely powerful, and exudes a aura of pure evil."
+level 55
+alignment -1000
+race RACE_HUMAN
+sex SEX_FEMALE
+height 200
+weight 300
+money 1 SILVER_PIECE
+exp 135  /* magic and rescue */
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+MSET_ABILITY(10,10,10,25,5,20,20,0)
+MSET_WEAPON(3,3,3,3,5,3)
+MSET_SPELL(10,1,1,1,1,9,11,11,11,13,11)
+special SFUN_RESCUE "blind hag"
+special SFUN_COMBAT_MAGIC "cast stinking cloud"
+end                                
+                                
+                                sod_hurling
+
+names {"sod hurling", "sod", "hurling"}
+title "Sod Hurling"
+descr "Sod Hurling is standing here smoking a cigarette."
+extra {}
+"This man looks all powerful, but all you can say to yourself is how much
+you would love to have that suit! At second glance, he looks REAL darn 
+familiar."
+level 60
+alignment +1000
+race RACE_HUMAN
+sex SEX_MALE
+height 200
+weight 600
+money 4 SILVER_PIECE    
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+MSET_ABILITY(25,25,10,25,5,10,0,0)
+MSET_WEAPON(10,10,10,6,6,8)
+MSET_SPELL(4,4,4,4,4,4,4,4,7,4,7)
+dilbegin sod_dil();
+var
+   pc : unitptr;
+   key : unitptr;
+   fkey : unitptr;
+code
+{
+     :init:
+     heartbeat := PULSE_SEC*4;
+     on_activation(self.position <= POSITION_SLEEPING, skip);
+
+     :start:
+     wait(SFB_CMD, activator.type == UNIT_ST_PC);
+
+     pc := activator;
+     fkey := findunit(self, "transition key", FIND_UNIT_HERE, null);
+     if (fkey != null) goto init;
+     exec("say Ahhh. So you want to venture into the Citadel, eh?", self);
+     pause;
+     if (pc.level <= 20)
+     {
+        exec("say Hmm. You appear too puny to enter...", self);
+        pause;
+        exec("say I refuse to be a party to your untimely death!", self);
+        heartbeat := PULSE_SEC*60;
+        pause;
+        goto init;
+     }
+     else
+     {
+        exec("say You will need this key, "+pc.name+".", self);
+        key := load("trans_key@citadel");
+        link(key, self);
+        exec("drop "+key.name, self);
+        pause;
+        exec("say Get it, quick!", self);
+        heartbeat := PULSE_SEC*60;
+        goto init;
+     }
+}
+dilend
+end
+
+/* Dark Mjollnir replacement dude (after remake) */
+
+		svygil
+names {"Svygil","knight"}
+title "Svygil of Niflheim"
+descr "A dark, armorclad knight steps from the shadows as you approach."
+extra {}
+"His cape dirty with the dust of the roads traveller, his armour 
+spattered with blood of foes slain, his eyes shining with hunger for your 
+lifeblood and his hand longing for the feel of your still-beating heart." 
+level 75
+alignment -1000
+race RACE_HUMAN
+sex SEX_MALE
+exp 130 		/* Combat Dil */
+height 190
+weight 200
+flags {UNIT_FL_NO_TELEPORT}
+money 4 SILVER_PIECE
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+MSET_ABILITY(20,25,5,25,10,5,5,5)
+MSET_WEAPON(20,16,10,8,2,4)
+MSET_SPELL(2,2,2,2,2,4,4,4,7,4,7)
+
+dilbegin reimb_hammer();
+var
+	u	: unitptr;
+	pc	: unitptr;
+code
+{
+on_activation(self.position==POSITION_FIGHTING,skip);
+heartbeat:=PULSE_SEC*5;
+	:start:
+wait(SFB_CMD,activator.type == UNIT_ST_PC);
+pc:=activator;
+if (not(APOC_COMPLETE in pc.quests)) goto start; 
+secure(pc,gone);
+u:=findunit(pc,"dark mjollnir",FIND_UNIT_IN_ME,null);
+if (u) goto start;
+pause;
+exec("say I've been waiting for you, "+pc.name+".",self);pause;
+exec("say You brought forth the doom of my master, forcing him away "+
+"from this plane of existence!",self);
+act("$3N stares at you and you can see fire in $3s eyes!",
+A_SOMEONE,self.outside,null,self,TO_CHAR);
+act("$3N stares at $1n with fire in $3s eyes!",
+A_SOMEONE,self.outside,null,self,TO_REST);pause;
+exec("say Now I recovered the weapon, you've looted from my master's "+
+"corpse!",self);pause;
+exec("say It shall be your doom, weakling!",self);
+exec("emote mutters a few words and with a blast of icy wind the "+
+"Dark Mjollnir materializes in his hands!",self);pause;
+u:=findunit(self,"falchion",FIND_UNIT_EQUIP,null);
+if (u) unequip(u);
+u:=load("dark_mjollnir@citadel");
+link(u,self);
+u.height:=self.height;
+addequip(u,WEAR_WIELD);
+set_fighting(self,pc);
+quit;
+	:gone:
+exec("emote grimaces with disgust.",self);
+exec("say Honourless weakling.",self);
+u:=findunit(self,"dark mjollnir",FIND_UNIT_IN_ME,null);
+if (u) destroy(u);
+goto start;
+}
+dilend
+
+dilbegin nodisarm();
+var
+	pc	: unitptr;
+	u	: unitptr;
+code
+{
+	:start:
+wait(SFB_CMD,command(CMD_DISARM)and(argument));
+pc:=activator;
+secure(pc,start);
+u:=findunit(pc,argument,FIND_UNIT_SURRO,null);
+if (u!=self) goto start;
+block;
+act("As you try to disarm $3n, $3e slaps away your weapon and smashes "+
+"$3s fist in your face!",A_SOMEONE,pc,null,self,TO_CHAR);
+act("$1n tries to disarm $3n but $3e slaps away $1s weapon and smashes "+
+"$3s fist in $1s face!",A_SOMEONE,pc,null,self,TO_REST);
+pc.hp:=pc.hp-rnd(5,20);
+position_update(pc);
+set_fighting(self,pc);      
+goto start;
+}
+dilend
+
+dilbegin svygil_fight();
+var
+	u	: unitptr;
+	flux	: integer;
+	pc	: unitptr;
+code
+{
+	:init:
+heartbeat:=PULSE_VIOLENCE*2;
+
+	:start:
+wait(SFB_COM,self.position==POSITION_FIGHTING);
+pc:=self.fighting;
+secure(pc,start);
+flux:=rnd(1,8);
+
+if ((flux==1)and(pc.alignment>-350))
+{
+exec("say Taste the power of Dark Mjollnir, infidel!",self);
+exec("icez",self);
+}
+if (flux==2)
+{
+exec("say Suffer the wrath of Dark Deity, heretic!",self);
+exec("cast harm ",self);
+}
+if (flux==3)
+{
+if (not(self.hp<self.max_hp/2)) goto start;
+exec("cast heal self",self);
+}
+if (flux==4)
+{
+ if (rnd(1,2)==1)
+ {
+ exec("cackle "+pc.name,self);
+ }
+exec("cast icestorm "+pc.name,self);
+}
+if (flux==5)
+{
+exec("cast madness "+pc.name,self);
+}
+pause;
+goto start;
+}
+dilend
+end
+
+%objects
+                         
+                         dark_mirror
+names {"dark mirror", "mirror"}
+title "the Dark Mirror"
+descr "The Dark Mirror is in the middle of the room."
+extra {}
+"This mirror is made of what appears to be onyx. The frame is a dark
+material; it looks like ancient wood. The surface does not reflect as you
+would think it does, but it has a cloudy pattern swirling about. There is
+a set of buttons on the frame, with twelve buttons. A small plaque is 
+evident over the row of buttons."
+extra {"frame"}
+"This frame appears to be made of an ancient blackened wood."
+extra {"buttons", "button"}
+"There are twelve buttons, with small indecipherable symbols engraved upon
+them."
+extra {"plaque"}
+"The plaque is extremely worn and aged. You can barely make out words in
+all the grime:&l
+
+                      -#--# T#E ##R# MI#R#R /-###
+        #C#E#SIN# T#IS #EVI#E ### L##D ## ##AT# - ### W#TH C##T##N.
+                             #N## WA# ##T!
+                        Push bu#t##s #t #w# r#s#."
+type ITEM_OTHER
+weight 10000
+dilbegin darkmirror();
+var
+   pc : unitptr;
+   bt : string;
+   pck : integer;
+   but : integer;
+   mnp : integer;
+code 
+{
+    :init:
+    pck := 0;
+    heartbeat := PULSE_SEC*4;
+
+    :start:
+    on_activation(activator.position <= POSITION_SLEEPING, skip);
+
+    wait(SFB_CMD, ((activator.type == UNIT_ST_NPC) or 
+                  (activator.type == UNIT_ST_PC)) and command(CMD_PUSH));
+
+    block;
+    pc := activator;
+    secure(pc, lostpc);
+    if ("button" in argument)
+    {
+       act("You really don't know what you're doing, do you?", A_ALWAYS,
+           pc, null, null, TO_CHAR);
+       act("$1n has a confused look on $1s face.", A_ALWAYS, pc, null,
+           null, TO_REST);
+       pause;
+       act("You start pressing buttons at random.", A_ALWAYS, pc, null,
+           null, TO_CHAR);
+       act("$1n starts pressing the buttons randomly.", A_ALWAYS, pc,
+           null, null, TO_REST);
+       
+       while (pck < 5)
+       {
+           but := rnd(1,12);
+           bt := itoa(but);
+           act("You press button number $3t.", A_ALWAYS, pc, self, 
+               bt, TO_CHAR);
+           act("$1n presses button number $3t.", A_ALWAYS, pc, self,
+               bt, TO_REST);
+           pck := pck + 1;
+       }    
+       pause;
+       act("The image in the $2n begins to roil furiously, and the "+ 
+           "buttons start to flash wildly.", A_ALWAYS, pc, self, null, 
+           TO_ALL);
+       pause;
+       act("Suddenly, a vortex forms within the surface of the $2n!",
+           A_ALWAYS, pc, self, null, TO_ALL);
+       pause;
+       act("The vortex pulls you in! You struggle vainly, but you "+
+           "cannot escape!", A_ALWAYS, pc, null, null, TO_CHAR);
+       act("The vortex swirls madly, and pulls $1n into the $2n!", 
+           A_ALWAYS, pc, self, null, TO_REST);
+       act("$1n is gone!", A_ALWAYS, pc, null, null, TO_REST);
+       link(pc, findrndunit(pc, FIND_UNIT_WORLD, UNIT_ST_ROOM));
+       act("You find yourself materializing in...", A_ALWAYS, pc, 
+           null, null, TO_CHAR);
+       exec("look", pc);
+
+       unsecure(pc);
+       :lostpc:
+       goto init;
+    }
+}
+dilend
+end
+                          
+                         night_key
+
+names {"key of night", "night key", "key"}
+title "the Key of Night"
+descr "A key that seems to be made of the night itself is here."
+extra {}
+"This is a very special key. It is the darkest key you've ever seen, and
+it seems to have stars twinkling faintly within it."
+manipulate {MANIPULATE_TAKE}
+type ITEM_KEY
+weight 1
+end
+                         
+                         narrow_blade 
+
+names {"narrow blade", "blade"}
+title "a narrow blade"
+descr "A small, narrow, and very sharp blade is glowing with power here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+weight 15
+cost 50 COPPER_PIECE
+rent 210 IRON_PIECE
+extra {}
+"This small and very narrow blade looks like it been made by gods and 
+could cut through steel like a blowtorch through butter. It looks sort of 
+magical, and you are not sure you are skilled enough to handle it. It's 
+glowing with magical power."
+extra {"$identify"}
+"This is a short sword. Can be used by middle levellers, and it adds to
+short sword skill and strength and detracts from intelligence slightly."
+extra {"$improved identify"}
+"This is short sword that adds 10 to your short sword skill, and +2 to
+strength and -1 from brain. It slays humans. Quality 7 and 4 magic bonus.
+Restricted to level 30 and above."
+WEAPON_DEF(WPN_SHORT_SWORD, 1, 0)
+dilcopy level_restrict@function(30,0,0,"");
+WEAPON_SLAYER(RACE_HUMAN)
+WEAPON_TRANSFER(WPN_SHORT_SWORD, 2)
+STR_TRANSFER(+2)
+BRA_TRANSFER(-1)
+end
+                             
+                          prism_key
+
+names {"prism key", "key"}
+title "the Prism Key"
+descr "The Prism Key is here, radiating color."
+extra {}
+"This key is glowing in all the colors of the rainbow, and more! You see
+that, unlike a real prism there is no pattern or coherence to the colors."
+type ITEM_KEY
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+end
+
+                             trans_key
+
+names {"transition key", "key"}
+title "the Transition Key"
+descr "The Transition Key is lying here."
+extra {}
+"This key is oddly shaped. It seems to be three keys in one, each being
+120 degrees apart, coming from the central focus point."
+type ITEM_KEY
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+special SFUN_BLOW_AWAY "$1n fades from existence."
+                       time WAIT_SEC*120 bits SFB_RANTIME
+end
+
+                              scalpel
+
+names {"scalpel", "knife"}
+title "a scalpel"
+descr "A scalpel is stuck in the ground here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+weight 5
+cost 42 COPPER_PIECE
+rent 8 IRON_PIECE
+extra {}
+"This scalpel looks like it might hurt you."
+flags {UNIT_FL_MAGIC}
+WEAPON_DEF(WPN_DAGGER, 0, 2)
+dilcopy level_restrict@function(30,0,0,"");
+dilcopy abi_restrict@function(ABIL_BRA,25,0,0,"");
+end
+
+                           
+                           black_hole
+
+names {"black hole", "hole"}
+title "the Black Hole"
+descr "The Black Hole is here, pulsing away."
+extra {}
+"This is the first time you have ever seen a black hole. You are too
+amazed to think anything else for now."
+manipulate {MANIPULATE_ENTER}
+CONTAINER_DEF(10000)
+flags {UNIT_FL_NO_TELEPORT}
+/* dil for lvl check */
+dilbegin blackhole_prg();
+var
+       pc : unitptr;
+code
+{
+    heartbeat := PULSE_SEC*4;
+    
+    :start:
+    wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and (command(CMD_ENTER))));
+
+    pc := activator;
+    secure(pc, lostpc);
+    
+    if ("hole" in argument)
+    {
+      block;
+      act(pc.name+" disappears into the Black Hole.", A_ALWAYS, pc, null, null,
+           TO_REST);
+      if (pc.level < 20) 
+      {
+        act("You realize something is wrong! You feel yourself being crushed!", 
+             A_ALWAYS, pc, null, null, TO_CHAR);
+        pc.hp := 0;
+        pc.mana := 0;
+        position_update(pc);
+        link(pc, findroom("temple@udgaard"));
+        unsecure(pc);
+      }
+      else if (pc.level >= 20)
+      { 
+        act("The Black Hole seems to pulse more quickly, and you are sent through!",
+            A_ALWAYS, pc, null, null, TO_CHAR); 
+        pc.hp := pc.hp - pc.hp/2;  
+        position_update(pc);
+        link(pc, findroom("transition@citadel"));
+        unsecure(pc);
+      }
+    }
+    :lostpc:
+    goto start;
+}
+dilend
+end
+
+
+                              dark_mjollnir
+names {"Dark Mjollnir", "mjollnir", "hammer", "mattock", "war mattock"}
+title "Dark Mjollnir"
+descr "The Dark Mjollnir lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+weight 25
+cost 30 SILVER_PIECE
+extra {}
+"This mighty war mattock, the antithesis of the thunder hammer, has power 
+unimaginable even by the gods themselves!"
+extra {"$identify"}
+"This is a special weapon indeed! It will only respond to evil people.&n"
+extra {"$improved identify"}
+"This weapon is evil-only, gives bonuses in str and dex as well as frost 
+sphere and war mattock, detracts from cha and con, and will emanate frost 
+in combat if prompted by the command 'icez'.&n"
+extra {"$no_engrave"}
+"How can I engrave a weapon of the gods?"
+WEAPON_DEF(WPN_WAR_MATTOCK, 16, 13)
+spell 80
+STR_TRANSFER(+3)
+DEX_TRANSFER(+3)
+CON_TRANSFER(-2)
+CHA_TRANSFER(-2)
+SPELL_TRANSFER(SPL_COLD, +5)
+WEAPON_TRANSFER(WPN_WAR_MATTOCK,+5)
+dilcopy ali_restrict@function(-350,-1000,0,50,"");
+dilcopy quest_restrict@function(APOC_COMPLETE,0,50,"apoc_rest@citadel");
+dilcopy abi_restrict@function(ABIL_STR,70,0,0,"");
+
+dilbegin recall charge_mjollnir();
+code
+{
+	:start:
+heartbeat:=PULSE_SEC*SECS_PER_MUD_DAY/6;
+wait (SFB_TICK,(self.equip==WEAR_WIELD));
+act("Frost forms on your $2N...",
+A_SOMEONE,self.outside,self,null,TO_CHAR);
+act("Frost forms on $1n's $2N...",
+A_HIDEINV,self.outside,self,null,TO_REST);
+sendto("frost",self);
+goto start;
+}
+dilend
+
+dilbegin recall aware mjollnir_frost();
+var
+        i 	: integer;
+        enemy 	: unitptr;
+	n	: integer;
+        charge	: integer;
+	pwr	: integer;
+code
+{
+pwr:=10;
+	:init:
+heartbeat := PULSE_SEC*3;
+charge:=interrupt (SFB_MSG,((self==activator)and(argument=="frost")),charge); 
+	
+	:start:
+wait(SFB_CMD,(command("icez"))and(self.equip==WEAR_WIELD)and
+(self.outside.position>POSITION_SLEEPING));
+block;
+act("You call upon the power of your $2N...",
+A_ALWAYS,self.outside,self,null,TO_CHAR);
+act("$1n calls upon the power of $1s $2n...",
+A_SOMEONE,self.outside,self,null,TO_REST);
+enemy:=self.outside.fighting;
+if (pwr<=0) goto fail;
+if (enemy==null) goto no_person;
+secure (enemy,start);
+pwr:=pwr-1;
+
+if (enemy.alignment<=-350)
+{
+act("Your $2N will not cooperate against this foe!",
+A_SOMEONE,self.outside,self,enemy,TO_CHAR);
+act("$1n's $2N doesn't respond!",
+A_SOMEONE,self.outside,self,enemy,TO_REST);
+goto start;
+}
+
+i := rnd (50,110);
+if (i < self.outside.abilities[ABIL_STR])
+{
+act("Your $2N begins to emanate biting cold!",
+A_ALWAYS,self.outside,self,enemy,TO_CHAR);
+act("$1n's $2N seems to emanate biting cold!",
+A_ALWAYS,self.outside,self,enemy,TO_REST);
+n:=cast_spell(SPL_FROSTBALL_1,self.outside,self,enemy,"");
+ if ((i > 90)and(i>enemy.abilities[ABIL_CON]))
+ {
+ act("Ice forms on your body, slowing you down!",
+ A_SOMEONE,enemy,self,self.outside,TO_CHAR);
+ act("Ice forms on $1n, slowing $1m down!",
+ A_SOMEONE,enemy,self,self.outside,TO_REST);
+ n:=cast_spell(SPL_SLOW,self,self,enemy,"");
+ }
+goto start;
+}
+else
+{
+act("You fail to awaken the power!",
+A_SOMEONE,self.outside,self,enemy,TO_CHAR);
+act("$1s $2N doesn't respond!",
+A_SOMEONE,self.outside,self,enemy,TO_REST);
+}
+pause;
+goto start;
+
+	:fail:
+act("Some frost forms on your $2N.",
+A_SOMEONE,self.outside,self,enemy,TO_CHAR);
+act("Some frost forms on $1n's $2N.",
+A_HIDEINV,self.outside,self,enemy,TO_REST);
+goto start;
+
+	:charge:
+clear(charge);
+if (pwr<12)
+pwr:=pwr+5;
+goto init;
+
+	:no_person:
+act("Your $2N begins to emanate biting cold...&n"+
+"Frost covers the ground around you!",
+A_SOMEONE,self.outside,self,null,TO_CHAR);
+act("$1n's $2N seems to emanate biting cold...&n"+
+"Frost covers the ground around you!",
+A_SOMEONE,self.outside,self,null,TO_REST);
+goto start;
+}
+dilend
+
+dilbegin mjollnir_slay();
+code
+{
+heartbeat := PULSE_SEC*3;
+	:start:
+wait(SFB_COM,command(CMD_AUTO_COMBAT)and(self.equip == WEAR_WIELD)and
+(self.outside.fighting.hp < 10));
+act("Your $2N mashes $3n into a bloody pulp!",
+A_ALWAYS, self.outside, self, self.outside.fighting, TO_CHAR);
+act("$1n's $2N descends upon you one final time and everything goes black.",
+A_SOMEONE, self.outside, self, self.outside.fighting, TO_VICT);
+act("$1n's $2N mashes $3n into a bloody pulp!",
+A_SOMEONE, self.outside, self, self.outside.fighting, TO_NOTVICT);
+self.outside.fighting.hp := -9;
+position_update(self.outside.fighting);
+pause;
+goto start;
+}
+dilend
+
+
+/* - - - - Old Program, removed 
+
+dilbegin mattock_prg1();
+var
+        enemy : unitptr;
+code
+{
+        :init:
+        on_activation((self.outside.type == UNIT_ST_PC) and
+                     (self.outside.fighting.type == UNIT_ST_PC), skip);
+
+        :start:
+        wait(SFB_COM, ((self.outside.position == POSITION_FIGHTING) and
+                       (self.equip == WEAR_WIELD)));
+        enemy := self.outside.fighting;
+        if ((enemy.alignment <= -350) or (self.outside.alignment >= -349)) 
+           goto no_motive;
+        if (rnd(1,100) <= 40)
+        {
+           act("$1n's $2N seems to emanate biting cold!",
+                A_SOMEONE, self.outside, self, null, TO_REST);
+           act("Your $2N begins to emanate biting cold!",
+                A_ALWAYS, self.outside, self, null, TO_CHAR);
+           cast_spell(SPL_FROSTBALL_3, self.outside, self, enemy);
+        }
+        goto start;
+        :no_motive:
+        act("Your $2N will not cooperate against this foe!",
+             A_ALWAYS, self.outside, self, null, TO_CHAR); 
+        goto start;
+}
+dilend
+
+*/
+end
+                        
+                        golden_scimitar
+
+names {"golden scimitar", "golden", "scimitar"}
+title "a Golden Scimitar"
+descr "A dull golden scimitar lies on the ground here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+weight 35
+cost 52 COPPER_PIECE
+extra {}
+"This scimitar looks as if it was majestic, back in the day. Now, it is 
+encrusted with dirt and dust, and has lost its former shine. Still, you 
+can tell it is a deadly weapon."
+WEAPON_DEF(WPN_SCIMITAR, 0, 0)
+special SFUN_RESTRICT_OBJ "level = 20" 
+end
+
+                        black_hammer
+
+names {"black hammer", "hammer"}
+title "the Black Hammer"
+descr "The legendary black hammer is here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+weight 30
+cost 72 COPPER_PIECE
+rent 186 IRON_PIECE
+extra {}
+"This is the legendary war hammer of lore. Legend says, that only the 
+strongest of people can wield it. The last wielder was the commander of
+the Black Army." 
+WEAPON_DEF(WPN_WAR_HAMMER, 2, 0)
+dilcopy abi_restrict@function(ABIL_STR,100,0,0,"");
+WEAPON_TRANSFER(WPN_WAR_HAMMER, 1)
+end
+
+                        shiny_falchion
+
+names {"shiny falchion", "falchion"}
+title "a shiny falchion"
+descr "A shiny sword lies in the dirt."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+weight 20
+cost 42 COPPER_PIECE
+rent 60 IRON_PIECE
+extra {}
+"This weapon has obviously been well taken care of. It has been polished to
+a loving shine, and looks as if it has been sharpened just recently. It
+looks deadly." 
+WEAPON_DEF(WPN_FALCHION, 0, 1)
+dilcopy level_restrict@function(19,0,0,"");
+DEX_TRANSFER(+1)
+end
+
+                           black_helmet
+
+names {"black-steel helmet", "black helmet", "steel helmet", "helmet"}
+title "a Black-Steel helmet"
+descr "A Black-Steel helmet has been tossed in a corner."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+weight 25
+cost 32 COPPER_PIECE
+rent 56 IRON_PIECE
+extra {}
+"This helmet is made of the finest steel known to man, Black-Steel. Only to 
+be found in the Realm of the Citadel, it is highly sought after and praised
+for its protective capabilities, and resistance to wear."
+ARMOUR_CHAIN(0, 0)
+dilcopy level_restrict@function(20,0,0,"");
+end
+
+                           black_plate
+
+names {"black-steel plate", "black plate", "steel plate", "plate"}
+title "a Black-Steel plate"
+descr "A Black-Steel plate has been dropped here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+weight 50
+cost 42 COPPER_PIECE
+rent 56 IRON_PIECE
+extra {}
+"This plate is made of the finest steel known to man, Black-Steel.  Only to 
+be found in the Realm of the Citadel, it is highly sought after and praised
+for its protective capabilities, and resistance to wear."
+ARMOUR_CHAIN(0, 0)
+dilcopy level_restrict@function(20,0,0,"");
+end
+                           black_sleeves
+
+names {"black-steel sleeves", "black sleeves", "steel sleeves", "sleeves"}
+title "Black-Steel sleeves"
+descr "Some Black-Steel sleeves have been left here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ARMS}
+weight 35
+cost 42 COPPER_PIECE
+rent 56 IRON_PIECE
+extra {}
+"These sleeves have been made of the finest steel known to man, Black-Steel.  
+Only to be found in the Realm of the Citadel, it is highly sought after and 
+praised for its protective capabilities, and resistance to wear."
+ARMOUR_CHAIN(0, 0)
+dilcopy level_restrict@function(20,0,0,"");
+end
+                           black_leggings
+
+names {"black-steel leggings", "black leggings", "steel leggings", "leggings"}
+title "Black-Steel leggings"
+descr "Some Black-Steel leggings have been thrown aside."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+weight 35
+cost 42 COPPER_PIECE
+rent 56 IRON_PIECE
+extra {}
+"These leggings have been made of the finest steel known to man, Black-Steel.  
+Only to be found in the Realm of the Citadel, it is highly sought after and 
+praised for its protective capabilities, and resistance to wear."
+ARMOUR_CHAIN(0, 0)
+dilcopy level_restrict@function(20,0,0,"");
+end
+                           black_gauntlets
+
+names {"black-steel gauntlets", "black gauntlets", "steel gauntlets", "gauntlets"}
+title "Black-Steel gauntlets"
+descr "some black-steel gauntlets are piled here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HANDS}
+weight 15
+cost 42 COPPER_PIECE
+rent 56 IRON_PIECE
+extra {}
+"These gauntlets have been made of the finest steel known to man, 
+Black-Steel. Only to be found in the Realm of the Citadel, it is highly 
+sought after and praised for its protective capabilities, and resistance to 
+wear. They will fit you well."
+ARMOUR_CHAIN(0, 0)
+dilcopy level_restrict@function(20,0,0,"");
+end
+                           black_boots
+
+names {"black-steel boots", "black boots", "steel boots", "boots"}
+title "Black-Steel boots"
+descr "A pair of Black-Steel boots are here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+weight 15
+cost 42 COPPER_PIECE
+rent 56 IRON_PIECE
+extra {}
+"These boots have been made of the finest steel known to man, Black-Steel.  
+Only to be found in the Realm of the Citadel, it is highly sought after and 
+praised for its protective capabilities, and resistance to wear. They will 
+fit you well."
+ARMOUR_CHAIN(0, 0)
+dilcopy level_restrict@function(20,0,0,"");
+end
+/* end of black steel armour */
+
+                           black_robes
+
+names {"black robes", "robes", "robe"}
+title "Black Robes"
+descr "Some black robes are here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+weight 5
+cost 2 COPPER_PIECE
+extra {}
+"These are dirty, dingy, smelly robes. Thats it. Boy, are these things 
+boring."
+ARMOUR_CLOTHES(-5, 0)
+end
+                              eye
+
+names {"white eye", "eye"}
+title "the White Eye"
+descr "The White Eye is rolling around on the floor here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 5
+cost 30 SILVER_PIECE
+rent 100 IRON_PIECE
+extra {}
+"This eye stares back at you blankly. You look it straight in the eye and
+see... absolutely nothing!"
+extra {"$identify"}
+"This eye will enable you to detect alignment, invisible, magic and life.&n"
+CHAR_FLAG_TRANSFER(CHAR_DETECT_ALIGN) 
+CHAR_FLAG_TRANSFER(CHAR_DETECT_INVISIBLE) 
+CHAR_FLAG_TRANSFER(CHAR_DETECT_MAGIC)
+CHAR_FLAG_TRANSFER(CHAR_DETECT_LIFE)
+dilcopy level_restrict@function(10,0,0,"");
+end
+
+                          three_suit
+
+names {"three piece", "suit"}
+title "a three piece suit"
+descr "A three piece suit should NOT be lying here!"
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+weight 15
+cost 10 SILVER_PIECE
+rent 50 IRON_PIECE
+extra {}
+"This is your typical pin-striped three piece suit. It looks mighty strong
+for one though. The chances of you ever wearing one of these is ohhh....
+zip, zilch, nada, zero, nothing never, no!"
+ARMOUR_CHAIN(0, 0)
+dilcopy level_restrict@function(30,0,0,"");
+end
+
+
+                              pen
+
+names {"pen"}
+title "the Pen"
+descr "THE pen is here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+weight 20
+cost 42 SILVER_PIECE
+rent 181 IRON_PIECE
+extra {}
+"This pen is mightier than the sword. MUCH mightier!"
+WEAPON_DEF(WPN_GREAT_SWORD, 0, 0)
+dilcopy level_restrict@function(30,0,0,"");
+WEAPON_SLAYER(RACE_HUMAN)                           
+STR_TRANSFER(+2)
+end
+
+                       prefab_sword
+
+names {"pre-fab sword", "sword"}
+title "a Pre-Fab Sword"
+descr "A Pre-Fabricated Sword has been discarded here."
+weight 10
+rent 40 IRON_PIECE
+extra {}
+"This sword is made very cheaply, and you can see mold-marks on it."
+WEAPON_DEF(WPN_LONG_SWORD, -2, -3)
+dilcopy level_restrict@function(30,0,0,"");
+dilcopy blowaway@function(120,"$1n has crumbled into dust.");
+end
+
+			black_cape
+names {"black cape","cape"}
+title "a black, rune-marked cape"
+descr "A large black cape lies here, covered with dust."
+extra {}
+"A large, thick, black cape. It's been used for quite a while, it seems 
+and is totally covered with dust of the roads. It bears a strange rune, 
+embroidened with silver."
+extra {"rune on the cape","rune"}
+"The strange mark seems to writhe under your watchful stare and change it 
+shape... It seems evil... Very evil indeed."
+extra {"$identify"}
+"Your spell reveals the mystic powers of this cape... It is an item of 
+Dark Deity and can only be used by those who bested him in combat. It 
+will protect you, increase your strength and personal charisma and your 
+skills with the Dark Deity's weapon.&n"
+extra {"$improved identify"}
+"The Str bonus is +2, Cha bonus +1, War Mattock bonus +4%. This cape is 
+an armour with craftmanship 6 and magic bonus 3.&n"
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+weight 15
+cost 10 GOLD_PIECE
+rent 140 IRON_PIECE
+ARMOUR_CHAIN(6, 3)
+STR_TRANSFER(2)
+CHA_TRANSFER(1)
+WEAPON_TRANSFER(WPN_WAR_MATTOCK, 4)
+dilcopy ali_restrict@function(-350,-1000,0,50,"");
+dilcopy abi_restrict@function(ABIL_BRA,50,0,0,"");
+dilcopy abi_restrict@function(ABIL_CHA,50,0,0,"");
+dilcopy quest_restrict@function(APOC_COMPLETE,0,50,"apoc_rest@citadel");
+end
+
+%reset
+
+/* SVYGIL RESET */
+load svygil into cth_e_aisle@midgaard max 1
+{
+    equip shiny_falchion position WEAR_WIELD
+    equip black_helmet position WEAR_HEAD
+    equip black_plate position WEAR_BODY
+    equip black_sleeves position WEAR_ARMS
+    equip black_gauntlets position WEAR_HANDS
+    equip black_leggings position WEAR_LEGS
+    equip black_boots position WEAR_FEET
+    equip black_cape position WEAR_ABOUT
+}
+
+/* PLAINS RESET START */
+load living_cactus into plains7 zonemax 2
+load living_cactus into plains7 zonemax 2
+load sand_snake into plains7 zonemax 2
+load sand_snake into plains7 zonemax 2
+/* PLAINS RESET DONE */
+
+/* ENTRANCE RESET START */
+load black_hole into sentinel max 1
+load sod_hurling into sentinel max 1
+{
+   equip three_suit position WEAR_ABOUT
+   equip pen position WEAR_WIELD 
+}
+/* ENTRANCE RESET DONE */
+
+/* CITADEL LEVEL 1 RESET START */
+load foyer_guard into ent_foyer local 2
+{
+    equip black_helmet position WEAR_HEAD
+    equip black_plate position WEAR_BODY
+    equip black_sleeves position WEAR_ARMS
+    equip black_gauntlets position WEAR_HANDS
+    equip black_leggings position WEAR_LEGS
+    equip black_boots position WEAR_FEET
+    equip prefab_sword position WEAR_WIELD
+}
+load foyer_guard into ent_foyer local 2
+{
+    equip black_helmet position WEAR_HEAD
+    equip black_plate position WEAR_BODY
+    equip black_sleeves position WEAR_ARMS
+    equip black_gauntlets position WEAR_HANDS
+    equip black_leggings position WEAR_LEGS
+    equip black_boots position WEAR_FEET
+    equip prefab_sword position WEAR_WIELD
+}
+load hall_guard into great_hall5 max 4
+{
+    equip black_helmet position WEAR_HEAD
+    equip black_plate position WEAR_BODY
+    equip black_sleeves position WEAR_ARMS
+    equip black_gauntlets position WEAR_HANDS
+    equip black_leggings position WEAR_LEGS
+    equip black_boots position WEAR_FEET
+    equip prefab_sword position WEAR_WIELD
+}
+load hall_guard into great_hall5 max 4
+{
+    equip black_helmet position WEAR_HEAD
+    equip black_plate position WEAR_BODY
+    equip black_sleeves position WEAR_ARMS
+    equip black_gauntlets position WEAR_HANDS
+    equip black_leggings position WEAR_LEGS
+    equip black_boots position WEAR_FEET
+    equip prefab_sword position WEAR_WIELD
+}
+load hall_guard into great_hall8 max 4
+{
+    equip black_helmet position WEAR_HEAD
+    equip black_plate position WEAR_BODY
+    equip black_sleeves position WEAR_ARMS
+    equip black_gauntlets position WEAR_HANDS
+    equip black_leggings position WEAR_LEGS
+    equip black_boots position WEAR_FEET
+    equip prefab_sword position WEAR_WIELD
+}
+load hall_guard into great_hall8 max 4
+{
+    equip black_helmet position WEAR_HEAD
+    equip black_plate position WEAR_BODY
+    equip black_sleeves position WEAR_ARMS
+    equip black_gauntlets position WEAR_HANDS
+    equip black_leggings position WEAR_LEGS
+    equip black_boots position WEAR_FEET
+    equip prefab_sword position WEAR_WIELD
+}
+/* CITADEL LEVEL 1 RESET DONE */
+
+/* NIGHTFALL RESET START */
+load shriveled_man into nightfall max 1
+/* NIGHTFALL RESET DONE */
+
+/* CITADEL LEVEL 4 RESET START */
+load security_guard into corridor1_4 max 14
+load security_guard into corridor3_4 max 14
+load black into monochrome max 1
+load white into monochrome max 1
+load grey into monochrome max 1
+{
+   load prism_key
+}
+/* CITADEL LEVEL 4 RESET DONE */
+
+/* CITADEL LEVELS 2 AND 3 RESET START */
+load dark_mirror into arrival_room max 1
+load doctor into lab1 max 2
+{
+   equip scalpel position WEAR_WIELD
+}
+load doctor into lab2 max 2
+{
+   equip scalpel position WEAR_WIELD
+}
+load scientist into lab3 zonemax 1
+load bum into maintenance max 1
+{
+    equip narrow_blade position WEAR_WIELD max 1
+}
+load security_off into guard1_2 local 1
+load security_off into guard2_2 local 1
+load security_off into guard2_3 local 1
+load security_off into guard2_3 local 1
+load security_guard into guard1_2 max 14
+load security_guard into guard1_2 max 14
+load security_guard into guard1_2 max 14
+load security_guard into guard2_2 max 14
+load security_guard into guard2_2 max 14
+load security_guard into guard2_2 max 14
+load security_guard into guard1_3 max 14
+load security_guard into guard1_3 max 14
+load security_guard into guard1_3 max 14
+load security_guard into guard2_3 max 14
+load security_guard into guard2_3 max 14
+load security_guard into guard2_3 max 14
+load mercenary into mercenary1 max 4
+load mercenary into mercenary1 max 4
+load mercenary into mercenary2 max 4
+load mercenary into mercenary2 max 4
+load prefab_sold into storage1 max 6
+{
+   equip prefab_sword position WEAR_WIELD
+}
+load prefab_sold into storage1 max 6
+{
+   equip prefab_sword position WEAR_WIELD
+}
+load prefab_sold into storage1 max 6
+{
+   equip prefab_sword position WEAR_WIELD
+}
+load prefab_sold into storage2 max 6
+{
+   equip prefab_sword position WEAR_WIELD
+}
+load prefab_sold into storage2 max 6
+{
+   equip prefab_sword position WEAR_WIELD
+}
+load prefab_sold into storage2 max 6
+{
+   equip prefab_sword position WEAR_WIELD
+}
+/* CITADEL LEVELS 2 AND 3 RESET DONE */
+
+/* BLACK CAVES RESET START */
+load witch into blackcave17 local 3
+{
+   equip black_robes position WEAR_ABOUT
+}
+load witch into blackcave17 local 3
+{
+   load night_key
+   equip black_robes position WEAR_ABOUT
+   equip eye position WEAR_HOLD
+}
+load witch into blackcave17 local 3
+{
+   equip black_robes position WEAR_ABOUT
+}
+load guardian into blackcave15 local 2
+{
+    equip black_helmet position WEAR_HEAD
+    equip black_plate position WEAR_BODY
+    equip shiny_falchion position WEAR_WIELD
+}
+load guardian into blackcave15 local 2
+{
+    equip black_helmet position WEAR_HEAD
+    equip black_plate position WEAR_BODY
+    equip shiny_falchion position WEAR_WIELD
+}
+load bmole into burrow max 5
+load bmole into burrow max 5
+load bmole into burrow max 5
+load bmole into burrow max 5
+load bmole into burrow max 5
+load bguard into blackcave8 zonemax 1
+{
+   equip black_helmet position WEAR_HEAD
+   equip black_plate position WEAR_BODY
+   equip black_sleeves position WEAR_ARMS
+   equip black_gauntlets position WEAR_HANDS
+   equip black_leggings position WEAR_LEGS
+   equip black_boots position WEAR_FEET
+   equip black_hammer position WEAR_WIELD
+}
+load magma_man into blackcave7 local 1
+load wolverine into blackcave4 local 3
+load wolverine into blackcave4 local 3
+load wolverine into blackcave4 local 3
+load skeleton into blackcave1 local 1
+{
+   equip golden_scimitar position WEAR_WIELD
+}
+load skeleton into blackcave5 local 1
+{
+   equip golden_scimitar position WEAR_WIELD
+}
+load skeleton into blackcave16 local 1
+{
+   equip golden_scimitar position WEAR_WIELD
+}
+/* BLACK CAVES RESET DONE */
+%end
+

@@ -1,0 +1,2456 @@
+/*
+filename    desert
+password    radiation
+changedby   Jager
+EmailAdd     Brian Spanton <jem@eskimo.com>
+request     compile
+version     6
+END HEADER*/
+
+#include <composed.h>
+
+%zone                 desert
+title "Desert"
+lifespan 45
+reset RESET_ANYHOW
+weather 1040
+
+creators {"thesar"}
+
+notes
+"&l
+     AABBCCDDEEFFGGHHIIJJ         Gaumbi Desert
+                 ^^               -------------
+ 1             ^^..^^             This is a buffer zone between
+ 2         ^^OX........^^         Khorsabad, Outxiyang, Garden.  Mobiles in 
+ 3       ^^..........^^           in zone are between 40-50 levels.
+ 4     ^^..............^^ 
+ 5 ^^....................^^       Legend 
+ 6 ^^................GD^^         ------
+ 7   ^^..............OO^^         OO - Oasis
+ 8       ^^...............^^       KK - Khorsabad
+ 9         ^^............^^       .. - Desert
+10       ^^..............^^       ^^ - Mountains (impassable)
+11     ^^..............^^         OX - Outxiyang  
+12       ^^..........^^           GD - Garden
+13         ^^^^....^^
+               ^^KK
+
+Feb 29, 96 - Zone was changed to a level 50 solo zone (40 group) and a link
+             was added to outxiyang. DIL for sandworms was removed till it
+             can be fixed to take into account wizi and sanc. (Palio)
+
+Jul 30, 96 - DIL for sandworms fixed for wizi and sanctuary.  Sandworms
+             will now roam _everywhere_ in the desert. (Thesar)
+"
+
+help
+"The Guambi Desert&n
+----------------&n
+This zone is intended for players from levels 40-50.&n
+&l
+     AABBCCDDEEFFGGHHIIJJ         Gaumbi Desert
+                 ^^               -------------
+ 1             ^^..^^             This is desert is a link between
+ 2         ^^OX........^^         Khorsabad, Outxiyang and Garden.
+ 3       ^^..........^^           
+ 4     ^^..............^^ 
+ 5 ^^....................^^       Legend 
+ 6 ^^................GD^^         ------
+ 7   ^^..............OO^^         OO - Oasis
+ 8       ^^..............^^       KK - Khorsabad
+ 9         ^^............^^       .. - Desert
+10       ^^..............^^       ^^ - Mountains (impassable)
+11     ^^..............^^         OX - Outxiyang  
+12       ^^..........^^           GD - Garden
+13         ^^^^....^^
+               ^^KK"
+
+%dil
+
+dilbegin worm_attack();
+var
+  worm : unitptr;
+  pc   : unitptr;
+
+code
+{
+   heartbeat := PULSE_SEC*5;
+
+   :start:
+   pause;
+   wait(SFB_CMD, (activator.type == UNIT_ST_PC) and
+	(activator.level <= 199) and
+        (not(isaff(activator, ID_SANCTUARY))) and
+        (activator.minv == 0));
+   if (rnd(1,40) != 1) goto start;
+   pc := activator;
+   secure(pc, lostpc);
+   secure(worm, start);
+   worm := load("sand_worm@desert");
+   act("$2n suddenly burrows out of the desert ground and attacks you!",
+       A_SOMEONE, pc, worm, null, TO_CHAR);
+   act("$2n suddenly burrows out of the desert ground and attacks $1n!",
+       A_SOMEONE, pc, worm, null, TO_REST);
+   exec("kill "+pc.name, worm);
+   unsecure(pc);
+   unsecure(worm);
+   goto start;
+
+   :lostpc:
+   act("$1n burrows into the ground and disappears from view.",
+       A_SOMEONE, worm, null, null, TO_REST);
+   destroy(worm);
+   goto start;
+}
+dilend
+
+
+
+%rooms
+
+			des_1G
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the northern edge of the desert near the mountain 
+range.  To your north, east and west you see an impassable rocky mountain 
+range.  At the foothills there are quiet a number of cactii growing in 
+spite of the hard weather, one of which is abnormally large.  The desert
+land stretches endlessly to your south."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+extra {"cactii", "cactus"}
+"Round and plump-looking plants with leaves of needle-like thorns."
+
+movement SECT_DESERT
+south to des_2G descr "The desert stretches on to the south.";
+
+dilcopy worm_attack();
+
+end
+
+			des_2E
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the edge of the desert near the mountain range.  
+During the day the blazing Sun scorches mercilessly upon the desert sand, 
+and when night comes the temperature drops steeply to bring a skin-penetrating
+chill as unbearable as the heat of the day.  To your west you see an 
+impassable rocky mountain range.  The desert land stretches on  in all 
+other directions."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+east to des_2F descr "The desert stretches on to the east.";
+south to des_3E descr "The desert stretches on to the south.";
+north to  desert_9@outxiyang descr
+"The desert stretches on to the south.";
+end
+
+			des_2F
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the edge of the desert near the mountain range.  
+During the day the blazing Sun scorches mercilessly upon the desert sand, 
+and when night comes the temperature drops steeply to bring a skin-penetrating
+chill as unbearable as the heat of the day.  To your north you see an 
+impassable rocky mountain range.  The desert land stretches on to your 
+east, west and south."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+east to des_2G descr "The desert stretches on to the east.";
+west to des_2E descr "The desert stretches on to the west.";
+south to des_3F descr "The desert stretches on to the south.";
+
+dilcopy worm_attack();
+
+end
+
+			des_2G
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_1G descr "The desert stretches on northwards.";
+east to des_2H descr "The desert stretches on eastwards.";
+south to des_3G descr "The desert stretches on southwards.";
+west to des_2F descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_2H
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the edge of the desert near the mountain range.  
+During the day the blazing Sun scorches mercilessly upon the desert sand, 
+and when night comes the temperature drops steeply to bring a skin-penetrating
+chill as unbearable as the heat of the day.  To your north you see an 
+impassable rocky mountain range.  The desert land stretches on to your 
+east, west and south."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+east to des_2I descr "The desert stretches on to the east.";
+west to des_2G descr "The desert stretches on to the west.";
+south to des_3H descr "The desert stretches on to the south.";
+
+dilcopy worm_attack();
+
+end
+
+			des_2I
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the edge of the desert near the mountain range.  
+During the day the blazing Sun scorches mercilessly upon the desert sand, 
+and when night comes the temperature drops steeply to bring a skin-penetrating
+chill as unbearable as the heat of the day..  To your north, east and south 
+you see an impassable rocky mountain range.  The desert land stretches on
+to your west."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+west to des_2H descr "The desert stretches on to the west.";
+
+dilcopy worm_attack();
+
+end
+
+			des_3D
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the edge of the desert near the mountain range.  
+During the day the blazing Sun scorches mercilessly upon the desert sand, 
+and when night comes the temperature drops steeply to bring a skin-penetrating
+chill as unbearable as the heat of the day.  To your north and west you 
+see an impassable rocky mountain range.  The desert land stretches on to your 
+east and south."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+east to des_3E descr "The desert stretches on to the east.";
+south to des_4D descr "The desert stretches on to the south.";
+
+dilcopy worm_attack();
+
+end
+
+			des_3E
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_2E descr "The desert stretches on northwards.";
+east to des_3F descr "The desert stretches on eastwards.";
+south to des_4E descr "The desert stretches on southwards.";
+west to des_3D descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_3F
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  This part of the terrain appears to be pretty flat and level.
+A very strong wind blows here, almost near to conjuring up a sand storm.
+Vision is obscured by desert sand swirling up with the wind.  It is very
+difficult to move in this place."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_2F descr "The desert stretches on northwards.";
+east to des_3G descr "The desert stretches on eastwards.";
+south to des_4F descr "The desert stretches on southwards.";
+west to des_3E descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_3G
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_2G descr "The desert stretches on northwards.";
+east to des_3H descr "The desert stretches on eastwards.";
+south to des_4G descr "The desert stretches on southwards.";
+west to des_3F descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_3H
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the edge of the desert near the mountain range.  
+During the day the blazing Sun scorches mercilessly upon the desert sand, 
+and when night comes the temperature drops steeply to bring a skin-penetrating
+chill as unbearable as the heat of the day.  To your east you see an 
+impassable rocky mountain range.  The desert land stretches on to your 
+north, west and south."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_2H descr "The desert stretches on to the north.";
+west to des_3G descr "The desert stretches on to the west.";
+south to des_4H descr "The desert stretches on to the south.";
+
+dilcopy worm_attack();
+
+end
+
+			des_4C
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the edge of the desert near the mountain range.  
+During the day the blazing Sun scorches mercilessly upon the desert sand, 
+and when night comes the temperature drops steeply to bring a skin-penetrating
+chill as unbearable as the heat of the day.  To your north and west you 
+see an impassable rocky mountain range.  The desert land stretches on to your 
+east and south."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+east to des_4D descr "The desert stretches on to the east.";
+south to des_5C descr "The desert stretches on to the south.";
+
+dilcopy worm_attack();
+
+end
+
+			des_4D
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind..  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_3D descr "The desert stretches on northwards.";
+east to des_4E descr "The desert stretches on eastwards.";
+south to des_5D descr "The desert stretches on southwards.";
+west to des_4C descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_4E
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_3E descr "The desert stretches on northwards.";
+east to des_4F descr "The desert stretches on eastwards.";
+south to des_5E descr "The desert stretches on southwards.";
+west to des_4D descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_4F
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_3F descr "The desert stretches on northwards.";
+east to des_4G descr "The desert stretches on eastwards.";
+south to des_5F descr "The desert stretches on southwards.";
+west to des_4E descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_4G
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_3G descr "The desert stretches on northwards.";
+east to des_4H descr "The desert stretches on eastwards.";
+south to des_5G descr "The desert stretches on southwards.";
+west to des_4F descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_4H
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_3H descr "The desert stretches on northwards.";
+east to des_4I descr "The desert stretches on eastwards.";
+south to des_5H descr "The desert stretches on southwards.";
+west to des_4G descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_4I
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the edge of the desert near the mountain range.  
+During the day the blazing Sun scorches mercilessly upon the desert sand, 
+and when night comes the temperature drops steeply to bring a skin-penetrating
+chill as unbearable as the heat of the day.  To your north and east you 
+see an impassable rocky mountain range.  The desert land stretches on to your 
+west and south."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+west to des_4H descr "The desert stretches on to the west.";
+south to des_5I descr "The desert stretches on to the south.";
+
+dilcopy worm_attack();
+
+end
+
+			des_5A
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the edge of the desert near the mountain range.  
+During the day the blazing Sun scorches mercilessly upon the desert sand, 
+and when night comes the temperature drops steeply to bring a skin-penetrating
+chill as unbearable as the heat of the day.  To your north and west you 
+see an impassable rocky mountain range.  The desert land stretches on to your 
+east and south."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+east to des_5B descr "The desert stretches on to the east.";
+south to des_6A descr "The desert stretches on to the south.";
+
+dilcopy worm_attack();
+
+end
+
+			des_5B
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the edge of the desert near the mountain range.  
+During the day the blazing Sun scorches mercilessly upon the desert sand, 
+and when night comes the temperature drops steeply to bring a skin-penetrating
+chill as unbearable as the heat of the day.  To your north you see an 
+impassable rocky mountain range.  The desert land stretches on to your 
+east, west and south."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+east to des_5C descr "The desert stretches on to the east.";
+west to des_5A descr "The desert stretches on to the west.";
+south to des_6B descr "The desert stretches on to the south.";
+
+dilcopy worm_attack();
+
+end
+
+			des_5C
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  You see a few
+cactii thriving on the barren sand, standing up to the beating of nature."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+extra {"cactii", "cactus"}
+"Round and plump-looking plants with leaves of needle-like thorns."
+
+movement SECT_DESERT
+north to des_4C descr "The desert stretches on northwards.";
+east to des_5D descr "The desert stretches on eastwards.";
+south to des_6C descr "The desert stretches on southwards.";
+west to des_5B descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_5D
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_4D descr "The desert stretches on northwards.";
+east to des_5E descr "The desert stretches on eastwards.";
+south to des_6D descr "The desert stretches on southwards.";
+west to des_5C descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_5E
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_4E descr "The desert stretches on northwards.";
+east to des_5F descr "The desert stretches on eastwards.";
+south to des_6E descr "The desert stretches on southwards.";
+west to des_5D descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_5F
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_4F descr "The desert stretches on northwards.";
+east to des_5G descr "The desert stretches on eastwards.";
+south to des_6F descr "The desert stretches on southwards.";
+west to des_5E descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_5G
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_4G descr "The desert stretches on northwards.";
+east to des_5H descr "The desert stretches on eastwards.";
+south to des_6G descr "The desert stretches on southwards.";
+west to des_5F descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_5H
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_4H descr "The desert stretches on northwards.";
+east to des_5I descr "The desert stretches on eastwards.";
+south to des_6H descr "The desert stretches on southwards.";
+west to des_5G descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_5I
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the edge of the desert near the mountain range.  
+During the day the blazing Sun scorches mercilessly upon the desert sand, 
+and when night comes the temperature drops steeply to bring a skin-penetrating
+chill as unbearable as the heat of the day.  To your south you see an
+impassable rocky mountain range.  The desert land stretches on to your 
+north, east and west."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_4I descr "The desert stretches on to the north.";
+west to des_5H descr "The desert stretches on to the west.";
+east to des_5J descr "The desert stretches on to the east.";
+
+dilcopy worm_attack();
+
+end
+
+			des_5J
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the edge of the desert near the mountain range.  
+During the day the blazing Sun scorches mercilessly upon the desert sand, 
+and when night comes the temperature drops steeply to bring a skin-penetrating
+chill as unbearable as the heat of the day.  To your north, east and south 
+you see an impassable rocky mountain range.  The desert land stretches on 
+to your west."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+west to des_5I descr "The desert stretches on to the west.";
+
+dilcopy worm_attack();
+
+end
+
+			des_6A
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the edge of the desert near the mountain range.  
+During the day the blazing Sun scorches mercilessly upon the desert sand, 
+and when night comes the temperature drops steeply to bring a skin-penetrating
+chill as unbearable as the heat of the day.  To your south and west you see
+an impassable rocky mountain range.  The desert land stretches on to your
+north and east."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_5A descr "The desert stretches on to the north.";
+east to des_6B descr "The desert stretches on to the east.";
+
+dilcopy worm_attack();
+
+end
+
+			des_6B
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_5B descr "The desert stretches on northwards.";
+east to des_6C descr "The desert stretches on eastwards.";
+south to des_7B descr "The desert stretches on southwards.";
+west to des_6A descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_6C
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_5C descr "The desert stretches on northwards.";
+east to des_6D descr "The desert stretches on eastwards.";
+south to des_7C descr "The desert stretches on southwards.";
+west to des_6B descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_6D
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_5D descr "The desert stretches on northwards.";
+east to des_6E descr "The desert stretches on eastwards.";
+south to des_7D descr "The desert stretches on southwards.";
+west to des_6C descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_6E
+
+title "At a Large Sand Dune"
+descr
+"   A large sand dune here catches your attention.  Although sand dunes are
+common in the Gaumbi desert this one is pretty huge, and the wind does  
+not seem to be able to demolish it.  The desert continues in all directions."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_5E descr "The desert stretches on northwards.";
+east to des_6F descr "The desert stretches on eastwards.";
+south to des_7E descr "The desert stretches on southwards.";
+west to des_6D descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_6F
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_5F descr "The desert stretches on northwards.";
+east to des_6G descr "The desert stretches on eastwards.";
+south to des_7F descr "The desert stretches on southwards.";
+west to des_6E descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_6G
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_5G descr "The desert stretches on northwards.";
+east to des_6H descr "The desert stretches on eastwards.";
+south to des_7G descr "The desert stretches on southwards.";
+west to des_6F descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_6H
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the edge of the desert near the mountain range.  
+During the day the blazing Sun scorches mercilessly upon the desert sand, 
+and when night comes the temperature drops steeply to bring a skin-penetrating
+chill as unbearable as the heat of the day.  To your east you see an 
+impassable rocky mountain range.  The desert land stretches on to your
+north, west and south."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_5H descr "The desert stretches on to the north.";
+west to des_6G descr "The desert stretches on to the west.";
+south to des_7H descr "The desert stretches on to the south.";
+
+dilcopy worm_attack();
+
+end
+
+			des_7B
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the edge of the desert near the mountain range.  
+During the day the blazing Sun scorches mercilessly upon the desert sand, 
+and when night comes the temperature drops steeply to bring a skin-penetrating
+chill as unbearable as the heat of the day.  To your west and south you see an 
+impassable rocky mountain range.  The desert land stretches on to your north
+and east."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_6B descr "The desert stretches on to the north.";
+east to des_7C descr "The desert stretches on to the east.";
+
+dilcopy worm_attack();
+
+end
+
+			des_7C
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the edge of the desert near the mountain range.  
+During the day the blazing Sun scorches mercilessly upon the desert sand, 
+and when night comes the temperature drops steeply to bring a skin-penetrating
+chill as unbearable as the heat of the day.  To your south you see an
+impassable rocky mountain range.  The desert land stretches on to your north,
+east and west."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_6C descr "The desert stretches on to the north.";
+east to des_7D descr "The desert stretches on to the east.";
+west to des_7B descr "The desert stretches on to the west.";
+
+dilcopy worm_attack();
+
+end
+
+			des_7D
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_6D descr "The desert stretches on northwards.";
+east to des_7E descr "The desert stretches on eastwards.";
+south to des_8D descr "The desert stretches on southwards.";
+west to des_7C descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_7E
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_6E descr "The desert stretches on northwards.";
+east to des_7F descr "The desert stretches on eastwards.";
+south to des_8E descr "The desert stretches on southwards.";
+west to des_7D descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_7F
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_6F descr "The desert stretches on northwards.";
+east to des_7G descr "The desert stretches on eastwards.";
+south to des_8F descr "The desert stretches on southwards.";
+west to des_7E descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_7G
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_6G descr "The desert stretches on northwards.";
+east to des_7H descr "The desert stretches on eastwards.";
+south to des_8G descr "The desert stretches on southwards.";
+west to des_7F descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_7H
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_6H descr "The desert stretches on northwards.";
+east to oasis descr "You see an oasis to your east.";
+south to des_8H descr "The desert stretches on southwards.";
+west to des_7G descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			oasis
+
+title "At the Oasis"
+descr
+"   Amidst the dry terrain you come across a rare source of water.  Here 
+lies a pond with crystal clear water large enough for several tens of 
+persons to dip in for a cool, refreshing bath.  By the pond grow several
+tropical trees providing some shade for weary trekkers.  The mountain
+range stands to your east with the oasis stretching out to the north, 
+leaving you to travel either west or south into the desert."
+
+extra {"water", "pond"}
+"The water is crystal clear, obviously unpolluted."
+extra {"tropical trees", "tropical tree", "tree", "trees"}
+"Some species unknown to you."
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+
+movement SECT_FOREST
+west to des_7H descr "The desert stretches on westwards.";
+south to des_8I descr "The desert stretches on southwards.";
+north to ent_gate@garden descr "It seems the oasis stretches northward.";
+
+end
+
+			des_8D
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the edge of the desert near the mountain range.  
+During the day the blazing Sun scorches mercilessly upon the desert sand, 
+and when night comes the temperature drops steeply to bring a skin-penetrating
+chill as unbearable as the heat of the day.  To your west and south you see an 
+impassable rocky mountain range.  The desert land stretches on to your north
+and east."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_7D descr "The desert stretches on to the north.";
+east to des_8E descr "The desert stretches on to the east.";
+
+dilcopy worm_attack();
+
+end
+
+			des_8E
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_7E descr "The desert stretches on northwards.";
+east to des_8F descr "The desert stretches on eastwards.";
+south to des_9E descr "The desert stretches on southwards.";
+west to des_8D descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_8F
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_7F descr "The desert stretches on northwards.";
+east to des_8G descr "The desert stretches on eastwards";
+south to des_9F descr "The desert stretches on southwards.";
+west to des_8E descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_8G
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_7G descr "The desert stretches on northwards.";
+east to des_8H descr "The desert stretches on eastwards.";
+south to des_9G descr "The desert stretches on southwards.";
+west to des_8F descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_8H
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_7H descr "The desert stretches on northwards.";
+east to des_8I descr "The desert stretches on eastwards.";
+south to des_9H descr "The desert stretches on southwards.";
+west to des_8G descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_8I
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to oasis descr "You see an oasis to your north.";
+east to des_8J descr "The desert stretches on eastwards.";
+south to des_9I descr "The desert stretches on southwards.";
+west to des_8H descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_8J
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the edge of the desert near the mountain range.  
+During the day the blazing Sun scorches mercilessly upon the desert sand, 
+and when night comes the temperature drops steeply to bring a skin-penetrating
+chill as unbearable as the heat of the day.  To your north and east you see an
+impassable rocky mountain range.  The desert land stretches on to your south
+and west."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+south to des_9J descr "The desert stretches on to the south.";
+west to des_8I descr "The desert stretches on to the west.";
+
+dilcopy worm_attack();
+
+end
+
+			des_9E
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the edge of the desert near the mountain range.  
+During the day the blazing Sun scorches mercilessly upon the desert sand, 
+and when night comes the temperature drops steeply to bring a skin-penetrating
+chill as unbearable as the heat of the day.  To your west you see an
+impassable rocky mountain range.  The desert land stretches on to your north,
+east and south."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_8E descr "The desert stretches on to the north.";
+east to des_9F descr "The desert stretches on to the east.";
+south to des_10E descr "The desert stretches on to the south.";
+
+dilcopy worm_attack();
+
+end
+
+			des_9F
+
+title "At a Small Sand Cliff"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  There is a small sand cliff in the middle here, formed by the 
+wind blowing in a particular direction.  The cliff stands only a few feet 
+high.  Ordinarily such a small cliff should be an easy climb, but 
+unfortunately the loose sand makes climbing impossible."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_8F descr "The desert stretches on northwards.";
+east to des_9G descr "The desert stretches on eastwards.";
+south to des_10F descr "The desert stretches on southwards.";
+west to des_9E descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_9G
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it..  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_8G descr "The desert stretches on northwards.";
+east to des_9H descr "The desert stretches on eastwards.";
+south to des_10G descr "The desert stretches on southwards.";
+west to des_9F descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_9H
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_8H descr "The desert stretches on northwards.";
+east to des_9I descr "The desert stretches on eastwards.";
+south to des_10H descr "The desert stretches on southwards.";
+west to des_9G descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_9I
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  You see a few
+cactii thriving on the barren sand, standing up to the beating of nature." 
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+extra {"cactii", "cactus"}
+"Round and plump-looking plants with leaves of needle-like thorns."
+
+movement SECT_DESERT
+north to des_8I descr "The desert stretches on northwards.";
+east to des_9J descr "The desert stretches on eastwards.";
+south to des_10I descr "The desert stretches on southwards.";
+west to des_9H descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_9J
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the edge of the desert near the mountain range.  
+During the day the blazing Sun scorches mercilessly upon the desert sand, 
+and when night comes the temperature drops steeply to bring a skin-penetrating
+chill as unbearable as the heat of the day.  To your east you see an 
+impassable rocky mountain range.  The desert land stretches on to your 
+north, west and south."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_8J descr "The desert stretches on to the north.";
+west to des_9I descr "The desert stretches on to the west.";
+south to des_10J descr "The desert stretches on to the south.";
+
+dilcopy worm_attack();
+
+end
+
+			des_10D
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the edge of the desert near the mountain range.  
+During the day the blazing Sun scorches mercilessly upon the desert sand, 
+and when night comes the temperature drops steeply to bring a skin-penetrating
+chill as unbearable as the heat of the day.  To your north and west you 
+see an impassable rocky mountain range.  The desert land stretches on to 
+your east and south."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+east to des_10E descr "The desert stretches on to the east.";
+south to des_11D descr "The desert stretches on to the south.";
+
+dilcopy worm_attack();
+
+end
+
+			des_10E
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_9E descr "The desert stretches on northwards.";
+east to des_10F descr "The desert stretches on eastwards.";
+south to des_11E descr "The desert stretches on southwards.";
+west to des_10D descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_10F
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_9F descr "The desert stretches on northwards.";
+east to des_10G descr "The desert stretches on eastwards.";
+south to des_11F descr "The desert stretches on southwards.";
+west to des_10E descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_10G
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_9G descr "The desert stretches on northwards.";
+east to des_10H descr "The desert stretches on eastwards.";
+south to des_11G descr "The desert stretches on southwards.";
+west to des_10F descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_10H
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_9H descr "The desert stretches on northwards.";
+east to des_10I descr "The desert stretches on eastwards.";
+south to des_11H descr "The desert stretches on southwards.";
+west to des_10G descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_10I
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_9I descr "The desert stretches on northwards.";
+east to des_10J descr "The desert stretches on eastwards.";
+south to des_11I descr "The desert stretches on southwards.";
+west to des_10H descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_10J
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the edge of the desert near the mountain range.  
+During the day the blazing Sun scorches mercilessly upon the desert sand, 
+and when night comes the temperature drops steeply to bring a skin-penetrating
+chill as unbearable as the heat of the day.  To your east and south you 
+see an impassable rocky mountain range.  The desert land stretches on to your 
+north and west."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_9J descr "The desert stretches on to the north.";
+west to des_10I descr "The desert stretches on to the west.";
+
+dilcopy worm_attack();
+
+end
+
+			des_11C
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the edge of the desert near the mountain range.  
+During the day the blazing Sun scorches mercilessly upon the desert sand, 
+and when night comes the temperature drops steeply to bring a skin-penetrating
+chill as unbearable as the heat of the day.  To your north, west and south 
+you see an impassable rocky mountain range.  The desert land stretches 
+on to your east."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+east to des_11D descr "The desert stretches on to the east.";
+
+dilcopy worm_attack();
+
+end
+
+			des_11D
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_10D descr "The desert stretches on northwards.";
+east to des_11E descr "The desert stretches on eastwards.";
+south to des_12D descr "The desert stretches on southwards.";
+west to des_11C descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_11E
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_10E descr "The desert stretches on northwards.";
+east to des_11F descr "The desert stretches on eastwards.";
+south to des_12E descr "The desert stretches on southwards.";
+west to des_11D descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_11F
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation.."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_10F descr "The desert stretches on northwards.";
+east to des_11G descr "The desert stretches on eastwards.";
+south to des_12F descr "The desert stretches on southwards.";
+west to des_11E descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_11G
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation.."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_10G descr "The desert stretches on northwards.";
+east to des_11H descr "The desert stretches on eastwards.";
+south to des_12G descr "The desert stretches on southwards.";
+west to des_11F descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_11H
+
+title "In the Desert"
+descr
+"   You are standing in the Gaumbi desert which stretches on in all 
+directions.  Now and then you pass by sand dunes, big and small created 
+by the relentless buffetting wind.  Due to the adverse conditions it takes
+you a lot of time and effort just to move a short distance.  Occassionally a 
+sand particle gets into your eyes adding to the frustration and irritation."
+
+extra {"sand dune", "sand dunes", "dune", "dunes"}
+"They look like miniature hills standing in the desert."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_10H descr "The desert stretches on northwards.";
+east to des_11I descr "The desert stretches on eastwards.";
+south to des_12H descr "The desert stretches on southwards.";
+west to des_11G descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_11I
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the edge of the desert near the mountain range.  
+During the day the blazing Sun scorches mercilessly upon the desert sand, 
+and when night comes the temperature drops steeply to bring a skin-penetrating
+chill as unbearable as the heat of the day.  To your east and south you see
+an impassable rocky mountain range.  The desert land stretches on to your 
+north and west."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_10I descr "The desert stretches on to the north.";
+west to des_11H descr "The desert stretches on to the west.";
+
+dilcopy worm_attack();
+
+end
+
+			des_12D
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the edge of the desert near the mountain range.  
+During the day the blazing Sun scorches mercilessly upon the desert sand, 
+and when night comes the temperature drops steeply to bring a skin-penetrating
+chill as unbearable as the heat of the day.  To your west and south you see
+an impassable rocky mountain range.  The desert land stretches on to your 
+north and east."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_11D descr "The desert stretches on to the north.";
+east to des_12E descr "The desert stretches on to the east.";
+
+dilcopy worm_attack();
+
+end
+
+			des_12E
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the edge of the desert near the mountain range.  
+During the day the blazing Sun scorches mercilessly upon the desert sand, 
+and when night comes the temperature drops steeply to bring a skin-penetrating
+chill as unbearable as the heat of the day.  To your south you see an 
+impassable rocky mountain range.  The desert land stretches on to your 
+north, east and west."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_11E descr "The desert stretches on to the north.";
+east to des_12F descr "The desert stretches on to the east.";
+west to des_12D descr "The desert stretches on to the west.";
+
+dilcopy worm_attack();
+
+end
+
+			des_12F
+
+title "In the Desert"
+descr
+"   You are standing in the southern part of the Gaumbi desert.  Fine sand
+particles scatter around the dry, barren ground.  You also see a myriad of 
+cracks running along the ground signifying the lack of rainfall.  A mild 
+wind sweeps across the place carrying with it the swirling sand dust.  
+The desert land continues in all directions."
+
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"Fine yellowish sand produced as a result of ground erosion."
+extra {"cracks", "crack"}
+"They are a large network of small cracks formed as a result of the 
+extremely dry weather."
+
+movement SECT_DESERT
+north to des_11F descr "The desert stretches on northwards.";
+east to des_12G descr "The desert stretches on eastwards.";
+south to des_13F descr "The desert stretches on southwards.";
+west to des_12E descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_12G
+
+title "In the Desert"
+descr
+"   You are standing in the southern part of the Gaumbi desert.  Fine sand
+particles scatter around the dry, barren ground.  You also see a myriad of 
+cracks running along the ground signifying the lack of rainfall.  A mild 
+wind sweeps across the place carrying with it the swirling sand dust.  
+The desert land continues in all directions."
+
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"Fine yellowish sand produced as a result of ground erosion."
+extra {"cracks", "crack"}
+"They are a large network of small cracks formed as a result of the 
+extremely dry weather."
+
+movement SECT_DESERT
+north to des_11G descr "The desert stretches on northwards.";
+east to des_12H descr "The desert stretches on eastwards.";
+south to des_13G descr "The desert stretches on southwards.";
+west to des_12F descr "The desert stretches on westwards.";
+
+dilcopy worm_attack();
+
+end
+
+			des_12H
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the edge of the desert near the mountain range.  
+During the day the blazing Sun scorches mercilessly upon the desert sand, 
+and when night comes the temperature drops steeply to bring a skin-penetrating
+chill as unbearable as the heat of the day.  To your east and south you 
+see an impassable rocky mountain range.  The desert land stretches on to your 
+north and west."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_11H descr "The desert stretches on to the north.";
+west to des_12G descr "The desert stretches on to the west.";
+
+dilcopy worm_attack();
+
+end
+
+			des_13F
+
+title "At the Edge of the Desert"
+descr
+"   You are standing at the edge of the desert near the mountain range.  
+During the day the blazing Sun scorches mercilessly upon the desert sand, 
+and when night comes the temperature drops steeply to bring a skin-penetrating
+chill as unbearable as the heat of the day.  To your west and south you 
+see an impassable rocky mountain range.  The desert land stretches on to your 
+north and east."
+
+extra {"mountain", "range"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"sand"}
+"The desert sand seems to drag your feet as you walk on it.  This slows
+down your movement and tires you out."
+
+movement SECT_DESERT
+north to des_12F descr "The desert stretches on to the north.";
+east to des_13G descr "The desert stretches on to the east.";
+
+dilcopy worm_attack();
+
+end
+
+			des_13G
+
+title "At the Southern Edge of the Desert"
+descr
+"   You are standing in the southern edge of the Gaumbi desert.  From here,
+you can sense a wave of intense heat coming from the desert towards your
+north.  On the east is a mountain range which extends in the north-east
+direction.  To your south lies the fabled city of Khorsabad, situated in
+the valley opening of the mountain range."
+
+extra {"sun"}
+"For your eyes' sake ... forget it."
+extra {"mountain"}
+"The mountain range is very rocky and steep.  You can see that it is at
+least several thousand feet high.  Only the most skillful mountaineer
+may perhaps be able to scale it; otherwise it is almost impassable."
+extra {"city", "khorsabad"}
+"A city of splendid architecture, a symbol of its wealth and glory."
+extra {"valley"}
+"The valley lies in between two mountain ranges on both sides."
+
+movement SECT_DESERT
+north to des_12G descr "The desert stretches on to the north.";
+west to des_13F descr "The desert stretches on to the west.";
+south to city_entrance@arabian
+         descr "The city of Khorsabad lies to the south.";
+end
+
+%mobiles
+
+			sand_monster
+
+names {"sand monster", "sand storm", "sand", "monster", "storm"}
+title "a sand monster"
+descr "A small sand storm erupts here scattering desert sand all over."
+extra {}
+"You see a burst of swirling wind from nowhere spiralling up desert sand
+as it moves along.  Looks like it is some kind of sand monster."
+level 60
+alignment 0
+race RACE_ELEMENTAL_EARTH
+sex SEX_NEUTRAL
+height 280
+weight 200
+NATURAL_DEF(WPN_CRUSH, ARM_CHAIN)
+MSET_ABILITY(20,19,18,18,13,12,0,0)
+MSET_WEAPON(8,8,8,8,18,8)
+MSET_SPELL(2,1,1,1,1,5,7,4,7,7,6)
+special SFUN_RANDOM_ZONE_MOVE time PULSE_SEC*90 bits SFB_RANTIME
+end
+
+			sand_worm
+
+names {"sand worm", "worm"}
+title "a sand worm"
+descr "A huge sand worm is munching up everything in its path."
+extra {}
+"You see a huge, brown-coloured worm with a large, gaping mouth.  Only its
+head is visible; the rest of its body are covered beneath the desert sand."
+level 50
+alignment 0
+race RACE_WORM
+sex SEX_NEUTRAL
+height 230
+weight 723
+NATURAL_DEF(WPN_BITE, ARM_HLEATHER)
+MSET_ABILITY(19,15,21,25,9,11,0,0)
+MSET_WEAPON(6,5,7,6,20,6)
+MSET_SPELL(1,1,1,2,1,7,9,6,7,8,7)
+
+dilbegin worm_burrow();
+code
+{
+  heartbeat := PULSE_SEC * 3;
+
+  :start:
+  pause;
+  if (self.position == POSITION_STANDING)
+  {
+    act("$1n burrows into the ground and disappears from view.",
+        A_SOMEONE, self, null, null, TO_REST);
+    destroy(self);
+  }
+  goto start;
+}
+dilend 
+end
+
+			wild_camel
+
+names {"wild camel", "camel"}
+title "a wild camel"
+descr "A wild camel roams here."
+extra {}
+"A beast with a hunch back, it can survive in the desert for long periods
+without water."
+level 55
+alignment 0
+race RACE_CAMEL
+sex SEX_MALE
+height 160
+weight 370
+NATURAL_DEF(WPN_KICK, ARM_HLEATHER)
+MSET_ABILITY(19,15,22,24,12,8,0,0)
+MSET_WEAPON(6,6,6,6,20,6)
+MSET_SPELL(2,2,2,2,2,6,8,6,6,8,6)
+special SFUN_RANDOM_ZONE_MOVE time 90 bits SFB_RANTIME
+end
+
+			cactus
+
+names {"carnivorous cactus", "cactus"}
+title "a carnivorous cactus"
+descr "A big, strange-looking cactus grows here."
+extra {}
+"This cactus is unusually large and has long and sharp thorns.  On a
+closer look ... strange! It has a mouth!"
+level 45
+alignment 0
+race RACE_CACTUS
+sex SEX_NEUTRAL
+height 140
+weight 295
+NATURAL_DEF(WPN_STING, ARM_CHAIN)
+MSET_ABILITY(21,12,20,25,12,10,0,0)
+MSET_WEAPON(6,6,6,6,20,6)
+MSET_SPELL(2,2,2,2,2,5,8,6,6,8,7)
+special SFUN_COMBAT_POISON
+end
+
+%objects
+
+%reset
+
+load cactus into des_5A zonemax 3
+load cactus into des_3F zonemax 3
+load cactus into des_11H zonemax 3
+
+load sand_monster into des_7D zonemax 2
+load sand_monster into des_2G zonemax 2
+
+load wild_camel into des_12F zonemax 3
+load wild_camel into des_12G zonemax 3
+load wild_camel into des_8I zonemax 3
+
+load sand_worm into des_2I  zonemax 3
+load sand_worm into des_3H  zonemax 3
+load sand_worm into des_4G  zonemax 3
+
+
+%end
+
+

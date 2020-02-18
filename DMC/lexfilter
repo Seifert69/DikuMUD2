@@ -1,0 +1,24 @@
+#!/usr/local/bin/perl
+# File   : lexfilter[.perl]					-*-Perl-*-
+# Version: 1.00
+# Author : gnort@daimi.aau.dk
+# Purpose: To remove offending lines from lex-generated files!
+#
+# Plan: Enhancing readability would be nice ;-)
+
+foreach (@ARGV) {
+    ++$sys{$1} if /^\-D(\w+)$/;
+}
+
+undef $/;			# Read in all file at once
+$_ = <STDIN>;
+
+if ($sys{'MARCEL'}) {
+    $bad = "#include <stddef.h>\n"
+	. "void \\*malloc\\( size_t \\);\n"
+	. "void free\\( void\\* \\);";
+
+    s/($bad)/\/\* Gnort outcommented this for MARCEL\n$1\n\*\//;
+}
+
+print;

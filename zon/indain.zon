@@ -1,0 +1,3477 @@
+/*
+filename    indian
+password    dragon
+changedby   Palio
+EmailAdd    Valhalla Administrator <mud@valhalla-usa.com>
+request     compile
+version     3
+END HEADER*/
+
+#include <composed.h>
+
+#define MOTABI_ONGOING "Makala's Request Ongoing"
+#define MOTABI_COMPLETE "Makala's Request Complete"
+#define HELPCHIEF dilcopy helpchief@indian();
+
+#define TABLE								\
+extra {"table", "trinkets"}						\
+"You see a small table with various items."				\
+
+#define FOREST								\
+extra {"trees", "tree", "forest"}					\
+"Why would you want to look at trees? Wow, are they BORING!"            \
+
+#define M_DRAGON_BODY(MLVL, GENDER)					\
+    race RACE_DRAGON_BLACK						\
+    level MLVL								\
+    sex GENDER								\
+    height    300							\
+    weight    300							\
+    NATURAL_DEF(WPN_CRUSH, ARM_PLATE)					\
+    alignment -1000							\
+    MSET_ABILITY(25,10,6,12,15,12,20,0)					\
+    MSET_WEAPON(25,25,10,10,25,5)
+
+#define M_DRAGON_HEAD(MLVL, GENDER)					\
+    race RACE_DRAGON_BLACK						\
+    level MLVL								\
+    sex GENDER								\
+    height    60							\
+    weight    75							\
+    NATURAL_DEF(WPN_BITE, ARM_PLATE)					\
+    alignment -1000							\
+    MSET_WEAPON(10,10,10,10,25,5)					\
+    MSET_SPELL(0,0,0,0,0,0,30,0,0,0,0)
+
+#define M_DRAGON_CLAW(MLVL, GENDER)					\
+    race RACE_DRAGON_BLACK						\
+    level MLVL								\
+    sex GENDER								\
+    height    90							\
+    weight    75							\
+    NATURAL_DEF(WPN_CLAW, ARM_PLATE)					\
+    alignment -1000							\
+    MSET_ABILITY(25,10,6,12,15,12,20,0)					\
+    MSET_WEAPON(25,25,10,10,25,5)
+
+#define M_DRAGON_TAIL(MLVL, GENDER)					\
+    race RACE_DRAGON_BLACK						\
+    level MLVL								\
+    sex GENDER								\
+    height    60							\
+    weight    75							\
+    NATURAL_DEF(WPN_CRUSH, ARM_PLATE)					\
+    alignment -1000							\
+    MSET_ABILITY(25,10,6,12,15,12,20,0)					\
+    MSET_WEAPON(25,25,10,10,25,5)
+
+#define M_STALLION(MLVL, GENDER)					\
+    race RACE_HORSE							\
+    level MLVL								\
+    sex GENDER								\
+    height 150								\
+    weight 10								\
+    NATURAL_DEF(WPN_KICK, ARM_PLATE)					\
+    alignment 750							\
+    MSET_ABILITY(20,20,15,10,5,30,0,0)					\
+    MSET_WEAPON(6,6,6,6,15,6)						\
+    MSET_SPELL(4,4,4,5,5,5,5,5,6,6,6)
+
+%zone indian
+title "Indian Village"
+lifespan 30
+reset RESET_ANYHOW
+creators {"your","zeron"}
+
+notes
+"&lThis is the village of the Motabi, a once primitive race of Indians who
+were scattered about the land after the war against the dragon Ancalador.
+They appointed a Chieftan, and soon learned how to farm, build, trade,
+and how to control the magicks of the land. They became skilled blacksmiths,
+and very strong warriors.
+
+If there are any problems, email smaug at smaug@mikeperry.pr.mcs.net or 
+zeron at root@mikeperry.pr.mcs.net. If that is down, email mikepery@mcs.com.
+
+Versions:
+1.02b - Major fixes. Changed alignment/exp/money on mobs, fixed some bugs with 
+	earth shaker dil and wall dil, and added a few more dils.
+1.03b - Fixed spell skill on Earth Shaker.
+1.04a - Fixed guard() dil so that it doesn't block if they try to drag south or
+	cast leaving south. Also took out the 'over powerful' slay human *gasp*"
+
+help
+"You have wandered into the village of the Motabi tribe, a group of Indians
+hardened by war. You might want to avoid this zone unless you have a group
+of hardy warriors and healers, as this is a high level zone for level 50+
+grouped."
+
+%dil
+
+dilbegin breakwall();
+var
+   pc : unitptr;
+   i  : integer;
+code
+{
+:init:
+i := 1;
+
+:start:
+wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and
+		(command("break")) and
+		("wall" in argument)));
+block;
+pc := activator;
+if (not (MOTABI_COMPLETE in activator.quests))
+{
+  act("You are not strong enough yet, you would need a very strong blessing to help you break this wall.", A_ALWAYS, pc, null, null, TO_CHAR);
+  goto start;
+}
+else
+{
+	if (not ("broken wall" in self.names))
+	{
+	while (i < 3)
+	{
+	  act("You cause a few cracks to appear on the wall.", A_ALWAYS, pc, null, null, TO_CHAR);
+	  act("$1n causes a few cracks to appear on the wall.", A_SOMEONE, pc, null, null, TO_REST);
+	  i := i+1;
+	  goto start;
+	}
+	act("The wall breaks and falls apart.", A_ALWAYS, pc, null, null, TO_ALL);
+	addstring(self.names, "broken wall");
+	}
+}
+goto start;
+}
+dilend
+
+dilbegin entwall();
+var
+   pc : unitptr;
+code {
+
+:init:
+heartbeat := PULSE_SEC*3;
+
+:start:
+wait (SFB_CMD, (activator.type == UNIT_ST_PC) and
+     (command(CMD_NORTH)));
+if (("broken wall" in self.names) and (MOTABI_COMPLETE in activator.quests))
+{
+pc := activator;
+block;
+act("You walk through the crumbled wall to the other side.",
+	A_ALWAYS, pc, null, null, TO_CHAR);
+act(pc.name+" walks through the crumbled wall.",
+	A_HIDEINV, pc, null, null, TO_REST);
+link(pc, findroom("crum_pass@indian"));
+substring (self.names, "broken wall");
+exec("look", pc);
+goto start;
+}
+else if (not ("broken wall" in self.names))
+{
+block;
+pc := activator;
+act("The wall is too stable, maybe you should weaken it first.",
+	A_ALWAYS, pc, null, null, TO_CHAR);
+goto start;
+}
+else if (not (MOTABI_COMPLETE in pc.quests))
+{
+  pc := activator;
+  block;
+  act("You are not strong enough yet, you would need a very strong blessing to help you get past this wall.",
+	A_ALWAYS, pc, null, null, TO_CHAR);
+  goto start;
+}
+}
+dilend
+
+dilbegin wall_bl();
+var
+   pc   : unitptr;
+code
+{
+:start:
+  wait(SFB_CMD, ((command(CMD_CAST)) and
+		("leav" in argument)));
+  block;
+  pc := activator;
+  act("The wall hums quietly and nothing happens.",
+	A_ALWAYS, pc, null, null, TO_CHAR);
+  goto start;
+}
+dilend
+
+dilbegin helpchief();
+var
+   u : unitptr;
+   s : string;
+code
+{
+   heartbeat := PULSE_SEC * 3;
+   on_activation(self.position <= POSITION_SLEEPING, skip);
+
+   :start:
+   nopriority;
+   wait(SFB_MSG, activator.nameidx == "mot_chief");
+   priority;
+   s := argument;
+   walkto(findsymbolic("mot_chief@indian"));
+   exec("kill " +s, self);
+   pause;
+   goto start;
+}
+dilend
+
+dilbegin tele();
+var
+   u    : unitptr;
+   s    : string;
+code
+{
+   heartbeat := PULSE_SEC * 3;
+   on_activation(self.position <= POSITION_SLEEPING, skip);
+
+   :start:
+   nopriority;
+   wait(SFB_MSG, (activator.nameidx == "mot_chief"));
+   s := argument;
+   u := findunit(self, s, FIND_UNIT_WORLD, null);
+   exec("cast invisibility spirit", self);
+   link(self, u.outside);
+   act("$1n appears in a puff of green smoke.",
+	A_SOMEONE, self, null, null, TO_REST);
+   act("Your chieftan is in need of help.",
+	A_SOMEONE, self, null, null, TO_CHAR);
+   exec("kill " +s, self);
+   priority;
+   pause;
+   goto start;
+}
+dilend
+
+dilbegin helpme();
+code
+{
+   heartbeat := PULSE_SEC*5;
+   on_activation(self.position <= POSITION_SLEEPING, skip);
+
+   :start:
+   nopriority;
+   wait(SFB_COM, self.position == POSITION_FIGHTING);
+   priority;
+   exec("emote cries 'Come help me my tribe, for I have been attacked!'", self);
+   sendto(activator.name, findsymbolic("mot_war@indian"));
+   sendto(activator.name, findsymbolic("mot_shaman@indian"));
+   sendto(activator.name, findsymbolic("mot_priest@indian"));
+   sendtoall(activator.name, "mot_guard@indian");
+   sendtoall(activator.name, "mot_spirit@indian");
+   while (self.position == POSITION_FIGHTING)
+     pause;
+   goto start;
+}
+dilend
+
+dilbegin helpus();
+code
+{
+   heartbeat := PULSE_SEC*5;
+   on_activation(self.position <= POSITION_SLEEPING, skip);
+
+   :start:
+   nopriority;
+   wait(SFB_COM, self.position == POSITION_FIGHTING);
+   priority;
+   exec("emote cries 'HELP!!!! HELP!!!!'", self);
+   sendtoall(activator.name, "mot_husband@indian");
+   while (self.position == POSITION_FIGHTING)
+     pause;
+   goto start;
+}
+dilend
+
+dilbegin helpwife();
+var
+   targ : unitptr;
+   s    : string;
+code
+{
+   heartbeat := PULSE_SEC * 3;
+   on_activation(self.position <= POSITION_SLEEPING, skip);
+
+   :start:
+   nopriority;
+   wait(SFB_MSG, (activator.nameidx == "mot_woman") or
+		 (activator.nameidx == "mot_child"));
+   s := argument;
+   targ := findunit(self, s, FIND_UNIT_WORLD, null);
+   walkto(targ.outside);
+   exec("rescue " +activator.name, self);
+   pause;
+   goto start;
+   priority;
+}
+dilend
+
+dilbegin ham_quest();
+var
+   i  : integer;
+   pc : unitptr;
+   exdp : extraptr;
+code
+{
+:init:
+heartbeat := PULSE_SEC*5;
+
+:start:
+interrupt(SFB_CMD,(activator.type==UNIT_ST_PC) and
+	(activator.level < 40), int_level);
+wait(SFB_CMD,(activator.type == UNIT_ST_PC) and
+	(not (MOTABI_COMPLETE in activator.quests)));
+
+pc := activator;
+secure(pc, lostpc);
+
+if (MOTABI_ONGOING in pc.quests)
+   goto quest_ongoing;
+
+exec("say Hello, "+pc.name+", do you seek the mighty earth shaker?", self);
+
+:accept_loop:
+wait(SFB_CMD,(activator==pc));
+if (command(CMD_NOD))
+   goto quest_accepted;
+else if (command(CMD_SHAKE))
+   goto no_quest;
+else
+{
+   exec("say Nod or shake.", self);
+   goto accept_loop;
+}
+
+:no_quest:
+pause;
+exec("say Come back when you change your mind.", self);
+unsecure(pc);
+goto start;
+
+:quest_accepted:
+pause;
+exec("say You must be a brave fellow!", self);
+pause;
+exec("say If you will bring me these items, I will aid you in that which you seek.", self);
+pause;
+exec("say First I will need a magical wand from one who put a curse on my family.", self);
+pause;
+exec("say Then you must bring me a strong gem that I will use in preparing the spell that you will need.", self);
+pause;
+exec("say Also, I would greatly appreciate news of my wife, Gwerath. She went out seeking to rid the world of dragons...", self);
+pause;
+exec("emote holds back a tear.", self);
+pause;
+exec("say After you bring me these items, I will give you strength to break the wall, behind which lies the evil dragon that has stolen the earth shaker.", self);
+addextra(pc.quests, {MOTABI_ONGOING}, "");
+unsecure(pc);
+goto start;
+
+:quest_ongoing:
+exdp := MOTABI_ONGOING in pc.quests;
+
+if (("wand" in exdp.names) and ("gem" in exdp.names) and ("locket" in exdp.names))
+{
+	experience(3000, pc);
+	subextra(pc.quests, MOTABI_ONGOING);
+	addextra(pc.quests, {MOTABI_COMPLETE}, "");
+	exec("say You truly are brave.", self);
+	pause;
+	exec("emote drops the wand into a steaming pot.", self);
+	pause;
+	exec("emote drops the gem into a steaming pot.", self);
+	pause;
+	exec("emote lays hands on you and chants an incantation.", self);
+	pause;
+	exec("say You have my blessing.", self);
+	pause;
+	exec("wave", self);
+}
+
+unsecure(pc);
+goto start;
+
+:int_level:
+pause;
+goto start;
+
+:lostpc:
+exec("say He will not get far.", self);
+unsecure(pc);
+pause;
+goto start;
+}
+dilend
+
+dilbegin ham_give();
+var
+   pc   : unitptr;
+   item : unitptr;
+   exdp : extraptr;
+
+code
+{
+:init:
+heartbeat := PULSE_SEC*5;
+
+:start:
+wait(SFB_DONE, command(CMD_GIVE) and
+		(target == self) and
+		(activator.type == UNIT_ST_PC) and
+		(MOTABI_ONGOING in activator.quests));
+
+:give:
+
+pc := activator;
+item := medium;
+secure(pc,lostpc);
+exdp := MOTABI_ONGOING in pc.quests;
+
+if ("wand@indian" == (self.inside.nameidx+"@"+self.inside.zoneidx))
+{
+	addstring(exdp.names, "wand");
+	exec("say This will give the spell its essense.", self);
+	destroy(item);
+}
+else if ("gray_gem@hades1" == (self.inside.nameidx+"@"+self.inside.zoneidx))
+{
+	addstring(exdp.names, "gem");
+	exec("say This will give the spell its strength.", self);
+	destroy(item);
+}
+else if ("gold_locket@indian" == (self.inside.nameidx+"@"+self.inside.zoneidx))
+{
+	addstring(exdp.names, "locket");
+	exec("emote sobs over the loss of his wife.", self);
+	destroy(item);
+}
+else
+{
+	exec("say I did not ask for this.", self);
+	exec("give "+self.inside.name+" to "+pc.name, self);
+}
+
+unsecure(pc);
+goto start;
+
+:lostpc:
+unsecure(pc);
+pause;
+goto start;
+}
+dilend
+
+dilbegin entfire();
+var
+   pc : unitptr;
+code {
+
+:init:
+heartbeat := PULSE_SEC*3;
+interrupt(SFB_CMD, (activator.type==UNIT_ST_NPC) and
+	(command(CMD_NORTH)), int_bl);
+
+:start:
+wait (SFB_CMD, (activator.type == UNIT_ST_PC) and
+	(command(CMD_SOUTH)));
+pc:=activator;
+block;
+if (pc.level < 30)
+{
+	act("The blazing fire is too hot for "+pc.name+" to pass.",
+		A_HIDEINV, pc, null, null, TO_REST);
+	act("The blazing fire is too hot for you to pass.",
+		A_ALWAYS, pc, null, null, TO_CHAR);
+}
+else
+{
+	act(pc.name+" runs through the blazing fire to the other side.",
+		A_HIDEINV, pc, null, null, TO_REST);
+	act("You run through the blazing fire to the other side. OUCH that hurt!",
+		A_ALWAYS, pc, null, null, TO_CHAR);
+	pc.hp := pc.hp - 50;
+        if (pc.hp < -11) pc.hp := -10;
+	link(pc, findroom("dense_forest@indian"));
+	exec("look", pc);
+	goto start;
+}
+:int_bl:
+block;
+pause;
+goto start;
+}
+dilend
+
+dilbegin hurt1(medi : unitptr, targ : unitptr, hm : integer);
+code {
+   act("You feel a large QUAKE as your $2N SHAKES $3n!",
+	A_SOMEONE, self, medi, targ, TO_CHAR);
+   act("You feel a large QUAKE as $1n's $2N SHAKES $3n!",
+	A_SOMEONE, self, medi, targ, TO_NOTVICT);
+   act("You feel a large QUAKE as $1n's $2N SHAKES you!",
+	A_SOMEONE, self, medi, targ, TO_VICT);
+   return;
+}
+dilend
+
+dilbegin hurt2(medi : unitptr, targ : unitptr, hm : integer);
+code {
+   act("You POUND $3n with your $2N, sending a SHOCKWAVE through $3s body!",
+	A_SOMEONE, self, medi, targ, TO_CHAR);
+   act("$1n POUNDS $3n with $1s $2N, sending a SHOCKWAVE through $3s body!",
+	A_SOMEONE, self, medi, targ, TO_NOTVICT);
+   act("$1n POUNDS you with $1s $2N, sending a SHOCKWAVE through your body!",
+	A_SOMEONE, self, medi, targ, TO_VICT);
+   return;
+}
+dilend
+
+dilbegin hurt3(medi : unitptr, targ : unitptr, hm : integer);
+code {
+   act("You SLAM $3n with your $2N, sending a SONIC BOOM through $3s body!", 
+	A_SOMEONE, self, medi, targ, TO_CHAR);
+   act("$1n SLAMS $3n with $1s $2N, sending a SONIC BOOM through $3s body!",
+	A_SOMEONE, self, medi, targ, TO_NOTVICT);
+   act("$1n SLAMS you with $1s $2N, sending a SONIC BOOM through your body!",
+	A_SOMEONE, self, medi, targ, TO_VICT);
+   return;
+}
+dilend
+
+dilbegin slay(medi : unitptr, targ : unitptr, hm : integer);
+code {
+   act("Your $2N glows, happy to be slaying humans once again!", 
+	A_SOMEONE, self, medi, targ, TO_CHAR);
+   act("$1n's $2N glows, happy to be slaying humans once again!", 
+	A_SOMEONE, self, medi, targ, TO_NOTVICT);
+   act("$1n's $2N glows, happy to be slaying humans once again!",
+	A_SOMEONE, self, medi, targ, TO_VICT);
+   return;
+}
+dilend
+
+dilbegin shakearth();
+var
+   pc       : unitptr;
+   enemy    : unitptr;
+   chance   : integer;
+   dmg      : integer;
+code {
+
+:init:
+on_activation(self.outside.position != POSITION_FIGHTING, skip);
+
+:start:
+wait (SFB_COM,(activator.type == UNIT_ST_PC) and (self.equip==WEAR_WIELD));
+pc     := self.outside;
+enemy  := pc.fighting;
+chance := pc.abilities[ABIL_DEX] / 5;
+
+if (enemy.hp <= 10)
+{
+   act("You CRUSH the ground with your $2N, CATAPULTING $3n across the room!",
+	A_SOMEONE, pc, self, enemy, TO_CHAR);
+   act("$1n CRUSHES the ground with $1s $2N, CATAPULTING $3n across the room!",
+	A_SOMEONE, pc, self, enemy, TO_NOTVICT);
+   act("$1n CRUSHES the ground with $1s $2N, CATAPULTING you across the room!",
+	A_SOMEONE, pc, self, enemy, TO_VICT);
+   enemy.hp := -11;
+   position_update(pc);
+   goto start;
+}
+
+else if ((rnd(1,650) <= chance) and (pc.abilities[ABIL_STR] >= 120))
+{
+   dmg := cast_spell(SPL_LIGHTNING_3, pc, self, enemy, "hurt3@indian");
+   position_update(pc);
+   goto start;
+}
+
+else if ((rnd(1,400) <= chance) and (pc.abilities[ABIL_STR] >= 110))
+{
+   dmg := cast_spell(SPL_LIGHTNING_2, pc, self, enemy, "hurt2@indian");
+   position_update(pc);
+   goto start;
+}
+
+else if ((rnd(1,250) <= chance) and (pc.abilities[ABIL_STR] >= 100))
+{
+   dmg := cast_spell(SPL_LIGHTNING_1, pc, self, enemy, "hurt1@indian");
+   position_update(pc);
+   goto start;
+}
+if (enemy.race == RACE_HUMAN) 
+{
+  if (rnd(1,10) == 5) 
+   dmg := cast_spell(SPL_CAUSE_WOUNDS_3, pc, self, enemy, "slay@indian");
+   position_update(pc);
+   goto start;
+}
+  
+goto start;
+}
+dilend
+
+/*
+dilbegin shaketype();
+var
+   pc     : unitptr;
+   arg    : string;
+   str    : string;
+   wpntyp : integer;
+code
+{
+
+:init:
+heartbeat := PULSE_SEC*3;
+on_activation((self.outside.position <= POSITION_SLEEPING) or
+		(self.outside.type != UNIT_ST_PC), skip);
+
+:start:
+wait(SFB_CMD, command("quake") and (activator == self.outside));
+block;
+pc := self.outside;
+if (self.equip == 0)
+{
+   arg    := getword(argument);
+   wpntyp := 0;
+   if (arg == "mattock")
+   {
+	str    := "war mattock";
+	wpntyp := WPN_WAR_MATTOCK;
+   }
+   if (arg == "hammer")
+   {
+	str    := "war hammer";
+	wpntyp := WPN_WAR_HAMMER;
+   }
+   if (wpntyp != 0)
+   {
+	act("Your $3N changes size into a $2t.",
+		A_ALWAYS, pc, str, self, TO_CHAR);
+	act("$1n's $3N changes size into a $2t.",
+		A_HIDEINV, pc, str, self, TO_REST);
+	self.value[0] := wpntyp;
+   }
+   else
+   {
+	act("Your $2N can only change into 'hammer' or 'mattock'.",
+		A_ALWAYS, pc, self, null, TO_CHAR);
+   }
+}
+else
+{
+	act("You must unequip your $2N first.",
+		A_ALWAYS, pc, self, null, TO_CHAR);
+}
+goto start;
+}
+dilend
+
+dilbegin tom1(medi : unitptr, targ : unitptr, hm : integer);
+code {
+    act("Your $2N jumps out of your hands and chops $3n!",
+	A_SOMEONE, self, medi, targ, TO_CHAR);
+    act("$1n's $2N jumps out of $1s hands and chops $3n!",
+	A_SOMEONE, self, medi, targ, TO_NOTVICT);
+    act("$1n's $2N jumps out of $1s hands and chops you!",
+	A_SOMEONE, self, medi, targ, TO_VICT);
+    return;
+}
+dilend
+*/
+
+dilbegin tom2(medi : unitptr, targ : unitptr, hm : integer);
+code {
+    act("You feel refreshed as your $2N drinks the blood from $3n.",
+	A_SOMEONE, self, medi, targ, TO_CHAR);
+    return;
+}
+dilend
+
+dilbegin tomahawk();
+var
+   enemy  : unitptr;
+   chance : integer;
+   dmg    : integer;
+code {
+
+:init:
+  on_activation(self.outside.position != POSITION_FIGHTING, skip);
+
+:start:
+  wait (SFB_COM,(self.equip == WEAR_WIELD));
+  enemy  := self.outside.fighting;
+  chance := self.outside.abilities[ABIL_DEX] / 10;
+
+  if (rnd(1,50) <= chance)
+  {
+    dmg := cast_spell(SPL_FIREBALL_1, self.outside, self, enemy, "tom1@indian");
+    position_update(self.outside);
+    goto start;
+  }
+  else if (rnd(1,50) <= chance)
+  {
+    dmg := cast_spell(SPL_CURE_WOUNDS_1, self.outside, self, enemy, "tom2@indian");
+    position_update(self.outside);
+    goto start;
+  }
+goto start;
+}
+dilend
+
+dilbegin well();
+var
+   pc : unitptr;
+code {
+
+:start:
+  wait (SFB_CMD,(command(CMD_DRINK)) and (argument in self.names));
+  block;
+  pc := activator;
+
+  act("You drink the magical water from the well.",
+	A_ALWAYS, pc, null, null, TO_CHAR);
+  act("$1n drinks the magical water from the well.",
+	A_ALWAYS, pc, null, null, TO_REST);
+
+  if ((rnd(1,2) == 1) and (pc.mana >= 10))
+  {
+     act("You feel better.",
+	A_ALWAYS, pc, null, null, TO_CHAR);
+     pc.hp := pc.hp + pc.abilities[ABIL_CON];
+     if (pc.hp > pc.max_hp) pc.hp := pc.max_hp;
+     pc.mana := pc.mana - 10;
+     goto start;
+  }
+  else if (pc.mana < 10)
+  {
+     goto nothing;
+  }
+  else if (rnd(1,50) == 50)
+  {
+    act("That tasted rather strange.",
+	   A_ALWAYS, pc, null, null, TO_CHAR);
+    act("You cough up blood.",
+	   A_ALWAYS, pc, null, null, TO_CHAR);
+    act("$1n makes a strange face and starts coughing up blood.",
+	   A_ALWAYS, pc, null, null, TO_REST);
+    if (pc.hp >= 40) pc.hp := pc.hp - 50;
+    goto start;
+  }
+:nothing:
+  act("Nothing happens.",
+	A_ALWAYS, pc, null, null, TO_CHAR);
+  goto start;
+}
+dilend
+
+dilbegin treasure1();
+var
+   pc  : unitptr;
+   obj : unitptr;
+   y   : integer;
+code {
+
+:init:
+  heartbeat := PULSE_SEC*5;
+  y := 1;
+
+:start:
+  wait(SFB_CMD, (command(CMD_SHAKE)));
+  block;
+  pc  := activator;
+  obj := pc.inside;
+
+:ifs:
+  if(("tail of Kerish" in obj.outside_descr) and ("a corpse" in obj.title))
+  {
+    while (y < 3)
+    {
+      act("You shake the dragon's tail.",
+	A_ALWAYS, pc, null, null, TO_CHAR);
+      y := y+1;
+      goto start;
+    }
+    act("You hear a faint rumbling sound as a small hole opens up and $1n falls in.",
+	A_SOMEONE, pc, null, null, TO_REST);
+    act("You hear a faint rumbling sound, and a small hole opens up right below you!", 
+	A_SOMEONE, pc, null, null, TO_CHAR);
+    destroy(obj);
+    link(pc, findroom("treasure2@indian"));
+    exec("look", pc);
+    unsecure(pc);
+    goto start;
+  }
+  else if(obj!=null)
+  {
+    obj:=obj.next;
+    goto ifs;
+  }
+  goto start;
+}
+dilend
+
+dilbegin treasure2();
+var
+   pc  : unitptr;
+code {
+
+:init:
+  heartbeat := PULSE_SEC*5;
+
+:start:
+  wait(SFB_CMD, (command(CMD_EXIT)));
+  block;
+  pc := activator;
+
+  act("A hole opens up in the ceiling and sucks $1n straight through.", 
+	A_SOMEONE, pc, null, null, TO_REST);
+  act("A hole opens up in the ceiling and sucks you through.", 
+	A_SOMEONE, pc, null, null, TO_CHAR);
+  link(pc, findroom("treasure3@indian"));
+  exec("look", pc);
+  unsecure(pc);
+  goto start;
+}
+dilend
+
+dilbegin treasure3();
+var
+   pc  : unitptr;
+code {
+
+:init:
+  heartbeat := PULSE_SEC*7;
+
+:start:
+  interrupt(SFB_CMD, (command("duck")), int_duck);
+ 
+  wait(SFB_TICK, TRUE);
+  foreach (UNIT_ST_PC, pc)
+  {
+    act("A slit opens in the east wall and knives fly straight at your face!", 
+	A_ALWAYS, pc, null, null, TO_CHAR);
+    if (pc.hp >= 90) pc.hp := pc.hp - 100;
+    else pc.hp := -10;
+    goto start;
+  }
+:int_duck:
+  block;
+  pc := activator;
+  act("A knife shoots out from a slit in the wall, but $1n ducks just in time.",
+	A_SOMEONE, pc, null, null, TO_REST);
+  act("You duck just as a knife flies straight at your head, but it skims your skull.",
+	A_ALWAYS, pc, null, null, TO_CHAR);
+  act("You are knocked unconcious.",
+	A_ALWAYS, pc, null, null, TO_CHAR);
+  link(pc, findroom("cave@indian"));
+  pc.hp := 0;
+  goto start;
+}
+dilend
+
+dilbegin stuck();
+var
+   pc : unitptr;
+code {
+
+:init:
+  heartbeat := PULSE_SEC*5;
+
+:start:
+  interrupt(SFB_CMD, (command(CMD_DIG)), int_dig);
+
+  wait(SFB_CMD, (command(CMD_SOUTH)) or (command(CMD_FLEE)));
+  block;
+  pc := activator;
+  act("You are stuck, you cannot move!",
+	A_ALWAYS, pc, null, null, TO_CHAR); 
+  act("$1n tries to escape, but cannot move.",
+	A_SOMEONE, pc, null, null, TO_REST);
+  goto start;
+
+:int_dig:
+  block;
+  pc := activator;
+  act("You cause a collapse, and you are flung out!",
+	A_ALWAYS, pc, null, null, TO_CHAR);
+  act("$1n causes a collapse, and is flung out!",
+	A_ALWAYS, pc, null, null, TO_REST);
+  link(pc, findroom("cavern2@indian"));
+  goto start;
+}
+dilend
+
+dilbegin glove();
+var
+   pc     : unitptr;
+   enemy  : unitptr;
+   chance : integer;
+   amount : integer;
+code {
+
+:init:
+  on_activation(self.outside.position != POSITION_FIGHTING, skip);
+
+:start:
+  wait (SFB_COM,(self.equip == WEAR_HANDS));
+  pc     := self.outside;
+  enemy  := pc.fighting;
+  chance := pc.abilities[ABIL_CHA] / 10;
+
+  if(rnd(1,100) <= chance)
+  {
+    amount := rnd(10,35);
+    if((enemy.mana >= amount) and (pc.mana < 100))
+    {
+      act("Your $2N glow as you absorbs $3n's magical energy.",
+	A_SOMEONE, pc, self, enemy, TO_CHAR);
+      act("$1n's $2N glow as $1e absorbs your magical energy.",
+	A_SOMEONE, pc, self, enemy, TO_VICT);
+      act("$1n's $2N glow as $1e absorbs $3n's magical energy.",
+	A_SOMEONE, pc, self, enemy, TO_NOTVICT);
+      act("You feel refreshed.",
+	A_SOMEONE, pc, self, enemy, TO_CHAR);
+      enemy.mana := enemy.mana - amount;
+      pc.mana    := pc.mana + amount;
+      if(pc.mana > 100) pc.mana := 100;
+    }
+    else if (pc.mana == 100)
+    {
+      act("Your $2N glow softly, but then die down.",
+	A_SOMEONE, pc, self, enemy, TO_CHAR);
+      act("$1n's $2N glow softly, but then die down.",
+	A_SOMEONE, pc, self, enemy, TO_VICT);
+      act("$1n's $2N glow softly, but then die down.",
+	A_SOMEONE, pc, self, enemy, TO_NOTVICT);
+    }
+    else if ((enemy.mana > 0) and (enemy.mana < amount))
+    {
+      act("Your $2N glow as you absorb $3n's magical energy.",
+	A_SOMEONE, pc, self, enemy, TO_CHAR);
+      act("$1n's $2N glow as $1e absorb your magical energy.",
+	A_SOMEONE, pc, self, enemy, TO_VICT);
+      act("$1n's $2N glow as $1e absorbs $3n's magical energy.",
+	A_SOMEONE, pc, self, enemy, TO_NOTVICT);
+      act("You feel refreshed.",
+	A_SOMEONE, pc, self, enemy, TO_CHAR);
+      pc.mana    := pc.mana + enemy.mana;
+      enemy.mana := 0;
+      if(pc.mana > 100) pc.mana := 100;
+    }
+  }
+goto start;
+}
+dilend
+
+dilbegin guard();
+var
+   pc  : unitptr;
+code {
+
+:init:
+  heartbeat := PULSE_SEC*5;
+
+:start:
+  interrupt(SFB_CMD, ((command(CMD_DRAG)) or
+		(command(CMD_EAST))) and
+		("e" in argument), snarl);
+  wait(SFB_CMD, (command(CMD_CAST)) and
+		("leav" in argument) or
+		("com" in argument));
+:snarl:
+  block;
+  pc := activator;
+  exec("snarl "+pc.name, self);
+  goto start;
+}
+dilend
+
+dilbegin riding();
+var
+   mnt  : string;
+   inv  : unitptr;
+code {
+
+:init:
+  heartbeat := PULSE_SEC*5;
+
+:start:
+  wait(SFB_TICK, TRUE);
+  inv:=self.inside;
+:ifs:
+  if (inv==null)
+  {
+    self.outside_descr:="A beatiful black stallion is pawing at the ground here.";
+    goto start;
+  }
+  else if (inv.type==UNIT_ST_PC)
+  {
+    mnt:=inv.name;
+    self.outside_descr:="A beatiful black stallion is here giving "+mnt+" a ride.";
+    goto start;
+  }
+  else if (inv.type==UNIT_ST_NPC)
+  {
+    mnt:=inv.title;
+    self.outside_descr:="A beatiful black stallion is here giving "+mnt+" a ride.";
+    goto start;
+  }
+  else if(inv!=null)
+  {
+    inv:=inv.next;
+    goto ifs;
+  }
+goto start;
+}
+dilend
+
+dilbegin gohome();
+var
+   pc : unitptr;
+code {
+
+:start:
+  wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and
+		(command(CMD_SAY)) and
+		("KL5" in argument)));
+  block;
+  pc:=activator;
+  act("$1n mumbles something strange and is sucked through a hole in the floor.",
+	A_SOMEONE, pc, null, null, TO_REST);
+  act("You mumble the password and you are pulled through a hole in the floor.",
+	A_SOMEONE, pc, null, null, TO_CHAR);
+  link(pc, findroom("home@indian"));
+  exec("look", pc);
+  goto start;
+}
+dilend
+
+dilbegin goback();
+var
+   pc : unitptr;
+code {
+
+:start:
+  wait(SFB_CMD, (activator.type==UNIT_ST_PC) and (command("return")));
+  block;
+  pc:=activator;
+  act("A giant hole appears in the ceiling and $1n is sucked straight through.",
+	A_SOMEONE, pc, null, null, TO_REST);
+  act("A giant hole appears in the ceiling and you are sucked straight through.",
+	A_SOMEONE, pc, null, null, TO_CHAR);
+  link(pc, findroom("inn@udgaard"));
+  exec("look", pc);
+  goto start;
+}
+dilend
+
+%rooms
+
+bridge
+
+title "A Stone Bridge"
+names {"stone bridge", "bridge", "mot_zone"}
+descr
+"   You are on a bridge over the Dark River in Haon-Dor. From the south you
+can hear faint sounds like yelling. To the north is the deep dark forest,
+south is A Dense Forest, and below is the Dark River."
+
+north to rn_6125@haon_dor
+   descr "You see Haon-Dor.";
+down to darkriver1@haon_dor
+   descr "Below the bridge is the Dark River.";
+south to dense_forest
+   descr "There is a very dense patch of forest to the south.";
+
+dilcopy gohome@indian();
+movement SECT_FOREST
+OUT_DARK_NON_NOON
+end
+
+dense_forest
+
+title "A Dense Forest"
+descr
+"   You have entered a forest almost so dense and secret that you couldn't
+get through. Noises like yelling and screaming echo in your head. You think
+to yourself, 'Self, maybe I should turn back, this sounds pretty dangerous.'
+Then you notice an a few lines in the dirt, it almost looks like a secret
+entrance."
+
+extra {"lines", "line", "door", "secret door"}
+"You see a square outline in the dirt. Maybe this is a hidden entrance!"
+
+north to bridge
+	descr "You see the bridge over the Dark River.";
+down to sec_tun1 open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+        keyword {"door", "square", "lines", "floor"};
+SECRET_DOOR_DIFFICULTY(DOWN, 45)
+
+movement SECT_FOREST
+OUT_DARK_NON_NOON
+end
+
+sec_tun1
+
+title "A Secret Tunnel"
+descr
+"   You have found a secret tunnel. It is very dark and damp, and you hear
+sounds of yelling coming from the south. There are walls to the east and
+west. You can go up or to the south."
+
+up to dense_forest open {EX_OPEN_CLOSE, EX_CLOSED}
+   descr "Here is the door that you found." keyword {"door"};
+south to sec_tun2
+   descr "The tunnel leads on.";
+north to junk_room
+   descr "The wall is blocking your passage to the north.";
+
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+end
+
+sec_tun2
+
+title "A Secret Tunnel"
+descr
+"   You are in a long, dark, damp tunnel. The sounds of yelling are louder
+than before. You cannot make out the words, but it seems to form a sort of
+song, or chant. The tunnel continues north and south."
+
+north to sec_tun1
+   descr "You can go north to the entrance.";
+south to sec_tun3
+   descr "The tunnel leads on.";
+
+movement SECT_INSIDE
+
+IN_ALWAYS_DARK
+end
+
+sec_tun3
+
+title "A Secret Tunnel"
+descr
+"   You are in a long, dark, damp tunnel. You still cannot make out the
+words, but you can hear the sounds loud and clear. It seems to form a sort
+of song, or chant. The tunnel continues north and south."
+
+north to sec_tun2
+   descr "The tunnel leads on.";
+south to sec_tun4
+   descr "The tunnel leads on.";
+
+movement SECT_INSIDE
+
+IN_ALWAYS_DARK
+end
+
+sec_tun4
+
+title "A Secret Tunnel"
+descr
+"   You are in a long, dark, damp tunnel. You still cannot make out the
+words, but you can hear the sounds loud and clear. It seems to form a sort
+of song, or chant. The tunnel continues north and south."
+
+north to sec_tun3
+   descr "The tunnel leads on.";
+south to sec_tun5
+   descr "The tunnel leads on.";
+
+movement SECT_INSIDE
+
+IN_ALWAYS_DARK
+end
+
+sec_tun5
+
+title "A Secret Tunnel"
+descr
+"   The tunnel ends here. The yelling is particularly loud here. Something
+clicks in your brain: You know what that yelling is! It is a tribe of
+Indians performing a ritual dance. You can go up the ladder to the Indian 
+camp or north along the tunnel."
+
+north to sec_tun4
+   descr "The tunnel leads on.";
+up to ent_motabi open {EX_OPEN_CLOSE, EX_CLOSED}
+   descr "You see a ladder leading up to the Indian camp." keyword {"door"};
+
+movement SECT_INSIDE
+
+IN_ALWAYS_DARK
+end
+
+ent_motabi
+
+title "Entrance to the Motabi village"
+descr
+"   You have arrived at the village of the Motabi tribe. To the far east you
+see a large hut with a strong looking Indian guarding the entrance. You see
+a road lined with tents leading north and south of the village square. You
+can go down into the tunnel or leave east."
+
+east to motabi_square
+   descr "You see the center of the Motabi village.";
+down to sec_tun5 open {EX_OPEN_CLOSE, EX_CLOSED}
+   descr "You see a door leading down to the tunnel." keyword {"door"};
+
+movement SECT_CITY
+
+OUT_DARK_NON_NOON
+end
+
+motabi_square
+
+title "Motabi Square"
+descr
+"   This is not really a square, but is the center of the Motabi village.
+Inside a huge ring of stones there is a large fire. As the fire radiates
+its warmth you feel stronger and your heart is lightened. To the east is
+the Chieftan's Hut. Ranubi Way leads north and south. West leads to the
+entrance."
+
+flags {UNIT_FL_SACRED}
+
+west to ent_motabi
+   descr "This leads to the entrance.";
+south to ran_way1
+   descr "The road is lined with tents of the Motabi living quarters.";
+north to ran_way3
+   descr "The road is lined with tents of the Motabi living quarters.";
+east to ent_hut
+   descr "The Chieftan of the Motabi lives in this hut.";
+
+movement SECT_CITY
+ALWAYS_LIGHT
+end
+
+ent_hut
+
+title "Entrance to the Chieftans Hut"
+descr
+"   You are standing before a very large hut. To the north and south are
+strong stone walls. To the west is the village square. East is a door
+into the chieftans hut."
+
+west to motabi_square
+   descr "You see the center of the Motabi village.";
+east to chief_hut
+   descr "The proud chieftan is in his room.";
+
+movement SECT_CITY
+
+OUT_DARK_NON_NOON
+end
+
+chief_hut
+
+title "The Motabi Chieftan's Hut"
+descr
+"   You are in the Chieftan's hut. This room is pretty plain, no decorations
+at all. You see a large chair in the back of the room, apparently the chief's.
+You can go west to the entrance to the hut."
+
+extra {"chair"}
+"The chair is very big, obviously used by someone of importance."
+
+west to ent_hut
+   descr "You can go to the entrance.";
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+end
+
+war_hut
+
+title "The Motabi War Chief's quarters"
+descr
+"   You are in the quarters of the Motabi War Chief. The walls are decarated
+with many weapons. A particular weapon that catches your eye is a strong
+looking sort of axe, maybe you should inspect it closer."
+
+extra {"weapons", "weapon"}
+"There are many weapons on the walls, but one axe in particular catches
+your eye."
+
+extra {"tomahawk", "axe"}
+"This is the mighty tomahawk, the only one of it's kind. It is a short axe,
+with a small handle. It is useful for throwing at your opponent, though
+you will never get your hands on one."
+
+west to ran_way1
+   descr "You see Ranubi Way.";
+
+movement SECT_CITY
+ALWAYS_LIGHT
+end
+
+priest_hut
+
+title "The Motabi Priest's quarters"
+descr
+"   You are in the quarters of the Motabi Priest. The room is decorated
+with miniature statues of gods. You get the feeling this guy is a real
+divine freak."
+
+east to ran_way1
+   descr "You see Ranubi Way.";
+
+extra {"statues", "statue"}
+"There are miniature statues of all the powerful gods. One that catches 
+your eye has Your engraved on it. It is very beautiful."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+end
+
+shaman_hut
+
+title "The Motabi Shaman's quarters"
+descr
+"   You are in the quarters of the Motabi Shaman. Shelves of books line
+the walls. There is a magical aura about this place, and you feel dizzy.
+There are many used magical items scattered about. This guy must really
+love magic."
+
+west to ran_way2
+   descr "You see Ranubi Way.";
+
+extra {"items", "item"}
+"You see many glowing stones and wands and staves of all sort."
+extra {"books", "book"}
+"There are many books on the magical arts here."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+end
+
+witch_hut
+
+title "The Motabi Witchdoctor's quarters"
+descr
+"You are in the quarters of the Motabi Witchdoctor. There are voodoo dolls
+on the floor, and masks and other strange items cover the ground. On the walls
+are painted pictures of a strange man, dancing around another man with a
+shrunken head."
+
+east to ran_way2
+   descr "You see Ranubi Way.";
+
+extra {"dolls"}
+"There are dolls, riddled with pins, on the floor."
+
+extra {"masks"}
+"There are many painted masks that look like strange animals."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+end
+
+ran_way1
+
+title "Ranubi Way"
+descr
+"   You are on a road leading north and south through the village. It is
+lined with tents on either side. To east is the war chief's quarters, and
+to the west is the priest's quarters. You can go north to the village square.
+Ranubi Way continues south."
+
+north to motabi_square
+   descr "You see the center of the Motabi village.";
+east to war_hut
+   descr "You see a large warrior sharpening his blade.";
+west to priest_hut
+   descr "A Priest is humming gently.";
+south to ran_way2
+   descr "Ranubi Way continues south.";
+
+movement SECT_CITY
+OUT_DARK_NON_NOON
+end
+
+ran_way2
+
+title "Ranubi Way"
+descr
+"   You are on a road leading north and south through the village. It is
+lined with tents on either side. To the east is the shaman's quarters, 
+while to the west you see a strange man dancing around a doll. To your 
+south is a large iron gate with a sign on it. Ranubi Way continues north."
+
+north to ran_way1
+   descr "Ranubi Way continues north.";
+east to shaman_hut
+   descr "The Shaman is studying a book of magic.";
+west to witch_hut
+   descr "You see a strange man dancing around a doll.";
+south to savanna_ent open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"gate"} descr
+   "You see a large iron gate";
+
+extra {"sign"}
+"&lThe sign reads:
+   Experienced hunters only. Keep out."
+
+movement SECT_CITY
+OUT_DARK_NON_NOON
+end
+
+ran_way3
+
+title "Ranubi Way"
+descr
+"   You are on a road leading north and south through the village. It is lined
+with tents on either side. You can go south to the village square. Ranubi Way
+continues north."
+
+south to motabi_square
+   descr "You see the center of the Motabi village.";
+north to ran_way4
+   descr "Ranubi Way continues north.";
+
+movement SECT_CITY
+
+OUT_DARK_NON_NOON
+end
+
+ran_way4
+
+title "Ranubi Way"
+descr
+"   You are on a road leading north and south through the village. The
+sounds of clashing metal is softer here. To the west is a strong stone
+wall. To the east is Takali Road. North is a large tent with a man holding
+a huge weapon painted on it. Ranubi Way continues south."
+
+south to ran_way3
+   descr "Ranubi Way continues south.";
+north to makala_tent
+   descr "You see a large man sitting on a chair.";
+east to tak_road1
+   descr "You see Takali Road.";
+
+movement SECT_CITY
+
+OUT_DARK_NON_NOON
+end
+
+makala_tent
+
+title "Makala's tent"
+descr
+"   You are in the tent of Makala, a very respected warrior and healer. The
+room is richly decorated with weapons, along with many herbs and spell books.
+By the looks of the room you get the impression that he is very skilled in 
+making weapons also."
+
+extra {"weapons"}
+"They look more like decorations than tools of war. They are lined with 
+gold."
+
+extra {"herbs"}
+"The herbs give off a pleasant odor. They look somewhat familiar, but you 
+cannot place it."
+
+extra {"spell books", "books"}
+"They have very beautiful covers, and they give off an aura of magic."
+
+south to ran_way4
+   descr "Ranubi Way continues south.";
+
+movement SECT_CITY
+OUT_DARK_NON_NOON
+end
+
+spirit_plane
+
+title "The Motabi Spirit Plane"
+descr
+"You are in the Motabi Spirit Plane, the place where Motabi go when they
+die. How you got here, no one knows. Some of the more faithful spirit's wait
+here for the call from their chieftan to come rescue him."
+
+
+flags {UNIT_FL_SACRED}
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+ALWAYS_LIGHT
+end
+
+tak_road1
+
+title "Takali Road"
+descr
+"You are on Takali Road, which runs east and west along the north part of the
+village. It is the part of the village that houses all the women and children."
+
+west to ran_way4
+   descr "You see Ranubi Way.";
+east to tak_road2
+   descr "Takali Road continues east.";
+
+movement SECT_CITY
+OUT_DARK_NON_NOON
+end
+
+tak_road2
+
+title "Takali Road"
+descr
+"You are on Takali Road, which runs east and west along the north part of the
+village. It is the part of the village that houses all the women and children.
+Tents are to the north and south."
+
+west to tak_road1
+   descr "Takali Road continues west.";
+east to tak_road3
+   descr "Takali Road continues east.";
+north to tent1
+   descr "You see a tent.";
+south to tent2
+   descr "You see a tent.";
+
+movement SECT_CITY
+OUT_DARK_NON_NOON
+end
+
+tak_road3
+
+title "Takali Road"
+descr
+"You are on Takali Road, which runs east and west along the north part of the
+village. It is the part of the village that houses all the women and children.
+Tents are to the north and south."
+
+west to tak_road2
+   descr "Takali Road continues west.";
+north to tent3
+   descr "You see a tent.";
+south to tent4
+   descr "You see a tent.";
+
+movement SECT_CITY
+OUT_DARK_NON_NOON
+end
+
+tent1
+
+title "A small tent"
+descr
+"You are in a tent housing a Motabi family. There are rugs and cushions on
+the floor. You see a small table with various trinkets on it. This tent looks
+like it could house about three people."
+
+south to tak_road2
+   descr "You see Takali Road.";
+TABLE
+movement SECT_CITY
+OUT_DARK_NON_NOON
+end
+
+tent2
+
+title "A small tent"
+descr
+"You are in a tent housing a Motabi family. There are rugs and cushions on
+the floor. You see a small table with various trinkets on it. This tent looks
+like it could house about three people."
+
+north to tak_road2
+   descr "You see Takali Road.";
+TABLE
+
+movement SECT_CITY
+OUT_DARK_NON_NOON
+end
+
+tent3
+
+title "A small tent"
+descr
+"You are in a tent housing a Motabi family. There are rugs and cushions on
+the floor. You see a small table with various trinkets on it. This tent looks
+like it could house about three people."
+
+south to tak_road3
+   descr "You see Takali Road.";
+TABLE
+
+movement SECT_CITY
+OUT_DARK_NON_NOON
+end
+
+tent4
+
+title "A small tent"
+descr
+"You are in a tent housing a Motabi family. There are rugs and cushions on
+the floor. You see a small table with various trinkets on it. This tent looks
+like it could house about three people."
+
+north to tak_road3
+   descr "You see Takali Road.";
+TABLE
+
+movement SECT_CITY
+OUT_DARK_NON_NOON
+end
+
+crum_pass
+
+title "A crumbled passage"
+descr
+"There are rocks scattered everywhere from the broken wall.  There are
+enormous claw marks on the walls.  Something was obviously trying to get out.
+To the south is the Secret Tunnel.  To the north is a huge lurking figure."
+
+extra {"claw marks", "marks"}
+"The claw marks were made with rage. They look very large."
+
+north to kerish_room
+   descr "You here loud breathing sounds coming from the north.";
+south to sec_tun1
+   descr "You can go south to the Secret Tunnel.";
+
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+flags {UNIT_FL_NO_TELEPORT}
+end
+
+kerish_room
+
+title "Kerish's Lair"
+descr
+"You are in the lair of Kerish, King of the Dragons, father of Ancalador.
+He has been sealed in this cave for several centuries, but has never been
+forgotten. There are claw marks all over the walls."
+
+east to treasure1 open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+        keyword {"small door", "door", "square", "marks", "mark"}
+        descr "You see what looks like a small square outline.";
+
+south to crum_pass
+   descr "You see the crumbled passage where you came in.";
+
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+flags {UNIT_FL_NO_TELEPORT}
+end
+
+treasure1
+
+title "Treasure Room"
+descr
+"   You have discovered the long lost Motabi treasure!  The Motabi used to
+keep their treasure hidden in here before the evil Kerish came and attacked
+them.  The walls are made of pure gold and from the ceiling hangs a wonderous
+chandelier made of platinum decorated with jewels and precious stones.  There
+is a faint silvery outline of letters on the north wall."
+
+extra {"chandelier", "ceiling"}
+"The chandelier is carved of pure platinum and has diamonds and rubies and
+emeralds set in the sides."
+
+extra {"silver letters", "letters", "north wall", "outline"}
+"&lThey read:
+             &c+bThree shakes of a dragon's tail.&cw"
+
+extra {"walls"}
+"The walls look very strong and beautiful."
+
+west to kerish_room open {EX_OPEN_CLOSE, EX_CLOSED}
+        keyword {"small door", "door"}
+        descr "You look back and see Kerish belching forth huge puffs of smoke.";
+
+dilcopy treasure1@indian();
+
+movement SECT_CITY
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_TELEPORT}
+end
+
+treasure2
+
+title "Treasure Room"
+descr
+"   This room is even more beautifully decorated than the first.  You see 
+monstrous gold statues and perfectly shaped platinum axes.  In this room the
+walls are made of diamond and crystal, and there is another chandelier 
+hanging from the brightly painted ceiling. The same kind of letters decorate
+the north wall as in the room before."
+
+extra {"silver letters", "letters", "north wall", "wall", "outline"}
+"&lThey read:
+             &c+bThere is no escape. You must get out now.&cw"
+
+extra {"walls"}
+"The walls look very strong and beautiful."
+
+extra {"gold statues", "statues", "statue"}
+"They are made of the purest gold, and one of them really catches your eye. It
+is holding a circular diamond, and on the diamond you see the letters: 'Your'"
+
+extra {"chandelier", "ceiling"}
+"The chandelier is carved of pure platinum and has diamonds and rubies and
+emeralds set in the sides."
+
+extra {"platinum axes", "axes"}
+"The axes look very strong and sharp, regardless of their beauty."
+
+dilcopy treasure2@indian();
+
+movement SECT_CITY
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_TELEPORT}
+end
+
+treasure3
+
+title "Treasure Room"
+descr
+"   This room is even more beautifully decorated than the last.  You see 
+numerous chests made of the strongest diamond.  In this room the walls are made
+of diamond and crystal, and there is another chandelier hanging from the
+brightly painted ceiling.  You see a very faint outline of silvery letters set
+in the diamond on the north wall of the room."
+
+extra {"walls"}
+"The walls look very strong and beautiful."
+
+extra {"chandelier", "ceiling"}
+"The chandelier is carved of pure platinum and has diamonds and rubies and
+emeralds set in the sides."
+
+extra {"silver letters", "letters", "north wall", "wall", "outline"}
+"&lThey read:
+             &c+bGreedy people lose their heads.&cw"
+
+dilcopy treasure3@indian();
+
+movement SECT_CITY
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_TELEPORT}
+end
+
+cave
+
+title "A small cave"
+descr
+"   As you recover, your eyes adjust to the light.  The feeling returns to your
+limbs and you stretch them.  You take a look around you and you notice that you
+are lost.  You are in a small dark cave used as a hideout by evil creations of
+the world."
+
+north to cavern1
+   descr "There is a small tunnel leading north.";
+
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+end
+
+cavern1
+
+title "A small cavern"
+descr
+"   The ceiling is so low to the ground you have to duck just to walk.  Your
+bulky armor scrapes the walls as you move.  You feel very cramped.  You smell a
+foul odor coming from the east, and to the north there is a small light."
+
+north to cavern2
+   descr "The small tunnel continues to grow smaller.";
+east to cavern3
+   descr "An almost unbearable stench comes from the east.";
+south to cave
+   descr "You see the cave you came in from.";
+
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+end
+
+cavern2
+
+title "A small cavern"
+descr
+"   The ceiling is so low to the ground you have to crawl just to walk.  Your
+bulky armor can just barely fit through and the sound of it scraping the walls
+is driving you insane.  The light grows faintly brighter as you continue north.
+To the south is a slightly larger cavern."
+
+north to cavern4
+   descr "The small tunnel continues to grow smaller.";
+south to cavern1
+   descr "The tunnel gets wider to the south.";
+
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+end
+
+cavern4
+
+title "A small cavern"
+descr
+"   The ceiling is so low to the ground you have to crawl just to walk.  The
+walls are so narrow you cannot move anymore. You are stuck. You can now see 
+what made the light.  There is a hole in the top of the cave, and sunlight
+shines through and lights up a shiny coin. It was a trap. To the south, the
+cavern widens, but it is too narrow for you to squeeze through."
+
+extra {"hole"}
+"The hole is very small, yet your eyes have accustomed to the dark and 
+the sunlight seems blinding."
+
+extra {"shiny coin", "coin"}
+"The sunlight shines on the gold coin, and the reflection is even brighter
+than the sunlight itself."
+
+south to cavern2
+   descr "The tunnel gets wider to the south.";
+
+dilcopy stuck@indian();
+
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+end
+
+cavern3
+
+title "A smelly cavern"
+descr
+"   The stench here is unbearable.  On the ground is a small corpse of a 
+Motabi indian.  He has a spear in his hand and it looks as if he was hunting
+and stumbled upon this cave.  What attacked him is a mystery to you.  To the
+north is a bright light."
+
+west to cavern1
+   descr "The cavern is dark and dreary.";
+north to cavern5
+   descr "The cavern is filled with light.";
+
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+end
+
+cavern5
+
+title "A small cavern"
+descr
+"   Your eyes sting as the light floods in from the entrance.  The cave is
+fairly small, and your head barely taps the ceiling when you move.  A foul
+odor emits from the south, and to the north is broad daylight."
+
+south to cavern3
+   descr "An almost unbearable stench comes from the south.";
+north to dense_forest
+   descr "You blink as you gaze upon the bright sun.";
+
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+end
+
+savanna_ent
+
+title "Entrance to the savanna"
+descr
+"   You find yourself on an open field scattered with trees and wildlife 
+that the Motabi use as a hunting ground. The savanna continues east, 
+west and south. Ranubi Way continues north."
+
+south to savanna4
+   descr "The savanna is around you.";
+north to ran_way2 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"gate"} descr
+   "You see a large iron gate.";
+east to savanna1
+   descr "The savanna is around you.";
+west to savanna2
+   descr "The savanna is around you.";
+
+
+movement SECT_FIELD
+OUT_DARK_NON_NOON
+end
+
+savanna1
+
+title "The savanna"
+descr
+"   You find yourself on an open field scattered with trees and wildlife 
+that the Motabi use as a hunting ground. The forest blocks all journey to 
+the north and east. The savanna continues west and south."
+
+FOREST
+
+south to savanna3
+   descr "The savanna is around you.";
+west to savanna_ent
+   descr "The savanna is around you.";
+
+movement SECT_FIELD
+OUT_DARK_NON_NOON
+end
+
+savanna2
+
+title "The savanna"
+descr
+"   You find yourself on an open field scattered with trees and wildlife 
+that the Motabi use as a hunting ground. The forest blocks all journey to 
+the north and west. The savanna continues east and south."
+
+FOREST
+
+south to savanna5
+   descr "The savanna is around you.";
+east to savanna_ent
+   descr "The savanna is around you.";
+
+movement SECT_FIELD
+OUT_DARK_NON_NOON
+end
+
+savanna3
+
+title "The savanna"
+descr
+"   You find yourself on an open field scattered with trees and wildlife 
+that the Motabi use as a hunting ground. The savanna continues west, north,
+east and south."
+
+FOREST
+
+north to savanna1
+   descr "The savanna is around you.";
+south to savanna7
+   descr "The savanna is around you.";
+west to savanna4
+   descr "The savanna is around you.";
+east to savanna15
+   descr "The savanna is around you.";
+
+movement SECT_FIELD
+OUT_DARK_NON_NOON
+end
+
+savanna4
+
+title "The savanna"
+descr
+"   You find yourself on an open field scattered with trees and wildlife 
+that the Motabi use as a hunting ground. The savanna continues east, west,
+north and south."
+
+FOREST
+
+south to savanna8
+   descr "The savanna is around you.";
+west to savanna5
+   descr "The savanna is around you.";
+east to savanna3
+   descr "The savanna is around you.";
+north to savanna_ent
+   descr "The savanna is around you.";
+
+movement SECT_FIELD
+OUT_DARK_NON_NOON
+end
+
+savanna5
+
+title "The savanna"
+descr
+"   You find yourself on an open field scattered with trees and wildlife 
+that the Motabi use as a hunting ground. The savanna continues east, west, 
+south and north."
+
+FOREST
+
+south to savanna9
+   descr "The savanna is around you.";
+west to savanna6
+   descr "The savanna is around you.";
+east to savanna4
+   descr "The savanna is around you.";
+north to savanna2
+   descr "The savanna is around you.";
+
+movement SECT_FIELD
+OUT_DARK_NON_NOON
+end
+
+savanna6
+
+title "The savanna"
+descr
+"   You find yourself on an open field scattered with trees and wildlife 
+that the Motabi use as a hunting ground. The forest closes in from all 
+ways except for east."
+
+FOREST
+
+east to savanna5
+   descr "The savanna is around you.";
+
+movement SECT_FIELD
+OUT_DARK_NON_NOON
+end
+
+savanna7
+
+title "The savanna"
+descr
+"   You find yourself on an open field scattered with trees and wildlife 
+that the Motabi use as a hunting ground. The forest closes in from the 
+south. The savanna continues to the west, east and north."
+
+FOREST
+
+west to savanna8
+   descr "The savanna is around you.";
+north to savanna3
+   descr "The savanna is around you.";
+east to savanna14
+   descr "The savanna is around you.";
+
+movement SECT_FIELD
+OUT_DARK_NON_NOON
+end
+
+savanna8
+
+title "The savanna"
+descr
+"   You find yourself on an open field scattered with trees and wildlife 
+that the Motabi use as a hunting ground. The forest blocks the way south."
+
+FOREST
+
+east to savanna7
+   descr "The savanna is around you.";
+west to savanna9
+   descr "The savanna is around you.";
+north to savanna4
+   descr "The savanna is around you.";
+
+movement SECT_FIELD
+OUT_DARK_NON_NOON
+end
+
+savanna9
+
+title "The savanna"
+descr
+"   You find yourself on an open field scattered with trees and wildlife 
+that the Motabi use as a hunting ground. The forest closes in from the 
+west."
+
+FOREST
+
+east to savanna8
+   descr "The savanna is around you.";
+north to savanna5
+   descr "The savanna is around you.";
+south to savanna10
+   descr "The savanna is around you.";
+
+movement SECT_FIELD
+OUT_DARK_NON_NOON
+end
+
+savanna10
+
+title "The savanna"
+descr
+"   You find yourself on an open field scattered with trees and wildlife 
+that the Motabi use as a hunting ground. The forest closes in from the 
+west and south."
+
+FOREST
+
+north to savanna9
+   descr "The savanna is around you.";
+east to savanna11
+   descr "The savanna is around you.";
+
+movement SECT_FIELD
+OUT_DARK_NON_NOON
+end
+
+savanna11
+
+title "The savanna"
+descr
+"   You find yourself on an open field scattered with trees and wildlife 
+that the Motabi use as a hunting ground. The forest closes in from the 
+north and south."
+
+FOREST
+
+west to savanna10
+   descr "The savanna is around you.";
+east to savanna12
+   descr "The savanna is around you.";
+
+movement SECT_FIELD
+OUT_DARK_NON_NOON
+end
+
+savanna12
+
+title "The savanna"
+descr
+"   You find yourself on an open field scattered with trees and wildlife 
+that the Motabi use as a hunting ground. The forest closes in from the 
+north."
+
+FOREST
+
+west to savanna11
+   descr "The savanna is around you.";
+south to savanna19
+   descr "The savanna is around you.";
+east to savanna13
+   descr "The savanna is around you.";
+
+movement SECT_FIELD
+OUT_DARK_NON_NOON
+end
+
+savanna13
+
+title "The savanna"
+descr
+"   You find yourself on an open field scattered with trees and wildlife 
+that the Motabi use as a hunting ground. The forest closes in from the 
+east and south."
+
+FOREST
+
+north to savanna14
+   descr "The savanna is around you.";
+west to savanna12
+   descr "The savanna is around you.";
+
+movement SECT_FIELD
+OUT_DARK_NON_NOON
+end
+
+savanna14
+
+title "The savanna"
+descr
+"   You find yourself on an open field scattered with trees and wildlife 
+that the Motabi use as a hunting ground. The forest closes in from the 
+south and east."
+
+FOREST
+
+north to savanna15
+   descr "The savanna is around you.";
+west to savanna7
+   descr "The savanna is around you.";
+
+movement SECT_FIELD
+OUT_DARK_NON_NOON
+end
+
+savanna15
+
+title "The savanna"
+descr
+"   You find yourself on an open field scattered with trees and wildlife 
+that the Motabi use as a hunting ground. The savanna continues in all
+directions."
+
+FOREST
+
+north to savanna18
+   descr "The savanna is around you.";
+west to savanna3
+   descr "The savanna is around you.";
+south to savanna14
+   descr "The savanna is around you.";
+east to savanna16
+   descr "The savanna is around you.";
+
+movement SECT_FIELD
+OUT_DARK_NON_NOON
+end
+
+savanna16
+
+title "The savanna"
+descr
+"   You find yourself on an open field scattered with trees and wildlife 
+that the Motabi use as a hunting ground. The forest closes in from the 
+south and east."
+
+FOREST
+
+north to savanna17
+   descr "The savanna is around you.";
+west to savanna15
+   descr "The savanna is around you.";
+
+movement SECT_FIELD
+OUT_DARK_NON_NOON
+end
+
+savanna17
+
+title "The savanna"
+descr
+"   You find yourself on an open field scattered with trees and wildlife 
+that the Motabi use as a hunting ground. The forest closes in from the 
+east and north."
+
+FOREST
+
+west to savanna18
+   descr "The savanna is around you.";
+south to savanna16
+   descr "The savanna is around you.";
+
+movement SECT_FIELD
+OUT_DARK_NON_NOON
+end
+
+savanna18
+
+title "The savanna"
+descr
+"   You find yourself on an open field scattered with trees and wildlife 
+that the Motabi use as a hunting ground. The forest closes in from the 
+west and north."
+
+FOREST
+
+east to savanna17
+   descr "The savanna is around you.";
+south to savanna15
+   descr "The savanna is around you.";
+
+movement SECT_FIELD
+OUT_DARK_NON_NOON
+end
+
+savanna19
+
+title "The savanna"
+descr
+"   You find yourself on an open field scattered with trees and wildlife 
+that the Motabi use as a hunting ground. The forest closes in from the 
+south, east, and west."
+
+FOREST
+
+north to savanna12
+   descr "The savanna is around you.";
+
+movement SECT_FIELD
+OUT_DARK_NON_NOON
+end
+
+junk_room
+
+title "A stone wall."
+descr "BUG!!! Please report using the 'bug' command, and maybe it will get
+fixed so you don't have to stay trapped in here."
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+end
+
+home
+
+title "Your's Den"
+descr
+"   This room is for writing down thoughts open for anyone worthy to see."
+
+extra {"wall"}
+"If you wish to return home, type 'return'"
+
+down to home2
+   descr "You see a small room with a board hanging on the wall.";
+
+dilcopy goback@indian();
+flags {UNIT_FL_SACRED}
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+ALWAYS_LIGHT
+end
+
+home2
+
+title "Your's Den"
+descr
+"   This room is for reading the citizen board in peace."
+
+up to home
+   descr "You see a small room with a board hanging on the wall.";
+
+flags {UNIT_FL_SACRED}
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+ALWAYS_LIGHT
+end
+
+%mobiles
+
+mot_war
+
+names {"motabi war chief", "war chief", "motabi"}
+title "the Motabi War Chief"
+descr "The Motabi War Chief is standing here ready for battle."
+extra {}
+"He is the leader of the Motabi Warriors. He looks very strong, and you
+certainly would not want to get in a fight with him all by yourself."
+
+BASE_HUMAN(95, SEX_MALE)
+alignment 0
+MSET_ABILITY(25,25,20,20,10,0,0,0)
+MSET_WEAPON(20,20,20,20,20,0)
+exp 100
+alignment 1000
+money 1 GOLD_PIECE, 4 SILVER_PIECE
+
+special SFUN_TEAMWORK "motabi"
+special SFUN_RESCUE "chieftan"
+HELPCHIEF
+end
+
+mot_warrior
+
+names {"motabi warrior", "warrior", "motabi"}
+title "a Motabi Warrior"
+descr "A grim warrior of the Motabi Tribe is standing here."
+extra {}
+"He is one of the strongest men you have ever seen. He looks like he could
+take on 3 dragons at once. You certainly would not want to get in a fight
+with him all by yourself."
+
+M_HUMAN_WARRIOR_AXE(95, SEX_MALE)
+alignment 1000
+money 1 GOLD_PIECE, 4 SILVER_PIECE
+
+special SFUN_RANDOM_GLOBAL_MOVE time 190 bits SFB_RANTIME
+special SFUN_TEAMWORK "motabi"
+end
+
+mot_shaman
+
+names {"motabi shaman", "shaman", "motabi"}
+title "the Motabi Shaman"
+descr "The Motabi Shaman is here studying the magical arts."
+extra {}
+"There is a magical sort of aura about him. He is studying the magic arts,
+although it looks like he doesn't need to learn any more, he is already
+powerful enough!"
+
+M_HUMAN_MAGE_ELECTRICITY(95, SEX_MALE, "cast lightning bolt")
+exp 110
+alignment 1000
+money 2 GOLD_PIECE
+
+HELPCHIEF
+special SFUN_TEAMWORK "motabi"
+end
+
+mot_priest
+
+names {"motabi priest", "priest", "motabi"}
+title "the Motabi Priest"
+descr "The Motabi Priest is here preparing to heal a person in need."
+extra {}
+"This is the most divine creature you have ever saw. He is surrounded by a
+bright white glow. He stares at you apparently looking for wounds."
+
+M_HUMAN_CLERIC_HAMMER(95, SEX_MALE, "cast harm", "cast heal")
+exp 115
+alignment 1000
+money 2 GOLD_PIECE
+
+HELPCHIEF
+special SFUN_TEAMWORK "motabi"
+end
+
+mot_chief
+
+names {"motabi chieftan", "chieftan", "chief", "motabi"}
+title "the Motabi Chieftan"
+descr "The proud Chieftan of the Motabi Tribe is here."
+extra {}
+"A very proud man stands before you. He is wearing a giant headress loaded
+with feathers. You can tell by looking at him that his fellow tribe members
+love him dearly, and that they would die for him."
+
+BASE_HUMAN(105, SEX_MALE)
+MSET_ABILITY(0,20,20,30,15,0,15,0)
+MSET_WEAPON(25,25,20,10,20,0)
+exp 115
+alignment 1000
+money 2 GOLD_PIECE
+
+special SFUN_TEAMWORK "motabi"
+dilcopy helpme@indian();
+end
+
+mot_witch
+
+names {"motabi witchdoctor", "witchdoctor", "motabi"}
+title "the Motabi Witchdoctor"
+descr "The Motabi Witchdoctor is here murmering strange incantations."
+extra {}
+"Before you stands a strange-looking man. In one hand he has a doll with 
+many pins in it, and in the other he has a large, sharp looking wand."
+
+M_HUMAN_MAGE_MIND(95, SEX_MALE, "cast hold monster")
+alignment 1000
+money 1 GOLD_PIECE, 4 SILVER_PIECE
+
+special SFUN_TEAMWORK "motabi"
+special SFUN_PAIN_INIT time WAIT_SEC*10 bits SFB_RANTIME
+"  100 Cemote lays a voodoo doll on the floor.@
+   110 Cemote chants in a strange tongue.@
+   120 Cemote starts dancing in a circle around the doll.@
+   130 Cemote whips out a sharp object and savagely impales the doll.@
+   140 Cemote grabs the doll off the floor and stuffs it in his cloak.@
+"
+
+HELPCHIEF
+end
+
+mot_thief
+names {"motabi thief", "thief", "motabi"}
+title "a Motabi Thief"
+descr "A disgraced thief of the Motabi Tribe is looking around nervously."
+extra {}
+"This pathetic creature is so filthy just looking at him makes you feel
+dirty. He stares at your pack nervously. You get the feeling you are missing
+something. Better check..."
+
+M_HUMAN_THIEF_SWORD(95, SEX_MALE)
+alignment -350
+money 1 GOLD_PIECE, 4 SILVER_PIECE
+
+dilcopy stealdil@function("money");
+special SFUN_RANDOM_GLOBAL_MOVE time 150 bits SFB_RANTIME
+end
+
+makala
+
+names {"Makala", "motabi"}
+title "Makala"
+descr "Makala of the Motabi tribe is standing here."
+extra {}
+"Standing before you is a huge man. He looks like he could knock down a wall
+with his bare fists."
+
+M_HUMAN_WARRIOR_AXE(95, SEX_MALE)
+
+special SFUN_TEAMWORK "motabi"
+dilcopy ham_quest@indian();
+dilcopy ham_give@indian();
+exp 0
+alignment 1000
+end
+
+mot_guard
+
+names {"motabi guard", "guard", "motabi"}
+title "a Motabi Guard"
+descr "A guard is here guarding the entrance to the hut."
+extra {}
+"He is guarding the entrance to the hut."
+
+M_HUMAN_WARRIOR_AXE(95, SEX_MALE)
+exp 110
+alignment 1000
+money 1 GOLD_PIECE, 4 SILVER_PIECE
+
+special SFUN_TEAMWORK "motabi"
+HELPCHIEF
+end
+
+mot_spirit
+
+names {"motabi spirit", "spirit", "motabi"}
+title "a Motabi Spirit"
+descr "A translucent spirit is here guarding his chieftan."
+extra {}
+"He is the spirit of a Motabi warrior long since dead. He is in the Spirit
+plane waiting to be called to teleport to his chieftan's rescue."
+
+BASE_HUMAN(95, SEX_MALE)
+MSET_ABILITY(35,20,0,0,15,0,30,0)
+MSET_WEAPON(25,0,15,0,20,0)
+MSET_SPELL(0,0,0,20,0,20,0,0,0,0,0)
+money 1 GOLD_PIECE, 4 SILVER_PIECE
+alignment 1000
+special SFUN_TEAMWORK "motabi"
+dilcopy tele@indian();
+end
+
+mot_woman
+
+names {"motabi woman", "woman", "motabi"}
+title "a Motabi Woman"
+descr "A woman of the Motabi Tribe is here sitting on a cushion."
+extra {}
+"She is very peaceful. She's here taking care of her children."
+
+alignment 1000
+BASE_HUMAN(90, SEX_FEMALE)
+MSET_ABILITY(10,20,10,20,20,20,0,0)
+MSET_WEAPON(0,30,30,10,30,0)
+money 1 GOLD_PIECE, 2 SILVER_PIECE
+
+special SFUN_TEAMWORK "husband"
+special SFUN_RESCUE "child"
+dilcopy helpus@indian();
+end
+
+mot_child
+
+names {"motabi child", "child", "motabi"}
+title "a Motabi Child"
+descr "A child of the Motabi Tribe is here playing."
+extra {}
+"You see a poor defenseless child."
+
+alignment 1000
+BASE_HUMAN(85, SEX_MALE)
+MSET_ABILITY(10,40,10,20,20,0,0,0)
+MSET_WEAPON(0,30,20,20,30,0)
+MSET_SPELL(0,0,0,0,0,0,0,0,0,0,0)
+money 1 GOLD_PIECE
+
+dilcopy stealdil@function("money");
+dilcopy helpus@indian();
+special SFUN_RANDOM_GLOBAL_MOVE time 150 bits SFB_RANTIME
+end
+
+mot_husband
+
+names {"motabi husband", "husband", "motabi"}
+title "a Motabi Husband"
+descr "A Motabi husband is wandering around here."
+extra {}
+"He is a husband to one of the women in the tribe, dressed in full
+hunting garb. Obviously he was recently on a hunt."
+
+alignment 1000
+BASE_HUMAN(92, SEX_MALE)
+MSET_ABILITY(10,20,10,20,20,20,0,0)
+MSET_WEAPON(30,30,10,0,30,0)
+MSET_SPELL(0,0,0,0,0,0,0,0,0,0,0)
+money 1 GOLD_PIECE, 2 SILVER_PIECE
+
+special SFUN_TEAMWORK "motabi"
+dilcopy helpwife@indian();
+special SFUN_RANDOM_GLOBAL_MOVE time 190 bits SFB_RANTIME
+end
+
+dragon_body
+
+names {"kerish body", "body", "kerish"}
+title "the body of Kerish"
+descr "The body of Kerish the King of the Dragons is here."
+extra {}
+"This is the body of Kerish, the King of the dragons. It is huge."
+
+M_DRAGON_BODY(95, SEX_MALE)
+money 2 GOLD_PIECE
+exp 130
+
+special SFUN_TEAMWORK "kerish"
+end
+
+dragon_head
+
+names {"kerish head", "head", "kerish"}
+title "the head of Kerish"
+descr "The head of Kerish the King of the Dragons is here."
+extra {}
+"This is the head of Kerish, the King of the dragons."
+
+M_DRAGON_HEAD(95, SEX_MALE)
+romflags {CHAR_DETECT_INVISIBLE}
+money 2 GOLD_PIECE
+exp 130
+
+dilcopy guard@indian();
+special SFUN_COMBAT_MAGIC "cast firestorm"
+special SFUN_TEAMWORK "kerish"
+special SFUN_AGGRESSIVE time WAIT_SEC*5
+end
+
+dragon_claw
+
+names {"kerish claw", "claw", "kerish"}
+title "the claw of Kerish"
+descr "The claw of Kerish the King of the dragons is here."
+extra {}
+"This is the claw of Kerish, the King of the dragons."
+
+M_DRAGON_CLAW(95, SEX_MALE)
+romflags {CHAR_DETECT_INVISIBLE}
+money 2 GOLD_PIECE
+exp 130
+
+special SFUN_TEAMWORK "kerish"
+special SFUN_AGGRESSIVE time WAIT_SEC*5
+end
+
+dragon_tail
+
+names {"kerish tail", "tail", "kerish"}
+title "the tail of Kerish"
+descr "The tail of Kerish the King of the Dragons is here."
+extra {}
+"This is the tail of Kerish, the King of the dragons."
+
+M_DRAGON_TAIL(95, SEX_MALE)
+romflags {CHAR_DETECT_INVISIBLE}
+money 2 GOLD_PIECE
+exp 130
+
+special SFUN_TEAMWORK "kerish"
+special SFUN_AGGRESSIVE time WAIT_SEC*5
+end
+
+caribou
+
+names {"caribou", "animal"}
+title "a caribou"
+descr "A caribou is grazing here."
+extra {}
+"This animal has a fair amount of meat on him. This is the animal that the
+Motabi hunt for food."
+
+M_DEER(SEX_MALE)
+
+level 70
+money 1 GOLD_PIECE
+
+special SFUN_RANDOM_GLOBAL_MOVE time 190 bits SFB_RANTIME
+end
+
+stallion
+
+names {"black stallion", "stallion"}
+title "a black stallion"
+descr "A beatiful black stallion is pawing at the ground here."
+extra {}
+"The stallion tilts its head up and looks at you, then continues pawing at 
+the dirt."
+
+M_STALLION(3, SEX_MALE)
+manipulate {MANIPULATE_ENTER, MANIPULATE_TAKE}
+flags {UNIT_FL_TRANS}
+capacity 2000
+
+dilcopy riding@indian();
+end
+
+%objects
+
+tribal_plate
+
+names {"tribal plate", "plate"}
+title "Tribal Plate"
+descr "A Tribal breast plate has been discarded here."
+extra {}
+"This armor is the official armor of the Motabi Tribe."
+extra {"$identify"}
+"This is the official armor of the Motabi Tribe. It isn't very good, but
+it protects them from many injuries."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_CHAIN(16,16)
+weight 10
+cost 1 PLATINUM_PIECE
+rent 4 GOLD_PIECE
+special SFUN_RESTRICT_OBJ "Level = 30"
+end
+
+tribal_helmet
+
+names {"tribal helmet", "helmet"}
+title "Tribal Helmet"
+descr "A Tribal helmet has been discarded here."
+extra {}
+"This armor is the official armor of the Motabi Tribe."
+extra {"$identify"}
+"This is the official armor of the Motabi Tribe. It isn't very good, but
+it protects them from many injuries."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+ARMOUR_CHAIN(16,16)
+weight 5
+cost 1 PLATINUM_PIECE
+rent 4 GOLD_PIECE
+special SFUN_RESTRICT_OBJ "Level = 30"
+end
+
+tribal_legging
+
+names {"tribal leggings", "leggings"}
+title "Tribal Leggings"
+descr "A pair of Tribal leggings has been discarded here."
+extra {}
+"This armor is the official armor of the Motabi Tribe."
+extra {"$identify"}
+"This is the official armor of the Motabi Tribe. It isn't very good, but
+it protects them from many injuries."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+ARMOUR_CHAIN(16,16)
+weight 7
+cost 1 PLATINUM_PIECE
+rent 4 GOLD_PIECE
+special SFUN_RESTRICT_OBJ "Level = 30"
+end
+
+tribal_boot
+
+names {"tribal boots", "boots"}
+title "Tribal Boots"
+descr "A pair of Tribal boots has been discarded here."
+extra {}
+"This armor is the official armor of the Motabi Tribe."
+extra {"$identify"}
+"This is the official armor of the Motabi Tribe. It isn't very good, but
+it protects them from many injuries."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+ARMOUR_CHAIN(16,16)
+weight 4
+cost 1 PLATINUM_PIECE
+rent 4 GOLD_PIECE
+special SFUN_RESTRICT_OBJ "Level = 30"
+end
+
+tribal_glove
+
+names {"tribal gloves", "gloves"}
+title "Tribal Gloves"
+descr "A pair of Tribal gloves has been discarded here."
+extra {}
+"This armor is the official armor of the Motabi Tribe."
+extra {"$identify"}
+"This is the official armor of the Motabi Tribe. It isn't very good, but
+it protects them from many injuries."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HANDS}
+ARMOUR_CHAIN(16,16)
+weight 3
+cost 1 PLATINUM_PIECE
+rent 4 GOLD_PIECE
+special SFUN_RESTRICT_OBJ "Level = 30"
+end
+
+tribal_sleeve
+
+names {"tribal sleeves", "sleeves"}
+title "Tribal Sleeves"
+descr "A Tribal sleeves has been discarded here."
+extra {}
+"This armor is the official armor of the Motabi Tribe."
+extra {"$identify"}
+"This is the official armor of the Motabi Tribe. It isn't very good, but
+it protects them from many injuries."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ARMS}
+ARMOUR_CHAIN(16,16)
+weight 7
+cost 1 PLATINUM_PIECE
+rent 4 GOLD_PIECE
+special SFUN_RESTRICT_OBJ "Level = 30"
+end
+
+dagger
+
+names {"dagger"}
+title "a dagger"
+descr "The motabi tribe's dagger is here."
+extra {}
+"This weapon is one of the personal weapons of the Motabi Tribe."
+
+WEAPON_DEF(WPN_DAGGER, 16, 12)
+weight 3
+cost 4 GOLD_PIECE
+rent 2 GOLD_PIECE
+special SFUN_RESTRICT_OBJ "Level = 30"
+end
+
+hammer
+
+names {"tribal hammer", "hammer"}
+title "Tribal Hammer"
+descr "The motabi tribe's hammer is here."
+extra {}
+"This weapon is one of the personal weapons of the Motabi Tribe."
+
+WEAPON_DEF(WPN_WAR_HAMMER, 16, 12)
+weight 8
+cost 4 GOLD_PIECE
+rent 2 GOLD_PIECE
+special SFUN_RESTRICT_OBJ "Level = 30"
+end
+
+tomahawk
+
+names {"tomahawk", "axe"}
+title "Tomahawk"
+descr "The legendary tomahawk lies on the ground here."
+extra {}
+"You see a very powerful weapon. This is the weapon motabi hunters and 
+warriors use to scalp their opponents. You certainly would not want to
+be in a fight against one with this weapon."
+WEAPON_DEF(WPN_HAND_AXE, 15, 18)
+dilcopy tomahawk@indian();
+spell 50
+weight 5
+cost 1 PLATINUM_PIECE, 2 GOLD_PIECE
+rent 5 GOLD_PIECE, 4 SILVER_PIECE
+special SFUN_RESTRICT_OBJ "Level = 30"
+end
+
+well
+
+names {"well", "water"}
+title "a well"
+descr "A stone well is in the middle of the room."
+extra {}
+"This is the Motabi village's only water supply."
+LIQ_DEF(LIQ_WATER,20000,20000,20000,0)
+dilcopy well@indian();
+
+end
+
+g_corpse
+
+names {"corpse"}
+title "corpse of Gwerath"
+descr "The corpse of Gwerath the wife of a Motabi blacksmith is here."
+extra {}
+"As you look at the withering corpse you catch a glimpse of something gold
+and shiny."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_ENTER}
+CONTAINER_DEF(0)
+weight 120
+end
+
+gold_locket
+
+names {"gold locket", "locket"}
+title "a gold locket"
+descr "A shining gold locket has been left here."
+extra {}
+"It is a very beautiful locket. When you open it up, you see a man with a
+forger's hammer standing next to a beautiful woman."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_NECK}
+weight 1
+cost 1 SILVER_PIECE
+end
+
+wall
+
+names {"wall"}
+title "a wall"
+descr "A huge stone wall blocks passage to the north."
+extra {}
+"&lThe writing is worn, and you can just barely read:
+    Ne/er a-a/n sh ll the ev/  Ki-g att--k us. The  ntr/nce h s been
+    se/led."
+dilcopy breakwall@indian();
+dilcopy entwall@indian();
+dilcopy wall_bl@indian();
+end
+
+fire
+
+names {"blazing fire", "fire"}
+title "the blazing fire"
+descr "A blazing hot fire is burning here."
+extra {}
+"&l&cr                            A  A A A
+&cr                       A   AAA&cw&c+y AAAA&cw&crAA  A
+&cr                      AAA AA&cw&c+yAAAAAAAA&cw&crAAAA
+&cr                     AAAAAA&cw&c+yAAAAAAAAA&cw&crAAAAA
+&cr                     AAAAA&cw&c+yAAAAAAAAAAA&cw&crAAAAA
+&cr                    AAAAAA&cw&c+yAAAAAAAAAAA&cw&crAAAAA
+&cr                   AAAAAA&cw&c+yAAAAAAAAAAAAA&cw&crAAAAA
+&cr                   AAAAAA&cw&c+yAAAAAAAAAAAAA&cw&crAAAAA
+&cr                  AAAAAA&cw&c+yAAAAAAAAAAAAAA&cw&crAAAAAA&cw"
+
+dilcopy entfire@indian();
+end
+
+shaker
+
+names {"earth shaker", "shaker", "hammer"}
+title "the Earth Shaker"
+descr "A very heavy looking weapon is here on the ground."
+extra {}
+"This weapon is large, and very heavy. It has great craftmanship, and has 
+the ability to shake the very earth itself."
+
+extra {"$identify"}
+"This weapon is very heavy. You get the feeling that it is most useful used by
+strong arms."
+
+extra {"$improved identify"}
+"This weapon is very heavy. You get the feeling that it is most useful used by
+strong arms. Sorry guys, papi is a fool. He thinks polymorph is bad, so 
+all you healers take it up with him. Shaker is now a war mattock."
+
+WEAPON_DEF(WPN_WAR_MATTOCK,20,20)
+DEX_TRANSFER(4)
+STR_TRANSFER(2)
+WEAPON_TRANSFER(WPN_WAR_MATTOCK,10)
+SKILL_TRANSFER(SKI_KICK, 10) /* To make up for war hammer +10 abils, which I hope was legal in the first place */
+/* WEAPON_SLAYER(RACE_HUMAN) awww, too powerful poor little gods */
+flags {UNIT_FL_MAGIC}
+weight 15
+cost 4 PLATINUM_PIECE
+rent 2 PLATINUM_PIECE
+spell 75
+
+dilcopy shakearth@indian();
+dilcopy shaketype@indian(); /* awww, too powerful for poor little papi
+  HEY!!! I SAW THAT!!! ARE YOU MAKING FUN OF ME????? */
+special SFUN_RESTRICT_QUEST MOTABI_COMPLETE
+special SFUN_RESTRICT_OBJ "Level = 45
+			   Str = 70"
+end
+
+wand
+
+names {"voodoo wand", "wand"}
+title "a voodoo wand"
+descr "A sharp wand is pulsing here."
+extra {}
+"The wand is light weight and sharp. It is glowing with magical essense."
+
+WAND_DEF(80,5,SPL_ACIDBALL_3,SPL_NONE)
+special SFUN_RESTRICT_OBJ "Level = 30"
+end
+
+board
+
+names {"bulletin board", "board", "yours journal", "journal"}
+title "Your's journal"
+descr "Your's journal is lying on a pedastal."
+
+special SFUN_BULLETIN_BOARD "journal"
+type ITEM_OTHER
+
+end
+
+headress
+
+names {"chieftan headress", "headress"}
+title "the chieftan's headress"
+descr "The motabi chieftan's headress has been disrespectfully tossed in a corner."
+extra {}
+"There are feathers beyond count poking out of the back, and in the front is a
+priceless jewel far greater than anyone of less importance than a great leader
+could afford."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+weight 3
+cost 50 PLATINUM_PIECE
+rent 30 PLATINUM_PIECE  /* Jewels are expensive! Especially ones that might *
+			 * become quest items later...                      */
+BRA_TRANSFER(3)
+special SFUN_RESTRICT_OBJ "Level = 30"
+end
+
+cloak
+
+names {"skin cloak", "cloak"}
+title "a cattle-skin cloak"
+descr "A tattered cattle-skin cloak is lying here."
+extra {}
+"The cloak is torn and ripped all along the edges, and hardly provides any
+warmth."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+weight 10
+type ITEM_WORN
+end
+
+stone
+
+names {"skipping stone", "stone"}
+title "a skipping stone"
+descr "A small sharp stone is lying among the rubble."
+extra {}
+"The edges are sharp and it looks fit for skipping across water."
+
+WEAPON_DEF(WPN_DAGGER, 10, 5)
+weight 1
+special SFUN_RESTRICT_OBJ "Level = 30"
+end
+
+knife
+
+names {"carving knife", "knife"}
+title "a carving knife"
+descr "A small knife with a sharp blade collects rust here."
+extra {}
+"It is used for carving meat and skinning animals."
+
+WEAPON_DEF(WPN_DAGGER, 10, 5)
+weight 3
+special SFUN_RESTRICT_OBJ "Level = 30"
+end
+
+nose_ring
+
+names {"nose ring", "ring"}
+title "a nose ring"
+descr "A fat golden ring has been dropped here."
+extra {}
+"The nose ring is thick, and looks pretty dull."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+weight 1
+STR_TRANSFER(2)
+cost 1 GOLD_PIECE
+rent 6 SILVER_PIECE
+special SFUN_RESTRICT_OBJ "Level = 30"
+end
+
+mocasins
+
+names {"mocasins"}
+title "a pair of dusty mocasins"
+descr "Some dusty mocasins are here collecting more dust."
+extra {}
+"The mocasins look very tight and slim."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+weight 2
+DEX_TRANSFER(3)
+
+rent 1 GOLD_PIECE
+special SFUN_RESTRICT_OBJ "Level = 30"
+end
+
+chest
+
+names {"diamond chest", "chest"}
+title "diamond chest"
+descr "A glorious diamond chest is here shining brightly."
+extra {}
+"The chest is made of pure diamond, and you can almost make out what's in it,
+but not quite. It is very lightweight for its size."
+
+CONTAINER_DEF(30000)
+open {EX_OPEN_CLOSE}
+manipulate {MANIPULATE_TAKE, MANIPULATE_ENTER}
+weight 10
+cost 10 PLATINUM_PIECE
+end
+
+stay_chest
+
+names {"treasure chest", "chest"}
+title "treasure chest"
+descr "A glorious diamond treasure chest is shining brightly."
+extra {}
+"The treasure chest is made of pure diamond, and you can almost make out what's
+in it, but not quite."
+
+CONTAINER_DEF(10000)
+open {EX_OPEN_CLOSE}
+end
+
+dex_belt
+
+names {"silencing belt", "belt", "b"}
+title "a silencing belt"
+descr "A cotton belt rests on the ground here."
+extra {}
+"The belt is very tight, and it keeps your armor from making noise when you
+move. Just holding it makes you feel agile."
+extra {"$identify"}
+"When worn, this belt gives remarkable agility."
+extra {"$improved identify"}
+"When worn, this belt gives remarkable agility.  It adds 3 dexterity and 
+3 strength to the wearer, and increases your sneak skill by 10 percent."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_WAIST, MANIPULATE_HOLD}
+weight 3
+DEX_TRANSFER(4)
+STR_TRANSFER(2)
+SKILL_TRANSFER(SKI_SNEAK, 10)
+cost 6 GOLD_PIECE
+rent 3 GOLD_PIECE
+special SFUN_RESTRICT_OBJ "Level = 40"
+end
+
+dex_nl
+
+names {"crystal necklace", "necklace", "n"}
+title "a crystal necklace"
+descr "A clear necklace glitters in the sunlight."
+extra {}
+"The crystal necklace is so clear that you can see right through to the other
+side. You feel agile just holding it in your hand."
+extra {"$identify"}
+"When worn, this necklace gives remarkable agility."
+extra {"$improved identify"}
+"When worn, this necklace gives remarkable agility.  It adds 3 dexterity 
+and 1 strength to the wearer."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_NECK, MANIPULATE_HOLD}
+weight 2
+DEX_TRANSFER(3)
+STR_TRANSFER(1)
+cost 3 GOLD_PIECE
+rent 1 GOLD_PIECE, 4 SILVER_PIECE
+end
+
+gloves
+
+names {"voodoo gloves", "gloves", "g"}
+title "voodoo gloves"
+descr "A small pair of gloves is pulsating here."
+extra {}
+"The gloves look very magical. As you stare at them the color and shape seems
+to change."
+extra {"$identify"}
+"The gloves seem to have a heartbeat of their own. As you hold them you feel
+less powerful."
+extra {"$improved identify"}
+"The gloves seem to have a heartbeat of their own. When worn, they steal mana
+from an enemy during battle."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HANDS, MANIPULATE_HOLD}
+weight 1
+special SFUN_RESTRICT_QUEST MOTABI_COMPLETE
+CHA_TRANSFER(3)
+CHAR_FLAG_TRANSFER(CHAR_DETECT_INVISIBLE)
+cost 6 GOLD_PIECE
+rent 3 GOLD_PIECE
+dilcopy glove@indian();
+end
+
+%reset
+
+remove gold_locket in g_corpse
+remove g_corpse in moun_cav29@tiamat
+purge treasure3
+load well into motabi_square
+load wall into sec_tun1
+load fire into bridge
+load board into home
+load bull_board@udgaard into home2
+load g_corpse into moun_cav29@tiamat
+{
+  load gold_locket@indian
+}
+load stay_chest into treasure3 zonemax 4
+{
+  load chest@indian
+  {
+    load chest@indian
+    {
+      load gloves@indian
+    }
+  }
+}
+load mot_war into war_hut
+{
+equip mocasins@indian position WEAR_FEET
+equip tribal_glove@indian position WEAR_HANDS
+equip tribal_legging@indian position WEAR_LEGS
+equip tribal_plate@indian position WEAR_BODY
+equip tribal_helmet@indian position WEAR_HEAD
+equip tribal_sleeve@indian position WEAR_ARMS
+equip tomahawk@indian position WEAR_WIELD
+equip cloak@indian position WEAR_ABOUT
+}
+load mot_shaman into shaman_hut
+{
+equip mocasins@indian position WEAR_FEET
+equip tribal_glove@indian position WEAR_HANDS
+equip tribal_legging@indian position WEAR_LEGS
+equip tribal_plate@indian position WEAR_BODY
+equip tribal_helmet@indian position WEAR_HEAD
+equip tribal_sleeve@indian position WEAR_ARMS
+equip dagger@indian position WEAR_WIELD
+equip cloak@indian position WEAR_ABOUT
+}
+load mot_priest into priest_hut
+{
+equip mocasins@indian position WEAR_FEET
+equip tribal_glove@indian position WEAR_HANDS
+equip tribal_legging@indian position WEAR_LEGS
+equip tribal_plate@indian position WEAR_BODY
+equip tribal_helmet@indian position WEAR_HEAD
+equip tribal_sleeve@indian position WEAR_ARMS
+equip hammer@indian position WEAR_WIELD
+equip cloak@indian position WEAR_ABOUT
+}
+load mot_chief into chief_hut
+{
+equip mocasins@indian position WEAR_FEET
+equip headress@indian position WEAR_HEAD
+equip cloak@indian position WEAR_ABOUT
+equip dex_belt@indian position WEAR_WAIST
+}
+load mot_spirit into spirit_plane zonemax 2
+{
+equip mocasins@indian position WEAR_FEET
+equip tribal_glove@indian position WEAR_HANDS
+equip tribal_legging@indian position WEAR_LEGS
+equip tribal_plate@indian position WEAR_BODY
+equip tribal_helmet@indian position WEAR_HEAD
+equip tribal_sleeve@indian position WEAR_ARMS
+equip cloak@indian position WEAR_ABOUT
+equip hammer@indian position WEAR_WIELD
+}
+load mot_spirit into spirit_plane zonemax 2
+{
+equip mocasins@indian position WEAR_FEET
+equip tribal_glove@indian position WEAR_HANDS
+equip tribal_legging@indian position WEAR_LEGS
+equip tribal_plate@indian position WEAR_BODY
+equip cloak@indian position WEAR_ABOUT
+equip tribal_helmet@indian position WEAR_HEAD
+equip tribal_sleeve@indian position WEAR_ARMS
+equip hammer@indian position WEAR_WIELD
+}
+load mot_thief into ran_way4 zonemax 2
+{
+equip mocasins@indian position WEAR_FEET
+equip tribal_glove@indian position WEAR_HANDS
+equip tribal_legging@indian position WEAR_LEGS
+equip tribal_plate@indian position WEAR_BODY
+equip tribal_helmet@indian position WEAR_HEAD
+equip tribal_sleeve@indian position WEAR_ARMS
+equip cloak@indian position WEAR_ABOUT
+equip dagger@indian position WEAR_WIELD
+}
+load mot_thief into tak_road2 zonemax 2
+{
+equip mocasins@indian position WEAR_FEET
+equip tribal_glove@indian position WEAR_HANDS
+equip tribal_legging@indian position WEAR_LEGS
+equip tribal_plate@indian position WEAR_BODY
+equip tribal_helmet@indian position WEAR_HEAD
+equip tribal_sleeve@indian position WEAR_ARMS
+equip dagger@indian position WEAR_WIELD
+equip cloak@indian position WEAR_ABOUT
+}
+load mot_child into ran_way2 zonemax 3
+{
+equip mocasins@indian position WEAR_FEET
+equip cloak@indian position WEAR_ABOUT
+equip stone@indian position WEAR_WIELD
+}
+load mot_child into savanna9 zonemax 3
+{
+equip mocasins@indian position WEAR_FEET
+equip cloak@indian position WEAR_ABOUT
+equip stone@indian position WEAR_WIELD
+}
+load mot_child into tent1 zonemax 3
+{
+equip mocasins@indian position WEAR_FEET
+equip cloak@indian position WEAR_ABOUT
+equip stone@indian position WEAR_WIELD
+}
+load mot_witch into witch_hut
+{
+equip mocasins@indian position WEAR_FEET
+equip tribal_glove@indian position WEAR_HANDS
+equip tribal_legging@indian position WEAR_LEGS
+equip tribal_plate@indian position WEAR_BODY
+equip tribal_helmet@indian position WEAR_HEAD
+equip tribal_sleeve@indian position WEAR_ARMS
+equip wand@indian position WEAR_HOLD
+equip cloak@indian position WEAR_ABOUT
+}
+load mot_warrior zonemax 3
+{
+    equip mocasins@indian position WEAR_FEET
+    equip tribal_glove@indian position WEAR_HANDS
+    equip tribal_legging@indian position WEAR_LEGS
+    equip tribal_plate@indian position WEAR_BODY
+    equip tribal_helmet@indian position WEAR_HEAD
+    equip tribal_sleeve@indian position WEAR_ARMS
+    equip hammer@indian position WEAR_WIELD
+    equip cloak@indian position WEAR_ABOUT
+}
+load mot_warrior zonemax 3
+{
+    equip mocasins@indian position WEAR_FEET
+    equip tribal_glove@indian position WEAR_HANDS
+    equip tribal_legging@indian position WEAR_LEGS
+    equip tribal_plate@indian position WEAR_BODY
+    equip tribal_helmet@indian position WEAR_HEAD
+    equip tribal_sleeve@indian position WEAR_ARMS
+    equip hammer@indian position WEAR_WIELD
+    equip cloak@indian position WEAR_ABOUT
+}
+load mot_husband into motabi_square zonemax 4
+{
+equip mocasins@indian position WEAR_FEET
+equip tribal_glove@indian position WEAR_HANDS
+equip tribal_legging@indian position WEAR_LEGS
+equip tribal_plate@indian position WEAR_BODY
+equip tribal_helmet@indian position WEAR_HEAD
+equip tribal_sleeve@indian position WEAR_ARMS
+equip cloak@indian position WEAR_ABOUT
+equip hammer@indian position WEAR_WIELD
+}
+load mot_husband into tak_road2 zonemax 4
+{
+equip mocasins@indian position WEAR_FEET
+equip tribal_glove@indian position WEAR_HANDS
+equip tribal_legging@indian position WEAR_LEGS
+equip tribal_plate@indian position WEAR_BODY
+equip tribal_helmet@indian position WEAR_HEAD
+equip tribal_sleeve@indian position WEAR_ARMS
+equip cloak@indian position WEAR_ABOUT
+equip hammer@indian position WEAR_WIELD
+}
+load mot_husband into ran_way3 zonemax 4
+{
+equip mocasins@indian position WEAR_FEET
+equip tribal_glove@indian position WEAR_HANDS
+equip tribal_legging@indian position WEAR_LEGS
+equip tribal_plate@indian position WEAR_BODY
+equip tribal_helmet@indian position WEAR_HEAD
+equip tribal_sleeve@indian position WEAR_ARMS
+equip hammer@indian position WEAR_WIELD
+equip cloak@indian position WEAR_ABOUT
+}
+load mot_husband into savanna5 zonemax 4
+{
+equip mocasins@indian position WEAR_FEET
+equip tribal_glove@indian position WEAR_HANDS
+equip tribal_legging@indian position WEAR_LEGS
+equip tribal_plate@indian position WEAR_BODY
+equip tribal_helmet@indian position WEAR_HEAD
+equip tribal_sleeve@indian position WEAR_ARMS
+equip cloak@indian position WEAR_ABOUT
+equip hammer@indian position WEAR_WIELD
+}
+load mot_woman into tent1 zonemax 4
+{
+equip mocasins@indian position WEAR_FEET
+equip cloak@indian position WEAR_ABOUT
+equip knife@indian position WEAR_WIELD
+equip nose_ring@indian position WEAR_HEAD
+}
+load mot_woman into tent2 zonemax 4
+{
+equip mocasins@indian position WEAR_FEET
+equip knife@indian position WEAR_WIELD
+equip cloak@indian position WEAR_ABOUT
+equip nose_ring@indian position WEAR_HEAD
+}
+load mot_woman into tent3 zonemax 4
+{
+equip mocasins@indian position WEAR_FEET
+equip cloak@indian position WEAR_ABOUT
+equip knife@indian position WEAR_WIELD
+equip nose_ring@indian position WEAR_HEAD
+}
+load mot_woman into tent4 zonemax 4
+{
+equip mocasins@indian position WEAR_FEET
+equip cloak@indian position WEAR_ABOUT
+equip knife@indian position WEAR_WIELD
+equip nose_ring@indian position WEAR_HEAD
+}
+load mot_guard into ent_hut zonemax 2
+{
+equip mocasins@indian position WEAR_FEET
+equip hammer@indian position WEAR_WIELD
+equip tribal_glove@indian position WEAR_HANDS
+equip tribal_legging@indian position WEAR_LEGS
+equip tribal_plate@indian position WEAR_BODY
+equip tribal_helmet@indian position WEAR_HEAD
+equip tribal_sleeve@indian position WEAR_ARMS
+equip cloak@indian position WEAR_ABOUT
+}
+load mot_guard into ent_hut zonemax 2
+{
+equip mocasins@indian position WEAR_FEET
+equip hammer@indian position WEAR_WIELD
+equip tribal_glove@indian position WEAR_HANDS
+equip tribal_legging@indian position WEAR_LEGS
+equip tribal_plate@indian position WEAR_BODY
+equip tribal_helmet@indian position WEAR_HEAD
+equip tribal_sleeve@indian position WEAR_ARMS
+equip cloak@indian position WEAR_ABOUT
+}
+load dragon_body into kerish_room
+{
+load shaker@indian
+}
+load makala into makala_tent
+load dragon_head into kerish_room
+{
+equip dex_nl@indian position WEAR_NECK_1
+}
+load dragon_tail into kerish_room
+load dragon_claw into kerish_room zonemax 4
+load dragon_claw into kerish_room zonemax 4
+load dragon_claw into kerish_room zonemax 4
+load dragon_claw into kerish_room zonemax 4
+/* To anyone who sees this, if caribou are left alone, they multiply :) */
+load caribou into savanna1 zonemax 25
+load caribou into savanna2 zonemax 25
+load caribou into savanna3 zonemax 25
+load caribou into savanna4 zonemax 25
+load caribou into savanna5 zonemax 25
+load caribou into savanna6 zonemax 25
+load caribou into savanna7 zonemax 25
+load caribou into savanna8 zonemax 25
+load caribou into savanna9 zonemax 25
+load caribou into savanna10 zonemax 25
+load caribou into savanna11 zonemax 25
+load caribou into savanna12 zonemax 25
+load caribou into savanna13 zonemax 25
+load caribou into savanna12 zonemax 25
+load caribou into savanna5 zonemax 25
+load caribou into savanna3 zonemax 25
+load caribou into savanna10 zonemax 25
+load caribou into savanna4 zonemax 25
+load caribou into savanna8 zonemax 25
+load caribou into savanna2 zonemax 25
+
+door dense_forest DOWN {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door sec_tun1 UP {EX_OPEN_CLOSE, EX_CLOSED}
+
+door sec_tun5 UP {EX_OPEN_CLOSE, EX_CLOSED}
+door ent_motabi DOWN {EX_OPEN_CLOSE, EX_CLOSED}
+
+door ran_way2 SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door savanna_ent NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+
+door kerish_room EAST {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door treasure1 WEST {EX_OPEN_CLOSE, EX_CLOSED}
+
+%end

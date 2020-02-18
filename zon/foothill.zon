@@ -1,0 +1,1683 @@
+/*
+filename    foothill
+password    rebirth
+changedby   whistler
+EmailAdd     Ken Perry <whistler@blinksoft.com>
+request     compile
+version     9
+END HEADER*/
+
+
+#include <composed.h>
+#define KEEP_HEAD "test"
+#define TEST_ONGOING "Test ongoing"
+#define  TEST_COMPLETE "Test complete"
+#define QUEST(ONGOING,COMPLETE,ITEMS,QUEST_FUNC,GET_FUNC) \
+dilcopy gen_give(\
+ONGOING,\
+COMPLETE,\
+ITEMS,\
+QUEST_FUNC);\
+\
+dilcopy gen_get@foothill( \
+ONGOING,\
+COMPLETE,\
+GET_FUNC);
+
+
+%zone foothill
+title "Foothills"
+lifespan 20
+reset RESET_ANYHOW
+
+creators {"whistler"}
+notes
+"This is the zone that connects Nymgaard to the bards it has also been added so that other
+zones in the future can be built off the sides."
+
+%dil
+
+dilbegin drop_act ();
+code
+{
+heartbeat:=PULSE_SEC*5;
+act ("Someone places a log from the other side of the cavern "+
+"forming a bridge",
+	A_SOMEONE, self, null, null, TO_REST);
+	quit;
+	}
+	dilend
+
+
+dilbegin give_act ();
+code
+{
+heartbeat:=PULSE_SEC*5;
+act ("Someone  removes the log bridge from the other side of the cavern.",
+	A_SOMEONE, self.outside, null, null, TO_REST);
+
+
+	quit;
+	}
+	dilend
+
+%rooms
+
+path_1
+names {"path_1"}
+title "A well kept path"
+descr
+"Sounds of the loud  city of Nymgaard can be heard as you travel
+this well kept path.  The path seems to curve its way between rocky foothills
+to the north and south.  You can go west deeper into the foothills or east
+into  Nymgaard."
+extra {"hills","hill"}
+"You see small and steep hills blocking your way to the north and south."
+
+movement SECT_HILLS
+
+east to dirt_path@nymgaard descr
+"You see the Dirt Path passing a guard house and entering the town.";
+
+west to path_2 descr
+"You see more of the foothill path.";
+end
+
+path_2
+names {"path_2"}
+title "A well kept path"
+descr
+"Sounds of the loud  city of Nymgaard can still be heard as you travel
+this well kept path.  The path seems to curve its way between rocky foothills
+to the north and south.  You can go west deeper into the foothills or east
+towards the city."
+
+movement SECT_HILLS
+
+extra {"hills","hill"}
+"You see small and steep hills blocking your way to the north and south."
+
+east to path_1 descr
+"You see the well kept path leading up to a guard shack.";
+
+west to path_3 descr
+"You see more of the foothill path.";
+end
+
+path_3
+names {"path_3"}
+title "A split in  the path"
+descr
+"Birds sing and little animals dodge between cracks in the hills as you
+stroll down the path.  The hills seem to open up to the north to reveal
+a small clearing and a pillar of smoke can be seen in that direction.  The
+sounds of a city can be heard far to the east , while to the west you can hear
+what sounds to be a calm stream."
+
+movement SECT_HILLS
+
+extra {"animals","animal"}
+"There just little playful creatures nothing for you to butcher I promise."
+
+north to clear_1 descr
+"You see the hills open up into a small valley like clearing.";
+
+west to path_4 descr
+"You see the well kept path curving its way through the hills.";
+east to path_2 descr
+"You see more of the well kept path.";
+end
+
+path_4
+title "A bend in the path"
+names {"path_4"}
+descr
+"The path here becomes very choppy.  Steep hills block your way to the
+west. Although the hill to the north is steep you might be able to climb
+it if you try.  The  well kept path bends and runs to the south and east."
+
+movement SECT_HILLS
+
+east to path_3 descr
+"You see a well kept path curving through the hills.";
+south to path_8 descr
+"You see a well kept path curving through the hills.";
+  dilcopy climb@function("path_4@foothill", 10, 10, CMD_UP);
+  dilcopy climb@function("path_4@foothill", 10, 10, CMD_NORTH);
+up to path_5 descr
+"You see a steep climb up"  keyword {"hill"};
+north to path_5 descr
+"You see a steep climb up"  keyword {"hill"};
+
+end
+
+path_5
+names {"path_5"}
+title "Top of the Hill"
+descr
+"Looking down the hill you wonder what possessed you to climb up here.
+The hill looks much bigger from up here than it did at the bottom.  You can
+see a large city to the east and foothills to the north and south.  To the
+west you can see small pillars of smoke rising up from what looks like a
+camp sight. The top of this hill is not very big and it doesn't look like it
+will be easy to get down.  As you examine your possible descent you think you
+might be able to climb down to the south or to the west."
+
+movement SECT_HILLS
+
+  dilcopy climb@function("path_6@foothill", 10, 10, CMD_WEST);
+  dilcopy climb@function("path_4@foothill", 10, 10, CMD_SOUTH);
+
+west to path_6 descr
+"You see a steep climb down." keyword {"hill"};
+south to path_4 descr
+"You see a steep climb down." keyword {"hill"};
+end
+
+path_6
+title "End of the path"
+descr
+"The path ends here with steep hills blocking your way to  the north and
+south.  Unlike the other hills the one to the east looks climbable if you
+have the time and skill.  You here  the sound of a stream to the west and
+see a well kept path in that direction."
+movement SECT_HILLS
+west to path_7 descr
+"You see the path leading up to a wooden bridge.";
+  dilcopy climb@function("path_6@foothill", 10, 10, CMD_UP);
+  dilcopy climb@function("path_6@foothill", 10, 10, CMD_EAST);
+
+up to path_5 descr
+"You see a steep climb up." keyword {"hill"};
+east to path_5 descr
+"You see a steep climb up." keyword {"hill"};
+end
+
+path_7
+names {"path_7"}
+title "A well kept path"
+descr
+"The peaceful sounds of small animals playing in the foothills around you
+almost cause you to miss the bubbling of the stream to the west.  The
+path leads up to a footbridge to the west and
+back into the foothills to the east."
+
+movement SECT_HILLS
+
+extra {"animals","animal"}
+"There just little playful creatures nothing for you to butcher I promise."
+
+extra {"foot bridge","bridge"}
+"It looks like a nice little sturdy foot bridge."
+
+
+west to bridge_1 descr
+"You see a  sturdy looking wood bridge.";
+
+east to path_6 descr
+"You see the path winding through the foothills.";
+end
+
+path_8
+names {"path_8"}
+title "A split in the path"
+descr
+"The hills to the south become to steep to traverse and you notice that
+small trees and shrubs are growing on them, unlike the other bare hills to the
+north.  Well kept paths lead west and east, while a more obscure path heads
+north."
+
+movement SECT_HILLS
+north to path_4 descr
+"You see a bend in the path.";
+east to path_9 descr
+"You see a small clearing in front of a cave.";
+west to path_10 descr
+"The path slopes down steeply to the west.";
+end
+
+path_9
+names {"path_9"}
+title "A small clearing"
+descr
+"The well kept path ends here at the entrance of a cave.  As you look more
+closely at your surroundings you begin to feel you could be in some danger.
+Small	piles of bones and debris litter the ground.  The path leads to the west
+and	you might be able to scamper up to the cave ledge if you try."
+
+movement SECT_CITY
+
+extra {"bones","debris","bone"}
+"It looks to be lots of bones and hides from both animals and you even think
+you recognize a human bone or two.  All the bones have nice claw marks and
+look to have been chewed up pretty bad."
+
+extra {"cave"}
+"The cave entrance is on a ledge a little higher than your head its only
+a short climb but it looks very steep and slippery."
+
+  dilcopy climb@function("path_9@foothill", 10, 10, CMD_UP);
+up to cv_1 descr
+"You see a ledge just above your head."
+keyword {"ledge"};
+west to path_8 descr
+"You can see the well kept path curving through the hills.";
+end
+
+path_10
+names {"path_10"}
+title "A sloping path"
+descr
+"The path slopes down steeply and turns south.  There are large hills to the west
+and east that block any hope of travel in those directions.  You seem to be
+in a valley like pit. The path climbs both
+north and south ."
+
+movement SECT_CITY
+
+north   to path_8 descr
+"You see the path curving through the hills.";
+
+south to path_11 descr
+"You see the path curving through the hills.";
+end
+
+path_11
+names {"path_11"}
+title "A winding path"
+descr
+"The well kept path turns into a weed infested trail here and
+seems to twist its way west towards an open area.  You can here the sounds
+of a stream near by.  There is a clear path to the north and trails that
+could be considered paths to the west and east."
+
+movement SECT_HILLS
+
+north to path_10 descr
+"You see more of the path, curving through the hills.";
+west to path_12 descr
+"You see a weedy path opening up into something like a weed infested clearing.";
+east to path_13 descr
+"You see a weedy looking trail.";
+end
+
+path_12
+names {"path_12"}
+title "A weed infested clearing"
+descr
+"Bushes shrubs and weeds seem to thrive here do to the stream that is
+just to your west.  This area seems to have been used for something at one
+time even though at first glance it doesn't seem to have been.  After
+looking around you notice things like old wooden troughs by the stream and
+even some pick heads here and there."
+
+movement SECT_HILLS
+
+extra {"troughs","trough"}
+"These troughs look to have been used to wash something by the stream.  they
+look to be very sturdy even with he weeds growing through the cracks."
+
+extra {"pick heads","pick head","picks","heads","pick","head"}
+"These look like old rusty minor pick heads they seem to be well secured as
+if they have not been used in years."
+
+extra {"bushes","bush"}
+"The bushes have grown to the south forming a wall covering an obscure hill
+to the south."
+
+east to path_11 descr
+"You see a weed infested path.";
+
+south to mine_1 descr
+"You see an old abandon mine shaft.";
+
+end
+
+path_13
+title "A long forgotten path"
+names {"path_13"}
+descr
+"The foothills here are becoming much more over grown than the rest of the
+hills.  Two the south the growth on the hills has become an unpassable wall
+of trees.	 The trail leads off in both the east and west direction."
+
+movement SECT_HILLS
+
+west to path_11 descr
+"You see more of this weedy path.";
+east to path_14 descr
+"You see  more of this old weedy path.";
+end
+
+path_14
+title "End of the old trail"
+names {"path_14"}
+descr
+"The trail ends here in walls of bushes and trees. You get the feeling
+that this path must have been here for some reason but can't see a purpose
+for it to end here.  The only visible exit leads west."
+
+movement SECT_HILLS
+
+extra {"bushes","bush","trees","tree"}
+"Something looks strange about the trees to the south."
+west to path_13 descr
+"You see more of the old weedy path.";
+south to for_12@talen descr
+"You see a path in a forest."
+	 open {EX_OPEN_CLOSE,EX_CLOSED,EX_HIDDEN}
+	 keyword {"bushes","bush","trees","tree"};
+	 SECRET_DOOR_DIFFICULTY(SOUTH,20)
+end
+
+cv_1
+names {"cv_1"}
+title "Cave Entrance"
+descr
+"As you stop to listen to the pebbles you just kicked over the 10 foot
+drop to the small clearing, you feel as if you are being watched from
+inside the cave.  The cave mouth is only a little bigger than your body and
+it looks as if it is very dark inside.  You can enter the cave to the east
+or climb down to the clearing."
+
+movement SECT_HILLS
+
+east to cv_2 descr
+"You stare into the darkness.";
+
+  dilcopy climb@function("path_9@foothill", 10, 10, CMD_DOWN);
+
+down to path_9 descr
+"You see a bone littered clearing." keyword {"ledge"};
+
+end
+
+cv_2
+			names {"cv_2"}
+			title "A sloping passage"
+			descr
+			"The entrance passage of the cave is not much bigger than you and
+			all your armor.  You manage to squeeze into the cave and find
+			yourself standing on the edge of an underground cliff.  On the other
+			side of what seems to be a bottomless cavern you can make out small
+			openings.  The cave like openings look like homes for some kind of
+			animal and look large enough for you to enter if you can find some
+			way over there.  The only visible exit is to the west."
+
+movement SECT_HILLS
+IN_ALWAYS_DARK
+
+west to cv_1 descr
+"You see the passage out of the cave.";
+
+end
+
+cv_3
+names {"cv_3"}
+title "The cave wall ledge"
+descr
+"It is very dark and hard to see here but you can here movement coming from
+above.  As you squint your eyes and look up you can see the small caves
+that you noticed from across the cavern.  The only natural exits are up
+or down."
+
+movement SECT_HILLS
+IN_ALWAYS_DARK
+  dilcopy climb@function("cv_6@foothill", 10, 20, CMD_UP);
+  dilcopy climb@function("cv_6@foothill", 10, 20, CMD_DOWN);
+
+down to cv_4 descr
+"You see NOTHING it is to darn dark."
+keyword {"cave wall"};
+up to cv_11 descr
+"You can just barely make out another cave ledge."
+keyword {"cave wall"};
+
+end
+
+cv_4
+title "On the cave wall"
+names {"cv_4"}
+				descr
+				"The cave wall is getting steeper and harder to
+				climb down.  It wouldn't be so hard if there was a little more
+				light but it is hard enough to see your hand in front of your face
+				let alone climb down a cliff."
+
+movement SECT_HILLS
+IN_ALWAYS_DARK
+  dilcopy climb@function("cv_6@foothill", 10, 15, CMD_UP);
+  dilcopy climb@function("cv_6@foothill", 10, 15, CMD_DOWN);
+
+down to cv_5 descr
+"You see NOTHING it is to darn dark"
+keyword {"cave wall"};
+
+up to cv_3 descr
+"You see a flicker of lights maybe something is up there."
+keyword {"cave wall"};
+end
+
+cv_5
+title "On the cave wall"
+names {"cv_5"}
+				descr
+				"The cave wall is getting steeper and harder to
+				climb down.  It wouldn't be so hard if there was a little more
+				light but it is hard enough to see your hand in front of your face
+				let alone climb down a cliff."
+
+movement SECT_HILLS
+IN_ALWAYS_DARK
+
+  dilcopy climb@function("cv_6@foothill", 10, 10, CMD_UP);
+  dilcopy climb@function("cv_6@foothill", 10, 10, CMD_DOWN);
+
+down to cv_6 descr
+"You see NOTHING it is to darn dark"
+keyword {"cave wall"};
+
+up to cv_4 descr
+"You see a flicker of lights maybe something is up there."
+keyword {"cave wall"};
+end
+
+cv_6
+title "The large landing"
+names {"cv_6"}
+descr
+"You are no where near the bottom of the cave and it doesn't look safe to
+climb down any farther.  The ledge here seems like a
+good place to collect your thoughts and guts before ascending the cave
+wall.  The cavern extends downwards to your west and dark passages lead in
+all three other directions.  You might be able to climb back up the cave
+wall from here."
+
+movement SECT_HILLS
+IN_ALWAYS_DARK
+  dilcopy climb@function("cv_6@foothill", 10, 5, CMD_UP);
+
+up to cv_5 descr
+"You see a faint flickering of light could be a way out."
+keyword {"cave wall"};
+
+east to cv_7 descr
+"You see NOTHING it  is to darn dark.";
+south to cv_8 descr
+"You see NOTHING it  is to darn dark.";
+north to cv_9 descr
+"You see NOTHING it  is to darn dark.";
+
+end
+
+cv_7
+title "A dark  cave"
+names {"cv_7"}
+descr
+"There is nothing really special about the caves down here.  The walls are
+dark black rock and the air has a musty oder and is very damp.  You see
+exits to both the west and south."
+
+movement SECT_HILLS
+IN_ALWAYS_DARK
+
+south to cv_10 descr
+"You see NOTHING it is to darn dark.";
+west to cv_6 descr
+"You see NOTHING it is to darn dark.";
+end
+cv_8
+title "A dark  cave"
+names {"cv_8"}
+descr
+"There is nothing really special about the caves down here.  The walls are
+dark black rock and the air has a musty oder and is very damp.  You see
+exits to both the east and north."
+
+movement SECT_HILLS
+IN_ALWAYS_DARK
+
+east to cv_10 descr
+"You see NOTHING it is to darn dark.";
+north to cv_6 descr
+"You see NOTHING it is to darn dark.";
+end
+
+cv_9
+title "A dark  cave"
+names {"cv_9"}
+descr
+"There is nothing really special about the caves down here.  The walls are
+dark black rock and the air has a musty oder and is very damp.  You see
+an exit to the south."
+
+movement SECT_HILLS
+IN_ALWAYS_DARK
+
+south to cv_6 descr
+"You see NOTHING it is to darn dark.";
+end
+
+cv_10
+names {"cv_10"}
+title "A dark  cave"
+descr
+"There is nothing really special about the caves down here.  The walls are
+dark black rock and the air has a musty oder and is very damp.  You see
+exits to all but the south."
+
+
+movement SECT_HILLS
+IN_ALWAYS_DARK
+
+west to cv_8 descr
+"You see NOTHING it is to darn dark.";
+north to cv_7 descr
+"You see NOTHING it is to darn dark.";
+east to cv_16 descr
+"You see NOTHING!  It is to darn dark.";
+end
+
+cv_11
+title "A cave ledge"
+names {"cv_11"}
+descr
+"You are standing on the highest ledge in the cave.  You can feel the fresh air
+wafting up from the entrance.  High above you stalactite signal that you
+have reached the top of this cave.  Small cave like openings can be seen both
+to the east and west.  You can also climb down towards the cave
+bottom."
+movement SECT_HILLS
+IN_ALWAYS_DARK
+
+  dilcopy climb@function("cv_6@foothill", 10, 25, CMD_DOWN);
+
+down to cv_3 descr
+"You see a faint flicker of light."
+keyword {"cave wall"};
+
+east to cv_12 descr
+"You see NOTHING it is to darn dark";
+west to cv_13 descr
+"You see NOTHING it is to darn dark";
+end
+
+cv_12
+title "On a cave ledge"
+names {"cv_12"}
+descr
+"You are high on a cave ledge if there was enough light you could probably see
+down for miles to the south.  There is an opening to the north that looks to be
+just another cave	mouth.over head the
+stalactite signal that you have reached the top of this very large cave.  You
+can go north deeper into the cave or west towards the climbable ledge."
+
+movement SECT_HILLS
+IN_ALWAYS_DARK
+
+north to cv_14 descr
+"You see NOTHING it is to darn dark.";
+west to cv_11 descr
+"You  see NOTHING it is to darn dark.";
+end
+
+cv_13
+title "On a cave ledge"
+names {"cv_13"}
+descr
+"You are high on a cave ledge if there was enough light you could probably see
+down for miles to the south.  There is an opening to the north that looks to be
+just another cave	mouth.over head the
+stalactite signal that you have reached the top of this very large cave.  You
+can go north deeper into the cave or east towards the climbable ledge."
+
+movement SECT_HILLS
+IN_ALWAYS_DARK
+
+north to cv_15 descr
+"You see NOTHING it is to darn dark.";
+east to cv_11 descr
+"You  see NOTHING it is to darn dark.";
+end
+
+cv_14
+title "A sparkling cave"
+names {"cv_14"}
+descr
+"As your light dances off the stalactite above you images of all kinds
+come to mind.  Shadows dance and sway in front of you and you you begin to
+wonder if any of them may be alive.  There is a  opening to the south into
+the more drab parts of the cave."
+
+movement SECT_HILLS
+IN_ALWAYS_DARK
+
+south to cv_12 descr
+"You see NOTHING it is to darn dark";
+end
+
+cv_15
+title "A sparkling cave"
+names {"cv_15"}
+descr
+"As your light dances off the stalactite above you images of all kinds
+come to mind.  Shadows dance and sway in front of you and you you begin to
+wonder if any of them may be alive.  There is a  opening to the south into
+the more drab parts of the cave."
+
+movement SECT_HILLS
+IN_ALWAYS_DARK
+
+south to cv_13 descr
+"You see NOTHING it is to darn dark";
+end
+
+
+cv_16
+names {"cv_16"}
+title "A dark  cave"
+descr
+"The cave floor begins sloping steeply down wards towards the east
+here.  The black rock walls seems to shimmer with every bit of light that
+hits them and the musty air is getting stronger.  You notice it is getting harder
+to go up towards the west and very easy to slide down towards the east."
+movement SECT_HILLS
+west to cv_10 descr
+"You see NOTHING!  It is to darn dark.";
+east to cv_17 descr
+"You see NOTHING!  It is to darn dark.";
+end
+
+cv_17
+names {"cv_17"}
+title "A dark  cave"
+descr
+"The dark cave passage you are following twists sharply  here.  The air is
+almost unbreathable and you are starting to get a slimy taste in your mouth.
+The black rock has stopped shimmering and seems to be sucking in the light
+source you are using.  There is two exits in the west wall one goes up and
+one goes down.  There might be other exits but with the dark of this room you
+will probably never know about them."
+
+movement SECT_HILLS
+
+up to cv_16 descr
+"You see NOTHING!  It is to darn dark.";
+down to cv_18 descr
+"You see NOTHING!  It is to darn dark.";
+end
+
+cv_18
+names {"cv_18"}
+title "A dark  cave"
+descr
+"You suddenly lose your footing and go slipping down a steep passage."
+
+flags {UNIT_FL_NO_MOB}
+movement SECT_HILLS
+special SFUN_FORCE_MOVE "cave_9@talen!As you slip and slide down your final vision "+
+"is of a nasty pool of slime. Hope you can hold your breath!"  time 14 bits SFB_RANTIME
+
+up to cv_17 descr
+"You see NOTHING! It is to darn dark.";
+end
+
+mine_1
+title "The Entrance to the mine shaft"
+names {"mine_1"}
+descr
+"this is a very old and unused mine shaft.  Spider webs hang from every
+corner of the room and the beams seem rotten and cracked.  As you walk around
+the dust kicks up and makes it difficult to breath.  An old ladder is
+anchored to the wall and heads down through a big whole in the floor.  The
+opening to the mine shaft is to the south."
+
+movement SECT_HILLS
+IN_ALWAYS_DARK
+
+north to path_12 descr
+"You see the weed infested clearing.";
+down to mine_2 descr
+"You see a dark passage going straight down.";
+end
+
+mine_2
+title "Down the mine shaft"
+names {"mine_2"}
+descr
+"As you climb on the old ladder you here its anchors creak and grown under
+your weight.  You decide it would be best not to hang around.  You can go
+up to the mine entrance or down into the mine."
+
+movement SECT_HILLS
+IN_ALWAYS_DARK
+
+up to mine_1 descr
+"You see a faint flicker of light coming from the entrance.";
+down to mine_3 descr
+"You can't make out anything any farther down.";
+end
+
+mine_3
+title "At the bottom"
+names {"mine_3"}
+descr
+"The ladder ends here at the bottom of the mine in a large round room.
+There are pick axe marks all over the wall but the mine doesn't look like
+a normal mine.  Judging by the marks it seems the original mine workers
+were looking for something specific.  The digging centers around a large hole in
+the wall.  The ladder leads back up towards the cave entrance."
+
+movement SECT_HILLS
+IN_ALWAYS_DARK
+
+extra {"hole"}
+"It is a large smooth round hole with a flat bottom.   There doesn't
+seem to be any marks like picks inside the hole.  It almost looks as if
+something had been stored in here.  Whatever the minors were looking for
+was probably in this hole."
+
+up to mine_2 descr
+"You see the ladder going up towards the entrance.";
+end
+
+clear_1
+title "Grassy clearing"
+names {"clear_1"}
+descr
+"You are standing in the southwest corner of the clearing.  You can see a
+small log cabin to the northeast across the field.  To the west
+is another steep hill that doesn't seem climbable, while the clearing opens
+up to the north and east."
+
+movement SECT_FIELD
+
+south to path_3 descr
+"You see the well kept path curving through the hills.";
+north to clear_3 descr
+"You see more of the clearing.";
+east to clear_2 descr
+"You see more of the clearing.";
+end
+
+clear_2
+title "Grassy clearing"
+names {"clear_2"}
+descr
+"There is nothing really special about this small clearing.  It
+is surrounded on both the east and south side by steep hills.  The grass
+seems well kept and flowers pop up here and there to add color.  You can
+see a small log cabin across the field to the north.  You can continue
+around the clearing to the north and west."
+
+movement SECT_FIELD
+
+north to clear_4 descr
+"You see the clearing leading up to a cabin.";
+west to clear_1 descr
+"You see more of the clearing.";
+end
+clear_3
+title "Grassy clearing"
+names {"clear_3"}
+descr
+"There is nothing really special about this small clearing.  It
+is surrounded on both the east and south side by steep hills.  The grass
+seems well kept and flowers pop up here and there to add color.  You can
+see a small log cabin across the field to the east.  You can continue
+around the clearing to the south and east."
+
+movement SECT_FIELD
+
+east to clear_4 descr
+"You see the clearing leading up to a cabin.";
+south to clear_1 descr
+"You see more of the clearing.";
+end
+
+clear_4
+title "Outside the cabin"
+names {"clear_4"}
+descr
+"You have come to the far northeastern part of the small clearing.  Just
+north of here you see the entrance of a small cabin.  The cabin doesn't look
+extremely well kept even though it looks lived in. You can enter the cabin
+to the north or continue around the field to the south and west."
+
+movement SECT_FIELD
+
+west to clear_3 descr
+"You see more of the clearing.";
+south to clear_2 descr
+"You see more of the clearing.";
+
+north to cabin_1 descr
+"You see a shabby looking cabin.";
+end
+
+cabin_1
+title "Inside the unkempt cabin"
+names {"cabin_1"}
+descr
+"Although the cabin doesn't look very well kept it still looks as if you
+would have no problem living here.  You are in  the main room of the cabin
+and there is only a small table, one chair, and a wood stove.  A door
+leads north into the bedroom and the front door is to the south."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+south to clear_4 descr
+"You see the small clearing.";
+north to cabin_2 descr
+"You see a bedroom in the back of the house.";
+end
+
+cabin_2
+title "Marmacks bedroom"
+names {"cabin_2"}
+descr
+"You have seen some nasty places but this is defiantly the worst.  Dead
+bugs and trash litter the room.  An old dusty bed takes up almost the whole
+north wall and an old stump like night stand sits beside it."
+
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+
+south to cabin_1 descr
+"You see  the main room of the cabin.";
+end
+
+bridge_1
+title "On the end of the footbridge"
+names {"bridge_1"}
+descr
+"You are standing on one end of a humble footbridge spanning a small stream.
+You are not quite over the stream yet  and you notice that the footbridge
+is very big compared to the river.  The bridge is a humble structure   not
+made by extremely professional hands yet it has been well kept over the years.
+You can go east into the foothills or west out onto the bridge and over
+the water."
+
+movement SECT_HILLS
+
+east to path_7 descr
+"You see the path curving through the foothills.";
+west to bridge_2 descr
+"You see the humble bridge spanning out before you.";
+end
+bridge_2
+title "On the middle of the bridge"
+names {"bridge_2"}
+descr
+"You here the soft sounds of the small stream slowly passing beneath the
+humble bridge below your feet.  The bridge seems to crescent here at a high point and
+it is very peaceful here.  The bridge even looks much wider here than it
+does on either end and it even has a bench on both sides.  The
+quiet sound of the river and soft breeze makes you feel safe and secure here.
+You can go either east or west on the bridge."
+
+movement SECT_CITY
+
+west to bridge_3 descr
+"You see one end of the bridge.";
+east to bridge_1 descr
+"You see one end of the bridge.";
+end
+
+bridge_3
+title "On the end of the footbridge"
+names {"bridge_3"}
+descr
+"You are standing on one end of a humble footbridge spanning a small stream.
+You are not quite over the stream yet  and you notice that the footbridge
+is very big compared to the river.  The bridge is a humble structure   not
+made by extremely professional hands yet it has been well kept over the years.
+You can go west into the camp sight or east out onto the bridge and over
+the water."
+
+movement SECT_HILLS
+
+east to bridge_2 descr
+"You see the path curving through the foothills.";
+west to bard_1 descr
+"You see the humble bridge spanning out before you.";
+end
+
+bard_1
+title "Entrance Way"
+names {"bard_1"}
+descr
+"You stand before a tent city of sorts.  Over head flies a royal
+blue flag supported by a skillfully lashed together pole.  The ground
+beneath your feet is well kept grass and small patches of trees and
+bushes block movement to the north and south.  You can make out music and
+laughter coming from the tents.  The soft green path leads into
+the middle of the camp sight to the west and to
+a wooden bridge to the east."
+
+movement SECT_FIELD
+
+east to bridge_3 descr
+"You see a wooden foot bridge.";
+west to bard_2 descr
+"You see the path leading up to the center of camp.";
+end
+
+bard_2
+title "The bards camp"
+names {"bard_2"}
+descr
+"As you walk through the bards camp You are amazed at how well they live in
+these tents.  The camp is set up in a semi-circle around a fire and although
+not guarded by gate guards the feeling of security surrounds this camp.
+To your north and south there are tents and to the west the path circles a fire
+pit."
+
+movement SECT_FIELD
+
+west to bard_3 descr
+"you see the bards path going around the fire pit.";
+east to bard_1 descr
+"You see the green path heading up to a bridge.";
+north to tent_1 descr
+"You see a tent to the north.";
+south to tent_2 descr
+"You see a tent.";
+end
+
+bard_3
+title "Around the Fire"
+names {"bard_3"}
+descr
+"You stand at the center of the camp or rather around the center of camp.
+The fire that burns before you seems to have been here before the bards
+even pitch the first tent.  You can head around the fire pit to the west
+and to the south.  To the east is the path out of the camp while to the
+north is an area for travelers to pitch there tent ."
+
+movement SECT_FIELD
+
+west to bard_4 descr
+"You see the path curving around the fire pit.";
+east to bard_2 descr
+"You see the path heading out of the camp.";
+
+south to bard_6 descr
+"You see the path curving around the fire pit.";
+north to camp_1 descr
+"You see a small patch of grass for tents.";
+end
+
+bard_4
+title "Around the Fire pit"
+names {"bard_4"}
+descr
+"The path around the large fire pit curves south to east here and
+a tent stands to the north.  The large tent seems to glow as if it was made
+from pure white lace and musical sounds can be heard from inside.  You can
+continue around the pit to the east or south or enter the tent to the north.  To
+the	west is also another area for travelers to pitch their tent and rest."
+
+movement SECT_FIELD
+
+north to tent_3 descr
+"You see a magical looking tent.";
+east to bard_3 descr
+"You see the path around the fire pit.";
+
+west to camp_3 descr
+"You see an area for travelers to set up camp.";
+south to bard_5 descr
+"You see the path around the pit passing in front of the largest tent in camp:";
+end
+
+bard_5
+title "Around the Fire pit"
+names {"bard_5"}
+descr
+"The fire pit path widens slightly here as if it is some kind of meeting area.  To
+the west stands the largest tent you have seen.  The tent is laced with bright
+ribbons and held up by well carved stakes and poles.  To the south also stands
+a tent yet it is not as grand.  The path curves around the fire pit to the
+north and east or you can enter the tents to the west and south."
+
+movement SECT_FIELD
+
+north to bard_4 descr
+"You see the path leading up to a magical looking tent.";
+east to bard_6 descr
+"You see the path continuing around the fire.";
+west to tent_5 descr
+"You see a large and spender tent.";
+south to tent_4 descr
+"You see a tent.";
+end
+
+bard_6
+title "Around the Fire pit"
+names {"bard_6"}
+descr
+"You have come to the far southeastern corner of the fire pit. You can see
+the wall of one of the tents to the east and to the south is another open
+area where fellow travelers can place there tents.  The path around the
+fire pit heads both to the north and west."
+
+movement SECT_FIELD
+
+west to bard_5 descr
+"You see the path leading up to one of the largest tents in camp.";
+north to bard_3 descr
+"You see the fire pit path curving around d the fire.";
+south to camp_5 descr
+"You see room for more tents.";
+end
+
+camp_1
+title "Rest Area"
+names {"camp_1"}
+descr
+"You are standing just off the fire pit path on soft green grass perfect for
+setting up your own tent the open area stretches a little ways to the east
+but is blocked to the north by short trees and bushes.  You can continue to the east
+or head back towards the fire to the south."
+
+movement SECT_FIELD
+
+south to bard_3 descr
+"You see the path curving around the fire pit.";
+east to camp_2 descr
+"You see more of the rest area.";
+
+end
+
+camp_2
+title "Rest area"
+names {"camp_2"}
+descr
+"The rest area ends here at the back of one of the bards tents to the south.
+The small forests trees to the north blocks movement to both the east and
+north direction.  The rest area extends back to the west."
+
+movement SECT_FIELD
+west to camp_1 descr
+"You see the rest area and the fire pit path.";
+end
+
+camp_3
+title "Rest area"
+names {"camp_3"}
+descr
+"You are standing just north of the largest tent in the bards camp.  The
+area is perfect for you to set up your own tent and rest for a while.  The
+trees of the surrounding forest block movement to the west but you can head
+north deeper into the rest area.  The path around the fire pit is just east of
+here."
+
+movement SECT_FIELD
+
+east to bard_4   descr
+"You see the path curving around the fire pit.";
+north to camp_4 descr
+"You can see more of the rest area.";
+end
+
+camp_4
+title "Rest area"
+names {"camp_4"}
+descr
+"This seems to be one of the better spots to set up a small tent in fact
+it looks as if someone beat you to it.  To the west sits a small and sturdy tent and
+you can see the side of the magical tent to the east.  The small forest surrounding the
+camp sight blocks your way to the north while the rest area heads back to
+the pit to the south."
+
+movement SECT_FIELD
+south to camp_3 descr
+"You see more of the rest area.";
+
+west to tent_6 descr
+"You see the entrance to a tent.";
+end
+
+camp_5
+title "Rest area"
+names {"camp_5"}
+descr
+"This is one of the smaller rest areas for travelers in camp.  The rest area
+might have been bigger at once but the eastern part is piled in logs and
+wood for the fire.  On the west side of the rest area you can see the side of a tent and to the
+south your way is blocked by trees.  You can return to the fire pit path
+to the north."
+
+movement SECT_FIELD
+
+north to bard_6 descr
+"You see the fire pit path curving around the fire.";
+end
+
+
+tent_1
+names {"skill tent"}
+title "The training tent"
+descr
+"This tent is extremely large and smells a lot like old sweat.  There are
+mats for practicing all the defensive skills of a bard.  While ropes and
+all kinds of practice equipment line the rooms.  Small bowls of incense
+sit in the corners in an attempt to get rid of
+the musty smell.  The south flap of this tent leads back to the path."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+south to bard_2 descr
+"You see the path that enters the bard camp.";
+end
+tent_2
+names {"weapon tent"}
+title "Bards weapon storage tent"
+descr
+"Like the other tents in this camp this tent is very large yet even with
+its size it feels cramped.  Armor and weapons are stacked all around you.
+Judging by the condition of this room the Bards armorer
+is not the neatest person in the world.  Both the north and south flap on
+this tent are open."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+south to weapon_tr descr
+"You see the training grounds for the bards weapons master.";
+north to bard_2 descr
+"You see the Path that leads into the Bards camp.";
+end
+
+weapon_tr
+names {"weapons ground"}
+title "The weapons training ground"
+descr
+"This large closed in space is perfect for training your weapon skills.
+Trees surround a ring of dirt making it a perfect place to practice hand
+to hand  combat.  Old cut up dummies and large cut marks in the trees let
+you know that this training ground is well used.  You can head north back into the weapons tent."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+north to tent_2 descr
+"You see the weapons and armor storage tent.";
+end
+
+tent_3
+names {"bard spell"}
+title "The musical instruction tent"
+descr
+"This tent truly looks to have been made from pure silk.  Colorful
+ribbons made of silk decorate the tent as if it was a royal hall.  A soft
+melody can be heard from all around almost as if the tent was enchanted
+by some strong magic.  Small soft pillows line the floor of the tent and
+make a perfect place to come and relax and learn.  The south flap of this
+tent leads back to the path around the fire pit."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+extra {"pillows","pillow"}
+"Some small some big but yup these are pillows.  Some are even stacked and
+attached to one another to form large sitting chairs."
+
+extra {"chairs","chair"}
+"What can I say they are chairs made of pillows."
+
+south to bard_4 descr
+"You see the path around the fire pit.";
+end
+
+tent_4
+
+names {"Ability tent"}
+title "The tent of higher learning"
+descr
+"This tent is not as big as the others in the camp but serves a large
+purpose.  A small work out area in one corner is perfect for training
+your strength and dexterity.  While closer to the front of the tent is an
+area with many puzzles and books for helping your mental abilities.  There
+is even a large mirror to help you get your appearance up.  You can go
+through the north flap to the path around the fire pit."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+north to bard_5 descr
+"You see the path around the fire pit.";
+end
+
+tent_5
+names {"master tent."}
+title "The master Bards tent"
+descr
+"This tent reminds you a lot of a royal house.  Banners and silk ribbons
+line the inside of the tent and there are two benches covered in pillows
+on the north and south wall.  The main room of the tent is through a flap
+to the west and the flap to the east leads back  to the path around the fire
+pit."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+east to bard_5 descr
+"You  see the path around the fire pit.";
+west to tent_52 descr
+"You see the masters study.";
+end
+
+tent_52
+names {"master room"}
+title "The Bards master's tent"
+descr
+"This part of the tent is not as grand as the entrance.  The bards master
+must be a humble person.  There is only a small cot and an old oak chair with
+a writing table next to it.  Many scrolls and tomes sit  on the table and
+look well used.  You can leave back towards the fire pit to the west."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+east to tent_5 descr
+"You see the entrance to the master's tent.";
+
+end
+
+tent_6
+names {"Bards bar"}
+title "The bards bar"
+descr
+"This is a newly set up tent it is not half the size of others in the camp.
+While it is smaller it seems to be a popular place for the Bards to come and
+tell stories and talk.  There is a small bar along the north side of the tent
+and plenty of room to sit and chat. You can go through the flap to the east
+into the bards camp."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+east to camp_4 descr
+"You see the Bards camp sight.";
+end
+%mobiles
+scorp
+title "a Manscorpion"
+names {"manscorpion","scorpion"}
+descr "A manscorpion is standing here."
+extra {}
+"The manscorpion has the upper body of a human and the lower body of a
+scorpion."
+M_SPIDER_GIANT(SEX_MALE)
+special SFUN_RANDOM_ZONE_MOVE time 120 bits
+SFB_RANTIME
+
+end
+
+
+hook_horror
+title "a Hook Horror"
+names {"hook horror", "horror","hook"}
+descr "A hook horror is lurking here."
+extra {}
+"The hook horror looks like a cross between a human and a vulture with
+hooks on it's hands."
+ M_VULTURE(SEX_MALE)
+level 10
+end
+
+brain_mole
+title "a Brain Mole"
+names {"brain mole","mole"}
+descr "A brain mole is standing here."
+extra {}
+"A small furry nearly blind creature."
+M_RAT_GIANT(SEX_MALE)
+special SFUN_RANDOM_ZONE_MOVE time 120 bits
+SFB_RANTIME
+
+end
+
+
+lamia
+title "a Lamia"
+names {"lamia"}
+descr "A lamia is standing here."
+extra {}
+"The lamis has the trunk of a lion and the upper body of a beautiful woman."
+M_LION_MOUNTAIN
+sex SEX_FEMALE
+end
+
+liger_male
+names {"liger"}
+title "the liger cub"
+descr "A liger cub is playing here."
+extra {}
+"This cute half lion half tiger is having a blast playing with anything it
+finds."
+M_LION_MOUNTAIN
+race RACE_TIGER
+sex SEX_MALE
+level 7
+end
+liger_female
+names {"liger"}
+title "the liger cub"
+descr "A liger cub is playing here."
+extra {}
+"This cute half lion half tiger is having a blast playing with anything it
+finds."
+M_LION_MOUNTAIN
+race RACE_TIGER
+sex SEX_MALE
+level 8
+special SFUN_AGGRESSIVE "$1n pounces $3n!" time 160 bits
+SFB_RANTIME
+special SFUN_RANDOM_ZONE_MOVE time 120 bits
+SFB_RANTIME
+
+end
+liger_dad
+names {"liger"}
+title "a liger male"
+descr "A liger is sitting here watching his cubs."
+extra {}
+"This half lion half Tiger is not as cute as his cubs and does not seem
+pleased with your presence here."
+M_LION_MOUNTAIN
+race RACE_TIGER
+sex SEX_MALE
+level 10
+end
+liger_mom
+names {"liger"}
+title "a liger female"
+descr "A liger is hunting here."
+extra {}
+"This half lion half tiger seems to be out looking for food for here
+family.  Hopefully it won't be you."
+M_LION_MOUNTAIN
+race RACE_TIGER
+sex SEX_MALE
+level 12
+end
+
+hermit
+title "marmack"
+descr "Marmack the hermit is here whittling on his staff."
+names {"marmack the hermit","marmack","hermit"}
+extra {}
+"This old dwarf looks to have seen better days his  clothes are shabby
+and his hair is dark black and unkempt.  He looks you over with a one tooth
+smile and goes back to carving on his staff."
+M_DWARF_WARRIOR_POLE (20,SEX_MALE)
+money 20 IRON_PIECE
+end
+
+	 %objects
+
+		log_bridge
+
+names {"old log","log"}
+title "an old long sturdy log"
+descr "An old sturdy log lays here."
+extra {}
+"This old log looks as if it would be perfect to use for a small foot
+bridge.  If you want to span some kind of distance with it
+just type:  'drop log'"
+type ITEM_TRASH
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 30
+cost 20 IRON_PIECE
+
+dilbegin log_drop ();
+var
+item:unitptr;
+code
+{
+:start:
+heartbeat := PULSE_SEC*5;
+
+wait (SFB_DONE,	((command (CMD_DROP)) and
+(self ==medium)));
+
+if ((self.outside!=findroom("cv_2@foothill")) and
+(self.outside!=findroom ("cv_3@foothill")))
+goto wrongroom;
+log ("The drop dil started");
+item:=self.outside.inside;
+while (item)
+{
+if (item==self)
+{
+item:=item.next;
+continue;
+}
+		 if (self.idx==item.idx)
+{
+act ("As you drop the log you realize in horror that there was no room for "+
+"it.  The log you dropped hits the log spanning the cavern and tumbles into "+
+"the endless pit.",
+	A_SOMEONE, activator, null, null, TO_CHAR);
+	destroy (self);
+	goto start;
+	}
+	item:=item.next;
+	}
+
+item:=load ("log_bridge@foothill");
+item.outside_descr:="A log spanning the cavern has been placed here.";
+dilcopy ("drop_act@foothill",item);
+if (self.outside==findroom("cv_3@foothill"))
+  link (item,findroom ("cv_2@foothill"));
+if (self.outside==findroom("cv_2@foothill"))
+  link (item,findroom ("cv_3@foothill"));
+
+act ("The log spins magically in place.",
+	A_SOMEONE, activator, null, null, TO_ALL);
+self.outside_descr:="A log spanning the cavern has been placed here.";
+goto start;
+
+:wrongroom:
+act ("The log spins magically around.",
+	A_SOMEONE, activator, null, null, TO_ALL);
+	}
+	dilend
+
+
+
+dilbegin cross();
+var
+        pc      :       unitptr;
+        room_start    :       unitptr;
+				room_end:unitptr;
+code
+{
+   :start:
+   wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and (command("cross")) and
+   (activator!=self.outside) and
+	 (argument in self.names)));
+   block;
+   pc := activator;
+   secure(pc, lost_pc);
+
+room_start:=self.outside;
+if ((room_start!=findroom ("cv_2@foothill")) and
+	(room_start!=findroom("cv_3@foothill"))) goto wrong_room;
+
+if (room_start==findroom("cv_2@foothill"))
+	room_end:=findroom("cv_3@foothill");
+	else if (room_start==findroom("cv_3@foothill"))
+	room_end:=findroom("cv_2@foothill");
+
+act ("You step bravely out on the log bridge and cross over to the other side.",
+A_ALWAYS,pc, null,null,TO_CHAR);
+act ("$1n steps bravely out on the log bridge and crosses over to the other side.",
+A_SOMEONE,pc, null,null,TO_REST);
+link (pc,room_end);
+exec ("look",pc);
+act ("$1n crosses over the log bridge from the other side and steps onto the ledge.",
+A_SOMEONE,pc, null,null,TO_REST);
+   unsecure(pc);
+								 goto start;
+:wrong_room:
+act ("You quickly cross the log screaming, 'Weeeeee "+
+"look at me as you wave your hands",
+A_ALWAYS,pc, null,null,TO_CHAR);
+
+act ("$1n quickly crosses the log screaming, 'Weeeeee "+
+"look at me as$1e waves $1m hands",
+A_SOMEONE,pc, null,null,TO_REST);
+unsecure (pc);
+goto start;
+   unsecure(pc);
+   :lost_pc:
+   goto start;
+}
+dilend
+
+
+dilbegin log_get ();
+var
+lg:unitptr;
+code
+{
+:start:
+heartbeat := PULSE_SEC*5;
+
+wait (SFB_CMD,  ((command (CMD_GET)) and
+(activator!=self.outside) and
+(argument in self.names)));
+												 lg:=self.outside.inside;
+												 while (lg)
+												 {
+if ((self.outside!=findroom("cv_3@foothill")) and
+(self.outside!=findroom("cv_2@foothill"))) goto start;
+
+												 if (lg==self)
+{
+  secure (lg,lostlog);
+	block;
+	goto right_room;
+	}
+	lg:=lg.next;
+													}
+													goto start;
+
+:right_room:
+  sendtoalldil ("destroylog","other_get@foothill");
+link (lg,activator);
+act ("You pull and pull and finally manage to lift the log.",
+	A_SOMEONE, activator, null, null, TO_CHAR);
+	self.outside_descr:="An old sturdy log lays here.";
+unsecure (lg);
+goto start;
+
+:lostlog:
+unsecure (lg);
+goto start;
+
+}
+dilend
+
+
+dilbegin  other_get ();
+code
+{
+heartbeat := PULSE_SEC*5;
+interrupt (SFB_MSG,"destroylog",dest);
+:start:
+wait (SFB_MSG, (argument =="destroy"));
+:dest:
+			 if (activator==self) goto start;
+if ((self.outside!=findroom("cv_3@foothill")) and
+(self.outside!=findroom("cv_2@foothill"))) goto start;
+
+
+
+					dilcopy ("get_act@foothill",self.outside);
+	destroy (self);
+	}
+	dilend
+
+end
+
+
+firepit
+
+names {"fire pit" , "fire", "pit"}
+title "the glowing fire pit"
+descr
+"A magically glowing fire pit filled with colorful hot embers and very little ash is burning here."
+
+manipulate {MANIPULATE_ENTER}
+CONTAINER_DEF(5000)
+extra {}
+"The magical fire enchants you and even though it burns wood you get the
+feeling if it was not fed for weeks it would still burn brightly.  Magical
+lights dance blue, red and even green as you watch he fire flicker."
+special SFUN_DEATH_ROOM "10" time WAIT_SEC * 5
+
+end
+
+			 staff
+
+names {"staff"}
+title "a staff"
+descr "a well decorated staff is lying here."
+extra{}
+"This looks to have been someone's pride and joy..  The staff is all hand
+carved but is not finished.  Someone must have bumped off the maker before he
+could finish.  The carvings tell a mysterious tail about how some dwarf
+had created a dark weapon and hid it but after that the stick is blank to
+bad it was never finished."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_QUARTERSTAFF,2,0)
+weight 5
+cost 1 SILVER_PIECE
+end
+knife
+names {"carving knife","knife"}
+title "a carving knife"
+descr "A small carving knife is here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_DAGGER, -8, 0)
+weight 2
+cost 3 COPPER_PIECE
+end
+
+%reset
+
+load log_bridge into pool@trees max 5
+
+load scorp into cv_10 max 2
+load hook_horror into cv_16 max 4
+load hook_horror into cv_17   max 4
+
+load lamia into cv_14 max 4
+load lamia into cv_15 max 4
+load brain_mole into cv_6 max 6
+load brain_mole into cv_8 max 6
+load brain_mole into cv_9 max 6
+
+
+load liger_male into path_9
+load liger_male into path_9
+load liger_female into path_9
+load liger_dad into path_9
+load liger_mom into path_14
+
+load hermit into cabin_2
+{
+equip knife WEAR_WIELD
+equip staff WEAR_HOLD
+}
+load firepit into bard_3
+load firepit into bard_4
+load firepit into bard_5
+load firepit into bard_6
+%end
+

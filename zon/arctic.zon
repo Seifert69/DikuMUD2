@@ -1,0 +1,2252 @@
+/*
+filename    arctic
+password    graknar
+changedby   Saor
+EmailAdd     saor@Maestro.COM (Morgan Schafer)
+request     compile
+version     19
+END HEADER*/
+
+
+#include <composed.h>
+#define WOLF_ONGOING  "Wolf Cloak Ongoing"
+#define WOLF_COMPLETE "Wolf Cloak Complete"
+#define RACE_SEAL 1123
+#define ROOM_INSIDE movement SECT_INSIDE \
+                    flags {UNIT_FL_NO_WEATHER,UNIT_FL_INDOORS} \
+                    ALWAYS_LIGHT
+
+%zone arctic
+title "Arctic"
+creators {"Zandar","Rexor"}
+lifespan 23
+reset RESET_ANYHOW
+notes
+"This zone is an expanse of arctic wastes suitable for characters above
+level 16. A small dwarven outpost exists where supplies can be found. The
+lich in the spire was added by Rexor for levels 21+.&n
+E-MAILS: Zandar- benjamin.ford@rose-hulman.edu   Rexor- msantilli@vgi1.com"
+help
+"A deep cold has been laid over this part of the land, creating an arctic
+tundra. Several animals have adopted to the environment and it is told that
+civilization may even flourish there."
+
+%dil
+
+dilbegin no_magic();
+code
+{
+:start:
+wait(SFB_CMD,(activator.type==UNIT_ST_PC) and command(CMD_CAST));
+act("This room is a dead magic zone!",A_ALWAYS,activator,null,null,TO_CHAR);
+block;
+goto start;
+}
+dilend
+
+dilbegin wind_chill();
+var
+  u: unitptr;
+code
+{
+heartbeat:=PULSE_SEC*30;
+on_activation(self.position!=POSITION_STANDING,skip);
+:start:
+wait(SFB_CMD,activator.type==UNIT_ST_PC);
+foreach (UNIT_ST_PC,u) {
+  if ((u!=self) and (u.level<IMMORTAL_LEVEL) and rnd(0,4)) {
+    act("You are chilled by a sudden gust of
+wind.",A_ALWAYS,u,null,null,TO_CHAR);
+    act("$1n is chilled by a sudden gust of
+wind.",A_SOMEONE,u,null,null,TO_REST);
+    u.hp:=u.hp-rnd(1,5);
+    position_update(u); } }
+pause;
+goto start;
+}
+dilend
+
+dilbegin door_close();
+code
+{
+heartbeat:=PULSE_SEC*120;
+:start:
+wait(SFB_TICK, not isset(self.exit_info[SOUTH],EX_CLOSED));
+act("The hole opened in the boulders closes
+shut.",A_ALWAYS,self.inside,null,null,TO_ALL);
+act("The hole opened in the boulders closes
+shut.",A_ALWAYS,self.exit_to[SOUTH].inside,null,null,TO_ALL);
+set(self.exit_info[SOUTH],EX_CLOSED);
+set(self.exit_to[SOUTH].exit_info[NORTH],EX_CLOSED);
+goto start;
+}
+dilend
+
+dilbegin norak_request();
+var
+  item: unitptr;
+  pc:   unitptr;
+  i:    integer;
+  exdp: extraptr;
+code
+{
+heartbeat:=PULSE_SEC*3;
+:start:
+wait(SFB_CMD,(activator.type==UNIT_ST_PC) and
+             (not(WOLF_COMPLETE in activator.quests)));
+pc:=activator;
+secure(pc,lostpc);
+if (WOLF_ONGOING in pc.quests) goto quest_ongoing;
+exec("say Ahh! Another arctic adventurer.", self);
+pause; exec("say How are you faring "+pc.name+"?",self);
+pause; exec("say I be a dwarven furrier honing my cloak making skills.",self);
+pause; exec("sigh",self);
+pause; exec("say I work too fast and have exhausted my wolf pelts.",self);
+pause; exec("say Hmm... you don't appear to have set up camp yet.",self);
+pause; exec("say Could you save me the trouble and fetch one for me?",self);
+pause; exec("say I won't be needing the finished product, you could have
+it",self);
+pause; exec("say Nod if so, shake your head otherwise.",self);
+
+:accept_loop:
+wait(SFB_CMD,activator==pc);
+if (command(CMD_NOD)) goto quest_accepted;
+else if (command(CMD_SHAKE)) goto no_quest;
+else {
+  exec("say Nod if so, shake your head otherwise.", self);
+  goto accept_loop; }
+
+:no_quest:
+exec("say So be it! Be off and never speak to me again.", self);
+unsecure(pc);
+goto start;
+
+:quest_accepted:
+addextra(pc.quests,{WOLF_ONGOING},"");
+exec("say Hurry back friend!  Oh... by the way...",self);
+pause; exec("say I also need a ice jewel, a ice shard, and a yellow
+flower.",self);
+unsecure(pc);
+goto start;
+
+:quest_ongoing:
+exdp:=WOLF_ONGOING in pc.quests;
+if (("pelt" in exdp.names) and
+    ("jewel" in exdp.names) and
+    ("shard" in exdp.names) and
+    ("flower" in exdp.names)) {
+  pause;
+  subextra(pc.quests,WOLF_ONGOING);
+  addextra(pc.quests,{WOLF_COMPLETE},"");
+  experience(1000,pc);
+  item:=load("cloak_wolf@arctic");
+  item.height:=pc.height;
+  link(item,pc);
+  exec("say Here, I have made this special wolf cloak for you.",self);
+  act("Norak gives you a white wolf cloak.",A_SOMEONE, pc, null, null,
+TO_CHAR);
+  act("Norak gives $1n a white wolf cloak.",A_SOMEONE, pc, null, null,
+TO_REST);
+  pause; exec("say You have been a great help "+pc.name,self); }
+unsecure(pc);
+goto start;
+
+:ohno_combat:
+exec("emote screams 'You will die in the name of Dwarven Honor!'",self);
+pause;
+goto start;
+
+:lostpc:
+exec("say Thankless fools!", self);
+goto start;
+}
+dilend
+
+dilbegin norak_give();
+var
+  pc:   unitptr;
+  item: unitptr;
+  exdp: extraptr;
+code
+{
+heartbeat:=PULSE_SEC*3;
+:start:
+wait(SFB_DONE,command(CMD_GIVE) and
+              (target==self) and
+              (activator.type==UNIT_ST_PC) and
+              (WOLF_ONGOING in activator.quests));
+:give:
+pc:=activator;
+item:=medium;
+secure(pc,lostpc);
+exdp:=WOLF_ONGOING in pc.quests;
+
+if ("pelt_wolf@arctic"==(item.nameidx+"@"+item.zoneidx)) {
+  addstring(exdp.names,"pelt");
+  exec("say Thanks "+pc.name+" this is a fine pelt.", self);
+  exec("emote begins curing the pelt.",self);
+  destroy(item); }
+else if ("jewel_ice@arctic"==(item.nameidx+"@"+item.zoneidx)) {
+  addstring(exdp.names,"jewel");
+  exec("say Thanks "+pc.name+" this jewel will do fine.", self);
+  destroy(item); }
+else if ("shard_glowing@arctic"==(item.nameidx+"@"+item.zoneidx)) {
+  addstring(exdp.names,"shard");
+  exec("say Ah yes "+pc.name+" this is the shard I need.", self);
+  destroy(item); }
+else if ("flower_yellow@arctic"==(item.nameidx+"@"+item.zoneidx)) {
+  addstring(exdp.names,"flower");
+  exec("say Thanks, "+pc.name+" for the pretty flower.", self);
+  exec("blush",self);
+  exec("emote slips the flower under his jacket.",self);
+  destroy(item); }
+else {
+  exec("say Thank you "+pc.name+" but I don't need that.", self);
+  link(self.inside,pc); };
+unsecure(pc);
+goto start;
+
+:lostpc:
+exec("say Some fools have no patience.", self);
+goto start;
+}
+dilend
+
+dilbegin fang_wield();
+var
+  bonus: integer;
+code
+{
+heartbeat:=PULSE_SEC*3;
+:start:
+wait(SFB_DONE,command(CMD_WIELD) and
+              (activator==self.outside) and
+              (medium==self));
+if (self.equip==WEAR_WIELD) {
+  act("You feel a tingling coming from the
+$2N.",A_ALWAYS,self.outside,self,null,TO_CHAR);
+  act("Your $2N howls in delight!",A_ALWAYS,self.outside,self,null,TO_CHAR);
+  act("$1N's $2N howls in delight!",A_ALWAYS,self.outside,self,null,TO_REST);
+  bonus:=self.outside.level/15+3;
+  if (bonus>15) bonus:=15;
+  if (bonus<0) bonus:=0;
+  self.value[2]:=bonus; }
+goto start;
+}
+dilend
+
+dilbegin lich_act();
+var
+  n :integer;
+code
+{
+heartbeat:=PULSE_SEC*20;
+on_activation(self.position==POSITION_FIGHTING,skip);
+:start:
+wait(SFB_TICK,self.position>POSITION_SLEEPING);
+exec("emote mumbles to himself as he lifts his head from a thick
+tomb.",self); pause;
+exec("say leave me! I have much research to do!",self); pause;
+exec("say Leave NOW! Or you will die!!!!",self); pause;
+pause;
+goto start;
+}
+dilend
+
+dilbegin duck_squeeze();
+code
+{
+heartbeat:=PULSE_SEC*5;
+:start:
+wait(SFB_CMD,(activator==self.outside) and
+             (command("squeeze")) and
+             (argument in self.names) and
+             (self.equip==WEAR_HOLD));
+block;
+act("You give your $2N a gentle
+squeeze.",A_SOMEONE,self.outside,self,null,TO_CHAR);
+act("$1n gives $1s $2N a gentle
+squeeze.",A_SOMEONE,self.outside,self,null,TO_REST);
+act("The $2N goes 'QUACK!'",A_SOMEONE,self.outside,self,null,TO_ALL);
+goto start;
+}
+dilend
+
+dilbegin recall ice_charger();
+code
+{
+:start:
+heartbeat:=PULSE_SEC*SECS_PER_MUD_DAY/20;
+wait(SFB_TICK,self.equip==WEAR_WIELD);
+heartbeat:=PULSE_SEC*5;
+act("A chill eminates from your grip on
+$2N.",A_ALWAYS,self.outside,self,null,TO_CHAR);
+sendto("add charge",self);
+goto start;
+}
+dilend
+
+dilbegin recall aware percant_bite();
+var
+  enemy :unitptr;
+      n :integer;
+ charge :integer;
+    pwr :integer;
+code
+{
+pwr:=10;
+:init:
+heartbeat:=PULSE_SEC*5;
+charge:=interrupt (SFB_MSG,(self==activator) and
+                           (argument=="add charge"),charge);
+:start:
+wait(SFB_CMD,command("bite") and (self.equip==WEAR_WIELD));
+block;
+enemy:=findunit(self.outside,argument,FIND_UNIT_SURRO,null);
+if (self.outside.fighting and not(enemy)) enemy:=self.outside.fighting;
+if (not(enemy)) goto no_person;
+secure(enemy,start);
+if (pwr<=0) goto fail;
+if (dilfind("safe_room@function",enemy.outside)) goto fail;
+pwr:=pwr-1;
+if (rnd(1,200)<self.outside.weapons[WPN_WAR_HAMMER]+50) {
+
+n:=cast_spell(SPL_FROSTBALL_1,self.outside,self,enemy,"percant_aff@arctic");}
+else {
+  act("The icy fang of $3N shatters as it tries to bite into $2n.",
+      A_SOMEONE,self.outside,enemy,self,TO_CHAR);
+  act("The icy fang of $1n's $3n shatters as it tries to bite into you.",
+      A_SOMEONE,self.outside,enemy,self,TO_VICT);
+  act("The icy fang of $1n's $3n shatters as it tries to bite into $2n.",
+      A_SOMEONE,self.outside,enemy,self,TO_NOTVICT); }
+goto start;
+
+:fail:
+act("You try to bite $2n but $3N is too warm to form the icy fang.",
+    A_SOMEONE,self.outside,enemy,self,TO_CHAR);
+goto start;
+
+:charge:
+clear(charge);
+if (pwr<10) pwr:=pwr+1;
+goto init;
+
+:no_person:
+act("Nothing by that name here.",A_ALWAYS,self.outside,null,null,TO_CHAR);
+goto start;
+}
+dilend
+
+dilbegin percant_death();
+code
+{
+heartbeat:=PULSE_SEC*3;
+:start:
+wait(SFB_COM,command(CMD_AUTO_COMBAT) and
+             (self.equip==WEAR_WIELD) and
+             (self.outside.fighting.hp<10));
+act("$1n's $2n FREEZES $3n to an icicle before SHATTERING!",
+    A_ALWAYS,self.outside,self,self.outside.fighting,TO_NOTVICT);
+act("You swing $2n into $3n, PIERCING the heart with its icy fang!",
+    A_ALWAYS,self.outside,self,self.outside.fighting,TO_CHAR);
+act("The fang FREEZES $3n to an icicle before $2N SHATTERS $3m.",
+    A_ALWAYS,self.outside,self,self.outside.fighting,TO_CHAR);
+act("The icy fang of $1n's $2N pierces your heart.",
+    A_ALWAYS,self.outside,self,self.outside.fighting,TO_VICT);
+act("You go cold and numb, your body turns to ice.  It's time to die!",
+    A_ALWAYS,self.outside,self,self.outside.fighting,TO_VICT);
+self.outside.fighting.hp:=-7;
+pause;
+goto start;
+}
+dilend
+
+dilbegin percant_aff(medi: unitptr, targ: unitptr, hm: integer);
+var
+  str: string;
+code
+{
+str:="insignificantly";
+if (hm>5) str:="slightly";
+if (hm>10) str:="lightly";
+if (hm>15) str:="fairly";
+if (hm>20) str:="seriously";
+if (hm>30) str:="severely";
+if (hm>40) str:="gravely";
+if (hm>50) str:="critically";
+if (hm>60) str:="fatally";
+act("The icy fang of Percant bites $3n $2t.",A_SOMEONE,self,str,targ,TO_CHAR);
+act("$1n's Percant bites $3n $2t.",A_SOMEONE,self,str,targ,TO_NOTVICT);
+act("$1n's Percant bites you $2t.",A_SOMEONE,self,str,targ,TO_VICT);
+return;
+}
+dilend
+
+%rooms
+
+entrance
+title "The Edge of the Plains"
+descr "You have completed the trek through the desolate mountain pass only to
+stand at the edge of a stark arctic plain. The wind chills your body, sending
+shivers down your spine. You wonder how life, if there is any, could manage
+to survive among the snow and ice. A small mark of civilization, a small
+sign, sticks up from the snow."
+extra{"small sign","sign"} "&l
+[===================================]
+ |Dear Citizens,                   |
+ |    The arctic is dangerous for  |
+ |those under level 16.  The evil  |
+ |spire holds even greater danger. |
+ |Please be careful.               |
+ |                    -King Welmar |
+[===================================]
+                |  |
+                |  |
+                |  |"
+extra{"boulders","boulder","pile"} "A pile of boulders."
+movement SECT_HILLS
+OUT_DARK_NON_NOON
+south to moun_tr4@mount open {EX_OPEN_CLOSE, EX_CLOSED}
+      keyword {"boulders","boulder","pile"};
+north to plain_B3 descr "The arctic plain stretches out to the north.";
+east to mountain_A4 descr "You can follow the mountains to the east.";
+west to mountain_A2 descr "You can follow the mountains to the west.";
+dilcopy door_close();
+end
+
+mountain_A2
+title "At the Base of the Mountains"
+descr "The jagged mountain peaks loom to the south and west. Everywhere else
+you look, the near complete blanket of snow fills your vision. The mountains
+help to keep the winds blasting at you full force. Despite these conditions,
+a few shrubs and grass cling to gaps in the snow."
+movement SECT_HILLS
+OUT_DARK_NON_NOON
+north to plain_B2;
+east to entrance;
+end
+
+mountain_A4
+title "At the Base of the Mountains"
+descr
+"The snow continues on in all directions save to the south where the steep
+jagged peaks loom. The wind blasting down from the mountain almost seems
+colder than on the plain if that is possible.  A stunted pine tree bravely
+holds onto a patch of grass."
+movement SECT_HILLS
+OUT_DARK_NON_NOON
+north to norak_tent;
+east to mountain_A5;
+west to entrance;
+end
+
+mountain_A5
+title "At the Base of the Mountains"
+descr
+"The high mountains peaks to the south meet up with a huge glacial wall
+to the east. The wind blasts very hard here, chilling you to the core. A
+few patches a grass can be found among the otherwise total blanket of snow
+on the ground."
+movement SECT_HILLS
+OUT_DARK_NON_NOON
+north to plain_B5;
+west to mountain_A4;
+end
+
+plain_B2
+title "The Great Arctic Plain"
+descr
+"All around you is white, a gleaming white that would be blinding if a
+large amount of sunlight was present.  The wind continues to lash you and
+is starting to numb your mind and reflexes."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+north to plain_C2;
+south to mountain_A2;
+east to plain_B3;
+west to troll_cave;
+end
+
+plain_B3
+title "The Great Arctic Plain"
+descr
+"All around you is white, a gleaming white that would be blinding if a
+large amount of sunlight was present.  The wind continues to lash you and
+is starting to numb your mind and reflexes."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+north to plain_C3;
+south to entrance;
+east to norak_tent;
+west to plain_B2;
+end
+
+plain_B5
+title "The Great Arctic Plain"
+descr
+"   All around you is white, a gleaming white that would be blinding if a
+large amount of sunlight was present.  The wind continues to lash you and
+is starting to numb your mind and reflexes."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+north to plain_C5;
+south to mountain_A5;
+east to wall_B6;
+west to norak_tent;
+end
+
+plain_C1
+title "The Great Arctic Plain"
+descr
+"   All around you is white, a gleaming white that would be blinding if a
+large amount of sunlight was present.  The wind continues to lash you and
+is starting to numb your mind and reflexes.  The snow becomes too deep for
+travel to the west."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+north to plain_D1;
+south to troll_cave;
+east to plain_C2;
+end
+
+plain_C2
+title "The Great Arctic Plain"
+descr
+"   All around you is white, a gleaming white that would be blinding if a
+large amount of sunlight was present.  The wind continues to lash you and
+is starting to numb your mind and reflexes."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+north to blizzard;
+south to plain_B2;
+east to plain_C3;
+west to plain_C1;
+end
+
+plain_C3
+title "The Great Arctic Plain"
+descr
+"   All around you is white, a gleaming white that would be blinding if a
+large amount of sunlight was present.  The wind continues to lash you and
+is starting to numb your mind and reflexes."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+north to edge_D3;
+south to plain_B3;
+east to plain_C4;
+west to plain_C2;
+end
+
+plain_C4
+title "The Great Arctic Plain"
+descr
+"   All around you is white, a gleaming white that would be blinding if a
+large amount of sunlight was present.  The wind continues to lash you and
+is starting to numb your mind and reflexes."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+north to edge_D4;
+south to norak_tent;
+east to plain_C5;
+west to plain_C3;
+end
+
+plain_C5
+title "The Great Arctic Plain"
+descr
+"   All around you is white, a gleaming white that would be blinding if a
+large amount of sunlight was present.  The wind continues to lash you and
+is starting to numb your mind and reflexes."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+north to edge_D5;
+south to plain_B5;
+east to wall_C6;
+west to plain_C4;
+end
+
+plain_D1
+title "The Great Arctic Plain"
+descr
+"   All around you is white, a gleaming white that would be blinding if a
+large amount of sunlight was present.  The wind continues to lash you and
+is starting to numb your mind and reflexes.  What looks like a pool of
+water lies off to the west."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+north to keep_door;
+south to plain_C1;
+east to blizzard;
+west to pool descr "An icy pool lies off toward the west.";
+end
+
+plain_E2
+title "The Great Arctic Plain"
+descr
+"   All around you is white, a gleaming white that would be blinding if a
+large amount of sunlight was present.  The wind continues to lash you and
+is starting to numb your mind and reflexes."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+north to plain_F2;
+south to blizzard;
+east to edge_E3;
+west to keep_door;
+end
+
+plain_F2
+title "The Great Arctic Plain"
+descr
+"   All around you is white, a gleaming white that would be blinding if a
+large amount of sunlight was present.  The wind continues to lash you and
+is starting to numb your mind and reflexes.  The snow becomes too deep to
+traverse to the north.  The great walls of the dwarf keep lies to the
+west."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+south to plain_E2;
+east to edge_F3;
+end
+
+edge_F3
+title "At the Edge of the Rift"
+descr
+"   The blanket of snow comes to a sudden stop eastward, plunging down in a
+deep rift.  The walls of the rift are jagged and too steep to climb.  The
+snow becomes too deep to travel through northward."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+south to edge_E3;
+west to plain_F2;
+end
+
+edge_E3
+title "At the Edge of the Rift"
+descr
+"   The blanket of snow comes to a sudden stop eastward, plunging down in a
+deep rift.  The walls of the rift are jagged and too steep to climb.
+Despite the blinding reflections, you think you see some movement at the
+bottom of the rift."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+north to edge_F3;
+south to edge_D3;
+west to plain_E2;
+end
+
+edge_D3
+title "At the Edge of the Rift"
+descr
+"   The blanket of snow comes to a sudden stop to the northeast, plunging
+down in a deep rift.  The walls of the rift are jagged and too steep to
+climb.  You can follow the rift to the north or east.  The winds seems to
+be pulling down at you as it plunges into the rift."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+north to edge_E3;
+south to plain_C3;
+east to edge_D4;
+west to blizzard;
+end
+
+edge_D4
+title "At the Edge of the Rift"
+descr
+"   The blanket of snow comes to a sudden stop northward, plunging down in a
+deep rift.  The walls of the rift are jagged and too steep to climb.  You
+could follow the rift to the east, but it begins to turn northward to the
+west."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+south to plain_C4;
+east to edge_D5;
+west to edge_D3;
+end
+
+edge_D5
+title "Before the Bridge Across the Rift"
+descr
+"   The blanket of snow comes to a sudden stop northward, plunging down in a
+deep rift.  The walls of the rift are jagged and too steep to climb.
+Strangely enough, there is a bridge leading across the rift.  You wonder
+who would have put a brigde here and who the who is."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+north to bridge;
+south to plain_C5;
+east to edge_D6;
+west to edge_D4;
+end
+
+edge_D6
+title "The Intersection of the Rift and Glacial Wall"
+descr
+"The blanket of snow comes to a sudden stop northward, plunging down in a
+deep rift. The walls of the rift are jagged and too steep to climb. A
+quick glace reveals no path leading down. The great glacial wall looms up
+to your east."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+south to wall_C6;
+west to edge_D5;
+down to rift_1 open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+        keyword {"path"}
+        descr "You have found a path leading down into the rift.";
+SECRET_DOOR_DIFFICULTY(DOWN, 60)
+end
+
+wall_C6
+title "Along the Glacial Wall"
+descr
+"The plain of snow comes to an end to the east as the ground suddenly towers
+up in a huge glacial wall of ice.  The wind peeling down from the ice feels
+especially cold."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+north to edge_D6;
+south to wall_B6;
+west to plain_C5;
+end
+
+wall_B6
+title "Along the Glacial Wall"
+descr
+"The plain of snow comes to an end to the south and east as the ground
+suddenly towers up in a huge glacial wall of ice.  The wind peels down from
+the ice to hit you with an extra-cold blast of air.  A cracked huge shard of
+ice sticks up at bit in front of the wall."
+extra {"snow"} "Its snow, what do you expect?"
+extra {"shard","rift","crack"} "The shard is full of cracks. One of them is
+almost big enough to be called a rift. Perhaps if you looked closely, you
+could find a way to squeeze through it."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+north to wall_C6;
+east to glacier_rift open {EX_OPEN_CLOSE,EX_CLOSED,EX_HIDDEN}
+    keyword {"rift","crack"}
+    descr "A shard of ice juts up right in front of the glacier wall.";
+SECRET_DOOR_DIFFICULTY(WEST,60)
+west to plain_B5;
+end
+
+bridge
+title "The Bridge Across the Rift"
+descr
+"   You stand upon a old wooden bridge spanning the rift.  It almost seem
+like the only thing still holding it together is the coating of ice.  There
+seems to be some sort of path leading from the north end and the snow
+plains spans out to the south.  Looking down, you can see the bottom of the
+rift and wonder if you can make the jump down."
+movement SECT_CITY
+OUT_DARK_NON_NOON
+flags {UNIT_FL_NO_MOB}
+north to out_spire;
+south to edge_D5;
+down to rift_2;
+end
+
+rift_1
+title "In the Rift"
+descr
+"The walls of the rift tower above you. It would be impossible to climb up
+the jagged walls. The wind continuously buffets you as it pours down from the
+top. The rift runs east to west, but ends in the glacial wall to the east. A
+quick glance at the rift walls reveals no obvious path out."
+extra {"glacier","glacial wall"}
+"The glacier towers up to the east, its height dwarving even the walls of the
+rift. The climb up would be impossible from here."
+extra {"rift wall","rift walls","walls","wall"}
+"The rift walls tower up to the north and south. It could be possible to
+climb up and out of here but only if you could find a path, none are
+obvious."
+movement SECT_FIELD
+OUT_DARK_NON_NOON
+up to edge_D6 open {EX_OPEN_CLOSE,EX_CLOSED,EX_HIDDEN} keyword {"path"}
+      descr "It almost looks like a path might lead up out of here.";
+west to rift_2;
+end
+
+rift_2
+title "In the Rift"
+descr
+"   The walls of the rift tower above you.  It would be impossible to climb
+up the jagged walls.  The wind continuously buffets you as it pours down
+from the top.  The rift runs east to west.  Looking up, you see a bridge
+spanning the rift."
+movement SECT_FIELD
+OUT_DARK_NON_NOON
+east to rift_1;
+west to rift_3;
+end
+
+rift_3
+title "In the Rift"
+descr
+"   The walls of the rift tower above you.  It would be impossible to climb
+up the jagged walls.  The wind continuously buffets you as it pours down
+from the top.  The rift turns from the east to the north."
+movement SECT_FIELD
+OUT_DARK_NON_NOON
+north to rift_4;
+east to rift_2;
+end
+
+rift_4
+title "The Rift's End"
+descr
+"   The walls of the rift close in from all directions, save to the south
+from which you came.  The wind pours down and circles around your body.  The
+snow has been shaped into the form of a lair, presumably by whatever beast
+lives here."
+movement SECT_FIELD
+OUT_DARK_NON_NOON
+south to rift_3;
+end
+
+keep_door
+title "Outside the Dwarven Outpost"
+descr
+"Finally you made it. A set of huge double doors guard the way north into the
+dwarven outpost. A set of runes as inscribed upon the doors. The outpost has
+a few windows and, on top, several smokestacks to release the fumes of fire.
+The snow becomes too deep to travel through westward."
+movement SECT_DESERT
+flags {UNIT_FL_NO_MOB}
+ALWAYS_LIGHT
+south to plain_D1;
+east to plain_E2;
+north to keep_rm1 open {EX_OPEN_CLOSE, EX_CLOSED}
+      keyword {"double doors","doors","door"};
+end
+
+keep_rm1
+title "Entrance to the Outpost"
+descr
+"   The blocky stone steps lead back up to the snow.  The stone blocks which
+make up the walls and smooth, if a bit cold, to the touch.  The main passage
+leads northward and a guard post is to the west."
+ROOM_INSIDE
+north to keep_rm3;
+west to keep_rm2;
+south to keep_door open {EX_OPEN_CLOSE, EX_CLOSED}
+      keyword {"double doors","doors","door"};
+end
+
+keep_rm2
+title "Dwarven Guard Post"
+descr
+"   This room has been organized so the guards can quickly respond to any
+threats entering their keep.  Windows give clear view to the main passageway,
+allowing the guards to quickly scan for enemies."
+ROOM_INSIDE
+east to keep_rm1;
+end
+
+keep_rm3
+title "Main Passage"
+descr
+"   This great passage is cut from the stone beneath the layers of ice and
+snow above.  Dwarves busily stroll the passage, heading from one building to
+another.  Two buildings that stand out are the Fur Shop to the east and the
+Blacksmith to the west.  A sign hangs above the Blacksmith shop.  The passage
+continues to the north and south."
+ROOM_INSIDE
+south to keep_rm1;
+east to keep_furshop;
+west to keep_rm5;
+north to keep_rm6;
+extra {"sign"}
+"
+             B L A C K S M I T H    S H O P
+
+           - Armor repaired for a SMALL fee -
+
+"
+end
+
+keep_furshop
+title "Dwarven Fur Shop"
+descr
+"This is a neat fur shop. Items of fur are neatly arranged on shelves and
+racks. There is a variety of items for sale. A counter is set up near the
+east wall where Miko does business. Behind the couter is a archway covered
+by a cloth, presumably the back room is behind there. A sign hangs on the
+wall."
+ROOM_INSIDE
+west to keep_rm3;
+extra {"sign"} "&l
+[=====================]
+ |   Furrier  Shop   |
+ | High Quality Furs |
+ | Provided by Norak |
+[=====================]"
+end
+
+keep_backroom
+names {"back room"}
+title "Back Room of the Fur Shop"
+descr
+"Shelves store extras of all sorts of items sold in the shop. In the back
+corner there is a collection of other goods for the special customers that
+are allowed back here."
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_INDOORS,UNIT_FL_NO_TELEPORT}
+in keep_furshop
+end
+
+keep_rm5
+title "Dwarven Blacksmith"
+descr
+"   The Blacksmith shop is one industrious place.  A large furnace fills the
+room providing heat as dwarven workers bustle around it.  The shop rings out
+with the clangs of metal beating upon metal.  Despite the apparent confusion
+of the works, the items in the shop seem to remain in perfect order.  A sign
+hard from the ceiling near the main desk."
+ROOM_INSIDE
+east to keep_rm3;
+end
+
+keep_rm6
+title "Main Passage"
+descr
+"This great passage is cut from the stone beneath the layers of ice and
+snow above. Dwarves busily stroll the passage, heading from one building to
+another. You notice a supply shop to the west. A passage to the shrine leads
+to the north, and a passage to the east leads to the living quarters.  The
+main passage leads back to the south."
+ROOM_INSIDE
+south to keep_rm3;
+east to keep_rm7;
+west to keep_rm8;
+north to keep_rm9;
+end
+
+keep_rm7
+title "Passage to the Living Quarters"
+descr
+"   This passage leads east and west through the rock.  The eastern edge is
+blocked off with a gate and guard house.  A sign on the gate boldly proclaims
+'CITIZENS ONLY'.  Dwarves bustle about to and from the living quarters."
+ROOM_INSIDE
+west to keep_rm6;
+end
+
+keep_rm8
+title "Dwarven Supply Shop"
+descr
+"   The well-stocked shop is cut in the same blocky style as the rest of the
+keep.  A large wooden counter is to the west.  Various supplies line shelves,
+floor space and hooks around the shop."
+ROOM_INSIDE
+east to keep_rm6;
+end
+
+keep_rm9
+title "Passage to the Shrine"
+descr
+"The passages going to the shrine is fairly narrow, only allowing two people
+to walk side by side. The northing end ends at a door to the shrine. You feel
+a sense of peace coming from the other side of the door."
+ROOM_INSIDE
+north to keep_shrine open {EX_OPEN_CLOSE,EX_CLOSED}
+      keyword {"shrine doors","doors","door"};
+south to keep_rm6 descr "The passage widens as it returns to the main area
+of activities.";
+end
+
+keep_shrine
+title "Shrine to Odin"
+descr
+"You stand in a great circular stone chamber obviously religious in nature.
+No expense, either monatary or time, was spared here from making the
+stonework anything less than perfect. Save for the door to the south, the
+walls are carved with giant murals in honor of Odin. A few feet in from the
+walls, pillars span the height of the chamber. Coals slowly burn in a brazier
+placed in the center of the chamber giving off a soft glow of light. The high
+point of the shrine is the altar slightly to the north of the bazier. A
+feeling of sacredness and peace eminates from the altar. This feeling of
+warmth strangely contrasts the cool air."
+ROOM_INSIDE
+flags {UNIT_FL_SACRED}
+south to keep_rm9 open {EX_OPEN_CLOSE, EX_CLOSED}
+      keyword {"shrine doors","doors","door"};
+end
+
+out_spire
+title "North Side of the Bridge"
+descr
+"   You stand at the north side of the bridge.  A path in the snow leads
+from the bridge to a tall spire to the east.  You feel a sense of dread
+coming from the tower."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+south to bridge;
+east to tall_spire;
+end
+
+tall_spire
+title "At the base of the Spire"
+descr
+"Nestled among a huge curve of snow to the north and east, the base of a huge
+spire suddenly rises from the snow. Designs play upon the spire, cumulating
+with several intertwined points. A sense of sheer dread emanates from the
+tower, making you want to run home to your mommy. A simple wooden door is the
+only visible entrance."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+flags {UNIT_FL_NO_MOB}
+west to out_spire;
+east to spire_rm1 open {EX_OPEN_CLOSE, EX_CLOSED}
+    keyword {"door"} descr "A wooden door.";
+end
+
+spire_rm1
+title "The Bottom of the Spire"
+descr
+"   You are the base of the tall spire.  The walls of the spire are engraved
+with many evil and disgusting icons.  One symbol that is repeated fairly often
+is that an a hideous skull grinning evilly.  A spiral staircase leads further
+up into the spire."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+ALWAYS_LIGHT
+west to tall_spire open {EX_OPEN_CLOSE, EX_CLOSED}
+        keyword {"door"} descr "A wooden door.";
+up to spire_rm2;
+end
+
+spire_rm2
+title "Climbing the Spire"
+descr
+"   The walls of the spire are engraved with many evil and disgusting icons.
+One symbol that is repeated fairly often is that an a hideous skull grinning
+evilly.  A spiral staircase leads further up and down the spire."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+ALWAYS_LIGHT
+up to spire_rm3;
+down to spire_rm1;
+end
+
+spire_rm3
+title "Climbing the Spire"
+descr
+"   The walls of the spire are engraved with many evil and disgusting icons.
+One symbol that is repeated fairly often is that an a hideous skull grinning
+evilly.  A spiral staircase leads further up and down the spire."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+ALWAYS_LIGHT
+up to spire_rm4;
+down to spire_rm2;
+end
+
+spire_rm4
+title "Climbing the Spire"
+descr
+"   The walls of the spire are engraved with many evil and disgusting icons.
+One symbol that is repeated fairly often is that an a hideous skull grinning
+evilly.  A spiral staircase leads further down the spire.  The stairs stop
+at a runed door."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+ALWAYS_LIGHT
+down to spire_rm3;
+up to spire_rm5 open {EX_OPEN_CLOSE,EX_CLOSED,EX_HIDDEN}
+                keyword {"door","runed door"}
+                descr "You have found a secret door to the top of the spire!";
+SECRET_DOOR_DIFFICULTY(UP, 60)
+end
+
+spire_rm5
+title "Apex of the Spire"
+descr
+" As you enter this dark and vile room, the only light here comes from a
+hideous flaming skull suspended in the center of the room.  There is an almost
+unbearable pressure of evil magic that chokes you and makes you tremble and
+cringe in terror. You are amazed at the arcane magic that has hidden this
+immense room from the outside world.  Exits lead east and west out of this
+room."
+extra {"skull", "flaming skull"}
+"You observe a human skull levitating directly in the center of the room.
+In your mind you hear a faint but maniacal voice whispering to you
+--- Leave Now or Perish !!!!!"
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+ALWAYS_LIGHT
+dilcopy no_magic();
+down to spire_rm4;
+east to spire_rm6;
+west to spire_rm7;
+end
+
+spire_rm6
+title "Skeletal Warrior Creation Room"
+descr
+"Against the far wall of this room are old coffins stinking of death.  Body
+parts of humans and dwarfs lie scattered everywhere.  In the center of the
+room is a large cauldron full of a bubbly green slime.  A person, or what is
+left of one, dangles from chains over the pot.  The green liquid is slowly
+corroding his skin as the so called person emits a final blood curdling
+scream.
+You notice an exit to the west and to the north."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+ALWAYS_LIGHT
+dilcopy no_magic();
+north to spire_rm9;
+west to spire_rm5;
+end
+
+spire_rm7
+title "Scrag Breeding Room"
+descr
+"You have walked into a mist filled room which you note is unusually warm for
+this arctic area.  You see hundreds of tiny pods covering the floor.  This is
+a breeding ground for the dreaded scrags.  Even though it is warm in here,
+you shiver remembering that there is usually a mother and father near the
+nest.  You observe exits to the north and east."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+ALWAYS_LIGHT
+dilcopy no_magic();
+north to spire_rm8;
+east to spire_rm5;
+end
+
+spire_rm8
+title "Ancient Library"
+descr
+"Again you have entered a deceptively large room which is covered from the
+ruby red floor to the dark ceiling with shelves filled with thousands of
+ancient tomes.  Each shelf is packed tightly with volumes written in an
+archaic tongue far too advanced for your simple intellect.  There is a
+corridor exiting to the east and a room to the south."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+dilcopy no_magic();
+south to spire_rm7;
+east to spire_rm10;
+end
+
+spire_rm9
+title "Ancient Laboratory"
+descr
+"You have entered the largest laboratory that you have ever seen.  Along the
+far wall there are at least 500 vials of assorted substances on the wall.
+Tables with vials of bubbling substances are all around the room.  This room
+is a dream for any alchemist.  You see a hallway exit to the west and another
+large room to the south."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+dilcopy no_magic();
+south to spire_rm6;
+west to spire_rm10;
+end
+
+spire_rm10
+title "Long Dark Hallway"
+descr
+"You have entered a long and dark hallway.  Far to west you see a pinpoint of
+light.  The light from your spells can trace the outline of many evil and
+disgusting icons along the walls.  A giant skull covers part of the south wall
+and a pentagram is traced along the north one. "
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+dilcopy no_magic();
+south to spire_rm11
+      open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+      keyword {"wall","skull"}
+      descr "You have found a secret door to the south";
+SECRET_DOOR_DIFFICULTY(SOUTH, 90)
+west to spire_rm8;
+east to spire_rm9;
+end
+
+spire_rm11
+title "The Evil Lich Room"
+descr
+"As you step in to this room, you know that you are in trouble.  You see a
+decayed person sitting on a golden throne.  You tremble because you know that
+this is the home of this ancient and powerful mage.  Standing to his left and
+right are the wispy shapes of his spectre bodyguards."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS,UNIT_FL_NO_TELEPORT}
+movement SECT_FIELD
+ALWAYS_LIGHT
+flags {UNIT_FL_SACRED}
+north to spire_rm10;
+end
+
+norak_tent
+title "A Tent pitched up in the Snow"
+descr
+"   A sign of civilization, a small tent, has been erected here.  The tent
+has no side walls, presumably to avoid being buffeted by the wind.  A few
+objects used to stay alive, are placed in the tent, and somehow don't blow
+away.  A few icons of Odin are among the items.  A feeling of warmth
+emanates from a small fire."
+movement SECT_FIELD
+ALWAYS_LIGHT
+flags {UNIT_FL_SACRED}
+south to mountain_A4;
+north to plain_C4;
+east to plain_B5;
+west to plain_B3;
+end
+
+glacier_rift
+title "In the Strange Shard"
+descr
+"   You are in the rift of the glacier tip.  Beams of light reflect about
+you by imperfections in the ice.  The ice shields you from the buffeting
+winds but chills you just the same."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+OUT_DARK_NON_NOON
+west to wall_B6
+        open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+        keyword {"rift","crack"}
+        descr "You have found a rift in the glacier!";
+SECRET_DOOR_DIFFICULTY(WEST, 20)
+end
+
+troll_cave
+title "A Cave in the Mountains"
+descr
+"   The mountains loom around you, cutting off all exits save to the north
+and the east.  However, a fairly large cave opens up to the south and leads
+down into the mountain face.  Snow surrounds the entrance and seems to line
+the walls of the caves.  Unfortunately, a large immovable boulder blocks
+the entrance to the cave."
+movement SECT_HILLS
+OUT_DARK_NON_NOON
+north to plain_C1;
+east to plain_B2;
+end
+
+blizzard
+title "In the Heart of a Blizzard"
+descr
+"Snow falls down all around you, erasing your tracks in the snow that you
+made just a little while ago.  You can barely tell where you are going with
+the snowfall obscuring your vision.  You think that you can head in any
+direction."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+north to plain_E2;
+south to plain_C2;
+east to edge_D3;
+west to plain_D1;
+dilcopy scramble@function("north east south west");
+end
+
+pool
+title "By an Icy Pool"
+descr
+"Finally, a variation in the snow. A large pool lies in front of you.
+While the edges are covered by ice, the still water is surprisingly ice
+free in the center. Perhaps it has something to do with the steam slowly
+rising from the water. The steam combined with the cold winds creates a
+very interesting sensation. It is only possible to leave back to the east."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+east to plain_D1 descr "The snow leads off to the east.";
+end
+
+%mobiles
+
+arctic_wolf
+names {"arctic wolf","wolf"}
+title "an arctic wolf"
+descr "A large white wolf searches for suitable prey."
+extra {} "This wolf is of a much bigger breed than those of Haon-Dor Forest.
+         Coming in at four feet tall, it is nearly all white save for the
+         black nose. Noticing you looking, the arctic wolf bars its teeth and
+         softly growls."
+race RACE_WOLF
+level 18
+height 126
+weight 120
+NATURAL_DEF(WPN_BITE,ARM_LEATHER)
+exp 105
+alignment -250
+MSET_ABILITY(20,15,20,20,10,15,0,0)
+MSET_WEAPON(6,6,6,6,15,6)
+MSET_SPELL(4,4,4,4,4,6,3,8,6,6,6)
+special SFUN_AGGRESSIVE time 30*PULSE_SEC
+special SFUN_RANDOM_ZONE_MOVE time 20*PULSE_SEC bits SFB_RANTIME
+end
+
+white_wolf
+names {"ancient white wolf","ancient wolf","white wolf","wolf"}
+title "the Ancient White Wolf"
+descr "The great Ancient White Wolf scans the area."
+extra {} "This great wolf could easily loom over any of the other arctic
+         wolves. Streaks of gray run through its pelt, a sign of its age.
+         Regardless of its age, you have the feeling that it has gained, not
+         lost, strength over time."
+race RACE_WOLF
+sex SEX_MALE
+level 24
+height 190
+weight 320
+NATURAL_DEF(WPN_BITE,ARM_CHAIN)
+exp 150
+alignment -800
+MSET_ABILITY(17,17,16,20,10,10,10,0)
+MSET_WEAPON(5,5,5,5,15,5)
+MSET_SPELL(4,4,4,4,4,6,4,12,6,6,6)
+special SFUN_AGGRESSIVE time 20*PULSE_SEC bits SFB_RANTIME
+dilcopy combat_mag@function("frost breath","",25,2);
+end
+
+ice_lizard
+names {"ice lizard","lizard"}
+title "an ice lizard"
+descr "A white scaled lizard crawls along with a gleam in its eye."
+extra {} "The ice lizard is snow-white, some three feet long. Its scales are
+      tinged in places with a dull silver or the palest blue. Sparkles dance
+      amid the air around its mouth. A strange jewel sits in its forehead."
+race RACE_LIZARD
+sex SEX_MALE
+level 20
+height 200
+weight 300
+NATURAL_DEF(WPN_CLAW,ARM_HLEATHER)
+exp 100
+alignment -500
+MSET_ABILITY(20,14,16,16,10,12,12,0)
+MSET_WEAPON(4,4,4,4,20,4)
+MSET_SPELL(5,5,5,5,5,5,2,13,5,5,5)
+dilcopy combat_mag@function("frostball","",25,3);
+special SFUN_RANDOM_ZONE_MOVE time 20*PULSE_SEC bits SFB_RANTIME
+end
+
+arctic_seal
+names {"arctic seal","seal"}
+title "an arctic seal"
+descr "A snow white seal slides across the snow."
+extra {} "This seal has a fine snow white pelt. It looks so cute and cuddley
+         that you can't barely even begin to consider harming it."
+race RACE_SEAL
+level 18
+height 200
+weight 242
+NATURAL_DEF(WPN_BITE,ARM_HLEATHER)
+alignment 349
+MSET_ABILITY(10,15,10,10,5,50,0,0)
+MSET_WEAPON(6,6,6,6,10,6)
+MSET_SPELL(4,4,4,6,6,6,6,6,6,6,6)
+end
+
+white_pudding
+names {"white pudding","pudding", "snow","patch"}
+title "a white pudding"
+descr "A patch of snow is strikingly odd."
+extra {} "As you look more closely, you can tell that the snow is definitely
+         something else. The color is a bit off, and it seemed to move!"
+race RACE_SLIME
+sex SEX_NEUTRAL
+level 20
+height 20
+weight 20
+NATURAL_DEF(WPN_CRUSH,ARM_CHAIN)
+exp 150
+alignment 0
+MSET_ABILITY(20,15,20,20,10,15,0,0)
+MSET_WEAPON(4,4,4,4,10,4)
+MSET_SPELL(4,4,4,4,4,8,6,12,8,8,8)
+special SFUN_RANDOM_ZONE_MOVE time 20*PULSE_SEC bits SFB_RANTIME
+end
+
+arctic_wind
+names {"arctic wind","air elemental","elemental","wind","air"}
+title "the arctic wind"
+descr "The fierce wind blows particularly cold here."
+extra {} "Looking at wind?  What do you expect to see?"
+race RACE_ELEMENTAL_AIR
+sex SEX_NEUTRAL
+level 17
+height 300
+weight 40
+NATURAL_DEF(WPN_CRUSH, ARM_CHAIN)
+alignment 0
+MSET_ABILITY(15,15,20,20,15,15,0,0)
+MSET_WEAPON(6,6,6,6,14,6)
+MSET_SPELL(5,5,5,5,5,5,3,8,5,5,5)
+flags {CHAR_SNEAK,CHAR_HIDE,UNIT_FL_INVISIBLE}
+special SFUN_RANDOM_ZONE_MOVE time 30 bits SFB_RANTIME
+special SFUN_HIDEAWAY time WAIT_SEC*120
+dilcopy wind_chill();
+end
+
+ice_guardian
+names {"ice guardian","guardian"}
+title "the Ice Guardian"
+descr "The massive Ice Guardian stands guard here."
+extra {} "The Ice Guardian is a massive man-beast, standing over twelve feet
+         tall. Its features are set in the sharp lines of ice. A gleam comes
+         to its eyes as it advances toward you."
+race RACE_AUTOMATON
+sex SEX_NEUTRAL
+level 20
+height 375
+weight 500
+NATURAL_DEF(WPN_FIST,ARM_CHAIN)
+exp 135
+alignment -250
+MSET_ABILITY(20,10,15,15,15,10,15,0)
+MSET_WEAPON(5,13,5,5,12,5)
+MSET_SPELL(4,4,4,4,4,5,5,5,10,5,5)
+special SFUN_AGGRESSIVE time 60 bits SFB_RANTIME
+dilcopy combat_mag@function("lightning bolt","",25,3);
+end
+
+mumak
+names {"mumak"}
+title "a mumak"
+descr "A hairy mumak wanders about searching for grass to graze on."
+extra {} "The mumak is a large, hairy beast. Its shaggy fur is a dusty gray
+         color. The dull gray head is mounted on either side by curving
+         horns. It shambles about peacefully, almost as if it was zoned out."
+race RACE_WORM
+sex SEX_FEMALE
+level 16
+height 500
+weight 600
+NATURAL_DEF(WPN_BITE,ARM_HLEATHER)
+exp 105
+alignment 0
+MSET_ABILITY(15,15,20,20,10,20,0,0)
+MSET_WEAPON(6,6,6,6,14,6)
+MSET_SPELL(5,5,5,5,5,5,3,8,5,5,5)
+special SFUN_RANDOM_ZONE_MOVE time 60 bits SFB_RANTIME
+end
+
+scrag
+names {"scrag"}
+title "a scrag"
+descr "A scrag lopes about snarling."
+extra {} "The scrag is a dwarf sized beast. The splotchy mauve skin
+         complements the glowing deep green eyes. Its bulging muscles allow
+         it to move fairly easily upon its short limbs. Its body is covered
+         in spines and its limbs end in claws."
+race RACE_DWARF
+sex SEX_MALE
+level 30
+height 135
+weight 250
+money 3 SILVER_PIECE, 6 COPPER_PIECE
+NATURAL_DEF(WPN_CLAW,ARM_CHAIN)
+alignment -600
+MSET_ABILITY(20,15,15,25,20,5,0,0)
+MSET_WEAPON(6,6,6,6,18,6)
+MSET_SPELL(4,3,3,3,3,6,6,6,6,6,6)
+end
+
+ice_skeleton
+names {"dwarf skeleton","ice skeleton","skeleton"}
+title "a dwarf skeleton"
+descr "A dwarf skeleton stands here, its bones covered in ice."
+extra {} "The skeleton has the shorter and thicker bones of a dwarf body.
+         The skull, however, has been distorted into a twisted, hideous grin.
+         Points of red light dot the eyes. The bones glisten in the light due
+         to the coating of frost and ice."
+race RACE_SKELETON
+sex SEX_NEUTRAL
+level 29
+height 150
+weight 230
+NATURAL_DEF(WPN_CLAW,ARM_CHAIN)
+alignment -650
+MSET_ABILITY(20,17,18,22,13,10,0,0)
+MSET_WEAPON(6,6,6,6,20,6)
+MSET_SPELL(3,3,3,3,3,6,3,8,6,6,6)
+end
+
+apprentice
+names {"apprentice lich","lich"}
+title "an apprentice lich"
+descr "An apprentice lich is here."
+extra {}
+"This undead creature is learning the ways of evil and death. It stands in
+a rotting robe, its putrid skin pulled tight over old bones. Its face is a
+mask of death, with spots of glowing yellow light where its eyes once were."
+level 24
+race RACE_LICH
+sex SEX_NEUTRAL
+height 120
+weight 115
+NATURAL_DEF(WPN_FIST,ARM_CHAIN)
+exp 150
+alignment -1000
+MSET_ABILITY(10,20,10,20,12,8,20,0)
+MSET_WEAPON(7,7,7,15,7,7)
+MSET_SPELL(2,2,2,2,2,5,5,15,5,5,5)
+dilcopy combat_mag@function("frostball","",25,2);
+money 1 GOLD_PIECE, 7 SILVER_PIECE
+special SFUN_AGGRESSIVE time 90
+end
+
+spectre
+names {"spectre"}
+title "a transparent spectre"
+descr "A transparent looking spectre floats about."
+extra{}
+"This undead creature was created by an immense power.  The almost
+total transparent body has only one purpose for existence:
+TO PROTECT IT'S CREATOR!!!!!"
+level 32
+race RACE_OTHER_UNDEAD
+sex SEX_NEUTRAL
+height 120
+weight 203
+NATURAL_DEF(WPN_CLAW,ARM_CHAIN)
+exp 140
+alignment -1000
+MSET_ABILITY(15,17,13,19,12,12,12,0)
+MSET_WEAPON(5,5,5,5,15,5)
+MSET_SPELL(4,4,4,4,4,5,3,7,15,5,5)
+special SFUN_COMBAT_MAGIC "cast lighting bolt"
+special SFUN_TEAMWORK "lich/spectre"
+special SFUN_RESCUE "lich"
+position POSITION_STANDING
+end
+
+lich
+names {"evil lich","lich"}
+title "an evil lich"
+descr "An evil lich is here."
+extra {}
+"This undead creature is the epitome of evil and death. It stands in a rotting
+robe, its putrid skin pulled tight over old bones. Its face is a mask of
+death, with spots of glowing yellow light where its eyes once were. The
+creature emanates power, and appears extremely dangerous."
+level 34
+race RACE_LICH
+sex SEX_NEUTRAL
+height 120
+weight 115
+NATURAL_DEF(WPN_FIST,ARM_PLATE)
+exp 150
+alignment -1000
+MSET_ABILITY(10,20,10,20,12,8,20,0)
+MSET_WEAPON(7,7,7,15,7,7)
+MSET_SPELL(2,2,2,2,2,5,5,15,5,5,5)
+special SFUN_COMBAT_MAGIC "cast icestorm"
+money 4 SILVER_PIECE, 5 COPPER_PIECE
+position POSITION_STANDING
+default POSITION_STANDING
+special SFUN_AGGRESSIVE time 90
+special SFUN_TEAMWORK "spectre"
+dilcopy lich_act();
+end
+
+dwarf_guard
+names {"dwarven guard","guard","dwarf"}
+title "a Dwarven Guard"
+descr "A dwarf stoicly stands guard here."
+extra {}
+"This dwarf, like many others, has a short burly body and a long beard.  His
+face is set with grim determination."
+M_DWARF_WARRIOR_AXE(26, SEX_MALE)
+money 3 SILVER_PIECE
+weight 250
+end
+
+dwarf
+names {"dwarven citizen","citizen","dwarf"}
+title "a Dwarven Citizen"
+descr "A dwarf citizen wanders about the keep."
+extra {}
+"This dwarf, like many others, has a short burly body and a long beard.  His
+face is set with grim determination."
+M_DWARF_WARRIOR_AXE(25,SEX_MALE)
+weight 250
+money 3 SILVER_PIECE
+special SFUN_RANDOM_ZONE_MOVE time 120 bits SFB_RANTIME
+end
+
+norak
+names {"norak","dwarf"}
+title "Norak"
+descr "Norak, the dwarven furrier is camped out here."
+extra {}
+"This dwarf, like many others, has a short burly body and a long beard. He
+wears the apron of a craftsman around his body. His clothes don't seem that
+thick and you wonder how he could survive out here alone."
+M_DWARF_WARRIOR_SWORD(35,SEX_MALE)
+weight 250
+dilcopy norak_request();
+dilcopy norak_give();
+end
+
+karon
+names {"karon","dwarf"}
+title "Karon"
+descr "Karon, the dwarven blacksmith, is working here."
+extra {}
+"This dwarf, like many others, has a short burly body and a long beard.  He
+wears the apron of a craftsman around his body.  You wonder how he can survive
+the heat of the forge with the heavy clothing that he is wearing."
+M_DWARF_WARRIOR_SWORD(30,SEX_MALE)
+weight 250
+end
+
+chester
+names {"chester","carver","dwarf"}
+title "Chester"
+descr "Chester sits here, fiddling with an ice pick."
+extra {}
+"While burly, this dwarf is not as burly as your average dwarf. His grey
+beard falls down in braids. His hands don't show the callouses of heavy
+work but just some wrinkles of old age, apart from that, they are smooth
+hands of a artist. He looks up at you with squinted icy blue eyes."
+M_DWARF_WARRIOR_SWORD(29,SEX_MALE)
+weight 240
+end
+
+burlof
+names {"ironmonger","Burlof"}
+title "Burlof"
+descr
+"Burlof, the dwarven ironmonger, is here to serve you."
+extra {}
+"This burly dwarf looks well off and quite content with his place in life."
+M_DWARF_CLERIC_HAMMER(25, SEX_MALE, "cast harm", "cast heal")
+weight 250
+money 3 SILVER_PIECE
+alignment 750
+position POSITION_SITTING
+default POSITION_SITTING
+special SFUN_WHISTLE
+special SFUN_SHOP_INIT
+"&lProfit sell = 120
+Profit buy = 80
+Production = ~torch@midgaard~ ~lantern@midgaard~ ~bag@midgaard~   \
+             ~paper@midgaard~ ~quill@midgaard~ ~dictionary@basis~ \
+             ~donut@arctic~ ~spam@arctic~ ~bread@midgaard~
+Trade types = "+ITEM_FOOD+ITEM_TREASURE+ITEM_POTION+ITEM_OTHER+ITEM_TRASH+
+                ITEM_CONTAINER+ITEM_NOTE+ITEM_DRINKCON+ITEM_FOOD+ITEM_PEN+"
+Msg1 = ~$1n says, 'I've got no such item!'~
+Msg2 = ~$1n says, 'Trying to sell me what you don't have, ehh?'~
+Msg3 = ~$1n says, 'Now why would I want to buy that?'~
+Msg4 = ~$1n says, 'Sorry, but I'm short on cash at the moment.'~
+Msg5 = ~$1n says, 'I suppose you want me to get you a loan? BAH!'~
+Msg6 = ~$1n says, 'Ok, it's a deal.~
+Msg7 = ~$1n says, 'Ok, it's a deal.~
+Hours1 = 4 12
+Hours2 = 13 23"
+end
+
+miko
+names {"miko","furrier"}
+title "Miko"
+descr "Miko, wife of Norak the furrier, is here to sell you furs."
+extra {} "Miko is a plump little dwarf woman. While she has a short beard, it
+is only a few inches long compared to the much long style of the males."
+M_DWARF_WARRIOR_SWORD(25,SEX_FEMALE)
+weight 250
+money 3 SILVER_PIECE
+alignment 750
+position POSITION_SITTING
+default POSITION_SITTING
+special SFUN_WHISTLE
+special SFUN_SHOP_INIT
+"&lProfit sell = 130
+Profit buy = 85
+Production = ~vest_fur@arctic~ ~sleeves_fur@arctic~ ~gloves_fur@arctic~ \
+             ~boots_fur@arctic~ ~belt_fur@arctic~ ~coat_mumak@arctic~ \
+             ~coat_seal@arctic~ ~stole_seal@arctic~
+Trade types = "+ITEM_ARMOR+ITEM_WORN+"
+Msg1 = ~$1n says, 'I ain't got one sweet!'~
+Msg2 = ~$1n says, 'Don't try to fool me with you sleight of hand tricks.'~
+Msg3 = ~$1n says, 'This is just a fur shop sweetie'~
+Msg4 = ~$1n says, 'I'd love that hun, but I'm short on funds'~
+Msg5 = ~$1n says, 'You're cute, but I do have a business to run here'~
+Msg6 = ~$1n says, 'Its  yours hun'~
+Msg7 = ~$1n says, 'I'll just go and shelve it now.'~
+Hours1 = 4 12
+Hours2 = 13 23"
+end
+
+katie
+names {"katie","girl"}
+title "Katie"
+descr "Katie, Miko's adopted daughter, is handling the back room."
+extra {} "Katie looks nothing like her mother or father, in fact she is
+human, not dwarven.     She is a cute girl in her late teens. Her dwarven
+haircut and clothing look a bbit odd on her body. She notices you looking
+and smiles."
+M_HUMAN_WARRIOR_SWORD(24,SEX_FEMALE)
+weight 105
+money 3 SILVER_PIECE
+alignment 950
+position POSITION_SITTING
+default POSITION_SITTING
+special SFUN_WHISTLE
+special SFUN_SHOP_INIT
+"&lProfit sell = 130
+Profit buy = 85
+Production = ~swimsuit_seal@arctic~ ~trunks_seal@arctic~
+Trade types = "+ITEM_WORN+"
+Msg1 = ~$1n says, 'Sorry cutie but those sold out.'~
+Msg2 = ~$1n says, 'I'm no ditz, you don't have one of those.'~
+Msg3 = ~$1n says, 'I don't have a use for that silly.'~
+Msg4 = ~$1n says, 'Slip me a platinum and I'll consider it.'~
+Msg5 = ~$1n says, 'You're cute, but I don't give stuff away for free.'~
+Msg6 = ~$1n says, 'Its yours cutie.'~
+Msg7 = ~$1n says, 'Ahh! That goes just back here.'~
+Hours1 = 1 9
+Hours2 = 15 24"
+end
+
+amon
+names {"amon","high priest","priest","dwarf"}
+title "Amon the High Priest"
+descr "Amon the High Priest of Odin stands here."
+extra {}
+"Amon is a fairly old and short dwarf. He has gone partly bald but still has
+his some hair and his beard. His eyes show the great wisdom that he has
+gathered over the years."
+M_DWARF_CLERIC_STAFF(23,SEX_MALE,"cast cause serious","cast cure serious")
+exp 100
+romflags {CHAR_DETECT_INVISIBLE}
+money 1 SILVER_PIECE
+alignment 0
+end
+
+%objects
+
+handaxe_dwarf
+names {"dwarven hand axe","dwarven axe","hand axe","axe"}
+title "a dwarven hand axe"
+descr "A heavy dwarven hand axe has been left here."
+extra {} "This fine-looking hand axe is made by a dwarven blacksmith."
+WEAPON_DEF(WPN_HAND_AXE, 0, 0)
+cost 1 SILVER_PIECE
+weight 6
+end
+
+claymore_dwarf
+names {"dwarven claymore","claymore"}
+title "a dwarven claymore"
+descr "A finely wrought claymore lies on the ground here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_GREAT_SWORD, 0, 0)
+weight 12
+cost 200 COPPER_PIECE
+rent 20 COPPER_PIECE
+dilcopy abi_restrict@function(ABIL_STR,24,0,25,"");
+extra {}
+"The claymore is a nasty great sword designed to cut down enemy ranks
+quickly. The sword is made out of some strange material that seems to hold
+an edge extremely well. The balance of the weapon make is seem that it was
+designed for a body shorter that a human."
+end
+
+fang_wolf
+names {"wolf fang","fang"}
+title "a wolf fang"
+descr "The fang of a great white wolf lies on the ground here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_DAGGER, 0, 0)
+weight 2
+cost 5 SILVER_PIECE
+rent 1 SILVER_PIECE
+extra {}
+"This is a big fang from the maw of a wolf.  It is big enough to be able to
+use the point as a weapon."
+dilcopy fang_wield();
+end
+
+shard_ice
+names {"ice shard","shard"}
+title "a ice shard"
+descr "A ice shard sticks out of the ground here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_SHORT_SWORD, 0, 0)
+weight 5
+cost 5 SILVER_PIECE
+extra {}
+"This is a long shard of ice.  You wonder how it manages to maintain its
+shape without melting.  It looks like it can be used as a short sword."
+end
+
+jewel_ice
+names {"ice jewel","jewel"}
+title "an ice jewel"
+descr "An ice jewel sparkles in the light."
+extra {}
+"The facets of the light blue jewel catch the light and reflect it back as
+beautiful sparkles.  A faint sense of warmth seems to come from the crystal.
+Looking carefully into the crystal you see it contains some kind of liquid."
+manipulate {MANIPULATE_TAKE}
+POTION_DEF(20,SPL_COLD_RESI,SPL_NONE,SPL_NONE)
+weight 1
+cost 8 GOLD_PIECE
+rent 10 GOLD_PIECE
+end
+
+pelt_wolf
+names {"wolf pelt","pelt"}
+title "a wolf pelt"
+descr "A gray-white wolf pelt lies in a heap here."
+extra {} "This pelt could fetch a good price to the right buyer."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_ABOUT}
+type ITEM_WORN
+weight 5
+cost 250 COPPER_PIECE
+rent 25 COPPER_PIECE
+CON_TRANSFER(1)
+dilcopy abi_restrict@function(ABIL_CON,20,0,25,"");
+end
+
+staff_ice
+names {"ice staff","staff"}
+title "an ice staff"
+descr "A clear staff lies here on the ground"
+extra{}
+"This clear staff is of the best quality ever made. It appears to be made of
+ice or a substance of a much more exquisite quality."
+WEAPON_DEF(WPN_QUARTERSTAFF, 1, 1)
+weight 6
+cost 2690 COPPER_PIECE
+rent 269 COPPER_PIECE
+MAG_TRANSFER(+1)
+BRA_TRANSFER(+1)
+dilcopy abi_restrict@function(ABIL_MAG,24,0,25,"");
+end
+
+cloak_wolf
+names {"wolf-skin cloak","cloak"}
+title "the Wolf-Skin Cloak"
+descr "A fine quality wolf-skin cloak lies in a heap."
+extra {} "This thick and warm wolf-skiin cloak has been fashioned by a
+      master craftsman from the finest white wolf pelt. The glowing jewels
+      inset in the trim give it a magical aura."
+extra {"$wear_s"} "As you drape $2n around your body, the spirit of the
+Ancient White Wolf infuses you."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_ABOUT}
+ARMOUR_HRD_LEATHER(6, 3)
+weight 8
+cost 5 SILVER_PIECE
+rent 2 SILVER_PIECE
+spell 50
+HIT_TRANSFER(2)
+SPELL_TRANSFER(SPL_COLD, 4)
+dilcopy quest_restrict@function(WOLF_COMPLETE,0,25,"");
+end
+
+block_ice
+names {"huge ice block","ice block","ice","block"}
+title "a huge ice block"
+descr "A huge ice block sits here."
+extra {} "A huge ice block lies here for some strange purpose. A faint light
+      gleams from its center."
+type ITEM_TRASH
+weight 100000
+cost 2 GOLD_PIECE
+end
+
+shard_glowing
+names {"glowing shard","ice shard","shard"}
+title "a glowing shard of ice"
+descr "A glowing shard of ice is stuck in the ground."
+extra {} "The shard of ice seems to pulsate with its own light."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+LIGHT_DEF(-1,2)
+weight 2
+cost 2 SILVER_PIECE
+end
+
+flower_yellow
+names {"yellow flower","flower"}
+title "a flower"
+descr "A strange yellow flower grows in the ground here."
+extra {} "The flower has a short stem and weird frilly petals."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+type ITEM_TRASH
+weight 1
+cost 1 IRON_PIECE
+end
+
+spam
+names {"can of spam","spam","can"}
+title "a can of Spam (tm)"
+descr "A can of Spam (tm) has been discarded here."
+extra {} "The wonderful can of Spam (tm) is filled with unidentified portions
+      of meat."
+extra {"$identify"} "Even your magics cannot identify the meat."
+extra {"$improved identify"} "Ugh! You don't want to know what this is!"
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+FOOD_DEF(20,0)
+weight 2
+cost 1 SILVER_PIECE
+end
+
+donut
+names {"glazed donut","chocolate donut","donut"}
+title "a glazed chocolate donut"
+descr "Someone has foolishly left a yummy glazed chocolate donut here!"
+extra {}
+"&l
+   .---.
+  /  _  \   (Just pretend that this picture really
+ :  : :  :   looks like a chocolate donut covered
+ :  :_:  :   with a honey glaze.)
+  \     /
+   `---'"
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF(5,0)
+weight 1
+cost 6 GOLD_PIECE, 4 SILVER_PIECE
+end
+
+heart_bloody
+names {"bloody heart","heart","blood"}
+title "a bloody heart"
+descr "Blood slowly oozes from a heart."
+extra {} "This heart appears to of been forcibly removed from its previous
+      owner. Torn off arteries limply dangle from the bloody pulp."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+LIQ_DEF(LIQ_BLOOD,1,12,12,0)
+cost 2 SILVER_PIECE
+end
+
+coat_mumak
+names {"mumak fur coat","mumak coat","fur coat","coat"}
+title "a mumak fur coat"
+descr "A crumpled heap of mumak fur is here."
+extra {} "This is a fine fur coat capable of keeping you warm in the cold. It
+is well made, especially considering the sleek fur orginally came from the
+shaggy mumak."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+type ITEM_WORN
+weight 8
+cost  5   GOLD_PIECE
+rent 16 COPPER_PIECE
+SPELL_TRANSFER(SPL_COLD,2)
+end
+
+coat_seal
+names {"seal fur coat","seal coat","fur coat","coat"}
+title "a seal fur coat"
+descr "A crumpled heap of seal fur is here."
+extra {} "This is a fine fur coat capable of keeping you warm in the cold.
+The fine seal fur gives a hint of elegence to the wearer."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+type ITEM_WORN
+weight 8
+cost 2 PLATINUM_PIECE
+rent 8   COPPER_PIECE
+SPELL_TRANSFER(SPL_COLD,1)
+end
+
+stole_seal
+names {"seal fur stole","seal stole","fur stole","stole"}
+title "a seal fur stole"
+descr "A tangled stole of seal fur is here."
+extra {} "The seal fur makes this fine stole a valueable item indeed. It is
+truely a mark of elegance for its wearer."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_NECK}
+type ITEM_WORN
+weight 2
+cost 1 PLATINUM_PIECE
+end
+
+vest_fur
+names {"heavy fur vest","fur vest","vest"}
+title "a heavy fur vest"
+descr "A heavy fur vest lies in a heap."
+extra {} "This vest has been made from a heavy shaggy pelt. In addition to
+providing warmth, the think fur offers modest protection."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+ARMOUR_HRD_LEATHER(0, 0)
+weight 16
+cost 1 SILVER_PIECE, 1 COPPER_PIECE
+rent 8 COPPER_PIECE
+SPELL_TRANSFER(SPL_COLD,1)
+end
+
+sleeves_fur
+names {"heavy fur sleeves","fur sleeves","sleeves"}
+title "a pair of heavy fur sleeves"
+descr "A pair of heavy fur sleeves lies in a heap."
+extra {} "These sleeves have been made from a heavy shaggy pelt. In addition
+to providing warmth, the think fur also offers modest protection."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_ARMS}
+ARMOUR_HRD_LEATHER(0, 0)
+weight 8
+cost 4 COPPER_PIECE, 5 IRON_PIECE
+end
+
+leggings_fur
+names {"heavy fur leggings","fur leggings","leggings"}
+title "a pair of heavy fur leggings"
+descr "A pair of heavy fur leggings lies in a heap."
+extra {} "These leggings have been made from a heavy shaggy pelt. In addition
+to providing warmth, the thick fur also offers modest protection."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_LEGS}
+ARMOUR_HRD_LEATHER(0, 0)
+weight 8
+cost 4 COPPER_PIECE, 5 IRON_PIECE
+end
+
+gloves_fur
+names {"heavy fur gloves","fur gloves","gloves"}
+title "a pair of heavy fur gloves"
+descr "A pair of heavy fur gloves lies in a heap."
+extra {} "These gloves have been made from a heavy shaggy pelt. In addition
+to providing warmth, the thick fur also offers modest protection."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_HANDS}
+ARMOUR_HRD_LEATHER(0, 0)
+weight 8
+cost 4 COPPER_PIECE, 5 IRON_PIECE
+end
+
+boots_fur
+names {"heavy fur boots","fur boots","boots"}
+title "a pair of heavy fur boots"
+descr "A pair of heavy fur boots lies in a heap."
+extra {} "These boots have been made from a heavy shaggy pelt. In addition
+to providing warmth, the thick fur also offers modest protection."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_FEET}
+ARMOUR_HRD_LEATHER(0, 0)
+weight 8
+cost 4 COPPER_PIECE, 5 IRON_PIECE
+end
+
+belt_fur
+names {"heavy fur belt","fur belt","belt"}
+title "a heavy fur belt"
+descr "A heavy fur belt lies in a heap."
+extra {} "This belt have been made from a heavy shaggy pelt. In addition to
+providing warmth, the thick fur also offers modest protection."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_WAIST}
+ARMOUR_HRD_LEATHER(0, 0)
+weight 8
+cost 4 COPPER_PIECE, 5 IRON_PIECE
+end
+
+swimsuit_seal
+names {"sealskin swimsuit","swimsuit", "heap", "sealskin"}
+title "a sealskin swimsuit"
+descr "A heap of sealskin is here."
+extra {} "This is a female one piece bathing suit. The cut is rather modest,
+being made more for utility than for fashion. The sealskin material is an
+excellant choice for practical swimming."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+type ITEM_WORN
+weight 1
+cost 1 GOLD_PIECE
+end
+
+trunks_seal
+names {"sealskin swimtrunks","swimtrunks","trunks"}
+title "some sealskin swimming trunks"
+descr "A heap of sealskin is here."
+extra {} "These swimming trunks are ideal for the practical guy.  They
+provide for a comfertable swimming experience while not compromising any
+sense of modesty.  The sealskin is an great choice for swimming purposes."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_LEGS}
+type ITEM_WORN
+weight 1
+cost 1 GOLD_PIECE
+end
+
+duck_yellow
+names {"yellow fluffy duck","fluffy duck","yellow duck","duck"}
+title "a yellow fluffy duck"
+descr "A yellow fluffy duck has been left here."
+extra {} "This is a simple yellow fluffy duck. Its fluffy like a teddy bear
+      and is covered with yellow fur.  Its the type that if you squeeze it,
+      it will make a quacking noise."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+type ITEM_TREASURE
+weight 2
+cost 1 SILVER_PIECE
+dilcopy duck_squeeze();
+end
+
+symbol_holy
+names {"dwarven holy symbol","holy symbol","symbol"}
+title "a dwarven holy symbol"
+descr "A dwarven holy symbol has been left on the ground."
+extra {} "The symbol depicts Odin on the face and dwarven runes on the back."
+extra {"$identify"} "This symbol is a conduit to Odin and an aid to curing
+ poisons."
+extra {"$improved identify"} "The dwarven holy symbol gives +1 DIV and +3 to
+ remove poison."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_NECK}
+type ITEM_WORN
+weight 1
+cost 7 COPPER_PIECE
+rent 7 COPPER_PIECE
+DIV_TRANSFER(1)
+SPELL_TRANSFER(SPL_REMOVE_POISON, 1)
+dilcopy abi_restrict@function(ABIL_DIV,6,0,0,"");
+end
+
+ring_ruby
+names {"dwarven ruby ring","ruby ring","ring"}
+title "a dwarven ruby ring"
+descr "A ruby ring has been left on the ground."
+extra {} "A golden band inset with a small ruby, all of dwarven carving."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_FINGER}
+type ITEM_WORN
+weight 1
+cost 1 SILVER_PIECE
+rent 3 COPPER_PIECE
+end
+
+hammer_ice
+names {"percant","ice hammer","hammer"}
+title "Percant the Ice Hammer"
+descr "A pale blue hammer is surrounded by frost."
+extra {} "Pale blue steel alloy forms the chilling head of Percant. Inscribed
+ upon which is the rune symbolizing ice. A substance similar in appearence to
+ ice forms the shaft of this magical hammer."
+extra {"$identify"} "Percant is forged with the power of ice. As it is swung
+ it can form an icy fang to bite into the opponent. The bond of ice improves
+ the wielders strength, divinity, and war hammer skill."
+extra {"$improved identify"}"Percant gives +1 STR, +1 DIV, and +2 war hammer
+ skill. It will bite into the opponent with an icy fang with the command
+ 'bite <target>'."
+WEAPON_DEF(WPN_WAR_HAMMER,7,4)
+weight 6
+cost 4 SILVER_PIECE
+rent 4 SILVER_PIECE
+STR_TRANSFER(1)
+DIV_TRANSFER(1)
+WEAPON_TRANSFER(WPN_WAR_HAMMER,2)
+dilcopy weap_restrict@function(WPN_WAR_HAMMER,25,10,10,"");
+spell 25
+dilcopy ice_charger();
+dilcopy percant_bite();
+dilcopy percant_death();
+end
+
+pouch_belt
+names {"dwarven belt pouch","dwarven pouch","belt pouch","pouch"}
+title "a dwarven belt pouch"
+descr "A belt pouch has been left on the ground."
+extra {} "This is a simple pouch of dwarven make. It has been attached to a
+         belt strap to help free up the hands."
+CONTAINER_DEF(50)
+manipulate {MANIPULATE_TAKE,MANIPULATE_ENTER,MANIPULATE_WEAR_WAIST}
+cost 1 SILVER_PIECE
+weight 2
+end
+
+%reset
+
+door entrance    SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door tall_spire   EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door spire_rm1    WEST {EX_OPEN_CLOSE,EX_CLOSED}
+door spire_rm4      UP {EX_OPEN_CLOSE,EX_CLOSED}
+door spire_rm10  SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door keep_rm9    NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+door keep_shrine SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+
+load arctic_wolf into keep_door max 4
+load arctic_wolf into rift_1 max 4
+load arctic_wolf into plain_B3 max 4
+
+load ice_lizard into wall_B6 max 3
+{load jewel_ice}
+load ice_lizard into edge_D4 max 3
+load ice_lizard into plain_C1 max 3
+
+load white_pudding into edge_E3 max 4
+load white_pudding into plain_C3 max 4
+load white_pudding into plain_C5 max 4
+
+load arctic_wind into blizzard max 1
+load arctic_wind into wall_C6 max 1
+
+load white_wolf into rift_4 max 1
+{load pelt_wolf max 10
+ load fang_wolf max 1}
+
+load mumak into plain_F2 max 4
+load mumak into mountain_A2 max 4
+load mumak into plain_C5 max 4
+
+load arctic_seal into pool max 2
+
+load norak into norak_tent max 1
+{equip hammer_ice position WEAR_WIELD
+ equip pouch_belt position WEAR_WAIST}
+
+load ice_guardian into glacier_rift max 1
+{load shard_glowing}
+
+load ice_skeleton into tall_spire local 2
+load ice_skeleton into spire_rm2 local 2
+
+load scrag into spire_rm1 local 2
+load scrag into spire_rm3 local 2
+
+load dwarf_guard into keep_rm2 max 2
+{equip handaxe_dwarf position WEAR_WIELD}
+load dwarf_guard into keep_rm2 max 2
+{equip handaxe_dwarf position WEAR_WIELD}
+load dwarf into keep_rm3 max 2
+{equip handaxe_dwarf position WEAR_WIELD}
+load dwarf into keep_rm6 max 2
+{equip handaxe_dwarf position WEAR_WIELD
+ equip ring_ruby position WEAR_FINGER_L}
+load dwarf into keep_rm6 max 2
+{equip handaxe_dwarf position WEAR_WIELD
+ equip symbol_holy position WEAR_NECK_1}
+load karon into keep_rm5 max 1
+{equip claymore_dwarf position WEAR_WIELD
+ equip ring_ruby position WEAR_FINGER_R}
+load burlof into keep_rm8 max 1
+{equip handaxe_dwarf position WEAR_WIELD
+ load torch@midgaard
+ load lantern@midgaard
+ load bag@midgaard
+ load paper@midgaard
+ load quill@midgaard
+ load dictionary@basis
+ load donut@arctic
+ load spam@arctic
+ load bread@midgaard}
+load miko into keep_furshop max 1
+{load vest_fur@arctic
+ load sleeves_fur@arctic
+ load leggings_fur@arctic
+ load gloves_fur@arctic
+ load boots_fur@arctic
+ load belt_fur@arctic
+ load coat_mumak@arctic
+ load coat_seal@arctic
+ load stole_seal@arctic}
+load katie into keep_backroom max 1
+{load trunks_seal@arctic
+ load swimsuit_seal@arctic}
+load amon into keep_shrine max 1
+{equip symbol_holy position WEAR_NECK_1}
+
+load flower_yellow into plain_C1 max 2
+
+load block_ice into entrance
+
+load lich into spire_rm11 max 1
+{ /* equip staff_ice position WEAR_WIELD */
+  load heart_bloody }
+load spectre into spire_rm11 local 2
+load spectre into spire_rm11 local 2
+load scrag into spire_rm7 local 3
+load scrag into spire_rm7 local 3
+load scrag into spire_rm7 local 3
+load ice_skeleton into spire_rm6 local 2
+load ice_skeleton into spire_rm6 local 2
+
+%end
+
+
+

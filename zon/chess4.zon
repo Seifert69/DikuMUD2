@@ -1,0 +1,3155 @@
+/*
+filename    chess4
+password    dreamer1
+changedby   palio
+EmailAdd     Palio <palio@blinksoft.com>
+request     
+version     14
+END HEADER*/
+
+
+
+
+#include <composed.h>
+
+%zone fields
+title ""
+#define BLACK_ARMY \
+                dilcopy white_agr@blcastle();
+#define WHITE_ARMY \
+                dilcopy black_agr@blcastle();
+
+#define BLACK_ARMOR \
+dilcopy ali_restrict@function (-1000,-350,0,0,"");\
+                flags {UNIT_FL_MAGIC}   \
+                extra {"$black army"}   \
+                        "This makes the white army agressive"
+
+#define WHITE_ARMOR \
+dilcopy ali_restrict@function (1000,350,0,0,"");\
+                flags {UNIT_FL_MAGIC}   \
+                extra {"$white army"}   \
+                        "This makes the white army agressive"
+
+lifespan 20
+reset RESET_ANYHOW
+creators {"palio"}
+
+notes
+"Long time ago before the times of destruction and despair, The Blanche
+and  the Noir clans where close friends. A budding romance rose up
+between the beautiful Lanairia and  the handsome Burtonious. Both
+kingdoms where pleased with the bonding of their children and their
+upcoming marriage would serve to join the kingdoms for all time. Both
+kingdoms prepared for months and months  to be ready for this auspicious
+occasion. Burtinious presented his wife to be with a small golden dagger
+as his wedding gift to her. His words to here where 'My love take this
+dagger and if every I stray from your love use it on me, for I never want
+to be far from your sweetness. The wedding day dawned on a gentle  summer
+day with not a  cloud to mar the sky. As the wedding was about to proceed
+it was noticed  that Burtonious was no where to be see. Groups from both
+kingdoms where  sent out in search of the  wayward prince but he was
+never found. Trackers found horse prints in the ground indicating
+someone had galloped away from the castle at an outstanding speed. The
+princess  Lanairia was inconsolable and eventually took her own life with
+the very dagger that her love had given her as a wedding gift. Her father
+King Blanche was  furious and declared war on King Noir. To this day the
+two kingdoms fight bloody battles when ever they meet. The fields between
+the kingdoms eventually becoming named 'the killing fields'"
+
+
+help
+"&l
+
+
+
+  &cgX-X-X-X-X-X-X-&crF-F-F-F-F-&cgX-X-X-X-X-X-X&cw
+  &cgX-X-X-X-X-X-X-&crF-F-F-F-F-&cgX-X-X-X-X-X-X&cw
+  &cgX-&cbM-M-M-M-M-&crF-F-F-F-F-F-F-&cbM-M-M-M-M-&cgX&cw
+  &cgX-&cbM&cw Black &cbM-&crF-F-F-F-F-F-F-&cbM&cw White &cbM-&cgX&cw
+  &cgX-&cbM&cw Castle&cbM-&crF-F-F-F-F-F-F-&cbM&cw Castle&cbM-&cgX&cw
+  &cgX-&cbM&cw       &cbM-&crF-F-F-F-F-F-F-&cbM&cw       &cbM-&cgX&cw
+  &cgX-&cbM-M-M-M-M-&crF-F-F-F-F-F-F-&cbM-M-M-M-M-&cgX&cw
+  &cgX-X-X-X-X-X-X-&crF-F-F-F-F-&cgX-X-X-X-X-X-X&cw
+  &cgX-X-X-X-X-X-X-&crF-F-F-F-F-&cgX-X-X-X-X-X-X&cw
+
+
+
+&cgGreen = Forest&cw
+&cbBlues = Moat&cw
+&crRed = Fields&cw
+
+
+
+History Of The Killing Fields
+===============================
+&f
+Long time ago before the times of destruction and despair, The Blanche
+and  the Noir clans where close friends. A budding romance rose up
+between the beautiful Lanairia and  the handsome Burtonious. Both
+kingdoms where pleased with the bonding of their children and their
+upcoming marriage would serve to join the kingdoms for all time. Both
+kingdoms prepared for months and months  to be ready for this auspicious
+occasion. Burtinious presented his wife to be with a small golden dagger
+as his wedding gift to her. His words to here where 'My love take this
+dagger and if every I stray from your love use it on me, for I never want
+to be far from your sweetness'. The wedding day dawned on a gentle summer
+day with not a cloud to mar the sky. As the wedding was about to proceed
+it was noticed that Burtonious was no where to be see. Groups from both
+kingdoms where sent out in search of the  wayward prince but he was
+never found. Trackers found horse prints in the ground indicating
+someone had galloped away from the castle at an outstanding speed.. The
+princess  Lanairia was inconsolable and eventually took her own life with
+the very dagger that her love had given her as a wedding gift. Her father
+King Blanche was  furious and declared war on King Noir. To this day the
+two kingdoms fight bloody battles when ever they meet. The fields between
+the kingdoms eventually becoming named 'the killing fields'
+
+
+version 1
+"
+
+%dil
+dilbegin short();
+code
+{
+        act("$1n jabs $3n HARD.",
+        A_SOMEONE, self, null,target, TO_NOTVICT);
+        act("$1n jabs you HARD.",
+        A_ALWAYS, self, null,null, TO_VICT);
+        act("You jab $3n HARD! ",
+        A_ALWAYS, self, null,target , TO_CHAR);
+        act("That really did HURT!",
+        A_ALWAYS, self, null,target , TO_VICT);
+        act("$1n screams with agony!",
+        A_SOMEONE, target, null, null, TO_REST);
+                                                 return;
+                                                 }
+                                                 dilend
+
+
+%rooms
+
+/*---------------------------Killing Fields----------------------*/
+field_1
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with only dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees.  Broken spear heads and  sword hilts
+scatter the ground and bones from  slain soldiers litter the area. To the
+west a moat protects a huge black castle."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+west to bmoat_9@forest descr
+"You see a moat to the west";
+east to field_2 descr
+"You see more fields to the east.";
+north to field_8 descr
+"You see more fields to the north.";
+south to bforest_22@forest descr
+"You see the forest to the south.";
+end
+
+field_2
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Oddly a  small red flowers
+that seem to be dripping blood growing here. Broken spear heads and
+sword hilts scatter the ground. Bones from slain soldiers litter the
+area."
+
+extra {"flowers"}
+"The flowers seem to have blood dripping from their leaves and in the
+center of each leaf is design that almost looks like a small golden dagger."
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+ south to field_47 descr
+"The fields continue to the south.";
+
+north to field_9 descr
+"The fields continue to the north.";
+east to field_3 descr
+"The fields continue to the east.";
+west to field_1 descr
+"The fields continue to the west.";
+end
+
+field_3
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers  with what look to
+be droplets of blood on their leaves poke through the  burnt ground, the
+only life visible in this area. Broken spear heads and sword hilts
+scatter the ground amongst the bones of slain soldiers. "
+
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+south to field_48 descr
+"The fields continue to the south.";
+east to field_4 descr
+"The fields continue to the east.";
+west to field_2 descr
+"The fields continue to the west.";
+north to field_10 descr
+"The fields continue to the north.";
+end
+
+field_4
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers  with what look to be
+droplets of blood on their leaves poke through the  burnt ground, the
+only life visible in this area. Broken spear heads and sword hilts
+scatter the ground amongst the bones of slain soldiers litter."
+
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+south to field_49 descr
+"The fields continue to the south.";
+east to field_5 descr
+"The fields continue to the east.";
+west to field_3 descr
+"The fields continue to the west.";
+north to field_11 descr
+"The fields continue to the north.";
+end
+	field_5
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area. Bones from  slain
+soldiers litter the  area. What looks like the arm of some poor
+soldier is laying on the ground. "
+extra {"arm"}
+"A bloody stump that was once an arm."
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+south to field_50 descr
+"The fields continue to the south.";
+east to field_6 descr
+"The fields continue to the east.";
+west to field_4 descr
+"The fields continue to the west.";
+north to field_12 descr
+"The fields continue to the north.";
+end
+
+field_6
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area. A faint
+wailing can be heard but it is difficult to tell weather it is  the wind
+or the cries of mothers across time that have lost sons and daughters on
+these very fields."
+
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+
+east to field_7 descr
+"The fields continue to the east.";
+west to field_5 descr
+"The fields continue to the west.";
+north to field_13 descr
+"The fields continue to the north.";
+south to field_51 descr
+"The fields continue to the south.";
+end
+
+field_7
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only visible life in the area. Bones from slain soldiers
+litter the area and large red splotches give testimony to the spilled
+blood  of the  men and women who fought here. The moat of  the whit
+castle is to the east."
+
+extra {"red splotches","blood"}
+"The  ground is stained red in testimony of those that have fallen here."
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+
+west to field_6 descr
+"The fields continue to the west.";
+north to field_14 descr
+"The fields continue to the north.";
+east to wmoat_13@forest descr
+"You see the moat to the east.";
+south to forest_22@forest descr
+"You see the forest to the south.";
+end
+
+field_8
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees.  Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area. The flowers sway in the
+wind, almost like they are swaying back and forth in sorrow for the dead.
+A moat provides protection for a large black castle to the west."
+
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+west to bmoat_8@forest descr
+"You see a moat to the west.";
+east to field_9 descr
+"The fields continue to the east.";
+south to field_1 descr
+"The fields continue to the south.";
+north to field_15 descr
+"The fields continue to the north.";
+end
+
+field_9
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees.  Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area."
+
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+south to field_2 descr
+"The fields continue to the south.";
+east to field_10 descr
+"The fields continue to the east.";
+west to field_8 descr
+"The fields continue to the west.";
+north to field_16 descr
+"The fields continue to the north.";
+end
+
+
+
+
+field_10
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees.  Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area. A faint
+wailing, like that of a woman crying for her lost love can be heard on
+the winds of time. The sound is eerie and sends a chill up one's spine."
+
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+south to field_3 descr
+"The fields continue to the south.";
+east to field_11 descr
+"The fields continue to the east.";
+west to field_9 descr
+"The fields continue to the west.";
+north to field_17 descr
+"The fields continue to the north.";
+end
+
+field_11
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only visible life in the area. A decomposing
+corpse lies on the ground."
+
+extra {"corpse"}
+"You see a rotting corpse."
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+east to field_12 descr
+"The field continues to the east.";
+south to field_4 descr
+"The fields continue to the south.";
+west to field_10 descr
+"The fields continue to the west.";
+north to field_18 descr
+"The fields continue to the north.";
+end
+
+field_12
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area. The place has an
+oppressive feeling to it."
+
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+west to field_11 descr
+"The fields continue to the west.";
+east to field_13 descr
+"The fields continue to the east.";
+south to field_5 descr
+"The fields continue to the south.";
+north to field_19 descr
+"The fields continue to the north.";
+end
+
+field_13
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees.  Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area."
+
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+south to field_6 descr
+"The fields continue to the south.";
+east to field_14 descr
+"The fields continue to the east.";
+west to field_12 descr
+"The fields continue to the west.";
+north to field_20 descr
+"The fields continue to the north.";
+end
+
+
+field_14
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees.  Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area.  Bones from  slain
+soldiers litter the area, a head that has been chopped off, 
+with a spear poking through what was once an eye socket lies on the
+ground. The moat that surrounds the white castle is to the east."
+extra {"skull"}
+"The skull has a spear poking there where one of the eyes use to be."
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+
+south to field_7 descr
+"The fields continue to the south.";
+west to field_13 descr
+"The fields continue to the west.";
+north to field_21 descr
+"The fields continue to the north.";
+east to wmoat_14@forest  descr
+"The castle moat is to the east.";
+end
+
+field_15
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area. Bones from  slain
+soldiers litter the  area. What seems to be the leg of some poor
+soldier is laying on the ground. To the west is a bridge leading to a
+huge black castle."
+
+extra {"castle"}
+"A large black castle is visible to the west."
+extra {"drawbridge","bridge"}
+"A large draw bridge  that leads over a dangerous moat."
+extra {"leg"}
+"A bloody stump that was once an leg."
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+west to bmoat_7@forest descr
+"You see a bridge to the west.";
+east to field_16 descr
+"The fields continue to the east.";
+south to field_8 descr
+"The fields continue to the south.";
+north to field_22 descr
+"The fields continue to the north.";
+end
+
+field_16
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees.  Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area.  A faint
+wailing can be heard  but it is impossible to tell if it is  the wind or
+the screams of pain from spirits long dead that once fought these fields."
+
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+south to field_9 descr
+"The fields continue to the south.";
+east to field_17 descr
+"The fields continue to the east.";
+west to field_15 descr
+"The fields continue to the west.";
+north to field_23 descr
+"The fields continue to the north.";
+end
+
+field_17
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only visible life in the area."
+
+extra {"red splotches","blood"}
+"The  ground is stained red in testimony of those that have fallen here."
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+south to field_10 descr
+"The fields continue to the south.";
+east to  field_18 descr
+"The fields continue to the east.";
+west to field_16 descr
+"The fields continue to the west.";
+north to field_14 descr
+"The fields continue to the north.";
+end
+
+field_18
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees.  Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area. The flowers sway in the
+wind, almost like they are swaying back and forth in sorrow for the dead."
+
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+west to field_17 descr
+"The fields continue to the west.";
+east to field_19 descr
+"The fields continue to the east.";
+south to field_11 descr
+"The fields continue to the south.";
+north to field_25 descr
+"The fields continue to the north.";
+end
+
+
+field_19
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with only dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees.  Broken spear heads and  sword hilts
+scatter the ground. A broken wheel lays beside what looks  like some sort
+of catapult machine that retreating soldiers abandoned as they ran."
+
+extra {"catapult","wheel"}
+"A broken wheel lays beside a disregard catapult."
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+south to field_12 descr
+"The fields continue to the south.";
+west to field_18 descr
+"The fields continue to the west.";
+east to field_20 descr
+"You see more fields to the east.";
+north to field_26 descr
+"You see more fields to the north.";
+end
+
+field_20
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Oddly a
+small red flower that seem to be dripping blood is growing here.
+They give the area a bit of color aside from the burnt black and the
+white of bones."
+
+extra {"flowers"}
+"The flowers seem to have blood dripping from their leaves and in the
+center of each leaf is design that almost looks like a small golden dagger."
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+north to field_27 descr
+"The fields continue to the north.";
+east to field_21 descr
+"The fields continue to the east.";
+west to field_19 descr
+"The fields continue to the west.";
+south to field_13 descr
+"The fields continue to the south.";
+end
+
+field_21
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area. A make shift
+grave  has been dug into the ground.  Someone has hastily built a
+small cross on top of the simple dirt grave. To the east is a bridge
+leading to a white castle."
+
+extra {"drawbridge","bridge"}
+"The drawbridge, when down provides one with safe passage over the life
+threatening moat."
+extra {"castle"}
+"A large white castle is visible to the east across the drawbridge."
+
+ extra {"grave","cross","dirt"}
+"A wooden cross mad from scraps of wood is pushed into the ground atop a
+mound of dirt about the size of a man. On the grave is a breastplate with
+two swords crossed over it."
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+
+south to field_14 descr
+"The fields continue to the south.";
+west to field_20 descr
+"The fields continue to the west.";
+north to field_28 descr
+"The fields continue to the north.";
+east to wmoat_15@forest descr
+"A large wooden bridge is visible to the east.";
+end
+
+field_22
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area. The wind blowing
+through the area almost sounds like the weeping of generations. A moat
+protects the black castle to the west."
+
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+west to bmoat_6@forest  descr
+"You see a moat to the west.";
+east to field_23 descr
+"The fields continue to the east.";
+south to field_15 descr
+"The fields continue to the south.";
+north to field_29 descr
+"The fields continue to the north.";
+end
+
+field_23
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees.  Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area. A helmet lies on the
+ground, upon closer examination one notices that the helmet is still on
+a head but there is no body in site."
+
+extra {"helmet","head"}
+"An Elemental Helmet lies on the ground here, two blank eyes staring out
+into space from the helmet."
+
+ extra {"arm"} "A bloody stump that was once an arm."
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+south to field_16 descr
+"The field continues to the south.";
+east to field_24 descr
+"The fields continue to the east.";
+west to field_22 descr
+"The fields continue to the west.";
+north to field_30 descr
+"The fields continue to the north.";
+end
+
+field_24
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers  with what look to be
+droplets of blood on their leaves poke through the  burnt ground, the
+only life visible in this area.  A faint  almost ghostly
+wailing echos through the air, its pain calling out over the winds of
+time."
+
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+south to field_17 descr
+"The field continues to the south.";
+east to field_25 descr
+"The fields continue to the east.";
+west to field_23 descr
+"The fields continue to the west.";
+north to field_31 descr
+"The fields continue to the north.";
+end
+
+field_25
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees.  Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only visible life in the area. Bones from slain soldiers
+litter the area and large red splotches give testimony to the spilled
+blood  of the people that fought and died here."
+
+extra {"red splotches","blood"}
+"The  ground is stained red in testimony of those that have fallen here."
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+south to field_18 descr
+"The field continues to the south.";
+east to field_26 descr
+"The field continues to the east.";
+west to field_24 descr
+"The fields continue to the west.";
+north to field_14 descr
+"The fields continue to the north.";
+end
+
+field_26
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area. To the southeast is
+the outline of a large castle."
+extra {"castle"}
+"A large castle is visible to the southeast."
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+west to field_25 descr
+"The fields continue to the west.";
+east to field_27 descr
+"The fields continue to the east.";
+south to field_19 descr
+"The fields continue to the south.";
+north to field_33 descr
+"The fields continue to the north.";
+end
+
+field_27
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area. A castle stands to the
+southeast."
+
+extra {"castle"}
+"A large castle is visible to the southeast."
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+south to field_20 descr
+"The fields continue to the south.";
+east to field_28 descr
+"The fields continue to the east.";
+west to field_26 descr
+"The fields continue to the west.";
+north to field_34 descr
+"The fields continue to the north.";
+end
+
+
+
+
+field_28
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area.  A faint
+wailing like that of a woman crying for her lost love is carried on the
+four winds. The sound is eerie
+and sends a chill up one's spine. The shadow of a castle to the east
+across a moat rises up into the sky."
+
+extra {"castle"}
+"A large castle is visible to the southeast."
+
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+south to field_21 descr
+"The fields continue to the south.";
+west to field_27 descr
+"The fields continue to the west.";
+north to field_35 descr
+"The fields continue to the north.";
+east to wmoat_16@forest  descr
+"You see the moat to the east.";
+end
+
+field_29
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only visible life in the area. A decomposing
+corpse lies on the ground rotting. A castle is visible to the southwest
+protected by a
+large moat."
+
+extra {"castle"}
+"A large castle is visible to the southwest."
+extra {"corpse"}
+"You see a rotting corpse."
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+ west to bmoat_5@forest  descr
+"You see a moat to the west.";
+east to field_30 descr
+"The field continues to the east.";
+south to field_22 descr
+"The fields continue to the south.";
+north to bforest_1@forest descr
+"You see a forest to the north";
+end
+
+field_30
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area. The place has an
+oppressive feeling to it. In the distance to the southwest is a large
+ castle."
+
+extra {"castle"}
+"A large castle is visible to the southwest."
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+west to field_29 descr
+"The fields continue to the west.";
+east to field_31 descr
+"The fields continue to the east.";
+south to field_23 descr
+"The fields continue to the south.";
+north to field_37 descr
+"The fields continue to the north.";
+
+end
+
+field_31
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees.  Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area. Broken weapons and
+carts lay discarded around the area, forgotten in ones haste to leave."
+
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","weapons","spear","sword","carts"}
+"Broken weapons and carts litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+south to field_24 descr
+"The fields continue to the south.";
+east to field_32 descr
+"The fields continue to the east.";
+west to field_31 descr
+"The fields continue to the west.";
+north to field_38 descr
+"The fields continue to the north.";
+end
+
+
+field_32
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area. Broken spear heads and
+sword hilts are scatter about , and bones from  slain soldiers litter the
+area, a decapitated head with a spear poking through what was once an eye
+socket lies rotting on the ground. Castles are visible to the southwest
+and southeast from here."
+
+extra {"castle"}
+"Large castles are visible to the southeast and southwest."
+ extra {"skull"}
+"The skull has a spear poking there where one of the eyes use to be."
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+
+south to field_25 descr
+"The fields continue to the south.";
+west to field_31 descr
+"The fields continue to the west.";
+east to field_33 descr
+"The fields continue to the east.";
+north to field_39 descr
+"The fields continue to the north.";
+
+end
+
+field_33
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area. Bones from  slain
+soldiers litter the  area. What was once the foot of some poor
+soldier lies forgotten, still in its boot, on the ground. "
+extra {"leg"}
+"A bloody stump that was once an foot."
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+
+east to field_34 descr
+"The fields continue to the east.";
+south to field_26 descr
+"The fields continue to the south.";
+west to field_32 descr
+"The fields continue to the west.";
+north to field_40 descr
+"The fields continue to the north.";
+
+
+end
+
+field_34
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees.  Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area. A discarded cart full
+of food that was obviously meant for the soldiers  has been well picked
+over by the vultures and rats that run rampant in this area."
+
+extra {"cart"}
+"The cart once full of daily rations is now rat infested piles of junk."
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+south to field_27 descr
+"The fields continue to the south.";
+east to field_35 descr
+"The fields continue to the east.";
+west to field_33 descr
+"The fields continue to the west.";
+north to field_41 descr
+"The fields continue to the north.";
+
+
+end
+
+field_35
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees.  Tiny red flowers with what look to
+be droplets of blood on their leaves poke through the burnt ground, the
+only visible life in the area except for the rats that scatter as you
+walk by. A moat to the east protects a huge white castle and a line of
+trees signifies the start of a forest to the north."
+
+extra {"red splotches","blood"}
+"The  ground is stained red in testimony of those that have fallen here."
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+east to wmoat_1@forest  descr
+"You see a moat to the east.";
+south to field_28 descr
+"The fields continue to the south.";
+west to field_34 descr
+"The fields continue to the west.";
+north to forest_1@forest descr
+"There is a forest to the north.";
+
+end
+
+field_37
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers  with what look to be
+droplets of blood on their leaves poke through the  burnt ground, the
+only life visible in this area.  A faint  almost ghostly
+wailing is in the air, calling out for an end to the pain and suffering.
+There is a line of trees to the west."
+
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+south to field_30 descr
+"The field continues to the south.";
+east to field_38 descr
+"The fields continue to the east.";
+west to bforest_1@forest  descr
+"There is a forest to the west.";
+north to field_42 descr
+"The fields continue to the north.";
+end
+
+field_38
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area.  A faint
+wailing like that of a woman crying for her lost love is carried on the
+winds."
+
+
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+south to field_31 descr
+"The fields continue to the south.";
+west to field_37 descr
+"The fields continue to the west.";
+north to field_43 descr
+"The fields continue to the north.";
+east to field_39 descr
+"The fields continue to the east.";
+end
+
+
+field_39
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only visible life in the area."
+
+extra {"red splotches","blood"}
+"The  ground is stained red in testimony of those that have fallen here."
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+south to field_32 descr
+"The fields continue to the south.";
+east to  field_38 descr
+"The fields continue to the east.";
+west to field_40 descr
+"The fields continue to the west.";
+north to field_44 descr
+"The fields continue to the north.";
+end
+
+
+
+field_40
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with only dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees.  Broken spear heads and  sword hilts
+scatter the ground. A broken wheel lays beside what looks  like some sort
+of catapult machine that retreating soldiers abandoned as they ran."
+
+extra {"catapult","wheel"}
+"A broken wheel lays beside a disregard catapult."
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+south to field_33 descr
+"The fields continue to the south.";
+west to field_41 descr
+"The fields continue to the west.";
+east to field_39 descr
+"You see more fields to the east.";
+north to field_45 descr
+"You see more fields to the north.";
+end
+
+
+field_41
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only visible life in the area. There is a decomposing
+corpse laying on the ground."
+
+extra {"corpse"}
+"You see a rotting corpse."
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+east to forest_1@forest  descr
+"There is a forest to the east.";
+south to field_34 descr
+"The fields continue to the south.";
+west to field_40 descr
+"The fields continue to the west.";
+north to field_46 descr
+"The fields continue to the north.";
+end
+
+
+
+
+field_42
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Oddly, small red flowers
+that seem to be dripping blood are growing here. Broken spear heads and
+sword hilts scatter the ground. Bones from slain soldiers litter the
+area."
+
+extra {"flowers"}
+"The flowers seem to have blood dripping from their leaves and in the
+center of each leaf is design that almost looks like a small golden dagger."
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+east to field_43 descr
+"The fields continue to the east..";
+west to bforest_9@forest  descr
+"The fields continue to the west.";
+south to field_37 descr
+"The fields continue to the west.";
+end
+
+field_43
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers  with what look to
+be droplets of blood on their leaves poke through the  burnt ground, the
+only life visible in this area. Broken spear heads and sword hilts
+scatter the ground amongst the bones of slain soldiers. "
+
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+
+east to field_44 descr
+"The fields continue to the east.";
+west to field_42 descr
+"The fields continue to the west.";
+south to field_38 descr
+"The fields continue to the south.";
+end
+
+field_44
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers  with what look to be
+droplets of blood on their leaves poke through the  burnt ground, the
+only life visible in this area. Broken spear heads and sword hilts
+scatter the ground amongst the bones of slain soldiers litter."
+
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+
+east to field_45 descr
+"The fields continue to the east.";
+west to field_43 descr
+"The fields continue to the west.";
+south to field_40 descr
+"The fields continue to the south.";
+end
+
+
+field_45
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers  with what look to be
+droplets of blood on their leaves poke through the  burnt ground, the
+only life visible in this area. A faint  wailing like that of a
+woman crying for her lost love can be heard over the span of time."
+
+extra {"castle"}
+"A large castle is visible to the southeast."
+
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+south to field_40 descr
+"The fields continue to the south.";
+west to field_44 descr
+"The fields continue to the west.";
+east to field_46 descr
+"The fields continue to the east.";
+end
+
+
+field_46
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees.  Tiny red flowers with what look to
+be droplets of blood on their leaves poke through the burnt ground, the
+only visible life in the area. Bones from slain soldiers litter the area
+and large red splotches give testimony to the spilled blood of the
+people that fought and died here."
+
+extra {"red splotches","blood"}
+"The  ground is stained red in testimony of those that have fallen here."
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+south to field_41 descr
+"The field continues to the south.";
+east to forest_9@forest  descr
+"The field continues to the east.";
+west to field_45 descr
+"The fields continue to the west.";
+end
+
+
+
+field_47
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees.  Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area."
+
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+south to field_52 descr
+"The fields continue to the south.";
+west to bforest_22@forest  descr
+"There are forest to the west.";
+east to field_48 descr
+"The fields continue to the east.";
+north to field_2 descr
+"The fields continue to the north.";
+end
+
+
+
+
+field_48
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees.  Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area. A faint
+wailing like that of a mother crying for her child is carried on the
+winds."
+
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+south to field_53 descr
+"The fields continue to the south.";
+east to field_49 descr
+"The fields continue to the east.";
+west to field_47 descr
+"The fields continue to the west.";
+north to field_3 descr
+"The fields continue to the north.";
+end
+
+field_49
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only visible life in the area. A decomposing
+corpse lies on the ground rotting."
+
+extra {"corpse"}
+"You see a rotting corpse."
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+east to field_50 descr
+"The field continues to the east.";
+south to field_54 descr
+"The fields continue to the south.";
+west to field_48 descr
+"The fields continue to the west.";
+north to field_4 descr
+"The fields continue to the north.";
+end
+
+field_50
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area. The place has an
+oppressive feeling to it."
+
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+west to field_48 descr
+"The fields continue to the west.";
+east to field_51 descr
+"The fields continue to the east.";
+south to field_55 descr
+"The fields continue to the south.";
+north to field_5 descr
+"The fields continue to the north.";
+end
+
+
+
+
+field_51
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees.  Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area. A helmet lies on the
+ground, upon closer examination, it appears  that the helmet is still
+on a head but there is no body in site."
+
+extra {"helmet","head"}
+"An Elemental Helmet lies on the ground here, two blank eyes staring out
+into space from the helmet."
+
+ extra {"arm"} "A bloody stump that was once an arm."
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+south to field_56 descr
+"The field continues to the south.";
+east to forest_22@forest  descr
+"There is a forest to the east.";
+west to field_50 descr
+"The fields continue to the west.";
+north to field_6 descr
+"The fields continue to the north.";
+end
+
+field_52
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers  with what look to be
+droplets of blood on their leaves poke through the  burnt ground, the
+only life visible in this area.  A faint  almost ghostly
+wailing is in the air but it is hard to tell where it is coming from.
+Dense trees block travel to the south but the forest is passable to the
+west."
+
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+east to field_53 descr
+"The fields continue to the east.";
+west to bforest_30@forest  descr
+"There is a forest to the west.";
+north to field_47 descr
+"The fields continue to the north.";
+end
+
+field_53
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees.  Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only visible life in the area. Bones from slain soldiers
+litter the area and large red splotches give testimony to the spilled
+blood  of the people that fought and died here. A dense forest is to the
+south."
+
+extra {"red splotches","blood"}
+"The  ground is stained red in testimony of those that have fallen here."
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+east to field_54 descr
+"The field continues to the east.";
+west to field_52 descr
+"The fields continue to the west.";
+north to field_48 descr
+"The fields continue to the north.";
+south to path_1 descr
+"A path leads off into the forests.";
+end
+
+field_54
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area. A dense forest blocks
+travel south."
+extra {"castle"}
+"A large castle is visible to the southeast."
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+west to field_53 descr
+"The fields continue to the west.";
+east to field_55 descr
+"The fields continue to the east.";
+north to field_49 descr
+"The fields continue to the north.";
+end
+
+field_55
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with mostly dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees. Tiny red flowers
+with what look to be droplets of blood on their leaves poke through the
+burnt ground, the only life visible in this area. A dense forest blocks
+travel to the south."
+
+extra {"flowers"}
+"The flowers are small and red. The leaves seem to secrete droplets of
+blood. One can only assume it is mother natures way of of showing her
+sorrow for the death and destruction this place has seen."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+
+east to field_56 descr
+"The fields continue to the east.";
+west to field_54 descr
+"The fields continue to the west.";
+north to field_50 descr
+"The fields continue to the north.";
+end
+
+
+
+field_56
+title "The Killing fields."
+names {"killing fields","field"}
+descr
+"The fields are blackened with only dry brittle vegetation showing
+through. It looks as though mother nature herself has given up on this
+place and the destruction it sees.  Broken spear heads and  sword hilts
+scatter the ground and bones from  slain soldiers litter the area.
+Forests are to the south and east."
+
+extra {"ground"}
+"The ground it blackened, the burnt grounds showing little signs of life."
+
+extra {"spear head","sword hilt","spear","sword"}
+"Broken weapons litter the area."
+extra {"bones"}
+"The odd bones from slain soldiers litter the ground."
+
+movement SECT_FIELD
+west to field_55 descr
+"You see a moat to the west";
+east to forest_30@forest  descr
+"There is forests to the east.";
+north to field_51 descr
+"You see more fields to the north.";
+end
+
+/*--------------------------------Link rooms-------------------*/
+path_1
+title "A trail through the dense forest "
+names {"forest"}
+descr
+"Giant trees tower over head, their thick branches forming a natural leaf
+roof and a bit of protection from the elements. The path leads north
+to a large field as well as south into the dense forest."
+extra {"path","paths"}
+"The narrow path is probably used by the animals living in the forest."
+extra {"tree","trees"}
+"The trees are mostly old beeches and oaks."
+north to field_53 descr
+"The path leads north into a large burnt out field.";
+south to path_2 descr
+"The small path leads south through the trees.";
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_NO_MOB}
+end
+
+
+path_2
+title "A small path in the deep, dark forest"
+names {"forest"}
+descr
+"The crowns of the old trees leave the forest in an unreal twilight
+illumination giving the place an eerie feeling. The path underfoot looks
+to be little more then an animal trail through the trees. The path
+continues north and east." 
+
+extra {"path","paths"}
+"The narrow path is probably used by the animals living in the forest."
+extra {"tree","trees"}
+"The trees are mostly old beeches and oaks."
+north to path_1 descr
+"The small path leads north through the trees.";
+east to path_3 descr
+"The small path leads east through the trees.";
+movement SECT_FOREST
+IN_ALWAYS_DARK
+end
+
+path_3
+title "A small path in the deep, dark forest"
+names {"forest"}
+descr
+"The crowns of the old trees leave the forest in an unreal twilight
+illumination.  Underfoot the path fades in and out of exsistance, being
+little more then an animal trail. The path continues south and west." 
+
+extra {"path","paths"}
+"The narrow path is probably used by the animals living in the forest."
+extra {"tree","trees"}
+"The trees are mostly old beeches and oaks."
+west to path_2 descr
+"The small path leads west through the trees.";
+south to path_4 descr
+"The small path leads south through the trees.";
+movement SECT_FOREST
+IN_ALWAYS_DARK
+
+end
+
+path_4
+title "A small path in the deep, dark forest"
+names {"forest"}
+descr
+"A narrow path leading through the deep, dark forest.  it seems as
+if the ancient trees observe you in watchful silence as you
+travel through their midst.  The path continues north and south."
+north to path_3 descr
+"The narrow path winds its way through the trees to the north.";
+south to path_5 descr
+"The narrow path winds its way through the trees to the south.";
+extra {"tree","trees","trunk","trunks"}
+"The ancient grey giants seem to observe you silently."
+extra {"path"}
+"The path seems all too frail.  One of the giant roots could probably
+crush it in a single blow."
+movement SECT_FOREST
+IN_ALWAYS_DARK
+end
+
+path_5
+title "A small path in the deep, dark forest"
+names {"forest"}
+descr
+"A narrow path leading through the deep, dark forest.  Ancient
+grey trees loom all around you and eyes seem to watch you from the shadows.
+The path continues north and west."
+north to path_4 descr
+"The narrow path winds its way through the trees to the north.";
+west to path_6 descr
+"The narrow path winds its way through the trees to the east.";
+extra {"shadows","eyes"}
+"You get the feeling something of someone is watching you."
+extra {"tree","trees","trunk","trunks"}
+"The ancient grey giants seem to observe you silently."
+extra {"path"}
+"The path seems all too frail.  One of the giant roots could probably
+crush it in a single blow."
+movement SECT_FOREST
+IN_ALWAYS_DARK
+end
+
+path_6
+names {"forest"}
+title "A narrow trail through the deep, dark forest"
+descr
+"A dusty trail winds its way between the huge, ancient trees which
+stand close on all sides,  so thick that travel is only possible to the 
+south and east."
+south  to path_7 descr
+"The narrow, dusty trail leads south through the forest.";
+east to path_5  descr
+"The narrow, dusty trail leads east through the forest.";
+extra {"trail"}
+"The dark and dusty trail seems fragile compared to the massive trunks,
+and in some places, giant grey roots have broken up through its surface."
+extra {"path"}
+"The path seems fragile and unsafe compared to the enourmous trunks that loom
+around it."
+extra {"tree","trees","trunk","trunks"}
+"These ancient trees must have been here for many, many years.  It is
+impossibleto catch even a glimpse of anything above the lowest branches."
+movement SECT_FOREST
+IN_ALWAYS_DARK
+end
+
+
+path_7
+title "A narrow trail through the deep, dark forest"
+names {"forest"}
+descr
+"A dusty trail winds its way north-south between the huge, ancient
+trees that loom ominously above overhead."
+north to path_6 descr
+"The narrow, dusty trail leads north through the forest.";
+south to path_8 descr
+"The narrow, dusty trail leads south through the forest.";
+extra {"trail"}
+"The dark and dusty trail seems fragile compared to the massive trunks,
+and in some places, giant grey roots have broken up through its surface."
+extra {"tree","trees","trunk","trunks"}
+"These ancient trees must have been here for many, many years.  It is
+impossibleto catch even a glimpse of anything above the lowest branches."
+movement SECT_FOREST
+IN_ALWAYS_DARK
+end
+
+path_8
+
+title "A narrow trail through the deep, dark forest"
+names {"forest"}
+descr
+"A dusty trail winding its way between huge, ancient trees
+standing close on all sides.  The trail leads north and east through the
+trees."
+north to path_7 descr
+"The narrow, dusty trail leads north through the forest.";
+east to rn_6004@haon_dor descr
+"The narrow, dusty trail leads east through the forest.";
+extra {"trail"}
+"The dark and dusty trail seems fragile compared to the massive trunks,
+and in
+some places, giant grey roots have broken up through its surface."
+extra {"path"}
+"The path seems fragile and unsafe compared to the enourmous trunks that loom
+around it."
+extra {"tree","trees","trunk","trunks"}
+"These ancient trees must have been here for many, many years.  It is
+impossibleto catch even a glimpse of anything above the lowest branches."
+movement SECT_FOREST
+IN_ALWAYS_DARK
+end
+
+
+
+%mobiles
+
+#define M_GOLEM_STONE(MLVL, GENDER) \
+    race RACE_GOLEM \
+    sex GENDER \
+    level MLVL \
+    height 250 \
+    weight 700 \
+    alignment 0 \
+    NATURAL_DEF(WPN_FIST, ARM_PLATE) \
+    MSET_ABILITY(20,20,20,20,5,5,5,5)  \
+    MSET_WEAPON(15,10,5,5,5,5)     \
+    MSET_SPELL(5,5,5,5,5,5,5,5,5,5,5)
+
+
+/*---------------------White Mobs-------------------*/
+
+
+wpawn
+title "a White Peasant"
+names {"white peasant","white pawn","peasant","pawn"}
+descr "A peasant of the white castle is standing here."
+extra {}
+"The peasant is a simple fighter from the white castle. He is dressed in
+all white armour and looks as if he has little mind of his own. This man
+is obviously used to following orders. You could call him a pawn."
+M_HUMAN_WARRIOR_SWORD(30,SEX_MALE)
+special SFUN_RANDOM_ZONE_MOVE time 180 bits SFB_RANTIME
+alignment 1000
+WHITE_ARMY
+end
+
+
+wknight
+title "a White Knight"
+names {"white knight","knight"}
+descr "Here stands a mighty White Knight upon a white stallion."
+extra {}
+"The knight, a nobleman is mounted on a white stallion, is loyal only to the
+white king, he looks like a force to be feared."
+M_HUMAN_WARRIOR_SWORD(40,SEX_MALE)
+special SFUN_RANDOM_ZONE_MOVE time 180 bits SFB_RANTIME
+alignment 1000
+WHITE_ARMY
+end
+
+
+wrook
+title "a White Golem"
+names {"white golem","white rook","golem","rook"}
+descr "A White Golem is standing here."
+extra {}
+"The golem is made from white stone and almost resembles the white castle
+with arms and legs."
+M_GOLEM_STONE(35, SEX_NEUTRAL)
+special SFUN_RANDOM_ZONE_MOVE time 180 bits SFB_RANTIME
+alignment 1000
+WHITE_ARMY
+end
+
+
+wbishop
+title "a White Bishop"
+names {"white bishop","bishop"}
+descr "The White Bishop is standing here."
+extra {}
+"The white bishop is a majestic looking man in robes and a hat."
+M_HUMAN_CLERIC_STAFF(45, SEX_MALE, "fireball", "heal")
+special SFUN_RANDOM_ZONE_MOVE time 180 bits SFB_RANTIME
+WHITE_ARMY
+alignment 1000
+end
+
+
+/*-----------------Black Mobs-----------------------*/
+
+
+bpawn
+title "a Black Peasant"
+names {"black peasant","black pawn","peasant","pawn"}
+descr "A peasant of the black castle is standing here."
+extra {}
+"The peasant is a simple fighter from the black castle. He is dressed in
+all black armour and looks as if he has little mind of his own. This man
+is obviously used to following orders. You could call him a pawn."
+M_HUMAN_WARRIOR_SWORD(30,SEX_MALE)
+special SFUN_RANDOM_ZONE_MOVE time 180 bits SFB_RANTIME
+alignment -1000
+BLACK_ARMY
+end
+
+
+
+bknight
+title "a Black Knight"
+names {"black knight","knight"}
+descr "Here stands a mighty Black Knight upon a black stallion."
+extra {}
+"The knight, a nobleman is mounted on a magestic black stallion, is loyal
+only to the black king, he looks like a force to be feared."
+M_HUMAN_WARRIOR_SWORD(40,SEX_MALE)
+special SFUN_RANDOM_ZONE_MOVE time 180 bits SFB_RANTIME
+alignment -1000
+BLACK_ARMY
+end
+
+bbrook
+title "a Black Golem"
+names {"black golem","black rook","golem","rook"}
+descr "A Black Golem is standing here."
+extra {}
+"The golem is made from black stone and almost resembles the black castle
+with arms and legs."
+M_GOLEM_STONE(35, SEX_NEUTRAL)
+special SFUN_RANDOM_ZONE_MOVE time 180 bits SFB_RANTIME
+alignment -1000
+BLACK_ARMY
+end
+
+
+bbishop
+title "a Black Bishop"
+names {"black bishop","bishop"}
+descr "The Black Bishop is standing here."
+extra {}
+"The black bishop is a majestic looking man in robes and a hat."
+M_HUMAN_CLERIC_STAFF(45, SEX_MALE, "fireball", "heal")
+special SFUN_RANDOM_ZONE_MOVE time 180 bits SFB_RANTIME
+BLACK_ARMY
+alignment -1000
+end
+
+
+%objects
+/*---------------------WEAPONS-------------------------*/
+bishop_staff
+title "an Oak Staff"
+names {"oak staff","staff"}
+descr "A beautiful oak staff is laying here."
+extra {}
+"The staff is made of 3 oak pieces that twist together to form the body
+of the staff. It is obvious there is no way any man could have formed the
+oak pieces in this manor. It could be only done by mother nature...or a
+very strong magicion. On top of the wand is a silver ball that is
+intricatly carved with symbols you can not understand."
+extra {"silver ball","symbols","ball"}
+"&L   *~`#\/-^~`/\|/*"
+WEAPON_DEF(WPN_QUARTERSTAFF,0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD,MANIPULATE_HOLD}
+MATERIAL_WOOD("a dark red oak shaft")
+MATERIAL_METAL("pure silver orb")
+cost 96 COPPER_PIECE
+end
+
+short_sword
+title "a Short Sword"
+names {"short sword","short","sword"}
+descr "A short sword has been left here."
+extra {}
+"A plain short sword"
+WEAPON_DEF(WPN_SHORT_SWORD,1,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD,MANIPULATE_HOLD}
+weight 5
+MATERIAL_METAL("Sharp hard metal")
+cost 8 SILVER_PIECE
+end
+
+broad_sword
+title "a Broad Sword"
+names {"broad sword","broad","sword"}
+descr "A broad sword has been left here."
+extra {}
+"A plain short sword"
+WEAPON_DEF(WPN_BROAD_SWORD,1,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD,MANIPULATE_HOLD}
+weight 5
+cost 40 SILVER_PIECE
+rent 20 IRON_PIECE
+MATERIAL_METAL("Sharp hard metal")
+end
+
+sp_short_sword
+title "a Short Sword"
+names {"short sword","sword","short"}
+descr "A short sword has been left here."
+extra {}
+"A plain short sword"
+WEAPON_DEF(WPN_SHORT_SWORD,1,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD,MANIPULATE_HOLD}
+weight 5
+spell 25
+MATERIAL_METAL("Sharp hard metal")
+dilcopy level_restrict@function (10,0,0,"");
+
+rent 2 COPPER_PIECE
+cost 4 GOLD_PIECE
+end
+
+/*-----------------------CLOTHES----------------------*/
+black_boots
+names {"black boots","boots"}
+title "a pair of black stone boots"
+descr "A pair of black stone boots has been left here."
+extra {}
+"These boots look like better camoflodge than armor.  When the boots are worn
+they look like the base of a far away castle."
+MATERIAL_STONE("A hard granite stone")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+ARMOUR_HRD_LEATHER(0, 0)
+BLACK_ARMOR
+cost 16 COPPER_PIECE
+weight 10
+end
+
+black_box
+names {"black stone box","stone box","box"}
+title "a black stone box."
+descr "A black stone box has been left here."
+extra {}
+"This black stone box looks like better camoflodge than armor.  It is very
+heavy but when worn it can help you look like a distant black castle."
+MATERIAL_STONE("A hard granite stone")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_HRD_LEATHER(0, 0)
+BLACK_ARMOR
+cost 16 COPPER_PIECE
+weight 10
+end
+
+black_top
+names {"black castle top","castle top","helmet","top"}
+title "a minature black castle top."
+descr "the top to a minature black castle has been left here."
+extra{}
+"This black castle top makes better camoflodge than armor.   When worn it
+makes your head look like the four top towers on a distant black castle."
+MATERIAL_STONE("A hard granite stone")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+ARMOUR_HRD_LEATHER(0, 0)
+BLACK_ARMOR
+cost 16 COPPER_PIECE
+weight 10
+end
+
+white_boots
+names {"white boots","boots"}
+title "a pair of white stone boots"
+descr "A pair of white stone boots has been left here."
+extra {}
+"These boots look like better camoflodge than armor.  When the boots are worn
+they look like the base of a far away castle."
+MATERIAL_STONE("A hard granite stone")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+ARMOUR_HRD_LEATHER(0, 0)
+WHITE_ARMOR
+cost 16 COPPER_PIECE
+weight 10
+end
+
+white_box
+names {"white stone box","stone box","box"}
+title "a white stone box."
+descr "A white stone box has been left here."
+extra {}
+"This white stone box looks like better camoflodge than armor.  It is very
+heavy but when worn it can help you look like a distant white castle."
+MATERIAL_STONE("A hard granite stone")
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_HRD_LEATHER(0, 0)
+WHITE_ARMOR
+cost 16 COPPER_PIECE
+weight 10
+end
+
+white_top
+names {"white castle top","castle top","helmet","top"}
+title "a minature white castle top."
+descr "the top to a minature white castle has been left here."
+extra{}
+"This white castle top makes better camoflodge than armor.   When worn it
+makes your head look like the four top towers on a distant white castle."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+ARMOUR_HRD_LEATHER(0, 0)
+														 WHITE_ARMOR
+cost 16 COPPER_PIECE
+weight 10
+end
+
+white_jerkin
+names {"white mesh jerkin", "mesh jerkin","jerkin"}
+title "a white mesh jerkin."
+descr  "A white mesh jerkin is lying on the ground."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_CHAIN(0, 0)
+WHITE_ARMOR
+weight 9
+end
+
+
+
+wknight_shirt
+names{"white shirt","shirt","plate"}
+title "a white chain mail shirt"
+descr "A chain mail shirt is lying on the ground."
+extra {}
+"The shirt is constructed of white rings sewn onto a hard leather shirt."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ARMS}
+MATERIAL_SKIN("Hard leather")
+MATERIAL_METAL("white hard metal rings")
+ARMOUR_CHAIN(0,0)
+weight 5
+cost 5 GOLD_PIECE
+ WHITE_ARMOR
+end
+
+bknight_shirt
+names{"black shirt","shirt","plate"}
+title "a black chain mail shirt"
+descr "A chain mail shirt is lying on the ground."
+extra {}
+"The shirt is constructed of black rings sewn onto a hard leather shirt."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ARMS}
+MATERIAL_SKIN("Hard leather")
+MATERIAL_METAL("black hard metal rings")
+ARMOUR_CHAIN(0,0)
+weight 8
+cost 5 GOLD_PIECE
+ BLACK_ARMOR
+end
+
+white_hose
+names {"white hose","hose"}
+title "White hose"
+descr "A pair of white hose are laying here in a heap."
+extra {}
+"A pair of very simple white hose."
+ARMOUR_CLOTHES(0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_LEGS}
+MATERIAL_CLOTH("made from cloth")
+weight 1
+cost 4 SILVER_PIECE
+ WHITE_ARMOR
+end
+
+black_hose
+names {"black hose","hose"}
+title "black hose"
+descr "A pair of black hose are laying here in a heap."
+extra {}
+"A pair of very simple black hose."
+ARMOUR_CLOTHES(0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_LEGS}
+MATERIAL_CLOTH("made from cloth")
+weight 1
+cost 4 SILVER_PIECE
+ BLACK_ARMOR
+end
+
+
+    boots
+names {"boots","shoes"}
+title "a pair of leather boots"
+descr "A pair of leaher boots lies here."
+extra {}
+"A pair of leather boots that reach to the mid-calf."
+ARMOUR_LEATHER(0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_FEET}
+weight 2
+MATERIAL_SKIN("made from leather")
+SKILL_TRANSFER(SKI_FLEE,3)
+cost 2 GOLD_PIECE, 4 SILVER_PIECE
+rent 80 IRON_PIECE
+cost 6 SILVER_PIECE
+dilcopy abi_restrict@function (ABIL_DEX,8,0,0,"");
+
+end
+
+
+
+white_bracers
+names{"white bracers","bracers"}
+title "a pair of white bracers"
+descr "A pair of white bracers are lying on the ground."
+extra {}
+"The bracers are made of soft leather."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ARMS}
+ARMOUR_LEATHER(0,0)
+MATERIAL_SKIN("made from soft leather")
+weight 4
+cost 3 SILVER_PIECE
+ WHITE_ARMOR
+end
+
+black_bracers
+names{"black bracers","bracers"}
+title "a pair of black bracers"
+descr "A pair of black bracers are lying on the ground."
+extra {}
+"The bracers are made of soft leather."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ARMS}
+ARMOUR_LEATHER(0,0)
+MATERIAL_SKIN("made from soft leather")
+weight 4
+cost 3 SILVER_PIECE
+BLACK_ARMOR
+end
+
+        sandals
+names {"sandals","shoes"}
+title "a pair of sandals"
+descr "A pair of sandals lies here."
+extra {}
+"A pair of sandals, the soles are made of soft leather."
+ARMOUR_LEATHER(0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_FEET}
+weight 1
+MATERIAL_SKIN("made from soft leather")
+SKILL_TRANSFER(SKI_FLEE,3)
+cost 160 COPPER_PIECE
+rent 80 IRON_PIECE
+
+dilcopy abi_restrict@function (ABIL_STR,8,0,0,"");
+
+end
+
+white_braies
+names {"white braies","braies"}
+title "White Braies"
+descr "A pair of white braies lies here in a heap."
+extra {}
+"Plain white braies, about kneelength. Very simple."
+ARMOUR_CLOTHES(0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_LEGS}
+dilcopy abi_restrict@function (ABIL_DIV,10,0,0,"");
+
+MATERIAL_CLOTH("made from cloth")
+DIV_TRANSFER(+1)
+dilcopy guild_restrict@function ({ GUILD_UDG_CLERIC},0,0,"");
+
+weight 6
+cost 50 COPPER_PIECE
+rent 25 IRON_PIECE
+WHITE_ARMOR
+end
+
+black_braies
+names {"black braies","braies"}
+title "Black Braies"
+descr "A pair of black braies lies here in a heap."
+extra {}
+"Plain black braies, about kneelength. Very simple."
+ARMOUR_CLOTHES(0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_LEGS}
+dilcopy abi_restrict@function (ABIL_MAG,10,0,0,"");
+
+MATERIAL_CLOTH("made from cloth")
+MAG_TRANSFER(+1)
+dilcopy guild_restrict@function ({ GUILD_UDG_MAGE},0,0,"");
+
+weight 6
+cost 50 COPPER_PIECE
+rent 25 IRON_PIECE
+BLACK_ARMOR
+end
+
+
+              white_chemise
+names {"white chemise","chemise"}
+title "a plain white chemise"
+descr "A plain white chemise lies here."
+extra {}
+"A simple white chemise that hangs to about the thigh. Used mainly for
+warth ."
+ARMOUR_CLOTHES(0,0)
+MATERIAL_CLOTH("made from cloth")
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+weight 4
+cost 4 SILVER_PIECE
+ WHITE_ARMOR
+end
+
+              black_chemise
+names {"black chemise","chemise"}
+title "a plain black chemise"
+descr "A plain black chemise lies here."
+extra {}
+"A simple black chemise that hangs to about the thigh. Used mainly for
+warth."
+ARMOUR_CLOTHES(0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+MATERIAL_CLOTH("made from cloth")
+weight 4
+cost 4 SILVER_PIECE
+BLACK_ARMOR
+end
+
+
+         cap
+names {"cap","plain cap"}
+title "a plain cap"
+descr "A plain looking cap lies here."
+extra {}
+"A plain looking cap."
+ARMOUR_CLOTHES(0,0)
+MATERIAL_CLOTH("made from cloth")
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_HEAD}
+weight 1
+cost 2 SILVER_PIECE
+end
+
+
+
+bbishop_hat
+title "a Magicians Hat"
+names {"magicians hat","black hat","hat"}
+descr "A black hat is laying here."
+extra {}
+"The hat is a midnight black with the sparks of stars that look like they
+where pulled from the sky and set into the cloth of the hat...infact
+maybe they where"
+ARMOUR_CLOTHES(0,2)
+dilcopy abi_restrict@function (ABIL_MAG,50,0,0,"");
+
+MAG_TRANSFER(+1)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+dilcopy guild_restrict@function ({ GUILD_UDG_MAGE},0,0,"");
+
+MATERIAL_CLOTH("black cloth")
+MATERIAL_MAGIC("Hevenly stars sparkle on the cloth")
+rent 98 IRON_PIECE
+cost 196 COPPER_PIECE
+BLACK_ARMOR
+end
+
+wbishop_hat
+title "a Magicians Hat"
+names {"magicians hat","white hat","hat"}
+descr "A white hat is laying here."
+extra {}
+"The hat is a snow white with magical flames dancing about the hat.
+Surprisingly the hat does not burn"
+ARMOUR_CLOTHES(0,2)
+dilcopy abi_restrict@function (ABIL_DIV,50,0,0,"");
+DIV_TRANSFER(+1)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+dilcopy guild_restrict@function ({ GUILD_UDG_CLERIC},0,0,"");
+
+MATERIAL_CLOTH("white cloth")
+MATERIAL_FIRE("magical flames")
+rent 98 IRON_PIECE
+cost 196 COPPER_PIECE
+WHITE_ARMOR
+end
+
+bbishop_cloak
+title "a Magicians Robe"
+names {"magicians robe","black robe","robe"}
+descr "a black magicians robe is laying here."
+extra {}
+"The robe is a midnight black."
+ARMOUR_CHAIN(0, 0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+dilcopy guild_restrict@function ({ GUILD_UDG_MAGE},0,0,"");
+MATERIAL_CLOTH("black links of chain") 
+rent 98 IRON_PIECE
+cost 196 COPPER_PIECE
+BLACK_ARMOR
+end
+
+wbishop_cloak
+title "a Magicians Robe"
+names {"magicians robe","white robe","robe"}
+descr "a white magicians robe is laying here."
+extra {}
+"The robe is a snow white."
+ARMOUR_CHAIN(0, 0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+dilcopy guild_restrict@function ({ GUILD_UDG_CLERIC},0,0,"");
+
+MATERIAL_CLOTH("white links of chain")
+rent 98 IRON_PIECE
+cost 196 COPPER_PIECE
+WHITE_ARMOR
+end
+
+white_belt
+title "a chain belt"
+names {"chain belt","belt","bag"}
+descr "A cain belt with a large buckle is laying here."
+extra {}
+"The baldric is made from a thick length of chain with a large buckle
+bearing the crest of the white king."
+cost 8 GOLD_PIECE
+rent 50 IRON_PIECE
+dilcopy abi_restrict@function (ABIL_DEX,40,0,0,"");
+weight 3
+MATERIAL_METAL("Hard Chain")
+ARMOUR_CHAIN(0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_WAIST}
+WHITE_ARMOR
+end
+
+black_belt
+title "a chain belt"
+names {"chain belt","belt","bag"}
+descr "A cain belt with a large buckle is laying here."
+extra {}
+"The baldric is made from a thick length of chain with a large buckle
+bearing the crest of the black king."
+cost 8 GOLD_PIECE
+rent 50 IRON_PIECE
+dilcopy abi_restrict@function (ABIL_DEX,40,0,0,"");
+weight 3
+MATERIAL_METAL("Hard Chain")
+ARMOUR_CHAIN(0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_WAIST}
+BLACK_ARMOR
+end
+
+
+%reset
+
+#define WARMOR \
+        equip white_bracers position WEAR_ARMS    \
+        equip white_chemise position WEAR_BODY \
+        equip cap position WEAR_HEAD  \
+        equip sandals position WEAR_FEET \
+        equip  white_braies position WEAR_LEGS    \
+
+
+#define BRARMOR \
+        equip black_box position WEAR_BODY \
+        equip black_top position WEAR_HEAD  \
+        equip black_boots position WEAR_FEET \
+
+#define WRARMOR \
+        equip white_box position WEAR_BODY \
+        equip white_top position WEAR_HEAD  \
+        equip white_boots position WEAR_FEET \
+
+#define BARMOR \
+        equip black_bracers position WEAR_ARMS    \
+        equip black_chemise position WEAR_BODY \
+        equip cap position WEAR_HEAD  \
+        equip sandals position WEAR_FEET \
+        equip black_braies position WEAR_LEGS    \
+
+#define WKARMOR \
+        equip white_bracers position WEAR_ARMS    \
+        equip wknight_shirt position WEAR_BODY \
+        equip cap position WEAR_HEAD  \
+        equip boots position WEAR_FEET \
+        equip  white_hose position WEAR_LEGS    \
+        equip white_belt position WEAR_WAIST \
+
+#define BKARMOR \
+        equip black_bracers position WEAR_ARMS    \
+        equip bknight_shirt position WEAR_BODY \
+        equip cap position WEAR_HEAD  \
+        equip boots WEAR_FEET \
+        equip black_hose position WEAR_LEGS    \
+        equip black_belt position WEAR_WAIST \
+
+load wrook into field_35 zonemax 2
+{
+WRARMOR
+}
+
+
+
+
+
+load wrook into field_7 zonemax 2
+{
+WRARMOR
+}
+
+load wknight into field_21 zonemax 2
+{
+WKARMOR
+}
+
+
+load wknight into field_20 zonemax 2
+{
+WKARMOR
+}
+
+
+
+load wbishop into field_28 zonemax 2
+{
+equip wbishop_hat position WEAR_HEAD
+equip wbishop_cloak position WEAR_ABOUT
+equip bishop_staff position WEAR_WIELD
+}
+
+
+load wbishop into field_14 zonemax 2
+{
+equip wbishop_hat position WEAR_HEAD
+equip wbishop_cloak position WEAR_ABOUT
+equip bishop_staff position WEAR_WIELD
+}
+
+
+load wpawn into field_33 zonemax 5
+{
+WARMOR
+equip sp_short_sword position WEAR_WIELD
+}
+
+
+
+load wpawn into field_26 zonemax 5
+{
+WARMOR
+equip short_sword position WEAR_WIELD
+}
+
+
+load wpawn into field_19 zonemax 5
+{
+WARMOR
+equip short_sword position WEAR_WIELD
+}
+
+
+
+
+load wpawn into field_12 zonemax 5
+{
+WARMOR
+equip short_sword position WEAR_WIELD
+}
+
+
+load wpawn into field_6 zonemax 5
+{
+WARMOR
+equip short_sword position WEAR_WIELD
+}
+
+
+load bpawn into field_31 zonemax 5
+{
+BARMOR
+equip sp_short_sword position WEAR_WIELD
+}
+
+
+
+
+load bpawn into field_24 zonemax 5
+{
+BARMOR
+equip short_sword position WEAR_WIELD
+}
+
+
+load bpawn into field_17 zonemax 5
+{
+BARMOR
+equip short_sword position WEAR_WIELD
+}
+
+
+load bpawn into field_10 zonemax 5
+{
+BARMOR
+equip short_sword position WEAR_WIELD
+}
+
+load bpawn into field_3 zonemax 5
+{
+BARMOR
+equip short_sword position WEAR_WIELD
+}
+
+
+load bbrook into field_29 zonemax 2
+{
+BRARMOR
+}
+
+
+load bbrook into field_1 zonemax 2
+{
+BRARMOR
+}
+
+load bknight into field_15 zonemax 2
+{
+BKARMOR
+}
+
+load bknight into field_16 zonemax 2
+{
+BKARMOR
+}
+
+load bbishop into field_22 zonemax 2
+{
+equip bbishop_hat position WEAR_HEAD
+equip bbishop_cloak position WEAR_ABOUT
+equip bishop_staff position WEAR_WIELD
+}
+
+load bbishop into field_8 zonemax 2
+{
+equip bbishop_hat position WEAR_HEAD
+equip bbishop_cloak position WEAR_ABOUT
+equip bishop_staff position WEAR_WIELD
+}
+%end
+
+
+
+

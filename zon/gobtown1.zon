@@ -1,0 +1,7217 @@
+/*
+filename    gobtown1
+password    oopsy
+changedby   oops
+EmailAdd     Jennifer A Garuba <garubaja@wilkes1.wilkes.edu>
+request     compile
+version     13
+END HEADER*/
+
+#include <composed.h>
+#include "values.h" 
+#include "wmacros.h"
+
+
+%zone gobtown1
+
+lifespan 20
+reset RESET_ANYHOW
+creators {"wynd", "malice"}
+
+notes 
+
+"&l	The theme of this zone is a labyrinth over-run by goblins which 
+leads to a goblin city.  The main mobs of course are goblins, which range 
+from between levels 70-80.  This is the city section of the zone.  Eventually
+the zone will be expanded to include a castle.  This zone has been in
+progress since August of 1996, and undergoes changes frequently. If you
+have any questions, comments, or suggestions regarding this zone, please
+e-mail Wynd at pupalijl@wilkes1.wilkes.edu, or Malice at
+garubaja@wilkes1.wilkes.edu.  Any questions dealing specifically with the
+city can be directed to Malice/Oops. 
+	
+Special Thanks:
+	I (Malice/Oops) would like to take time to thank all those people 
+that helped me and/or supported me through making the zone.  First, I'd 
+like to thank Zig, who explained anything and everything I had a question 
+about right from the beginning.  Secondly, thank you to Jager and Nexus 
+who took the time to explain shopkeepers to me.  Thirdly, thank you to 
+Palio, Whistler, and Saor, who edited and checked the zone.  I'd also 
+like to thank Batlin in advance for making a great quest to add to the 
+zone, which will be put in very shortly.  Also, thank you to everyone who 
+supported me throughout making the zone, including all of the above, 
+along with Dangerboy, Wonko, Shanna, and Boyz.  And finally, a very 
+special thank you to Wynd/Wynne, who had the initial idea for the zone, 
+let me co-write with her, and made the whole zone making experience a 
+fun one.  I couldn't ask for a better partner.  Thank you all so much. =)"
+
+  
+
+/* Shopkeeper Stuff */
+
+/* Tavern */
+
+#define TAVERN_PROD \
+{"grain_alcohol@gobtown1 15 20", \
+ "pretzels@gobtown1 10 15", \
+ "beer_nuts@gobtown1 15 20", \
+ "rum_coke@gobtown1 10 15", \
+ "tuborg@udgaard 15 20"} 
+
+#define TAVERN_MSG \
+{"$1n says, 'This is a tavern, I don't sell such an item as that!'", \
+ "$1n says, '$3n, you don't even have that!'", \
+ "$1n says, 'I don't trade with things such as $2n! Just buy a beer!'", \
+ "$1n says, '$3n, you can't afford $2n.'", \
+ "$1n says, 'Thank you, $3n, here are %s for $2n.'", \
+ "$1n says, 'Thank you, $3n.'", \
+ "$1n says, 'I don't have that many $2ns in stock.'", \
+ "$1n says, 'I'm on break, come back later.'", \
+ "$1n says, 'I haven't got a use for $2n.'", \
+ "$1n says, 'I'd like to buy it, but I can't afford it, sorry.'"} \
+
+#define TAVERN_OPEN_TIMES {"2","24"}
+
+#define TAVERN_ITEM_TYPE "19" 
+
+#define TAVERN_MAX_CASH 40960 
+
+#define TAVERN_SELL_PROFIT 110
+
+#define TAVERN_BUY_PROFIT 50
+
+/* Candystore */
+
+#define CANDY_PROD \
+{"rock_candy@gobtown1 14 16", \
+"cherry_pop@gobtown1 15 20", \
+"rasp_pop@gobtown1 16 18", \
+"watermelon_pop@gobtown1 14 16", \
+"grape_pop@gobtown1 15 20", \
+"strawberry_pop@gobtown1 16 18", \
+"bscotch_pop@gobtown1 14 16", \
+"rootbeer_pop@gobtown1 15 20", \
+"goblin_bar@gobtown1 16 18", \
+"almond_bar@gobtown1 14 16"}
+
+#define CANDY_MSG \
+{"$1n says, 'I don't sell any of those.'", \
+"$1n says, '$3n, you don't even have that!'", \
+"$1n says, 'I don't trade with things like $2n.'", \
+"$1n says, '$3n, you can't afford to buy $2n.'", \
+"$1n says, 'Thanks, $3n, here are %s for $2n.'", \
+"$1n says, 'Thank you, $3n.'", \
+"$1n says, 'It seems I don't have that many $2ns in stock.'", \
+"$1n says, 'We're not open right now, come back later.'", \
+"$1n says, 'I have no use for $2n!'", \
+"$1n says, 'I'd buy it if I could afford it, sorry.'"} \
+
+#define CANDY_OPEN_TIMES {"2","23"}
+
+#define CANDY_ITEM_TYPE "19"
+
+#define CANDY_MAX_CASH 40960
+
+#define CANDY_SELL_PROFIT 115
+
+#define CANDY_BUY_PROFIT 65
+
+/* Bakery */
+
+#define BAKE_PROD \
+{"cream_donut@gobtown1 8 10", \
+"elephant_ear@gobtown1 12 18", \
+"bday_cake@gobtown1 8 10", \
+"choc_pie@gobtown1 12 18", \
+"cinn_toast@gobtown1 8 10", \
+"mousse@gobtown1 12 18", \
+"cruller@gobtown1 8 10", \
+"bread@gobtown1 12 18"}
+
+#define BAKE_MSG \
+{"$1n says, 'Why would I sell that?  This is a bakery!'", \
+"$1n says, 'You don't even own one of those, $3n!'", \
+"$1n says, 'I don't trade with things such as $2n.'", \
+"$1n says, 'You can't afford $2n, $3n.'", \
+"$1n says, 'Thank you, $3n.  Here are %s for $2n.'", \
+"$1n says, 'Thank you, $3n.'", \
+"$1n says, 'I don't have anymore $2ns in stock.'", \
+"$1n says, 'I'm on break right now, come back in a bit.'", \
+"$1n says, 'What use would a baker have for that?'", \
+"$1n says, 'I can't afford to buy that, sorry.'"} \
+
+#define BAKE_OPEN_TIMES {"2", "23"}
+
+#define BAKE_ITEM_TYPE "19"
+
+#define BAKE_MAX_CASH 40960
+
+#define BAKE_SELL_PROFIT 110
+
+#define BAKE_BUY_PROFIT 70
+
+/* Greengrocer */
+
+#define GREEN_PROD \
+{"peach@gobtown1 6 12", \
+"salad@gobtown1 8 14", \
+"veggie_burger@gobtown1 8 14", \
+"plum@gobtown1 6 12", \
+"lime@gobtown1 6 12", \
+"soup@gobtown1 10 18", \
+"fruit_salad@gobtown1 10 18", \
+"rose@gobtown1 6 12", \
+"baked_potato@gobtown1 8 14", \
+"pickle@gobtown1 6 12"}
+
+#define GREEN_MSG \
+{"$1n says, 'Sorry, we don't carry that item.'", \
+"$1n says, 'You don't even have that, $3n!'", \
+"$1n says, 'I don't trade with such things as $2n.'", \
+"$1n says, 'You don't have enough money to buy $2n, $3n.'", \
+"$1n says, 'Thank you, $3n.  Here are %s for $2n.'",\
+"$1n says, 'Thank you very much, $3n.'", \
+"$1n says, 'It seems I have run out of $2ns.'", \
+"$1n says, 'The store is closed right now, come back later.'", \
+"$1n says, 'No thanks, I don't have a use for that.'", \
+"$1n says, 'I'd like to buy it, but i can't afford it.'"} \
+
+#define GREEN_OPEN_TIMES {"3", "24"}
+
+#define GREEN_ITEM_TYPE "19"
+
+#define GREEN_MAX_CASH 40960
+
+#define GREEN_SELL_PROFIT 120
+
+#define GREEN_BUY_PROFIT 75
+
+/* Butchershop */
+
+#define BUTCHER_PROD \
+{"meat@gobtown1 6 12", \
+"ham@gobtown1 8 14", \
+"chicken_leg@gobtown1 8 14", \
+"pepperoni@gobtown1 6 12", \
+"bacon@gobtown1 8 14"}
+
+#define BUTCHER_MSG \
+{"$1n says, 'Sorry, we don't carry that item.'", \
+"$1n says, 'You don't even have that, $3n!'", \
+"$1n says, 'I don't trade with such things as $2n.'", \
+"$1n says, 'You don't have enough money to buy $2n, $3n.'", \
+"$1n says, 'Thank you, $3n.  Here are %s for $2n.'",\
+"$1n says, 'Thank you very much, $3n.'", \
+"$1n says, 'It seems I have run out of $2ns.'", \
+"$1n says, 'The store is closed right now, come back later.'", \
+"$1n says, 'No thanks, I don't have a use for that.'", \
+"$1n says, 'I'd like to buy it, but i can't afford it.'"} \
+
+#define BUTCHER_OPEN_TIMES {"3", "24"}
+
+#define BUTCHER_ITEM_TYPE "19"
+
+#define BUTCHER_MAX_CASH 40960
+
+#define BUTCHER_SELL_PROFIT 120
+
+#define BUTCHER_BUY_PROFIT 75
+
+/* Potion Shop */
+
+#define POTION_PROD \
+{"con_pot@gobtown1 6 12", \
+"det_inv_pot@gobtown1 10 18", \
+"div_pot@gobtown1 8 14", \
+"rem_poi_pot@gobtown1 6 12", \
+"rem_dis_pot@gobtown1 10 18", \
+"cha_pot@gobtown1 8 14", \
+"mag_pot@gobtown1 6 12", \
+"haste_pot@gobtown1 10 18", \
+"bra_pot@gobtown1 8 14", \
+"str_pot@gobtown1 6 12", \
+"dex_pot@gobtown1 10 18", \
+"heal_pot@gobtown1 8 14", \
+"inv_pot@gobtown1 6 12"}
+
+#define POTION_MSG \
+{"$1n says, 'Sorry, we don't carry that item.'", \
+"$1n says, 'You don't even have that, $3n!'", \
+"$1n says, 'I don't trade with such things as $2n.'", \
+"$1n says, 'You don't have enough money to buy $2n, $3n.'", \
+"$1n says, 'Thank you, $3n.  Here are %s for $2n.'",\
+"$1n says, 'Thank you very much, $3n.'", \
+"$1n says, 'It seems I have run out of $2ns.'", \
+"$1n says, 'The store is closed right now, come back later.'", \
+"$1n says, 'No thanks, I don't have a use for that.'", \
+"$1n says, 'I'd like to buy it, but i can't afford it.'"} \
+
+#define POTION_OPEN_TIMES {"2", "24"}
+
+#define POTION_ITEM_TYPE "10"
+
+#define POTION_MAX_CASH 40960
+
+#define POTION_SELL_PROFIT 110
+
+#define POTION_BUY_PROFIT 75
+
+/* Scroll Shop */
+
+#define SCROLL_PROD \
+{"heal_scroll@gobtown1 6 12", \
+"str_scroll@gobtown1 8 14", \
+"dex_scroll@gobtown1 10 18", \
+"bless_scroll@gobtown1 6 12", \
+"haste_scroll@gobtown1 8 14", \
+"con_scroll@gobtown1 10 18", \
+"cha_scroll@gobtown1 6 12", \
+"bra_scroll@gobtown1 8 14", \
+"mag_scroll@gobtown1 10 18", \
+"div_scroll@gobtown 6 12", \
+"sanc_scroll@gobtown1 8 14"}
+
+#define SCROLL_MSG \
+{"$1n says, 'I don't sell any of those.'", \
+"$1n says, '$3n, you don't even have that!'", \
+"$1n says, 'I don't trade with things like $2n.'", \
+"$1n says, '$3n, you can't afford to buy $2n.'", \
+"$1n says, 'Thanks, $3n, here are %s for $2n.'", \
+"$1n says, 'Thank you, $3n.'", \
+"$1n says, 'It seems I don't have that many $2ns in stock.'", \
+"$1n says, 'We're not open right now, come back later.'", \
+"$1n says, 'I have no use for $2n!'", \
+"$1n says, 'I'd buy it if I could afford it, sorry.'"} \
+
+#define SCROLL_OPEN_TIMES {"1","23"}
+
+#define SCROLL_ITEM_TYPE "2"
+
+#define SCROLL_MAX_CASH 40960
+
+#define SCROLL_SELL_PROFIT 115
+
+#define SCROLL_BUY_PROFIT 65
+
+/* Mortician Shop */
+
+#define MORT_PROD \
+{"death_fluid@gobtown1 12 18", \
+"headstone@gobtown1 8 14", \
+"coffin@gobtown1 10 18"}
+
+
+#define MORT_MSG \
+{"$1n says, 'I don't sell any of those.'", \
+"$1n says, 'You don't even own one of those, $3n!'", \
+"$1n says, 'I don't trade with things such as $2n.'", \
+"$1n says, 'You can't afford $2n, $3n.'", \
+"$1n says, 'Thank you, $3n.  Here are %s for $2n.'", \
+"$1n says, 'Thank you, $3n.'", \
+"$1n says, 'I don't have anymore $2ns in stock.'", \
+"$1n says, 'I'm on break right now, come back in a bit.'", \
+"$1n says, 'What use would a mortician have for that?'", \
+"$1n says, 'I can't afford to buy that, sorry.'"} \
+
+#define MORT_OPEN_TIMES {"1", "22"}
+
+#define MORT_ITEM_TYPE "12"
+
+#define MORT_MAX_CASH 40960
+
+#define MORT_SELL_PROFIT 110
+
+#define MORT_BUY_PROFIT 70
+
+/* Ironmonger Shop */
+
+#define IRON_PROD \
+{"dictionary@basis 15 20", \
+"torch@gobtown1 8 14", \
+"lantern@gobtown1 8 18", \
+"quill@gobtown1 10 16", \
+"bag@gobtown1 10 12", \
+"paper@gobtown1 8 14"}
+
+
+#define IRON_MSG \
+{"$1n says, 'I don't sell any of those.'", \
+"$1n says, '$3n, you don't even have that!'", \
+"$1n says, 'I don't trade with things like $2n.'", \
+"$1n says, '$3n, you can't afford to buy $2n.'", \
+"$1n says, 'Thanks, $3n, here are %s for $2n.'", \
+"$1n says, 'Thank you, $3n.'", \
+"$1n says, 'It seems I don't have that many $2ns in stock.'", \
+"$1n says, 'We're not open right now, come back later.'", \
+"$1n says, 'I have no use for $2n!'", \
+"$1n says, 'I'd buy it if I could afford it, sorry.'"} \
+
+#define IRON_OPEN_TIMES {"2","23"}
+
+#define IRON_ITEM_TYPE "12"
+
+#define IRON_MAX_CASH 40960
+
+#define IRON_SELL_PROFIT 115
+
+#define IRON_BUY_PROFIT 65
+
+/* Weaponsmith Shop */
+
+#define ARMOR_PROD \
+{"rag_shirt@gobtown1 12 18", \
+"old_pants@gobtown1 8 10", \
+"dress@gobtown1 12 18", \
+"goblin_helmet@gobtown1 8 10", \
+"goblin_plate@gobtown1 12 18", \
+"halberd@gobtown1 8 10", \
+"trident@gobtown1 12 18", \
+"spear@gobtown1 8 10"}
+
+#define ARMOR_MSG \
+{"$1n says, 'Why would I sell that?  This is a weapon and armor shop!'", \
+"$1n says, 'You don't even own one of those, $3n!'", \
+"$1n says, 'I don't trade with things such as $2n.'", \
+"$1n says, 'You can't afford $2n, $3n.'", \
+"$1n says, 'Thank you, $3n.  Here are %s for $2n.'", \
+"$1n says, 'Thank you, $3n.'", \
+"$1n says, 'I don't have anymore $2ns in stock.'", \
+"$1n says, 'I'm on break right now, come back in a bit.'", \
+"$1n says, 'What use would a weaponsmith have for that?'", \
+"$1n says, 'I can't afford to buy that, sorry.'"} \
+
+#define ARMOR_OPEN_TIMES {"1", "23"}
+
+#define ARMOR_ITEM_TYPE "12"
+
+#define ARMOR_MAX_CASH 40960
+
+#define ARMOR_SELL_PROFIT 110
+
+#define ARMOR_BUY_PROFIT 70
+
+/* Dil Defines */
+
+#define UURAK_PROPHESY_ONGOING "Searching for the Artifacts of Uurak..."
+
+#define UURAK_PROPHESY_COMPLETE "Fulfilled the Prophesy of Uurak"
+
+
+/* Mob Defines */
+
+
+#define GOBLIN_CIT_A(MLVL,GENDER,HEIGHT,WEIGHT) \
+race RACE_GOBLIN \
+level MLVL \
+sex GENDER \
+height HEIGHT \
+weight WEIGHT \
+alignment -1000 \
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES) \
+MSET_ABILITY(25,20,10,25,10,5,5,0) \
+MSET_WEAPON(7,7,7,10,29,7) \
+MSET_SPELL(3,3,3,3,3,3,3,3,3,3,3) 
+
+
+#define GOBLIN_CIT_B(MLVL,GENDER,HEIGHT,WEIGHT) \
+race RACE_GOBLIN \
+level MLVL \
+sex GENDER \
+height HEIGHT \
+weight WEIGHT \
+alignment -1000 \
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES) \
+MSET_ABILITY(22,22,10,26,10,5,5,0) \
+MSET_WEAPON(7,7,7,10,29,7) \
+MSET_SPELL(3,3,3,3,3,3,3,3,3,3,3) 
+
+
+#define GOBLIN_CHILD_A(MLVL,GENDER,HEIGHT,WEIGHT) \
+race RACE_GOBLIN \
+level MLVL \
+sex GENDER \
+height HEIGHT \
+weight WEIGHT \
+alignment -1000 \
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES) \
+MSET_ABILITY(20,20,20,20,10,5,5,0) \
+MSET_WEAPON(7,7,7,10,29,7) \
+MSET_SPELL(3,3,3,3,3,3,3,3,3,3,3) 
+
+
+#define GOBLIN_CHILD_B(MLVL,GENDER,HEIGHT,WEIGHT) \
+race RACE_GOBLIN \
+level MLVL \
+sex GENDER \
+height HEIGHT \
+weight WEIGHT \
+alignment -1000 \
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES) \
+MSET_ABILITY(21,21,18,18,12,5,5,0) \
+MSET_WEAPON(7,7,7,10,29,7) \
+MSET_SPELL(3,3,3,3,3,3,3,3,3,3,3) 
+
+#define GUARD_A(MLVL,GENDER,HEIGHT,WEIGHT) \
+race RACE_GOBLIN \
+level MLVL \
+sex GENDER \
+height HEIGHT \
+weight WEIGHT \
+alignment -1000 \
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES) \
+MSET_ABILITY(16,16,26,20,12,5,5,0) \
+MSET_WEAPON(8,8,8,5,30,8) \
+MSET_SPELL(3,3,3,3,3,3,3,3,3,3,3) 
+
+
+#define GOBLIN_SCAV(MLVL,GENDER,HEIGHT,WEIGHT) \
+race RACE_GOBLIN \
+level MLVL \
+sex GENDER \
+height HEIGHT \
+weight WEIGHT \
+alignment -1000 \
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES) \
+MSET_ABILITY(20,25,10,15,20,5,5,0) \
+MSET_WEAPON(5,5,5,7,40,5) \
+MSET_SPELL(3,3,3,3,3,3,3,3,3,3,3) 
+
+
+#define QUEST_MOB_KURUK(MLVL,GENDER,HEIGHT,WEIGHT) \
+race RACE_GOBLIN \
+level MLVL \
+sex GENDER \
+height HEIGHT \
+weight WEIGHT \
+alignment -1000 \
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES) \
+MSET_ABILITY(15,15,15,20,15,10,10,0) \
+MSET_WEAPON(6,6,6,11,10,6) \
+MSET_SPELL(4,4,4,5,5,5,6,5,5,6,6) 
+
+
+#define QUEST_MOB_ASAAUK(MLVL,GENDER,HEIGHT,WEIGHT) \
+race RACE_GOBLIN \
+level MLVL \
+sex GENDER \
+height HEIGHT \
+weight WEIGHT \
+alignment -1000 \
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES) \
+MSET_ABILITY(15,15,15,20,15,10,10,0) \
+MSET_WEAPON(6,6,6,11,10,6) \
+MSET_SPELL(4,4,4,5,5,5,6,5,5,6,6) 
+
+
+#define BIG_RAT(MLVL,GENDER,HEIGHT,WEIGHT) \
+race RACE_RAT \
+level MLVL \
+sex GENDER \
+height HEIGHT \
+weight WEIGHT \
+alignment -1000 \
+NATURAL_DEF(WPN_BITE, ARM_CLOTHES) \
+MSET_ABILITY(25,20,15,20,10,5,5,0) \
+MSET_WEAPON(3,3,3,3,52,3) \
+MSET_SPELL(3,3,3,3,3,3,3,3,3,3,3) 
+
+#define SKELETON_A(MLVL,GENDER,HEIGHT,WEIGHT) \
+race RACE_SKELETON \
+level MLVL \
+sex GENDER \
+height HEIGHT \
+weight WEIGHT \
+alignment -1000 \
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES) \
+MSET_ABILITY(20,20,20,20,10,5,5,0) \
+MSET_WEAPON(3,6,6,6,40,6) \
+MSET_SPELL(3,3,3,3,3,3,3,3,3,3,3) 
+
+#define SPIRIT_A(MLVL,GENDER,HEIGHT,WEIGHT) \
+race RACE_SPIRIT \
+level MLVL \
+sex GENDER \
+height HEIGHT \
+weight WEIGHT \
+alignment -1000 \
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES) \
+MSET_ABILITY(25,20,10,15,20,5,5,0) \
+MSET_WEAPON(3,6,6,6,40,6) \
+MSET_SPELL(3,3,3,3,3,3,3,3,3,3,3) 
+
+
+%dil
+
+/* Wynne wrote the following dil */
+
+dilbegin shuffle ();
+
+var
+	x: integer;
+	room: unitptr;
+	obj: unitptr;
+code
+	{
+	:start:
+	heartbeat:= PULSE_SEC*rnd(60, 120);
+	pause;
+	x:= 0;
+	while(x<=5)
+		{
+		room:= self.exit_to[x];
+		obj:= room.inside;
+		while(obj)
+			{
+			if("goblin" in obj.names)
+			goto here;
+			obj:= obj.next;
+			}
+		x:=x+1;
+		}
+	goto start;
+	:here:
+	act("You hear the sound of goblin feet shuffling through trash in the 
+distance.", A_SOMEONE, self.inside, null, null, TO_ALL);
+	goto start;
+	}
+dilend
+
+
+dilbegin coffin_1a ();
+ 
+var
+	obj: unitptr;
+	dork: unitptr;
+code
+	{
+	heartbeat:=PULSE_SEC*60*20;
+	:start:
+	obj:= self.inside;
+	while(obj)
+		{
+		if(obj.title=="a goblin skeleton")
+			{
+			pause;
+			goto start;
+			}
+		obj:= obj.next;
+		}
+	dork:=load("skeleton_a@gobtown1");
+	pause;
+	goto start;
+	}
+dilend
+
+
+dilbegin coffin_1b ();
+ 
+var
+	obj: unitptr;
+	dork: unitptr;
+code
+	{
+	heartbeat:=PULSE_SEC*60*20;
+	:start:
+	obj:= self.inside;
+	while(obj)
+		{
+		if(obj.title=="a goblin skeleton")
+			{
+			pause;
+			goto start;
+			}
+		obj:= obj.next;
+		}
+	dork:=load("skeleton_b@gobtown1");
+	pause;
+	goto start;
+	}
+dilend
+
+dilbegin coffin_2 ();
+
+var
+	pc: unitptr;
+	skel: unitptr;
+code
+	{
+	:start:
+	wait(SFB_DONE, ((command(CMD_OPEN)) and (target==self)));
+	pc:= activator;
+	skel:= self.inside;
+	while(skel)
+		{
+		if(skel.title=="a goblin skeleton")
+			{
+			exec("exit", skel);
+			exec("kill "+ pc.name, skel);
+			goto start;
+			}
+		skel:= skel.next;
+		}
+		goto start;
+	}
+dilend 
+
+dilbegin coffin_3 ();
+
+code
+	{
+	heartbeat:= PULSE_SEC*60*2;
+	:start:
+	pause;
+	if(self.outside.title=="a large coffin") goto start;
+	if(self.position== POSITION_FIGHTING) goto start;
+	exec("enter coffin", self);
+	exec("close coffin", self);
+	goto start;
+	}
+dilend
+
+
+/* This is Batlin's Quest */
+
+dilbegin kuruk_quest();
+
+var
+	pc : unitptr;
+	potn : unitptr;
+	iFight : integer;
+	quest : extraptr;
+
+code
+{
+	heartbeat := PULSE_SEC * 8;
+	on_activation(self.position == POSITION_FIGHTING, ina_fight);
+	potn := null;
+
+:start:
+	iFight := interrupt(SFB_COM, self.position == POSITION_FIGHTING,
+ina_fight);
+
+:stillwait:
+	wait(SFB_DONE, (not(UURAK_PROPHESY_COMPLETE in activator.quests)) and
+(activator.type == UNIT_ST_PC));
+	pc := activator;
+	secure(pc,start);
+
+	if(UURAK_PROPHESY_ONGOING in pc.quests) goto part2;
+	else goto part1;
+
+:part1:
+	exec("say Greetings, "+pc.name+".",self);
+	pause;
+	exec("bow",self);
+	pause;
+	exec("peer"+pc.name, self);
+	exec("say My!  Aren't you a hearty looking adventurer!",self);
+	pause;
+	exec("think",self);
+	exec("say Would you like to help ol' Kuruk out?  I'll make it 
+worth your while.",self);
+	exec("say Please NOD if you'd like to help me.",self);
+
+	wait(SFB_DONE,pc==pc);
+	if(not command(CMD_NOD))
+	{
+		exec("sigh",self);
+		pause;
+		exec("say Maybe next time, "+pc.name+"... maybe next 
+time...", self);
+		pause;
+		exec("sigh",self);
+		unsecure(pc);
+		goto stillwait;
+	}
+
+	exec("say Excellent...",self);
+	exec("grin"+pc.name,self);
+	pause;
+	exec("emote makes a quick gesture and the silver mirror begins to 
+glow slightly.",self);
+	pause;
+	act("The silver mirror pulses, as an image of a bloody battle 
+comes into view.", A_SOMEONE, pc, null, null, TO_ALL);
+	pause;
+	act("You see a great goblin warchief, waving a deadly spear, 
+commanding his troops onward into the elven forces.", A_SOMEONE, pc, 
+null, null, TO_ALL);
+	pause;
+	act("The mirror flickers, and darkens slightly, as the new image 
+begins to form...", A_SOMEONE, pc, null, null, TO_ALL);
+	pause;
+	act("...an elven king, leading his troops against the incoming 
+goblin onslaught.", A_SOMEONE, pc, null, null, TO_ALL);
+	pause;
+	act("The goblin warchief cries 'HAVOC!' and a deadly rain of 
+spears falls upon the elves.", A_SOMEONE, pc, null, null, TO_ALL);
+	pause;
+	act("A dark light engulfs the image, twisting it, as a different 
+scene befalls your eyes.", A_SOMEONE, pc, null, null, TO_ALL);
+	pause;
+	act("You see a land razed to the ground... almost an entire race 
+destroyed... and the elven king locked in mortal combat with the goblin 
+warchief.", A_SOMEONE, pc, null, null, TO_ALL);
+	pause;
+	act("The spear glows ominously, as the elven king is slain.  The 
+goblin warchief seems to be surrounded by an evil illumination.", 
+A_SOMEONE, pc, null, null, TO_ALL);
+	pause;
+	exec("grin",self);
+	pause;
+	exec("emote gestures again, and the image fades slowly to 
+black.",self);
+	pause;
+	exec("say Thousands of years ago, my people lived in what you 
+would call 'The Golden Age.'",self);
+	pause;
+	exec("say We prospered under the rule of The Great One, Uurak of 
+Uural.",self);
+	pause;
+	exec("say According to legend, The Great One vanished from this 
+world, vowing to return again when the celestial spheres align.",self);
+	pause;
+	exec("say In order to fulfill this prophesy, The Great One 
+requires the greatest artifacts of Uural, as well as one of the ancient 
+bloodline to perform the divine ritual.",self);
+	pause;
+	act("Kuruk's voice chills you to the bone as he hisses, 'I am the 
+last one of the Uural bloodline.'", A_SOMEONE, pc, null, null, TO_ALL);
+	pause;
+	exec("say I will require four artifacts of Uurak to fulfill the 
+prophesy, "+pc.name+".",self);
+	pause;
+	exec("say The first artifact you must find is the Spear of Uurak, 
+which is the bane of my people's enemies, the elves.",self);
+	pause;
+	exec("say Next, I will require the Ring of Uurak, from which The 
+Great One draws his powers.",self);
+	pause;
+	exec("say The third item I require from you will be the Crown of 
+Uurak, which gives The Great One his inner sight.",self);
+	pause;
+	exec("say Finally, I need you, "+pc.name+", to bring me the 
+Dagger of Uurak, whose blade sacrificed many of elven blood.",self);
+	pause;
+	exec("say Of the locatons of the artifacts, I know not, for they 
+have been lost for hundreds of years.",self);
+	pause;
+        exec("say The sage Asaauk may be able to aid you in your quest. 
+Simply say my name, and he will help you.", self);
+	pause;
+        exec("say Good luck, my friend.", self);
+        addextra(pc.quests, {UURAK_PROPHESY_ONGOING}, "");
+	unsecure(pc);
+	pause;
+	goto stillwait;
+
+:part2:
+	if((not command(CMD_GIVE)) or (target!=self))
+	{
+		unsecure(pc);
+		goto stillwait;
+	}
+	if((medium.nameidx=="uurak_spear") and (not("uurak_prophesy_2_1" 
+in pc.quests)))
+	{
+		destroy(medium);
+		quest:=UURAK_PROPHESY_ONGOING in pc.quests;
+		addstring(quest.names, "uurak_prophesy_2_1");
+		exec("say "+pc.name+", you have found the Spear of 
+Uurak.  The Great One will be pleased.", self);
+		exec("grin",self);
+		goto allitems;
+	}
+	if((medium.nameidx=="uurak_ring") and (not ("uurak_prophesy_2_2" 
+in pc.quests)))
+	{
+		destroy(medium);
+		quest:=UURAK_PROPHESY_ONGOING in pc.quests;
+		addstring(quest.names, "uurak_prophesy_2_2");
+		exec("say Ahhh... the Ring of Uurak.  Well done, 
+"+pc.name+".",self);
+		goto allitems;
+	}
+	if((medium.nameidx=="uurak_crown") and (not ("uurak_prophesy_2_3" 
+in pc.quests)))
+	{
+		destroy(medium);
+		quest:=UURAK_PROPHESY_ONGOING in pc.quests;
+		addstring(quest.names, "uurak_prophesy_2_3");
+		exec("say The Crown of Uurak!  The Great One will be 
+pleased, "+pc.name+".",self);
+		goto allitems;
+	}
+	if((medium.nameidx=="uurak_dagger") and (not 
+("uurak_prophesy_2_4" in pc.quests)))
+	{
+		destroy(medium);
+		quest:=UURAK_PROPHESY_ONGOING in pc.quests;
+		addstring(quest.names, "uurak_prophesy_2_4");
+		exec("say The Dagger of Uurak.  The Great One will be 
+pleased by the glory of the sacrifices this blade brings.",self);
+		goto allitems;
+	}
+
+	else
+	{
+		exec("say I have not asked for this, "+pc.name+".",self);
+		exec("give "+medium.name+" "+pc.name,self);
+	}
+	unsecure(pc);
+	goto stillwait;
+
+:allitems:
+	if(("uurak_prophesy_2_1" in pc.quests) and ("uurak_prophesy_2_2" 
+in pc.quests) and ("uurak_prophesy_2_3" in pc.quests) and 
+("uurak_prophesy_2_4" in pc.quests))
+	{
+		subextra(pc.quests, UURAK_PROPHESY_ONGOING);
+		addextra(pc.quests, {UURAK_PROPHESY_COMPLETE},"");
+		experience(6000, pc);
+		exec("say You fulfilled my people's ancient prophesy, 
+"+pc.name+".  " ,self);
+		pause;
+		exec("bow"+pc.name,self);
+		pause;
+		exec("say You truly are a great adventurer.",self);
+		pause;
+		exec("say Please take this reward.", self);
+		act("You gained 6000 xp!", A_SOMEONE, pc, null, null, TO_CHAR);
+		pause;
+		act("Kuruk makes a quick gesture and a dark breastplate 
+appears before you.", A_SOMEONE, pc, null, null, TO_ALL);
+		pause;
+		exec("grin"+pc.name, self);
+		pause;
+		exec("say This breastplate is an ancient goblin 
+treasure.  For allowing me to fulfill the prophesy of my people, I 
+beseech you, "+pc.name+", to take it.",self);
+		pause;
+		/* potn:=load("newbie_sword@newbie"); */ 
+		/* link(potn, pc); */
+		/* potn:=load("newbie_sword@newbie"); */
+		/* link(potn, pc); */ /* add whatever reward */
+		act("Kuruk hands the dark breastplate to you.", 
+A_SOMEONE, pc, null, null, TO_CHAR);
+		act("Kuruk hands a dark breastplate to "+pc.name+".", 
+A_SOMEONE, pc, null, null, TO_REST);
+		exec("say I must now prepare the dark ritual to summon 
+The Great One to this realm.", self);
+		pause;
+		exec("say Farewell, "+pc.name+"",self);
+		pause;
+	}
+	unsecure(pc);
+	pause;
+	goto stillwait;
+
+:ina_fight:
+	clear(iFight);
+	while(self.position==POSITION_FIGHTING) pause;
+	goto start;
+}
+
+dilend
+		
+
+/*dilbegin asaauk_chat();
+
+var
+	pc : unitptr;
+code
+{
+
+:init:
+heartbeat := PULSE_SEC * 8;
+
+:start:
+nopriority;
+wait(SFB_CMD,((activator.type == UNIT_ST_PC) and
+	      (command("CMD_SAY") and (argument != "kuruk")) and
+	      ((UURAK_PROPHESY_ONGOING in activator.quests)) and
+	       (argument in self.names) ));
+block;
+priority;
+pc := activator;
+secure(pc, losthim);
+
+act("You mention the name of 'Kuruk' to Asaauk, and his eyes light up in 
+recognition.",A_SOMEONE,pc,null,null,TO_CHAR);
+act("pc.name+" mentions the name of 'Kuruk' to Asaauk, and his eyes light 
+up in recognition.",A_SOMEONE,pc,null,null,TO_REST);
+pause;
+
+exec("say Well, now, "+pc.name+".  I see you know my friend Kuruk.  He 
+must have sent you to find those artifacts of Uurak, eh?",self);
+pause;
+exec("emote strokes his chin thoughtfully.",self);
+pause;
+exec("say I believe I know where you might find those items, 
+"+pc.name+"." ,self);
+pause;
+exec("say Of course, you could always BEG me for the information.",self);
+pause;
+wait(SFB_CMD,((activator.type == UNIT_ST_PC) and
+	      (command("CMD_BEG")) and
+	      ((UURAK_PROPHESY_ONGOING in activator.quests)) and
+	       (argument in self.names) ));
+act("You beg Asaauk to tell you the information leading to the 
+whereabouts of the artifacts.",A_SOMEONE,pc,null,null,TO_CHAR);
+act("pc.name+" begs Asaauk for information leading to the whereabouts of 
+the artifacts.",A_SOMEONE,pc,null,null,TO_REST);
+
+exec("emote laughs evilly under his breath.",self);
+pause;
+exec("say You can do much better than that!  I want to see you GROVEL!" 
+,self);
+pause;
+
+wait(SFB_CMD,((activator.type == UNIT_ST_PC) and
+	      (command("CMD_GROVEL")) and
+	      ((UURAK_PROPHESY_ONGOING in activator.quests)) and
+	       (argument in self.names) ));
+
+exec("cackle",self);
+pause;
+exec("say I'd like to see you BEG again, "+pc.name+"!  This time, I want 
+to see some tears!!!",self);
+pause;
+
+wait(SFB_CMD,((activator.type == UNIT_ST_PC) and
+	      (command("CMD_BEG")) and
+	      ((UURAK_PROPHESY_ONGOING in activator.quests)) and
+	       (argument in self.names) ));
+
+act("You beg Asaauk for the information again, with tears streaming down 
+your cheeks.",A_SOMEONE,pc,null,null,TO_CHAR);
+act("pc.name+" begs Asaauk for the information again while crying like a 
+baby!",A_SOMEONE,pc,null,null,TO_REST);
+exec("laugh",self);
+pause;
+exec("say I still have my reservations about giving you the information, 
+"+pc.name+".  WORSHIP ME!",self);
+pause;
+
+wait(SFB_CMD,((activator.type == UNIT_ST_PC) and
+	      (command("CMD_WORSHIP")) and argument!("asaauk")) and
+	      ((UURAK_PROPHESY_ONGOING in activator.quests)) and
+	       (argument in self.names) ));
+
+exec("emote laughs and begins to cry!",self);
+pause;
+exec("say Oh, my.  That WAS funny!",self);
+exec("grin",self);
+pause;
+exec("say Well, now.  You wanted the information to the artifacts of 
+Uurak, eh?",self);
+pause;
+exec("wink",self);
+pause;
+exec("say The Dagger Of Uurak has long been hidden... blah blah blah.", 
+self);
+pause;
+exec("babble",self);
+pause;  
+
+unsecure(pc);
+pause;
+goto start;
+
+:losthim:
+exec("shrug",self);
+unsecure(pc);
+pause;
+goto start;
+
+}
+
+dilend */
+
+
+
+
+%rooms
+
+
+/* Town Rooms */
+
+road_A1 
+title "The End of Eerie Avenue"
+descr "A large stone wall blocks your way to the north and west as you 
+come to the northern end of Eerie Avenue.  It is dark and gloomy, and 
+very dirty in this part of town.  Trash litters the entire street.  It 
+looks as though it has never been cleaned.  In the dark shadows, it 
+feels as though the presence of goblin eyes are staring at you.  To the 
+east you see a small goblin cottage."
+
+extra {"trash"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"high stone wall","stone wall","wall"}
+"This is one of the highest walls you have ever laid your eyes upon.  Made 
+of stone, this wall is incredibly strong to keep out intruders."
+
+extra {"cottage"}
+"Your eyes fall upon a shabby, falling-down cottage to the east."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow 
+out from in between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+south to road_A2 descr
+"Eerie Avenue continues to the south.";
+east to home_D descr
+"A small cottage lies to the east.";
+
+end
+
+
+road_A2
+title "Intersection of Eerie Avenue and Fear Street"
+descr "This is the intersection of two major city roads.  Eerie Avenue 
+branches off to the north and south, while Fear Street is off to the  
+east.  A few scattered leaves flutter in the wind at a distance, and the 
+air feels cool against your skin.  A large stone wall which surrounds the 
+city blocks your way westward."
+
+extra {"leaves","leaf"}
+"A few golden orange and auburn leaves flutter in the wind."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"This is one of the highest walls you have ever laid your eyes upon.  Made 
+of stone, this wall is incredibly strong to keep out intruders."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow 
+out from in between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+dilcopy shuffle@gobtown1();
+
+north to road_A1 descr
+"Eerie Avenue continues to the north.";
+south to road_A3 descr
+"Eerie Avenue continues to the south.";
+east to road_E1 descr
+"Fear Street continues to the east.";
+
+end
+
+road_A3
+title "Eerie Avenue"
+descr "Piles and piles of trash just seem to line the city streets.  This 
+whole town is completely filthy, and you wonder how anyone could bear to 
+live here.  The road beneath your feet is made of cobblestone and has 
+some weeds growing out from between its cracks.  Eerie Avenue 
+continues to the north and south, and to the east is the shop of the 
+city's assorted foods store.  To the west is a large stone wall which 
+surrounds the city."
+
+extra {"piles of trash","trash","piles","pile"}
+"There is trash littered all over the ground beneath your feet."
+
+extra {"weeds","weed"}
+"Tall weeds grow out from in between the cracks in the cobblestone road."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"This is one of the highest walls you have ever laid your eyes upon.  
+Made of stone, this wall is incredibly strong to keep out intruders."
+
+extra {"shop"}
+"To the east, you see a large shop which belongs to the city's assorted 
+food store."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow 
+out from in between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+north to road_A2 descr
+"Eerie Avenue continues to the north.";
+south to road_A4 descr
+"Eerie Avenue continues to the south.";
+east to shop_13 descr
+"The town's assorted food store lies to the east.";
+
+end
+
+road_A4
+title "Eerie Avenue"
+descr "Piles of trash are all over the street.  The smell of 
+the city when the wind blows is unbearable.  A few scattered leaves  
+flutter in the wind, and the whole town just looks rather somber and 
+gloomy.  Blocking your way westward is a large stone wall which surrounds 
+the city.  To the east is the home of a goblin guard."
+
+extra {"piles of trash","trash","piles","pile"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"leaves","leaf"}
+"A few deep orange and brown leaves flutter in the wind."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"This is one of the highest walls you have ever laid your eyes upon.  Made 
+of stone, this wall is incredibly strong to keep out intruders."
+
+extra {"home"}
+"As you look to the east, you see a small, neatly kept home of a goblin 
+guard."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+north to road_A3 descr 
+"Eerie Avenue continues to the north.";
+south to road_A5 descr
+"Eerie Avenue continues to the south.";
+east to gh_1 descr
+"The home of a goblin guard lies to the east.";
+
+end
+
+
+road_A5
+title "The Intersection of Main Street and Eerie Avenue"
+descr "This is the intersection of two of the most travelled roads of the
+Goblin City.  The city appears somewhat gloomy, and very unfriendly.  
+There is trash littering the ground beneath your feet, and some leaves 
+fluttering in the wind.  Eerie Avenue branches off to the north and 
+south, and Main Street runs eastward.  To the west, there is the city's 
+one and only exit."
+
+flags {UNIT_FL_NO_MOB}
+
+dilcopy shuffle@gobtown1();
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow 
+out from in between the cracks, and pieces of trash litter the ground."
+
+extra {"trash"}
+"There is some trash lying on the ground at your feet."
+
+extra {"leaves","leaf"}
+"There are some golden yellow and brown leaves fluttering in the wind."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+north to road_A4 descr
+"Eerie Avenue branches off to the north.";
+south to road_A6 descr
+"Eerie Avenue branches off to the south."; 
+east to road_G1 descr
+"Main Street continues to the east.";
+west to labh_15@gobtown open {EX_OPEN_CLOSE,EX_CLOSED} keyword 
+{"gates","gate"} descr "The end of a large labyrinth lies to the west.";
+
+end
+
+road_A6
+title "Eerie Avenue"
+descr "All around, piles of trash are all over the street.  The smell of 
+the city when the wind blows is unbearable.  A few scattered leaves  
+flutter in the wind, and the whole town just looks rather somber.   
+Blocking your way westward is a large stone wall which surrounds 
+the city.  To the east is the home of a goblin guard."
+
+extra {"piles of trash","trash","piles","pile"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"leaves","leaf"}
+"A few deep orange and brown leaves flutter in the wind."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"This is one of the highest walls you have every laid your eyes upon.  
+Made of stone, this wall is incredibly strong to keep out intruders."
+
+extra {"home"}
+"As you look to the east, you see a small, neatly kept home of a goblin 
+guard."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow 
+out from in between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+north to road_A5 descr
+"Eerie Avenue continues to the north.";
+south to road_A7 descr
+"Eerie Avenue continues to the south.";
+east to gh_2 descr
+"The home of a goblin guard lies to the east.";
+
+end
+
+road_A7
+title "Eerie Avenue"
+descr "Piles and piles of trash just seem to line the city streets.  This 
+whole town is completely filthy, and you wonder how anyone could bear to 
+live here.  The road beneath your feet is made of cobblestone and has 
+some weeds growing out from between its cracks.  Eerie Avenue  
+continues to the north and south, and to the east is a small park.  To the 
+west is a large stone wall which surrounds the city."
+
+extra {"piles of trash","trash","piles","pile"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"weeds","weed"}
+"Tall weeds grow out from in between the cracks in the cobblestone road."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"This is one of the highest walls you have ever laid your eyes upon.  Made 
+of stone, this wall is incredibly strong to keep out intruders." 
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+extra {"small park","park"}
+"The park is rather small from what you can see.  Little goblin children 
+pass the time of day playing there."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+north to road_A6 descr 
+"Eerie Avenue continues to the north.";
+south to road_A8 descr
+"Eerie Avenue continues to the south."; 
+east to park_1 descr
+"A small park lies to the east.";
+
+end
+
+road_A8
+title "Intersection of Eerie Avenue and Death Road"
+descr "This is the intersection of two major city roads.  Eerie Avenue 
+branches off to the north and south, while Death Road is off to the  
+east.  A few scattered leaves flutter in the wind at a distance, and the 
+air feels cool against your skin.  A large stone wall which surrounds the 
+city blocks your way westward."
+
+extra {"leaves","leaf"}
+"A few deep green and dark brown leaves flutter in the wind."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"This is one of the highest walls you have ever laid your eyes upon.  Made 
+of stone, this wall is incredibly strong to keep out intruders."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow 
+out from in between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+dilcopy shuffle@gobtown1();
+
+north to road_A7 descr
+"Eerie Avenue continues to the north.";
+south to road_A9 descr
+"Eerie Avenue continues to the south.";
+east to road_F1 descr
+"Death Road continues to the east."; 
+
+end
+
+
+road_A9
+title "The End of Eerie Avenue"
+descr "A large stone wall blocks your way to the south and west as you 
+come to the southern end of Eerie Avenue.  It is dark and gloomy, and 
+very dirty in this part of town.  Trash litters the entire street.  It 
+looks as though it has never been cleaned.  In the dark shadows, it 
+feels as though the presence of goblin eyes are staring at you.  To the 
+east there is a small park."
+
+extra {"piles of trash","trash","piles","pile"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"This is one of the highest walls you have ever laid your eyes upon.  Made 
+of stone, this wall is incredibly strong to keep out intruders."
+
+extra {"small park","park"}
+"The park is rather small from what you can see.  Little goblin children 
+pass the time of day playing there."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+north to road_A8 descr
+"Eerie Avenue branches off to the north.";
+east to park_4 descr
+"A small park lies to the east.";
+
+end
+
+
+road_B1
+title "The End of Shaddow Lane"
+descr "A large stone wall blocks your way to the north and east as you 
+come to the northern end of Shaddow Lane.  It is dark and gloomy, and 
+very dirty in this part of town.  Trash litters the entire street.  It 
+looks as though it has never been cleaned.  In the dark shadows, it 
+feels as though the presence of goblin eyes are staring at you.  To the 
+west there is a large abandoned warehouse."
+
+extra {"trash"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"This is one of the highest walls you have ever laid your eyes upon.  Made 
+of stone, this wall is incredibly strong to keep out intruders."
+
+extra {"warehouse"}
+"As you look to the west, your eyes fall upon a large dilapidated building."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+south to road_B2 descr
+"Shaddow Lane continues to the south.";
+west to shop_17 descr
+"A large abandoned warehouse lies to the west.";
+
+end
+
+road_B2
+title "Intersection of Shaddow Lane and Fear Street"
+descr "This is the intersection of two major city roads.  Shaddow Lane 
+branches off to the north and south, while Fear Street continues to the  
+east and west.  A few scattered leaves flutter in the wind at a distance, 
+and the air feels cool against your skin.  A few weeds grow out from 
+between the cracks in the cobblestone road at your feet."
+
+extra {"leaves","leaf"}
+"A few scattered leaves flutter in the wind."
+
+extra {"weeds","weed"}
+"A few tall weeds grow out from in between the cracks in the cobblestone 
+road."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+dilcopy shuffle@gobtown1();
+
+north to road_B1 descr 
+"Shaddow Lane continues to the north.";
+south to road_B3 descr
+"Shaddow Lane continues to the south."; 
+east to road_E2 descr
+"Fear Street continues to the east.";
+west to road_E1 descr
+"Fear Street continues to the west.";
+
+end
+
+road_B3
+title "Shaddow Lane"
+descr "The cobblestone road beneath your feet is filled with trash piled
+high and weeds growing out from between its cracks.  The slight breeze 
+that is blowing is cool, and causes you to shiver.  The feeling of goblin
+eyes staring at you starts to become overwhelming.  To the east is one of
+the goblin's dwellings." 
+
+extra {"piles of trash","trash","piles","pile"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"weeds","weed"}
+"Tall weeds grow up from in between the cracks in the cobblestone road."
+
+extra {"dwelling place", "dwelling"}
+"To the east you have spotted a small, grungy home of a goblin."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+north to road_B2 descr 
+"Shaddow Lane continues to the north.";
+south to road_B4 descr
+"Shaddow Lane continues to the south.";
+east to home_B descr
+"A goblin dwelling lies to the east.";
+
+end
+
+road_B4
+title "Shaddow Lane"
+descr "The smell of this city is unbearable.  The filth here is awful, and
+you wonder how anyone could live in such conditions.  Trash is piled high,
+and grime covers everything.  As the wind blows, the smell of the city 
+makes you want to gag.  To the east is a lodging area for the goblin 
+townspeople." 
+
+extra {"trash"}
+"Trash is littered all over the cobblestone road beneath your feet."
+
+extra {"lodging area","lodging", "lodge", "area"}
+"The building is decrepit and tattered.  The shingles are falling off and 
+the windows are all broken."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+north to road_B3 descr 
+"Shaddow Lane continues to the north.";
+south to road_B5 descr
+"Shaddow Lane continues to the south.";
+east to home_M descr
+"A lodging area for local townspeople lies to the east.";
+
+end
+
+road_B5
+title "Goblin City Square"
+names {"goblin city square","goblin square"}
+descr "This is the Goblin City Square, one of the most popular meeting
+spots for the local townspeople. It is obvious that the locals like to
+come here by the amount of trash littered at your feet.  A few goblins are
+roaming about here looking at you evilly.  Running north and south lies
+Shaddow Lane, and Main Street continues to the east and west." 
+
+extra {"trash"}
+"There is trash littered all over the ground beneath your feet, and there 
+seems to be more here than anywhere else."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow 
+out from in between the cracks, and pieces of trash litter the ground."
+
+extra {"goblins","goblin"}
+"Vile, disgusting creatures with sores all over their faces."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+dilcopy shuffle@gobtown1();
+
+north to road_B4 descr
+"Shaddow Lane branches off to the north."; 
+south to road_B6 descr
+"Shaddow Lane branches off to the south."; 
+east to road_G2 descr
+"Main Street continues to the east.";
+west to road_G1 descr
+"Main Street continues to the west."; 
+
+end
+
+road_B6
+title "Shaddow Lane"
+descr "The cobblestone road beneath your feet is filled with trash piled 
+high and weeds growing out from between its cracks.  The slight breeze 
+that is blowing is cool, and causes you to shiver.  This whole town 
+just seems to become more grimy the more you look around it.  The 
+feeling of goblin eyes staring at you starts to become overpowering.  
+To the east is one of the goblin's cottages."
+
+extra {"trash"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"weeds","weed"}
+"Tall weeds grow up from in between the cracks in the cobblestone road."
+
+extra {"cottage"}
+"To the east you have spotted a small, grungy home of a goblin."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow 
+out from in between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+north to road_B5 descr
+"Shaddow Lane continues to the north.";
+south to road_B7 descr
+"Shaddow Lane continues to the south.";
+east to home_G descr
+"A goblin cottage lies to the east.";
+
+end 
+
+road_B7
+title "Shaddow Lane"
+descr "The smell of this city is starting to become unbearable.  The filth
+here is abundant, and you wonder how anyone could live in these 
+conditions.  Trash is piled high, and just plain grime covers 
+everything.  Small goblin children run around you while grunting and 
+making hissing noises.  Gazing westward you see a small park." 
+
+extra {"trash"}
+"Trash is littered all over the cobblestone road beneath your feet."
+
+extra {"goblins","goblin","children"}
+"Vile, disgusting creatures with sores all over their faces."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow 
+out from in between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+north to road_B6 descr
+"Shaddow Lane continues to the north.";
+south to road_B8 descr
+"Shaddow Lane continues to the south.";
+west to park_3 descr
+"A small park where goblin children play lies to the west.";
+
+end
+
+road_B8
+title "Intersection of Shaddow Lane and Death Road"
+descr "This is the intersection of two major city roads.  Shaddow Lane 
+branches off to the north and south, while Death Road continues to the  
+east and west.  A few scattered leaves flutter in the wind at a distance, 
+and the air feels cool against your skin.  A few weeds grow out from 
+between the cracks in the cobblestone road at your feet."
+
+extra {"leaves","leaf"}
+"A few scattered leaves flutter in the wind."
+
+extra {"weeds","weed"}
+"A few tall weeds grow out from in between the cracks in the cobblestone 
+road."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow 
+out from in between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+dilcopy shuffle@gobtown1();
+
+north to road_B7 descr
+"Shaddow Lane continues to the north.";
+south to road_B9 descr
+"Shaddow Lane continues to the south.";
+east to road_F2 descr
+"Death Road continues to the east.";
+west to road_F1 descr
+"Death Road continues to the west.";
+
+end
+
+
+road_B9
+title "The End of Shaddow Lane"
+descr "A large stone wall blocks your way to the south and east as you 
+come to the southern end of Shaddow Lane.  It is dark and gloomy, and 
+very dirty in this part of town.  Trash litters the entire street, and it 
+looks as though it has never been cleaned.  As the wind blows, the smell 
+of the city makes you want to gag. To the west lies the town's post office."
+
+extra {"trash"}
+"Trash is littered all over the cobblestone road beneath your feet."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"This is one of the highest walls you have ever laid your eyes upon.  Made 
+of stone, this wall is incredibly strong to keep out intruders."
+
+extra {"post office","post","office"}
+"The post office to the west appears to be cleaner than most of the town."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow  
+out from in between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+north to road_B8 descr
+"Shaddow Lane continues to the north.";
+west to shop_5 descr
+"The town's post office lies to the west.";
+
+end
+
+
+road_C1
+title "The End of Cemetery Road"
+descr "A large stone wall blocks your way to the north and east as you 
+come to the northern end of Cemetery Road.  It is dark and dismal, and 
+very dirty in this part of town.  Trash litters the entire city.  You 
+get the feeling that you are being watched by hidden eyes.  To the west  
+lies the run-down shack of a goblin."
+
+extra {"trash"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"This is one of the highest walls you have ever laid your eyes upon.  Made 
+of stone, this wall is incredibly strong to keep out intruders."
+
+extra {"shack"}
+"The small shack is barely standing.  It looks as if you lean up against 
+it, it will fall right over."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow 
+out from in between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+dilcopy shuffle@gobtown1();
+
+south to road_C2 descr 
+"Cemetery Road continues to the south.";
+west to home_C descr
+"The run-down shack of a local goblin lies to the west.";
+
+end
+
+road_C2
+title "Intersection of Cemetery Road and Fear Street"
+descr "This is the intersection of two major city roads.  Cemetery Road 
+branches off to the north and south, while Fear Street is off to the  
+west.  A few scattered leaves flutter in the wind adding to the amount of 
+trash on the ground.  A large stone wall which surrounds the city blocks 
+your way eastward."
+
+extra {"trash"}
+"Trash is littered all over the cobblestone road beneath your feet."
+
+extra {"leaves","leaf"}
+"A few golden orange and auburn leaves flutter in the wind."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"This is one of the highest walls you have ever laid your eyes upon.  Made 
+of stone, this wall is incredibly strong to keep out intruders."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow 
+out from in between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+north to road_C1 descr
+"Cemetery Road continues to the north.";
+south to road_C3 descr
+"Cemetery Road continues to the south.";
+west to road_E7 descr
+"Fear Street continues to the west.";
+
+end
+
+road_C3
+title "Entrance to the Cemetery"
+descr "You are standing on Cemetery Road just outside a cemetery which is
+to the east.  There is the sensation that unseen goblin eyes are staring
+at you from inside, and as the wind blows mildly against your skin, it 
+causes goosebumps.  To the west is a wall which surrounds a large 
+castle.  Your only option is to either enter the cemetery or continue on 
+Cemetery Road which runs north to south." 
+
+extra {"castle"}
+"You can only see the tip of this magnificent castle because the wall 
+gets in your way."
+
+extra {"cemetery"}
+"Gazing eastwards, your eyes fall upon a small cemetery.  It looks rather 
+eerie and creepy, and you wonder if you should dare to enter it."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"As you look at the wall, your gaze travels up and up.  It looks as 
+though this wall rises up to the sky without any end.  It is one of the 
+highest walls you've ever seen, and is made from very strong stone to 
+keep out intruders."  
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+flags {UNIT_FL_NO_MOB}
+
+dilcopy shuffle@gobtown1();
+
+north to road_C2 descr
+"Cemetery Road continues to the north.";
+south to road_C4 descr
+"Cemetery Road continues to the south.";
+east to cem_3 descr
+"A small cemetery lies to the east.";
+
+end
+
+road_C4
+title "Intersection of Cemetery Road and Death Road"
+descr "This is the intersection of two major city roads.  Cemetery Road 
+branches off to the north and south, while Death Road is off to the 
+west.  Leaves are carried by the wind, and settle on the piles of trash, 
+which add to the overall feeling of neglect.  A large stone wall blocks 
+your way eastward."
+
+extra {"trash"}
+"Trash is littered all over the cobblestone road beneath your feet."
+
+extra {"leaves","leaf"}
+"A few golden orange and auburn leaves flutter in the wind."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"This is one of the highest walls you have ever laid your eyes upon.  Made 
+of stone, this wall is incredibly strong to keep out intruders."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+north to road_C3 descr
+"Cemetery Road continues to the north.";
+south to road_C5 descr
+"Cemetery Road continues to the south.";
+west to road_F7 descr
+"Death Road continues to the west.";
+
+end
+
+road_C5
+title "The End of Cemetery Road"
+descr "A large stone wall blocks your way to the south and east as you 
+come to the southern end of Cemetery Road.  It is dark and gloomy, and 
+very dirty in this part of town.  Trash litters the entire street.  It 
+looks as though it has never been cleaned.  To the west is one of the  
+city's magic shops."
+
+extra {"trash"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"This is one of the highest walls you have ever laid your eyes upon.  Made 
+of stone, this wall is incredibly strong to keep out intruders."
+
+extra {"magic shop", "shop"}
+"Looking westward, your eyes fall upon one of the city's magic shops.  
+>From the sign in the window, you can see it sells magic potions."
+
+extra {"sign"}
+"Potions Sold Here"
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow 
+out from in between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+dilcopy shuffle@gobtown1();
+
+north to road_C4 descr
+"Cemetery Road continues to the north.";
+west to shop_8 descr
+"One of the town's magic shops lies to the west.";
+
+end
+
+road_D1
+title "The End of Manson Avenue"
+descr "A large stone wall blocks your way to the north as you come to 
+the northern end of Manson Avenue.  It is dark and gloomy, and very 
+dirty in this part of town.  Trash litters the entire street.  It looks 
+as though it has never been cleaned.  In the dark shadows, it feels as 
+though the presence of goblin eyes are staring at you.  To the east is a 
+small goblin dwelling, and to the west is an abandoned warehouse."
+
+extra {"trash"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"This is one of the highest walls you have ever laid your eyes upon.  Made 
+of stone, this wall is incredibly strong to keep out intruders."
+
+extra {"warehouse"}
+"This large building looks as though it has been out of use for a long time."
+
+extra {"dwelling"}
+"You see a small dilapidated home of a goblin."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow 
+out from in between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+south to road_D2 descr
+"Manson Avenue continues to the south.";
+east to home_E descr
+"A small dilapidated dwelling of a goblin lies to the east.";
+west to shop_16 descr
+"A large abandoned warehouse lies to the west.";
+
+end
+
+road_D2
+title "Intersection of Manson Avenue and Fear Street"
+descr "This is the intersection of two city roads.  Manson Avenue  
+branches off to the north, while Fear Street continues to the east and 
+west.  Leaves flutter in the wind, and the air sends a shiver down your 
+spine.  A few weeds grow out from between the cracks in the cobblestone  
+road at your feet.  To the south is a wall which surrounds a large castle."
+
+extra {"castle"}
+"You can only see the tip of this magnificent castle because the wall 
+gets in your way."
+
+extra {"leaves","leaf"}
+"A few scattered leaves flutter in the wind."
+
+extra {"weeds","weed"}
+"A few tall weeds grow out from in between the cracks in the cobblestone 
+road."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"As you look at the wall, your gaze travels up and up.  It looks as 
+though this wall rises up to the sky without any end.  It is one of the 
+highest walls you've ever seen, and is made from very strong stone to 
+keep out intruders."  
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+dilcopy shuffle@gobtown1();
+
+north to road_D1 descr
+"Manson Avenue continues to the north.";
+east to road_E5 descr
+"Fear Street continues to the east.";
+west to road_E4 descr
+"Fear street continues to the west.";
+
+end
+
+road_D3
+title "Intersection of Manson Avenue and Death Road"
+descr "This is the intersection of two city roads.  Manson Avenue branches
+off to the south, while Death Road continues to the east and west.  There
+are leaves fluttering in the wind.  A few weeds grow out from between the
+cracks in the cobblestone road at your feet.  To the north is a wall which
+surrounds a large castle." 
+
+extra {"leaves","leaf"}
+"A few scattered leaves flutter in the wind."
+
+extra {"weeds","weed"}
+"A few tall weeds grow out from in between the cracks in the cobblestone 
+road."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"As you look at the wall, your gaze travels up and up.  It looks as 
+though this wall rises up to the sky without any end.  It is one of the 
+highest walls you've ever seen, and is made from very strong stone to 
+keep out intruders."  
+
+extra{"castle"}
+"You can only see the tip of this magnificent castle because the wall 
+gets in your way."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow 
+out from in between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+dilcopy shuffle@gobtown1();
+
+south to road_D4 descr
+"Manson Avenue continues to the south.";
+east to road_F5 descr
+"Death Road continues to the east.";
+west to road_F4 descr
+"Death Road continues to the west.";
+
+end
+
+road_D4
+title "The End of Manson Avenue"
+descr "A large stone wall blocks your way to the south as you come to 
+the southern end of Manson Avenue.  It is dark and gloomy, and very 
+dirty in this part of town.  Trash litters the entire street.  In the  
+dark shadows, it feels as though the presence of goblin eyes are staring  
+at you.  To the east is South Goblin Inn and to the west is a small 
+goblin cottage."
+
+extra {"trash"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"This is one of the highest walls you have ever laid your eyes upon.  Made 
+of stone, this wall is incredibly strong to keep out intruders."
+
+extra {"cottage"}
+"You see a small dilapidated home of a goblin."
+
+extra {"south goblin inn","south inn","goblin inn","inn"}
+"As you look to the east, you see a large building called the South Goblin 
+Inn."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+north to road_D3 descr
+"Manson Avenue continues to the north.";
+east to shop_11 descr
+"South Goblin Inn lies to the east.";
+west to home_A descr
+"The small cottage of a goblin lies to the west.";
+
+end
+
+
+road_E1
+title "Fear Street"
+descr "Trash is piled high all over the streets in the small city.  It is 
+a very gloomy area, overcast, and gives you an eerie feeling.  Deep in  
+the shadows, it feels as though dozens of goblin eyes are staring at  
+you... keeping watch over you.  This is hardly what would be considered a 
+friendly place, and the feeling of hatred from the townspeople  
+overpowers you.  To the north is the butcher's shop, and to the south is a 
+medium-sized goblin home."
+
+extra {"trash"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"butcher's shop","butcher shop","shop"}
+"As you look at the butcher's shop, you can see dried blood on the steps."
+
+extra {"goblin house","house"}
+"As you look at one of the many goblin houses, you notice how run-down 
+everything is."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow 
+out from in between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+north to shop_4 descr
+"The town's butcher shop lies to the north.";
+south to home_N descr
+"The home of a local goblin lies to the south.";
+east to road_B2 descr
+"Fear Street continues to the east.";
+west to road_A2 descr
+"Fear Street continues to the west.";
+
+end
+
+
+road_E2
+title "Fear Street"
+descr "Piles and piles of trash litter the city's streets.  Tall weeds 
+grow out from between the cracks of the cobblestone road.  The filth 
+of this city is unbearable, and the stench when the wind blows is enough 
+to make one sick.  How anyone could live here is a question that goes 
+unanswered.  The city's bank is to the south, and a large stone wall which 
+surrounds the city lies to the north."  
+
+extra {"trash"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"weeds","weed"}
+"Tall weeds grow out from in between the cracks of the cobblestone road."
+
+extra {"bank"}
+"A small, quaint building, not quite as shabby as the rest of the town's 
+humble shops and homes."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"This is one of the highest walls you have ever laid your eyes upon.  Made 
+of stone, this wall is incredibly strong to keep out intruders."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow 
+out from in between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+south to shop_2 descr
+"The city's bank lies to the south.";
+east to road_E3 descr
+"Fear Street continues to the east.";
+west to road_B2 descr
+"Fear Street continues to the west.";
+
+end
+
+road_E3
+title "Intersection of Fear Street and Moses Way"
+descr "This is the intersection of two city roads.  Moses Way branches off
+to the south, while Fear Street continues to the east and west.  A few
+scattered leaves flutter in the wind.  A few weeds grow out from 
+between the cracks in the cobblestone road at your feet.  To the north is
+the shop of the city's weaponsmith." 
+
+extra {"leaves","leaf"}
+"A few scattered leaves flutter in the wind."
+
+extra {"weeds","weed"}
+"A few tall weeds grow out from in between the cracks in the cobblestone 
+road."
+
+extra {"shop","weaponsmith"}
+"Standing before you is the shop of the city's one and only weaponsmith."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+dilcopy shuffle@gobtown1();
+
+north to shop_7 descr
+"The shop of the city's weaponsmith lies to the north.";
+south to road_H5 descr
+"Moses Way continues to the south.";
+east to road_E4 descr
+"Fear Street continues to the east.";
+west to road_E2 descr
+"Fear Street continues to the west.";
+
+end
+
+road_E4 
+title "Fear Street"
+descr "Trash is piled high all over the streets in the small city.  It is 
+a very gloomy area, overcast, and gives you an eerie feeling.  Deep in  
+the shadows, it feels as though dozens of goblin eyes are staring at  
+you... keeping watch over you.  This is hardly what would be considered a 
+friendly place, and the feeling of hatred from the townspeople  
+overcomes you.  To the north is North Goblin Inn and to the south is a 
+wall which surrounds a large castle."
+
+extra {"trash"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"north goblin inn","goblin inn","north inn","inn"}
+"Your eyes fall upon a large dilapidated building where the goblins 
+sometimes stay."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"As you look at the wall, your gaze travels up and up.  It looks as 
+though this wall rises up to the sky without any end.  It is one of the 
+highest walls you've ever seen, and is made from very strong stone to 
+keep out intruders."  
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+north to shop_10 descr
+"North Goblin Inn lies to the north.";
+east to road_D2 descr
+"Fear Street continues to the east.";
+west to road_E3 descr
+"Fear Street continues to the west.";
+
+end
+
+
+road_E5
+title "Fear Street"
+descr "Piles and piles of trash litter the city's streets.  Tall weeds 
+grow out from between the cracks of the cobblestone road.  The filth 
+of this city is unbearable, and the stench when the wind blows is enough 
+to make one sick.  How anyone could live here is a question that goes 
+unanswered.  To the north is a lodging area of a local goblin and to the 
+south is a wall which surrounds a large castle."
+
+extra {"trash"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"weeds","weed"}
+"Tall weeds grow out from in between the cracks of the cobblestone road."
+
+extra {"lodging area", "lodging", "lodge", "area"}
+"A dilapidated humble home of a goblin stands before you."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"As you look at the wall, your gaze travels up and up.  It looks as 
+though this wall rises up to the sky without any end.  It is one of the 
+highest walls you've ever seen, and is made from very strong stone to 
+keep out intruders."  
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+north to home_J descr
+"The lodging area of a local goblin lies to the north.";
+east to road_E6 descr
+"Fear Street continues to the east.";
+west to road_D2 descr
+"Fear Street continues to the west.";
+
+end
+
+
+road_E6
+title "Fear Street"
+descr "Trash is piled high all over the streets in the small city.  It is 
+a very gloomy area, overcast, and gives you an eerie feeling.  Deep in  
+the shadows, it feels as though dozens of goblin eyes are staring at  
+you... keeping watch over you.  This is hardly what would be considered a 
+friendly place, and the feeling of hatred from the townspeople  
+overwhelms you.  To the north is a run-down shack of one of the goblins. 
+To the south is a wall which surrounds a large castle."
+
+extra {"trash"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"run-down shack","shack"}
+"Dilapidated and run-down, this goblin home is in poor condition."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"As you look at the wall, your gaze travels up and up.  It looks as 
+though this wall rises up to the sky without any end.  It is one of the 
+highest walls you've ever seen, and is made from very strong stone to 
+keep out intruders."  
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+north to home_I descr
+"A run-down shack of a goblin lies to the north.";
+east to road_E7 descr
+"Fear Street continues to the east.";
+west to road_E5 descr
+"Fear Street continues to the west.";
+
+end
+
+
+road_E7
+title "Fear Street"
+descr "Piles and piles of trash litter the city's streets.  Tall weeds 
+grow out from between the cracks of the cobblestone road.  The filth 
+of this city is unbearable, and the stench when the wind blows is enough 
+to make one sick.  How anyone could live here is a question that goes 
+unanswered.  To the north is the shop of the ironmonger and to the south 
+is a wall which surrounds a large castle."
+
+extra {"trash"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"weeds","weed"}
+"Tall weeds grow out from in between the cracks of the cobblestone road."
+
+extra {"ironmonger shop","ironmonger","shop"}
+"A dilapidated little shack that looks cluttered even from the outside."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"As you look at the wall, your gaze travels up and up.  It looks as 
+though this wall rises up to the sky without any end.  It is one of the 
+highest walls you've ever seen, and is made from very strong stone to 
+keep out intruders."  
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+north to shop_9 descr
+"The shop of the town's ironmonger lies to the north.";
+east to road_C2 descr
+"Fear Street continues to the east.";
+west to road_E6 descr
+"Fear Street continues to the west.";
+
+end
+
+road_F1
+title "Death Road"
+descr "Trash is piled high all over the streets in the small city.  It is 
+a very gloomy area, overcast, and gives you an eerie feeling.  Deep in  
+the shadows, it feels as though dozens of goblin eyes are staring at  
+you... keeping watch over you.  This is hardly what would be considered a 
+friendly place, and the feeling of hatred from the townspeople  
+overwhelms you.  To the north and south is a small park where the goblin 
+children play."
+
+extra {"small park","park"}
+"A small park where goblin children spend their days playing."
+
+extra {"trash"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+north to park_2 descr
+"A small park lies to the north.";
+south to park_5 descr
+"A small park lies to the south.";
+east to road_B8 descr
+"Death Road continues to the east.";
+west to road_A8 descr
+"Death Road continues to the west.";
+
+end
+
+road_F2
+title "Death Road"
+descr "Piles and piles of trash litter the city's streets.  Tall weeds 
+grow out from between the cracks of the cobblestone road.  The filth 
+of this city is unbearable, and the stench when the wind blows is enough 
+to make one sick.  How anyone could live here is a question that goes 
+unanswered.  The city's tavern is to the north, and a large stone wall which 
+surrounds the city lies to the south."  
+
+extra {"trash"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"weeds","weed"}
+"Tall weeds grow out from in between the cracks of the cobblestone road."
+
+extra {"tavern"}
+"A small, dilapidated shack where many of the goblins spend a large 
+portion of their day."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"This is one of the highest walls you have ever laid your eyes upon.  Made 
+of stone, this wall is incredibly strong to keep out intruders."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+north to shop_3 descr
+"The city's tavern lies to the north.";
+east to road_F3 descr
+"Death Road continues to the east.";
+west to road_B8 descr
+"Death Road continues to the west.";
+
+end
+
+
+road_F3
+title "Intersection of Death Road and Moses Way"
+descr "This is the intersection of two city roads.  Moses Way branches 
+off to the north, while Death Road continues to the east and west.  A 
+few scattered leaves flutter in the wind at a distance, and the air 
+feels cool against your skin.  A few weeds grow out from between the 
+cracks in the cobblestone road at your feet.  To the south is a shabby 
+goblin dwelling."
+
+extra {"leaves","leaf"}
+"A few scattered leaves flutter in the wind."
+
+extra {"weeds","weed"}
+"A few tall weeds grow out from in between the cracks in the cobblestone 
+road."
+
+extra {"dwelling"}
+"You see a small dilapidated home of a goblin."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+dilcopy shuffle@gobtown1();
+
+north to road_H6 descr
+"Moses Way continues to the north.";
+south to home_H descr
+"A shabby goblin home lies to the south.";
+east to road_F4 descr
+"Death Road continues to the east.";
+west to road_F2 descr
+"Death Road continues to the west.";
+
+end
+
+
+road_F4
+title "Death Road"
+descr "Trash is piled high all over the streets in the small city.  It is 
+a very gloomy area, overcast, and gives you an eerie feeling.  Deep in  
+the shadows, it feels as though dozens of goblin eyes are staring at  
+you... keeping watch over you.  This is hardly what would be considered a 
+friendly place, and the feeling of hatred from the townspeople  
+overwhelms you.  To the south is the city's mortician shop and to the 
+north is a wall which surrounds a large castle."
+
+extra {"trash"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"mortician shop","shop"}
+"A small, gloomy, dark building stands before you.  Its presence alone 
+makes you quiver in fear.  It seems as though an eerie aura of death 
+seeps from the walls of this place."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"As you look at the wall, your gaze travels up and up.  It looks as 
+though this wall rises up to the sky without any end.  It is one of the 
+highest walls you've ever seen, and is made from very strong stone to 
+keep out intruders."  
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+south to shop_12 descr
+"The city's mortician shop lies to the south.";
+east to road_D3 descr
+"Death Road continues to the east.";
+west to road_F3 descr
+"Death Road continues to the west.";
+
+end
+
+
+road_F5
+title "Death Road"
+descr "Piles and piles of trash litter the city's streets.  Tall weeds 
+grow out from between the cracks of the cobblestone road.  The filth 
+of this city is unbearable, and the stench when the wind blows is enough 
+to make one sick.  How anyone could live here is a question that goes 
+unanswered.  To the south is a dreary house of a goblin and to the north 
+is a wall which surrounds a large castle."
+
+extra {"trash"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"weeds","weed"}
+"Tall weeds grow out from in between the cracks of the cobblestone road."
+
+extra {"house"}
+"Like most of the other goblin homes, this house is in poor condition.  
+Barely standing and completely run-down, this home looks as though it 
+will fall over at any given time."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"As you look at the wall, your gaze travels up and up.  It looks as 
+though this wall rises up to the sky without any end.  It is one of the 
+highest walls you've ever seen, and is made from very strong stone to 
+keep out intruders."  
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+south to home_K descr
+"The dreary home of a local goblin lies to the south.";
+east to road_F6 descr
+"Death Road continues to the east.";
+west to road_D3 descr
+"Death Road continues to the west.";
+
+end
+
+
+road_F6
+title "Death Road"
+descr "Trash is piled high all over the streets in the small city.  It is 
+a very gloomy area, overcast, and gives you an eerie feeling.  Deep in  
+the shadows, it feels as though dozens of goblin eyes are staring at  
+you... keeping watch over you.  This is hardly what would be considered a 
+friendly place, and the feeling of hatred from the townspeople  
+overwhelms you.  To the south is the baker's shop and you can smell 
+the freshly baked goods.  To the north is a wall which surrounds a 
+large castle."
+
+extra {"trash"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"baker's shop","bakery","shop"}
+"Gazing in the direction of the baker's shop, your nose is filled with 
+the essence of delicious baked goods."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"As you look at the wall, your gaze travels up and up.  It looks as 
+though this wall rises up to the sky without any end.  It is one of the 
+highest walls you've ever seen, and is made from very strong stone to 
+keep out intruders."  
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+south to shop_15 descr
+"The baker's shop lies to the south.";
+east to road_F7 descr
+"Death Road continues to the east.";
+west to road_F5 descr
+"Death Road continues to the west.";
+
+end
+
+
+road_F7
+title "Death Road"
+descr "Piles and piles of trash litter the city's streets.  Tall weeds 
+grow out from between the cracks of the cobblestone road.  The filth 
+of this city is unbearable, and the stench when the wind blows is enough 
+to make one sick.  How anyone could live here is a question that goes 
+unanswered.  To the south is the run-down shack of a local goblin and to 
+the north is a wall which surrounds a large castle."
+
+extra {"trash"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"weeds","weed"}
+"Tall weeds grow out from in between the cracks of the cobblestone road."
+
+extra {"shack"}
+"Run-down and tattered, this shack looks as though it can fall over at 
+any given moment."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"As you look at the wall, your gaze travels up and up.  It looks as 
+though this wall rises up to the sky without any end.  It is one of the 
+highest walls you've ever seen, and is made from very strong stone to 
+keep out intruders."  
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+south to home_F descr
+"A run-down shack of a local goblin lies to the south.";
+east to road_C4 descr
+"Death Road continues to the east.";
+west to road_F6 descr
+"Death Road continues to the west.";
+
+end
+
+road_G1
+title "Main Street"
+descr "Main Street is one of the busiest streets in this small city.  The 
+abundance of dirt and trash all over the city streets is unbelievable.  
+The sheer smell of the town is sickening, and it looks as though it has 
+never been cleaned, not even once.  To the north is the city's 
+candystore, where the goblin children swarm around, and to the south is a 
+medium-sized goblin house."
+
+extra {"trash"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"candystore","store"}
+"You are looking at one of the goblin children's favorite shops.  Inside, 
+the shop owner sells lots of sweets."
+
+extra {"house"}
+"Your eyes scan the area to the south and fall upon a tattered house of a 
+goblin."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+north to shop_14 descr
+"A small candystore lies to the north.";
+south to home_L descr
+"The home of one of the local goblin townspeople is to the south.";
+east to road_B5 descr
+"Main Street continues to the east.";
+west to road_A5 descr
+"Main Street continues to the west.";
+
+end
+
+road_G2
+title "Main Street"
+descr "Trudging your way through the city streets, the town seems to 
+just get more and more filthy.  The question of how anyone could bear to 
+live here is a question that goes unanswered.  Tall weeds grow out from 
+between the cracks of the cobblestone road, and trash is stacked up 
+in tall piles all over the sides of the street.  To the south is a room 
+dedicated to the goblins' king, and to the north is the office of the 
+cityguards."
+
+extra {"trash"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"weeds","weed"}
+"Tall weeds grow out from in between the cracks in the cobblestone road."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"As you look at the wall, your gaze travels up and up.  It looks as 
+though this wall rises up to the sky without any end.  It is one of the 
+highest walls you've ever seen, and is made from very strong stone to 
+keep out intruders."  
+
+extra {"cityguard office","office"}
+"A shabby little building where the goblin guards keep order in the city."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+north to shop_18 descr
+"The cityguard office lies to the north.";
+south to shop_1 descr
+"A sacred worshipping place lies to the south.";
+east to road_G3 descr
+"Main Street continues to the east.";
+west to road_B5 descr
+"Main Street continues to the west.";
+
+end
+
+road_G3
+title "Before the Gate to the Castle"
+descr "Standing before you to the east are the gates leading to the Goblin 
+King's castle.  They are enormous in both height and strength, and it 
+looks as though they can keep out even the strongest of intruders.  Tall 
+weeds grow around the base of these large gates and it appears that they 
+have not been opened in quite some time."
+
+extra {"gates","gate"}
+"Large, solid iron gates block your travels eastward.  They look as though 
+they have not been opened in quite some time."
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow 
+out from in between the cracks, and pieces of trash litter the ground."
+
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+dilcopy shuffle@gobtown1();
+
+north to road_H2 descr 
+"Moses Way branches off to the north.";
+south to road_H3 descr
+"Moses Way branches off to the south.";
+west to road_G2 descr
+"Main Street lies to the west.";
+
+end
+
+road_H1
+title "A Turn in Moses Way"
+descr "Tall weeds sprout out from between the cracks in the cobblestone 
+road as it takes a turn changing directions.  The wind is cool against 
+your skin and it blows around some of the litter that is all over the 
+ground.  Dark shadows surround the area, and it feels like dozens of 
+goblin eyes watch your every move.  The road leads south and east, and to 
+the west is the lodging area of a local goblin."
+
+extra {"weeds","weed"}
+"Tall weeds grow out from in between the cracks in the cobblestone road."
+
+extra {"trash"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"lodging area", "lodging", "lodge", "area"}
+"Not unlike the other goblin homes, this lodging area is tattered and 
+worn.  The goblins do not take much care in keeping their houses neat."
+
+extra {"road","street","avenue","lane"} 
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow 
+out from in between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+south to road_H2 descr
+"Moses Way continues to the south.";
+east to road_H5 descr
+"Moses Way continues to the east.";
+west to home_O descr
+"An old shabby goblin home lies to the west.";
+
+end
+
+
+road_H2
+title "Moses Way"
+descr "All around, piles of trash are all over the street.  The smell of 
+the city when the wind blows is unbearable.  A few scattered leaves  
+flutter in the wind, and the whole town just looks rather somber and 
+gloomy.  A large wall blocks your way east, but to the west is the small 
+house of a goblin guard."
+
+extra {"piles of trash","trash","piles","pile"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"leaves","leaf"}
+"A few deep orange and brown leaves flutter in the wind."
+
+extra {"house"}
+"By looking at the home of the goblin guard, you can see that the guards 
+of the city put a little more care in upkeeping their homes... though not 
+much more."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"As you look at the wall, your gaze travels up and up.  It looks as 
+though this wall rises up to the sky without any end.  It is one of the 
+highest walls you've ever seen, and is made from very strong stone to 
+keep out intruders."  
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+north to road_H1 descr
+"Moses Way continues to the north.";
+south to road_G3 descr
+"Moses Way continues to the south.";
+west to gh_3 descr
+"The home belonging to a goblin guard lies to the west.";
+
+end
+
+road_H3
+title "Moses Way"
+descr "All around, piles of trash are all over the street.  The smell of 
+the city when the wind blows is unbearable.  A few scattered leaves  
+flutter in the wind, and the whole town just looks rather somber and 
+gloomy.  A large wall blocks your way east, but to the west is the 
+small house of a goblin guard."
+
+extra {"piles of trash","trash","piles","pile"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"leaves","leaf"}
+"A few deep orange and brown leaves flutter in the wind."
+
+extra {"house"}
+"By looking at the home of the goblin guard, you can see that the guards 
+of the city put a little more care in upkeeping their homes... though not 
+much more."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"As you look at the wall, your gaze travels up and up.  It looks as 
+though this wall rises up to the sky without any end.  It is one of the 
+highest walls you've ever seen, and is made from very strong stone to 
+keep out intruders."  
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+north to road_G3 descr
+"Moses Way continues to the north.";
+south to road_H4 descr
+"Moses Way continues to the south.";
+west to gh_4 descr
+"The home belonging to a goblin guard lies to the west.";
+
+end
+
+road_H4
+title "A Turn in Moses Way"
+descr "Tall weeds sprout out from between the cracks in the cobblestone 
+road as it takes a turn changing directions.  The wind is cool against 
+your skin and it blows around some of the litter that is all over the 
+ground.  Dark shadows surround the area, and it feels like dozens of 
+goblin eyes watch your every move.  The road leads north and east, and to 
+the west is one of the town's magic shops."
+
+extra {"weeds","weed"}
+"Tall weeds grow out from in between the cracks in the cobblestone road."
+
+extra {"trash"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"magic shop","cottage","shop"}
+"A quaint little cottage used as a magic shop stands here.  A sign in the 
+window tells you that you can purchase scrolls here."
+
+extra {"window"}
+"As you look at the window, you see a small sign."
+
+extra {"sign"}
+"Scrolls Sold Here"
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+north to road_H3 descr
+"Moses Way continues to the north.";
+east to road_H6 descr
+"Moses Way continues to the east.";
+west to shop_6 descr
+"One of the town's magic shops lies to the west.";
+
+end 
+
+
+road_H5
+title "A Bend in Moses Way"
+descr "Piles of trash fill the streets as the road bends.  The feeling of 
+goblin eyes from within the dark shadows overwhelms you and is far from 
+comforting.  As the cool wind blows against your skin, the stench of the 
+city becomes even more unbearable.  To the south and east there is a high 
+wall which surrounds the castle.  The road leads to the north and west."
+
+extra {"piles of trash","piles","pile","trash"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"As you look at the wall, your gaze travels up and up.  It looks as 
+though this wall rises up to the sky without any end.  It is one of the 
+highest walls you've ever seen, and is made from very strong stone to 
+keep out intruders."  
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+north to road_E3 descr
+"Moses Way continues to the north.";
+west to road_H1 descr
+"Moses Way continues to the west.";
+
+end
+
+road_H6
+title "A Bend in Moses Way"
+descr "Piles of trash fill the streets as the road bends.  The feeling of 
+goblin eyes from within the dark shadows overwhelms you and is far from 
+comforting.  As the cool wind blows against your skin, the stench of the 
+city becomes even more unbearable.  To the north and east there is a high 
+wall which surrounds the castle.  The road leads to the south and west."
+
+extra {"piles of trash","piles","pile","trash"}
+"Trash is littered all over the ground beneath your feet."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"As you look at the wall, your gaze travels up and up.  It looks as 
+though this wall rises up to the sky without any end.  It is one of the 
+highest walls you've ever seen, and is made from very strong stone to 
+keep out intruders."  
+
+extra {"road","street","avenue","lane"}
+"Looking at the road, you notice it is made of cobblestone.  Weeds grow out from in 
+between the cracks, and pieces of trash litter the ground."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+south to road_F3 descr
+"Moses Way continues to the south.";
+west to road_H4 descr
+"Moses Way continues to the west.";
+
+end
+
+
+park_1
+title "A Small Park"
+descr "Tall green grass grows throughout this small park.  A few trees 
+are scattered here and there.  It looks to be a safe place for the goblin 
+children to play.  Even though the park is much cleaner than the rest of 
+town, there is still litter scattered about the ground.  The park 
+continues to the east."
+
+extra {"trees","tree"}
+"Tall trees are scattered here and there throughout the park."
+
+extra {"green grass","grass"}
+"Tall green grass grows throughout the small park."
+
+extra {"litter"}
+"Some scattered pieces of garbage litter the ground at your feet."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+east to park_2 descr
+"The small park continues to the east.";
+west to road_A7 descr
+"Eerie Avenue lies to the west.";
+
+end
+
+park_2
+title "A Small Park"
+descr "Leaves and scattered pieces of trash surround your feet as you 
+walk through this small park.  The wind is cool and crisp, but when it 
+blows, the stench of the city becomes even more unbelievable.  The park 
+looks to be a safe place for the goblin children to play, and it almost 
+sets you at ease."
+
+extra {"leaves","leaf"}
+"A few scattered leaves flutter in the wind."
+
+extra {"trees","tree"}
+"Tall trees are scattered here and there throughout the park."
+
+extra {"green grass","grass"}
+"Tall green grass grows throughout the small park."
+
+extra {"trash","litter"}
+"Some scattered pieces of garbage litter the ground at your feet."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+dilcopy shuffle@gobtown1();
+
+south to road_F1 descr
+"Death Road lies to the south.";
+east to park_3 descr
+"The small park continues to the east.";
+west to park_1 descr
+"The small park continues to the west.";
+
+end
+
+park_3
+title "A Small Park"
+descr "Tall green grass grows throughout this small park.  A few trees 
+are scattered here and there.  It looks to be a safe place for the goblin 
+children to play.  Even though the park is much cleaner than the rest of 
+town, there is still litter scattered about the ground.  The park 
+continues to the west."
+
+extra {"trees","tree"}
+"Tall trees are scattered here and there throughout the park."
+
+extra {"green grass","grass"}
+"Tall green grass grows throughout the small park."
+
+extra {"litter"}
+"Some scattered pieces of garbage litter the ground at your feet."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+east to road_B7 descr
+"Shaddow Lane lies to the east.";
+west to park_2 descr
+"The small park continues to the west.";
+
+end
+
+park_4
+title "A Small Park"
+descr "Leaves and scattered pieces of trash surround your feet as you 
+walk through this small park.  The wind is cool and crisp, but when it 
+blows, the stench of the city becomes ever more apparent.  The park 
+looks to be a safe place for the goblin children to play.  To the south 
+is a large wall that surrounds the city."
+
+extra {"leaves","leaf"}
+"A few scattered leaves flutter in the wind."
+
+extra {"trees","tree"}
+"Tall trees are scattered here and there throughout the park."
+
+extra {"green grass","grass"}
+"Tall green grass grows throughout the small park."
+
+extra {"trash","litter"}
+"Some scattered pieces of garbage litter the ground at your feet."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"This is one of the highest walls you have ever laid your eyes upon.  
+Made of stone, this wall is incredibly strong to keep out intruders."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+east to park_5 descr
+"The small park continues to the east.";
+west to road_A9 descr
+"Death Road lies to the west.";
+
+end
+
+park_5
+title "A Small Park"
+descr "Tall green grass grows throughout this small park.  A few trees 
+are scattered here and there.  It looks to be a safe place for the goblin 
+children to play.  Even though the park is much cleaner than the rest of 
+town, there is still litter scattered about the ground.  The park 
+continues to the west."
+
+extra {"trees","tree"}
+"Tall trees are scattered here and there throughout the park."
+
+extra {"green grass","grass"}
+"Tall green grass grows throughout the small park."
+
+extra {"litter"}
+"Some scattered pieces of garbage litter the ground at your feet."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"This is one of the highest walls you have ever laid your eyes upon.  
+Made of stone, this wall is incredibly strong to keep out intruders."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+north to road_F1 descr
+"Death Road lies to the north.";
+west to park_4 descr
+"The small park continues to the west.";
+
+end
+
+cem_1
+title "A Small Cemetery"
+descr "An evil presence seems to be emanating from this small cemetery.  
+Dark shadows of unidentifiable things cover the entire area.  There is a 
+slight breeze, and it causes you to shiver.  An unknown entity seems to 
+be watching your every move, and it's very unsettling.  To the north and 
+west is a large stone wall, but the cemetery continues to the east and 
+south."
+
+extra {"gravestones","gravestone"}
+"As you look at all the overturned gravestones, you can see vandalism has 
+plagued this small cemetery."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"This is one of the highest walls you have ever laid your eyes upon.  
+Made of stone, this wall is incredibly strong to keep out intruders."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+
+south to cem_3 descr
+"The cemetery continues to the south.";
+east to cem_2 descr
+"The cemetery continues to the east.";
+
+end
+
+cem_2
+title "A Dead End in the Cemetery"
+descr "You have come to a dead end.  The evil presence lurking from the 
+shadows seems even more extreme.  There are overturned gravestones and 
+large, deep holes dug in the ground all around you.  It looks as though 
+massive vandalism has struck this small cemetery.  The only way out is 
+westward, for to the north, south, and east is a large stone wall."
+
+extra {"gravestones","gravestone"}
+"As you look at all the overturned gravestones, you can see vandalism has 
+plagued this small cemetery."
+
+extra {"holes","hole"}
+"Deep holes have been dug in the ground by vandals and grave-robbers."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+dilcopy shuffle@gobtown1();
+
+west to cem_1 descr
+"The cemetery continues to the west.";
+
+end
+
+cem_3 
+title "A Small Cemetery"
+descr "An evil presence seems to lurk from within the shadows in this 
+cemetery.  It feels as though you are being watched, but by what is a 
+question that goes unanswered.  The cool wind blows lightly up against 
+you and causes shivers.  There are overturned gravestones and deep holes 
+dug in the ground.  It looks as though massive vandalism has struck the 
+cemetery."
+
+extra {"gravestones","gravestone"}
+"As you look at all the overturned gravestones, you can see vandalism has 
+plagued this small cemetery."
+
+extra {"holes","hole"}
+"Deep holes have been dug in the ground by vandals and grave-robbers."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+north to cem_1 descr
+"The cemetery continues to the north.";
+south to cem_4 descr
+"The cemetery continues to the south.";
+west to road_C3 descr
+"Cemetery Road lies to the west.";
+
+end
+
+cem_4
+title "A Small Cemetery"
+descr "An evil presence seems to be emanating from this small cemetery.  
+Dark shadows of unidentifiable things cover the entire area.  There is a 
+slight breeze, and it causes you to shiver.  An unknown entity seems to 
+be watching your every move, and it's very unsettling.  To the south and 
+west is a large stone wall, but the cemetery continues to the east and 
+north."
+
+extra {"gravestones","gravestone"}
+"As you look at all the overturned gravestones, you can see vandalism has 
+plagued this small cemetery."
+
+extra {"high stone wall","large stone wall","stone wall","wall"}
+"This is one of the highest walls you have ever laid your eyes upon.  
+Made of stone, this wall is incredibly strong to keep out intruders."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+north to cem_3 descr
+"The cemetery continues to the north."; 
+east to cem_5 descr
+"The cemetery continues to the east.";
+
+end
+
+cem_5
+title "A Dead End in the Cemetery"
+descr "You have come to a dead end.  The evil presence lurking from the 
+shadows seems even more extreme.  There are overturned gravestones and 
+large, deep holes dug in the ground all around you.  It looks as though 
+massive vandalism has struck this small cemetery.  The only way out is 
+westward, for to the north, south, and east is a large stone wall."
+
+extra {"gravestones","gravestone"}
+"As you look at all the overturned gravestones, you can see vandalism has 
+plagued this small cemetery."
+
+extra {"holes","hole"}
+"Deep holes have been dug in the ground by vandals and grave-robbers."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+dilcopy shuffle@gobtown1();
+
+west to cem_4 descr
+"The cemetery continues to the west.";
+
+end  
+
+
+home_A
+title "A Small Goblin Cottage"
+descr "Complete filth surrounds you.  This kitchen looks like it has 
+never been cleaned.  Dirty dishes, pots, and pans are scattered all over 
+the countertop.  The floor is covered in dirt and dried up food.  Its 
+overall smell is appalling."
+
+extra {"pots", "pans", "dishes"}
+"You see piles of dirty dishes along with pots and pans all over the 
+kitchen."
+
+extra {"countertop"}
+"The countertop is covered with dirty pots, pans, and dishes."
+
+extra {"floor"}
+"There is dirt and dried up food all over the floor beneath your feet."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+east to road_D4 descr
+"Manson Avenue lies to the east.";
+
+end
+
+home_B
+title "A Goblin Dwelling"
+descr "This goblin dwelling is simply disgusting.  Heaps of trash are 
+piled up high all over, and there is dirt covering everything.  Old 
+pieces of food have begun to decompose, and the smell is sickening.  
+Since the trash prevents you from going any further into the house, your 
+only choice is to go back west."
+
+extra {"food"}
+"Old pieces of food are starting to decompose here, giving off a 
+sickening smell."
+
+extra {"trash", "objects"}
+"You see a filthy mess before you.  Trash fills the entire room and the 
+dirt on everything is piled high."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+dilcopy shuffle@gobtown1();
+
+west to road_B3 descr
+"Shaddow Lane lies to the west.";
+
+end
+
+home_C
+title "A Run-Down Shack of a Goblin"
+descr "Dirty clothes and piles of trash line the floor in this run-down 
+shack.  The fact that the goblins don't care much for sanitary conditions 
+is more than obvious.  Some broken furniture lie in a corner of the 
+room, and you wonder how the goblins could live like this."
+
+extra {"furniture"}
+"Some broken chairs and a broken table lies in a heap in a corner of the 
+shack."
+
+extra {"clothes"}
+"You see piles of dirty clothes strewn all over the shack."
+
+extra {"trash","garbage"}
+"Heaping piles of garbage litter the entire place."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+east to road_C1 descr
+"Cemetery Road lies to the east.";
+
+end
+
+home_D
+title "A Small Goblin Cottage"
+descr "Filth covers everything in this small cottage.  Trash is littered 
+all over, and mixed in with clothes that are strewn on the floor.  Old 
+pieces of food are left all over for the rats to feed on.  The sight is 
+just unbearable and the smell is even worse.  The only way out is to head 
+back west."
+
+extra {"clothes"}
+"Clothes are strewn all over the floor."
+
+extra {"floor"}
+"Old bits of food, dirty clothes, and trash are strewn all over the floor."
+
+extra {"trash"}
+"You see mounds of trash all over the floor."
+
+extra {"dust","surfaces","surface"}
+"As you look at the exposed surfaces, you see inches of filth and dust 
+piled up high."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+dilcopy shuffle@gobtown1();
+
+west to road_A1 descr
+"Eerie Avenue lies to the west.";
+
+end
+
+home_E
+title "A Shabby Goblin Dwelling"
+descr "As soon as you get in this small home, the smell overpowers you 
+and makes you sick to your stomach.  There are piles of just old food 
+rotting away in the corner and giving off the most horrible smell.  Trash 
+and dirty clothes are piled all over the room blocking any further 
+movement into the home."
+
+extra {"food"}
+"A large pile of rotting food lies in the corner."
+
+extra {"clothes"}
+"Dirty laundry is strewn all over the floor."
+
+extra {"floor"}
+"The floor is covered with trash, dirty clothes, and rotting food."
+
+extra {"trash", "garbage"}
+"Tall piles of trash clutter the floor."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+west to road_D1 descr
+"Manson Avenue lies to the west.";
+
+end
+
+
+home_F
+title "A Cramped Goblin Shack"
+descr "Complete filth surrounds you.  This kitchen looks like it has 
+never been cleaned.  Dirty dishes, pots, and pans are scattered all over 
+the countertop.  The floor is covered in dirt and dried up food.  Its 
+overall smell is appalling."
+
+extra {"pots", "pans", "dishes"}
+"You see piles of dirty dishes along with pots and pans all over the 
+kitchen."
+
+extra {"countertop"}
+"The countertop is covered with dirty pots, pans, and dishes."
+
+extra {"floor"}
+"There is dirt and dried up food all over the floor beneath your feet."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+north to road_F7 descr
+"Death Road lies to the north.";
+
+end
+
+home_G
+title "A Run-Down Goblin Cottage"
+descr "This goblin dwelling is simply disgusting.  Heaps of trash are 
+piled up high all over, and there is dirt and mold covering everything.  Old 
+pieces of food have begun to decompose, and the smell is sickening.  
+Since the trash prevents you from going any further into the house, your 
+only choice is to go back west."
+
+extra {"food"}
+"Old pieces of food are starting to decompose here, giving off a 
+sickening smell."
+
+extra {"trash", "objects"}
+"You see a filthy mess before you.  Trash fills the entire room and the 
+dirt on everything is piled high."
+
+extra {"dirt"}
+"You see piles of dirt covering everything."
+
+extra {"mold"}
+"As you look about the room, you see green mold growing all over the place."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+dilcopy shuffle@gobtown1();
+
+west to road_B6 descr
+"Shaddow Lane lies to the west.";
+
+end
+
+home_H
+title "A Dreary Goblin Dwelling"
+descr "Dirty clothes and piles of trash line the floor in this goblin 
+dwelling.  The fact that the goblins don't care much for sanitary conditions 
+is more than obvious.  Some broken furniture lie in a corner of the 
+room, and you wonder how the goblins could live like this."
+
+extra {"furniture"}
+"Some broken chairs and a broken table lies in a heap in a corner of the 
+shack."
+
+extra {"clothes"}
+"You see piles of dirty clothes strewn all over the shack."
+
+extra {"trash","garbage"}
+"Heaping piles of garbage litter the entire place."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+dilcopy shuffle@gobtown1();
+
+north to road_F3 descr
+"Death Road lies to the north.";
+
+end
+
+home_I
+title "A Small Shack of a Goblin"
+descr "Filth covers everything in this small shack.  Trash is littered 
+all over, and mixed in with clothes that are strewn on the floor.  Old 
+pieces of food are left all over for the rats to feed on, and mold is 
+growing on everything.  The sight is just unbearable and the smell is 
+even worse."
+
+extra {"clothes"}
+"Clothes are strewn all over the floor."
+
+extra {"floor"}
+"Old bits of food, dirty clothes, and trash are strewn all over the floor."
+
+extra {"trash"}
+"You see mounds of trash all over the floor."
+
+extra {"dust","surfaces","surface"}
+"As you look at the exposed surfaces, you see inches of filth and dust 
+piled up high."
+
+extra {"mold","mildew"}
+"Green mold and mildew are growing along all the countertops."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+dilcopy shuffle@gobtown1();
+
+south to road_E6 descr
+"Fear Street lies to the south.";
+
+end
+
+home_J
+title "A Goblin Lodging"
+descr "As soon as you get inside this large goblin lodging, the smell 
+overpowers you and makes you sick to your stomach.  There are piles of  
+old food rotting away in the corner and giving off the most horrible 
+smell.  Trash and dirty clothes are piled all over the room blocking any 
+further movement into the home."
+
+extra {"food"}
+"A large pile of rotting food lies in the corner."
+
+extra {"clothes"}
+"Dirty laundry is strewn all over the floor."
+
+extra {"floor"}
+"The floor is covered with trash, dirty clothes, and rotting food."
+
+extra {"trash", "garbage"}
+"Tall piles of trash clutter the floor."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+south to road_E5 descr
+"Fear Street lies to the south.";
+
+end
+
+home_K
+title "A Broken-Down Goblin House"
+descr "Complete filth surrounds you.  This kitchen looks like it has 
+never been cleaned.  Dirty dishes, pots, and pans are scattered all over 
+the countertop.  The floor is covered in dirt and dried up food.  Its 
+overall smell is appalling."
+
+extra {"pots", "pans", "dishes"}
+"You see piles of dirty dishes along with pots and pans all over the 
+kitchen."
+
+extra {"countertop"}
+"The countertop is covered with dirty pots, pans, and dishes."
+
+extra {"floor"}
+"There is dirt and dried up food all over the floor beneath your feet."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+north to road_F5 descr
+"Death Road lies to the north.";
+
+end
+
+home_L
+title "A Dilapidated Goblin House"
+descr "This goblin home is simply disgusting.  Heaps of trash are 
+piled up high all over, and there is dirt covering everything.  Old 
+pieces of food have begun to decompose, and the smell is sickening.  
+Since the trash prevents you from going any further into the house, your 
+only choice is to go back north."
+
+extra {"food"}
+"Old pieces of food are starting to decompose here, giving off a 
+sickening smell."
+
+extra {"trash", "objects"}
+"You see a filthy mess before you.  Trash fills the entire room and the 
+dirt on everything is piled high."
+
+extra {"dirt"}
+"As you scan the room, your eyes fall upon the inches of dirt that have 
+accumulated on everything."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+dilcopy shuffle@gobtown1();
+
+north to road_G1 descr
+"Main Street lies to the north.";
+
+end
+
+home_M
+title "A Decaying Goblin Lodging"
+descr "Dirty clothes and piles of trash line the floor in this run-down 
+lodging.  The fact that the goblins don't care much for sanitary conditions 
+is more than obvious.  Some broken furniture lie in a corner of the 
+room, and you wonder how the goblins could live like this."
+
+extra {"furniture"}
+"Some broken chairs and a broken table lies in a heap in a corner of the 
+shack."
+
+extra {"clothes"}
+"You see piles of dirty clothes strewn all over the shack."
+
+extra {"trash","garbage"}
+"Heaping piles of garbage litter the entire place."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+west to road_B4 descr
+"Shaddow Lane lies to the west.";
+
+end
+
+home_N
+title "A Decrepit Goblin House"
+descr "Filth covers everything in this small house.  Trash is littered 
+all over, and mixed in with clothes that are strewn on the floor.  Old 
+pieces of food are left all over for the rats to feed on.  The sight is 
+just unbearable and the smell is even worse."
+
+extra {"clothes"}
+"Clothes are strewn all over the floor."
+
+extra {"floor"}
+"Old bits of food, dirty clothes, and trash are strewn all over the floor."
+
+extra {"trash"}
+"You see mounds of trash all over the floor."
+
+extra {"dust","surfaces","surface"}
+"As you look at the exposed surfaces, you see inches of filth and dust 
+piled up high."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+north to road_E1 descr
+"Fear Street lies to the north.";
+
+end
+
+home_O
+title "A Grungy Goblin Lodge"
+descr "As soon as you get inside this small lodge, the smell overpowers you 
+and makes you sick to your stomach.  There are piles of just old food 
+rotting away in the corner and giving off the most horrible smell.  Trash 
+and dirty clothes are piled all over the room blocking any further 
+movement into the home."
+
+extra {"food"}
+"A large pile of rotting food lies in the corner."
+
+extra {"clothes"}
+"Dirty laundry is strewn all over the floor."
+
+extra {"floor"}
+"The floor is covered with trash, dirty clothes, and rotting food."
+
+extra {"trash", "garbage"}
+"Tall piles of trash clutter the floor."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+east to road_H1 descr
+"Moses Way lies to the east.";
+
+end
+
+shop_1
+title "Shrine to the Goblin King"
+descr "This is a room dedicated to the goblins' king.  A large statue of
+the king stands near the back of the room.  Flowers are scattered all over
+the base of the statue as offerings from the goblins.  This seems to be
+the only place in the Goblin City that is even remotely clean.  The room
+is filled with the essence of smoke from all the candles lit on the king's
+behalf." 
+
+extra {"flowers"}
+"The flowers, scattered all about the base of the statue, are all rotted 
+and dead."
+
+extra {"statue"}
+"Depicted as a very large statue, is the goblins' king.  Looking closer 
+at it you realize that these goblins aren't ruled by another goblin at 
+all... it is a human that controls these vile beasts."
+
+extra {"candles","candle"}
+"Many, many candles are placed about the room.  All lit, they are making 
+the room quite smoky, not to mention the layer of candle wax covering 
+the floor."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+flags {UNIT_FL_SACRED}
+
+north to road_G2 descr
+"Main Street lies to the north.";
+end
+
+
+
+shop_2
+title "Plorg's Bank"
+descr "This is the town's one and only bank.  It is sparsely decorated, 
+and rather plain.  There is a small counter in the middle of the room, 
+and a small sign on the wall.  Compared to the filth in some of the 
+goblin cottages, this bank is rather clean."
+
+extra {"counter"}
+"It is completely bare."
+
+extra {"sign"}
+"Welcome to Plorg's Bank."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+north to road_E2 descr
+"Fear Street lies to the north.";
+
+end
+
+shop_3
+title "Hogan's Tavern"
+descr "This tavern is barely lit.  Boards are nailed over the existing 
+windows so no light can enter.  The overall lighting of the place is 
+very dim and it's hard to make out more than shadows.  The floor is only 
+hard packed dirt with shattered glass all over from the broken beer bottles."
+
+extra {"boards","board"}
+"These boards are nailed over the windows so as not to let in any light 
+from the outside."
+
+extra {"floor"}
+"A hard-packed dirt floor with pieces of broken glass all over from the 
+broken beer bottles."
+
+extra {"bottles", "glass"}
+"Jagged glass from the broken beer bottles lies here."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+south to road_F2 descr
+"Death Road lies to the south.";
+
+end
+
+shop_4
+title "A Small Butchershop"
+descr "Scanning this small goblin butchershop, your eyes fall upon small 
+puddles of blood.  There is also blood smeared all over the countertops 
+and splattered on the walls.  Rats and other mangy rodents scurry past you 
+heading for a piece of fresh raw meat."
+
+extra {"blood", "puddles", "puddle"}
+"Disgusting puddles of blood cover the floor."
+
+extra {"countertops","countertop"}
+"It is smeared with blood."
+
+extra {"walls","wall"}
+"They are all splattered with droplets of blood."
+
+extra {"raw meat","meat"}
+"Rats scurry towards the piece of raw meat left on the floor."
+
+extra {"rats", "rat", "rodents", "rodent"}
+"Dirty, disgusting rats and other rodents have free run of the place."
+
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+south to road_E1 descr
+"Fear Street lies to the south.";
+
+end
+
+shop_5
+title "Nixim's Post Office"
+descr "This is the town's post office.  There is a small counter at the 
+back of the room, and letters are strewn all over it.  The floor is 
+covered in dirt, but the overall mess isn't quite as bad as the rest of 
+the town."
+
+extra {"counter"}
+"The counter is covered with many letters."
+
+extra {"letters","letter"}
+"Some letters are strewn all over the countertop."
+
+extra {"floor"}
+"The floor is covered in dirt, but the overall filth isn't as bad as most 
+of the goblin homes."
+
+dilcopy letter_subst@udgaard();
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+east to road_B9 descr
+"Shaddow Lane lies to the east.";
+
+end
+
+shop_6
+title "A Small Magic Shop"
+descr "This is Rifkin's scroll shop.  You can tell he takes great pride 
+in his shop because the filth isn't quite as bad as in most of the 
+goblin houses.  It is small and cluttered with various kinds of magic 
+paraphernalia.  The countertop is completely covered with all kinds of 
+scrolls for sale.  There is a small sign hanging on the back wall."
+
+extra {"countertop"}
+"It is cluttered with a lot of scrolls."
+
+extra {"wall"}
+"There is a small sign hanging on it."
+
+extra {"sign"}
+"Scrolls Sold Here"
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+east to road_H4 descr
+"Moses Way lies to the east.";
+
+end
+
+shop_7
+title "The Weaponsmith's Shop"
+descr "Looking around the weaponsmith's shop, your eyes fall upon the 
+various weapons on the wall and locked up in the cases.  By the neatness 
+of the area, it looks as though the weaponsmith takes great pride in 
+this quaint little shop.  Pieces of broken weapons and other such pieces 
+of equipment litter the ground."
+
+extra {"weapons","equipment"}
+"You see various types of weapons hanging on the walls for display and 
+also some broken ones discarded on the floor."
+
+extra {"ground"}
+"Broken weapons and other pieces of equipment litter the ground."
+
+extra {"cases"}
+"The cases are full of new weapons ready to sell."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+dilcopy shuffle@gobtown1();
+
+south to road_E3 descr
+"Fear Street lies to the south.";
+
+end
+
+shop_8
+title "A Tiny Magic Shop"
+descr "As soon as you walk into this small shop, you are amazed by the 
+shelves full of useful and colorful potions.  All sorts of different 
+scents fill the room from the various concoctions being made.  The 
+shopkeeper keeps his shop very organized despite the extreme filth of 
+the place."
+
+extra {"shelves"}
+"They are stacked with all different kinds of potions."
+
+extra {"potions"}
+"Very colorful potions line the shelves."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+east to road_C5 descr
+"Cemetery road lies to the east.";
+
+end
+
+shop_9
+title "Barre's Assorted Wares"
+descr "As soon as you enter this little store you see shelves filled 
+with different kinds of assorted goods, covering every wall.  It looks as 
+though if you need anything, you would be able to find it here."
+
+extra {"shelves"}
+"You see shelves covering every wall crammed to complete capacity."
+
+extra {"assorted goods","goods"}
+"These goods are piled high on all the shelves."
+
+extra {"walls","wall"}
+"Shelves filled with all sorts of stuff cover the walls."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+south to road_E7 descr
+"Fear Street lies to the south.";
+
+end
+
+shop_10
+title "North Goblin Inn"
+descr "As your eyes scan the place, you see such a huge amount of filth, 
+you wonder how any of the goblins could stay here.  For that matter, you 
+wonder how the rats scurrying around your feet could bear to stay here 
+either."
+
+extra {"rats", "rat", "rodents", "rodent"}
+"Dirty, disgusting rats and other rodents have free run of the place."
+
+extra {"filth"}
+"It looks as though this place has never been cleaned."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+south to road_E4 descr
+"Fear Street lies to the south.";
+up to shop_19 descr
+"The lodgings of the inn lie upstairs.";
+
+end
+
+shop_11
+title "South Goblin Inn"
+descr "As your eyes scan the place, you see such a huge amount of filth, 
+you wonder how any of the goblins could stay here.  For that matter, you 
+wonder how the rats scurrying around your feet could bear to stay here 
+either."
+
+extra {"rats", "rat", "rodents", "rodent"}
+"Dirty, disgusting rats and other rodents have free run of the place."
+
+extra {"filth"}
+"It looks as though this place has never been cleaned."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+dilcopy shuffle@gobtown1();
+
+west to road_D4 descr
+"Manson Avenue lies to the west.";
+up to shop_20 descr
+"The lodgings of the inn lie upstairs.";
+
+end
+
+shop_12
+title "The Goblin Mortician Shop"
+descr "A small dark room surrounds you.  It's hard to breathe because of 
+the stuffy, stale air.  The windows are all boarded up, keeping the 
+place without light or fresh air.  There are coffins up against the back 
+wall on display."
+
+extra {"windows","window"}
+"They are boarded up so as no light from the outside can enter."
+
+extra {"coffins","coffin"}
+"Many coffins are leaning up against the back wall on display."
+
+extra {"back wall","wall"}
+"Many coffins are propped up against this wall on display."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+north to road_F4 descr
+"Death Road lies to the north.";
+
+end
+
+shop_13
+title "The City's Assorted Food Store"
+descr "All sorts of various fruits and vegetables fill the bins which line 
+the walls.  Even though the shop is completely filthy, the groceries  
+look fresh enough, though rats and other rodents also creep in and 
+out of these bins."
+
+extra {"rats", "rat", "rodents", "rodent"}
+"Dirty, disgusting rats and other rodents have free run of the place."
+
+extra {"bins","bin"}
+"They are full of fresh produce... and a couple of rats."
+
+extra {"vegetables","vegetable"}
+"They look fresh enough, but rats are crawling on them."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+west to road_A3 descr
+"Eerie Avenue lies to the west.";
+
+end
+
+shop_14
+title "Catlin's Candystore"
+descr "As you enter the candystore, the amount of candy in here befuddles 
+you.  Shelves upon shelves of sweet smelling, colorful candy line the 
+walls.  Being in this store makes you feel like a child again, and 
+leaving back south to the city seems so unattractive at this moment."
+
+extra {"candy"}
+"Colorful and sweet smelling candy fill the shelves and the display case."
+
+extra {"shelves","shelf"}
+"These shelves are filled with sweet smelling, colorful candy."
+
+extra {"display case","display","case"}
+"The display case is full of colorful, sweet smelling candy."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+south to road_G1 descr
+"Main Street lies to the south.";
+
+end
+
+shop_15
+title "Kirby's Baked Goods"
+descr "The moment you stepped inside this little bake shop, your nose was 
+filled with the aroma of delicious baked goods.  On the shelves you see 
+cakes, cookies, bread, and more.  Flour, mixing bowls, and stirring 
+utensils clutter the countertops."
+
+extra {"shelves","shelf"}
+"Freshly baked goods line the shelves."
+
+extra {"cakes"}
+"All sorts of freshly baked cakes fill the shelves."
+
+extra {"cookies"}
+"Dozens of different kinds of cookies line the shelves."
+
+extra {"bread"}
+"Loaves of bread are stacked up on the shelves."
+
+extra {"flour"}
+"Flour from all the baking is scattered on the counter."
+
+extra {"mixing bowls","bowls"}
+"Dirty mixing bowls from making today's baked goods clutter the counter."
+
+extra {"stirring utensils","utensils"}
+"Spoons and other stirring utensils clutter the counter."
+
+extra {"countertops"}
+"The countertops are cluttered with all sorts of baking utensils."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+north to road_F6 descr
+"Death Road lies to the north.";
+
+end
+
+shop_16
+title "An Abandoned Warehouse"
+descr "A large falling-down warehouse surrounds you.  It is completely 
+barren.  It has a very high ceiling and is also very drafty, so you can 
+feel the cool wind against your skin.  Pieces of broken boards and parts 
+of the ceiling lie on the ground in heaps.  This place looks far from sturdy."
+
+extra {"ceiling"}
+"As you look upward, you notice how high the ceiling is."
+
+extra {"broken boards","boards","heaps", "heap"}
+"Broken boards from the warehouse lie on the ground here in a heap."
+
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+east to road_D1 descr
+"Manson Avenue lies to the east.";
+
+end
+
+shop_17
+title "An Abandoned Warehouse"
+descr "A large falling-down warehouse surrounds you.  It is completely 
+barren.  It has a very high ceiling and is also very drafty, so you can 
+feel the cool wind against your skin.  Pieces of broken boards and parts 
+of the ceiling lie on the ground in heaps.  This place looks far from sturdy."
+
+extra {"ceiling"}
+"As you look upward, you notice how high the ceiling is."
+
+extra {"broken boards","boards","heaps","heap"}
+"Broken boards from the warehouse lie on the ground here in a heap."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+dilcopy shuffle@gobtown1();
+
+east to road_B1 descr
+"Shaddow Lane lies to the east.";
+
+end
+
+shop_18
+title "The Goblin Cityguard Office"
+descr "This is the squalid cityguard office of the Goblin City.  It 
+becomes painfully apparent to you that there is a large lack of law and 
+order in this poor town.  The cityguards are obviously extremely 
+underfunded.  When they built this cityguard office, they lacked money to 
+add a jail to the building.  This room also has very little in it, simply 
+a desk and a chair."
+
+extra {"desk"}
+"The desk is a sturdy oak desk, but in obvious disrepair.  You can't help 
+but notice footprints on the top of the desk as if someone were putting 
+their feet up."
+
+extra {"chair"}
+"The chair, which is in terrible shape, doesn't coordinate with anything 
+else in the office. You wonder if it was simply plucked from a dump 
+somewhere."
+
+extra {"footprints"}
+"Large footprints from a goblin are all over the top of the desk."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+south to road_G2 descr
+"Main Street lies to the south.";
+
+end
+
+shop_19
+title "Upstairs in North Goblin Inn"
+descr "As you enter the upstairs, you take comfort in that at least it 
+isn't quite as filthy as the downstairs was.  It actually looks as though 
+the room was at least sort of cleaned, but without very much success.  
+At least there are less rats to avoid up here."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+flags {UNIT_FL_SACRED}
+
+dilcopy shuffle@gobtown1();
+
+down to shop_10 descr
+"The main floor of the inn lies downstairs.";
+
+end
+
+shop_20
+title "Upstairs in South Goblin Inn"
+descr "As you enter the upstairs, you take comfort in that at least it 
+isn't quite as filthy as the downstairs was.  It actually looks as though 
+the room was at least sort of cleaned, but without very much success.  
+At least there are less rats to avoid up here."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_SACRED}
+
+down to shop_11 descr
+"The main floor of the inn lies downstairs.";
+
+end
+
+gh_1
+title "A Goblin Guard's Home"
+descr "Once inside this little dwelling, you observe that it is kept much 
+neater than the other goblin homes, but it still isn't clean.  In the 
+middle of the room is a large kitchen table with the remains of food on 
+it, and a few rats scurry around to the crumbs left on the floor."
+
+extra {"table"}
+"A large wooden table.  It has claw marks in it from the rats."
+
+extra {"crumbs", "crumb"}
+"A few rats scurry to the crumbs left on the floor."
+
+extra {"rats", "rat", "rodents", "rodent"}
+"Dirty, disgusting rats and other rodents have free run of the place."
+
+extra {"food"}
+"The food looks as if it came from the goblin guard's last meal."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+dilcopy shuffle@gobtown1();
+
+west to road_A4 descr
+"Eerie Avenue lies to the west.";
+
+end
+
+gh_2
+title "A Goblin Guard's Cottage"
+descr "Like many of the other guards, the guard who resides here keeps 
+his home much neater than the ordinary goblins.  Despite the rats 
+and dirt covering everything, the floor is bare, without anything tossed 
+onto it.  And in the kitchen sink, there is a pile of dirty dishes."
+
+extra {"sink"}
+"It is full with dirty dishes."
+
+extra {"rats", "rat", "rodents", "rodent"}
+"Dirty, disgusting rats and other rodents have free run of the place."
+
+extra {"dishes"}
+"Dirty dishes covered with food are piled high in the sink."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+west to road_A6 descr
+"Eerie Avenue lies to the west.";
+
+end
+
+gh_3
+title "A Goblin Guard's Shack"
+descr "Unlike many of the other goblin guards who attempt to keep their 
+homes sort of neat, it looks as though the guard who lives here has made 
+no attempt in keeping his house neat whatsoever.  Piles of dirty laundry 
+and trash litter the floor.  Mounds of dirty dishes with food all over 
+them sit in the sink, and there are many, many rats scurrying around."
+
+extra {"laundry"}
+"Piles of dirty linens and clothes clutter the floors."
+
+extra {"rats", "rat", "rodents", "rodent"}
+"Dirty, disgusting rats and other rodents have free run of the place."
+
+extra {"trash"}
+"Heaps of food scraps and other pieces of garbage lie all over the floor."
+
+extra {"dishes"}
+"Dirty dishes are stacked up high in the kitchen sink."
+
+extra {"sink"}
+"The sink is full of dirty dishes."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+east to road_H2 descr
+"Moses Way lies to the east.";
+
+end
+
+gh_4
+title "A Goblin Guard's House"
+descr "Once inside this little home of a goblin guard, you see a fairly 
+neat home considering the state of the other goblins' homes.  The bed, 
+even though lumpy, looks as though someone attempted to make it, but with 
+little success.  Although the guard who lives here seems to attempt to 
+keep his home neat, the filth is still overwhelming."
+
+extra {"bed"}
+"You see a rather small bed, not made very neatly."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+
+dilcopy shuffle@gobtown1();
+
+east to road_H3 descr
+"Moses Way lies to the east.";
+
+end
+
+
+%objects
+
+
+/*Town objs*/
+
+shovel
+names {"large shovel","shovel"}
+title "a large shovel"
+descr "An old beat-up shovel lies here covered in dirt."
+extra {}
+"The wooden handle of this old battered shovel is all chipped.  It looks 
+as though it might cause slivers to those who use it."
+
+extra {"$identify"}
+"This shovel has a craftsmanship of 0 and a magical modifier of 0."
+
+WEAPON_DEF(WPN_QUARTERSTAFF,0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+
+cost 4 SILVER_PIECE
+rent 2 SILVER_PIECE
+
+end
+
+
+goblin_plate
+names {"goblin breastplate","breastplate","plate"}
+title "a hard leather goblin breastplate"
+descr "A hard leather goblin breastplate is lying on the ground here."
+extra {}
+"Made from the hide of an elf, it looks very strong."
+
+extra {"$identify"}
+"This goblin plate has a craftsmanship of 0 and a magical modifier of 0."
+
+ARMOUR_HRD_LEATHER(0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+
+cost 4 SILVER_PIECE
+rent 2 SILVER_PIECE
+
+end
+
+goblin_helmet
+names {"goblin helmet","helmet"}
+title "a hard leather goblin helmet"
+descr "A hard leather goblin helmet is lying on the ground."
+extra {}
+"Made from the hide of an elf, it looks very strong."
+
+extra {"$identify"}
+"This goblin helmet has a craftsmanship of 0 and a magical modifier of 0."
+
+ARMOUR_HRD_LEATHER(0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_HEAD}
+
+cost 4 SILVER_PIECE
+rent 2 SILVER_PIECE
+
+end
+
+
+spear
+names {"pointy goblin spear","goblin spear","pointy spear","spear"}
+title "a pointy goblin spear"                         
+descr "A goblin spear lies here covered in blood."
+extra {}
+"This goblin spear looks quite sharp and pointy."
+
+extra {"$identify"}
+"This goblin spear has a craftsmanship of -20 and a magical modifier of -20."
+
+WEAPON_DEF(WPN_SPEAR,-20,-20)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+
+weight 1
+
+cost 1 SILVER_PIECE
+rent 4 COPPER_PIECE
+
+end
+
+trident
+names {"goblin pitchfork","pitchfork","fork"}
+title "a goblin pitchfork"
+descr "A sharp goblin pitchfork lies here splattered with blood."
+extra {} 
+"This pitchfork looks very pointy.  Its handle is a bit chipped from all 
+the battles it has endured."
+
+extra {"$identify"}
+"This goblin pitchfork has a craftsmanship of -20 and a magical modifier of 
+-20."
+
+WEAPON_DEF(WPN_TRIDENT,-20,-20)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+
+weight 1
+
+cost 1 SILVER_PIECE
+rent 4 COPPER_PIECE
+
+end
+
+halberd
+names {"large goblin halberd","goblin halberd","large halberd","halberd"}
+title "a large goblin halberd"
+descr "A large halberd covered in droplets of blood has been left here."
+extra {}
+"The handle on this large, crude halberd looks very chipped.  It has 
+endured many battles, yet still bares a sharp edge."
+
+extra {"$identify"}
+"This goblin halberd has a craftsmanship of -20 and a magical modifier of 
+-20."
+
+WEAPON_DEF(WPN_HALBERD,-20,-20)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+
+weight 2
+
+cost 2 SILVER_PIECE 
+rent 1 SILVER_PIECE
+
+end
+
+rag_shirt
+names {"rag shirt","shirt"}
+title "a shirt made of rags"
+descr "An old shirt lies here in a heap."
+extra {}
+"Old, faded and dingy, this shirt looks like it has never been washed."
+
+extra {"$identify"}
+"This old tattered shirt has a craftsmanship of 0 and a magical modifier 
+of 0."
+
+ARMOUR_CLOTHES(0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+
+cost 2 SILVER_PIECE
+rent 1 SILVER_PIECE
+
+weight 1
+
+end
+
+old_pants
+names {"pants"}
+title "a worn out pair of pants"
+descr "An old tattered pair of pants has been discarded here."
+extra {}
+"These pants are filthy and full of holes.  It looks as though they've 
+never been washed."
+
+extra {"$identify"}
+"This old pair of tattered pants have a craftsmanship of 0 and a magical 
+modifier of 0."
+
+ARMOUR_CLOTHES(0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_LEGS}
+
+weight 1
+
+cost 2 SILVER_PIECE
+rent 1 SILVER_PIECE
+
+end
+
+dress
+names {"burlap dress","dress"}
+title "a burlap dress"
+descr "An old beat-up dress lies here forgotten."
+extra {}
+"This dress is made from rough burlap.  It is completely covered in dirt 
+and grime, and looks as though it would be uncomfortable to wear."
+
+extra {"$identify"}
+"This old grimy dress has a craftsmanship of 0 and a magical modifier of 0."
+
+ARMOUR_CLOTHES(0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+
+cost 2 SILVER_PIECE
+rent 1 SILVER_PIECE
+
+weight 1
+
+end
+
+/* Magic Items */
+
+
+anklet
+names {"anklet of glass shards","glass shards anklet","glass shard 
+anklet","glass anklet","anklet"} 
+title "an anklet of glass shards"
+descr "An anklet of jagged glass lies here on the ground."
+extra {}
+"This anklet is made of jagged shards of clear glass.  It seems as though 
+it has magical powers, though these powers may be unwanted."
+
+extra {"$identify"}
+"This anklet will reduce the amount of magic you possess."
+
+extra {"$improved identify"}
+"This anklet will reduce the amount of magic you possess by 10."
+
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_ANKLE}
+
+MAG_TRANSFER (-10)
+
+rent 2 COPPER_PIECE
+cost 4 COPPER_PIECE
+
+weight 1
+
+end
+
+
+
+/* Kuruk Quest Prize */
+
+protector
+names {"adamantium breastplate called 'the protector'","adamantium 
+breastplate called the protector","protector","adamantium 
+breastplate","adamantium plate","breastplate","plate"}
+title "&c+nT&cwh&c+we
+&cwA&c+nd&cwa&c+wm&cwa&c+nn&cwt&c+wi&cwu&c+nm
+&cwB&c+wr&cwe&c+na&cws&c+wt&cwp&c+nl&cwa&c+wt&cwe
+&c+nc&cwa&c+wl&cwl&c+ne&cwd
+&c+w'&c+rT&crh&c+re &crP&c+rr&cro&c+rt&cre&c+rc&crt&c+ro&crr&c+w'&cw"
+descr "&c+nAn ancient breastplate lies here on the ground, forgotten.&cw'"
+
+extra {}
+"Forged from pure adamantium, this breastplate seems to glow with raw 
+energy.  I bears a small engraving of the Great One, Uurak.  Small gems 
+are encrusted in the vestament, both as a symbol of strength, as well as 
+magic.  You have a feeling that this plate will protect you well."
+
+extra {"small engraving","engraving"}
+"Etched deeply into the breastplate, this engraving shows the Great One, 
+Uurak, with a stoic expression on his face.  Power and strength dominate 
+this engraving.  You almost believe that the engraving moved... if only 
+slightly.  It may all just be a trick with the lighting."
+
+extra {"small gems","gems","small gem","gem"}
+"Small gems dominate this breastplate.  They look beautiful set against 
+the silvery black adamantium."
+
+extra {"$identify"}
+"&l
+&c+nA beautiful piece of work, this breastplate is the result of years of 
+hardship, blood, sweat and tears.  You sense great magical powers in this 
+breatplate, and know it will protect you well.
+
+&c+wC&cwraftsmanship &c+b:  &c+w1&cw8
+&c+wM&cwagical Modifier&c+b:  &c+w1&cw1"
+
+extra {"$improved identify"}
+"&l
+
+&c+wS&cwtrength    &c+b:  &c+w+&cw3
+&c+wD&cwexterity   &c+b:  &c+w+&cw4"
+
+ARMOUR_PLATE(18,11)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+
+weight 10
+
+dilcopy quest_restrict@function ("Fulfilled the Prophesy of Uurak",0,0,"");
+dilcopy level_restrict@function (50,0,0,"");
+
+STR_TRANSFER(+3)
+DEX_TRANSFER(+4)
+
+end
+
+
+/* Kuruk's Quest Items */
+
+uurak_spear
+names {"spear of uurak","spear"}
+title "&c+rT&crh&c+re &crS&c+rp&cre&c+ra&crr &c+rO&crf 
+&c+rU&cru&c+rr&cra&c+rk&cw"  /* The Spear Of Uurak */
+descr "An ancient &crspear&cw lies here on the ground."
+extra {}
+"This spear looks to be an ancient artifact."
+
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_SPEAR,10,10)
+
+/* Quest Item - this item was not made to be used */
+
+dilcopy abi_restrict@function (ABIL_DIV,100,0,0,"");
+dilcopy level_restrict@function (199,0,0,"");
+dilcopy ali_restrict@function (-350,-1000,0,0,"");
+
+weight 5
+ 
+cost 5 PLATINUM_PIECE
+
+end
+
+uurak_dagger
+names {"dagger of uurak", "dagger"}
+title "&c+bT&cbh&c+be &cbD&c+ba&cbg&c+bg&cbe&c+br &cbO&c+bf 
+&cbU&c+bu&cbr&c+ba&cbk&cw" /* The Dagger Of Uurak */
+descr "An ancient &cbdagger&cw lies on the ground."
+extra {}
+"This dagger looks to be an ancient artifact."
+
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_DAGGER,10,10)
+
+/* Quest Item - this item was not made to be used */
+
+dilcopy abi_restrict@function (ABIL_DIV,100,0,0,"");
+dilcopy level_restrict@function (199,0,0,"");
+dilcopy ali_restrict@function (-350,-1000,0,0,"");
+
+weight 5
+ 
+cost 5 PLATINUM_PIECE
+
+end
+
+
+uurak_crown
+names {"crown of uurak","crown"}
+title "&c+gT&cgh&c+ge &cgC&c+gr&cgo&c+gw&cgn &c+gO&cgf 
+&c+gU&cgu&c+gr&cga&c+gk&cw" /* The Crown Of Uurak */
+descr "An ancient &c+gcrown&cw lies on the ground."
+extra {}
+"This crown looks to be an ancient artifact."
+
+ARMOUR_PLATE(25,25)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_HEAD}
+
+/* Quest Item - this item was not made to be used */
+
+dilcopy abi_restrict@function (ABIL_DIV,100,0,0,"");
+dilcopy level_restrict@function (199,0,0,"");
+dilcopy ali_restrict@function (-350,-1000,0,0,"");
+
+weight 5
+ 
+cost 5 PLATINUM_PIECE
+
+end
+
+uurak_ring
+names {"ring of uurak","ring"}
+title "&c+mT&cmh&c+me &cmR&c+mi&cmn&c+mg &cmO&c+mf &cmU&c+mu&cmr&c+ma&cmk&cw"
+ /* The Ring Of Uurak */
+descr "An ancient &c+mring&cw lies on the ground."
+extra {}
+"This ring looks to be an ancient artifact."
+
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_FINGER}
+
+/* Quest Item - this item was not made to be used */
+
+dilcopy abi_restrict@function (ABIL_DIV,100,0,0,"");
+dilcopy level_restrict@function (199,0,0,"");
+dilcopy ali_restrict@function (-350,-1000,0,0,"");
+
+weight 2
+ 
+cost 5 PLATINUM_PIECE
+
+end
+
+
+
+/* Tavern Products */
+
+grain_alcohol
+names {"shot of grain alcohol", "grain alcohol","grain","alcohol",      
+       "shot glass","shot","glass","vodka"} 
+title "a shot of grain alcohol"
+descr "A small shot glass is lying on the ground."
+extra {}
+"You think that drinking this may be harmful to your health."
+
+LIQ_DEF(LIQ_VODKA,1,1,1,1)
+manipulate {MANIPULATE_TAKE}
+
+cost 6 IRON_PIECE
+
+end
+
+pretzels
+names {"pretzels"}
+title "some pretzels"
+descr "Some pretzels lie in a small heap here."
+extra {}
+"They look extra salty."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (12,0)
+
+cost 4 IRON_PIECE
+
+
+end
+
+beer_nuts
+names {"beer nuts","nuts"}
+title "some beer nuts"
+descr "A small pile of beer nuts lies here."
+extra {}
+"They look like they would go well with a mug of beer."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (12,0)
+
+cost 4 IRON_PIECE
+
+end
+
+rum_coke
+names {"glass of rum and coke","rum and coke","rum","coke","glass","brandy"}
+title "a rum and coke"
+descr "A glass of rum and coke has been dropped here."
+extra {}
+"It looks really strong and smells sweet."
+
+manipulate {MANIPULATE_TAKE}
+LIQ_DEF(LIQ_BRANDY,1,1,1,0)
+
+cost 7 IRON_PIECE
+
+end
+
+/* Butcher Products */
+
+chicken_leg
+names {"chicken leg","chicken","leg"}
+title "a tasty chicken leg"
+descr "A tasty chicken leg has been dropped here."
+extra {}
+"A big, meaty chicken leg."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (14,0)
+
+cost 1 COPPER_PIECE, 3 IRON_PIECE
+
+end
+
+bacon
+names {"slab of bacon","bacon slab","bacon","slab"}
+title "a slab of bacon"
+descr "A slab of bacon has been left here."
+extra {}
+"A fresh lean slab of bacon."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (4,0)
+
+cost 1 COPPER_PIECE, 2 IRON_PIECE
+
+end
+
+meat
+names {"unidentified slab of meat","slab of meat","meat","slab"}
+title "an unidentified slab of meat"
+descr "An unidentified slab of meat has been left here."
+extra {}
+"As you look closely at it, you wonder what it could be made of."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (15,0)
+
+cost 1 COPPER_PIECE, 6 IRON_PIECE
+
+end
+
+pepperoni
+names {"stick of pepperoni","pepperoni stick","pepperoni","stick"}
+title "a stick of pepperoni"
+descr "A stick of pepperoni has been left here on the ground."
+extra {}
+"It looks extra spicy."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (13,0)
+
+cost 8 IRON_PIECE
+
+end
+
+ham
+names {"glazed ham","ham"}
+title "a glazed ham"
+descr "A glazed ham has been dropped here."
+extra {}
+"It looks very lean and tangy."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (16,0)
+
+cost 2 COPPER_PIECE
+
+end
+
+/* Candystore Products */
+
+rock_candy
+names {"rock candy","candy"}
+title "some rock candy"
+descr "Some rock candy is glistening on the ground."
+extra {}
+"This candy looks hard enough to break your teeth."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (12,0)
+
+cost 1 COPPER_PIECE, 2 IRON_PIECE
+
+end
+
+cherry_pop
+names {"cherry goblin-pop","cherry goblin pop","cherry pop","goblin  
+pop","pop"} 
+title "a cherry goblin-pop"
+descr "A cherry goblin-pop is lying here discarded on the ground."
+extra {}
+"A sweet lollipop with a goblin-shaped head."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (12,0)
+
+cost 4 IRON_PIECE
+
+end
+
+
+rasp_pop
+names {"raspberry goblin-pop","raspberry goblin pop","raspberry pop", 
+"goblin pop","pop"} 
+title "a raspberry goblin-pop"
+descr "A raspberry goblin-pop is lying here discarded on the ground."
+extra {}
+"A sweet lollipop with a goblin-shaped head."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (12,0)
+
+cost 4 IRON_PIECE
+
+end
+
+watermelon_pop
+names {"watermelon goblin-pop","watermelon goblin pop","watermelon 
+pop","goblin pop","pop"}
+title "a watermelon goblin-pop"
+descr "A watermelon goblin-pop is lying here discarded on the ground."
+extra {}
+"A sweet lollipop with a goblin-shaped head."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (12,0)
+
+cost 4 IRON_PIECE
+
+end
+
+grape_pop
+names {"grape goblin-pop","grape goblin pop","grape pop","goblin pop","pop"}
+title "a grape goblin-pop"
+descr "A grape goblin-pop is lying here discarded on the ground."
+extra {}
+"A sweet lollipop with a goblin-shaped head."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (12,0)
+
+cost 4 IRON_PIECE
+
+end
+
+
+bscotch_pop
+names {"butterscotch goblin-pop","butterscotch goblin pop","butterscotch 
+pop","goblin pop","pop"}
+title "a butterscotch goblin-pop"
+descr "A butterscotch goblin-pop is lying here discarded on the ground."
+extra {}
+"A sweet lollipop with a goblin-shaped head."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (12,0)
+
+cost 4 IRON_PIECE
+
+end
+
+strawberry_pop
+names {"strawberry goblin-pop","strawberry goblin pop","strawberry 
+pop","goblin pop","pop"} 
+title "a strawberry goblin-pop"
+descr "A strawberry goblin-pop is lying here discarded on the ground."
+extra {}
+"A sweet lollipop with a goblin-shaped head."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (12,0)
+
+cost 4 IRON_PIECE
+
+end
+
+rootbeer_pop
+names {"rootbeer goblin-pop","rootbeer goblin pop","rootbeer pop",  
+"goblin pop","pop"} 
+title "a rootbeer goblin-pop"
+descr "A rootbeer goblin-pop is lying here discarded on the ground."
+extra {}
+"A sweet lollipop with a goblin-shaped head."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (12,0)
+
+cost 4 IRON_PIECE
+
+end
+
+goblin_bar
+names {"goblin chocolate bar","chocolate bar","bar"}
+title "a goblin chocolate bar"
+descr "A chocolate bar has been left here."
+extra {}
+"It looks extra sweet and chocolaty."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (13,0)
+
+cost 1 COPPER_PIECE, 2 IRON_PIECE
+
+end
+
+almond_bar
+names {"goblin almond bar","almond bar","bar"}
+title "a goblin almond bar"
+descr "An almond bar has been dropped here."
+extra {}
+"It looks very chocolaty and is filled with almonds."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (13,0)
+
+cost 1 COPPER_PIECE, 2 IRON_PIECE
+
+end
+
+/* Greengrocer Products */
+
+peach
+names {"peach"}
+title "a peach"
+descr " A peach has been left here."
+extra {}
+"You see a very ripe, fuzzy peach."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (12,0)
+
+cost 2 IRON_PIECE
+
+end
+
+salad
+names {"fresh garden salad","garden salad","salad","bowl of vegetables", 
+"vegetables","bowl"} 
+title "a fresh garden salad"
+descr "A bowl of vegetables has been left here."
+extra {}
+"The salad is filled with crisp lettuce, tomatoes, carrots, broccoli, 
+cauliflower, and topped with croutons."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (14,0)
+
+cost 1 COPPER_PIECE, 3 IRON_PIECE
+
+end
+
+veggie_burger
+names {"goblin veggie burger","veggie burger","goblin burger","burger"}
+title "a goblin veggie burger"
+descr "A goblin veggie burger has been discarded here."
+extra {}
+"A toasty bun filled with all kinds of vegetables."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (16,0)
+
+cost 2 COPPER_PIECE
+
+end
+
+plum
+names {"plum"}
+title "a plum"
+descr "A plum has been left here."
+extra {}
+"An extra ripe and juicy purple plum."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (12,0)
+
+cost 2 IRON_PIECE
+
+end
+
+lime
+names {"lime"}
+title "a lime"
+descr "A lime has been left here."
+extra {}
+"A very green sour lime."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (12,0)
+
+cost 2 IRON_PIECE
+
+end
+
+soup
+names {"bowl of French onion soup","bowl of onion soup","bowl of soup", 
+"French onion soup", "onion soup","soup","bowl"} 
+title "a bowl of French onion soup"
+descr "A bowl of soup has been dropped here."
+extra {}
+"It is piping hot and quite tasty."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (14,0)
+
+cost 1 COPPER_PIECE, 3 IRON_PIECE
+
+end
+
+fruit_salad
+names {"fruit salad","salad"}
+title "a fruit salad"
+descr "A fruit salad has been left here."
+extra {}
+"A scrumptious fruit salad containing chunks of watermelon, cantaloupe, 
+kiwi, strawberries and blueberries."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (13,0)
+
+cost 1 COPPER_PIECE
+
+end
+
+rose
+names {"single red rose","red rose","rose"}
+title "a single red rose"
+descr "A single red rose is lying here."
+extra {}
+"A long-stemmed rose with deep red petals that are as soft as velvet."
+
+manipulate {MANIPULATE_TAKE}
+
+cost 1 COPPER_PIECE
+
+end
+
+baked_potato
+names {"baked potato","potato"}
+title "a baked potato"
+descr "A baked potato has been dropped here."
+extra {}
+"A steaming hot baked potato smothered in butter."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (13,0)
+
+cost 1 COPPER_PIECE, 2 IRON_PIECE
+
+end
+
+pickle
+names {"dill pickle","pickle"}
+title "a dill pickle"
+descr "A dill pickle has been dropped here."
+extra {}
+"It looks very crunchy."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (12,0)
+
+cost 3 IRON_PIECE
+
+end
+
+/* Bakery Products */
+
+cream_donut
+names {"cream filled donut","cream donut","donut"}
+title "a cream filled donut"
+descr "A cream filled donut has been dropped here."
+extra {}
+"A powdered donut with cream filling in the center."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (13,0)
+
+cost 3 IRON_PIECE
+
+end
+
+elephant_ear
+names {"elephant ear","ear"}
+title "an elephant ear"
+descr "An elephant ear has been discarded on the ground."
+extra {}
+"A flaky cinnamon covered treat."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (12,0)
+
+cost 3 IRON_PIECE
+
+end
+
+bday_cake
+names {"birthday cake","cake"}
+title "a birthday cake"
+descr "A birthday cake has been dropped here."
+extra {}
+"A special cake made in honor of someone's birthday celebration."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (14,0)
+
+cost 1 COPPER_PIECE, 4 IRON_PIECE
+
+end
+
+choc_pie
+names {"chocolate cream pie","pie"}
+title "a chocolate cream pie"
+descr "A chocolate cream pie has been dropped here on the ground."
+extra {}
+"Made with chocolate pudding in a graham cracker crust and topped with 
+whipped cream, it looks wonderfully delicious."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (14,0)
+
+cost 1 COPPER_PIECE, 2 IRON_PIECE
+
+end
+
+cinn_toast
+names {"piece of cinnamon toast","piece of toast","cinnamon toast", 
+"toast","piece"} 
+title "a piece of cinnamon toast"
+descr "A piece of toast has been left here."
+extra {}
+"A golden piece of toast sprinkled with cinnamon and sugar."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (12,0)
+
+cost 6 IRON_PIECE
+
+end
+
+mousse
+names {"chocolate mousse","mousse"}
+title "some chocolate mousse"
+descr "Some chocolate mousse has been left here."
+extra {}
+"The chocolate mousse looks extra creamy."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (12,0)
+
+cost 3 IRON_PIECE
+
+end
+
+cruller
+names {"cruller"}
+title "a cruller"
+descr "A cruller has been left here."
+extra {}
+"A twisty glazed cruller that looks quite tasty."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (12,0)
+
+cost 4 IRON_PIECE
+
+end
+
+bread
+names {"loaf of freshly baked bread","loaf of fresh bread","loaf of baked 
+bread","loaf of bread","freshly baked bread","fresh bread","baked 
+bread","loaf","bread"}
+title "a loaf of freshly baked bread"
+descr "A loaf of bread has been discarded here."
+extra {}
+"A piping hot loaf of fresh bread."
+
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF (13,0)
+
+cost 2 IRON_PIECE
+
+end
+
+/* Potion Shop Products */
+
+heal_pot
+names {"fizzing gold potion","healing potion","golden potion","gold 
+potion","potion"}
+title "a fizzing gold potion"
+descr "A golden potion has been left here fizzing."
+extra {}
+"It appears to have healing powers."
+
+extra {"$identify"}
+"This potion will heal you when quaffed."
+
+manipulate {MANIPULATE_TAKE}
+POTION_DEF(60,SPL_CURE_WOUNDS_2,SPL_CURE_WOUNDS_2,SPL_NONE)
+
+weight 1
+cost 4 GOLD_PIECE
+
+end
+
+
+dex_pot
+names {"misty white potion","dexterity potion","white potion","potion"}
+title "a misty white potion"
+descr "A misty white potion has been dropped here."
+extra {}
+"It appears to have dexterity boosting powers."
+
+extra {"$identify"}
+"This potion will raise your dexterity when quaffed."
+
+manipulate {MANIPULATE_TAKE}
+POTION_DEF(60,SPL_RAISE_DEX,SPL_NONE,SPL_NONE)
+
+weight 1
+cost 2 GOLD_PIECE
+
+end
+
+str_pot
+names {"fizzing black potion","strength potion","black potion","potion"}
+title "a fizzing black potion"
+descr "A black potion has been left here fizzing."
+extra {}
+"It appears to have strength boosting powers."
+
+extra {"$identify"}
+"This potion will raise your strength when quaffed."
+
+manipulate {MANIPULATE_TAKE}
+POTION_DEF(60,SPL_RAISE_STR,SPL_NONE,SPL_NONE)
+
+weight 1
+cost 2 GOLD_PIECE
+
+end
+
+haste_pot
+names {"fizzing copper potion","haste potion","copper potion","potion"}
+title "a fizzing copper potion"
+descr "A copper potion has been left here fizzing."
+extra {}
+"It appears to have hastening powers."
+
+extra {"$identify"}
+"This potion will make you faster when quaffed."
+
+manipulate {MANIPULATE_TAKE}
+POTION_DEF(60,SPL_HASTE,SPL_NONE,SPL_NONE)
+
+weight 1
+cost 2 GOLD_PIECE
+
+end
+
+rem_poi_pot
+names {"fizzing green potion","remove poison potion","green potion","potion"} 
+title "a fizzing green potion"
+descr "A green potion has been left here fizzing."
+extra {}
+"It appears to be able to remove poison."
+
+extra {"$identify"}
+"This potion will remove poison when quaffed."
+
+manipulate {MANIPULATE_TAKE}
+POTION_DEF(60,SPL_REMOVE_POISON,SPL_NONE,SPL_NONE)
+
+weight 1
+cost 2 GOLD_PIECE
+
+end
+
+inv_pot
+names {"misty grey potion","invisibility potion","grey potion","potion"}
+title "a misty grey potion"
+descr "A misty grey potion has been dropped here."
+extra {}
+"It appears to be able to make you invisible."
+
+extra {"$identify"}
+"This potion will make you invisible when quaffed."
+
+manipulate {MANIPULATE_TAKE}
+POTION_DEF(60,SPL_INVISIBILITY,SPL_NONE,SPL_NONE)
+
+weight 1
+cost 2 GOLD_PIECE
+
+end
+
+rem_dis_pot
+names {"misty pink potion","remove disease potion","pink potion","potion"}
+title "a misty pink potion"
+descr "A misty pink potion has been dropped here."
+extra {}
+"It appears to be able to remove disease."
+
+extra {"$identify"}
+"This potion will remove disease when quaffed."
+
+manipulate {MANIPULATE_TAKE}
+POTION_DEF(60,SPL_REM_DISEASE,SPL_NONE,SPL_NONE)
+
+weight 1
+cost 2 GOLD_PIECE
+
+end
+
+det_inv_pot
+names {"fizzing turquoise potion","detect invisible potion","turquoise 
+potion","potion"} 
+title "a fizzing turquoise potion"
+descr "A turquoise potion has been left here fizzing."
+extra {}
+"It appears to have powers to detect invisible."
+
+extra {"$identify"}
+"This potion will help you detect invisible when quaffed."
+
+manipulate {MANIPULATE_TAKE}
+POTION_DEF(60,SPL_DET_INVISIBLE,SPL_NONE,SPL_NONE)
+
+weight 1
+cost 2 GOLD_PIECE
+
+end
+
+
+bra_pot
+names {"misty orchid potion","brain potion","orchid potion","potion"}
+title "a misty orchid potion"
+descr "A misty orchid potion has been dropped here."
+extra {}
+"It appears to be able to make you smarter."
+
+extra {"$identify"}
+"This potion will raise your brain when quaffed."
+
+manipulate {MANIPULATE_TAKE}
+POTION_DEF(60,SPL_RAISE_BRA,SPL_NONE,SPL_NONE)
+
+weight 1
+cost 2 GOLD_PIECE
+
+end
+
+mag_pot
+names {"misty lavender potion","magic potion","lavender potion","potion"}
+title "a misty lavender potion"
+descr "A misty lavender potion has been dropped here."
+extra {}
+"It appears to be able to boost your magic powers."
+
+extra {"$identify"}
+"This potion will raise your magic when quaffed."
+
+manipulate {MANIPULATE_TAKE}
+POTION_DEF(60,SPL_RAISE_MAG,SPL_NONE,SPL_NONE)
+
+weight 1
+cost 2 GOLD_PIECE
+
+end
+
+con_pot
+names {"misty yellow potion","constitution potion","yellow potion","potion"} 
+title "a misty yellow potion"
+descr "A misty yellow potion has been dropped here."
+extra {}
+"It appears to be able to boost your constitution."
+
+extra {"$identify"}
+"This potion will raise your constitution when quaffed."
+
+manipulate {MANIPULATE_TAKE}
+POTION_DEF(60,SPL_RAISE_CON,SPL_NONE,SPL_NONE)
+
+weight 1
+cost 2 GOLD_PIECE
+
+end
+
+div_pot
+names {"misty blue potion","divine potion","blue potion","potion"}
+title "a misty blue potion"
+descr "A misty blue potion has been left here."
+extra {}
+"It appears to be able to boost your divinity."
+
+extra {"$identify"}
+"This potion will raise your divinity when quaffed."
+
+manipulate {MANIPULATE_TAKE}
+POTION_DEF(60,SPL_RAISE_DIV,SPL_NONE,SPL_NONE)
+
+weight 1
+cost 2 GOLD_PIECE
+
+end
+
+cha_pot
+names {"fizzing peach potion","charisma potion","peach potion","potion"}
+title "a fizzing peach potion"
+descr "A peach potion has been left here fizzing."
+extra {}
+"It appears to be able to boost your charisma."
+
+extra {"$identify"}
+"This potion will raise your charisma when quaffed."
+
+manipulate {MANIPULATE_TAKE}
+POTION_DEF(60,SPL_RAISE_CHA,SPL_NONE,SPL_NONE)
+
+weight 1
+cost 2 GOLD_PIECE
+
+end
+
+/* Scroll Shop Products */ 
+
+cha_scroll
+names {"scroll of charisma","charisma scroll","scroll"}
+title "a scroll of charisma"
+descr "A scroll of charisma has been left here."
+extra {}
+"It appears to be able to boost your charisma."
+
+extra {"$identify"}
+"This scroll will raise your charisma when recited."
+
+manipulate {MANIPULATE_TAKE}
+SCROLL_DEF(60,SPL_RAISE_CHA,SPL_NONE,SPL_NONE)
+
+weight 1
+cost 2 GOLD_PIECE
+
+end
+
+div_scroll
+names {"scroll of divinity","divinity scroll","divine scroll","scroll"}
+title "a scroll of divinity"
+descr "A scroll of divinity has been dropped here."
+extra {}
+"It appears to be able to boost your divinity."
+
+extra {"$identify"}
+"This scroll will raise your divinity when recited."
+
+manipulate {MANIPULATE_TAKE}
+SCROLL_DEF(60,SPL_RAISE_DIV,SPL_NONE,SPL_NONE)
+
+weight 1
+cost 2 GOLD_PIECE
+
+end
+
+con_scroll
+names {"scroll of constitution","constitution scroll","scroll"}
+title "a scroll of constitution"
+descr "A scroll of constitution has been left here."
+extra {}
+"It appears to be able to boost your constitution."
+
+extra {"$identify"}
+"This scroll will raise your constitution when recited."
+
+manipulate {MANIPULATE_TAKE}
+SCROLL_DEF(60,SPL_RAISE_CON,SPL_NONE,SPL_NONE)
+
+weight 1
+cost 2 GOLD_PIECE
+
+end
+
+mag_scroll
+names {"scroll of raise magic","raise magic scroll","magic scroll","scroll"}
+title "a scroll of raise magic"
+descr "A scroll of raise magic has been dropped here."
+extra {}
+"It appears to be able to boost your magic."
+
+extra {"$identify"}
+"This scroll will raise your magic when recited."
+
+manipulate {MANIPULATE_TAKE}
+SCROLL_DEF(60,SPL_RAISE_MAG,SPL_NONE,SPL_NONE)
+
+weight 1
+cost 2 GOLD_PIECE
+
+end
+
+bra_scroll
+names {"scroll of brain boosting","brain scroll","scroll"}
+title "a scroll of brain boosting"
+descr "A scroll of brain boosting has been left here."
+extra {}
+"It appears to be able to make you smarter."
+
+extra {"$identify"}
+"This scroll will raise your brain when recited."
+
+manipulate {MANIPULATE_TAKE}
+SCROLL_DEF(60,SPL_RAISE_BRA,SPL_NONE,SPL_NONE)
+
+weight 1
+cost 2 GOLD_PIECE
+
+end
+
+bless_scroll
+names {"scroll of blessing","blessing scroll","bless scroll","scroll"}
+title "a scroll of blessing"
+descr "A scroll of blessing has been dropped here."
+extra {}
+"It appears to be able to boost your powers."
+
+extra {"$identify"}
+"This scroll will raise your powers when recited."
+
+manipulate {MANIPULATE_TAKE}
+SCROLL_DEF(60,SPL_BLESS,SPL_NONE,SPL_NONE)
+
+weight 1
+cost 2 GOLD_PIECE
+
+end
+
+sanc_scroll
+names {"scroll of sanctuary","sanctuary scroll","scroll"}
+title "a scroll of sanctuary"
+descr "A scroll of sanctuary has been left here."
+extra {}
+"It appears to be able to keep you safe."
+
+extra {"$identify"}
+"This scroll will cast sanctuary on you when recited."
+
+manipulate {MANIPULATE_TAKE}
+SCROLL_DEF(60,SPL_SANCTUARY,SPL_NONE,SPL_NONE)
+
+weight 1
+cost 2 GOLD_PIECE
+
+end
+
+haste_scroll
+names {"scroll of hastening","hastening scroll","haste scroll","scroll"}
+title "a scroll of hastening"
+descr "A scroll of hastening has been dropped here."
+extra {}
+"It appears to be able to make you faster."
+
+extra {"$identify"}
+"This scroll will make you faster when recited."
+
+manipulate {MANIPULATE_TAKE}
+SCROLL_DEF(60,SPL_HASTE,SPL_NONE,SPL_NONE)
+
+weight 1
+cost 2 GOLD_PIECE
+
+end
+
+str_scroll
+names {"scroll of strength boosting","strength boosting scroll","strength 
+scroll","scroll"} 
+title "a scroll of strength boosting"
+descr "A scroll of strength boosting has been dropped here."
+extra {}
+"It appears to be able to boost your strength."
+
+extra {"$identify"}
+"This scroll will raise your strength when recited."
+
+manipulate {MANIPULATE_TAKE}
+SCROLL_DEF(60,SPL_RAISE_STR,SPL_NONE,SPL_NONE)
+
+weight 1
+cost 2 GOLD_PIECE
+
+end
+
+dex_scroll
+names {"scroll of dexterity","dexterity scroll","scroll"}
+title "a scroll of dexterity"
+descr "A scroll of dexterity has been left here."
+extra {}
+"It appears to be able to boost your dexterity."
+
+extra {"$identify"}
+"This scroll will raise your dexterity when recited."
+
+manipulate {MANIPULATE_TAKE}
+SCROLL_DEF(60,SPL_RAISE_DEX,SPL_NONE,SPL_NONE)
+
+weight 1
+cost 2 GOLD_PIECE
+
+end
+
+heal_scroll
+names {"scroll of healing","healing scroll","heal scroll","scroll"}
+title "a scroll of healing"
+descr "A scroll of healing has been dropped here."
+extra {}
+"It appears to be able to heal you."
+
+extra {"$identify"}
+"This scroll will heal you when recited."
+
+manipulate {MANIPULATE_TAKE}
+SCROLL_DEF(60,SPL_CURE_WOUNDS_2,SPL_CURE_WOUNDS_2,SPL_NONE)
+
+weight 1
+cost 4 GOLD_PIECE
+
+end
+
+/* Mortician Shop Products */
+
+death_fluid
+names {"embalming fluid","fluid","vial","slime"}
+title "a vial of embalming fluid"
+descr "A vial of murky green fluid bubbles here."
+extra {}
+"The fluid in the vial is a murky green color and gives off an offensive 
+odor.  It doesn't look very safe to drink... in fact, it looks as though 
+it may be fatal."
+
+LIQ_DEF(LIQ_SLIME,1,1,1,3)
+manipulate {MANIPULATE_TAKE}
+
+weight 1
+cost 2 GOLD_PIECE
+
+end
+
+coffin
+names {"large oak coffin","oak coffin","large coffin","coffin"}
+title "a large oak coffin"
+descr "A large oak coffin has been left here."
+extra {}
+"It appears to be very old and very heavy."
+
+manipulate {MANIPULATE_TAKE,MANIPULATE_ENTER}
+CONTAINER_DEF(500)
+
+cost 1 SILVER_PIECE
+weight 15
+
+end
+
+headstone
+names {"headstone"}
+title "a headstone"
+descr "A granite headstone has been left here."
+
+manipulate {MANIPULATE_TAKE}
+type ITEM_NOTE
+
+cost 2 COPPER_PIECE
+weight 5
+
+end
+
+
+/* Ironmonger Shop Products */
+
+torch
+names {"torch"}
+title "a torch"
+descr "A torch has been left here on the ground."
+extra {}
+"It is just a plain, wooden torch."
+
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+LIGHT_DEF(3,2)
+
+cost 1 IRON_PIECE
+weight 1
+
+end
+
+lantern
+names {"brass lantern","lantern"}
+title "a small brass lantern"
+descr "A small brass lantern has been left here."
+extra {}
+"It is just a plain brass lantern."
+
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+LIGHT_DEF(6,4)
+
+cost 3 IRON_PIECE
+weight 1
+
+end
+
+bag
+names {"brown paper bag","paper bag","bag"}
+title "a brown paper bag"
+descr "An old brown paper bag has been dropped here."
+extra {}
+"Just an ordinary bag to carry things in."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_ENTER}
+CONTAINER_DEF(75)
+
+cost 4 IRON_PIECE
+weight 1
+
+end
+
+paper
+names {"piece of paper","paper"}
+title "a piece of paper"
+descr "A single piece of paper has been dropped here."
+
+manipulate {MANIPULATE_TAKE}
+type ITEM_NOTE
+
+cost 1 IRON_PIECE
+weight 1
+
+end
+
+quill
+names {"quill"}
+title "a quill"
+descr "An ordinary quill has been left here."
+extra {}
+"It is just an ordinary quill used for writing."
+
+manipulate {MANIPULATE_TAKE}
+type ITEM_PEN
+
+cost 1 IRON_PIECE
+weight 1
+
+end
+
+/* Cemetery Coffins */
+
+coffin_a
+names {"large coffin","coffin"}
+title "a large coffin"
+descr "A large coffin lies here on the ground waiting to be buried."
+extra {}
+"Gazing at the coffin you see it is made from oak.  It looks to be rather 
+new, and you wonder if you should try to open it."
+
+
+CONTAINER_DEF(30000)
+manipulate {MANIPULATE_ENTER}
+
+weight 1000
+
+dilcopy coffin_2@gobtown1();
+dilcopy coffin_1a@gobtown1();
+
+open {EX_OPEN_CLOSE, EX_INSIDE_OPEN, EX_CLOSED}  
+
+end
+
+coffin_b
+names {"large coffin","coffin"}
+title "a large coffin"
+descr "A large coffin lies here on the ground waiting to be buried."
+extra {}
+"Gazing at the coffin you see it is made from oak.  It looks to be rather 
+new, and you wonder if you should try to open it."
+
+
+CONTAINER_DEF(30000)
+
+manipulate {MANIPULATE_ENTER}
+
+weight 1000
+
+dilcopy coffin_2@gobtown1();
+dilcopy coffin_1b@gobtown1();
+
+open {EX_OPEN_CLOSE, EX_INSIDE_OPEN, EX_CLOSED} 
+
+end
+
+/* Town Objects */
+
+sign_square
+names {"small wooden sign","small sign","wooden sign","sign"}
+title "a small wooden sign"
+descr "A small wooden sign is here."
+extra {}
+"Welcome to the Goblin City."
+
+MATERIAL_WOOD("A small wooden sign")
+
+weight 1000
+
+end
+
+statue_square
+names {"large goblin statue","goblin statue","large statue","statue"}
+title "a large statue"
+descr "A large statue of a goblin is here."
+extra {}
+"A large stone statue of a goblin stands before you.  You can feel the 
+evilness and cruelty of this town emanating from the eyes of the statue."
+
+MATERIAL_STONE("A very large stone statue")
+
+weight 1000
+
+end
+
+
+%mobiles
+
+
+/* Shop Mobs */
+
+bartender
+names {"hogan","goblin","bartender"}
+title "Hogan"
+descr "Hogan stands behind the bar waiting to take your order."
+extra {}
+"He looks back at you, patiently waiting for your order."
+
+M_AVG_GOBLIN(76,SEX_MALE)
+
+alignment -1000
+
+exp 100
+money 4 SILVER_PIECE, 4 COPPER_PIECE
+
+dilcopy shopkeeper@function(TAVERN_PROD, TAVERN_MSG, TAVERN_OPEN_TIMES,
+                            TAVERN_ITEM_TYPE,TAVERN_SELL_PROFIT, 
+                            TAVERN_BUY_PROFIT, TAVERN_MAX_CASH, "", "");
+
+end
+
+banker
+names {"plorg","goblin","banker"}
+title "Plorg"
+descr "Plorg stands here behind the counter counting his money."
+extra {}
+"He looks just like his brother Glorp and seems to be preoccupied and 
+completely engrossed in counting his money."
+
+M_AVG_GOBLIN(75,SEX_MALE)
+special SFUN_BANK
+
+alignment -1000
+
+exp 100
+money 4 SILVER_PIECE, 4 COPPER_PIECE
+
+end
+
+greengrocer
+names {"glorp","goblin","greengrocer"}
+title "Glorp"
+descr "Glorp rummages through some fruit and vegetable bins."
+extra {}
+"He looks just like his brother Plorg, with the same leathery skin and 
+deep grey eyes."
+
+M_AVG_GOBLIN(75,SEX_MALE)
+alignment -1000
+
+exp 100
+money 4 SILVER_PIECE, 4 COPPER_PIECE
+
+dilcopy shopkeeper@function(GREEN_PROD, GREEN_MSG, GREEN_OPEN_TIMES,
+		            GREEN_ITEM_TYPE, GREEN_SELL_PROFIT,
+			    GREEN_BUY_PROFIT, GREEN_MAX_CASH, "", "");
+
+end
+
+post_man
+names {"nixim","goblin","postman"}
+title "Nixim"
+descr "Nixim waits here patiently for you to mail a letter."
+extra {}
+"He appears tired and old, and his hands are covered with paper cuts. "
+
+M_AVG_GOBLIN(74,SEX_MALE)
+special SFUN_POSTMAN
+
+alignment -1000
+
+exp 100
+money 4 SILVER_PIECE, 4 COPPER_PIECE
+
+end
+
+captain
+names {"ralston","goblin","captain"}
+title "Ralston"
+descr "Ralston stands here behind his desk waiting for someone to misbehave."
+extra {}
+"A large mean-looking goblin stares back at you just waiting for you to 
+do something wrong."
+
+M_GOBLIN_WARRIOR_POLE(80,SEX_MALE)
+alignment -1000
+
+special SFUN_TEAMWORK "goblin"
+special SFUN_RESCUE "goblin"
+
+exp 105
+money 5 SILVER_PIECE, 2 COPPER_PIECE
+
+end
+
+butcher
+names {"dom err","dom","err","goblin","butcher"}
+title "Dom Err"
+descr "Dom Err stands here mopping up some of the smeared blood on the 
+counters."
+extra {}
+"He is smeared and splattered with blood, just like the rest of the shop."
+
+M_GOBLIN_WARRIOR_POLE(77,SEX_MALE)
+alignment -1000
+
+dilcopy shopkeeper@function(BUTCHER_PROD, BUTCHER_MSG, BUTCHER_OPEN_TIMES,
+                            BUTCHER_ITEM_TYPE, BUTCHER_SELL_PROFIT, 
+                            BUTCHER_BUY_PROFIT, BUTCHER_MAX_CASH, "", "");
+
+exp 100
+money 4 SILVER_PIECE, 4 COPPER_PIECE
+
+end
+
+scroll_seller
+names {"rifkin","goblin","scroll seller","seller"}
+title "Rifkin"
+descr "Rifkin stands here reading through some magical scrolls."
+extra {}
+"He looks a little absent-minded as he leafs through some scrolls."
+
+M_GOBLIN_MAGE_FIRE(72,SEX_MALE,"cast firestorm")
+alignment -1000
+
+
+dilcopy shopkeeper@function(SCROLL_PROD, SCROLL_MSG, SCROLL_OPEN_TIMES,
+                            SCROLL_ITEM_TYPE, SCROLL_SELL_PROFIT, 
+                            SCROLL_BUY_PROFIT, SCROLL_MAX_CASH, "", "");
+
+
+exp 100
+money 4 SILVER_PIECE, 4 COPPER_PIECE
+
+end
+
+weaponsmith
+names {"weiss","goblin","weaponsmith","smithy","smith"}
+title "Weiss"
+descr "Weiss is standing behind the counter polishing some weapons."
+extra {}
+"A large strong goblin seemingly ready to take on any challenge."
+
+M_GOBLIN_WARRIOR_POLE(76,SEX_MALE)
+alignment -1000
+
+dilcopy shopkeeper@function(ARMOR_PROD, ARMOR_MSG, ARMOR_OPEN_TIMES,
+                            ARMOR_ITEM_TYPE, ARMOR_SELL_PROFIT, 
+                            ARMOR_BUY_PROFIT, ARMOR_MAX_CASH, "", "");
+
+exp 100
+money 4 SILVER_PIECE, 4 COPPER_PIECE
+
+end
+
+potion_seller
+names {"bismo","goblin","potion seller","seller"}
+title "Bismo"
+descr "Bismo is carefully mixing some magical potions."
+extra {}
+"He is a rather small goblin mage concentrating on his potions."
+
+M_GOBLIN_MAGE_FROST(72,SEX_MALE,"cast icestorm")
+alignment -1000
+
+dilcopy shopkeeper@function(POTION_PROD, POTION_MSG, POTION_OPEN_TIMES,
+                            POTION_ITEM_TYPE, POTION_SELL_PROFIT, 
+                            POTION_BUY_PROFIT, POTION_MAX_CASH, "", "");
+
+
+exp 100
+money 4 SILVER_PIECE, 4 COPPER_PIECE
+
+end
+
+ironmonger
+names {"barre","goblin","ironmonger"}
+title "Barre"
+descr "Barre is separating his goods and stacking them on the shelves."
+extra {}
+"He looks very busy at the moment."
+
+M_AVG_GOBLIN(74,SEX_MALE)
+alignment -1000
+
+dilcopy shopkeeper@function(IRON_PROD, IRON_MSG, IRON_OPEN_TIMES,
+                            IRON_ITEM_TYPE, IRON_SELL_PROFIT, 
+                            IRON_BUY_PROFIT, IRON_MAX_CASH, "", "");
+
+
+exp 100
+money 4 SILVER_PIECE, 4 COPPER_PIECE
+
+end
+
+innkeeper_north
+names {"doane","goblin","innkeeper","keeper"}
+title "Doane"
+descr "Doane stands here patiently waiting to rent out a room."
+extra {}
+"She looks a lot like her brother, Farley."
+
+M_AVG_GOBLIN(73,SEX_FEMALE)
+alignment -1000
+
+exp 100
+money 4 SILVER_PIECE, 4 COPPER_PIECE
+
+end
+
+innkeeper_south
+names {"farley","goblin","innkeeper","keeper"}
+title "Farley"
+descr "Farley stands here patiently waiting to rent out a room."
+extra {}
+"He looks a lot like his sister, Doane."
+
+M_AVG_GOBLIN(73,SEX_MALE)
+alignment -1000
+
+exp 100
+money 4 SILVER_PIECE, 4 COPPER_PIECE
+
+end
+
+mortician
+names {"capin","goblin","mortician"}
+title "Capin"
+descr "Capin stands here with a solemn look on his face."
+extra {}
+"He looks very serious and depressed."
+
+M_AVG_GOBLIN(73,SEX_MALE)
+alignment -1000
+
+dilcopy shopkeeper@function(MORT_PROD, MORT_MSG, MORT_OPEN_TIMES,
+                            MORT_ITEM_TYPE, MORT_SELL_PROFIT, 
+                            MORT_BUY_PROFIT, MORT_MAX_CASH, "", "");
+
+
+exp 100
+money 4 SILVER_PIECE, 4 COPPER_PIECE
+
+end
+
+candy_seller
+names {"catlin","goblin","candy seller","seller"}
+title "Catlin"
+descr "Catlin stands here with a big smile on her face waiting for the 
+goblin children."
+extra {}
+"She is munching on some sweet candies."
+
+M_AVG_GOBLIN(74,SEX_FEMALE)
+alignment -1000
+
+exp 100
+money 4 SILVER_PIECE, 4 COPPER_PIECE
+
+dilcopy shopkeeper@function(CANDY_PROD, CANDY_MSG, CANDY_OPEN_TIMES, 
+                            CANDY_ITEM_TYPE, CANDY_SELL_PROFIT, 
+                            CANDY_BUY_PROFIT, CANDY_MAX_CASH, "", "");
+
+end
+
+baker
+names {"kirby","goblin","baker"}
+title "Kirby"
+descr "Kirby is behind the counter waiting for you to place your order."
+extra {}
+"His hands and face are all covered with flour."
+
+M_AVG_GOBLIN(75,SEX_MALE)
+alignment -1000
+
+exp 100
+money 4 SILVER_PIECE, 4 COPPER_PIECE
+
+dilcopy shopkeeper@function(BAKE_PROD, BAKE_MSG, BAKE_OPEN_TIMES,
+			    BAKE_ITEM_TYPE, BAKE_SELL_PROFIT,
+		            BAKE_BUY_PROFIT, BAKE_MAX_CASH, "","");
+
+end
+
+kuruk
+names {"kuruk the goblin sage", "goblin sage", "sage", "kuruk", "goblin"}
+title "Kuruk, the Goblin Sage"
+descr "Kuruk, the Goblin Sage, sits brooding in an oaken chair."
+extra {}
+"Kuruk, the Goblin Sage, smiles slightly as you look him over.  Although 
+he is old, he still radiates an almost unreal strength about him, as if 
+he was selected by the &c+nDark Gods&cw.  His muscles still ripple under 
+ancient grey skin, and his steel grey eyes pierce your very soul."
+
+
+QUEST_MOB_KURUK(130,SEX_MALE,180,160)
+
+dilcopy kuruk_quest@gobtown1();
+dilcopy combat_mag@function("firestorm","",25,2);
+
+flags {UNIT_FL_NO_TELEPORT}
+
+money 3 GOLD_PIECE
+exp 100
+
+end
+
+asaauk
+names {"asaauk the goblin sage","goblin sage","asaauk","sage","goblin"}
+title "Asaauk, the Goblin Sage"
+descr "Asaauk, the Goblin Sage, eyes you curiously."
+extra {}
+"Asaauk, the Goblin Sage, grins evilly as you look at him.  He's old... 
+very old.  He looks like a goblin that you can trust, but as you notice 
+him giggling maniacally under his breath, you aren't so sure anymore."
+
+
+QUEST_MOB_ASAAUK(80,SEX_MALE,165,140)
+
+/*dilcopy asaauk_chat@gobtown1();*/
+dilcopy combat_mag@function("lightening bolt","",25,2);
+
+flags {UNIT_FL_NO_TELEPORT}
+
+money 5 SILVER_PIECE
+exp 100
+
+end
+
+
+
+/* Non-Wandering Town Mobs */
+
+home_citizen_a
+names {"goblin citizen","goblin","citizen"}
+title "a goblin citizen"
+descr "A goblin citizen is looking for something in all the trash."
+extra {}
+"She has leathery greenish brown skin and is covered with warts.  The 
+sight of her is positively disgusting."
+
+GOBLIN_CIT_B(77,SEX_FEMALE,180,160)
+
+money 3 SILVER_PIECE, 2 COPPER_PIECE
+exp 100
+
+end
+
+home_citizen_b
+names {"goblin citizen","goblin","citizen"}
+title "a goblin citizen"
+descr "A goblin citizen is rummaging in some trash."
+extra {}
+"She has leathery brownish skin and is her face is covered with warts.  The 
+sight of her is positively disgusting, and the smell is even worse."
+
+GOBLIN_CIT_A(77,SEX_FEMALE,180,160)
+
+alignment -1000
+
+money 3 SILVER_PIECE, 2 COPPER_PIECE
+exp 100
+
+end
+
+home_citizen_c
+names {"goblin citizen","goblin","citizen"}
+title "a goblin citizen"
+descr "A goblin citizen is looking for something in all the trash."
+extra {}
+"He has leathery greenish brown skin and is covered with warts.  The 
+sight of him is positively disgusting."
+
+GOBLIN_CIT_B(77,SEX_MALE,180,160)
+
+money 3 SILVER_PIECE, 2 COPPER_PIECE
+exp 100
+
+end
+
+
+home_citizen_d
+names {"goblin citizen","goblin","citizen"}
+title "a goblin citizen"
+descr "A goblin citizen is rummaging in some trash."
+extra {}
+"He has leathery brownish skin and is his face is covered with warts.  The 
+sight of him is positively disgusting, and the smell is even worse."
+
+GOBLIN_CIT_A(77,SEX_MALE,180,160)
+
+money 3 SILVER_PIECE, 2 COPPER_PIECE
+exp 100
+
+end
+
+park_child_a
+names {"goblin child","goblin","child"}
+title "a goblin child"
+descr "A goblin child peeks out from behind a tall tree."
+extra {}
+"She has warts all over her yellowish brown skin, and is covered with 
+filth and grime.  The sight of her is simply appalling."
+
+GOBLIN_CHILD_B(72,SEX_FEMALE,150,130)
+
+money 2 SILVER_PIECE, 2 COPPER_PIECE
+exp 100
+
+end
+
+park_child_b
+names {"goblin child","goblin","child"}
+title "a goblin child"
+descr "A goblin child is playing some goblin games here."
+extra {}
+"She has warts all over her leathery brown skin, and is covered with 
+filth and grime.  The sight of her is simply appalling."
+
+GOBLIN_CHILD_A(72,SEX_FEMALE,150,130)
+
+money 2 SILVER_PIECE, 2 COPPER_PIECE
+exp 100
+ 
+end
+
+
+park_child_c
+names {"goblin child","goblin","child"}
+title "a goblin child"
+descr "A goblin child peeks out from behind a tall tree."
+extra {}
+"He has warts all over his yellowish brown skin, and is covered with 
+filth and grime.  The sight of him is simply appalling."
+
+GOBLIN_CHILD_B(72,SEX_MALE,150,130)
+
+money 2 SILVER_PIECE, 2 COPPER_PIECE
+exp 100
+ 
+end
+
+park_child_d
+names {"goblin child","goblin","child"}
+title "a goblin child"
+descr "A goblin child is playing some goblin games here."
+extra {}
+"He has warts all over his leathery brown skin, and is covered with 
+filth and grime.  The sight of him is simply appalling."
+
+GOBLIN_CHILD_A(72,SEX_MALE,150,130)
+
+money 2 SILVER_PIECE, 2 COPPER_PIECE
+exp 100
+ 
+end
+
+home_child_a
+names {"goblin child","goblin","child"}
+title "a goblin child"
+descr "A goblin child peeks out from under some litter."
+extra {}
+"Covered in dirt and grime, this goblin child is absolutely filthy.  The 
+sight of her is appalling and so is the smell."
+
+GOBLIN_CHILD_B(73,SEX_FEMALE,150,130)
+
+money 2 SILVER_PIECE, 2 COPPER_PIECE
+exp 100
+ 
+end
+
+home_child_b
+names {"goblin child","goblin","child"}
+title "a goblin child"
+descr "A goblin child is playing in all the garbage."
+extra {}
+"Covered in dirt and grime, this goblin child is absolutely filthy.  The 
+sight of her is appalling and the smell emanating from her is sickening."
+
+GOBLIN_CHILD_A(73,SEX_FEMALE,150,130)
+
+money 2 SILVER_PIECE, 2 COPPER_PIECE
+exp 100
+ 
+end
+
+home_child_c
+names {"goblin child","goblin","child"}
+title "a goblin child"
+descr "A goblin child peeks out from under some litter."
+extra {}
+"Covered in dirt and grime, this goblin child is absolutely filthy.  The 
+sight of him is appalling and so is the smell."
+
+GOBLIN_CHILD_B(73,SEX_MALE,150,130)
+
+money 2 SILVER_PIECE, 2 COPPER_PIECE
+exp 100
+ 
+end
+
+home_child_d
+names {"goblin child","goblin","child"}
+title "a goblin child"
+descr "A goblin child is playing in all the garbage."
+extra {}
+"Covered in dirt and grime, this goblin child is absolutely filthy.  The 
+sight of him is appalling and the smell emanating from him is sickening."
+
+GOBLIN_CHILD_A(73,SEX_MALE,150,130)
+
+money 2 SILVER_PIECE, 2 COPPER_PIECE
+exp 100
+ 
+end
+
+grave_robber
+names {"grave robber","robber"}
+title "a grave robber"
+descr "A grave robber is digging some deep holes here."
+extra {}
+"He has putrid yellowish skin and warts all over him.  His hands are 
+calloused from all the digging he does."
+
+GOBLIN_CIT_A(78,SEX_MALE,180,170)
+
+exp 100
+money 4 SILVER_PIECE, 6 COPPER_PIECE
+
+end
+
+skeleton_a
+names {"goblin skeleton","skeleton"}
+title "a goblin skeleton"
+descr "A goblin skeleton is here being kept from his eternal rest."
+extra {}
+"Looking at this skeleton, you see there isn't much to him except for old 
+frail bones."
+
+SKELETON_A(75,SEX_NEUTRAL,180,120)
+dilcopy coffin_3@gobtown1();
+
+exp 100
+money 2 SILVER_PIECE, 2 COPPER_PIECE
+
+end
+
+skeleton_b
+names {"goblin skeleton","skeleton"}
+title "a goblin skeleton"
+descr "A goblin skeleton is here being kept from his eternal rest."
+extra {}
+"Looking at this skeleton, you see there isn't much to him except for old 
+frail bones."
+
+SKELETON_A(75,SEX_NEUTRAL,180,120)
+dilcopy coffin_3@gobtown1();
+
+exp 100
+money 2 SILVER_PIECE, 2 COPPER_PIECE
+
+end
+
+goblin_spirit
+names {"goblin spirit","spirit"}
+title "a goblin spirit"
+descr "A goblin spirit is hovering over the ground here."
+extra {}
+"This spirit is so translucent you can see right through it.  It hovers 
+over the ground above its grave."
+
+SPIRIT_A(78,SEX_NEUTRAL,180,100)
+
+exp 100
+money 3 SILVER_PIECE, 2 COPPER_PIECE
+
+end
+
+
+
+/* Wandering Town Mobs */
+
+wand_citizen_a
+names {"goblin citizen","goblin","citizen"}
+title "a goblin citizen"
+descr "A goblin citizen is here taking a walk."
+extra {}
+"She has leathery brownish skin and her face is covered with warts and 
+sores.  The sight of her is positively disgusting, and the smell is even 
+worse."
+
+GOBLIN_CIT_B(77,SEX_FEMALE,180,160)
+
+special SFUN_RANDOM_ZONE_MOVE time 250 bits SFB_RANTIME
+
+money 3 SILVER_PIECE, 2 COPPER_PIECE
+exp 100
+
+end
+
+wand_citizen_b
+names {"goblin citizen","goblin","citizen"}
+title "a goblin citizen"
+descr "A goblin citizen stares at you muttering under her breath."
+extra {}
+"She has leathery brownish skin and is her face is covered with warts and 
+sores.  She stares back at you with complete hatred. The sight of her 
+is positively disgusting, and the smell is even worse."
+
+GOBLIN_CIT_A(77,SEX_FEMALE,180,160)
+
+special SFUN_RANDOM_ZONE_MOVE time 225 bits SFB_RANTIME
+
+money 3 SILVER_PIECE, 2 COPPER_PIECE
+exp 100
+
+end
+
+wand_citizen_c
+names {"goblin citizen","goblin","citizen"}
+title "a goblin citizen"
+descr "A goblin citizen is here taking a walk."
+extra {}
+"He has leathery brownish skin and his face is covered with warts and 
+sores.  The sight of him is positively disgusting, and the smell is even 
+worse."
+
+GOBLIN_CIT_B(78,SEX_MALE,180,160)
+
+special SFUN_RANDOM_ZONE_MOVE time 200 bits SFB_RANTIME
+
+money 3 SILVER_PIECE, 2 COPPER_PIECE
+exp 100
+
+end
+
+
+wand_citizen_d
+names {"goblin citizen","goblin","citizen"}
+title "a goblin citizen"
+descr "A goblin citizen stares at you muttering under his breath."
+extra {}
+"He has leathery brownish skin and his face is covered with warts and 
+sores.  He stares back at at you with complete hatred. The sight of him 
+is positively disgusting, and the smell is even worse."
+
+GOBLIN_CIT_A(78,SEX_MALE,180,160)
+
+special SFUN_RANDOM_ZONE_MOVE time 275 bits SFB_RANTIME
+
+money 3 SILVER_PIECE, 2 COPPER_PIECE
+exp 100
+
+end
+
+wand_child_a
+names {"goblin child","goblin","child"}
+title "a goblin child"
+descr "A goblin child runs through the town muttering foul language." 
+extra {}
+"Covered in dirt and grime, this goblin child is absolutely filthy.  The 
+sight of her is appalling and the smell emanating from her is sickening."
+
+GOBLIN_CHILD_A(73,SEX_FEMALE,150,130)
+
+special SFUN_RANDOM_ZONE_MOVE time 225 bits SFB_RANTIME
+
+money 2 SILVER_PIECE, 2 COPPER_PIECE
+exp 100
+ 
+end
+
+wand_child_b
+names {"goblin child","goblin","child"}
+title "a goblin child"
+descr "A goblin child runs through the town muttering foul language."
+extra {}
+"Covered in dirt and grime, this goblin child is absolutely filthy.  The 
+sight of him is appalling and the smell emanating from him is sickening."
+
+GOBLIN_CHILD_B(73,SEX_MALE,150,130)
+
+special SFUN_RANDOM_ZONE_MOVE time 275 bits SFB_RANTIME
+
+money 2 SILVER_PIECE, 2 COPPER_PIECE
+exp 100
+ 
+end
+
+
+goblin_guard
+names {"goblin guard","guard","goblin"}
+title "a goblin guard"
+descr "A goblin guard is standing here keeping an eye on things."
+extra {}
+"He looks as though he can handle any opposition."
+
+GUARD_A(78,SEX_MALE,165,130)
+
+special SFUN_RANDOM_ZONE_MOVE time 250 bits SFB_RANTIME
+special SFUN_TEAMWORK "goblin"
+special SFUN_RESCUE "goblin"
+
+alignment -1000
+
+money 3 SILVER_PIECE, 2 COPPER_PIECE
+exp 105
+
+end
+
+scavenger
+names {"goblin scavenger","goblin","scavenger"}
+title "a goblin scavenger"
+descr "A goblin scavenger is here searching for discarded items."
+extra {}
+"He appears to be a very old goblin.  His leathery skin is all wrinkly 
+and rough from being outdoors in all kinds of weather."
+
+GOBLIN_SCAV(76,SEX_MALE,150,130)
+
+special SFUN_RANDOM_ZONE_MOVE time 235 bits SFB_RANTIME
+
+special SFUN_SCAVENGER
+
+alignment -1000
+
+money 3 SILVER_PIECE, 2 COPPER_PIECE
+exp 100
+
+end
+
+
+rodent
+names {"large rat","rat","rodent"}
+title "a large rat"
+descr "A large rat scurries about here."
+extra {}
+"It has small beady eyes and a long skinny tail."
+
+BIG_RAT(70,SEX_NEUTRAL,30,15)
+special SFUN_RANDOM_ZONE_MOVE time 215 bits SFB_RANTIME
+
+exp 100
+money 6 COPPER_PIECE
+
+end
+
+
+%reset
+
+door road_A5 WEST {EX_OPEN_CLOSE, EX_CLOSED}
+
+load sign_square into road_B5 zonemax 1
+
+load statue_square into road_B5 zonemax 1
+
+load coffin_a into cem_1 zonemax 1
+{
+load skeleton_a
+}
+
+load coffin_b into cem_5 zonemax 1
+{
+load skeleton_b
+}
+
+/* Shop Mobs */
+
+load bartender into shop_3 zonemax 1
+{
+equip old_pants position WEAR_LEGS
+equip rag_shirt position WEAR_BODY
+equip spear position WEAR_WIELD
+}
+
+load candy_seller into shop_14 zonemax 1
+{
+equip dress position WEAR_BODY
+equip trident position WEAR_WIELD
+}
+
+load baker into shop_15 zonemax 1
+{
+equip old_pants position WEAR_LEGS
+equip rag_shirt position WEAR_BODY
+equip trident position WEAR_WIELD
+}
+
+
+load butcher into shop_4 zonemax 1
+{
+equip old_pants position WEAR_LEGS
+equip rag_shirt position WEAR_BODY
+equip spear position WEAR_WIELD
+}
+
+
+load scroll_seller into shop_6 zonemax 1
+{
+equip old_pants position WEAR_LEGS
+equip rag_shirt position WEAR_BODY
+load anklet
+}
+
+
+load weaponsmith into shop_7 zonemax 1
+{
+equip old_pants position WEAR_LEGS
+equip rag_shirt position WEAR_BODY
+equip spear position WEAR_WIELD
+}
+
+
+load potion_seller into shop_8 zonemax 1
+{
+equip old_pants position WEAR_LEGS
+equip rag_shirt position WEAR_BODY
+load anklet
+}
+
+
+load banker into shop_2 zonemax 1
+{
+equip old_pants position WEAR_LEGS
+equip rag_shirt position WEAR_BODY
+equip trident position WEAR_WIELD
+}
+
+load greengrocer into shop_13 zonemax 1
+{
+equip old_pants position WEAR_LEGS
+equip rag_shirt position WEAR_BODY
+equip trident position WEAR_WIELD
+}
+
+load post_man into shop_5 zonemax 1
+{
+equip old_pants position WEAR_LEGS
+equip rag_shirt position WEAR_BODY
+equip trident position WEAR_WIELD
+}
+
+load captain into shop_18 zonemax 1
+{
+equip old_pants position WEAR_LEGS
+equip rag_shirt position WEAR_BODY
+equip halberd position WEAR_WIELD
+}
+
+load ironmonger into shop_9 zonemax 1
+{
+equip old_pants position WEAR_LEGS
+equip rag_shirt position WEAR_BODY
+equip trident position WEAR_WIELD
+}
+
+load innkeeper_north into shop_10 zonemax 1
+{
+equip dress position WEAR_BODY
+equip trident position WEAR_WIELD
+}
+
+load innkeeper_south into shop_11 zonemax 1
+{
+equip old_pants position WEAR_LEGS
+equip rag_shirt position WEAR_BODY
+equip trident position WEAR_WIELD
+}
+
+load mortician into shop_12 zonemax 1
+{
+equip old_pants position WEAR_LEGS
+equip rag_shirt position WEAR_BODY
+equip trident position WEAR_WIELD
+}
+
+ /* load kuruk into shop_1 zonemax 1 */
+
+
+/* Non-Wandering Town Mobs */
+
+load home_citizen_b into home_B local 1
+{
+equip dress position WEAR_BODY
+equip spear position WEAR_WIELD
+}
+
+load home_citizen_a into home_C local 1
+{
+equip dress position WEAR_BODY
+equip spear position WEAR_WIELD
+}
+
+load home_citizen_b into home_F local 1
+{
+equip dress position WEAR_BODY
+equip spear position WEAR_WIELD
+}
+
+load home_citizen_b into home_J local 1
+{
+equip dress position WEAR_BODY
+equip spear position WEAR_WIELD
+}
+
+load home_citizen_a into home_K local 1
+{
+equip dress position WEAR_BODY
+equip spear position WEAR_WIELD
+}
+
+load home_citizen_b into home_N local 1
+{
+equip dress position WEAR_BODY
+equip spear position WEAR_WIELD
+}
+
+load home_citizen_d into home_D local 1
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip spear position WEAR_WIELD
+}
+
+load home_citizen_c into home_E local 1
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip spear position WEAR_WIELD
+}
+
+load home_citizen_d into home_H local 1
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip spear position WEAR_WIELD
+}
+
+load home_citizen_c into home_I local 1
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip spear position WEAR_WIELD
+}
+
+load home_citizen_d into home_L local 1
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip spear position WEAR_WIELD
+}
+
+
+load park_child_a into park_1 local 1
+{
+equip dress position WEAR_BODY
+equip trident position WEAR_WIELD
+}
+
+load park_child_d into park_1 local 1
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip trident position WEAR_WIELD
+}
+
+load park_child_b into park_2 local 1
+{
+equip dress position WEAR_BODY
+equip trident position WEAR_WIELD
+}
+
+load park_child_c into park_2 local 1
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip trident position WEAR_WIELD
+}
+
+load park_child_a into park_3 local 1
+{
+equip dress position WEAR_BODY
+equip trident position WEAR_WIELD
+}
+
+load park_child_d into park_3 local 1
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip trident position WEAR_WIELD
+}
+
+load park_child_b into park_4 local 1
+{
+equip dress position WEAR_BODY
+equip trident position WEAR_WIELD
+}
+
+load park_child_c into park_4 local 1
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip trident position WEAR_WIELD
+}
+
+load park_child_a into park_5 local 1
+{
+equip dress position WEAR_BODY
+equip trident position WEAR_WIELD
+}
+
+load park_child_d into park_5 local 1
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip trident position WEAR_WIELD
+}
+
+
+load home_child_a into home_A local 1
+{
+equip dress position WEAR_BODY
+equip trident position WEAR_WIELD
+}
+
+load home_child_b into home_B local 1
+{
+equip dress position WEAR_BODY
+equip trident position WEAR_WIELD
+}
+
+load home_child_a into home_E local 1
+{
+equip dress position WEAR_BODY
+equip trident position WEAR_WIELD
+}
+
+load home_child_b into home_F local 1
+{
+equip dress position WEAR_BODY
+equip trident position WEAR_WIELD
+}
+
+load home_child_c into home_C local 1
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip trident position WEAR_WIELD
+}
+
+load home_child_d into home_D local 1
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip trident position WEAR_WIELD
+}
+
+load home_child_c into home_G local 1
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip trident position WEAR_WIELD
+}
+
+load home_child_d into home_M local 1
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip trident position WEAR_WIELD
+}
+
+load home_child_d into home_O local 1
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip trident position WEAR_WIELD
+}
+
+
+load grave_robber into cem_1 local 1
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip shovel position WEAR_WIELD
+}
+
+load grave_robber into cem_5 local 1
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip shovel position WEAR_WIELD
+}
+
+load goblin_spirit into cem_1 local 1
+load goblin_spirit into cem_2 local 1
+load goblin_spirit into cem_3 local 1
+load goblin_spirit into cem_4 local 1
+load goblin_spirit into cem_5 local 1
+
+
+
+/* Wandering Town Mobs */
+
+load wand_child_a into road_A1 zonemax 3
+{
+equip dress position WEAR_BODY
+equip trident position WEAR_WIELD
+}
+
+load wand_child_a into road_B7 zonemax 3
+{
+equip dress position WEAR_BODY
+equip trident position WEAR_WIELD
+}
+
+load wand_child_a into road_C5 zonemax 3
+{
+equip dress position WEAR_BODY
+equip trident position WEAR_WIELD
+}
+
+load wand_child_b into road_B3 zonemax 4
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip trident position WEAR_WIELD
+}
+
+load wand_child_b into road_E4 zonemax 4
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip trident position WEAR_WIELD
+}
+
+load wand_child_b into road_G2 zonemax 4
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip trident position WEAR_WIELD
+}
+
+load wand_child_b into road_H5 zonemax 4
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip trident position WEAR_WIELD
+}
+
+load wand_citizen_a into road_B1 zonemax 3
+{
+equip dress position WEAR_BODY
+equip spear position WEAR_WIELD
+}
+
+load wand_citizen_a into road_E1 zonemax 3
+{
+equip dress position WEAR_BODY
+equip spear position WEAR_WIELD
+}
+
+load wand_citizen_a into road_F3 zonemax 3
+{
+equip dress position WEAR_BODY
+equip spear position WEAR_WIELD
+}
+
+load wand_citizen_b into road_A8 zonemax 4
+{
+equip dress position WEAR_BODY
+equip spear position WEAR_WIELD
+}
+
+load wand_citizen_b into road_C1 zonemax 4
+{
+equip dress position WEAR_BODY
+equip spear position WEAR_WIELD
+}
+
+load wand_citizen_b into road_E2 zonemax 4
+{
+equip dress position WEAR_BODY
+equip spear position WEAR_WIELD
+}
+
+load wand_citizen_b into road_F6 zonemax 4
+{
+equip dress position WEAR_BODY
+equip spear position WEAR_WIELD
+}
+
+load wand_citizen_c into road_A6 zonemax 4
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip spear position WEAR_WIELD
+}
+
+load wand_citizen_c into road_B9 zonemax 4
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip spear position WEAR_WIELD
+}
+
+load wand_citizen_c into road_E5 zonemax 4
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip spear position WEAR_WIELD
+}
+
+load wand_citizen_c into road_F7 zonemax 4
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip spear position WEAR_WIELD
+}
+
+load wand_citizen_d into road_B5 zonemax 4
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip spear position WEAR_WIELD
+}
+
+load wand_citizen_d into road_D1 zonemax 4
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip spear position WEAR_WIELD
+}
+
+load wand_citizen_d into road_F2 zonemax 4
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip spear position WEAR_WIELD
+}
+
+load wand_citizen_d into road_H2 zonemax 4
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+equip spear position WEAR_WIELD
+}
+
+
+load goblin_guard into road_A4 zonemax 12
+{
+equip goblin_plate position WEAR_BODY
+equip goblin_helmet position WEAR_HEAD
+equip halberd position WEAR_WIELD
+}  
+
+load goblin_guard into gh_2 zonemax 12
+{
+equip goblin_plate position WEAR_BODY
+equip goblin_helmet position WEAR_HEAD
+equip halberd position WEAR_WIELD
+}
+
+load goblin_guard into gh_3 zonemax 12
+{
+equip goblin_helmet position WEAR_HEAD
+equip goblin_plate position WEAR_BODY
+equip halberd position WEAR_WIELD
+}
+
+load goblin_guard into road_H3 zonemax 12
+{
+equip goblin_plate position WEAR_BODY
+equip goblin_helmet position WEAR_HEAD
+equip halberd position WEAR_WIELD
+}
+
+load goblin_guard into road_E7 zonemax 12
+{
+equip goblin_helmet position WEAR_HEAD
+equip goblin_plate position WEAR_BODY
+equip halberd position WEAR_WIELD
+}
+
+load goblin_guard into road_D3 zonemax 12
+{
+equip goblin_plate position WEAR_BODY
+equip goblin_helmet position WEAR_HEAD
+equip halberd position WEAR_WIELD
+}
+
+load goblin_guard into road_A2 zonemax 12
+{
+equip goblin_plate position WEAR_BODY
+equip goblin_helmet position WEAR_HEAD
+equip halberd position WEAR_WIELD
+}  
+
+load goblin_guard into road_B8 zonemax 12
+{
+equip goblin_plate position WEAR_BODY
+equip goblin_helmet position WEAR_HEAD
+equip halberd position WEAR_WIELD
+}  
+
+load goblin_guard into road_C2 zonemax 12
+{
+equip goblin_plate position WEAR_BODY
+equip goblin_helmet position WEAR_HEAD
+equip halberd position WEAR_WIELD
+}  
+
+load goblin_guard into gh_1 zonemax 12
+{
+equip goblin_plate position WEAR_BODY
+equip goblin_helmet position WEAR_HEAD
+equip halberd position WEAR_WIELD
+}  
+
+load goblin_guard into gh_4 zonemax 12
+{
+equip goblin_plate position WEAR_BODY
+equip goblin_helmet position WEAR_HEAD
+equip halberd position WEAR_WIELD
+}  
+
+load goblin_guard into road_E2 zonemax 12
+{
+equip goblin_plate position WEAR_BODY
+equip goblin_helmet position WEAR_HEAD
+equip halberd position WEAR_WIELD
+}  
+
+load scavenger into road_A1 zonemax 8
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+}
+
+load scavenger into road_A7 zonemax 8
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+}
+
+load scavenger into road_B4 zonemax 8
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+}
+
+load scavenger into road_B8 zonemax 8
+{ 
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+}
+
+load scavenger into road_C3 zonemax 8
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+}
+
+load scavenger into road_E3 zonemax 8
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+}
+
+load scavenger into road_F1 zonemax 8
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+}
+
+load scavenger into road_H1 zonemax 8
+{
+equip rag_shirt position WEAR_BODY
+equip old_pants position WEAR_LEGS
+}
+
+
+load rodent into home_D zonemax 10
+load rodent into home_G zonemax 10
+load rodent into home_H zonemax 10
+load rodent into home_I zonemax 10
+load rodent into home_K zonemax 10
+load rodent into shop_13 zonemax 10
+load rodent into shop_15 zonemax 10
+load rodent into gh_1 zonemax 10
+load rodent into gh_4 zonemax 10
+load rodent into road_E2 zonemax 10
+load rodent into road_F4 zonemax 10
+
+
+%end
+

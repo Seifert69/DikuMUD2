@@ -1,0 +1,2080 @@
+/*
+filename    guild_quest
+password    njet
+changedby   Papi
+EmailAdd     Palio <palio@blinksoft.com>
+request     compile
+version     21
+END HEADER*/
+
+%zone g_q
+#include <composed.h>
+
+#define FAMILIAR_ONGOING  "Familiar Quest Ongoing"
+#define FAMILIAR_COMPLETE "Familiar Quest Completed"
+#define FAMILIAR_BONDED   "Familiar Bonded"
+#define FAMILIAR_BAN      "Familiar Quest Banned"
+
+lifespan 60
+reset RESET_ANYHOW
+creators {"cabal"}
+
+notes
+" This zone contains the additions rooms, monsters and objects
+involved in the guild quests. Initially, a whole bunch of quests
+were going to be in this zone, but so far... it has been dominated
+by FAMILIARS. Since there are no rooms in the zone, reset by a
+god is not possible :) Also contains the CUSTOMIZATION CONTRAPTION
+for demigods...
+
+Dec /95 Familiar weights fixed to try to prevent people from carrying
+<as one player did> 30 of the beasts.
+
+Contact whistler@blinksoft.com
+"
+%dil
+dilbegin act_world (s:string);
+var
+  pc:unitptr;
+  code
+  {
+  heartbeat:=PULSE_SEC*3;
+  pc:=findrndunit(self,FIND_UNIT_WORLD, UNIT_ST_PC);
+  while (pc.gprevious.type==UNIT_ST_PC)
+   pc:=pc.gprevious;
+
+
+     while (pc.type==UNIT_ST_PC)
+      {
+     sendtext(s,pc);
+      pc:=pc.gnext;
+      }
+
+return;
+}
+dilend
+
+
+
+dilbegin santa_spl ();
+var
+pc:unitptr;
+code
+{
+
+:start:
+wait(SFB_PRE, command(CMD_CAST) and
+(self== target));
+pc:=activator;
+secure (pc,start);
+power:=-1;
+block;
+pause;
+
+act ("$1n glows brightly.",
+A_ALWAYS,self,null,pc,TO_ALL);
+act ("$1n's New years magic protects him and you are thrown to the ground stunned.",
+A_ALWAYS,self,null,pc,TO_VICT);
+act ("$1n's New Years magic protects him and $3n is thrown to the ground stunned.",
+A_ALWAYS,self,null,pc,TO_NOTVICT);
+pc.position:=POSITION_STUNNED;
+self.position:=POSITION_STANDING;
+pc.hp:=0;
+unsecure (pc);
+goto start;
+}
+dilend
+
+
+
+dilbegin santa_nokill ();
+code
+{
+:start:
+wait (SFB_PRE, command (CMD_AUTO_DAMAGE) and
+(self==target));
+power:=0;
+block;
+
+act ("Magic New Years dust falls from the sky and you are stunned.",
+A_ALWAYS,self,null,activator,TO_VICT);
+activator.position:=POSITION_STUNNED;
+self.position:=POSITION_STANDING;
+activator.hp:=0;
+goto start;
+}
+dilend
+
+
+dilbegin santa_dil (fighter:stringlist,necro:stringlist,thief_ass:stringlist,
+pal_heal:stringlist,sorc_conj:stringlist,bad:string, newbie:string);
+var
+item:unitptr;
+pc:unitptr;
+i:integer;
+actstr:string;
+code
+{
+
+:start:
+wait (SFB_DONE, command (CMD_SAY) and
+("fireworks" in argument));
+if (activator.type!=UNIT_ST_PC) goto start;
+pc:=activator;
+secure (pc,start);
+if ("$newyears gift" in activator.quests) goto grench;
+if (pc.level<=5) goto newbie;
+i:=0;
+while (i<5)
+  {
+  item:=load ("rocket@g_q");
+  link (item,pc);
+  i:=i+1;
+  }
+
+i:=rnd(0,5);
+on i goto zero,one,two,three,four,five;
+:zero:
+actstr:="say Happy New Year!";
+goto gift;
+:one:
+actstr:="say May your new year be prosperous!";
+goto gift;
+:two:
+actstr:="say Have you made your new years resolution yet?";
+goto gift;
+:three:
+actstr:="emote digs around in his diaper for something.";
+goto gift;
+:four:
+actstr:="say May your new year be a blast!";
+goto gift;
+:five:
+actstr :="1997 should be much better then 1996!";
+goto gift;
+
+:gift:
+exec (actstr,self);
+pause;
+act ("$1n gives you some fireworks.",
+  A_ALWAYS,self,item,pc,TO_VICT);
+act ("$1n gives $3n some fireworks.",
+  A_SOMEONE,self,item,pc,TO_NOTVICT);
+  addextra (pc.quests,{"$newyears gift"},"");
+  unsecure (pc);
+  goto start;
+
+  :grench:
+  exec ("sigh "+pc.name,self);
+  exec ("tell "+pc.name+" Greed is not a good way to start out the new year",self);
+  unsecure (pc);
+  goto start;
+  :newbie:
+  exec ("sigh "+pc.name,self);
+  exec ("tell "+pc.name+" You are to young to play with fire works now run along and play.",self);
+  unsecure (pc);
+  goto start;
+
+  }
+  dilend
+
+
+
+
+
+
+
+
+
+
+/* FAMILIAR DIL LOGIC Version 6.0 underconstruction by Whistler)
+Now will not kill or attack players below level 4.
+   Now exploits that variables are saved! Bugs fixed.
+
+   Familiars basically have three DIL's and one important SFUN to their
+   behavior that sit in a priority tree for behavior modification:
+
+   1) MAIN DIL LOGIC (handles bonding, status report, unbonded status)
+
+   2) FAMILIAR JEALOUSY ROUTINES (handle jealous familiars)
+
+   3) FAMILIAR COMBAT BEHAVIOR (coming soon...)
+
+   4) SFUN_OBEY (handles the majority of command interaction) */
+
+/*
+   Familiar Logic is this:
+
+   First the unbonded program is all that exists on the familiar.
+
+   When it is bonded, the unbonded program is destroyed and g_qd with
+   brains.
+
+
+   There is one VERY good reason to add the owner to the familiar's extra
+   instead of passing it as a parameter. Assume that the call is changed,
+   then the parameter passed values are changed, and hence, the owner is
+   lost. As we do it now, we can actually update the familiar logic, and
+   voila, all familiars in the game act according to the new routines!
+*/
+
+
+
+dilbegin fam_obey ();
+var
+  pcname:string;
+  extra_ptr:extraptr;
+code
+{
+extra_ptr:="$owner" in self.extra;
+pcname:=extra_ptr.descr;
+:start:
+wait (SFB_CMD,command (CMD_TELL) and
+(activator.name==pcname));
+heartbeat:=PULSE_SEC*3;
+if (findunit(self,argument ,FIND_UNIT_HERE,null)!=self) goto start;
+block;
+if (activator.mana>=5)
+  {
+act ("You command $2n to '"+argument+"'",
+A_ALWAYS,activator,self,argument,TO_CHAR);
+exec (argument,self);
+activator.mana:=activator.mana-5;
+goto start;
+}
+else
+  {
+  act ("You try to control $2n but you don't have enough power to do it.",
+  A_ALWAYS,activator,self,null,TO_CHAR);
+  goto start;
+  }
+}
+dilend
+
+dilbegin fam_unbonded();
+var
+  pcowner: unitptr;
+  str : string;
+
+code
+{
+   /* Be inactive when sleeping / wounded */
+   on_activation(self.position <= POSITION_SLEEPING, skip);
+   priority;
+
+   heartbeat := PULSE_SEC*5;
+
+   while (self.outside.type == UNIT_ST_NPC)
+     pause; /* we know Hexica has us.... */
+
+   /*
+      This routine picks a master, making sure that they are
+      an UDGAARD MAGE of ABOVE LEVEL 19 or a MIDGAARD SORCERER
+      and that they have COMPLETED THE FAMILIAR QUEST. Previous
+      FAMILIAR BONDEDs evoke a response, but are allowed, since
+      accidents and crashes do happen.
+   */
+
+   heartbeat := PULSE_SEC*5;
+
+   :unbonded:
+   exec("emote is longing for a master to bond to.", self);
+
+   wait (SFB_DONE, (activator.type == UNIT_ST_PC) and command(CMD_WHISPER) and
+	 ("serve" in argument) and
+	 (target==self));
+
+   pcowner := activator;
+
+   /* MUST BE A MAGIC USER - Mage, Sorcerer or Necromancer */
+   if (not((pcowner.guild $= GUILD_UDG_MAGE) or
+	   (pcowner.guild $= GUILD_SORCERER) or
+	   (pcowner.guild $= GUILD_NECROMANCER)))
+   {
+      exec ("say I will not serve you, "+pcowner.name+
+	    ", because you are a mundane.", self);
+      pause;
+      goto rouge;
+   }
+
+   secure(pcowner, rouge);
+
+
+   /* MUST BE ABOVE LEVEL 20 */
+   if (not (pcowner.level > 19) )
+   {
+      exec ("say You lack enough power to be my master, "+
+	    pcowner.name+".", self);
+      pause;
+      goto rouge;
+   }
+
+   /* This routine handles the actual bonding of the familiar
+      to the mage, remove the FAMILIAR QUEST COMPLETED from the
+      PC's Quest, add FAMILIAR BONDED to the PC's Quest, set
+      the master's flags to mark transparant, follow the master,
+      and initiate the brains command structure. It also allows
+      the familiar to reconfigure it's name :)
+   */
+
+   exec ("say just whisper to me what you want to call me.  You wouldn't want everyone to know.",self);
+exec ("wink "+pcowner.name,self);
+   wait (SFB_DONE, (command(CMD_WHISPER) and (activator #= pcowner)) and
+   (target==self));
+   addstring(self.names, argument);
+
+   str := self.name;
+
+   /* Move the first name to the last position */
+   substring(self.names, str);
+   addstring(self.names, str);
+							pause;
+   exec ("emote is surrounded by a supernatural glow... it has bonded to " +
+	 pcowner.name+"!", self);
+
+   addextra(self.extra, {"$owner"}, pcowner.name);
+   dilcopy ("catchit@g_q",self);
+   dilcopy("fam_brain@g_q", self);
+   dilcopy("fam_personality@g_q", self);
+   dilcopy ("fam_obey@g_q",self);
+   quit;
+
+
+   :rouge:
+   /* this routine is only called if a familiar is summoned
+      and the activator leaves without creating a bond... no
+      bond means the familiar can do as it wants!! This is
+      a fun bit of chaotic DIL */
+
+   heartbeat := PULSE_SEC*5;
+   exec ("grin", self);
+   exec ("cast invisibility self", self);
+   walkto (findroom("midgaard/turning_point"));
+   wait (SFB_CMD, (activator.type == UNIT_ST_PC));
+   pcowner := activator;
+   secure (pcowner, rouge);
+   exec ("follow "+pcowner.name, self);
+   pause;
+   exec ("cast plague "+pcowner.name, self);
+   pause;
+   exec ("cast madness "+pcowner.name, self);
+   quit;
+}
+dilend
+
+
+
+dilbegin fam_brain();
+
+var
+  junk:    integer;
+  i:integer;
+  pcowner: unitptr;
+  exd    : extraptr;
+  loader:  unitptr;
+
+  pcname : string;
+  stat1:   string;
+  stat2:   string;
+  stat3:   string;
+
+code
+{
+   exd    := "$owner" in self.extra;
+   pcname := exd.descr;
+
+   on_activation(self.position <= POSITION_SLEEPING, skip);
+   priority;
+
+   heartbeat := PULSE_SEC*5;
+
+   :bond:
+   if ((self.outside.type == UNIT_ST_PC) and (pcname == self.outside.name))
+   {
+      pcowner := self.outside;
+      secure(pcowner, lostowner);
+      exec ("follow "+pcowner.name,self);
+      exec("emote basks in the loving glow of it's master "+
+	   pcowner.name+".", self);
+      nopriority;
+      goto brains;
+   }
+   pause;
+   goto bond;
+
+   :brains:
+
+   /* Current implementation only supports the status command,
+      which should now work wonderfully... a few new routines
+      have been added as seperate DILs for combat and death.
+      The main reason not to have the brains wait statement
+      responde to generic or multiple SFB_CMD is that a few
+      familiars would really eat up the system resources. */
+
+   wait (SFB_CMD, (command(CMD_STATUS) or command(CMD_TELL)) and
+	 (activator #= pcowner) and
+	 (findunit(activator, argument, FIND_UNIT_SURRO |
+		   FIND_UNIT_INVEN, null) == self));
+
+   if ((pcowner.guild != GUILD_UDG_MAGE) and
+       (pcowner.guild != GUILD_SORCERER) and
+       (pcowner.guild != GUILD_NECROMANCER))
+     goto lostbond;
+
+   /* MANA FEEDING ROUTINE: it really should drain a small amount of mana
+      each time it is commanded, but right now, it just gets you for the
+      status command for 5 mana points... how to beef this up? are familiars
+      too powerful a possession? */
+
+   /* Notice that now every command issued via TELL will cost the owner
+      some mana. Need to make them a BIT more expensive... */
+
+   pcowner.mana := pcowner.mana - 5;
+   position_update (pcowner);
+   if (command(CMD_TELL))
+   {
+      stat1 := getword(argument);
+      goto brains; /* Pass on the tell command to the obey function! */
+   }
+
+   /* IMPLIED: a status command was issued */
+   block;
+
+   act ("**The mental image of your familiar appears to you**", A_SOMEONE,
+	self, null, pcowner, TO_VICT);
+
+   /* STATUS ROUTINE CONSTRUCTION */
+
+   /* Pick a phrase to describe hit point state */
+   if (self.hp > ((self.max_hp / 4) * 3))
+     stat1 := "healthy";
+   if ((self.hp < ((self.max_hp / 4) *3)) and (self.hp > (self.max_hp/2)))
+     stat1 := "battered";
+   if ((self.hp < (self.max_hp/2)) and (self.hp > (self.max_hp/4)))
+     stat1 := "injured";
+   if (self.hp < (self.max_hp/4))
+     stat1 := "devestated";
+
+   /* Pick a phrase to describe mana state */
+   if (self.mana > 75)
+     stat2 := "powerful";
+   if ((self.mana < 75) and (self.mana > 50))
+     stat2 := "stressed";
+   if ((self.mana < 50) and (self.mana > 25))
+     stat2 := "drained";
+   if (self.mana < 25)
+     stat2 := "helpless";
+
+   /* Pick a phrase to describe endurance */
+   if (self.endurance > 140)
+     stat3 := "rested";
+   if ((self.endurance < 140) and (self.endurance > 80))
+     stat3 := "winded";
+   if ((self.endurance < 80) and (self.endurance > 40))
+     stat3 := "fatigued";
+   if (self.endurance < 40)
+     stat3 := "exhausted";
+
+   /* And put it all together as a status line */
+
+   act ("You sense that your familiar is "+stat1+", "+stat2+
+	", "+stat3+".", A_SOMEONE, self, null, pcowner, TO_VICT);
+   goto brains;
+
+
+   :lostbond:    /* This routine is invoked if the familiar's master has
+		    stopped being a Spellcaster and tried to command it.
+		    In this version, lostbond sends the familiar into a very
+		    destructive rampage against their FORMER master. */
+
+   exec ("follow "+self.name, self);
+   priority;
+   exec ("say "+pcowner.name+", you no longer control me... by straying from "+
+	 "the paths of magic, you have lost your control over me! "+
+	 "Now, it's pay back time for all those nasty situations you made me "+
+	 "go into!", self);
+   pause;
+
+   /* NASTY NEW ROUTINE: familiar removes all owners mana and 75% of points
+      before attacking... they were warned what classes the had to be.... */
+   junk := pcowner.max_hp;
+   pcowner.hp := (pcowner.hp - (3*(junk/4)));
+   pcowner.mana := 0;
+   position_update (pcowner);
+   exec ("kill "+pcowner.name, self);
+   quit;
+
+
+   :lostowner:
+   heartbeat := PULSE_SEC * 5;
+   exec ("say Eeek!", self);
+   exec("follow", self);
+   pause;
+
+   :lostloop:
+   exec ("cast controlled teleport "+pcname, self);
+   pause;
+   stat1 := pcname;
+   walkto(findunit(self, stat1, FIND_UNIT_WORLD, null));
+   exec("follow "+pcname, self);
+   if (self.master.name == pcname)
+   {
+      pcowner := self.master;
+      secure(pcowner, lostowner);
+      goto brains;
+   }
+   /* Retry */
+   goto lostloop;
+}
+dilend
+
+dilbegin aware catchit();
+var
+  trg:unitptr;
+  extra_ptr:extraptr;
+  pcname:string;
+code
+{
+extra_ptr:="$owner" in self.extra;
+pcname:=extra_ptr.descr;
+interrupt (SFB_PRE,((( command (CMD_AUTO_DAMAGE)) and
+(self==activator))),damage);
+
+:there:
+
+wait(SFB_CMD, TRUE and
+(activator==self));
+   if (command(CMD_SHOUT))
+      {
+	 exec ("tell "+self.master.name+" Shout?!? And give away my "+
+	       "presence on the material plane? That's not in my "+
+	       "contract.", self);
+	 block;
+      }
+
+ if  (command (CMD_TELL))
+      {
+	 exec ("tell "+self.master.name+" tell?!? What do I look "+
+	       "like a comm channel?  It will probably be more clear if you do "+
+				 "your own telling.",self);
+	 block;
+      }
+if 	 ((command (CMD_STEAL)) or
+   (command (CMD_PICK)))
+	 {
+	 exec ("tell "+self.master.name+" What?!? What do I look "+
+	 "like a Thief??  I would be laughed out of the Magical relm!! "+
+	 "You Should probably do your own dirty work!!", self);
+     block;
+		 }
+
+goto there;
+
+:damage:
+if (target.type!=UNIT_ST_PC) goto there;
+trg:=findunit(self,pcname,FIND_UNIT_HERE, null);
+if ((isset (target.pcflags,PC_PK_RELAXED)) and
+ (isset (trg.pcflags,PC_PK_RELAXED))) goto there;
+else
+{
+  power:=-1;
+  block;
+  pause;
+  }
+
+goto there;
+}
+dilend
+
+/* FAMILIAR DIL MODULE ADD-IN: Familiar-On-Familiar jealousy. In a nutshell,
+since players can have multiple familiars, those familiars need to react to
+one another: and these are jealous little buggers. If they sense another
+familiar in the same room with their owner, they might (1) attack the
+other familiar, (2) screw with the other familiar, (3) grow grumpy and
+uncontrolable, or (4) destroy the other spirit. Obviously, since this is the
+second DIL in the chain, an exit from the game (causing a reload), will get
+rid of the grumpyness :) */
+
+dilbegin fam_personality();
+
+var
+   jealous:   unitptr;
+   i:         integer;
+   ashes:     unitptr;
+
+code
+{
+   /* We dont need to find pcowner here (yet, maybe next version?) */
+
+   /* Be inactive when sleeping / wounded */
+   on_activation(self.position <= POSITION_SLEEPING, skip);
+
+   :setup:
+   nopriority; /* IMPORTANT! Since it can be saved with priority on! */
+   heartbeat := PULSE_SEC*10;
+
+   wait (SFB_CMD, ((activator.type == UNIT_ST_NPC)
+		   and (activator.idx == self.idx) and
+		   (activator.master==self.master)));
+
+   /* Basically, wait for a familiar, imp or spirit to do anything in the
+      same room, then decide how angry/jealous it is */
+
+   jealous := activator;
+   secure (jealous, setup);
+
+   /* 5% chance of getting upset */
+
+   i := rnd (1, 40);
+   if (i > 2)
+     goto setup;
+
+   /* Ok, we know it is pissed now... here are the behavior chances:
+
+      60% chance he'll grow grumpy (4 < i <= 10)
+      30% chance he'll mess with the other (1 < i <= 4)
+      10% chance he'll destroy the other ( i = 1 )   */
+
+   i := rnd (1, 10);
+
+   /* 10% CHANCE: destroy the other */
+   if (i < 2)
+   {
+      act ("$1n begins to grow restless and glares jealously at "+
+	   jealous.title+" .", A_SOMEONE, self, null, null, TO_ALL);
+      pause;
+      act ("There is a strange puff of smoke, and "+jealous.title+
+	   "is gone, leaving only a small pile of ashes.",
+	   A_SOMEONE, self, null, null, TO_ALL);
+      ashes := load ("fam_ashes@g_q");
+      ashes.outside_descr := "The ashes of "+jealous.name+" have settled here.";
+      link (ashes, jealous.outside);
+      unsecure (jealous);
+      destroy (jealous);
+      pause;
+      act ("$1n cackles evilly.", A_SOMEONE, self, null, null, TO_ALL);
+   }
+
+   /* 30% CHANCE: mess with the other */
+   if ((i > 1) and (i < 5))
+   {
+      act ("$1n begins to grow restless and looks about to see if "+
+	   "anyone is watching him watch "+jealous.title+".",
+	   A_SOMEONE, self, null, null, TO_ALL);
+      pause;
+
+      i := (rnd (1, 10));
+      exec ("cast sleep "+jealous.name, self); /* ALWAYS Sleep */
+
+      if ((i >2) and (i <3)) exec ("cast plague "+jealous.name, self);
+      if ((i >3) and (i <4)) exec ("cast toxicate "+jealous.name, self);
+      if ((i >4) and (i <5)) exec ("cast blind "+jealous.name, self);
+      if ((i >5) and (i <6)) exec ("cast curse "+jealous.name, self);
+      if (i >6) exec ("cast madness "+jealous.name, self); /*Favorite!!*/
+
+      /* realize, although these spells are tough, the familiar has
+	 whimpy spell powers in each of those.... */
+
+      pause;
+   }
+
+   /* 60% CHANCE: becoming grumpy and uncontrollable */
+
+   if (i > 4)
+   {
+      act ("$1n begins to look grumpy and jealous of "+
+	   jealous.title+".", A_SOMEONE, self, null, null, TO_ALL);
+      pause;
+      priority;       /* NOTE: this turns off the OBEY special and the
+			 combat assistance, making the familiar
+			 useful only for reporting it's own status */
+      :bkloop:    /* Provides a response so user knows it is grumpy
+		     and not just broken!! */
+
+      wait (SFB_CMD, ((activator.type == UNIT_ST_PC) and
+		      (command(CMD_TELL))));
+      act ("$1n looks grumpy and suspicious of all the secrets being told.",
+	   A_SOMEONE, self, null, null, TO_ALL);
+      goto bkloop;
+
+   }
+
+   goto setup;
+}
+dilend
+
+
+%rooms
+room1
+title "An Empty Room"
+names {"qq"}
+descr
+"Its an empty room!"
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+%mobiles
+/*
+spirit_97
+names {"spirit of 1997","spirit","baby","1997"}
+title "the spirit of 1997"
+descr "A small baby is sitting here."
+extra {}
+"The baby is dressed only in a diaper. Across the babies chest is a large
+white sash with the numbers '1997' written across it. The baby has a look
+of anticipation on his face. He looks forward to the upcoming year,
+knowing that he will do his best to make this a great year. Knowing
+also that he will make mistakes, but through it all that true friendships
+will remain true.  Ask nice for some fireworks"
+M_HUMAN_WARRIOR_SWORD(5, SEX_MALE)
+exp -500
+dilcopy santa_dil (
+{"gift_war20@g_q","gift_war40@g_q","gift_war50@g_q"},
+{"gift_nec20@g_q","gift_nec40@g_q","gift_nec50@g_q"},
+{"gift_thief20@g_q","gift_thief40@g_q","gift_thief50@g_q"},
+{"gift_healer21@g_q","gift_healer40@g_q","gift_healer50@g_q"},
+{"gift_conj20@g_q","gift_conj40@g_q","gift_conj50@g_q"},
+"gift_noguild@g_q",
+"gift_newbie@g_q");
+dilcopy santa_nokill();
+dilcopy santa_spl();
+end
+*/
+healer
+names {"Phoenix","healer"}
+title "the Phoenix"
+descr "The Phoenix is here, aiding those near doom."
+extra {} 
+"Born of the Ashes and rising to the sky, Phoenix has always had great
+powers of rejuvination.  Now in her old age she continues to combat the
+darkness, not with her own strength, but by maintainin that of others
+around her.  The warmth of her love and goodness heals all who come in
+contact with her. A solid gold medalion around her neck catches your eye.
+" 
+
+extra {"medalion"}
+"Thanks to Lev for my name and description"
+M_HUMAN_WARRIOR_SWORD(5, SEX_FEMALE)
+MSET_ABILITY(2,2,2,2,30,2,30,30) /*special spellcaster only*/
+exp -500
+flags  {UNIT_FL_NO_TELEPORT}
+
+dilbegin healer();
+
+var
+   pc: unitptr;
+code
+{
+
+   heartbeat := PULSE_SEC * 65;
+
+
+   :loop:
+
+   wait(SFB_TICK, TRUE);
+   if (self.position < POSITION_SLEEPING)
+  {
+   self.position := POSITION_STANDING;
+  }
+
+
+
+   on rnd(0,42) goto
+     case0, case1, case2, case3, case4, case5, case6, case7, case8,
+     case9, case10, case11, case12, case13, case14, case15, case16,
+     case17, case18, case19, case20, case21, case22, case23, case24,
+     case25, case26, case27, case28, case29, case30, case31, case32,
+     case33, case34, case35, case36, case37, case38, case39, case40,
+     case41, case42;
+
+:case42:
+   :case0:
+pc:=findrndunit (self,FIND_UNIT_SURRO,UNIT_ST_PC);
+{
+exec("cast heal " +pc.name, self);
+goto loop;
+}
+:case41:
+   :case1:
+pc:=findrndunit (self,FIND_UNIT_SURRO,UNIT_ST_PC);
+{
+exec("cast bless " +pc.name, self);
+goto loop;
+}
+:case40:
+   :case2:
+pc:=findrndunit (self,FIND_UNIT_SURRO,UNIT_ST_PC);
+{
+exec("cast stone skin " +pc.name, self);
+goto loop;
+}
+:case25:
+:case39:
+   :case3:
+pc:=findrndunit (self,FIND_UNIT_SURRO,UNIT_ST_PC);
+{
+exec("cast bone skin " +pc.name, self);
+goto loop;
+}
+:case24:
+:case38:
+   :case4:
+pc:=findrndunit (self,FIND_UNIT_SURRO,UNIT_ST_PC);
+{
+exec("cast strength " +pc.name, self);
+goto loop;
+}
+:case23:
+:case5:
+pc:=findrndunit (self,FIND_UNIT_SURRO,UNIT_ST_PC);
+{
+exec("cast dex " +pc.name, self);
+goto loop;
+}
+
+:case22:
+pc:=findrndunit (self,FIND_UNIT_SURRO,UNIT_ST_PC);
+{
+exec("cast det invis " +pc.name, self);
+goto loop;
+}
+
+
+:case37:
+   :case6:
+pc:=findrndunit (self,FIND_UNIT_SURRO,UNIT_ST_PC);
+{
+exec("cast con " +pc.name, self);
+goto loop;
+}
+:case21:
+:case36:
+   :case7:
+pc:=findrndunit (self,FIND_UNIT_SURRO,UNIT_ST_PC);
+{
+exec("cast cha " +pc.name, self);
+goto loop;
+}
+:case20:
+:case35:
+   :case8:
+pc:=findrndunit (self,FIND_UNIT_SURRO,UNIT_ST_PC);
+{
+exec("cast bra " +pc.name, self);
+goto loop;
+}
+:case19:
+:case34:
+   :case9:
+pc:=findrndunit (self,FIND_UNIT_SURRO,UNIT_ST_PC);
+{
+exec("cast raise mag " +pc.name, self);
+goto loop;
+}
+:case18:
+:case33:
+   :case10:
+pc:=findrndunit (self,FIND_UNIT_SURRO,UNIT_ST_PC);
+{
+exec("cast bark skin " +pc.name, self);
+goto loop;
+}
+
+:case32:
+   :case11:
+pc:=findrndunit (self,FIND_UNIT_SURRO,UNIT_ST_PC);
+{
+exec("cast  cure serious wounds " +pc.name, self);
+goto loop;
+}
+ :case31:
+   :case12:
+pc:=findrndunit (self,FIND_UNIT_SURRO,UNIT_ST_PC);
+{
+exec("cast raise divine " +pc.name, self);
+goto loop;
+}
+:case30:
+   :case13:
+pc:=findrndunit (self,FIND_UNIT_SURRO,UNIT_ST_PC);
+{
+exec("cast  remove curse " +pc.name, self);
+goto loop;
+}
+:case29:
+   :case14:
+pc:=findrndunit (self,FIND_UNIT_SURRO,UNIT_ST_PC);
+{
+exec("cast  remove disease " +pc.name, self);
+goto loop;
+}
+:case28:
+   :case15:
+pc:=findrndunit (self,FIND_UNIT_SURRO,UNIT_ST_PC);
+{
+exec("cast  remove poison " +pc.name, self);
+goto loop;
+}
+:case27:
+   :case16:
+pc:=findrndunit (self,FIND_UNIT_SURRO,UNIT_ST_PC);
+{
+exec("cast sanctuary " +pc.name, self);
+goto loop;
+}
+:case26:
+   :case17:
+pc:=findrndunit (self,FIND_UNIT_SURRO,UNIT_ST_PC);
+{
+exec("cast protection from evil " +pc.name, self);
+goto loop;
+}
+
+}
+dilend
+dilbegin dil_zap();
+var
+  u : unitptr;
+  s : string;
+  i : integer;
+  extra_ptr:extraptr;
+code
+{
+   wait(SFB_DONE, command(CMD_SAY) and
+   ("fix me" == argument));
+
+
+   u :=activator;
+
+   if (u)
+   {
+   extra_ptr:="$stone code" in u.extra;
+   if (extra_ptr)
+    {
+    extra_ptr.descr:="space holder";
+    }
+         act("Your code was successfully fixed.",
+           A_ALWAYS, activator, null, null, TO_CHAR);
+           }
+   else
+     act("No such person found to fix.",
+         A_ALWAYS, activator, null, null, TO_CHAR);
+}
+dilend
+
+dilcopy santa_nokill();
+dilcopy santa_spl();
+end
+
+
+
+
+/*--------MOBILES FOR MAGE QUEST #1: FAMILIARS--------*/
+
+		magic_cricket
+names {"magic cricket", "cricket"}
+title "an irridescent cricket"
+descr
+"A shiny, irridescent cricket is hiding here, chirping happily."
+extra {}
+"Although small like any cricket, this one sparkles in the light and has
+a most pleasant song. It looks like it could almost be magical!"
+level 1
+position POSITION_STANDING
+race RACE_OTHER_INSECT
+alignment 0
+weight 2
+sex SEX_FEMALE
+manipulate MANIPULATE_TAKE
+romflags {CHAR_DETECT_INVISIBLE}
+MSET_ABILITY (20,15,10,10,15,15,15,0)
+MSET_WEAPON (8,8,8,8,8,0)
+MSET_SPELL (4,4,4,20,4,4,4,4,4,4,4)
+
+/* DIL Behavior: This little girl is just meant to be irritating.
+   It routinely tries to go back to the tree circle in Cypress zone,
+   which makes it exit the players inventory in the process. You can
+   only hold it for about 1 minute... unless, of course, you sleep it.*/
+
+dilbegin prg1();
+
+code
+{
+   wait (SFB_CMD, (activator.type == UNIT_ST_PC) );
+   if (self.outside.type == UNIT_ST_PC)
+   {
+      heartbeat := PULSE_SEC*10;
+      exec ("emote chirps a little song, homesick for it's forest home.",
+	    self);
+      pause;
+      walkto (findroom("cypress/tree_circle"));
+   }
+}
+dilend
+
+end
+
+
+			familiar
+names {"familiar"}
+title "a strange magical familiar"
+descr
+"A strange magical familiar has been left here."
+extra {}
+"This beast is obviously magical in nature - the glow surrounding
+it's body and the intelligent gleam in its eyes give it away as a
+mage's familiar. Perhaps you should leave it unmolested."
+extra {"tags", "gold tags"}
+"The tags on this familiar say 'MageFamiliar Version 6.0'"
+level 20
+position POSITION_STANDING
+race RACE_FAMILIAR
+alignment 0
+weight 15
+sex SEX_NEUTRAL
+capacity 1000
+romflags {CHAR_DETECT_INVISIBLE}
+MSET_ABILITY (5,5,10,10,20,20,15,15)
+MSET_WEAPON (2,2,2,2,2,2)
+MSET_SPELL (8,8,8,20,8,6,6,6,6,6,6)
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+special SFUN_COMBAT_MAGIC "cast burn"
+special SFUN_COMBAT_MAGIC_HEAL "cast heal"
+
+dilcopy fam_unbonded@g_q();
+
+special SFUN_OBEY   /* placed after the DIL so that it can be blocked
+		       via DIL */
+
+end
+
+
+
+
+
+
+			hexica
+names { "hexica" , "witch" }
+title "Hexica the witch"
+descr "Hexica, the haggish old witch, is cackling to herself."
+extra {}
+"The withered old hag is dressed in smelly rags and is as ugly as
+sin itself. She glares at you with beady black eyes from behind
+her matted hair."
+level 199
+flags {UNIT_FL_NO_TELEPORT}
+exp -500
+alignment -400     /* quite evil and perverted */
+race RACE_HUMAN
+sex SEX_FEMALE
+position POSITION_STANDING
+default POSITION_STANDING
+romflags {CHAR_DETECT_INVISIBLE}
+MSET_ABILITY (10,10,10,20,20,15,15,0)
+MSET_WEAPON (8,8,8,8,8,0)
+MSET_SPELL (4,4,4,20,4,4,4,4,4,4,4)
+special SFUN_COMBAT_MAGIC "cast curse"
+
+/* DIL BEHAVIOR: Familiar Quest Part Three - for players with a Familiar
+Quest Completed. This routine loads a familiar, customizes and sets the
+quest status to Familiar Bonded. Placed at the TOP of the DIL level tree
+so that it has priority functions over the rest.*/
+
+dilbegin prg2();
+
+var
+  pc:        unitptr;
+  familiar:  unitptr;
+
+  exdp:      extraptr;
+  i:         integer;
+  in_name:   string;
+  in_title:  string;
+  in_descr:  string;
+  item:      unitptr;
+  junk:      integer;
+
+code
+{
+   on_activation(self.position <= POSITION_SLEEPING, skip);
+
+   :start:
+   heartbeat := PULSE_SEC*5;
+	 nopriority;
+   wait (SFB_DONE, (activator.type == UNIT_ST_PC) and
+	 ((FAMILIAR_COMPLETE in activator.quests) or
+	 ((FAMILIAR_BONDED in activator.quests) and not
+	 ("familiar" in activator.inside.name))));
+
+   /* This is a rather complex wait statement, but basically, it filters:
+      only spell casters with a completed familiar quest
+      and other players (spell caster or not) that have a "Familiar Bonded"
+      quest and no familiar in current inventory. If a non-spell caster
+      has another familiar summoned, it will not serve them... and will in
+      fact go rouge :) */
+
+   if ((activator.guild != GUILD_UDG_MAGE) and
+       (activator.guild != GUILD_SORCERER) and
+       (activator.guild != GUILD_NECROMANCER))
+     goto waitawhile;
+
+   :setup:
+
+   pc := activator;
+   secure (pc, hagsecure);
+   priority;
+   exec ("say So, "+pc.name+", you are ready for a familiar? This ritual "+
+	 "can take a little time and is also a little dangerous.", self);
+   pause;
+   exec ("say If you are sure you want me to summon you a familiar now, "+
+	 "nod your ugly head.", self);
+
+   i := 0;
+   while (i < 5)
+   {
+      wait (SFB_DONE, activator #= pc);
+
+      if (command (CMD_NOD))
+	goto ritual;
+      else if (command (CMD_SAY))
+      {
+	 exec ("say Just nod if you want me to, "+pc.name+".", self);
+      }
+      else if (command (CMD_SHAKE))
+	goto no_ritual;
+
+
+      i := i + 1;
+   }
+
+   :no_ritual:
+   exec ("say Then come back later when you have more nerve...", self);
+   nopriority;
+   unsecure (pc);
+   goto waitawhile;
+
+   :ritual:
+
+   heartbeat := PULSE_SEC*6;
+   act ("Hexica grins at $3N with subtle malice.", A_SOMEONE, self, null,
+	 pc, TO_NOTVICT);
+   act ("Hexica grins at you with subtle malice, and you feel a chill run "+
+	"down your spine.", A_SOMEONE, self, null, pc, TO_VICT);
+   act ("$3N shudders as the hag Hexica vexes him with her gaze.", A_SOMEONE,
+	self, null, pc, TO_NOTVICT);
+   pause;
+
+   exec ("say Then I will begin the ritual...", self);
+   pause;
+
+   act ("Hexica becomes quite busy, rushing around the small cottage "+
+	"collecting ingredients for an evil brew in her cauldron.",
+	A_SOMEONE, self, null, null, TO_ALL);
+   pause;
+
+   act ("As the cauldron heats, a strange green vapor begins to rise "+
+	"and fill the cottage, soaking into $3N.", A_SOMEONE, self,
+	null, pc, TO_NOTVICT);
+   act ("As the cauldron heats, a strange green vapor begins to rise "+
+	"and fill the cottage, soaking into your skin and making you "+
+	"feel strangely ill.", A_SOMEONE, self, null, pc, TO_VICT);
+   i := pc.max_hp;
+   pc.hp := (pc.hp - (i/2));    /* SLAM!! The PC just lost half of
+				   their hit points... this is to scare
+				   them more than anything... :) */
+   position_update (pc);
+		pause ;
+   act ("Hexica looks truly evil as she dangles the poor helpless magic "+
+	"cricket over the cauldron. She cackles in pleasure as the cricket "+
+	"tries to kick its way out of her hand.", A_SOMEONE, self, null,
+	null, TO_ALL);
+   pause;
+   act ("The cricket escapes from Hexica's grasp, only to fall into the "+
+	"boiling cauldron of evil sludge. It expires with a small peep.",
+	A_SOMEONE, self, null, null, TO_ALL);
+   act ("You feel imbibed with strange arcane power as the spirits of "+
+	"of the outer planes descend upon this place.", A_SOMEONE, self,
+	null, pc, TO_VICT);
+   pause;
+
+
+   exec ("say And now, you must choose the physical form of your familiar.", self);
+   pause;
+   exec ("say There are two things you can control:  their title and their description.", self);
+   pause;
+   exec ("say I will ask you for each in turn... simply say it exactly how you want it... I will confirm that I have it correctly.", self);
+   heartbeat := PULSE_SEC*5;
+   familiar := load ("familiar@g_q");
+   secure (familiar,hagsecure);
+   goto titleloop;
+
+
+   :titleloop:
+   exec ("say What would you like the title of your familiar to be (such as the tiny black dragon)?", self);
+   wait (SFB_DONE, (activator #= pc));
+
+   if ( not (command(CMD_SAY)))
+   {
+      exec ("say All your fancy emoting just leaves me confused... please just use say...", self);
+      goto titleloop;
+   }
+   in_title := argument;
+   exec ("say I heard that!", self);
+   exec ("say Nod if you want the familiar's title to be '"+in_title+"'. ",
+	 self);
+   wait (SFB_DONE, (activator #= pc));
+   if ( not (command(CMD_NOD)))
+   {
+      exec("say Then let's try again...... ", self);
+      goto titleloop;
+   }
+
+   familiar.title := in_title;
+   exec ("say Then let it be so.....", self);
+   goto descrloop;
+
+   :descrloop:
+	 pause;
+   exec ("say What do you want people to see when it is in the room (for example... 'A fat cuddly Poo bear is lazing around looking for honey.')?", self);
+   wait (SFB_DONE, (activator #= pc));
+
+   if ( not (command(CMD_SAY)))
+   {
+      exec ("say All your fancy emoting just leaves me confused... please just use say...", self);
+      goto descrloop;
+   }
+   in_descr := argument;
+   exec ("say I heard that!", self);
+
+   exec ("say Nod if you want the familiar's description to be '"+in_descr+"'. ", self);
+   wait (SFB_DONE, (activator #= pc));
+   if ( not (command(CMD_NOD)))
+   {
+      exec ("say Then let's try again...... ", self);
+      goto descrloop;
+   }
+
+   familiar.outside_descr := in_descr;
+   exec ("say Then let it be so.....", self);
+   pause;
+
+   :final:
+
+   exec ("say Now, let me give you a few things... first, this owners manual, describes all the functions.", self);
+   item := load ("magef_manual@g_q");
+   link (item, pc);
+
+   subextra (pc.quests, FAMILIAR_COMPLETE);
+   if (not (FAMILIAR_BONDED in pc.quests))
+     addextra (pc.quests, {FAMILIAR_BONDED}, "");
+   pc.capacity := 100;
+
+   link (familiar, pc.outside);
+   unsecure (familiar);
+   pause;
+
+   exec ("say Simply whisper to your familiar 'Serve me' and it will bond to you.", self);
+   pause;
+   exec ("say When the familiar asks you what you want to call it, give it the name you"+
+	 "would use to command it, 'cause you don't really want to just call it"+
+	 "familiar, do you?", self);
+   pause;
+   exec ("say I hope this familiar serves you well, "+pc.name+".", self);
+   exec ("whisper "+pc.name+" I can g_q lost familiars, so "+
+	 "you can always come back for another.... just realize that they "+
+	 "suck mana now to feed.", self);
+   pause;
+   exec("say I guess you could even have more than one now... of course, "+
+        "magic crickets don't grow on trees...", self);
+   nopriority;
+   unsecure (pc);
+   goto waitawhile;
+
+   :hagsecure:
+   exec ("say I just hate little mages turning their backs on me!", self);
+   goto waitawhile;
+
+   :waitawhile:
+   heartbeat := PULSE_SEC*30;
+   pause;
+	 nopriority;
+   goto start;
+}
+dilend
+
+
+
+
+
+
+/* DIL BEHAVIOR: Familiar Quest Part One - handles players with no Familiar
+Quest status and those with Familiar Bonded status */
+
+dilbegin prg3();
+var
+  pc:     unitptr;
+  i:      integer;
+
+code
+{
+
+   :init:
+   interrupt (SFB_COM, (self.position == POSITION_FIGHTING), ohno_combat);
+
+   :start:
+	 nopriority;
+   heartbeat := PULSE_SEC*5;
+   wait (SFB_CMD, (activator.type == UNIT_ST_PC));
+
+
+   pc := activator;
+   secure (pc, lostpc);
+
+   if (not ((FAMILIAR_ONGOING in pc.quests)
+    or (FAMILIAR_COMPLETE in pc.quests) or (FAMILIAR_BONDED in pc.quests)))
+   {
+      pause;
+
+      if ((pc.guild != GUILD_UDG_MAGE) and (pc.guild != GUILD_SORCERER)
+          and (pc.guild != GUILD_NECROMANCER))
+      {
+	 exec ("say I will have nothing to do with a mundane such as you, "+pc.name+"!", self);
+	 unsecure (pc);
+	 goto waitawhile;
+      }
+
+      if ( not(pc.level >= 20) )
+      {
+	 exec ("say You show some promise, "+pc.name+", but need to gain more power.", self);
+	 pause;
+	 exec ("say Come visit me again once you reach level 20. Perhaps I can assist you.", self);
+	 unsecure (pc);
+	 goto waitawhile;
+      }
+
+      priority;
+      exec ("say Ahhh... so you are interested in familiar, huh? You seem powerful enough to bond one, "+pc.name+".", self);
+
+      pause;
+      exec ("say You just have to fetch me the ingredients to cast the spell... they are listed there in that book.", self);
+      pause;
+      exec ("say Just look at the book if you want see what you have to get. Interested?", self);
+
+      i := 0;
+      while (i < 5)
+      {
+	 wait (SFB_CMD, (activator #= pc));
+
+	 if (command (CMD_NOD))
+	   goto quest_accepted;
+	 else if (command (CMD_SAY))
+	 {
+	    pause;
+	    exec ("say Just nod if you want to, "+pc.name+".", self);
+	 }
+	 else if (command (CMD_SHAKE))
+	   goto noquest;
+
+	 i := i + 1;
+      }
+
+      :noquest:
+      pause;
+      exec ("say Fine... you'll be back, I'm sure of that...", self);
+      exec ("cackle", self);
+      unsecure (pc);
+      nopriority;
+      goto waitawhile;
+
+      :quest_accepted:
+      pause;
+      exec ("cackle", self);
+      exec ("say I knew you'd want a familiar... just bring me the ingredients and I'll cast the spell for you.", self);
+      addextra (pc.quests, {FAMILIAR_ONGOING}, "");
+      nopriority;
+      unsecure (pc);
+      goto start;
+   }
+   :waitawhile:
+   heartbeat := PULSE_SEC*30;
+   pause;
+   goto init;
+
+   :lostpc:
+   exec ("say The little snot... doesn't know it's manners!", self);
+	 nopriority;
+   goto start;
+
+   :ohno_combat:
+   heartbeat := PULSE_SEC*5;
+   exec ("say You nasty, rude little brat!", self);
+   exec ("cast curse "+pc.name, self);
+   pause;
+   interrupt (SFB_COM, (self.position == POSITION_FIGHTING), ohno_combat);
+   goto start;
+}
+dilend
+
+
+
+/* DIL BEHAVIOR: Familiar Quest Part Two - handles the fetching of the quest
+objects for players with status Familiar Quest Ongoing Players need to fetch
+spider silk ("web"), grave moss ("moss") and a live magic cricket ("cricket")
+... special check to make sure if a corpse of cricket it delivered the pc
+is criticised...*/
+
+dilbegin prg4();
+
+var
+ pc:      unitptr;
+ item:    unitptr;
+ exdp:    extraptr;
+
+code
+{
+   heartbeat := PULSE_SEC*5;
+
+   :start:
+   wait (SFB_CMD, ((command (CMD_GIVE)) and (activator.type == UNIT_ST_PC) and (self.name in argument)));
+
+   :give:
+   if (not (FAMILIAR_ONGOING in activator.quests))
+   {
+      exec ("say Trying a bribe, eh, sweetie?", self);
+      pause;
+      exec ("cackle", self);
+      goto start;
+   }
+
+   pc := activator;
+   item := self.inside;
+   secure (pc, hagsecure);
+   secure (item, hagsecure);
+
+   wait (SFB_CMD | SFB_TICK, TRUE);
+
+   if (not(item #= self.inside))
+   {
+      unsecure (item);
+      exdp := FAMILIAR_ONGOING in pc.quests;
+
+      if ("web" in self.inside.name)
+      {
+	 addstring (exdp.names, "web");
+	 exec ("say Ahhh... the web of a giant spider. We'll use this to bond the familiar to you.", self);
+	 destroy (self.inside);
+      }
+
+      else if ("moss" in self.inside.name)
+      {
+	 addstring (exdp.names, "moss");
+	 exec ("say Yes... with this the familiar will be bonded to you, even if you have to visit Valhalla.", self);
+	 destroy (self.inside);
+	 exec ("cackle", self);
+      }
+      else if (("corpse" in self.inside.name) and ("cricket" in self.inside.outside_descr))
+      {
+	 exec ("say Now what am I supposed to do with a dead magic cricket. I must have a live one!", self);
+	 destroy (self.inside);
+      }
+
+      else if ("cricket" in self.inside.name)
+      {
+	 addstring (exdp.names, "cricket");
+	 exec ("say Perfect.... this will give your familiar a voice.", self);
+	 destroy (self.inside);
+      }
+      else
+      {
+	 exec ("say This is not ingredient for the spell! Why do you waste my time?", self);
+	 destroy (self.inside);
+      }
+   }
+   if (("web" in exdp.names) and ("moss" in exdp.names) and ("cricket" in exdp.names))
+   {
+      pause;
+      subextra (pc.quests, FAMILIAR_ONGOING);
+      addextra (pc.quests, {FAMILIAR_COMPLETE}, "");
+      exec ("say Ahhh. That is all the ingredients! Now we are ready to summon you a familiar,"+pc.name+".", self);
+      pause;
+   }
+   unsecure (pc);
+
+   if (command (CMD_GIVE) and (activator.type == UNIT_ST_PC))
+     goto give;
+   else
+     goto start;
+
+   :hagsecure:
+   exec ("say I just hate little mages turning their backs on me!", self);
+   goto start;
+}
+dilend
+
+
+
+end
+
+
+
+%objects
+
+rocket
+
+names {"rocket"}
+title "a rocket"
+descr "A rocket has been set up here.."
+extra {}
+"The rocket has a small hole in the top of it. If you put a paper in the
+hole the message on the paper will be displayed in the explosion. Remeber
+no swearing and keep it to a max of 3 lines. Anyone caught abusing this
+will lose the right to use them. The rockets will disappear shortly after
+new years so dont try to save them :)  LIGHT ROCKET to activate it."
+type ITEM_CONTAINER
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD, MANIPULATE_ENTER}
+MATERIAL_WOOD("Heavy oak")
+weight 2
+CONTAINER_DEF(10)
+
+
+dilbegin rocket ();
+external
+  act_world (s:string);
+var
+  pc:unitptr;
+  s:string;
+  item:unitptr;
+  code
+  {
+  heartbeat:=PULSE_SEC*3;
+  :start:
+  wait (SFB_CMD,  command (CMD_LIGHT));
+  pc:=activator;
+  secure (pc,start);
+  item:=findunit(pc,argument,FIND_UNIT_SURRO,null);
+  if ((item==null) or (item!=self))
+    {
+    unsecure (pc);
+    goto start;
+    }
+    if (item.outside.type!=UNIT_ST_ROOM)
+      {
+      act ("You need to put it on the ground first.",
+        A_ALWAYS,pc,null,null,TO_CHAR);
+        unsecure (pc);
+        unsecure (item);
+        goto start;
+        }
+    secure (item,start);
+    block;
+    pause;
+    act ("$1n  bends down and lights $2n.",
+    A_ALWAYS,pc,self,null,TO_REST);
+    act ("You bend down and light $2n.",
+    A_ALWAYS,pc,self,null,TO_CHAR);
+    pause;
+    act ("sssssssssssssssss",
+    A_ALWAYS,self,null,null,TO_ALL);
+    pause;
+    act ("$1n leaves the ground with blinding speed.",
+    A_ALWAYS,self,null,null,TO_ALL);
+    self.minv:=200;
+    pause;
+    if ((self.inside==null) or (self.inside.objecttype!=ITEM_NOTE))
+    {
+    :default:
+    act_world("You hear a loud boom!");
+    pause;
+    act_world("A burst of &c+r red sparkles &cw explodes in the sky above and drifts to the ground");
+    destroy (self);
+    quit;
+    }
+    else
+      {
+      if (self.inside.extra==null) goto default;
+      s:=self.inside.extra.descr;
+      act_world ("You hear a loud boom!");
+      pause;
+      act_world ("A burst of &c+r red sparkles&cw explodes in the sky above spelling out &n &cr "+ s +" &cw");
+      destroy(self);
+      quit;
+      }
+
+}
+    dilend
+end
+
+
+
+gift_newbie
+title "a Miniature City Guard"
+names {"city guard","statue","guard"}
+descr "A small statue of a city guard is laying here."
+extra {}
+"A small version of a city guard"
+CHA_TRANSFER (+1)
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+end
+
+
+spec
+title "some wire glasses"
+names {"glasses"}
+descr "A pair of wire glasses."
+extra {}
+"A pair of wire glasses."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+end
+
+diaper
+title "a diaper"
+names {"a diaper","diaper"}
+descr "A white diaper is laying here."
+extra {}
+"A white diaper."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+end
+
+sash_97
+title "a white sash with 1997 printed on it."
+names {"sash"}
+descr "A white sash with 1997 printed on it is laying here."
+extra {}
+"A white sash with 1997 printed on it."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_CHEST}
+end
+
+sash_96
+title "a tattered white sash with 1996 printed on it."
+names {"sash"}
+descr "A tattered white sash with 1996 printed on it is laying here."
+extra {}
+"A tattered white sash with 1996 printed on it."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_CHEST}
+end
+
+
+suit
+title "a red suit"
+names {"santa suit","suit"}
+descr "A red velvet suit is laying here."
+extra {}
+"A red velvet santa's suit."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+end
+
+belt
+title "a wide black belt"
+names {"black belt","belt"}
+descr "A wide black belt is laying here."
+extra {}
+"A wide black belt."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+end
+
+
+                                  bag
+
+names {"bag"}
+title "a bag full of gifts"
+descr "A bag full of gifts is sitting here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD, MANIPULATE_ENTER}
+CONTAINER_DEF(75)
+weight 2
+end
+
+
+gift_thief20
+title "a Reindeer Horn"
+names {"a reindeer horn","reindeer horn","horn"}
+descr "A reindeer horn is laying here."
+extra {}
+"The horn, which is quite small, has a magical glow to it"
+DEX_TRANSFER (+2)
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+end
+
+gift_thief40
+title "a Dragons Tooth necklace with a big bow on it."
+names {"a dragons tooth necklace","dragon tooth","tooth","necklace"}
+descr "A dragons tooth on a thong with a big red bow is laying here."
+extra {}
+"The tooth is huge, someone has drilled a hole and put it on a leather
+thong. There is a HUGE red bow around the tooth."
+DEX_TRANSFER (+3)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_NECK}
+dilcopy level_restrict@function (21,0,25,"");
+end
+
+gift_thief50
+title "a Tyrannosaurus Claw"
+names {"a tyrannosaurus claw","tyrannosaurus claw","claw","dagger"}
+descr "A tyrannosaurus claw is laying here."
+extra {}
+"The claw is about 7 inches long with a razor sharp edge."
+DEX_TRANSFER (+4)
+WEAPON_DEF(WPN_DAGGER, 11, 9)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+dilcopy level_restrict@function (41,0,25,"");
+end
+
+
+gift_healer20
+title "a reindeer hoof"
+names {"a reindeer hoof","reindeer hoof","hoof","hammer"}
+descr "A  reindeer hoof is laying here."
+extra {}
+"The hoof is very heavy and looks like it would pack a wallop."
+DEX_TRANSFER (+2)
+WEAPON_DEF(WPN_WAR_HAMMER, 7, 5)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+end
+
+gift_healer21
+title "a reindeer hoof"
+names {"a reindeer hoof","reindeer hoof","hoof","hammer"}
+descr "A  reindeer hoof is laying here."
+extra {}
+"The hoof is very heavy."
+DEX_TRANSFER (+2)
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+end
+
+
+gift_healer40
+title "some black boots"
+names {"santas boots","black boots","santas boot","boot"}
+descr "Santas boots are laying here."
+extra {}
+"A pair of jet black boots."
+DIV_TRANSFER (+3)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+dilcopy level_restrict@function (21,0,25,"");
+end
+
+gift_healer50
+title "a gaily wrapped present"
+names {"a gaily wrapped present"," wrapped present"," present"}
+descr "A gaily wrapped present is laying here."
+extra {}
+"A present wrapped in bright paper and a big red bow."
+DIV_TRANSFER (+4)
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+dilcopy level_restrict@function (41,0,25,"");
+end
+
+
+
+gift_conj20
+title "a Large Candy Cane"
+names {"a large candy cane","candy cane","candy","staff"}
+descr "A large candy cane is laying here."
+extra {}
+"A huge piece of candy with red and white strips."
+MAG_TRANSFER (+2)
+WEAPON_DEF(WPN_QUARTERSTAFF, 9, 7)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+end
+
+gift_conj40
+title "a toy horse"
+names {"a toy horse","toy horse","horse","toy"}
+descr "A wooden toy horse is laying here."
+extra {}
+"A small wooden horse about the size of a christmas ornament  with a
+string through the top of it."
+MAG_TRANSFER (+3)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_EAR}
+dilcopy level_restrict@function (21,0,25,"");
+end
+
+
+gift_conj50
+title "a piece of mistletoe"
+names {"a piece of mistletoe","mistletoe"}
+descr "A piece of mistletoe is laying here."
+extra {}
+"A small green sprig of leaves."
+MAG_TRANSFER (+4)
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+dilcopy level_restrict@function (41,0,25,"");
+end
+
+
+gift_war20
+title "a small christmas tree"
+names {"a small christmas tree","christmas tree","tree"}
+descr "A tiny christmas tree is laying here."
+extra {}
+"A small wooden christmas tree gaily decorated"
+STR_TRANSFER (+2)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_EAR}
+end
+
+gift_war40
+title "a miniature wooden sword"
+names {"a miniature wooden sword","wooden sword","wooden","sword"}
+descr "A miniature wooden sword is laying here."
+extra {}
+"A miniature wooden sword with a string through it."
+STR_TRANSFER (+3)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_NECK}
+dilcopy level_restrict@function (21,0,25,"");
+end
+
+gift_war50
+title "a christmas bow"
+names {"a  christmas bow"," christmas bow","bow"}
+descr "A  christmas bow is laying here."
+extra {}
+"A bright red bow."
+STR_TRANSFER (+4)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_FINGER}
+dilcopy level_restrict@function (41,0,25,"");
+end
+
+gift_nec20
+title "a skull with a bright red bow"
+names {"a skull with a bright red bow"," skull","red bow","bow"}
+descr "A skull with a bright red bow is laying here."
+extra {}
+"A skull with a bright red bow tied through the eye sockets."
+BRA_TRANSFER (+2)
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+end
+
+
+gift_nec40
+title "the spirit of christmas past"
+names {"the spirit of christmas past","christmas past","spirit"}
+descr "The spirit of christmas past is barely visible."
+extra {}
+"The spirit of christmas past shimmers mystically."
+BRA_TRANSFER (+3)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BACK}
+dilcopy level_restrict@function (21,0,25,"");
+end
+
+
+
+gift_nec50
+title "Leopard Skin Briefs"
+names {"leopard skin briefs","leopard skin","briefs"}
+descr "A pair of skimpy leopard skin briefs are laying here."
+extra {}
+"SEXY!."
+BRA_TRANSFER (+4)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_WAIST}
+dilcopy level_restrict@function (41,0,25,"");
+end
+
+gift_noguild
+title "a lump of coal"
+names {"a lump of coal"," coal"}
+descr "A lump of coal is laying here."
+extra {}
+"A lump of black coal"
+CHA_TRANSFER (+2)
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+end
+
+/*--------OBJECTS FOR MAGE QUEST #1: FAMILIARS--------*/
+
+
+		   spider_silk
+names {"web","spider silk", "silk"}
+title "a piece of spider silk"
+descr
+"A small fragment of fine spider silk has been left here."
+type ITEM_OTHER
+weight 1
+manipulate MANIPULATE_TAKE
+extra {}
+"This is obviously part of a spider's web, although what use you could
+possibly have with it escapes you. Perhaps a mage could use it as a
+spell component."
+end
+
+		grave_moss
+names {"grave moss", "moss", "hunk"}
+title "a hunk of grave moss"
+descr
+"A strange kind of moss is thriving in the sunlight."
+type ITEM_OTHER
+manipulate MANIPULATE_TAKE
+weight 1
+extra {}
+"You wonder if grave moss has any strange properties that you don't
+know of, but you cannot think of any. Perhaps a mage could use it as
+a spell component. The moss is bright red and has the texture of a
+man's beard."
+end
+
+		fam_ashes
+names {"ashes"}
+title "a pile of ashes"
+descr
+"A strange pile of grey ashes has been left here."
+type ITEM_OTHER
+manipulate MANIPULATE_TAKE
+weight 1
+end
+
+
+			hexica_tome
+names {"hexica's tome", "tome", "book"}
+title "a large, weather-beaten tome"
+descr
+"A massive, weather-beaten old tome sits on a stand here. You wonder
+what could be written in it."
+extra {}
+"The leather binding of this massive tome looks like it might have
+endured doomsday itself! The pages are old and crackly, but still
+readable. The book is open to beginning of a spell formula for
+familiars. It reads:&l
+
+  ' Ingredients Needed:
+
+      Grave moss - the only known site is a strange grave hidden
+		   in the lands of the elves
+      Spider silk - the spiders in Haon Dor offer a ready supply
+      Magic Cricket - heard singing sometimes in the Cypress woods
+
+      During the incantations to prepare the Mage for their new
+      familiar, it will also be required to take a small part of the
+      Mage's soul ... a bit of their brain and constitution to
+      inhabit the new body of their familiar. Then, after all the
+      ingredients have been prepared, you must begin the ritual
+      incantations... '
+
+The page ends there... and you get the feeling that you shouldn't turn
+to the next."
+end
+
+
+
+			magef_manual
+names {"owner's manual", "owner manual", "manual"}
+title "a well-thumbed manual"
+descr
+"A well-thumbed owner's manual has been discarded here."
+extra {}
+" This manual has a large heading title HEXIA'S GUIDE TO FAMILIARS, and
+reads:&l
+
+  ' MageFamiliar Version 5.2:
+
+    Updated the jealousy routines so that they look better.
+    Blocked shout capabilities for familiars.
+    KNOWN BUGS: lost master routine, combat logic
+
+    MageFamiliar Version 5.1:
+
+    Familiars are beings bonded to serve magical spell casters
+    (Mages, Sorcerers and Necromancers). Such spell casters can
+    have multiple familiars (currently only for the summoning
+    fee, but soon will require another rare object as well). All
+    the spellcaster need do to complete the ritual performed by
+    Hexica is to WHISPER to their familiar the phrase SERVE ME.
+    Then the familiar will ask for their name...
+
+    It is known that powerful spell caster have managed to keep
+    multiple familiars under their command, but the stories of
+    from most spell casters tell of it's danger: familiars
+    attacking one another, the group of familiars turning en masse
+    against their master.
+
+    Once a familiar is bonded to a spell caster, that is it's one
+    master for it's entire existence. Even if the spell caster
+    leaves the world of Valhalla, as long as he has his familiar
+    with him, it will recognize him. Some spell casters have
+    reported losing their familiar while on adventure: although
+    stressed by the absence of their master, the spell casters
+    said that picking it up and leaving the world of Valhalla
+    briefly soothed it back into servitude.
+
+    Controlling a familiar is easy. It will respond to either
+    Familiar or to the name you gave it upon bonding. Simply
+    TELL the familiar any commands that a player could execute,
+    and the familiar will try it's best to comply. These can
+    range from expressive gestures like TELL FAMILIAR SMILE to
+    useful actions like TELL FAMILIAR GET ALL. The familiar can
+    use armor, weapons and magic items and gain the effects of
+    those items. Although you can command a familiar to attack
+    with TELL FAMILIAR KILL (target), their strongest use is as
+    a spell casting supporter! The familiar, although weak in
+    magical power, knows every single spell invented by the
+    minds of the gods. Every spell caster can appreciate the
+    benefit of a TELL FAMILIAR CAST HEAL (master), or of a
+    timely TELL FAMILIAR CAST CREATE WATER.
+
+    Spell casters have also been known to use familiars like
+    a Mana Bank. Since the familiar has a pool of mana of
+    their own (that regenerates over time), casters can get
+    a boost in their failing mana with TELL FAMILIAR CAST BOOST
+    MANA (master)!
+
+    If you become separated from your familiar, it will try
+    to seek you out... first by teleporting to you, then by
+    walking to you. More then one owner (thinking themself
+    clever) has tried to summon their familiar to them, only
+    to discover that it automatically attacks any spell caster
+    that would dare summon it without the secret familiar ritual!!
+
+    Some clever spell casters are experimenting with the homing
+    feature of familiars. One clever Sorcerer developed the
+    FAMILIAR SPY TECHNIQUE. Try the following TELL FAMILIAR
+    CAST INVISIBILITY FAMILIAR to make it invisible, TELL
+    FAMILIAR CAST CONTROLLED TELEPORT <TARGET> to send it
+    somewhere. Now, it is going to make a small noise when it
+    sees you missing, and try to teleport or walk back to you...
+    While it does however, you could easily CAST WIZARD EYE
+    FAMILIAR and see what is going on.... The clever Sorcerer
+    was also experimenting with sending out the familiar spy,
+    then teleporting to a new location for the familiar to home
+    in on, allowing him to WIZARD EYE spy on a specific route.
+
+    In addition, if you type STATUS FAMILIAR, your familiar will
+    report to you some of it's vital statistics.... (and this
+    should actually be working now). While the familiar is loath
+    to tell you his actual statistics (for fear that you would
+    work it harder!), he will report the general quality of his
+    hit points, mana and endurance.
+
+
+    You should keep your familiar on you or following you are
+    all times. If you are forced to leave it behind somewhere,
+    it will not be able to hear your commands (your telepathic
+    link with the familiar requires you to be in the same room
+    with you.) Horrible stories have been told about small
+    familiars killing even their high level masters if they cease
+    to be a spell caster. Some activities with familiars will
+    also impact the spellcaster negatively... sometimes the
+    little buggers like to feed on their master's hit points
+    or endurance or mana.
+
+    Coming in revision 5.2 (schedule for Jan 1995): familiars that
+    gain in power with their masters and the new breeds of familiars
+    for sorcerers and necromancers.
+"
+manipulate {MANIPULATE_TAKE}
+type ITEM_NOTE
+weight 1
+end
+
+
+/*------------ THE CUSTOMIZATION CONTRAPTION ------------*/
+
+/*-------------------------RESET-------------------------*/
+%reset
+
+/*--------------MAGE QUEST: FAMILIARS RESET--------------*/
+load hexica into haon_dor/tower_lab max 1
+load hexica_tome into haon_dor/tower_lab max 1
+load magic_cricket into cypress/tree_circle max 1
+load grave_moss into elfdom/grave_st max 1
+load spider_silk into haon_dor/spider_den max 1
+%end
+
+

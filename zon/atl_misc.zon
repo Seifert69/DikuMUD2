@@ -1,0 +1,956 @@
+/*
+filename    atl_misc
+password    tritium
+changedby   Saor
+EmailAdd     saor@Maestro.COM (Morgan Schafer)
+request     compile
+version     10
+END HEADER*/
+
+
+/* The miscellaneous bits of Atlantis */
+#include "composed.h"
+
+%zone atl_misc
+title ""
+lifespan 30
+reset RESET_ANYHOW
+creators {"anubis"}
+
+notes
+"A zone created by Anubis (paulh@argonet.co.uk)
+to implement the miscellaneous bits of Atlantis
+including : the ship."
+
+%dil
+
+dilbegin lcap();
+var
+        captain         :       unitptr;
+        cutlass         :       unitptr;
+        jacket          :       unitptr;
+        trousers        :       unitptr;
+        boots           :       unitptr;
+code {
+        captain  := load("liparlo@atl_misc");
+        cutlass  := load("cutlass@atl_misc");
+        jacket   := load("jacket@atl_misc");
+        trousers := load("trousers@atl_misc");
+        boots    := load("boots@atl_misc");
+
+        link(cutlass, captain);
+        link(jacket, captain);
+        link(trousers, captain);
+        link(boots, captain);
+
+        addequip(cutlass, WEAR_WIELD);
+        addequip(jacket, WEAR_BODY);
+        addequip(trousers, WEAR_LEGS);
+        addequip(boots, WEAR_FEET);
+
+        return;
+}
+dilend
+
+
+
+%rooms
+
+
+      ankh_deck /* The centredeck of the Golden Ankh */
+title "The centredeck of the Golden Ankh"
+names {"Golden Ankh","desck", "ship"}
+descr
+"You are on the freshly-scrubbed centre deck of the Golden Ankh, everything
+appears to be ship-shape and bristol-fashion. you could almost eat your
+food of this deck. A tall mast reaches up to the sky in front of you
+and shiny brass cannons line up along the side. Long coils of rope
+are neatly rolled up at various places. You could go north
+to the poop deck, south to the aft deck, or down to the lower deck.
+The sea roils round the bows and rocks the ship slightly."
+extra {"flag"}
+"The flag bears a large golden ankh symbol like this :
+ &l
+         ***
+        *****
+       **   **
+       *     *
+       **   **
+        *****
+   ***************
+   ***************
+         ***
+         ***
+         ***
+         ***
+         ***
+         ***
+&f
+on a pale blue background."
+extra {"Golden Ankh", "ship"}
+"The ship is looking very clean and tidy...unnaturally so."
+extra {"mast", "sails", "spinnaker"}
+"The mast is at least 20 feet high and rigged for fast running with
+two main sails and a spinnaker. The Golden Ankh flag flies proudly
+at the top."
+extra {"cannon", "cannons"}
+"These brightly shining brass cannons look like they have never seen action,
+they are so clean. But plentiful supplies of cannonballs and powder kegs
+ready for action make you think again."
+extra {"cannon balls", "balls", "cannonballs"}
+"The cannon balls look extremely heavy...you wouldn't like to be in
+any vessel hit by one of those things!"
+extra {"powder kegs", "kegs"}
+"Full to the brim with gunpowder. You decide not to smoke near them!"
+extra {"sea", "waves"}
+"As you gaze at the choppy motion of the waves, you start feeling a bit
+sick and decide to go for a lie-down somewhere."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_TELEPORT}
+
+north to ankh_poop descr
+"You can see a nice clean poop deck to the north of the ship.";
+south to ankh_aft descr
+"You see a beautfily shiny aft deck to the south of the ship.";
+down to ankh_hold descr
+"You peer down into a gloomy hold, I wonder what's down there?";
+
+dilbegin deck();
+external
+        lcap();
+var
+        ship            :       unitptr;
+        captain         :       unitptr;
+        room            :       unitptr;
+        sign            :       unitptr;
+        a               :       unitptr;
+        destinations    :       stringlist;
+        messages        :       stringlist;
+        message         :       string;
+        msg_no          :       integer;
+        shore_count     :       integer;
+        sail_count      :       integer;
+        shore_max       :       integer;
+        sail_max        :       integer;
+        shore_beat      :       integer;
+        sail_beat       :       integer;
+        embark_try      :       integer;
+        curr_port       :       integer;
+        next_port       :       integer;
+        max_port        :       integer;
+
+code {
+        :init:
+        destinations := {
+                                "pier@atl_beach"
+                        ,       "pier_two@torsbay"
+                        };
+
+        max_port := length(destinations) - 1;
+        messages :=     {
+                                "A large seagull far above, caws raucously
+and drops a large messy package on your head."
+                        ,       "A large wave hits the side of the ship
+making it roll precariously. You decide
+that you should not have had that goat
+vindaloo curry before embarking."
+                        ,       "One of the cannonballs comes loose and,
+picking up speed, rolls towards one of
+the sailors. You laugh as he curses and
+jumps out of the way."
+                        ,       "The ship's cat dashes out from behind a
+cask and pounces on a small white mouse.
+She proceeds to eat it with relish."
+                        ,       "You gaze over the side of the ship in
+awe as a huge whale surfaces. Its
+blowhole gapes open and spurts a huge
+plume of water over 30 feet into the air.
+It then dives once again, its huge tail
+lashing the water."
+                        ,       "A burly-sailor eyes you up. He then gives
+you a very slow, deliberate wink. You turn
+away feeling a bit embarassed."
+                        ,       "The sailors now group together to pull on
+a large rope attached to a capstan. As they
+heave they start to sing an old sea-shanty.
+You can't quite make out the words, but it
+seems to involve a sheep, two tubs of butter
+and a large cucumber. Perhaps it is better
+that you can't make it out!"
+                        ,       "A commotion amongst the sailors starts as
+one of their number, looking very bedraggled
+is hauled in front of the captain.
+Apparently he has transgressed some rule
+of the ship. He is strapped to the main mast
+and his tunic is ripped, exposing his back.
+A very muscley sailor wields a huge
+cat-o-nine-tails and proceeds to severely
+flay the unfortunate sailor.
+You wince as a mixture of vinegar and salt
+is then rubbed into what is left of his back."
+                        ,       "The captain's mistress comes out of the door
+of his cabin. She shimmies slowly across the
+deck. Most of the sailor's gaze at her,
+tongues hanging out."
+                        };
+
+        curr_port := 0;
+        next_port := 1;
+        ship := findsymbolic("ankh_ship@atl_misc");
+        if (ship == null) {
+                room := findroom(destinations.[curr_port]);
+                ship := load("ankh_ship@atl_misc");
+                link(ship, room);
+        }
+
+        captain := findsymbolic("liparlo@atl_misc");
+
+        if (captain == null) {
+                room := findroom(destinations.[curr_port]);
+                lcap();
+                captain := findsymbolic("liparlo@atl_misc");
+                link(captain, room);
+        }
+
+        shore_count := 0;
+        sail_count := 0;
+        shore_max := 3;
+        sail_max := 4;
+        shore_beat := 20 * PULSE_SEC;
+        sail_beat := 30 * PULSE_SEC;
+
+        interrupt(SFB_CMD, (command(CMD_LEAVE) | command(CMD_EAST)), leaving);
+        heartbeat := shore_beat;
+        :start:
+        embark_try := 0;
+        wait(SFB_TICK, TRUE);
+        if (curr_port >= 0) { /* We are at a port */
+                captain := findsymbolic("liparlo@atl_misc");
+                if (captain == null) {
+                        room := findroom(destinations.[curr_port]);
+                        lcap();
+                        captain := findsymbolic("liparlo@atl_misc");
+                        link(captain, room);
+                        shore_count := 0;
+                        goto start;
+                }
+                ship := findsymbolic("ankh_ship@atl_misc");
+                if (ship == null) {
+                        room := findroom(destinations.[curr_port]);
+                        ship := load("ankh_ship@atl_misc");
+                        link(ship, room);
+                        shore_count := 0;
+                        goto start;
+                }
+
+                if (captain.outside != ship.outside) {
+                        destroy(captain);
+                        goto start;
+                }
+
+                shore_count := shore_count + 1;
+                if (shore_count == shore_max) {
+                        captain := findsymbolic("liparlo@atl_misc");
+                        exec("say We are leaving very soon... please " +
+                                "'enter ship' if you wish to journey with us.",
+                                captain);
+                        goto start;
+                }
+                if (shore_count > shore_max) {
+                        captain := findsymbolic("liparlo@atl_misc");
+                        exec("enter ship", captain);
+                        pause;
+                        /* OK...the captain is aboard */
+                        act("The sailors busy themselves and with " +
+                                "an impressive fluttering of sails, " +
+                                "the Golden Ankh gracefully sails off " +
+                                "into the wide blue yonder.",
+                                A_SOMEONE, self.inside, null, null, TO_ALL);
+                        room := findroom(destinations.[curr_port]);
+                        act("The sailors busy themselves and with " +
+                                "an impressive fluttering of sails, " +
+                                "the Golden Ankh gracefully sails off " +
+                                "into the wide blue yonder.",
+                                A_SOMEONE, room.inside, null, null, TO_ALL);
+                        ship := findsymbolic("ankh_ship@atl_misc");
+                        destroy(ship);
+                        curr_port := -1; /* Indicates we are sailing */
+                        sail_count := 0;
+                        heartbeat := sail_beat;
+                }
+                goto start;
+        }
+        else { /* We must be sailing */
+                ship := findsymbolic("ankh_ship@atl_misc");
+                if (ship != null) { /* Whoops! */
+                        destroy(ship);
+                }
+                captain := findsymbolic("liparlo@atl_misc");
+                if ((captain == null) |
+                        (captain.outside != self)) {
+                        destroy(captain);
+                        lcap();
+                        captain := findsymbolic("liparlo@atl_misc");
+                        link(captain, self);
+                        sail_count := 0;
+                        goto start;
+                }
+
+                sail_count := sail_count + 1;
+                if (sail_count == sail_max) {
+                        act("There is a lot of shouting and frantic activity "
++
+                                "from the sailors as the cry of 'Land Ahoy!' "
++
+                                "goes up from the crow's nest. Sailors start "
++
+                                "to take down some of the rigging and you " +
+                                " prepare yourself for the landing.",
+                                A_SOMEONE, self.inside, null, null, TO_ALL);
+                        goto start;
+                }
+                if (sail_count > sail_max) { /* We have landed */
+                        ship := findsymbolic("ankh_ship@atl_misc");
+                        if (ship != null) {
+                                destroy(ship);
+                        }
+                        ship := load("ankh_ship@atl_misc");
+                        room := findroom(destinations.[next_port]);
+                        link(ship, room);
+
+                        curr_port := next_port;
+                        next_port := next_port + 1;
+                        if (next_port > max_port) {
+                                next_port := 0;
+                        }
+                        act("With a gentle bump, the Golden Ankh arrives at " +
+                                "her destination.",
+                                A_SOMEONE, self.inside, null, null, TO_ALL);
+
+                        captain := findsymbolic("liparlo@atl_misc");
+                        if ((captain == null) |
+                                (captain.outside != self)) {
+                                destroy(captain);
+                                lcap();
+                                captain := findsymbolic("liparlo@atl_misc");
+                                link(captain, self);
+                        }
+                        act("The captain bows to you and say 'You " +
+                                "may leave the ship now. Just " +
+                                "'leave' or go 'east''",
+                                A_SOMEONE, self.inside, null, null, TO_ALL);
+                        act("The captain jauntily descends the gangplank.",
+                                A_SOMEONE, self.inside, null, null, TO_ALL);
+                        room := findroom(destinations.[curr_port]);
+                        act("You notice the Golden Ankh, sails fluttering " +
+                                "in the breeze, draw majestically up to " +
+                                "the pier.",
+                                A_SOMEONE, room.inside, null, null, TO_ALL);
+                        act("The captain jauntily descends the gangplank.",
+                                A_SOMEONE, room.inside, null, null, TO_ALL);
+                        link(captain, room);
+                        pause;
+
+                        room := findroom("ankh_hold@atl_misc");
+                        sendto("leave", room);
+
+                        room := findroom("ankh_aft@atl_misc");
+                        sendto("leave", room);
+
+                        room := findroom("ankh_poop@atl_misc");
+                        sendto("leave", room);
+
+                        heartbeat := shore_beat;
+                        shore_count := 0;
+                        goto start;
+                }
+                else    { /* Generate a random message */
+                        msg_no := rnd(0,10);
+                        message := messages.[msg_no];
+                        act(message,
+                                A_SOMEONE, self.inside, null, null, TO_ALL);
+                }
+                goto start;
+        }
+
+:leaving:
+
+        a := activator;
+        if (a.position == POSITION_FIGHTING) {
+                act("Not while fighting you can't!",
+                    A_SOMEONE, a, null, null, TO_CHAR);
+                block;
+                goto start;
+        }
+        if (a.position != POSITION_STANDING) {
+                act("Try standing first.",
+                    A_SOMEONE, a, null, null, TO_CHAR);
+                block;
+                goto start;
+        }
+        if (curr_port == -1) {
+                act("Don't be silly $1n, not while we are sailing!",
+                        A_SOMEONE, a, null, null, TO_CHAR);
+                block;
+                goto start;
+        }
+        act("You jauntily walk down the gangplank towards terra firma.",
+                A_SOMEONE, a, null, null, TO_CHAR);
+        act("$1n walks jauntily down the plank to terra firma.",
+                A_SOMEONE, a, null, null, TO_ROOM);
+        room := findroom(destinations.[curr_port]);
+        link(a, room);
+        act("$1n walks jauntily down the gangplank from the Golden Ankh.",
+                A_SOMEONE, a, null, null, TO_ROOM);
+        block;
+        exec("look", a);
+        goto start;
+
+}
+dilend
+end
+
+
+        ankh_poop
+title "The Poop Deck of the Golden Ankh"
+names {"poop deck","poop"}
+descr
+"You are on the poop deck, sea tossed spume dashes into your face from
+the north as you gaze at the far ocean. To the south you see the centre
+deck. Rising in front of you is a wonderful figurehead."
+extra {"figurehead"}
+"The figurehead is of a splendidly endowed female with striking red
+hair worn in a coil on her head."
+extra{"sea","ocean"}
+"Spume-tossed and briny as usual!"
+
+
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_TELEPORT}
+
+south to ankh_deck descr
+"Southwards you can see the centredeck, with many sailors busying
+themselves at whatever sailors do.";
+
+dilbegin prg2();
+code
+{
+    heartbeat := 30 * PULSE_SEC;
+    :start:
+    wait(SFB_MSG, TRUE);
+    if (argument $= "leave") {
+       act("There is a slight bump as the ship gently docks at its "
+         + "destination.",
+         A_SOMEONE, self.inside, null, null, TO_ALL);
+       act("You faintly hear the captain saying that you can leave "
+         + "from the centredeck by saying 'east' or 'leave'",
+           A_SOMEONE, self.inside, null, null, TO_ALL);
+    }
+}
+dilend
+end
+
+
+      ankh_aft
+title "The Aft Deck of the Golden Ankh"
+names {"aft deck","deck","aft"}
+descr
+"You are on the aft deck, a massive rudder protrudes from the centre
+of the deck but, try as you might, you don't seem to be able to shift
+it an inch. A huge anchor and chain lie to one side and, unless you
+want a hernia, I wouldn't even attempt picking it up. As you gaze
+over the stern you see the churning ocean far below. To the north
+you see the centredeck of the Golden Ankh."
+extra{"rudder"}
+"Over five feet high and 10 feet long it is *massive*"
+extra{"anchor","chain"}
+"The anchor and chain are made of some peculiar black material that
+you don't recognise. What you do know is that it is *very* heavy."
+extra{"sea","ocean"}
+"Spume-tossed and briny as usual!"
+
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_TELEPORT}
+
+north to ankh_deck descr
+"Northwards you can see the centredeck, with many sailors busying
+themselves at whatever sailors do.";
+
+dilbegin prg3();
+code
+{
+    heartbeat := 30 * PULSE_SEC;
+    :start:
+    wait(SFB_MSG, TRUE);
+    if (argument $= "leave") {
+       act("There is a slight bump as the ship gently docks at its "
+         + "destination.",
+         A_SOMEONE, self.inside, null, null, TO_ALL);
+       act("You faintly hear the captain saying that you can leave "
+         + "from the centredeck by saying 'east' or 'leave'",
+           A_SOMEONE, self.inside, null, null, TO_ALL);
+    }
+}
+dilend
+
+end
+
+      ankh_hold
+title "In the Hold of the Golden Ankh"
+names {"hold"}
+descr
+"This hold is almost as clean as the upper deck. Neat piles of supplies
+are arranged along the bows : there are barrels of water and wine,
+salted beef, ships biscuits, limes, candles, rope, tar and all the
+myriad of things a ship needs when sailing in dangerous barely-charted
+waters."
+extra{"piles","supplies"}
+"They look very neat."
+extra{"barrels","water","wine"}
+"These barrels look like they have enough in them for a long
+sea-journey."
+extra{"salted beef","beef"}
+"The beef is salted to prevent decay."
+extra{"limes"}
+"Prevents scurvy, don't you know. Maybe we ought to call the sailors
+limeys?"
+extra{"ships biscuits","biscuits"}
+"Hard but sustaining."
+extra{"candles"}
+"For jack-be-nimble?...who knows?"
+extra{"rope"}
+"Well, you always need lots of rope on a ship...something to do with
+splicing the mainbrace you think...you were never very nautical anyway."
+extra{"tar"}
+"Stops rope from decaying in the bitter salt-sprayed air."
+
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER}
+
+up to ankh_deck descr
+"Up an oak ladder you can see the centredeck, with many sailors busying
+themselves at whatever sailors do.";
+
+dilbegin prg4();
+code
+{
+    heartbeat := 30 * PULSE_SEC;
+    :start:
+    wait(SFB_MSG, TRUE);
+    if (argument $= "leave") {
+       act("There is a slight bump as the ship gently docks at its "
+         + "destination.",
+         A_SOMEONE, self.inside, null, null, TO_ALL);
+       act("You faintly hear the captain saying that you can leave "
+         + "from the centredeck by saying 'east' or 'leave'",
+           A_SOMEONE, self.inside, null, null, TO_ALL);
+    }
+}
+dilend
+end
+
+
+%mobiles
+
+        sailor
+names {"ankh sailor", "sailor"}
+title "a sailor"
+descr "A smart sailor stands here."
+extra {}
+"Though he looks extremely well turned out, you can see that he is
+extremely experienced and efficient, and probably deadly in a fight."
+level 38
+race RACE_HUMAN
+alignment 200
+sex SEX_MALE
+NATURAL_DEF(WPN_FIST,ARM_CLOTHES)
+ATTACK_DEFENSE(0,100)
+weight 200
+height 180
+MSET_ABILITY(20,25,20,20,10,0,5,0)
+MSET_WEAPON(5,20,20,10,5,7)
+MSET_SPELL(3,3,3,3,3,3,3,3,3,3,3)
+
+
+special SFUN_RESCUE "captain/sailor"
+special SFUN_TEAMWORK "captain/sailor"
+special SFUN_RANDOM_ZONE_MOVE time WAIT_SEC*120 bits SFB_RANTIME
+
+special SFUN_PAIN_INIT time WAIT_SEC*50 bits SFB_RANTIME "
+100 S100@
+110 R200,25@
+120 R300,50@
+130 R400,50@
+140 d100emote busily repairs some torn sails with a large needle.@
+150 d100whistle@
+160 d100look at %s@
+170 d100smile@
+180 J100@
+
+200 d100emote sings a sailor's sea-shanty.@
+210 d100emote licks his finger and sticks it in the air.@
+220 d100emote nods to himself solemnly.@
+230 J100@
+
+300 d100emote ties an extremely complex knot in a large piece of rope.@
+310 d100emote smokes thoughtfully on an old pipe.@
+320 d100emote hums a tuneful ditty under his breath.@
+330 J100@
+
+400 d100cough@
+410 d100emote taps the tobacco out from his pipe.@
+420 d100frown@
+430 d100say Well %s, I think I better give up smoking.@
+440 J100@
+"
+end
+
+
+        liparlo /* The captain of the Golden Ankh */
+names {"ankh captain", "captain liparlo", "captain", "liparlo"}
+title "Captain Liparlo"
+descr "Captain Liparlo of the Golden Ankh stands here in his resplendent
+uniform."
+extra {}
+"He eyes you with his twinkly blue eyes and gives you a broad smile. The
+captain looks a competent old sea-dog."
+level 150 /* He is not for killing */
+race RACE_HUMAN
+alignment 700
+sex SEX_MALE
+ATTACK_DEFENSE(500,500)
+NATURAL_DEF(WPN_FIST,ARM_PLATE)
+weight 182
+height 170
+MSET_ABILITY(20,20,10,20,20,0,5,5)
+MSET_WEAPON(10,20,10,10,10,7)
+MSET_SPELL(3,3,3,3,3,3,3,3,3,3,3)
+
+special SFUN_RESCUE "sailor"
+special SFUN_TEAMWORK "sailor"
+
+dilbegin prg5();
+var
+    sail_count    : integer;
+    shore_count   : integer;
+    going_to      : string;
+    time_left     : string;
+    ship          : unitptr;
+    room          : unitptr;
+code
+{
+        :start:
+        wait(SFB_MSG, TRUE);
+        if (argument == "embark") {
+                exec("enter ship", self);
+                goto start;
+        }
+        if (argument == "disembark") {
+                exec("leave", self);
+                goto start;
+        }
+        goto start;
+
+}
+dilend
+
+end
+
+
+%objects
+
+
+        knobkerrie /* a club for the sailors */
+names {"knobkerrie", "sailors club", "club"}
+title "a knobkerrie"
+descr "A knobkerrie lies here."
+extra{}
+"A knobkerrie is a sailor's club, and this one is covered in
+painful-looking protuberences."
+WEAPON_DEF(WPN_CLUB,-5,0)
+dilcopy abi_restrict@function (ABIL_STR,30,0,25,"");
+MATERIAL_WOOD("A knobbly and very hard walnut wood")
+cost 1 SILVER_PIECE
+weight 20
+end
+
+         stiletto /* a knife for the sailors */
+names {"stiletto knife","stiletto","thin knife","sailors knife","knife"}
+title "a stiletto knife"
+descr "An extremely thin knife has been plunged into the dirt here."
+extra{}
+"This extremely thin stiletto knife is used by sailors the world
+over for close-range fighting. very good for piercing through the
+rib-cage and penetrating the heart."
+
+WEAPON_DEF(WPN_DAGGER,0,0)
+cost 2 SILVER_PIECE
+weight 1
+dilcopy abi_restrict@function (ABIL_DEX,30,0,25,"");
+MATERIAL_METAL("Thin but tough steel")
+end
+
+
+        cutlass /* The Ankh Captain's cutlass */
+names {"cutlass"}
+title "the Captain's cutlass"
+descr "A wicked looking cutlass with worrying blood-stains on the handle."
+WEAPON_DEF(WPN_FALCHION, 2, 2)
+WEAPON_SLAYER(RACE_HUMAN)
+cost 5 GOLD_PIECE
+rent 5 COPPER_PIECE
+MATERIAL_METAL("Finely crafted steel and iridium alloy.")
+weight 14
+flags {UNIT_FL_MAGIC}
+dilcopy level_restrict@function (30,0,25,"");
+dilcopy abi_restrict@function (ABIL_DEX,30,0,25,"");
+dilcopy abi_restrict@function (ABIL_STR,60,0,25,"");
+dilcopy ali_restrict@function (350,1000,0,25,"");
+end
+
+        t_shirt
+names {"sailor's t-shirt", "sailors t-shirt", "t-shirt"}
+title "a sailor's t-shirt"
+descr "A neatly folded sailor's tunic lies here."
+extra {}
+"This T-shirt has lovely bright red rings running round it...very nautical!"
+ARMOUR_CLOTHES(1, 1)
+manipulate {MANIPULATE_WEAR_BODY}
+MATERIAL_CLOTH("A strudy cotton twill weave.")
+cost 1 COPPER_PIECE
+weight 1
+end
+
+        bell_bottoms
+names {"bellbottom trousers", "bellbottoms", "trousers"}
+title "a pair of bellbottom trousers"
+descr "A neatly folded pair of sailor's bellbottom trousers lies here."
+extra {}
+"A nice, clean pair of bellbottoms. They look like a sailor's, but
+seem to be much too clean."
+ARMOUR_CLOTHES(1, 0)
+manipulate {MANIPULATE_WEAR_LEGS}
+MATERIAL_CLOTH("A sturdy corduroy.")
+cost 2 COPPER_PIECE
+weight 2
+end
+
+        plimsoles
+names {"plimsoles"}
+title "a pair of plimsoles"
+descr "A nautical-looking pair of plimsoles have been discarded here."
+extra {}
+"A pair of slip-on leather plimsoles that have a
+definite nauitcal air, and smell, about them."
+ARMOUR_LEATHER(0, 0)
+manipulate {MANIPULATE_WEAR_FEET}
+MATERIAL_LEATHER("A fine soft leather")
+cost 1 COPPER_PIECE
+weight 1
+end
+
+        jacket
+names {"embroided jacket", "jacket"}
+title "an embroided jacket"
+descr "a beautifully embroided jacket lies here."
+extra {}
+"Made of the finest quality materials, the lovely jacket
+has some exquisite cross-stitch gold embroidery all
+over it. As you look closely at it, you realise that
+it forms an interlocking ankh symbol pattern."
+extra{"$identify"}
+"This jacket will increase the wearer's strength and
+brain power."
+extra {"$improved identify"}
+"The strength is increased by 2 and the brain by 1."
+ARMOUR_CHAIN(0, 2)
+manipulate {MANIPULATE_WEAR_BODY}
+cost 1 PLATINUM_PIECE
+rent 1 COPPER_PIECE
+weight 10
+STR_TRANSFER(+2)
+BRA_TRANSFER(+1)
+MATERIAL_CLOTH("An unknown fibre that appears to be incredibly tough")
+dilcopy level_restrict@function (65,0,25,"");
+flags {UNIT_FL_MAGIC}
+end
+
+        trousers
+names {"embroided trousers", "trousers"}
+title "an embroided pair of trousers"
+descr "A beautifully embroided pair of trousers lies here."
+extra {}
+"Made of the finest quality materials, the lovely pair
+of trousers has some exquisite cross-stitch gold
+embroidery all over it. As you look closely at it,
+you realise that it forms an interlocking ankh symbol
+pattern."
+extra{"$identify"}
+"This pair of trousers will increase the wearer's dexterity and
+constitution."
+extra {"$improved identify"}
+"The dexterity is increased by 1 and the constitution by 2."
+ARMOUR_CHAIN(0, 2)
+manipulate {MANIPULATE_WEAR_LEGS}
+cost 1 PLATINUM_PIECE
+rent 1 COPPER_PIECE
+weight 10
+DEX_TRANSFER(+1)
+CON_TRANSFER(+2)
+MATERIAL_CLOTH("An unknown fibre that appears to be incredibly tough")
+dilcopy level_restrict@function (65,0,25,"");
+flags {UNIT_FL_MAGIC}
+end
+
+        boots
+names {"leather boots", "shiny boots", "boots"}
+title "a pair of shiny leather boots"
+descr "A very shiny pair of leather boots stand here."
+extra {}
+"These boots have been polished to a very high sheen."
+ARMOUR_HRD_LEATHER(-1, 0)
+manipulate {MANIPULATE_WEAR_FEET}
+cost 1 GOLD_PIECE
+weight 2
+MATERIAL_LEATHER("A very hard shiny blakc leather")
+end
+
+        ankh_ship /* The golden ankh ship..sails between Torbay and island */
+names {"Golden Ankh ship", "Golden Ankh", "Ankh ship", "ship", "schooner"}
+title "the Golden Ankh"
+descr "A fine three-sailed schooner is docked here."
+extra {}
+"This fine-looking ship proudly bears the name 'The Golden Ankh' and flies
+a flag bearing such a symbol. Efficient, clean-looking sailors are visible
+on the decks doing whatever sailors do in order to get a ship ready for
+a voyage."
+extra {"flag"}
+"The flag bears a large golden ankh symbol like this :
+&l
+         ***
+        *****
+       **   **
+       *     *
+       **   **
+        *****
+   ***************
+   ***************
+         ***
+         ***
+         ***
+         ***
+         ***
+         ***
+&f
+on a pale blue background."
+extra {"sailor", "sailors"}
+"They don't look like the seedy, drunken individuals you are used to
+seeing in the wharf-side bars of your home town. Oh no!...dressed
+smartly, working hard, and all of them sober...you rub your eyes in
+disbelief."
+type ITEM_OTHER
+
+dilbegin ship();
+var
+   count : integer;
+   a     : unitptr;
+   room  : unitptr;
+
+code
+{
+       :start:
+       heartbeat := PULSE_SEC*60;
+       wait(SFB_TICK | SFB_CMD, TRUE);
+       if (command(CMD_AUTO_TICK)) {
+          act("The ship bobs slightly on the gentle waves.",
+              A_SOMEONE,self,null,null,TO_ALL);
+          goto start;
+       }
+       if (command(CMD_ENTER)) {
+          if ((argument $= "ship") or (argument $= "schooner")) {
+             a := activator;
+             secure(a, lostpc);
+             if (a.position == POSITION_FIGHTING) {
+                act("Not while fighting you can't!",
+                    A_SOMEONE, a, null, null, TO_CHAR);
+                block;
+                goto start;
+             }
+             if (a.position != POSITION_STANDING) {
+                act("Try standing first.",
+                    A_SOMEONE, a, null, null, TO_CHAR);
+                block;
+                goto start;
+             }
+             act("You cheerily ascend the gangplank to adventure!",
+                 A_SOMEONE, a, null, null, TO_CHAR);
+             act("$1n cheerily ascends the gangplank to unknown places "
+               + " - how brave $1e is!",
+                 A_SOMEONE, a, null, null, TO_ROOM);
+             room := findroom("ankh_deck@atl_misc");
+             link(a, room );
+             act("$1n cheerily ascends the gangplank to unknown places "
+               + " - how brave $1e is!",
+                 A_SOMEONE, a, null, null, TO_ROOM);
+             block;
+             exec("look", a);
+             goto start;
+          }
+       }
+
+       goto start;
+
+:lostpc:
+  goto start;
+}
+dilend
+end
+
+
+
+%reset
+
+load sailor into ankh_deck zonemax 6 {
+     equip knobkerrie position WEAR_WIELD
+     equip t_shirt position WEAR_BODY
+     equip bell_bottoms position WEAR_LEGS
+     equip plimsoles position WEAR_FEET
+}
+load sailor into ankh_poop zonemax 6 {
+     equip stiletto position WEAR_WIELD
+     equip t_shirt position WEAR_BODY
+     equip bell_bottoms position WEAR_LEGS
+     equip plimsoles position WEAR_FEET
+}
+load sailor into ankh_aft zonemax 6 {
+     equip knobkerrie position WEAR_WIELD
+     equip t_shirt position WEAR_BODY
+     equip bell_bottoms position WEAR_LEGS
+     equip plimsoles position WEAR_FEET
+}
+load sailor into ankh_aft zonemax 6 {
+     equip knobkerrie position WEAR_WIELD
+     equip t_shirt position WEAR_BODY
+     equip bell_bottoms position WEAR_LEGS
+     equip plimsoles position WEAR_FEET
+}
+load sailor into ankh_aft zonemax 6 {
+     equip knobkerrie position WEAR_WIELD
+     equip t_shirt position WEAR_BODY
+     equip bell_bottoms position WEAR_LEGS
+     equip plimsoles position WEAR_FEET
+}
+load sailor into ankh_hold zonemax 6 {
+     equip stiletto position WEAR_WIELD
+     equip t_shirt position WEAR_BODY
+     equip bell_bottoms position WEAR_LEGS
+     equip plimsoles position WEAR_FEET
+}
+
+%end
+
+
+
+

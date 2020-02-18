@@ -1,0 +1,2835 @@
+/*
+filename    arabian
+password    sesame
+changedby   Saor
+EmailAdd     saor@Maestro.COM (Morgan Schafer)
+request     compile
+version     13
+END HEADER*/
+
+/* PAPI moved weaver's shop into the urland zone where it belongs */
+
+#include <composed.h>
+
+#define SINBAD_ONGOING "Sinbad Quest Ongoing"
+#define SINBAD_COMPLETE "Sinbad Quest Complete"
+#define JAFIA_ONGOING "Khorsabad Seamstress Ongoing"
+#define JAFIA_COMPLETE "Khorsabad Seamstress Complete"
+#define WEAVER_ONGOING "Weaver Quest Ongoing"
+#define WEAVER_COMPLETE "Weaver Quest Complete"
+
+%zone arabian
+title "Khorsabad City"
+lifespan 25
+reset RESET_ANYHOW
+
+creators {"midnight", "saor"}
+
+notes
+"The city of Khorsabad houses the Assassin Guild, as well as several
+stories from the Arabian Nights Tales. Included are: Scheherazade and the
+Sultan, Aladdin (not sure what to do with the lamp yet), Ali Baba and the
+40 thieves, and possibly Sinbad the Sailor. Suggestions are welcome. Target
+levels are 45+.
+Isildur fixed the quest Jan/96
+Zandar fixed a small reset bug Mar 24, 1996
+
+MudMail to Midnight
+E-Mail to sstrohme@bigcat.missouri.edu"
+
+%dil
+
+dilbegin weaver1(); var
+  pcname   : string;
+  item     : unitptr;
+  pc       : unitptr;
+  i        : integer;
+  exdp     : extraptr;
+
+code
+{
+
+  :init:
+  heartbeat := PULSE_SEC*5;
+  on_activation((self.position <= POSITION_SLEEPING) or
+               (self.position == POSITION_FIGHTING), skip);
+
+  :start:
+  wait(SFB_CMD, (activator.type == UNIT_ST_PC) and (not
+      command(CMD_GIVE)) and ((JAFIA_ONGOING in activator.quests)));
+  if(WEAVER_COMPLETE in activator.quests)
+   goto waitawhile;
+
+  pc := activator;
+  secure(pc, lostpc);
+
+  if(not(WEAVER_ONGOING in pc.quests))
+    {
+     exec("say You look like you are in need of some cloth.", self);
+     pause;
+     exec("say I'm not quite sure how I know that, perhaps "+
+          "it's because I am a weaver.", self);
+     pause;
+     exec("grin", self);
+     pause;
+     exec("say I am also looking for something...", self);
+     pause;
+     exec("say If you bring me something golden and dug from "+
+          "the ground, I can make you some beautiful fabric, "+
+          "and satisfy my needs at the same time.", self);
+     pause;
+     exec("say Could you find me something like this " +pc.name+".", self);
+     pause;
+     exec("say Please Nod if yes, and Shake if no.", self);
+     i := 0;
+     while (i < 5)
+     {
+        wait(SFB_CMD, activator #= pc);
+
+        if(command(CMD_NOD))
+        {
+          goto quest_accepted;
+        }
+        else if(command(CMD_SAY))
+        {
+          pause;
+          exec("say Nod if you want to continue, shake " +
+               "if not.", self);
+        }
+        else if(command(CMD_SHAKE))
+        goto no_quest;
+        i := I + 1;
+     }
+
+  :no_quest:
+  pause;
+  exec("say You look like a jerk anyhow.", self);
+  unsecure(pc);
+  goto waitawhile;
+
+  :quest_accepted:
+  pause;
+  exec("say Oh, please hurry back!", self);
+  pause;
+  addextra(pc.quests, {WEAVER_ONGOING}, "");
+  unsecure(pc);
+  goto start;
+  }
+  else
+  {
+    exdp := WEAVER_ONGOING in pc.quests;
+    if (("gold nugget" in exdp.names))
+    {
+      pause;
+      subextra(pc.quests, WEAVER_ONGOING);
+      addextra(pc.quests, {WEAVER_COMPLETE}, "");
+      exec("say Thank you " +pc.name+ ".", self);
+      pause;
+      exec("emote takes the gold and melts it down.", self);
+      pause;
+      exec("emote spins the gold into thread.", self);
+
+      act("You gawk at the weavers skill as he makes some cloth.",
+      A_SOMEONE, pc, null, null, TO_CHAR);
+
+      act("$1n gawks at the weavers skill as he makes some cloth.",
+      A_SOMEONE, pc, null, null, TO_REST);
+
+      exec("say Thank you again", self);
+      item := load("cloth@arabian");
+      item.height := pc.height;
+      link(item, pc);
+
+      act("The weaver gives you some cloth.",
+      A_SOMEONE, pc, null, null, TO_CHAR);
+
+      act("The weaver gives $1n some cloth.",
+      A_SOMEONE, pc, null, null, TO_REST);
+    }
+  }
+
+      unsecure(pc);
+      goto start;
+
+        :waitawhile:
+        heartbeat := PULSE_SEC*60;
+        pause;
+        goto init;
+
+        :lostpc:
+        exec("say Aww, darn.", self);
+        pause;
+        exec("sigh", self);
+        goto start;
+}
+dilend
+
+dilbegin weaver2();
+var
+  pc     : unitptr;
+  item   : unitptr;
+  exdp   : extraptr;
+
+  code
+  {
+    heartbeat := PULSE_SEC*5;
+    on_activation((self.position <= POSITION_SLEEPING) or
+               (self.position == POSITION_FIGHTING), skip);
+
+    :start:
+    wait(SFB_CMD, command(CMD_GIVE) and
+        (activator.type == UNIT_ST_PC));
+
+    :give:
+    if (not(WEAVER_ONGOING in activator.quests))
+        goto start;
+
+    pc := activator;
+    item := self.inside;
+    secure(pc, labsecure);
+    secure(item, labsecure);
+
+    wait(SFB_CMD | SFB_TICK, TRUE);
+    if(not(item #= self.inside))
+    {
+      unsecure(item);
+      exdp := WEAVER_ONGOING in pc.quests;
+
+      if("gold nugget" in self.inside.name)
+      {
+        addstring(exdp.names, "gold nugget");
+        exec("say Oh, what a fine piece of raw gold.", self);
+        destroy(self.inside);
+      }
+      else
+      {
+        exec("say This is not what I am looking " +
+             "for " +pc.name + ".", self);
+        pause;
+        exec("say Please have it back.", self);
+        link(self.inside, pc);
+      }
+    }
+    unsecure(pc);
+
+    if((command(CMD_GIVE)) and
+       (activator.type == UNIT_ST_PC))
+    {
+      goto give;
+    }
+      else
+        goto start;
+
+    :labsecure:
+    exec("sigh", self);
+    goto start;
+
+}
+dilend
+
+dilbegin sinbad1();
+var
+  pcname   : string;
+  item     : unitptr;
+  pc       : unitptr;
+  i        : integer;
+  exdp     : extraptr;
+
+code
+{
+
+  :init:
+  heartbeat := PULSE_SEC*5;
+  on_activation((self.position <= POSITION_SLEEPING) or
+               (self.position == POSITION_FIGHTING), skip);
+
+  :start:
+  wait(SFB_CMD, (activator.type == UNIT_ST_PC) and (not
+      command(CMD_GIVE)) and ((JAFIA_ONGOING in activator.quests)));
+  if(SINBAD_COMPLETE in activator.quests)
+   goto waitawhile;
+
+  pc := activator;
+  secure(pc, lostpc);
+
+  if(not(SINBAD_ONGOING in pc.quests))
+    {
+     exec("say Avast Ye!  Perhaps might ye be lookin fer something?", self);
+     pause;
+     exec("say Aye, I's spent many a day on the high seas.", self);
+     pause;
+     exec("say Many a scurvy dog I's ripped apart with me bare hands!",
+          self);
+     pause;
+     exec("say I's old now though, not much to do but sit around and whittle"
+          , self);
+     pause;
+     exec("say I seem to have lost me small knife though, and I could use "+
+          "a small block o' balsa to carve, aye.", self);
+     pause;
+     exec("say Might ye be able to find these things for me?", self);
+     pause;
+     exec("say I could probably trade ye this piece of paper for" +
+          " them.  You might make a wee lass happy.", self);
+     pause;
+     exec("say Please Nod to accept my offer, and Shake to decline.", self);
+
+     i := 0;
+     while (i < 5)
+     {
+        wait(SFB_CMD, activator #= pc);
+
+        if(command(CMD_NOD))
+        {
+          goto quest_accepted;
+        }
+        else if(command(CMD_SAY))
+        {
+          pause;
+          exec("say Nod if you want to continue, shake " +
+               "if not.", self);
+        }
+        else if(command(CMD_SHAKE))
+        goto no_quest;
+        i := I + 1;
+     }
+
+     :no_quest:
+      pause;
+      exec("say Yarrr, Scurvy Dog, I'll run ye through!", self);
+      unsecure(pc);
+      goto waitawhile;
+
+      :quest_accepted:
+      addextra(pc.quests, {SINBAD_ONGOING}, "");
+      pause;
+      exec("say Fair sailing matey.", self);
+      unsecure(pc);
+      goto start;
+    }
+    else
+    {
+      exdp := SINBAD_ONGOING in pc.quests;
+      if (("balsa" in exdp.names) and
+          ("small knife" in exdp.names))
+      {
+        subextra(pc.quests, SINBAD_ONGOING);
+        addextra(pc.quests, {SINBAD_COMPLETE}, "");
+        exec("say Thank you " +pc.name+ ".", self);
+        item := load("pattern@arabian");
+        item.height := pc.height;
+        link(item, pc);
+        pause;
+        exec("say Here the paper, it may " +
+           "help you.  I no longer need it...", self);
+
+        act("Sinbad gives you the paper.",
+        A_SOMEONE, pc, null, null, TO_CHAR);
+
+        act("Sinbad gives a piece of paper to $1n.",
+        A_SOMEONE, pc, null, null, TO_REST);
+
+
+      }
+    }
+
+      unsecure(pc);
+      goto start;
+
+        :waitawhile:
+        heartbeat := PULSE_SEC*60;
+        pause;
+        goto init;
+
+        :lostpc:
+        exec("say Are, where did that dog go?", self);
+        pause;
+        exec("sigh", self);
+        goto start;
+}
+dilend
+
+dilbegin sinbad2();
+var
+  pc     : unitptr;
+  item   : unitptr;
+  exdp   : extraptr;
+
+  code
+  {
+    heartbeat := PULSE_SEC*5;
+    on_activation((self.position <= POSITION_SLEEPING) or
+               (self.position == POSITION_FIGHTING), skip);
+
+    :start:
+    wait(SFB_CMD, command(CMD_GIVE) and
+        (activator.type == UNIT_ST_PC));
+
+    :give:
+    if (not(SINBAD_ONGOING in activator.quests))
+        goto start;
+
+    pc := activator;
+    item := self.inside;
+    secure(pc, labsecure);
+    secure(item, labsecure);
+
+    wait(SFB_CMD | SFB_TICK, TRUE);
+    if(not(item #= self.inside))
+    {
+      unsecure(item);
+      exdp := SINBAD_ONGOING in pc.quests;
+
+      if("balsa" in self.inside.name)
+      {
+        addstring(exdp.names, "balsa");
+        exec("say This is a nice block of balsa wood.", self);
+        destroy(self.inside);
+      }
+      else if("small knife" in self.inside.name)
+      {
+        addstring(exdp.names, "small knife");
+        exec("say Aye, a blade of the perfect size.", self);
+        destroy(self.inside);
+      }
+      else
+      {
+        exec("say Argh, this is not what I's lookin " +
+             "for " +pc.name + ".", self);
+        pause;
+        exec("say Have it back ye dog.", self);
+        link(self.inside, pc);
+      }
+    }
+    unsecure(pc);
+
+    if((command(CMD_GIVE)) and
+       (activator.type == UNIT_ST_PC))
+    {
+      goto give;
+    }
+      else
+        goto start;
+
+    :labsecure:
+    exec("sigh", self);
+    goto start;
+
+}
+dilend
+
+dilbegin bartender_prg();
+code
+{
+   :init:
+   heartbeat := WAIT_SEC*15;
+   interrupt(SFB_COM, self.position == POSITION_FIGHTING, waitawhile);
+   on_activation( self.position <= POSITION_SLEEPING, skip);
+
+   :start:
+   heartbeat := WAIT_SEC*25;
+   exec("emote wipes down the bar with a dirty rag.", self);
+   pause;
+   exec("emote begins pouring several different spirits into a glass.", self);
+   pause;
+   exec("emote mixes the contents of the glass thoroughly.", self);
+   pause;
+   exec("emote adds an olive to the resultant concoction.", self);
+   pause;
+   exec("emote tips his head back, and slugs down the entire drink.", self);
+   pause;
+   exec("glare", self);
+   pause;
+   exec("say You gonna buy something, or just stand there?", self);
+   pause;
+   pause;
+   goto start;
+
+   :waitawhile:
+   heartbeat := PULSE_SEC*180;
+   while ((self.position <= POSITION_SLEEPING) or
+      (self.position == POSITION_FIGHTING))
+   pause;
+   goto start;
+}
+dilend
+
+dilbegin banker_prg();
+code
+{
+   :init:
+   heartbeat := WAIT_SEC*15;
+   interrupt(SFB_COM, self.position == POSITION_FIGHTING, waitawhile);
+   on_activation( self.position <= POSITION_SLEEPING, skip);
+
+   :start:
+   heartbeat := WAIT_SEC*25;
+   exec("emote pulls some coins from his pocket.", self);
+   pause;
+   exec("emote begins counting his money slowly.", self);
+   pause;
+   exec("emote sneers greedily.", self);
+   pause;
+   exec("emote puts some coins in his pocket.", self);
+   pause;
+   pause;
+   goto start;
+
+   :waitawhile:
+   heartbeat := PULSE_SEC*180;
+   while ((self.position <= POSITION_SLEEPING) or
+      (self.position == POSITION_FIGHTING))
+   pause;
+   goto start;
+}
+dilend
+
+dilbegin jafia1();
+var
+  pcname   : string;
+  item     : unitptr;
+  pc       : unitptr;
+  i        : integer;
+  exdp     : extraptr;
+
+code
+{
+
+  :init:
+  heartbeat := PULSE_SEC*5;
+  on_activation((self.position <= POSITION_SLEEPING) or
+               (self.position == POSITION_FIGHTING), skip);
+
+  :start:
+  wait(SFB_CMD, (activator.type == UNIT_ST_PC) and (not
+      command(CMD_GIVE)) and (not(SINBAD_ONGOING in activator.quests))
+      and (not(WEAVER_ONGOING in activator.quests)));
+  if(JAFIA_COMPLETE in activator.quests)
+   goto waitawhile;
+
+  pc := activator;
+  secure(pc, lostpc);
+
+  if(not(JAFIA_ONGOING in pc.quests))
+    {
+      pause;
+      exec("emote searches through a daunting stack of paper patterns.", self);
+      pause;
+      exec("sigh", self);
+      pause;
+      exec("emote looks up and notices you.", self);
+      pause;
+      exec("say Oh! I'm sorry, I hadn't noticed you.",self);
+      pause;
+      exec("say You see, I've lost a very important pattern for a special garme
+nt.", self);
+      pause;
+      exec("say It's contains some very intricate designs that are used to crea
+te a magic robe.", self);
+      pause;
+      exec("say Without the pattern, I'll never be able to duplicate it!", self
+);
+      pause;
+      exec("look "+pc.name, self);
+      pause;
+      exec("say If you can find the pattern and bring it back, I'll give you on
+e of my robes.", self);
+      pause;
+      exec("say I also need some cloth if that is possible.", self);
+      pause;
+      exec("say Do we have a deal?", self);
+
+     i := 0;
+     while (i < 5)
+     {
+        wait(SFB_CMD, activator #= pc);
+
+        if(command(CMD_NOD))
+        {
+          goto quest_accepted;
+        }
+        else if(command(CMD_SAY))
+        {
+          pause;
+          exec("say Nod if you'll help me recover the pattern, shake your head
+otherwise.", self);
+        }
+        else if(command(CMD_SHAKE))
+        goto no_quest;
+        i := I + 1;
+     }
+
+      :no_quest:
+      pause;
+      exec("say I figured as much.  You don't look much like the adventurous ty
+pe.", self);
+      unsecure(pc);
+      goto waitawhile;
+
+      :quest_accepted:
+      pause;
+      exec("say Splendid!", self);
+      pause;
+      exec("say The last place I remember having it was when I was showing it t
+o old Sinbad.", self);
+      pause;
+      exec("say His house is in the southeast part of the city near the pier.",
+ self);
+      pause;
+      exec("say Good luck, and hurry back!", self);
+      addextra(pc.quests, {JAFIA_ONGOING}, "");
+      unsecure(pc);
+      goto start;
+  }
+  else
+  {
+    exdp := JAFIA_ONGOING in pc.quests;
+    if (("pattern" in exdp.names) and
+        ("golden cloth" in exdp.names))
+    {
+         pause;
+         subextra(pc.quests, JAFIA_ONGOING);
+         addextra(pc.quests, {JAFIA_COMPLETE}, "");
+         exec("say Thank you ever so much for returning my pattern!", self);
+         pause;
+         exec("say and this is such wonderful cloth!", self);
+         pause;
+         exec("say You have saved my business from ruin.", self);
+         pause;
+         exec("say As I promised, here is one of the robes that I make with thi
+s pattern.", self);
+         pause;
+         exec("emote gives you a dazzling robe.", self);
+         item := load("dazzle_robe@arabian");
+         item.height := pc.height;
+         link(item, pc);
+         experience(1300, pc);
+
+         exec("say Again, thank you for finding my lost pattern.", self);
+         pause;
+         exec("wave", self);
+      }
+   }
+
+   unsecure(pc);
+   goto start;
+
+   :waitawhile:
+   heartbeat := PULSE_SEC*60;
+   pause;
+   goto init;
+
+   :lostpc:
+   exec("say Some poeple just aren't willing to help out those in need, I guess
+.", self);
+   pause;
+   exec("shrug", self);
+   goto start;
+}
+dilend
+
+dilbegin jafia2();
+var
+  pc     : unitptr;
+  item   : unitptr;
+  exdp   : extraptr;
+
+  code
+  {
+    heartbeat := PULSE_SEC*5;
+    on_activation((self.position <= POSITION_SLEEPING) or
+               (self.position == POSITION_FIGHTING), skip);
+
+    :start:
+    wait(SFB_CMD, command(CMD_GIVE) and
+        (activator.type == UNIT_ST_PC));
+
+    :give:
+    if (not(JAFIA_ONGOING in activator.quests))
+        goto start;
+
+    pc := activator;
+    item := self.inside;
+    secure(pc, labsecure);
+    secure(item, labsecure);
+
+    wait(SFB_CMD | SFB_TICK, TRUE);
+    if(not(item #= self.inside))
+    {
+      unsecure(item);
+      exdp := JAFIA_ONGOING in pc.quests;
+
+      if("pattern" in self.inside.name)
+      {
+        addstring(exdp.names, "pattern");
+        exec("say My lost pattern! How wonderful!", self);
+        destroy(self.inside);
+      }
+      else if("golden cloth" in self.inside.name)
+      {
+        addstring(exdp.names, "golden cloth");
+        exec("say The cloth I needed!", self);
+        destroy(self.inside);
+      }
+      else
+      {
+        exec("say This is not what I am looking " +
+             "for " +pc.name + ".", self);
+        pause;
+        exec("say Please have it back.", self);
+        link(self.inside, pc);
+      }
+    }
+    unsecure(pc);
+
+    if((command(CMD_GIVE)) and
+       (activator.type == UNIT_ST_PC))
+    {
+      goto give;
+    }
+      else
+        goto start;
+
+    :labsecure:
+    exec("sigh", self);
+    goto start;
+
+}
+dilend
+
+dilbegin coffee();
+var
+  pc   : unitptr;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*5;
+
+   :start:
+   wait(SFB_CMD, (command("quaff") and
+       ("coffee" in argument)));
+   block;
+   pc := activator;
+   secure(pc, lostpc);
+   {
+     if(pc.thirst >= 12)
+     {
+       block;
+       act("Your stomach refuses to accept that right now.",
+        A_SOMEONE, pc, null, null, TO_CHAR);
+       goto start;
+     }
+     :drink:
+     block;
+     exec("quaff coffee", pc);
+     act("You drink the coffee.",
+        A_SOMEONE, pc, null, null, TO_CHAR);
+
+     act("$1n drinks a cup of VERY strong coffee.",
+         A_SOMEONE, pc, null, null, TO_REST);
+     pc.thirst := 12;
+     position_update(pc);
+   }
+   :lostpc:
+     goto start;
+}
+dilend
+
+%rooms
+
+/* -------------------------- Entrance to city -------------------------- */
+
+city_entrance
+
+names {"entrance to khorsabad"}
+title "Entrance to Khorsabad"
+descr
+"You are standing on North Street, inside the northern entrance to
+Khorsabad. This pleasant looking street leads east and west, looking
+somewhat nicer to the west than to the east.. Bazaar Street leads south."
+movement SECT_CITY
+north to des_13G@desert descr "This way leads into the wilderness.";
+east to north_2 descr "North Street continues eastward.";
+south to bazaar_1e descr "To Bazaar Street.";
+west to north_1 descr "North Street continues westward.";
+ALWAYS_LIGHT
+end
+
+/* -------------------------- Bazaar Street -------------------------- */
+
+bazaar_1e
+
+title "The Bazaar"
+descr
+"You are strolling down the eastern edge of Bazaar Street, a hectic street
+full of bustling crowds. The noise of haggling merchants almost drowns
+out any other sound. The city gates are to the north. To the west, you
+see a jeweler's booth. A merchant has set up a cart full of fruits and
+vegatables here."
+movement SECT_CITY
+north to city_entrance descr "Towards the Northern Gate.";
+west to bazaar_1w descr "The Bazaar continues on.";
+south to bazaar_2e descr "The Bazaar continues on.";
+ALWAYS_LIGHT
+end
+
+bazaar_1w
+
+title "The Bazaar"
+descr
+"You are strolling down the western edge of Bazaar Street, a hectic street
+full of bustling crowds. The noise of haggling merchants almost drowns out
+any other sound. To the east, you see a cart full of vegetables. There is a
+booth full of fine jewelry here."
+movement SECT_CITY
+east to bazaar_1e descr "The Bazaar continues on.";
+south to bazaar_2w descr "The Bazaar continues on.";
+ALWAYS_LIGHT
+end
+
+bazaar_2e
+
+names {"The Bazaar"}
+title "The Bazaar"
+descr
+"   You are strolling down the eastern edge of Bazaar Street, a hectic
+street full of bustling crowds. The noise of haggling merchants almost drowns
+out any other sounds. Bazaar Street continues to the north and south. To the
+west, you see racks full of clothes. A baker has set up a cart full of fresh
+baked goods here."
+movement SECT_CITY
+south to bazaar_3e;
+west to bazaar_2w;
+north to bazaar_1e;
+ALWAYS_LIGHT
+end
+
+bazaar_2w
+
+names {"The Bazaar"}
+title "The Bazaar"
+descr
+"   You are strolling down the western edge of Bazaar Street, a hectic
+street full of bustling crowds. The noise of haggling merchants almost drowns
+out any other sounds. Bazaar Street continues to the north and south. The
+smell of freshly baked bread comes from the east. Racks of clothes line this
+area of Bazaar Street."
+movement SECT_CITY
+south to bazaar_3w;
+east to bazaar_2e;
+north to bazaar_1w;
+ALWAYS_LIGHT
+end
+
+bazaar_3e
+
+names {"The Bazaar"}
+title "The Bazaar"
+descr
+"   You are strolling down the eastern edge of Bazaar Street, a hectic
+street full of bustling crowds. The noise of haggling merchants almost drowns
+out any other sounds. Bazaar Street continues to the north and south. To the
+west, you see various leather goods. There is a stand with a variety of dried
+meats here."
+movement SECT_CITY
+south to bazaar_4e;
+west to bazaar_3w;
+north to bazaar_2e;
+ALWAYS_LIGHT
+end
+
+bazaar_3w
+
+names {"The Bazaar"}
+title "The Bazaar"
+descr
+"   You are strolling down the western edge of Bazaar Street, a hectic
+street full of bustling crowds. The noise of haggling merchants almost drowns
+out any other sounds. Bazaar Street continues to the north and south. To the
+east, the smell of roasting meat makes your mouth water. A small
+seamstress shop is to the west. Leather goods line this area of the street."
+movement SECT_CITY
+south to bazaar_4w;
+east to bazaar_3e;
+north to bazaar_2w;
+west to jafia_shop;
+ALWAYS_LIGHT
+end
+
+bazaar_4e
+
+names {"The Bazaar"}
+title "The Bazaar"
+descr
+"   You are strolling down the eastern edge of Bazaar Street, a hectic
+street full of bustling crowds. The noise of haggling merchants almost drowns
+out any other sounds. Bazaar Street continues to the north and south. The
+Avenue of the Sultans leads east and west."
+movement SECT_CITY
+south to bazaar_5e;
+west to bazaar_4w;
+east to sultan_4;
+north to bazaar_3e;
+ALWAYS_LIGHT
+end
+
+bazaar_4w
+
+names {"The Bazaar"}
+title "The Bazaar"
+descr
+"   You are strolling down the western edge of Bazaar Street, a hectic
+street full of bustling crowds. The noise of haggling merchants almost drowns
+out any other sounds. Bazaar Street continues to the north and south. The
+Avenue of the Sultans leads east and west."
+movement SECT_CITY
+south to bazaar_5w;
+east to bazaar_4e;
+west to sultan_3;
+north to bazaar_3w;
+ALWAYS_LIGHT
+end
+
+bazaar_5e
+
+names {"The Bazaar"}
+title "The Bazaar"
+descr
+"   You are strolling down the eastern edge of Bazaar Street, a hectic
+street full of bustling crowds. The noise of haggling merchants almost drowns
+out any other sounds. Bazaar Street continues to the north and south. Off to
+the west, you catch the glint of shining metal. A small variety of water
+craft can be found here."
+movement SECT_CITY
+south to bazaar_6e;
+west to bazaar_5w;
+north to bazaar_4e;
+ALWAYS_LIGHT
+end
+
+bazaar_5w
+
+names {"The Bazaar"}
+title "The Bazaar"
+descr
+"   You are strolling down the western edge of Bazaar Street, a hectic
+street full of bustling crowds. The noise of haggling merchants almost drowns
+out any other sounds. Bazaar Street continues to the north and south. Off to
+the east, you see an anchor emblem. A blacksmith has placed many fine pieces
+of armor here for your inspection."
+movement SECT_CITY
+south to bazaar_6w;
+east to bazaar_5e;
+north to bazaar_4w;
+ALWAYS_LIGHT
+end
+
+bazaar_6e
+
+names {"The Bazaar"}
+title "The Bazaar"
+descr
+"   You are strolling down the eastern edge of Bazaar Street, a hectic
+street full of bustling crowds. The noise of haggling merchants almost drowns
+out any other sounds. Bazaar Street continues to the north and south. You can
+the clang of metal on metal to the west. Potions, herbs, and other mystical
+objects completely fill a small cart here."
+movement SECT_CITY
+south to bazaar_7e;
+west to bazaar_6w;
+north to bazaar_5e;
+ALWAYS_LIGHT
+end
+
+bazaar_6w
+
+names {"The Bazaar"}
+title "The Bazaar"
+descr
+"   You are strolling down the western edge of Bazaar Street, a hectic
+street full of bustling crowds. The noise of haggling merchants almost drowns
+out any other sounds. Bazaar Street continues to the north and south. From
+the corner of your eye, you see flashes of light and clouds of smoke off to
+the east. A weaponsmith has laid out a vast array of personal armaments here."
+movement SECT_CITY
+south to bazaar_7w;
+east to bazaar_6e;
+north to bazaar_5w;
+ALWAYS_LIGHT
+end
+
+bazaar_7e
+
+names {"The Bazaar"}
+title "The Bazaar"
+descr
+"   You are strolling down the eastern edge of Bazaar Street, a hectic
+street full of bustling crowds. The noise of haggling merchants almost drowns
+out any other sounds. Bazaar Street continues to the north and south. The
+sounds of a variety of animal cries come from your west. An odd looking cart
+with an assortment of odds and ends on it rests here."
+movement SECT_CITY
+south to bazaar_8;
+west to bazaar_7w;
+north to bazaar_6e;
+ALWAYS_LIGHT
+end
+
+bazaar_7w
+
+names {"The Bazaar"}
+title "The Bazaar"
+descr
+"   You are strolling down the western edge of Bazaar Street, a hectic
+street full of bustling crowds. The noise of haggling merchants almost drowns
+out any other sounds. Bazaar Street continues to the north and south. You see
+a nondescript cart off to the east. An interesting collection of animals are
+penned up in cages lining the edge of the street here."
+movement SECT_CITY
+south to bazaar_8;
+east to bazaar_7e;
+north to bazaar_6w;
+ALWAYS_LIGHT
+end
+
+bazaar_8
+
+names {"Bazaar Street"}
+title "Bazaar Street"
+descr
+"   You are strolling down Bazaar Street, a hectic street full of bustling
+crowds. Bazaar Street continues to the north and south. Center Street runs
+east and west here."
+movement SECT_CITY
+south to bazaar_9;
+west to center_1;
+north to bazaar_7e;
+east to center_2;
+ALWAYS_LIGHT
+end
+
+bazaar_9
+
+names {"Bazaar Street"}
+title "Bazaar Street"
+descr
+"   You are strolling down Bazaar Street, most of the bustling crowds have
+been left behind to the north. Mercenary Avenue runs east and west here."
+movement SECT_CITY
+south to bazaar_10;
+west to merc_1;
+north to bazaar_8;
+east to merc_2;
+ALWAYS_LIGHT
+end
+
+bazaar_10
+
+names {"Bazaar Street"}
+title "Bazaar Street"
+descr
+"   You are at the southern end of Bazaar Street. The southern gate of the
+Khorsabad lies to the south. South Street leads east and west here."
+movement SECT_CITY
+south to clearing@deathlink;
+west to south_1;
+north to bazaar_9;
+east to south_2;
+ALWAYS_LIGHT
+end
+
+/* -------------------------- Palace Street -------------------------- */
+
+palace_1
+
+names {"Palace Street"}
+title "Palace Street"
+descr
+"   You are at the north-west corner of Khorsabad. North Street leads east,
+and Palace Street leads south."
+movement SECT_CITY
+east to north_1;
+south to palace_2;
+ALWAYS_LIGHT
+end
+
+palace_2
+
+names {"Palace Street"}
+title "Palace Street"
+descr
+"   You are strolling down Palace Street. You can catch glimpses of the
+majestic spires of the Sultan's palace over the stone wall to your west.
+A seamless white door east leads into the base of a short tower."
+extra {"white door","door"}
+"  The door has no knob, and you can figure out no way to open it."
+movement SECT_CITY
+north to palace_1;
+/* east to ;     This may lead to wizard's tower? */
+south to palace_3;
+ALWAYS_LIGHT
+end
+
+palace_3
+
+names {"Outside the Palace"}
+title "Outside the Palace"
+descr
+"   You are on Palace Street. The entrance to the Sultan's palace is to the
+west. Through the gate, you can see the spires and domes which house the
+Sultan. The Avenue of the Sultans leads east from here."
+extra {"gate"}
+"A sign on the gate reads,
+
+     CLOSED FOR RENOVATIONS."
+movement SECT_CITY
+north to palace_2;
+east to sultan_1;
+south to palace_4;
+/* west to ;  */
+ALWAYS_LIGHT
+end
+
+palace_4
+
+names {"Palace Street"}
+title "Palace Street"
+descr
+"   You are walking down Palace Street. Palace street continues to the north
+and south. Center Street leads east from here."
+movement SECT_CITY
+north to palace_3;
+east to center_1;
+south to palace_5;
+ALWAYS_LIGHT
+end
+
+palace_5
+
+names {"Palace Street"}
+title "Palace Street"
+descr
+"   You are walking down Palace Street. Palace street continues to the north
+and south, and Mercenary Street leads east. To the west, you see the entrance
+to a short, stout building that looks rather like a fortress. There's a sign
+above the door."
+extra {"sign"}
+"Swords for hire."
+movement SECT_CITY
+north to palace_4;
+east to merc_1;
+south to palace_6;
+west to merc_office_1;
+ALWAYS_LIGHT
+end
+
+palace_6
+
+names {"Palace Street"}
+title "Palace Street"
+descr
+"   You are at the southwest corner of Khorsabad. Palace Street leads north,
+and South Street leads east."
+movement SECT_CITY
+north to palace_5;
+east to south_1;
+ALWAYS_LIGHT
+end
+
+/* -------------------------- Wharf Road -------------------------- */
+
+wharf_1
+
+names {"Wharf Street"}
+title "Wharf Street"
+descr
+"   You are at the northeast corner of Khorsabad. North Street leads west, and
+Wharf Street leads south."
+movement SECT_CITY
+south to wharf_2;
+west to north_2;
+ALWAYS_LIGHT
+end
+
+wharf_2
+
+names {"Wharf Street"}
+title "Wharf Street"
+descr
+"   You are walking down a dingy-looking section of Wharf Street. Rats scurry
+out of your way as you approach. Wharf Street continues to the north and
+south. To your west is a run-down bar that doesn't look like the kinda place
+you'd take a first date."
+movement SECT_CITY
+north to wharf_1;
+south to wharf_3;
+west to abdul_bar;
+ALWAYS_LIGHT
+end
+
+wharf_3
+
+names {"Wharf Street"}
+title "Wharf Street"
+descr
+"   You are at the intersection of Wharf Street and the Avenue of the Sultans.
+To the east is the entrance to a dark building. A feeling of dread comes over
+you as you contemplate entering the building, and the hair on the back of
+your neck stands on end. A sign is posted near the doorway."
+extra {"sign","doorway","east"}
+"The sign next to the doorway reads:
+
+     Abandon Hope All Ye Who Enter The Guild of Assassins!"
+movement SECT_CITY
+north to wharf_2;
+east to assassin/entrance;
+south to wharf_4;
+west to sultan_6;
+ALWAYS_LIGHT
+end
+
+wharf_4
+
+names {"Wharf Street"}
+title "Wharf Street"
+descr
+"   You are walking down a dingy-looking section of Wharf Street. Rats scurry
+out of your way as you approach. Wharf Street continues to the north and
+south."
+movement SECT_CITY
+north to wharf_3;
+south to wharf_5;
+ALWAYS_LIGHT
+end
+
+wharf_5
+
+names {"Wharf Street"}
+title "Wharf Street"
+descr
+"   You are walking down a Wharf Street. The street continues to the north and
+south. Center Street leads west from here. You catch occasional whiffs of salt
+water coming from the south."
+movement SECT_CITY
+north to wharf_4;
+south to wharf_6;
+west to center_2;
+ALWAYS_LIGHT
+end
+
+wharf_6
+
+names {"Wharf Street"}
+title "Wharf Street"
+descr
+"   You are walking down the southern section of Wharf Street. The smell of
+salt water is in the air. To your west there is an entrance to a nice-looking
+house."
+movement SECT_CITY
+north to wharf_5;
+south to wharf_7;
+west to sinbad_house;
+ALWAYS_LIGHT
+end
+
+wharf_7
+
+names {"Wharf Street"}
+title "Wharf Street"
+descr
+"   You are walking down the southern section of Wharf Street. This area of
+Wharf Street is mostly populated with uninteresting warehouses. The smell of
+the sea is strong here. A large pier leads off to the east."
+movement SECT_CITY
+north to wharf_6;
+south to wharf_8;
+east to pier_1;
+ALWAYS_LIGHT
+end
+
+wharf_8
+
+names {"Wharf Street"}
+title "Wharf Street"
+descr
+"   You are standing at the southeast corner of Khorsabad. Wharf Street and
+the smell of the sea are to the north. South Street leads west from here."
+movement SECT_CITY
+north to wharf_7;
+west to south_2;
+ALWAYS_LIGHT
+end
+
+/* -------------------------- North Street -------------------------- */
+
+north_1
+
+names {"North Street"}
+title "North Street"
+descr
+"   You are walking down North Street. The street continue to the east and
+west."
+movement SECT_CITY
+east to city_entrance;
+west to palace_1;
+ALWAYS_LIGHT
+end
+
+north_2
+
+names {"North Street"}
+title "North Street"
+descr
+"   You are walking down North Street. The street continue to the east and
+west."
+movement SECT_CITY
+east to wharf_1;
+west to city_entrance;
+ALWAYS_LIGHT
+end
+
+/* -------------------------- Avenue of the Sultans ---------------------- */
+
+sultan_1
+
+names {"Avenue of the Sultans"}
+title "Avenue of the Sultans"
+descr
+"   You are walking down the Avenue of the Sultans. The street continues to
+the east and west."
+movement SECT_CITY
+east to sultan_2;
+west to palace_3;
+ALWAYS_LIGHT
+end
+
+sultan_2
+
+names {"Avenue of the Sultans"}
+title "Avenue of the Sultans"
+descr
+"   You are walking down the Avenue of the Sultans. The street continues to
+the east and west. To your north, you see the office of the Caliph's Guard.
+To the south, you see the Bank of Khorsabad."
+movement SECT_CITY
+north to accuse_room;
+east to sultan_3;
+south to bank;
+west to sultan_1;
+ALWAYS_LIGHT
+end
+
+sultan_3
+
+names {"Avenue of the Sultans"}
+title "Avenue of the Sultans"
+descr
+"   You are walking down the Avenue of the Sultans. The street continues to
+the east and west. You can hear the bustling crowds of the Bazaar to your
+east."
+movement SECT_CITY
+east to bazaar_4w;
+west to sultan_2;
+ALWAYS_LIGHT
+end
+
+sultan_4
+
+names {"Avenue of the Sultans"}
+title "Avenue of the Sultans"
+descr
+"   You are walking down the Avenue of the Sultans. The street continues to
+the east and west. You can hear the bustling crowds of the Bazaar to your
+west."
+movement SECT_CITY
+east to sultan_5;
+west to bazaar_4e;
+ALWAYS_LIGHT
+end
+
+sultan_5
+
+names {"Avenue of the Sultans"}
+title "Avenue of the Sultans"
+descr
+"   You are walking down the Avenue of the Sultans. The Khorsabad Post Office
+is to your north. To the south, you see a kiosk."
+movement SECT_CITY
+north to post_office;
+east to sultan_6;
+south to kiosk;
+west to sultan_4;
+ALWAYS_LIGHT
+end
+
+sultan_6
+
+names {"Avenue of the Sultans"}
+title "Avenue of the Sultans"
+descr
+"   You are walking down the Avenue of the Sultans. The street continues to
+the east and west. A chill wind blows from the east."
+movement SECT_CITY
+east to wharf_3;
+west to sultan_5;
+ALWAYS_LIGHT
+end
+
+/* -------------------------- Center Street -------------------------- */
+
+center_1
+
+names {"Center Street"}
+title "Center Street"
+descr
+"   You are walking down Center Street. This street meanders aimlessly
+between the north and south halves of the city. The street continues to the
+east and west."
+movement SECT_CITY
+east to bazaar_8;
+west to palace_4;
+ALWAYS_LIGHT
+end
+
+center_2
+
+names {"Center Street"}
+title "Center Street"
+descr
+"   You are walking down Center Street. This street meanders aimlessly
+between the north and south halves of the city. The street continues to the
+east and west."
+movement SECT_CITY
+east to wharf_5;
+west to bazaar_8;
+ALWAYS_LIGHT
+end
+
+
+/* -------------------------- Mercenary Street -------------------------- */
+
+merc_1
+
+names {"Mercenary Street"}
+title "Mercenary Street"
+descr
+"   You are walking down Mercenary Street. To your west is Palace Street.
+To the east is Bazaar Street."
+movement SECT_CITY
+east to bazaar_9;
+west to palace_5;
+ALWAYS_LIGHT
+end
+
+merc_2
+
+names {"Mercenary Street"}
+title "Mercenary Street"
+descr
+"   You are walking down Mercenary Street. To your west is Bazaar Street.
+To the east are the city docks."
+movement SECT_CITY
+west to bazaar_9;
+east to wharf_7;
+ALWAYS_LIGHT
+end
+
+/* -------------------------- South Street -------------------------- */
+
+south_1
+
+names {"South Street"}
+title "South Street"
+descr
+"   You are walking down South Street. To your west is Palace Street.
+To the east is Bazaar Street."
+movement SECT_CITY
+east to bazaar_10;
+west to palace_6;
+ALWAYS_LIGHT
+end
+
+south_2
+
+names {"South Street"}
+title "South Street"
+descr
+"   You are walking down South Street. To your west is Bazaar Street.
+To the east is Wharf Street."
+movement SECT_CITY
+west to bazaar_10;
+east to wharf_8;
+ALWAYS_LIGHT
+end
+
+pier_1
+
+names{"pier"}
+title "The Pier"
+descr
+"   You are standing at the beginning of a long pier stretching out into
+the water. The wooden planks of the pier are solid and well-maintained.
+Merchant vessels come and go at the end of the pier."
+movement SECT_CITY
+west to wharf_7;
+east to pier_2;
+ALWAYS_LIGHT
+end
+
+pier_2
+
+names{"pier"}
+title "The Pier"
+descr
+"   You are at the end of a long pier. Sailors load cargo and supplies onto
+ships of all sizes. A ladder leads down from the edge of the pier."
+movement SECT_CITY
+west to pier_1;
+down to under_pier;
+ALWAYS_LIGHT
+end
+
+under_pier
+
+names{"under pier"}
+title "Under the pier"
+descr
+"   You are underneath the pier. You are surrounded by the bulk of sailing
+vessels. A small boat could easily be crushed between the hull of a ship and
+the pier, but you think you could navigate safely. There is a small platform
+here from which you can launch a boat."
+movement SECT_CITY
+up to pier_2;
+end
+
+/* -------------------------- Misc Rooms -------------------------- */
+
+jafia_shop
+title "Seamstress Shop"
+names {"seamstress shop"}
+descr
+"The shop is an organized clutter. Pieces of material lay spread over
+every imaginable surface as well as scraps on the floor.  In the very
+center of the room is a large table full or material and patterns. You
+may re-enter the bazaar to the east."
+extra {"patterns"}
+"Papers with every imaginable design on them."
+extra {"material","cloth"}
+"Pieces of cloth and material are scattered about."
+extra {"table"}
+"The table is large and well used."
+east to bazaar_3w;
+end
+
+merc_office_1
+
+names {"Mercenary Office"}
+title "Mercenary Office"
+descr
+"   You are in a severely functional office. The only decorations to be seen
+are some ceremonial weapons hung on the walls. There is a desk in one corner
+with a sign on it."
+extra {"sign"}
+"Remember:  OFFER and CONTRACT"
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+east to palace_5;
+west to merc_office_2;
+ALWAYS_LIGHT
+end
+
+merc_office_2
+
+names {"back room"}
+title "Back Room"
+descr
+"   You are in the back room of the Mercenary Office. This room is even less
+hospitable than the outer room."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+east to merc_office_1;
+ALWAYS_LIGHT
+end
+
+abdul_bar
+
+names {"Abdul's Pub"}
+title "Abdul's Pub"
+descr
+"   You are in a seedy-looking pub. The floors are covered with straw and
+an unidentified sticky substance. Assorted unsavory characters stagger
+about here and there. Your instincts tell you to keep one hand on your
+purse."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+east to wharf_2;
+ALWAYS_LIGHT
+end
+
+accuse_room
+
+names {"Office of the Caliph's Guard"}
+title "Office of the Caliph's Guard"
+descr
+"   You are in the office of the Caliph's Guard. The barred windows look out
+at the busy street. A rather imposing iron door leads north, and a spiral
+staircase leads up."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+flags {UNIT_FL_SACRED}
+movement SECT_INSIDE
+north to jail open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_PICKPROOF}
+   key cell_key
+   keyword {"imposing iron door","iron door","door"};
+south to sultan_2;
+up to guard_tower;
+ALWAYS_LIGHT
+end
+
+jail
+
+names {"Jail Cell"}
+title "Jail Cell"
+descr
+"   You are in a small, dark cell. The door to the cell looks strong enough
+that you don't think you could break out. The only window has been sealed shut
+with bricks. There is a small cot in one corner."
+extra {"window","bricks"}
+"Forget it. The mortar used on these bricks is as smooth and solid as granite.
+There will be no digging these loose."
+extra {"cot"}
+"The cot looks incredibly uncomfortable. You'd probably be more comfortable on
+the floor."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+south to accuse_room open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_PICKPROOF}
+   key cell_key
+   keyword {"imposing iron door","iron door","door"};
+ALWAYS_LIGHT
+end
+
+guard_tower
+
+names {"Lookout Tower"}
+title "The Guard's Lookout Tower"
+descr
+"   This tower is taller than most of the city, and provides an excellent
+view of everything that happens around it. In the center of the room are
+several bunks for the Guardsmen to sleep on when they're off duty. The only
+exit is back down the staircase. Windows look out in each direction."
+extra {"windows","window"}
+"Try looking in a specific direction..."
+extra {"north"}
+"Through the north window, you can see North Street running along the northern
+edge of the city, and the north gate to the city."
+extra {"east"}
+"Through the east window, you can watch the bustling crowds of Bazaar Street.
+Further to the east, you can make out Wharf Street and a low, dark building
+that makes you uneasy to look at -- It gives you the feeling that someone's
+looking back at you, and you quickly glance away."
+extra {"south"}
+"Through the south window, you can see Center Street, Mercenary Street, and
+finally South Street at the southern edge of the city. To the southwest, you
+can see a large, heavily fortified building. Almost directly south, you can
+see the southern gate to the city. To the far southeast, you can make out the
+city's docks, and the waves beyond them."
+extra {"west"}
+"Through the west window is an inspiring view of the Caliph's palace. Its
+majestic spires and graceful domes occupy the entire westward view."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+down to accuse_room;
+ALWAYS_LIGHT
+end
+
+bank
+
+names {"Bank of Khorsabad"}
+title "Bank of Khorsabad"
+descr
+"   You are in a beautiful marble building. Plush carpets line the floors, and
+the walls are decorated with fine art. Everything in the building speaks of
+truly opulent wealth."
+extra {"art","carpet"}
+"So that's where that 5% fee goes..."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+north to sultan_2;
+ALWAYS_LIGHT
+end
+
+post_office
+
+names {"Khorsabad Post Office"}
+title "The Khorsabad Post Office"
+descr
+"   You are in a stuffy, official looking building. A stuffy, official looking
+sign is posted on the wall describing postal rules, regulations, and
+guidelines. The only exit is back to the south."
+extra {"sign","rules","regulations","guidelines"}
+"   Use
+      `mail <letter> <person>' to send a letter to somebody.
+      `request' to get your mail.
+      `eat <letter>' to erase the letter permanently.
+
+Postal regulations prohibit the mailing of controlled substances, live
+animals, or explosive materials. Your cooperation is appreciated. Your
+non-cooperation is punishable by death. Have a nice day."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+south to sultan_5;
+ALWAYS_LIGHT
+end
+
+kiosk
+
+names {"kiosk"}
+title "The Kiosk"
+descr
+"   You are standing in a large kiosk. It looks like the Khorsabad equivalent
+of a tourist information booth. You feel strangely comfortable here."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_MOB}
+flags {UNIT_FL_SACRED}
+movement SECT_INSIDE
+north to sultan_5;
+ALWAYS_LIGHT
+end
+
+sinbad_house
+
+names {"sinbad's house"}
+title "Sinbad's House"
+descr
+"   You are standing in a large, comfortable house. The house is luxuriously
+furnished with odds and ends from around the world."
+extra {"odds and ends","odds","ends"}
+"You notice trinkets and souvenirs from far away lands."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+east to wharf_6;
+ALWAYS_LIGHT
+end
+
+%mobiles
+
+/* THE LAW */
+
+captain
+
+names {"captain"}
+title "the Captain"
+descr "The Captain of the Caliph's Guard is here."
+extra {}
+"He is a very large man, who looks quite competent with the enormous saber
+he carries."
+romflags {CHAR_PROTECTED, CHAR_DETECT_INVISIBLE}
+M_HUMAN_WARRIOR_SWORD(55, SEX_MALE)
+alignment 1000
+special SFUN_REWARD_GIVE
+dilcopy captain@midgaard("jail@arabian");
+special SFUN_ACCUSE
+special SFUN_WHISTLE
+special SFUN_PROTECT_LAWFUL time PULSE_SEC*30 bits SFB_RANTIME
+special SFUN_GUARD_WAY "0accuse_room@captain@$1n blocks your way.@$1n prevents
+$3n from going north."
+special SFUN_GUARD_DOOR "accuse_room@door@captain@$1n stops you.@$1n prevents $
+3n from using the iron door."
+special SFUN_GUARD_UNIT "@safe@@$1n stops you.@$1n prevents $3n from accessing
+the safe."
+end
+
+guardsman
+
+names {"guardsman", "guard"}
+title "the guardsman"
+descr "A member of the Caliph's Guard is keeping a watchful eye over
+things."
+extra {}
+"He's a pretty big fellow, and he doesn't look like he ever smiles."
+romflags {CHAR_PROTECTED}
+M_HUMAN_WARRIOR_SWORD(45, SEX_MALE)
+alignment 450
+special SFUN_RESCUE "guardsman/captain"
+dilcopy arrest_check@midgaard("accuse_room@arabian");
+special SFUN_RANDOM_ZONE_MOVE time WAIT_SEC*60 bits SFB_RANTIME
+end
+
+merc_statue
+
+names {"mercenary statue", "mercenary", "statue", "merc"}
+title "the Mercenary Statue"
+descr "A giant stone statue of a mercenary stands here."
+extra {}
+"An inscription on the statue reads 'Offer and Contract.'"
+M_GOLEM_STONE(SEX_NEUTRAL)
+alignment -600
+level 47
+money 5 SILVER_PIECE, 7 COPPER_PIECE
+special SFUN_MERCENARY_HIRE
+end
+
+abdul
+
+names {"abdul", "bartender"}
+title "Abdul"
+descr "Abdul the bartender waits behind the bar to serve up a mind-numbing
+beverage."
+extra {}
+"He doesn't look particularly trustworthy, but he mixes a mean drink."
+M_SHOP_KEEPER(48, SEX_MALE, RACE_HUMAN)
+money 5 SILVER_PIECE, 8 COPPER_PIECE
+special SFUN_WHISTLE
+special SFUN_SHOP_INIT
+"Profit sell = 130
+Profit buy = 70
+Production = ~tuborg@udgaard~ ~beer_barrel@midgaard~ ~beer_bottle@midgaard~ ~fi
+rebreather@midgaard~ ~speciality@midgaard~
+Trade types = "+ITEM_DRINKCON+"
+Msg1 = ~$1n says, 'I don't know how to mix up a $2n.'~
+Msg2 = ~$1n says, 'Come back when you really have one, $3n!'~
+Msg3 = ~$1n says, 'I'm not interested in $2n.'~
+Msg4 = ~$1n says, 'I can't afford it!'~
+Msg5 = ~$1n says, '$3n, you can't afford $2n! Get lost!'~
+Msg6 = ~$1n says, 'That's %s for $2n.'~
+Msg7 = ~$1n says, 'Thank you $3n, here are %s for $2n.'~
+Hours1 = 6 12
+Hours2 = 13 23"
+dilcopy bartender_prg@arabian();
+end
+
+achmed
+
+names {"achmed", "banker"}
+title "Achmed"
+descr "Achmed is here counting his money."
+extra {}
+"He seems to be enjoying himself tremendously."
+M_HUMAN_WARRIOR_SWORD(55, SEX_MALE)
+money 6 SILVER_PIECE, 5 COPPER_PIECE
+special SFUN_WHISTLE
+special SFUN_BANK
+dilcopy banker_prg@arabian();
+end
+
+suliman
+
+names {"postman", "suliman"}
+title "Suliman"
+descr "Suliman the postman is here, thinking official thoughts."
+extra {}
+"Suliman is your average-looking Arabian postman."
+M_SHOP_KEEPER(54, SEX_MALE, RACE_HUMAN)
+money 6 SILVER_PIECE, 6 COPPER_PIECE
+special SFUN_POSTMAN
+end
+
+fahrir
+
+names {"fahrir"}
+title "Fahrir"
+descr "Fahrir is here, trying to sell vegetables."
+extra {}
+"He is a plump man, who looks like he eats everything that doesn't get sold."
+M_SHOP_KEEPER(52, SEX_MALE, RACE_HUMAN)
+money 6 SILVER_PIECE, 4 COPPER_PIECE
+special SFUN_SHOP_INIT
+"Profit sell = 130
+Profit buy = 20
+Production = ~pomegranate@arabian~ ~date@arabian~ ~fig@arabian~ ~melon@arabian~
+Trade types = "+ITEM_FOOD+"
+Msg1 = ~$1n says, 'I don't know how what that is.'~
+Msg2 = ~$1n says, 'Come back when you really have one, $3n!'~
+Msg3 = ~$1n says, 'I'm not interested in $2n.'~
+Msg4 = ~$1n says, 'I can't afford it!'~
+Msg5 = ~$1n says, '$3n, you can't afford $2n! Get lost!'~
+Msg6 = ~$1n says, 'That's %s for $2n.'~
+Msg7 = ~$1n says, 'Thank you $3n, here are %s for $2n.'~
+Hours1 = 4 12
+Hours2 = 13 23"
+end
+
+asim
+
+names {"asim"}
+title "Asim"
+descr "Asim is selling fine jewelry here."
+extra {}
+"He is a beady-eyed man, who looks rather nervous."
+M_SHOP_KEEPER(54, SEX_MALE, RACE_HUMAN)
+money 6 SILVER_PIECE, 6 COPPER_PIECE
+special SFUN_SHOP_INIT
+"Profit sell = 110
+Profit buy = 90
+Production = ~diamond@arabian~ ~ruby@arabian~ ~emerald@arabian~ ~gold_neck@arab
+ian~
+Trade types = "+ITEM_TREASURE+"
+Msg1 = ~$1n says, 'I don't know how what that is.'~
+Msg2 = ~$1n says, 'Come back when you really have one, $3n!'~
+Msg3 = ~$1n says, 'I'm not interested in $2n.'~
+Msg4 = ~$1n says, 'I can't afford it!'~
+Msg5 = ~$1n says, '$3n, you can't afford $2n! Get lost!'~
+Msg6 = ~$1n says, 'That's %s for $2n.'~
+Msg7 = ~$1n says, 'Thank you $3n, here are %s for $2n.'~
+Hours1 = 4 12
+Hours2 = 13 23"
+end
+
+buzo
+
+names {"buzo","baker"}
+title "Buzo"
+descr "Buzo the baker is selling fresh baked goods here."
+extra {}
+"He wipes flour from his hands, and smiles at you."
+M_SHOP_KEEPER(54, SEX_MALE, RACE_HUMAN)
+money 6 SILVER_PIECE, 6 COPPER_PIECE
+special  SFUN_SHOP_INIT
+"Profit sell = 130
+Profit buy = 20
+Production = ~bread@arabian~ ~muffin@arabian~
+             ~pie@arabian~ ~coffee@arabian~
+Trade types = "+ITEM_TREASURE+"
+Msg1 = ~$1n says, 'I don't know how what that is.'~
+Msg2 = ~$1n says, 'Come back when you really have one, $3n!'~
+Msg3 = ~$1n says, 'I'm not interested in $2n.'~
+Msg4 = ~$1n says, 'I can't afford it!'~
+Msg5 = ~$1n says, '$3n, you can't afford $2n! Get lost!'~
+Msg6 = ~$1n says, 'That's %s for $2n.'~
+Msg7 = ~$1n says, 'Thank you $3n, here are %s for $2n.'~
+Hours1 = 4 12
+Hours2 = 13 23"
+end
+
+hakim
+
+names {"hakim","junkman"}
+title "Hakim"
+descr "Hakim the Junkman stands near his cart full of assorted goods."
+extra {}
+"He seems to notice everything that happens around him."
+M_SHOP_KEEPER(55, SEX_MALE, RACE_HUMAN)
+money 6 SILVER_PIECE, 6 COPPER_PIECE
+special SFUN_WHISTLE
+special SFUN_SHOP_INIT
+"Profit sell = 130
+Profit buy = 40
+Production = ~torch@midgaard~ ~lantern@midgaard~ ~bag@midgaard~ ~paper@midgaard
+~ ~dictionary@basis~ ~pencil@arabian~
+Trade types = "+ITEM_OTHER+ITEM_NOTE+ITEM_PEN+"
+Msg1 = ~$1n says, 'I don't know how what that is.'~
+Msg2 = ~$1n says, 'Come back when you really have one, $3n!'~
+Msg3 = ~$1n says, 'I'm not interested in $2n.'~
+Msg4 = ~$1n says, 'I can't afford it!'~
+Msg5 = ~$1n says, '$3n, you can't afford $2n! Get lost!'~
+Msg6 = ~$1n says, 'That's %s for $2n.'~
+Msg7 = ~$1n says, 'Thank you $3n, here are %s for $2n.'~
+Hours1 = 4 12
+Hours2 = 13 23"
+end
+
+omar
+
+names {"omar","weaponsmith"}
+title "Omar"
+descr "Omar the weaponsmith is here, eager to sell you a new weapon."
+extra {}
+"He is a thin, beady-eyed man. His movements are surprisingly graceful for
+someone of his apparent awkwardness."
+M_SHOP_KEEPER(55, SEX_MALE, RACE_HUMAN)
+money 6 SILVER_PIECE, 6 COPPER_PIECE
+special SFUN_WHISTLE
+special SFUN_SHOP_INIT
+"Profit sell = 150
+Profit buy = 40
+Production = ~battle_axe@arabian~ ~hand_axe@arabian~ ~battle_mace@arabian~
+             ~hand_mace@arabian~  ~battle_club@arabian~ ~hand_club@arabian~
+             ~hand_flail@arabian~ ~great_sword@arabian~ ~long_sword@arabian~
+             ~broad_sword@arabian~ ~assassin_dagger@arabian~ ~katana@midgaard~
+             ~fish_knife@arabian~ ~wakizashi@arabian~
+Trade types = "+ITEM_WEAPON+"
+Msg1 = ~$1n says, 'I don't know how what that is.'~
+Msg2 = ~$1n says, 'Come back when you really have one, $3n!'~
+Msg3 = ~$1n says, 'I'm not interested in $2n.'~
+Msg4 = ~$1n says, 'I can't afford it!'~
+Msg5 = ~$1n says, '$3n, you can't afford $2n! Get lost!'~
+Msg6 = ~$1n says, 'That's %s for $2n.'~
+Msg7 = ~$1n says, 'Thank you $3n, here are %s for $2n.'~
+Hours1 = 4 12
+Hours2 = 13 23"
+end
+
+carver
+
+names {"yangtu", "carver"}
+title "Yangtu"
+descr "An old man is here carving balsa wood."
+extra {}
+"The man is very old, his exact age undeterminant. He looks like he
+would enjoy just sitting here all day carving."
+M_HUMAN_WARRIOR_SWORD(55, SEX_MALE)
+end
+
+jafia
+
+names {"jafia", "seamstress"}
+title "Jafia"
+descr "Jafia the Seamstress is here, minding the shop."
+extra {}
+"She is leafing through a stack of paper patterns. She seems to have lost
+one."
+M_HUMAN_WARRIOR_SWORD(55, SEX_FEMALE)
+money 6 SILVER_PIECE, 5 COPPER_PIECE
+special SFUN_WHISTLE
+dilcopy jafia1@arabian();
+dilcopy jafia2@arabian();
+end
+
+sinbad
+
+names {"sinbad", "sailor"}
+title "Sinbad"
+descr "Sinbad the Sailor is here, telling his tall tales."
+extra {}
+"He is an older gentleman who looks very wise. He looks healthy and spry,
+but his eyes betray signs that he has seen much more than most mortals can
+ever imagine."
+M_HUMAN_WARRIOR_SWORD(55, SEX_MALE)
+money 7 SILVER_PIECE, 1 COPPER_PIECE
+special SFUN_WHISTLE
+dilcopy sinbad1@arabian();
+dilcopy sinbad2@arabian();
+end
+
+weaver
+
+names {"jacob", "weaver"}
+title "Jacob"
+descr "Jacob the weaver is here, fretting about what to make."
+extra {}
+"Jacob is an older man who takes great pride in his work.  He seems
+to be a bit disturbed right now, not having the right materials to make
+what he wants to."
+M_HUMAN_WARRIOR_SWORD(55, SEX_MALE)
+money 7 SILVER_PIECE, 1 COPPER_PIECE
+special SFUN_WHISTLE
+dilcopy weaver1@arabian();
+dilcopy weaver2@arabian();
+end
+
+%objects
+
+wakizashi
+
+names {"wakizashi", "sword"}
+title "a wakizashi"
+descr "A wakizashi has been left here."
+extra {}
+"The wakizashi is the smaller version of the katana, you notice that it is
+a finely crafted weapon somewhat resembling the short sword."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_WAKIZASHI, 1, 0)
+weight 7
+cost 15 SILVER_PIECE
+end
+
+gown
+
+names {"golden gown", "dress", "gown"}
+title "a beautiful golden gown"
+descr "A golden gown lies sparkling here."
+extra {}
+"A golden gown of delicate silky material. Made by the skilled hands of
+Jafia."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+MATERIAL_CLOTH("gold cloth")
+weight 1
+cost 7 GOLD_PIECE
+end
+
+needle
+
+names {"sewing needle", "needle"}
+title "a large sewing needle"
+descr "A large sewing needle is lying here."
+extra {}
+"This needle looks like it belongs to a seamstress."
+WEAPON_DEF(WPN_DAGGER, 1, 0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+end
+
+fish_knife
+
+names {"fish knife", "sharp knife", "knife"}
+title "a sharp fish knife"
+descr "A sharp knife it lying here."
+extra {}
+"The knife is razor sharp."
+WEAPON_DEF(WPN_DAGGER, 1, 0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+end
+
+patch
+
+names {"eye patch", "eyepatch", "patch"}
+title "an eye patch"
+descr "An eye patch is lying here."
+extra {}
+"It is an eye patch like a pirate would wear."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+ARMOUR_CLOTHES(0, 0)
+end
+
+linen_trousers
+
+names {"trousers", "linen trousers"}
+title "linen trousers"
+descr "A pair of linen trousers lies here in a heap."
+extra {}
+"Plain white linen trousers. Very simple."
+ARMOUR_CLOTHES(1, 0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+weight 1
+cost 2 SILVER_PIECE
+end
+
+linen_shirt
+
+names {"shirt", "linen shirt"}
+title "a linen shirt"
+descr "A linen shirt lies here."
+extra {}
+"A simple shirt of white linen."
+ARMOUR_CLOTHES(1, 0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+weight 1
+cost 1 SILVER_PIECE
+end
+
+smknife
+
+names {"small knife", "knife"}
+title "a small knife"
+descr "A small whittling knife has been dropped here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_DAGGER, -25, -25)
+weight 1
+rent 10 PLATINUM_PIECE
+extra {}
+"This small knife looks as if it would be quite handy for carving soft
+wood."
+end
+
+lgknife
+names {"large knife", "carving knife", "knife"}
+title "a large knife"
+descr "A large carving knife is here."
+extra {}
+"The knife is large with a sharp blade and a ruby hilt."
+WEAPON_DEF(WPN_DAGGER, 0, 0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+end
+
+balsa
+names {"balsa"}
+title "balsa"
+descr "A small block of balsa wood has been dropped here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+extra {}
+"This balsa wood looks as if it would be quite handy for carving."
+end
+
+cloth
+
+names {"golden cloth", "cloth"}
+title "golden embroidered cloth"
+descr "Some cloth lies in a heap here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+extra {}
+"This cloth is very soft and supple, and is embroidered with golden
+thread."
+end
+
+cell_key
+
+/* Key to open the Jail */
+names {"black key","key"}
+title "a black key"
+descr "A large black key has been left here."
+type ITEM_KEY
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 2
+extra {}
+"This key looks like it would fit a very large, strong door."
+end
+
+jail_safe_key
+
+/* This is for the safe in the guards office */
+names {"small key","key"}
+title "a key"
+descr "A small key has been left here."
+type ITEM_KEY
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+end
+
+safe
+
+names {"safe"}
+title "the safe"
+descr "A safe is anchored to the floor in the corner of the room."
+extra {} "The safe has a small keyhole in the front."
+manipulate {MANIPULATE_ENTER}
+open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_PICKPROOF}
+key jail_safe_key
+CONTAINER_DEF(400)
+end
+
+fountain
+
+names {"bubbling fountain", "fountain", "water"}
+title "a bubbling fountain"
+descr "A bubbling fountain rests in the center of the room."
+extra {}
+"In the middle of the fountain is a stone cherub that spits water from his...
+Oh. Well, perhaps it's best not to think about where the water is coming from."
+LIQ_DEF(LIQ_WATER, 5000, 20000, 20000, 0)
+end
+
+bull_board
+
+names {"bulletin board", "board"}
+title "a bulletin board"
+descr "A large bulletin board occupies one wall here."
+type ITEM_OTHER
+special SFUN_BULLETIN_BOARD "citizen"
+end
+
+info_box
+
+names {"information Box","box"}
+title "an Information Box"
+descr "A small information box rests here."
+CONTAINER_DEF(10)
+/* dilbegin
+code
+{
+   :start:
+   heartbeat := WAIT_SEC*SECS_PER_MUD_HOUR/2;
+   if (not ("khorsabad map" in self.inside.name))
+   {
+      load("khors_map@arabian");
+   }
+   goto start;
+}
+dilend */
+end
+
+khors_map
+
+names {"khorsabad map","map"}
+title "a map of Khorsabad"
+descr "A map of Khorsabad has been left here"
+type ITEM_NOTE
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+weight 1
+extra {"$read"}
+"&l                   The city of Khorsabad
+---------------------------------------------------------------------
+
+#--------#---------#---------#---------#
+|                 ||                   |
+|                 ||                   |   Sorry, this map still
+|                 ||                   |   under construction.
+|                 ||                   |
+|                 ||                   |   Midnight - Chief Cartographer
+|                 ||                   |
+|                 ||                   |
+|------------------|-------------------|
+|                  |                   |
+|                  |                   |
+|                  |                   |
+|                  |                   |
+|                  |                   |
+|                  |                   |
+|                  |                   |
+|                  |                   |"
+end
+
+pencil
+
+names {"pencil"}
+title "a crude pencil"
+descr "A crude pencil is lying on the ground."
+extra {}
+"The pencil is made of charcoal, wrapped with coarse paper."
+type ITEM_PEN
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+cost 2 IRON_PIECE
+end
+
+date
+
+names {"date"}
+title "a date"
+descr "A date is lying here."
+extra {}
+"The date looks quite delicious."
+FOOD_DEF(4,0)
+manipulate {MANIPULATE_TAKE}
+weight 1
+cost 1 IRON_PIECE
+end
+
+pomegranate
+
+names {"pomegranate"}
+title "a pomegranate"
+descr "A pomegranate is lying here."
+extra {}
+"The pomegranate smells very sweet, and looks to contain an immense
+number of seeds."
+FOOD_DEF(5,0)
+manipulate {MANIPULATE_TAKE}
+weight 1
+cost 2 IRON_PIECE
+end
+
+fig
+
+names {"dried fig","fig"}
+title "a dried fig"
+descr "A dried fig is lying here."
+extra {}
+"The fig is about the size of a pear, and has been dried to prevent
+it from spoiling."
+FOOD_DEF(6,0)
+manipulate {MANIPULATE_TAKE}
+weight 1
+cost 3 IRON_PIECE
+end
+
+melon
+
+names {"melon"}
+title "a melon"
+descr "A melon is lying here."
+extra {}
+"The melon closely resembles a cantaloupe."
+FOOD_DEF(8,0)
+manipulate {MANIPULATE_TAKE}
+weight 2
+cost 5 IRON_PIECE
+end
+
+bread
+
+names {"bread"}
+title "a loaf of bread"
+descr "A loaf of bread is lying here."
+extra {}
+"A specialty of Buzo's Bakery, the bread is made of 12 different grains."
+FOOD_DEF(24,0)
+manipulate {MANIPULATE_TAKE}
+weight 2
+cost 1 SILVER_PIECE
+end
+
+muffin
+
+names {"muffin"}
+title "a muffin"
+descr "A spiced muffin lies here."
+extra {}
+"The muffin is flavored with a select blend of rare spices and a touch of
+honey, and is quite delicious."
+FOOD_DEF(11,0)
+manipulate {MANIPULATE_TAKE}
+weight 2
+cost 5 IRON_PIECE
+end
+
+pie
+
+names {"fig pie","pie"}
+title "a fig pie"
+descr "A fig pie lies here."
+extra {}
+"The pie is an experiment of Buzo's. It's... different, yet strangely
+filling."
+FOOD_DEF(35,0)
+manipulate {MANIPULATE_TAKE}
+weight 2
+cost 7 IRON_PIECE
+end
+
+coffee
+
+names {"coffee"}
+title "a cup of VERY strong coffee"
+descr "A cup of rather dense coffee rests here."
+extra {}
+"The coffee is heavy and very black. It looks like it could eat the rust
+off of an old sword."
+extra{"warning label", "label"}
+"WARNING:  You will not be able to drink more than two cups of this
+stuff or you will rot a hole through your intestine."
+manipulate {MANIPULATE_TAKE}
+POTION_DEF(50, SPL_RAISE_STR, SPL_RAISE_DEX, SPL_NONE)
+weight 2
+cost 2 GOLD_PIECE
+dilcopy coffee@arabian();
+end
+
+diamond
+
+names {"large diamond", "diamond"}
+title "a large diamond"
+descr "A large diamond is lying here, sparkling intensely."
+extra {}
+"The diamond catches the light as you look at it, and glints beautifully."
+type ITEM_TREASURE
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 3
+cost 8 PLATINUM_PIECE
+end
+
+ruby
+
+names {"large ruby", "ruby"}
+title "a large ruby"
+descr "A large ruby is lying here, glowing a deep red."
+extra {}
+"The ruby seems to glow softly from an internal light."
+type ITEM_TREASURE
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 3
+cost 6 PLATINUM_PIECE
+end
+
+emerald
+
+names {"large emerald", "emerald"}
+title "a large emerald"
+descr "A large emerald is lying here, glowing a deep green."
+extra {}
+"The emerald is a deep green in color."
+type ITEM_TREASURE
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 3
+cost 6 PLATINUM_PIECE, 4 GOLD_PIECE
+end
+
+gold_neck
+
+names {"golden necklace", "necklace"}
+title "a golden necklace"
+descr "A golden necklace lies here sparkling."
+extra {}
+"The necklace is made of pure gold, and is quite thick."
+type ITEM_TREASURE
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_NECK, MANIPULATE_HOLD}
+weight 3
+cost 4 PLATINUM_PIECE
+end
+
+dazzle_robe
+
+names {"dazzling robe", "robe"}
+title "a dazzling robe"
+descr "A dazzling robe lies here, scintillating beautifully."
+extra {}
+"The robe is made of ordinary material, but is beautifully crafted. It
+is so exquisite in its craftmanship that it steals your breath away."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+weight 7
+ARMOUR_PLATE(+10, +6) /* Quest reward */
+SPELL_TRANSFER(SPL_SUMMONING, 5)
+SPELL_TRANSFER(SPL_CONTROL_TELEPORT, 4)
+CHAR_FLAG_TRANSFER(CHAR_HIDE)
+cost 930 COPPER_PIECE
+rent 240 IRON_PIECE
+BRA_TRANSFER(2)
+DEX_TRANSFER(1)
+STR_TRANSFER(1)
+end
+
+pattern
+
+names {"pattern"}
+title "an intricate pattern"
+descr "An intricate pattern is folded up neatly on the ground."
+extra {}
+"The pattern is an amazing confusion of lines and symbols. It looks
+incredibly complex, yet strangely beautiful."
+type ITEM_OTHER
+manipulate {MANIPULATE_TAKE}
+weight 2
+cost 10 PLATINUM_PIECE
+end
+
+/* Armor */
+
+ring_vest
+
+names {"ring mail vest", "vest"}
+title "a ring mail vest"
+descr "A ring mail vest is lying in a heap on the floor."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_CHAIN(0, 0)
+weight 5
+cost 4 SILVER_PIECE
+end
+
+ring_leggings
+
+names {"ring mail leggings", "leggings"}
+title "ring mail leggings"
+descr "A pair of ring mail leggings are lying here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+ARMOUR_CHAIN(0, 0)
+weight 4
+cost 4 SILVER_PIECE
+end
+
+ring_sleeves
+
+names {"ring mail sleeves", "sleeves"}
+title "ring mail sleeves"
+descr "A pair of ring mail sleeves are lying here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ARMS}
+ARMOUR_CHAIN(0, 0)
+weight 4
+cost 4 SILVER_PIECE
+end
+
+ring_gloves
+
+names {"ring mail gloves", "gloves"}
+title "ring mail gloves"
+descr "A pair of ring mail gloves are lying here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HANDS}
+ARMOUR_CHAIN(0, 0)
+weight 5
+cost 4 SILVER_PIECE
+end
+
+ring_boots
+
+names {"ring mail boots", "boots"}
+title "ring mail boots"
+descr "A pair of ring mail boots are lying here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+ARMOUR_CHAIN(0, 0)
+weight 5
+cost 4 SILVER_PIECE
+end
+
+ring_coif
+
+names {"ring mail coif", "coif"}
+title "a ring mail coif"
+descr "A ring mail coif is lying here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+ARMOUR_CHAIN(0, 0)
+weight 5
+cost 4 SILVER_PIECE
+end
+
+small_shield
+
+names {"small iron shield", "small shield", "shield"}
+title "a small iron shield"
+descr "A small iron shield lies here."
+SHIELD_DEF(SHIELD_SMALL, 0, 0)
+weight 5
+cost 2 SILVER_PIECE
+end
+
+medium_shield
+
+names {"medium iron shield", "medium shield", "shield"}
+title "a medium iron shield"
+descr "A medium-sized iron shield lies here."
+SHIELD_DEF(SHIELD_MEDIUM, 0, 0)
+weight 10
+cost 3 SILVER_PIECE
+end
+
+large_shield
+
+names {"large iron shield", "large shield", "shield"}
+title "a large iron shield"
+descr "A large iron shield lies here."
+SHIELD_DEF(SHIELD_LARGE, 0, 0)
+weight 15
+cost 4 SILVER_PIECE
+end
+
+/* WEAPONS */
+
+battle_axe
+
+names {"battle axe", "axe"}
+title "a battle axe"
+descr "A large, mean-looking axe rests here."
+WEAPON_DEF(WPN_BATTLE_AXE, 0, 0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+weight 5
+cost 1 GOLD_PIECE
+end
+
+hand_axe
+
+names {"hand axe", "axe"}
+title "a hand axe"
+descr "A sharp hand axe rests here."
+WEAPON_DEF(WPN_HAND_AXE, 0, 0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+weight 5
+cost 6 SILVER_PIECE
+end
+
+battle_mace
+
+names {"battle mace", "mace"}
+title "a battle mace"
+descr "A large mace sits here."
+WEAPON_DEF(WPN_BATTLE_MACE, 0, 0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+weight 6
+cost 1 GOLD_PIECE
+end
+
+hand_mace
+
+names {"hand mace", "mace"}
+title "a hand mace"
+descr "A hand mace rests here."
+WEAPON_DEF(WPN_MACE, 0, 0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+weight 5
+cost 6 SILVER_PIECE
+end
+
+battle_club
+
+names {"battle club", "club"}
+title "a battle club"
+descr "A bronze battle club rests here, waiting to bludgeon someone."
+WEAPON_DEF(WPN_BATTLE_CLUB, 0, 0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+weight 10
+cost 8 SILVER_PIECE
+end
+
+hand_club
+
+names {"hand club", "club"}
+title "a hand club"
+descr "An iron hand club rests here."
+WEAPON_DEF(WPN_CLUB, 0, 0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+weight 5
+cost 6 SILVER_PIECE
+end
+
+hand_flail
+
+names {"hand flail", "flail"}
+title "a hand flail"
+descr "An iron flail rests here."
+WEAPON_DEF(WPN_FLAIL, 0, 0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+weight 5
+cost 7 SILVER_PIECE
+end
+
+great_sword
+
+names {"great sword", "sword"}
+title "a giant sword"
+descr "A large two-handed sword rests here."
+WEAPON_DEF(WPN_GREAT_SWORD, 0, 0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+weight 15
+cost 2 GOLD_PIECE
+end
+
+broad_sword
+
+names {"battle sword", "sword"}
+title "a battle sword"
+descr "A battle sword rests here."
+WEAPON_DEF(WPN_BROAD_SWORD, 0, 0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+weight 11
+cost 1 GOLD_PIECE
+end
+
+long_sword
+
+names {"hand sword", "sword"}
+title "a hand sword"
+descr "A hand sword rests here."
+WEAPON_DEF(WPN_LONG_SWORD, 0, 0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+weight 10
+cost 1 GOLD_PIECE
+end
+
+assassin_dagger
+
+names {"assassin's dagger", "dagger"}
+title "an assassin's dagger"
+descr "An evil looking dagger rests here."
+extra {}
+"It looks ideally suited to backstabbing."
+WEAPON_DEF(WPN_DAGGER, 0, 0)
+SKILL_TRANSFER(SKI_BACKSTAB, +3)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+weight 5
+cost 10 PLATINUM_PIECE
+end
+
+/* ZONE RESET */
+
+#define GUARDARMOR   \
+   equip ring_sleeves position WEAR_ARMS   \
+   equip ring_vest position WEAR_BODY   \
+   equip ring_leggings position WEAR_LEGS   \
+   equip ring_boots position WEAR_FEET   \
+   equip ring_gloves position WEAR_HANDS   \
+   equip ring_coif position WEAR_HEAD   \
+   equip broad_sword position WEAR_WIELD   \
+   equip medium_shield position WEAR_SHIELD
+
+%reset
+
+load udgaard/reward_board into accuse_room local 1
+load weaver into weavers@urland max 1
+load fountain into kiosk local 1
+load bull_board into kiosk local 1
+load info_box into kiosk local 1
+{
+   load khors_map
+}
+
+/* OPERATE APPROPRIATE DOORS */
+
+door accuse_room NORTH EX_CLOSED
+door jail SOUTH EX_CLOSED
+
+/* setup the captains office */
+
+load safe into accuse_room local 1
+load captain into accuse_room zonemax 1
+{
+   equip ring_sleeves position WEAR_ARMS
+   equip ring_vest position WEAR_BODY
+   equip ring_leggings position WEAR_LEGS
+   equip ring_boots position WEAR_FEET
+   equip ring_gloves position WEAR_HANDS
+   equip ring_coif position WEAR_HEAD
+   equip great_sword position WEAR_WIELD
+   load cell_key
+   load jail_safe_key
+}
+load guardsman into accuse_room zonemax 15
+{
+   GUARDARMOR
+}
+load guardsman into bazaar_3e zonemax 15
+{
+   GUARDARMOR
+}
+load guardsman into palace_5 zonemax 15
+{
+   GUARDARMOR
+}
+load guardsman into wharf_5 zonemax 15
+{
+   GUARDARMOR
+}
+load carver into path_4@outxiyang
+{
+   load balsa
+   equip lgknife position WEAR_WIELD
+}
+load jafia into jafia_shop zonemax 1
+{
+   equip gown position WEAR_BODY
+   equip needle position WEAR_WIELD
+}
+load sinbad into sinbad_house zonemax 1
+{
+   equip fish_knife position WEAR_WIELD
+   equip linen_trousers position WEAR_LEGS
+   equip linen_shirt position WEAR_BODY
+   equip patch position WEAR_HEAD
+}
+load abdul into abdul_bar local 1
+{
+   load tuborg@udgaard
+   load beer_barrel@midgaard
+   load beer_bottle@midgaard
+   load firebreather@midgaard
+   load speciality@midgaard
+}
+load achmed into bank local 1
+load hakim into bazaar_7e
+{
+   load torch@midgaard
+   load lantern@midgaard
+   load bag@midgaard
+   load paper@midgaard
+   load dictionary@basis
+   load pencil
+}
+load suliman into post_office
+load omar into bazaar_6w
+{
+   load wakizashi
+   load katana@midgaard
+   load battle_axe
+   load hand_axe
+   load battle_mace
+   load hand_mace
+   load battle_club
+   load hand_club
+   load hand_flail
+   load great_sword
+   load broad_sword
+   load long_sword
+   load fish_knife
+}
+load fahrir into bazaar_1e
+{
+   load pomegranate
+   load date
+   load fig
+   load melon
+}
+load asim into bazaar_1w
+{
+   load diamond
+   load ruby
+   load emerald
+   load gold_neck
+}
+load buzo into bazaar_2e
+{
+   load bread
+   load muffin
+   load pie
+   load coffee
+}
+load merc_statue into merc_office_2
+{
+   equip large_shield position WEAR_SHIELD
+   load paper@midgaard
+}
+
+%end
+

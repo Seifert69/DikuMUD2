@@ -1,0 +1,4754 @@
+/*
+filename    hamlet
+password    6R7AZ
+changedby   Isildur
+EmailAdd     David Gersh <gersh@lightlink.com>
+request     compile
+version     8
+END HEADER*/
+
+#include "composed.h"
+#include "wmacros.h"
+#include "values.h"
+%zone    hamlet
+
+title "Hamlet"
+
+lifespan 25
+reset RESET_ANYHOW
+creators {"isildur"}
+notes
+"This zone was written by Isildur to expand udgaard to the north.  
+Zone written Spring 1997.  This zone is for players level 1-10."
+%dil
+dilbegin integer walk_room (place:string, spd:integer);
+                      external
+                        string dirstring@function (dr:integer);
+                        integer rev_dir@function (i:integer);
+var
+rm:unitptr;
+rdir:integer;
+  dir : integer;
+  dir_string : string;
+  rdir_string : string;
+  dr_name : string;
+  heart : integer;
+  thing : unitptr;
+code
+{
+   :init:
+   on_activation(self.position <= POSITION_SLEEPING, skip);
+   if(( (spd*4) < 5) )
+   {
+      heartbeat := 5 * 3;
+   } else {
+      heartbeat := spd * 3;
+   }
+   heart := heartbeat;
+   thing:=findroom(place);
+   :start:
+   if (self.outside==thing)
+   {
+     return (TRUE);
+   }
+   wait(SFB_TICK, TRUE);
+
+   /* Lets stand up if for some reason we are sitting */
+   if ((self.position == POSITION_RESTING) or
+       (self.position == POSITION_SITTING))
+   {
+      exec("stand", self);
+   }
+
+   /* if were not standing now then abort! */
+
+   if (self.position != POSITION_STANDING)
+     return (FALSE);
+
+   heartbeat := heart;
+   thing:=findroom(place);
+
+   dir:=pathto (self,thing);
+   dir_string:=dirstring@function (dir);
+   rdir:=rev_dir@function(dir);
+      rdir_string :=dirstring@function (rdir);
+
+      if (isset (self.outside.exit_info[dir], EX_LOCKED))
+        goto locked;
+      if (isset (self.outside.exit_info[dir], EX_CLOSED))
+      {
+      exec ("open "+dir_string+" "+self.outside.exit_names[dir].[0],self);
+      exec (dir_string,self);
+      exec ("close "+rdir_string+" "+self.outside.exit_names[rdir].[0],self);
+         goto start;
+      }
+
+   :locked:
+      if (isset (self.outside.exit_info[dir], EX_LOCKED))
+      {
+      rm:=self.outside;
+         unset(rm.exit_info[dir], EX_LOCKED);
+      exec ("open "+dir_string+" "+self.outside.exit_names[dir].[0],self);
+      exec (dir_string,self);
+      exec ("close "+rdir_string+" "+self.outside.exit_names[rdir].[0],self);
+         set(rm.exit_info[dir], EX_LOCKED);
+         goto start;
+      }
+   exec(dir_string, self);
+   goto start;
+}
+dilend
+
+%rooms
+			sm_path
+
+title "A Small Path"
+descr
+"This small path is just north of the watchtower in Udgaard.  
+It leads northward between two fields, and is made of hard
+packed dirt.  A post and rail fence blocks all passage to
+the east or west, and the path leads north-south."
+extra {"small path", "path"}
+"This small path connects Udgaard with what looks to be a
+small farming hamlet."
+extra {"watch tower", "watchtower","tower"}
+"This tower allows Udgaard to be guarded more efficiently."
+extra {"fields"}
+"There is different types of grain growing in the fields."
+extra {"post and rail fence", "fence", "post", "rail"}
+"This fence looks as if it was constructed with strong hardwood."
+
+
+movement SECT_CITY
+north to sm_path2 descr
+"A Small Path";
+south to udgaard/watch_tower3
+descr "A wooden watch tower";
+end
+
+			sm_path2
+
+title "A Small Path"
+descr
+"Fields run along the eastern and western sides of this
+small path.  It leads north and south between the two
+fields, and is made of hard packed dirt.  A post and
+rail fence blocks all passage to the east and west,
+though it appears that to the north is a crossroads."
+extra {"small path", "path"}
+"This small path connects Udgaard with what looks to
+be a small farming hamlet."
+extra {"fields"}
+"There is different types of grain growing in the fields."
+extra {"post and rail fence", "post fence", "rail fence", "fence", "post", "rail"} 
+"This fence looks as if it was constructed with strong hardwood."
+extra {"crossroads"}
+"Crossroads, hence where two roads cross, or the meeting
+of four road pieces."
+
+movement SECT_CITY
+north to cross_road descr
+"A small crossroad";
+south to sm_path descr
+"A small path";
+end
+
+				cross_road
+
+title "A Small Crossroad"
+descr
+"Four roads seem to meet here, though the entire area
+is surrounded by fields.  To the west it is possible
+to make out some buildings, as is the case to the east.  Another small path
+continues north and south."
+extra {"small path", "path"}
+"This small path connects Udgaard with what looks to
+be a small farming hamlet."
+extra {"fields", "crops"}
+"There are different types of grain growing in the fields."
+extra {"post and rail fence", "post fence", "rail fence","fence", "post", "rail"}
+"This fence looks as if it was constructed with strong hardwood."
+extra {"crossroads"}
+"Crossroads, hence where two roads cross, or the meeting
+of four road pieces."
+extra {"buildings", "building"}
+"You aren't sure but it looks be to a hamlet of some sort."
+
+movement SECT_CITY
+north to sm_path3 descr
+"A small path";
+south to sm_path2 descr
+"A Small Path";
+west to west_path descr
+"West of the crossroad";
+east to east_path descr
+"East of the crossroad";
+end
+                                sm_path3
+
+title "A Small Path"
+descr
+"There are fences to the east and west as the village path
+leads from north to south.  To the south is a small crossroads, and
+it appears that there are some woods to the north.  The path is a little
+rough, appearing to be used less than the others in town."
+extra {"small path", "path"}
+"The path here appears to be used less frequently than in other
+parts of town."
+extra {"fences", "fence"}
+"The fences look to be used as enclosures for fields and livestock."
+extra {"crossroads"}
+"Crossroads, hence where two roads cross, or the meeting
+of four road pieces."
+extra {"woods"}
+"The trees look to be much the same variety as those found in the
+Cypress Forest."
+
+movement SECT_CITY
+south to cross_road descr
+"A small crossroad";
+north to sm_path4 descr
+"A village path";
+end
+
+                                sm_path4
+
+title "A Small Path"
+descr
+"This small path leads from north to south and connects a small farming
+hamlet with a trail to the north.  There is a forest in that direction,
+which seems to have trees much like the Cypress Forest.  The path
+is constructed of hard packed dirt, and you can see empty fields to the
+east and west."
+
+extra {"small path", "path"}
+"This path connects a small farming hamlet with the trail to the north."
+extra {"trail"}
+"The trail looks to be used seldomly."
+extra {"forest"}
+"The trees are quite tall, and grow close together."
+extra {"dirt"}
+"It's dirty."
+extra {"empty fields", "fields"}
+"This land was cleared for farming, but looks to be unused.  Perhaps
+you could settle in this hamlet."
+extra {"woods"}
+"The trees look to be much the same variety as those found in the
+Cypress Forest."
+flags {UNIT_FL_NO_MOB}
+
+movement SECT_CITY
+south to sm_path3 descr
+"A small path";
+north to moor_path descr
+"A small trail";
+end
+
+
+
+				west_path
+
+title "West of the Crossroad"
+descr
+"From this point along the path, some buildings
+are clearly visible to the west.  There are at least
+two on the north side, and one to the south.  This
+small path leads east to a crossroad, and is bordered
+to the north and south by post and rail fences."
+extra {"small path", "path"}
+"This small path connects with a crossroads to the east."
+extra {"fields"}
+"There are different types of grain growing in the fields."
+extra {"post and rail fence", "post fence", "rail fence","fence", "post", "rail"}
+"This fence looks as if it was constructed with strong hardwood."
+extra {"crossroads"}
+"Crossroads, hence where two roads cross, or the meeting
+of four road pieces."
+extra {"buildings"}
+"It looks to be a small hamlet."
+
+movement SECT_CITY
+east to cross_road descr
+"A small crossroad";
+west to west_path2 descr
+"An east-west path";
+end
+
+				west_path2
+
+title "An east-west path"
+descr
+"There is a small hut to the north, and a larger
+one to the south.  The path leads east to west,
+and there could be a windmill further west.
+You see the glint of something under the dirt of the
+roadway."
+extra {"small hut", "hut"}
+"This looks to be the dwelling of a farmer."
+extra {"windmill"}
+"The sails run a circular course in the wind."
+extra {"glint"}
+"There appears to be something metal smashed into the dirt
+of the road, perhaps you should search the dirt."
+extra {"dirt"}
+"The dirt here appears to hide something metallic, perhaps
+you should search it."
+extra {"roadway"}
+"The road looks as if it has something metallic pounded
+into it, perhaps you should search the dirt."
+extra {"small path", "path"}
+"This small path runs east west through the small farming hamlet."
+extra {"fields"}
+"There are different types of grain growing in the fields."
+extra {"post and rail fence", "fence", "post", "rail"}
+"This fence looks as if it was constructed with strong hardwood."
+extra {"crossroads"}
+"Crossroads, hence where two roads cross, or the meeting
+of four road pieces."
+extra {"buildings"}
+"It looks to be a small hamlet."
+
+movement SECT_CITY
+east to west_path descr
+"West of the Crossroad";
+west to west_path3 descr
+"Before the Windmill";
+north to hut1 open {EX_OPEN_CLOSE, EX_CLOSED} descr "A small wooden door." keyword {"door"};
+south to hut2 open {EX_OPEN_CLOSE, EX_CLOSED} descr "A small wooden door." keyword {"door"};
+dilbegin key();
+var
+  item : unitptr;
+  pc   : unitptr;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*10;
+   :start:
+   wait(SFB_CMD, (command("search") and
+       ("dirt" in argument)));
+   block;
+   pc := activator;
+   secure(pc, lostpc);
+   {
+     act("You search in the dirt and find a small key.", 
+     A_SOMEONE, pc, null, null, TO_CHAR);
+
+     act("$1n searches in the dirt and finds a small key",
+     A_SOMEONE, pc, null, null, TO_REST);
+
+   item := load("safe_key@hamlet");
+   link(item, pc);
+   }
+   unsecure(pc);
+     goto start;
+
+   :lostpc:
+     goto start;
+}
+dilend
+end
+
+				west_path3
+
+title "The End of the Path"
+descr
+"To the north is a small shed which is leaning over, while
+to the west is a large windmill.  Southwards is
+the wall of a large hut, and the path runs to the
+east.  There is some grain scattered on the ground,
+along with what looks like horse droppings."
+extra {"large hut", "hut"}
+"This looks to be the dwelling of a farmer."
+extra {"small shed", "shed"}
+"The shed looks to be in a bit of disrepair."
+extra {"large windmill", "windmill"}
+"You can hear a creaking and groaning coming from inside the windmill."
+extra {"ground", "grain"}
+"The grain in scattered on the ground and in front of the windmill."
+extra {"horse droppings", "droppings"}
+"It appears that more than one horse has let go here."
+extra {"small path", "path"}
+"This small path runs east out of the farming hamlet."
+extra {"fields"}
+"There is different types of grain growing in the fields."
+extra {"post and rail fence", "post fence", "rail fence", "fence", "post", 
+"rail"} "This fence looks as if it was constructed with strong hardwood."
+extra {"buildings"}
+"It looks to be a small hamlet."
+
+movement SECT_CITY
+east to west_path2 descr
+"An east-west path";
+north to shed descr
+"In the small shack";
+west to windmill open {EX_OPEN_CLOSE, EX_CLOSED} descr "A small wooden door." keyword {"door"};
+end
+				shed
+
+title "A Shed"
+descr
+"This shed is leaning to the left, and is close to
+falling over.  Bales of hay are stacked neatly here,
+and the air smells fresh."
+extra {"shed"}
+"The shed is in disrepair, but it keeps the water out."
+extra {"bales of hay", "bales", "hay"}
+"The bales of hay are stacked neatly here."
+
+flags {UNIT_FL_NO_WEATHER}
+
+
+movement SECT_INSIDE
+south to west_path3 descr
+"The end of the path";
+end
+
+				hut1
+
+title "A Small Hut"
+descr
+"This hut is small and cozy.  There is a fireplace
+against one wall, and a few pieces of furniture sit around.
+A small bed is pushed into one corner, and there is a
+window above it.  The roof is low and the dirt floor is
+covered with a sparse amount of hay.  There is a doorway
+which leads south."
+extra {"small hut", "hut"}
+"This hut is small but cozy."
+extra {"dirt floor", "floor", "dirt", "hay"}
+"A sparse amount of hay covers the dirt floor of the hut."
+extra {"fireplace"}
+"Some small flames lick at a log in the fireplace."
+extra {"furniture"}
+"The furniture is rough and heavy looking."
+extra {"small bed", "bed"}
+"The bed looks small, although comfortable."
+extra {"corner"}
+"There are a few cobwebs in the corner."
+extra {"roof"}
+"The roof is made of small wooden beams and thatched with straw."
+extra {"doorway"}
+"The doorway is small and strong looking."
+
+flags {UNIT_FL_NO_WEATHER}
+
+
+movement SECT_INSIDE
+south to west_path2 open {EX_OPEN_CLOSE, EX_CLOSED} descr "A small wooden door." keyword {"door"};
+end
+
+				hut2
+
+title "A Slightly Larger Hut"
+descr
+"This hut appears to be inhabited by the miller.  All
+of the articles of clothing here are covered in a white
+powder which you assume to be flour..  The hut is quite cozy,
+and a warm fire burns in the hearth.  There is another room to the west."
+extra {"hut"}
+"This hut is small but cozy."
+extra {"articles of clothing", "clothing", "articles"}
+"It is obvious that the miller makes flour."
+extra {"white powder", "powder"}
+"It's flour."
+extra {"hearth", "fire"}
+"The flames lick at a log."
+extra {"room"}
+"This is probably the bedroom."
+
+flags {UNIT_FL_NO_WEATHER}
+
+
+movement SECT_INSIDE
+north to west_path2 open {EX_OPEN_CLOSE, EX_CLOSED} descr "A small wooden door." keyword {"door"};
+west to hut3 descr
+"A Bedroom";
+end
+
+				hut3
+
+title "A Bedroom"
+descr
+"This room looks to be where the miller sleeps.
+There is a large feather bed, and the windows are
+covered with curtains.  A large bureau stands against
+one wall, and the floor is paneled with wood.  There
+is a rug covering the floor, and a doorway
+leads east into the main room."
+extra {"room"}
+"This is the miller's bedroom."
+extra {"large feather bed", "feather bed", "bed"}
+"This bed looks like it would be luscious to sleep on."
+extra {"windows", "curtains"}
+"The miller must make a good deal of money considering
+that his windows are covered with curtains."
+extra {"large bureau", "bureau"}
+"The bureau is where the miller keeps his clothing."
+extra {"wall"}
+"The wall is made of wood."
+extra {"floor", "wood"}
+"A wood floor is special in a hamlet like this."
+extra {"rug"}
+"The rug is large and has intricate patterns, though it
+looks to be strangely placed.  Perhaps you should
+inspect it closer."
+
+flags {UNIT_FL_NO_WEATHER}
+
+
+movement SECT_INSIDE
+east to hut2 descr
+"The main room of the miller's hut";
+down to basement open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}      
+     keyword {"trapdoor", "door","rug"};      
+SECRET_DOOR_DIFFICULTY(DOWN, 1)      
+end
+
+				basement
+
+title "A Musty Basement"
+descr
+"This room is filled with all types of food and
+vegetables.  It appears to be a root cellar of some
+sort or another.  There is a ladder leading upwards."
+extra {"root cellar", "room"}
+"This room serves as a storage area."
+extra {"vegetables","food"}
+"This food has been stored here by the miller."
+extra {"ladder"}
+"This is a simple wooden ladder."
+
+flags {UNIT_FL_NO_WEATHER}
+
+
+movement SECT_INSIDE
+up to hut3 open {EX_OPEN_CLOSE, EX_CLOSED} descr "A small wooden trapdoor." keyword {"trapdoor", "door"};
+end
+
+
+				windmill
+
+title "Inside the Windmill"
+descr
+"On the bottom floor of the windmill is a large grindstone
+which is turning grain into flour.  A drive axle comes
+out of the ceiling, and the room is filled with gears,
+cogs, and belts.  A loud groaning sound fills the air as
+the sails of the windmill spin around.  Some small windows
+line the walls, and a few sacks of grain or flour are
+sitting around.  A set of stairs lead upwards."
+extra {"bottom floor", "windmill", "floor"}
+"This floor contains a millstone used for grinding flour."
+extra {"large grindstone", "grindstone"}
+"The grindstone is massive, and looks to be constructed
+with the same granite used in the Midgaard walls."
+extra {"gears", "belts", "axle", "cogs"}
+"These all function with the process of turning the grindstone."
+extra {"ceiling"}
+"This is the floor of an upstairs room."
+extra {"small windows", "windows", "walls"}
+"The windows are open and admit fresh air."
+extra {"sacks of grain", "grain", "sacks", "flour"}
+"The key necessities of running a mill."
+extra {"stairs"}
+"The stairs lead into the upper chamber of the mill."
+extra {"doorway"}
+"The doorway is small and strong looking."
+
+flags {UNIT_FL_NO_WEATHER}
+
+
+movement SECT_CITY
+up to windmill2 descr
+"Uptairs in the windmill";
+east to west_path3 open {EX_OPEN_CLOSE, EX_CLOSED} descr "A small wooden door." keyword {"door"};
+end
+
+				windmill2
+
+title "Upstairs in the Windmill"
+descr
+"There is not much to see in the upper room of the windmill.
+A large axle comes in from the wall, and connects to
+some gears and another axle which passes through the
+floor.  Sacks of grain and flour are stored in this
+room of the mill.  A set of stairs leads downwards."
+extra {"upper room", "windmill", "room"}
+"This floor is used for the storage of grain and flour."
+extra {"large axle", "axle"}
+"It is connected to the gears and sails." 
+extra {"gears"}
+"These help to transfer power from the windmill sails to the grindstone."
+extra {"sacks of grain", "grain", "sacks", "flour"}
+"These have been stored here by the miller."
+extra {"stairs"}
+"The stairs lead into the lower chamber of the mill."
+
+flags {UNIT_FL_NO_WEATHER}
+
+
+movement SECT_CITY
+down to windmill descr
+"Downstairs in the windmill";
+end
+/******************************* THE EAST PATH ******************************************/
+
+				east_path
+
+title "East of the Crossroads"
+descr
+"East of the crossroads, it seems that there is
+a building or two to the northeast.  This small path
+leads west to a crossroads, and is bordered to the north
+and south by post and rail fences."
+extra {"small path", "path"}
+"This small path connects with a crossroads to the west."
+extra {"fields"}
+"There is different types of grain growing in the fields."
+extra {"post and rail fence","post fence", "rail fence", "fence", "post", "rail"}
+"This fence looks as if it was constructed with strong hardwood."
+extra {"crossroads"}
+"Crossroads, hence where two roads cross, or the meeting
+of four road pieces."
+extra {"buildings"}
+"It looks to be a small hamlet."
+
+movement SECT_CITY
+west to cross_road descr
+"A small crossroad";
+east to east_path2 descr
+"An east-west path";
+end
+
+				east_path2
+
+title "An East-west Path"
+descr
+"At this point along the path, there is a small
+building to the north, and a break in the fence to
+the south.  The road is a bit rough here, and grass
+grows along its edges.  The path continues to the east
+and west from here."
+extra {"small path", "path", "road"}
+"This small path leads east and west through the hamlet.
+Little pieces of gravel mottle its surface at this point."
+extra {"grass"}
+"The grass is green and luscious."
+extra {"fields"}
+"There is different types of grain growing in the fields."
+extra {"post and rail fence", "post fence", "rail fence","fence", "post", "rail"}
+"This fence looks as if it was constructed with strong hardwood.
+Passage into a field is possible to the south."
+extra {"building"}
+"It looks to be a small house."
+
+movement SECT_CITY
+west to east_path descr
+"East of the crossroads";
+east to east_path3 descr
+"An east-west path";
+north to hut4 open {EX_OPEN_CLOSE, EX_CLOSED} descr "A small wooden door." keyword {"door"};
+south to field1 descr
+"A field of hay";
+end
+
+				east_path3
+
+title "The End of the Path"
+descr
+"A path leads west from here, and there is a post and
+rail fence to the south.  All access in this direction
+is blocked by the aforementioned fence, though travel is 
+possible to the north and east.  To the east stands
+a small hut, while to the north there appears to be a garden of some sort."
+extra {"small path", "path", "road"}
+"This small path connects travels east and west throug the hamlet.
+Little pieces of gravel mottle its surface at this point."
+extra {"grass"}
+"The grass is green and luscious."
+extra {"fields"}
+"There is different types of grain growing in the fields."
+extra {"post and rail fence", "post fence", "rail fence","fence", "post", "rail"}
+"This fence looks as if it was constructed with strong
+hardwood.  Passage into a field is possible to the south."
+extra {"building"}
+"It looks to be a small house."
+
+movement SECT_CITY
+west to east_path2 descr
+"East of the crossroad";
+east to hut6 open {EX_OPEN_CLOSE, EX_CLOSED} descr "A small wooden door." 
+keyword {"door"}; 
+north to garden1 descr
+"A vegetable garden";
+end
+
+                                garden1
+
+title "A Vegetable Garden"
+descr
+"All different varieties of vegetables grow in neat rows which line
+this garden.  The soil looks to be rich with nutrients as all
+of the plants appear to be healthy and green.  Along each row is a
+small stick with some writing on it.  Travel in the garden is
+possible to the north and east, while a small path is to the south."
+extra {"small path", "path", "road"}
+"This small path connects to the crossroads of the hamlet.  Little pieces of 
+gravel mottle its surface at this point." 
+extra {"vegetables", "plants"}
+"Someone takes good care of these plants."
+extra {"soil"}
+"The soil is a rich brown color."
+extra {"writing", "stick", "row"}
+"Each row is marked with a stick, one that catches your eye says
+`carrots'."
+
+movement SECT_CITY
+south to east_path3 descr
+"The end of the path";
+north to garden3 descr
+"A vegetable garden";
+east to garden2 descr
+"A vegetable garden";
+end
+                                garden2
+
+title "A Vegetable Garden"
+descr
+"This garden appears to be well maintained, and the plants are quite
+healthy.  They are lined in neat rows, each offset with a stick
+describing the type of plants.  The wall of a hut is to the south, and
+to the east is a dense forest.  The garden continues to the west."
+extra {"garden"}
+"Someone obviously takes great pride in their work."
+extra {"plants"}
+"The plants could almost be called vibrant."
+extra {"neat rows", "stick", "rows"}
+"The rows are well kept, and are marked off with a stick naming
+the variety of vegetable."
+extra {"wall", "hut"}
+"This is where the gardener lives."
+extra {"dense forest", "forest"}
+"This is the Cypress Forest."
+
+movement SECT_CITY
+west to garden1 descr
+"A vegetable garden";
+end
+                                garden3
+
+title "A Vegetable Garden"
+descr
+"The plants grow lush and green in this small vegetable garden.
+They look almost good enough to eat, but if only they were ripe.
+The plants are laid out in rows, and each row has a small marker
+noting what type of plant is growing there.  The garden continues
+to the south."
+extra {"vegatable garden", "garden"}
+"Someone obviously takes great pride in their work."
+extra {"plants"}
+"The plants could almost be called vibrant."
+extra {"small marker", "neat rows", "marker", "rows", "row"}
+"The rows are well kept, and are marked off with a stick naming
+the variety of vegetable."
+
+movement SECT_CITY
+south to garden1 descr
+"A vegetable garden";
+end
+
+
+
+                                hut6
+
+title "A Small Hut"
+descr
+"The walls of this small hut are covered with what appear to be
+gardening tools.  There are rakes and hoes, picks, shovels, and
+a variety of other implements.  Aside from the large collection
+of tools, a small bed and a table, the hut is relatively bare."
+
+extra {"small hut", "hut"}
+"This is obviously the residence of the gardener."
+extra {"gardening tools", "implements", "shovels", "walls", "tools"} 
+"It is conceivable that these are used for gardening."
+extra {"rakes", "picks", "hoes"}
+"It is conceivable that these are used for gardening."
+extra {"small bed", "bed"}
+"The bed is small but looks to be comfortable."
+extra {"table"}
+"The table is quite small, and appears to be set for one."
+
+movement SECT_CITY
+west to east_path3 open {EX_OPEN_CLOSE, EX_CLOSED} descr "A small wooden door." keyword {"door"};
+end
+				hut4
+
+title "A Small Hut"
+descr
+"This small hut is filled with the smell of roasted meat.
+It is quite quaint and decorated with a painting or two.
+It is obvious that whoever owns this place is wealthy.
+The floor is made of wood, and a large feather
+bed rests against one wall.  A doorway leads north into a back room."
+extra {"small hut", "hut"}
+"This small hut is decorated with taste and style not
+common in the boonies."
+extra {"painting"}
+"This is a portrait of what can be assumed as the family."
+extra {"floor", "wood"}
+"A wood floor is a very special thing in the country."
+extra {"feather bed", "bed"}
+"A goose down bed in the country! How posh."
+extra {"doorway"}
+"A curtain blocks your view into the back room."
+
+movement SECT_CITY
+north to abattoir descr
+"The abattoir";
+south to east_path2 open {EX_OPEN_CLOSE, EX_CLOSED} descr "A small wooden door." keyword {"door"};
+end
+
+				abattoir
+ 
+title "The Abattoir"
+descr
+"The last thing to be expected after such a nice front
+room is to find a slaughterhouse.  Blood is caked on the
+walls, and the room stinks of evisceration.  There is
+every type of knife and saw here, and a large hammer
+rests on the table.  Buckets of blood sit in one corner,
+and there is some bloody pulp in another.  A doorway
+leads south and a gate is to the north."
+extra {"blood", "walls"}
+"The walls are red with both fresh and dried blood."
+extra {"large hammer", "hammer", "knife", "saw"}
+"These are used to cut meat and splinter bones."
+extra {"buckets of blood", "buckets"}
+"The buckets are brimming full with stinking blood."
+extra {"bloody pulp", "pulp"}
+"Who knows what this is."
+extra {"doorway"}
+"A curtain blocks your view into the front room."
+
+movement SECT_CITY
+south to hut4 descr
+"The nice room";
+north to pen open {EX_OPEN_CLOSE, EX_CLOSED} descr "A small gate." keyword {"gate"};
+end
+
+				pen
+ 
+title "Pig Pen"
+descr
+"This pig pen is filled with muck, and there are a
+large number of pigs rooting around in the mud.  A
+trough sits against a low fence, and the stink here
+is almost unbearable.  To the south is a small hut,
+and a doorway into the abattoir."
+extra {"pig pen", "pen"}
+"This is where the pigs live."
+extra {"muck", "mud"}
+"The muck looks dirty and smells bad."
+extra {"small hut", "hut"}
+"This is where the butcher lives."
+extra {"doorway", "abattoir"}
+"This is where they make pigs into bacon."
+
+movement SECT_CITY
+south to abattoir open {EX_OPEN_CLOSE, EX_CLOSED} descr "A small gate." keyword {"gate"};
+end
+
+
+				field1
+
+title "A Field of Wheat"
+descr
+"This field of golden wheat stands about waist high,
+and looks to be just ready for harvest.  Field mice
+can be heard scuffling about beneath the stalks, and
+a light wind blows the tops of the wheat about.  The
+field is bordered by a fence to the west and continues
+to the south and east."
+extra {"golden wheat", "stalks", "wheat", "field", "tops"}
+"The wheat looks as if it was grown with care, and
+appears to be healthy and disease free."
+extra {"fence"}
+"It is a fence of the post and rail variety."
+
+movement SECT_FIELD
+north to east_path2 descr
+"An east-west path";
+east to field2 descr
+"A field of wheat";
+south to field3 descr
+"A field of wheat";
+end
+
+				field2
+
+title "A Field of Wheat"
+descr
+"The field of wheat has a small path running through
+it, so that the tender stalks are not trampled.  The
+stalks wave about in a light breeze, and there is a
+fresh smell in the air.  The field is bordered by a
+fence to the north, and what appear to be rows of corn
+are east.  The wheat field continues to the south and west."
+extra {"field of wheat", "golden wheat", "stalks", "wheat", "field", "tops"}
+"The wheat looks as if it was grown with care, and appears
+to be healthy and disease free."
+extra {"fence"}
+"It is a fence of the post and rail variety."
+extra {"small path", "path"}
+"This path cuts a passage between the stalks of wheat."
+extra {"rows of corn", "rows", "corn"}
+"The rows of corn appear to grow about three times as tall as the wheat."
+
+movement SECT_FIELD
+east to corn_field descr
+"A corn field";
+south to field4 descr
+"A field of wheat";
+west to field1 descr
+"A field of wheat";
+end
+
+				field3
+
+title "A Field of Wheat"
+descr
+"This field of wheat looks as if it was grown with
+care and love.  To the west and over a fence is what
+appears to be a road.  The field is also bordered by
+a fence to the south, and continues to the east.  There
+is a large and menacing
+looking scarecrow, which appears to be doing its job quite well."
+extra {"field of wheat", "golden wheat", "stalks", "wheat", "field", "tops"}
+"The wheat looks as if it was grown with care, and
+appears to be healthy and disease free."
+extra {"fence"}
+"It is a fence of the post and rail variety."
+extra {"small path", "path"}
+"This path cuts a passage between the stalks of wheat."
+extra {"road"}
+"The road leads to Udgaard."
+extra {"scarecrow"}
+"The scarecrow is quite a menacing fellow, and you get the
+impression that if you were a crow you would fear it."
+
+movement SECT_FIELD
+east to field4 descr
+"A field of wheat";
+north to field1 descr
+"A field of wheat";
+end
+
+				field4
+
+title "A Field of Wheat"
+descr
+"The wheat grows waist high in this field.  It looks as if
+the kernels are almost popping from their husks, just ready
+for harvest.  The field continues to the
+north and west, while it is bordered by a fence to the south.
+There is a field
+of corn to the east, but travel that way is also blocked by a fence."
+extra {"field of wheat", "golden wheat", "kernels", "stalks", "husks", "wheat", "field", "tops"}
+"The wheat looks as if it was grown with care, and appears
+to be healthy and disease free."
+extra {"fence"}
+"It is a fence of the post and rail variety."
+extra {"small path", "path"}
+"This path cuts a passage between the stalks of wheat."
+extra {"road"}
+"The road leads to Udgaard."
+extra {"scarecrow"}
+"The scarecrow is quite a menacing fellow, and you get the
+impression that if you were a crow you would fear it."
+extra {"field of corn", "corn"}
+"The rows of corn appear to grow about three times as
+tall as the wheat."
+
+
+movement SECT_FIELD
+west to field3 descr
+"A field of wheat";
+north to field2 descr
+"A field of wheat";
+end
+
+				corn_field
+
+title "A Corn Field"
+descr
+"The stalks of corn rise high overhead, blocking out
+all view of the surrounding area.  Occasionally an
+ear or two can be seen sticking out of the stalks,
+and broad leaves brush against you.  There is a wheat
+field to the west, and the corn field lies eastwards."
+extra {"stalks of corn", "stalks", "corn", "ear"}
+"The corn looks as if it is almost ready to be harvested."
+extra {"wheat field", "field"}
+"The wheat in the field grows roughly waist high."
+
+flags {UNIT_FL_NO_MOB}
+
+
+movement SECT_FIELD
+west to field2 descr
+"A field of wheat";
+east to corn_field2 descr
+"In the corn field";
+end
+
+				corn_field2
+
+title "In the Corn Field"
+descr
+"The stalks of corn rise high overhead, and it is hard
+to tell which direction is the exit."
+extra {"stalks of corn", "stalks", "corn", "ear"}
+"The corn looks as if it is almost ready to be harvested."
+
+dilcopy scramble@function("north east south west");
+movement SECT_FIELD
+west to corn_field descr
+"A corn field";
+east to corn_field3 descr
+"In the corn field";
+south to corn_field5 descr
+"In the corn field";
+north to corn_fielda descr
+"In the corn field";
+end
+
+				corn_field3
+
+title "In the Corn Field"
+descr
+"The stalks of corn rise high overhead, and it is
+hard to tell which direction is the exit.  There
+may be a clearing to the east."
+extra {"stalks of corn", "stalks", "corn", "ear"}
+"The corn looks as if it is almost ready to be harvested."
+extra {"clearing"}
+"There might be a clearing to the east."
+
+dilcopy scramble@function("north east south west");
+movement SECT_FIELD
+west to corn_field2 descr
+"In the corn field";
+east to patch descr
+"In the corn field";
+south to corn_field6 descr
+"In the corn field";
+north to corn_fieldb descr
+"In the corn field";
+end
+
+				patch
+
+title "A Barren Patch"
+descr
+"It appears that there was a fire here, killing all
+which once lived.  The fence to the east is scorched
+and burnt.  The ground is covered with ashes.  The corn
+field continues to the north, south and west."
+extra {"fence"}
+"This post and rail fence is blackened with soot."
+extra {"ground", "ashes"}
+"The ground is covered with what appears to be the remains of a fire."
+
+dilcopy scramble@function("north south west");
+movement SECT_FIELD
+west to corn_field3 descr
+"In the corn field";
+south to corn_field7 descr
+"In the corn field";
+north to corn_fieldc descr
+"In the corn field";
+end
+
+				corn_field5
+
+title "In the Corn Field"
+descr
+"The stalks of corn rise high overhead, and it is
+hard to tell which direction is the exit.  There are
+fences to the south and west, the field continues in
+all other directions."
+extra {"stalks of corn", "stalks", "corn", "ear"}
+"The corn looks as if it is almost ready to be harvested."
+extra {"fences"}
+"These fences are of the typical post and rail variety."
+
+dilcopy scramble@function("north east");
+movement SECT_FIELD
+east to corn_field6 descr
+"In the corn field";
+north to corn_field2 descr
+"In the corn field";
+end
+
+				corn_field6
+
+title "In the Corn Field"
+descr
+"The stalks of corn rise high overhead, and it is hard to
+tell which direction is the exit.  There is a fence to the
+south, and the field continues in all other directions.
+A slight breeze ripples the corn stalks."
+extra {"stalks of corn", "stalks", "corn", "ear"}
+"The corn looks as if it is almost ready to be harvested."
+extra {"fences"}
+"These fences are of the typical post and rail variety."
+
+dilcopy scramble@function("north east west");
+movement SECT_FIELD
+east to corn_field7 descr
+"In the corn field";
+north to corn_field3 descr
+"In the corn field";
+west to corn_field5 descr
+"In the corn field";
+end
+
+				corn_field7
+
+title "In the Corn Field"
+descr
+"The stalks of corn rise high overhead, and it is hard
+to tell which direction is the exit.  There are fences
+to the south and east, and the field continues in all
+other directions.  It appears that there might be an
+opening to the north."
+extra {"stalks of corn", "stalks", "corn", "ear"}
+"The corn looks as if it is almost ready to be harvested."
+extra {"fences"}
+"These fences are of the typical post and rail variety."
+
+dilcopy scramble@function("north west");
+movement SECT_FIELD
+north to patch descr
+"An opening in the field";
+west to corn_field6 descr
+"In the corn field";
+end
+
+
+				corn_fielda
+
+title "In the Corn Field"
+descr
+"The stalks of corn rise high overhead, and it is
+hard to tell which direction is the exit.  There
+are fences to the north and west, the field continues
+in all other directions.  The air smells like fresh
+corn on the cob here."
+extra {"stalks of corn", "stalks", "corn", "ear"}
+"The corn looks as if it is almost ready to be harvested."
+extra {"fences"}
+"These fences are of the typical post and rail variety."
+
+dilcopy scramble@function("east south");
+movement SECT_FIELD
+east to corn_fieldb descr
+"In the corn field";
+south to corn_field2 descr
+"In the corn field";
+end
+
+				corn_fieldb
+
+title "In the corn Field"
+descr
+"The stalks of corn rise high overhead, and it is
+hard to tell which direction is the exit.  There
+is a fence to the north, and the field continues
+in all other directions.  The air is scented with
+the smell of growing corn."
+extra {"stalks of corn", "stalks", "corn", "ear"}
+"The corn looks as if it is almost ready to be harvested."
+extra {"fences"}
+"These fences are of the typical post and rail variety."
+
+dilcopy scramble@function("east south west");
+movement SECT_FIELD
+east to corn_fieldc descr
+"In the corn field";
+south to corn_field3 descr
+"In the corn field";
+west to corn_fielda descr
+"In the corn field";
+end
+
+				corn_fieldc
+
+title "In the Corn Field"
+descr
+"The stalks of corn rise high overhead, and it is
+hard to tell which direction is the exit.  There
+are fences to the north and east, and the field
+continues in all other directions.  It appears that
+there might be an opening to the south."
+extra {"stalks of corn", "stalks", "corn", "ear"}
+"The corn looks as if it is almost ready to be harvested."
+extra {"fences"}
+"These fences are of the typical post and rail variety."
+
+
+dilcopy scramble@function("south west");
+movement SECT_FIELD
+south to patch descr
+"An opening in the field";
+west to corn_fieldb descr
+"In the corn field";
+end
+
+/********************* PATH TO THE MOOR ***************************/
+
+				moor_path
+
+title "End of the Small Path"
+descr
+"The small path peters out here, and is replaced by a
+trail which leads through the woods to the north.  Moss
+covered trees hang over the trail which is covered with
+leaves and debris.  The trail looks reasonably well traveled,
+but does not appear to be used daily."
+extra {"small path", "path", "road"}
+"This small path leads south and connects with the town of Udgaard."
+extra {"trail"}
+"The trail is a small footpath which leads though the woods."
+extra {"leaves", "debris"}
+"No one works very hard to maintain this trail."
+extra {"moss covered trees", "trees", "moss"}
+"The old oaks and elms have bark which is covered in moss and lichens."
+
+movement SECT_FOREST
+south to sm_path4 descr
+"A north-south path";
+north to moor_path2 descr
+"A forest trail"; 
+end
+
+				moor_path2
+
+title "A Forest Trail"
+descr
+"The trail continues in a steady north and south
+direction, with few obstacles in the way.  Occasionally
+though, it is necessary to climb over a fallen tree or
+push through dense bushes.  The trees spread overhead,
+and forest animals can be heard in the underbrush."
+extra {"trail"}
+"The trail is a small footpath which leads though the woods."
+extra {"trees"}
+"The old oaks and elms spread their leafy branches overhead."
+
+movement SECT_FOREST
+south to moor_path descr
+"The end of the Trail";
+north to moor_path3 descr
+"A forest trail"; 
+end
+
+				moor_path3
+
+title "A Forest Trail"
+descr
+"This forest trail begins to lead uphill here, and
+begins to bend slightly to the east.  Nonetheless,
+it continues north and south, and thick underbrush
+prevents travel to the east or west.  The ground is
+littered with broken branches, and some cracked acorns
+lie nearby."
+extra {"forest trail", "trail"}
+"The trail is a small footpath which leads though the
+woods.  It begins to lead upwards slightly."
+extra {"thick underbrush", "underbrush"}
+"These bushes are certainly thick, and it looks like
+they have been trimmed back on a regular basis."
+extra {"broken branches", "branches", "ground"}
+"These branches look like they fell off the trees."
+extra {"cracked acorns", "acorns"}
+"It appears that a squirrel has been busy here."
+
+movement SECT_FOREST
+south to moor_path2 descr
+"A forest trail";
+north to moor_path4 descr
+"A forest trail"; 
+end
+
+				moor_path4
+
+title "A Bend in the Forest Trail"
+descr
+"The forest trail becomes quite steep here, and rises
+upwards to the east.  It looks as if there is a break
+in the trees in that direction, perhaps it would be
+possible to get a view of the surrounding countryside.
+This trail also leads downhill to the south, and
+is covered in leaves and broken twigs."
+extra {"forest trail", "trail"}
+"The trail is a small footpath which leads though the
+woods.  It leads upwards to the east and downwards to
+the south."
+extra {"break", "trees"}
+"It appears that there is clear sky to the east."
+extra {"broken twigs", "leaves", "twigs"}
+"The trail is scattered with debris from above."
+
+movement SECT_HILLS
+south to moor_path3 descr
+"A forest trail";
+east to moor_path5 descr
+"A break in the trees"; 
+end
+				moor_path5
+
+title "A Break in the Trees"
+descr
+"A break in the trees provides a spectacular view
+to the south.  There is a small farming hamlet,
+and the town of Udgaard is a little further south
+of that.  To the southeast, it is possible to see
+one of the towers of the Midgaard Walls poking above
+the tree line.  This small trail leads downhill
+both to the north or west."
+extra {"forest trail", "trail"}
+"The trail is a small footpath which leads though
+the woods.  It leads upwards to the east and downwards
+to the south."
+extra {"break", "view"}
+"There is a good view from here."
+extra {"small farming hamlet", "farming hamlet", "hamlet"}
+"This hamlet provides food and goods for the City of Midgaard."
+extra {"tree line", "tower"}
+"This of one of the great towers of the City of Midgaard."
+extra {"town of udgaard", "udgaard", "town"}
+"This is most likely where you hail from."
+
+movement SECT_HILLS
+west to moor_path4 descr
+"A bend in the forest trail"; 
+north to moor_path6 descr
+"A forest trail";
+end
+				moor_path6
+
+title "A Forest Trail"
+descr
+"The forest trail leads downhill to the north and
+uphill to the south.  To the south it appears that
+there is a break in the trees, which will perhaps
+provide a view of the surrounding lands.  The ground
+is covered in leaf mold along this well used trail.
+"
+extra {"forest trail", "trail"}
+"The trail is a small footpath which leads though the
+woods.  It leads upwards to the east and downwards to the south."
+extra {"break", "trees"}
+"It appears that there is clear sky to the east."
+extra {"leaf mold", "leaves", "mold", "leaf"}
+"These are decomposing leaves, and not very interesting."
+
+
+movement SECT_HILLS
+south to moor_path5 descr
+"A forest trail"; 
+north to moor_path7 descr
+"A forest trail";
+end
+
+				moor_path7
+
+title "A Forest Trail"
+descr
+"This small forest trail begins to rise upwards to the
+south.  The air is slightly chilly here, and to the north
+it is actually possible to make out a small stream.
+Chirping of birds can be heard over what can only be
+running water.  he trail is covered in gravel and silt
+here, perhaps from the flooding of the stream."
+extra {"forest trail", "trail"}
+"The trail is a small footpath which leads though the woods.
+It leads upwards to the south, and is covered in gravel and silt."
+extra {"gravel", "silt"}
+"This was most likely deposited in a flood."
+extra {"small stream", "stream"}
+"You can hear the small stream bubbling merrily."
+
+movement SECT_FOREST
+south to moor_path6 descr
+"A forest trail"; 
+north to moor_path8 descr
+"South of a small bridge";
+end
+
+				moor_path8
+
+title "South of a Small Bridge"
+descr
+"North of here is a small wooden bridge which spans a
+stream that flows from west to east.  The vegetation
+surrounding the stream grows very green, and what
+appears to be hoof prints are pressed into the silt
+alongside the trail.  The air is quite chilly
+here, but is very fresh scented.  The forest trail leads
+north over the bridge and south up a slight hill."
+extra {"forest trail", "trail"}
+"The trail is a small footpath which leads though the woods.
+It leads upwards to the south, northwards over a small bridge."
+extra {"small wooden bridge", "small bridge", "bridge"}
+"This small wooden bridge looks like it has survived a
+good number of floods."
+extra {"small stream", "stream"}
+"You can hear the small stream bubbling merrily."
+extra {"hoof prints", "prints", "silt"}
+"It appears that animals come to drink from the water."
+extra {"vegetation"}
+"These plants do not lack for water or fertilizer."
+
+movement SECT_FOREST
+south to moor_path7 descr
+"A forest trail"; 
+north to moor_path9 descr
+"On a small bridge";
+end
+
+		moor_path9
+
+title "Standing on a Small Bridge"
+descr
+"This small wooden bridge crosses a stream which flows
+from the west to east.  The wooden planks creak underfoot,
+and a few ripple appear in the water.  Leaves and other
+debris float by, and the bridge can be exited to the north
+or south."
+extra {"small wooden bridge", "small bridge", "bridge"}
+"This small wooden bridge looks like it has survived a
+good number of floods."
+extra {"small stream", "stream"}
+"You can hear the small stream bubbling merrily."
+extra {"wooden planks", "planks"}
+"They are VERY old but VERY strong."
+extra {"leaves", "debris"}
+"These are the typical things which might be found in a forest stream."
+extra {"ripple"}
+"Looks like a scared fish or frog."
+
+movement SECT_FOREST
+south to moor_path8 descr
+"South of the bridge"; 
+north to moor_path10 descr
+"North of the bridge";
+end
+		moor_path10
+
+title "North of a Small Bridge"
+descr
+"To the south is a small wooden bridge which crosses
+a stream flowing west to east.  The trail continues
+to the east, where there appears to be a landing of
+some sort.  The air is chilly, and the occasional leaf can
+be seen falling from the trees.  Birds of all types can
+be heard over the bubbling of the stream."
+extra {"forest trail", "trail"}
+"The trail is a small footpath which leads though the woods.
+It leads east to a ford, and southwards over a small bridge."
+extra {"small wooden bridge", "small bridge", "bridge"}
+"This small wooden bridge looks like it has survived a good
+number of floods."
+extra {"small stream", "stream"}
+"You can hear the small stream bubbling merrily.."
+extra {"landing"}
+"The path passes very close to the river's edge."
+extra {"trees", "leaf"}
+"If a tree falls in the forest, does it make a sound?"
+
+
+movement SECT_FOREST
+south to moor_path9 descr
+"On a small bridge"; 
+east to moor_path11 descr
+"By the landing";
+end
+
+		moor_path11
+
+title "A Landing"
+descr
+"The forest trail passes very close to the small stream
+at this point.  It might be possible to float a boat into
+the stream to the south.  This well kept trail passes from
+east to west here, but appears to bend north in the eastern
+direction.  Tall oaks span overhead, blocking out most of the sky."
+extra {"forest trail", "trail"}
+"The trail is a small footpath which leads though the woods."
+extra {"tall oaks", "oaks", "oak"}
+"The trees appear to be very old."
+extra {"small stream", "stream"}
+"You can hear the small stream bubbling merrily."
+extra {"landing"}
+"The path passes very close to the river's edge."
+extra {"sky"}
+"The sky can be seen in patches through the trees."
+
+
+movement SECT_FOREST
+west to moor_path10 descr
+"North of a small bridge"; 
+east to moor_path12 descr
+"A bend in the forest trail";
+south to moor_river1 descr
+"Floating on the small stream";
+end
+
+		moor_path12
+
+title "A Bend in the Forest Trail"
+descr
+"The forest trail bends from north to west here, and a small
+landing can be seen to the west.  Tall trees span overhead,
+and what sounds like water can be heard to the south.  There
+are some ferns growing here, and the trail looks to be well
+kept."
+extra {"forest trail", "trail"}
+"The trail is a small footpath which leads though the woods.
+It leads west to a ford, and north into the woods."
+extra {"tall trees", "trees", "tree"}
+"The trees appear to be very old."
+extra {"small stream", "stream"}
+"You can hear the small stream bubbling merrily."
+extra {"landing"}
+"The path passes very close to the river's edge."
+extra {"ferns"}
+"Ferns are a bushy looking plant which grows from the ground."
+
+movement SECT_FOREST
+west to moor_path11 descr
+"A landing"; 
+north to moor_path13 descr
+"A forest trail";
+end
+
+		moor_path13
+
+title "A Forest Trail"
+descr
+"Walls of earth run up on the east and west sides of
+this forest trail, creating a small defile.  The walls
+look as if they were dug by hand, perhaps this was a mine
+of some type.  Roots stick out of the earth, poking into
+the air like bony fingers.  The trail leads north and
+south out of this defile"
+extra {"forest trail", "trail"}
+"The trail is a small footpath which leads though the woods.
+It passes through at defile at this point."
+extra {"walls of earth", "defile", "walls", "earth", "mine"}
+"It appears as if this gully was dug by hand, but the
+reason is unapparent."
+extra {"fingers", "roots"}
+"The defile is quite old, allowing the roots to grow
+outwards into mid air."
+
+
+movement SECT_FOREST
+north to moor_path14 descr
+"A bend in the forest trail"; 
+south to moor_path12 descr
+"A bend in the forest trail";
+end
+
+		moor_path14
+
+title "A Bend in the Forest Trail"
+descr
+"The small forest trail bends from south to east here,
+and appears to enter some sort of defile to the south.
+There is a hut to the north, which is surrounded with
+deep pits.  The trees are thinner here, and the ground
+is becoming slightly moist."
+extra {"forest trail", "trail"}
+"The trail is a small footpath which leads though the woods."
+extra {"defile"}
+"The trail passes through a defile to the south."
+extra {"hut"}
+"The hut looks to be ramshackle and run down."
+extra {"deep pits", "pits"}
+"There appears to be no reason for the pits."
+extra {"trees"}
+"The trees have begun to thin out here, and larger patches
+of the sky are visible."
+extra {"ground"}
+"The ground is slightly moist beneath your feet."
+
+
+movement SECT_FOREST
+north to old_hut descr
+"A ramshackle hut";
+east to moor_path15 descr
+"A forest trail"; 
+south to moor_path13 descr
+"A defile";
+end
+
+		old_hut
+
+title "Inside the Ramshackle Hut"
+descr
+"This hut appears to be inhabited, and there are a
+few old blankets laying around the room.  A fire
+burns in the hearth, and the room is filled with
+digging tools.  There are a few benches and a loaf
+of bread sits on a table next to a large pan.
+There is a doorway to the south."  
+extra {"ramshackle hut", "room", "hut"}
+"This hut is in such poor condition it is almost falling over."
+extra {"old blankets", "blankets"}
+"These old blankets are nappy and dirty looking."
+extra {"hearth", "fire"}
+"This is the only cheery thing in the room."
+extra {"digging tools", "tools"}
+"There is a pickaxe, some shovels, a hoe, and an assortment
+of other tools."
+extra {"benches", "table"}
+"There are a few benches sitting around a table."
+extra {"large pan", "pan"}
+"Looks to be what might be used to pan for gold."
+extra {"loaf of bread", "bread", "loaf"}
+"This loaf of bread looks very crusty."
+
+movement SECT_INSIDE
+south to moor_path14 descr
+"A bend in the forest path";
+end
+
+		moor_path15
+
+title "A Forest Trail"
+descr
+"There are a few deep holes on either side of the
+trail here, and it looks as if they have filled up
+with water.  The ground is almost spongy here, and
+the pungent smell of skunk cabbage fills the air.
+The trees have thinned out, and stand at least a good
+six feet apart at any point.  The forest trail leads
+from west to east."
+extra {"forest trail", "trail"}
+"The trail is a small footpath which leads though the woods."
+extra {"deep holes", "holes"}
+"What were once deep holes are now deep holes filled with water.
+You verify this by plunging a stick into one."
+extra {"trees"}
+"The trees have thinned out here, and large patches of
+the sky are visible."
+extra {"ground"}
+"The ground is wet beneath your feet."
+
+movement SECT_FOREST
+east to moor_path16 descr
+"A forest trail"; 
+west to moor_path14 descr
+"A forest trail";
+end
+				moor_path16
+
+title "A Forest Trail"
+descr
+"The air here is quite moist, and the ground squishes
+and squashes underfoot.  The tall trees are spread farther
+apart, allowing large patches of the sky to be seen.
+Some toadstools grow next to the path, and you can hear
+the croak of a toad or two.  The trail leads from west
+to east here."
+extra {"forest trail", "trail"}
+"The trail is a small footpath which leads though the woods."
+extra {"tall trees", "trees"}
+"The trees grow farther apart here, and large patches of
+the sky are visible."
+extra {"ground"}
+"The ground is wet and squishy beneath your feet."
+extra {"toadstools"}
+"They have large caps, and are covered with red spots."
+
+
+movement SECT_FOREST
+east to moor_path17 descr
+"A forest trail"; 
+west to moor_path15 descr
+"A forest trail";
+end
+
+				moor_path17
+
+title "A Forest Trail"
+descr
+"Pools of water intersect the path here, making the
+travel difficult.  The roots of the trees are covered
+in moss and lichens, and are grow far apart from one
+another.  Some tufts of grass grow here and there,
+sprouting an occasional flower.  The trail passes
+from west to east."
+extra {"forest trail", "trail"}
+"The trail is a small footpath which leads though the
+swampy woods."
+extra {"tall trees", "trees"}
+"The trees have moss and lichens growing on their bark."
+extra {"pools of water", "water", "pools"}
+"They are small pools of stagnant water."
+extra {"lichens", "moss"}
+"The mosses and lichens are colored green and blue."
+extra {"tufts of grass", "flower", "grass", "tufts"}
+"There are tufts of grass growing here, along the edges
+of the trail.  Sometimes a flower sprouts out from the
+middle of these."
+
+movement SECT_SWAMP
+east to moor_path18 descr
+"A forest trail"; 
+west to moor_path16 descr
+"A forest trail";
+end
+
+				moor_path18
+
+title "A Soggy Forest Trail"
+descr
+"Toads can be heard croaking all along this stretch of
+the soggy forest trail.  There is a certain, unidentifiable
+stench that comes from nowhere in particular.  The tall
+trees are covered in moss and lichens, and there are pools
+of water all around.  The forest trail leads from west to east."  
+extra {"soggy forest trail", "forest trail", "trail"}
+"The trail is a small footpath which leads though the swampy woods."
+extra {"tall trees", "trees"}
+"The trees have moss and lichens growing on their bark."
+extra {"pools of water", "water", "pools"}
+"They are small pools of stagnant water."
+extra {"lichens", "moss"}
+"The mosses and lichens are colored green and blue."
+
+movement SECT_SWAMP
+east to moor_path19 descr
+"A forest trail"; 
+west to moor_path17 descr
+"A forest trail";
+end
+
+				moor_path19
+
+title "A Soggy Forest Trail"
+descr
+"Something smells bad along this soggy forest trail,
+but it is probably just the stink of a swamp.  A little
+farther east it seems that there is a break in the trees,
+and there are small pools of water next to the trail.  The
+trees here are short and covered in moss and lichens.  
+This soggy forest trail leads from west to east."
+extra {"soggy forest trail", "forest trail", "trail"}
+"The trail is a small footpath which leads though the swampy woods."
+extra {"break"}
+"It appears that there is a break in the tree line to the east."
+extra {"tall trees", "trees"}
+"The trees have moss and lichens growing on their bark."
+extra {"pools of water", "water", "pools"}
+"They are small pools of stagnant water."
+extra {"lichens", "moss"}
+"The mosses and lichens are colored green and blue."
+
+movement SECT_SWAMP
+east to moor_path20 descr
+"The end of the forest trail"; 
+west to moor_path18 descr
+"A forest trail";
+end
+
+				moor_path20
+
+title "The End of a Forest Trail"
+descr
+"There is a vast expanse of flat land which extends to
+the east from the edge of this forest.
+The line of trees extends to the north and the south,
+and there are some small pools of water next to the trail.
+You can follow a small trail westwards into the forest."
+extra {"expanse of flat land", "flat land", "expanse", "land"}
+"This is the moor which lies north of the City of Midgaard."
+extra {"soggy forest trail", "forest trail", "trail"}
+"The trail is a small footpath which leads though the swampy woods."
+extra {"break"}
+"It appears that there is a break in the tree line to the east."
+extra {"tall trees", "trees"}
+"The trees have moss and lichens growing on their bark."
+extra {"pools of water", "water", "pools"}
+"They are small pools of stagnant water."
+extra {"lichens", "moss"}
+"The mosses and lichens are colored green and blue."
+flags {UNIT_FL_NO_MOB}
+
+movement SECT_SWAMP
+east to moor/moor_w17 descr
+"The moor";
+west to moor_path19 descr
+"A soggy forest trail";
+end
+
+				moor_river1
+
+title "On a Small Stream"
+descr
+"This small stream flows from west to east, and its
+current is rather slow.  There is a landing to the north,
+which is connected with a small forest trail.  To the west
+is a bridge spanning the stream, and it is possible to sail
+to the east or west."
+extra {"small stream", "stream"}
+"This small stream flows merrily along, the current moving
+from west to east."
+extra {"forest trail", "trail"}
+"The trail is a small footpath which leads though the woods."
+extra {"landing"}
+"This is where the river has access to a forest trail."
+extra {"bridge"}
+"The bridge is constructed of strong wood and has survived
+a number of floods."
+
+movement SECT_WATER_SAIL
+east to moor_river2 descr
+"Floating down the stream";
+west to under_bridge descr
+"Floating under the bridge";
+north to moor_path11 descr
+"A landing";
+end
+				under_bridge
+
+title "Under the Bridge"
+descr
+"The bottom of the bridge looks to be made of strong
+planks and rafters.  The foundations are well cut
+stones, and the mortar still looks strong.  This
+small stream flows east, but rocks block all passage
+to the west."
+extra {"small stream", "stream"}
+"This small stream flows merrily along, the current
+moving from west to east."
+extra {"forest trail", "trail"}
+"The trail is a small footpath which leads though the woods."
+extra {"landing"}
+"This is where the river has access to a forest trail."
+extra {"bridge", "bottom"}
+"The bridge is constructed of strong wood and has
+survived a number of floods."
+extra {"planks", "rafters"}
+"The bridge is constructed of strong wood."
+extra {"well cut stones", "foundations", "cut stones", "mortar", "stones"}
+"The foundations of this bridge are well built and quite strong."
+
+
+
+movement SECT_WATER_SAIL
+east to moor_river1 descr
+"On a small stream";
+end
+				moor_river2
+
+title "On a Small Stream"
+descr
+"This small stream is passing through a forest of
+massive trees, and there are some wildflowers along
+its banks.  There are small whirlpools here and there,
+and a bubble rises to the surface occasionally.  The river
+flows from west to east, and there are
+no exits on the north or south banks."  
+extra {"small stream", "stream"}
+"This small stream flows merrily along, the current
+moving from west to east."
+extra {"massive trees", "forest", "trees"}
+"The massive trees reach their boughs skyward."
+extra {"wildflowers"}
+"They are pretty flowers in red, yellow and orange."
+extra {"small whirlpools", "whirlpools"}
+"The whirlpools flow clockwise."
+extra {"bubble"}
+"The bubble roll to the surface."
+
+
+
+movement SECT_WATER_SAIL
+east to moor_river3 descr
+"Floating down the stream";
+west to moor_river1 descr
+"Upstream from here";
+end
+
+				moor_river3
+
+title "On a Small Stream"
+descr
+"The current picks up a little here on the stream
+which is flowing from west to east.  The trees are
+beginning to thin out on the banks, and the water is
+filled with silt.  The air is cold but fresh here."
+extra {"small stream", "stream"}
+"This small stream flows merrily along, the current
+moving from west to east."
+extra {"massive trees", "forest", "trees"}
+"The massive trees reach their boughs skyward."
+extra {"wildflowers"}
+"They are pretty flowers in red, yellow and orange."
+extra {"small whirlpools", "whirlpools"}
+"The whirlpools flow clockwise."
+extra {"banks"}
+"The banks of the river are muddy."
+
+
+
+movement SECT_WATER_SAIL
+east to moor_river4 descr
+"Floating down the stream";
+west to moor_river2 descr
+"Upstream from here";
+end
+
+				moor_river4
+
+title "On a Small Stream"
+descr
+"The air is chilly at this section of the small stream.
+There are sparse trees on the banks now, and the land next
+to the stream has become almost like a flood plain.  Tufts
+of grass wave in the waters currents, and the river flows
+gently east."
+extra {"small stream", "stream"}
+"This small stream flows merrily along, the current moving
+from west to east."
+extra {"sparse trees", "forest", "trees"}
+"The sparse trees block little of the sky overhead."
+extra {"flood plain", "plain", "land"}
+"It appears as if there is a marsh all around the stream."
+extra {"tufts of grass", "grass", "tufts"}
+"The grass is green and long."
+
+movement SECT_WATER_SAIL
+east to moor_river5 descr
+"Floating down the stream";
+west to moor_river3 descr
+"Upstream from here";
+end
+
+				moor_river5
+
+title "On a Small Stream"
+descr
+"The air is chilly at this section of the small stream.
+There are sparse trees on the banks now, and the land next
+to the stream has become almost like a flood plain.  Some cattails can 
+be seen growing next to the trees.  Tufts
+of grass wave in the waters currents, and the river flows
+gently east."
+extra {"cattails"}
+"They are green plants with brown puffy tops."
+extra {"small stream", "stream"}
+"This small stream flows merrily along, the current moving
+from west to east."
+extra {"sparse trees", "forest", "trees"}
+"The sparse trees block little of the sky overhead."
+extra {"flood plain", "plain", "land"}
+"It appears as if there is a marsh all around the stream."
+extra {"tufts of grass", "grass", "tufts"}
+"The grass is green and long."
+
+
+
+movement SECT_WATER_SAIL
+east to moor_river6 descr
+"A rocky Barrier";
+west to moor_river4 descr
+"Upstream from here";
+end
+				moor_river6
+
+title "A Rocky Barrier"
+descr
+"A rocky barrier blocks all eastward passage along
+this stream.  Due east of the rocky barrier, the
+stream flows into a hole, disappearing underground.
+To the north there is a landing of some sort, and there
+is a marsh all around.  A few frogs or toads can be
+heard croaking somewhere nearby."
+extra {"small stream", "stream"}
+"This small stream flows merrily along, and flows underground to the east."
+extra {"rocky barrier", "barrier", "rocks"}
+"These rocks keep your boat from being sucked underground."
+extra {"hole"}
+"The small stream disappears into this hole."
+extra {"marsh"}
+"It appears as if there is a marsh all around the stream."
+
+
+
+movement SECT_WATER_SAIL
+north to river_land descr
+"Landing at the marsh";
+west to moor_river5 descr
+"Upstream from here";
+end
+
+					river_land
+
+title "Landing at the Marsh"
+descr
+"To the south it is possible to float a boat out onto a
+small stream.  All around is marshland, and the ground is
+extremely wet underneath the feet.  Some cattails are
+growing in a clump here, and there are small pools of water
+here and there.  Passage eastward and deeper into the
+marsh is possible."
+extra {"small stream", "stream"}
+"This small stream flows from east to west."
+extra {"marshland", "ground", "marsh"}
+"The ground appears to consist of a sort of peat moss."
+extra {"cattails", "clump"}
+"The cattails stand in a clump and are roughly five feet tall."
+extra {"small pools", "water", "pools"}
+"The pools of water seem to bubble up from underground."
+
+movement SECT_SWAMP
+east to moor/marsh_20;
+south to moor_river6 descr
+"A Rocky Barrier";
+end
+
+
+
+%objects
+
+                                pants
+
+names {"pantsa", "pants"}
+title "a pair of pants"
+descr "A pair of pants is sitting on the ground."
+extra {}
+"This pair of pants looks just right for someone who is missing them."
+weight 2
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+end
+                                needle
+
+names {"needlea", "needle"}
+title "a small sewing needle"
+descr "A sewing needle is almost hidden in the dust of the floor."
+extra {}
+"This needle looks perfect for sewing.  It's small and shiny."
+weight 1
+manipulate {MANIPULATE_TAKE}
+end
+
+                                straw
+
+names {"strawa", "straw"}
+title "a pile of straw"
+descr "A pile of straw sits here."
+extra {}
+"This straw looks good as animal fodder, or perhaps it could be used
+to stuff something."
+weight 2
+manipulate {MANIPULATE_TAKE}
+end
+
+                                spool
+
+names {"spoola", "spool"}
+title "a spool of thread"
+descr "A spool of thread sits here."
+extra {}
+"The thread looks to be in good condition, and could be used for sewing."
+weight 1
+manipulate {MANIPULATE_TAKE}
+end
+                                old_pants
+
+names {"legs"}
+title "a pair of legs"
+descr "A pair of legs is resting on the ground."
+extra {}
+"These legs look to have come from a scarecrow."
+weight 4
+manipulate {MANIPULATE_TAKE}
+end
+
+                                ring
+
+names {"tarnished silver ring", "small silver ring", "silver ring", "ring"}
+title "a tarnished silver ring"
+descr "A slightly tarnished silver ring sits on the ground."
+extra {}
+"This small silver ring is slightly tarnished, but you can
+see its true beauty shining through.  It looks just right for your
+finger. Perhaps you should polish it."
+STR_TRANSFER(+1)
+SKILL_TRANSFER(SKI_RESCUE, 10)
+weight 1
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FINGER}
+#define FART ""
+/*
+dilbegin ring();
+var
+  item : unitptr;
+  pc   : unitptr;
+  extvar : string;
+  polished : string;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*10;
+   :start:
+   wait(SFB_CMD, (command("polish") and
+       ("ring" in argument)));
+   block;
+   pc := activator;
+   secure(pc, lostpc);
+   {
+     if("$polish" in self.extra)
+     {
+       goto end;
+     }
+     act("You polish your ring until it shines.", 
+     A_SOMEONE, pc, null, null, TO_CHAR);
+
+     act("$1n polished their small silver ring.",
+     A_SOMEONE, pc, null, null, TO_REST);
+
+     extvar := "This small silver ring shines brightly, "+
+               "and you can tell that it is special in some "+
+               "way.  It looks just right for your finger.";
+     addextra(self.extra, {FART}, extvar);
+     polished := "was polished.";   
+     addextra(self.extra, {"$polish"}, polished);
+     self.outside_descr := "A shiny silver ring sits on the ground.";
+     self.title := "a shiny silver ring.";
+     goto end;
+   }
+   unsecure(pc);
+     goto start;
+
+   :lostpc:
+     goto start;
+   :end:
+}
+dilend
+*/
+end
+
+
+				sign
+
+names {"sign"}
+title "a small sign"
+descr "There is a small sign nailed to a post."
+extra {}
+"&l
+The sign points south, and the letters read
+	<------------ To Udgaard -----------"
+weight 500
+end
+
+				box
+
+names {"metal box", "box"}
+title "a metal box"
+descr "A small metal box sits here."
+extra {} 
+"This metal box looks to be quite strong, and is equipped with a small lock."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED} 
+key safe_key
+type ITEM_CONTAINER
+CONTAINER_DEF(20)
+weight 10
+end
+                           cleaver
+
+names {"meat cleaver","cleaver"}
+title "a meat cleaver"
+descr "A large meat cleaver dares you to cut pork."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_HAND_AXE, 1, 0)
+weight 5
+cost 15 SILVER_PIECE
+extra {}
+"This cleaver looks as if it is used to cut up pigs or some
+other large animal."
+end
+
+                           scythe
+
+names {"scythe"}
+title "a scythe"
+descr "A scythe for cutting wheat sits here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_HAND_AXE, -5, -3)
+weight 6
+cost 12 SILVER_PIECE
+extra {}
+"This scythe appears to be used for cutting wheat or
+some other type of grain."
+end
+
+                           shovel
+
+names {"shovel"}
+title "a shovel"
+descr "A large shovel is stuck into the ground."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_BATTLE_AXE, -4, -8)
+weight 5
+cost 15 SILVER_PIECE
+extra {}
+"This shovel has probably not been used solely for digging in the ground."
+end
+
+
+				bail
+
+names {"bundle of wheat", "bundle", "wheat"}
+title "a bundle of wheat"
+descr "A bundle of wheat is here."
+extra {}
+"These are the collected stalks of cut wheat."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 4
+end
+                             carcass
+
+names {"pork saddle", "saddle", "pork"}
+title "a saddle of pork"
+descr "A saddle of pork hangs on a hook."
+extra {}
+"It looks quite tasty, but you'd better have something to drink."
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF(36, 0)
+weight 6
+cost 5 IRON_PIECE
+end
+
+                             dead_pig
+
+names {"dead pig", "pig"}
+title "a dead pig"
+descr "A dead pig lies on the floor."
+extra {}
+"A dead pig."
+manipulate {MANIPULATE_TAKE}
+weight 15
+end
+                             capture_flag
+
+names {"rules card", "card"}
+title "a rules card for capture the flag"
+descr "A rules card for capture the flag."
+extra {}
+"&l
+Rules:
+No teleport
+No Gate except members of your team
+No Ressurect
+If you tele to corpse, you can not rejoin the battle
+No Looting
+No Reporting to captain
+No Wings
+No Feather
+No Outside help
+
+Use your brain don't do stupid things, don't cheat :)
+."
+manipulate {MANIPULATE_TAKE}
+weight 1
+end
+
+
+                             coins
+MONEY(COPPER_PIECE, 15)
+end
+
+
+                            safe_key
+
+
+names {"iron key","key"}
+title "a key"
+descr "An iron key is caked in dirt."
+type ITEM_KEY
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+
+extra {}
+"This large iron key looks like it opens a door somewhere."
+end
+
+                            sack
+
+
+names {"sack of flour","flour", "sack"}
+title "a sack of flour"
+descr "A sack of flour sits here."
+type ITEM_OTHER
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 5
+
+extra {}
+"The sack reads: Alvin Miller Flour."
+end
+                            wheat_bag
+
+
+names {"bag of wheat", "wheat", "chaff", "sack", "bag"}
+title "a bag of wheat chaff"
+descr "A bag of wheat chaff sits here."
+type ITEM_OTHER
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 5
+
+extra {}
+"The bag reads: Property of Joe Farmer."
+end
+
+%mobiles
+		
+				dog
+/* level  5*/
+names {"dog"}
+title "a dog"
+descr "A dog is curled on the ground here."
+extra {}
+"A young dog is curled upon the ground here.  He looks quite content."
+
+M_DOG_ROTTWEILER(SEX_MALE)
+money 3 COPPER_PIECE
+end
+
+                                scarecrow
+
+/* level  5*/
+names {"scarecrow"}
+title "a scarecrow"
+descr "A scarecrow is strung up on sticks."
+extra {}
+"This scarecrow does not look like its doing a very good job protecting
+the corn from the birds."
+
+M_DOG_ROTTWEILER(SEX_MALE)
+level 10
+
+#define CROW_ONGOING "Scarecrow Quest Ongoing"
+#define CROW_COMPLETE "Scarecrow Quest Complete"
+
+dilbegin crow1();
+var
+  pcname   : string;
+  item     : unitptr;
+  pc       : unitptr;
+  i        : integer;
+  exdp     : extraptr;
+
+code
+{
+
+  :init:
+  heartbeat := PULSE_SEC*5;
+  on_activation((self.position <= POSITION_SLEEPING) or
+	       (self.position == POSITION_FIGHTING), skip);
+
+  :start:
+  wait(SFB_CMD, (activator.type == UNIT_ST_PC) and (not command(CMD_GIVE)));
+  if(CROW_COMPLETE in activator.quests)
+     goto waitawhile;
+
+  pc := activator;
+  secure(pc, lostpc);
+
+  if(not(CROW_ONGOING in pc.quests))
+     {
+     exec("say Please, please help me fair traveler.", self);
+     pause;
+     exec("say I can't keep the crows out of the field.", self);
+     pause;
+     exec("say They laugh and jeer at me from the corn stalks "+
+          "even as they eat the plants that I am supposed to "+
+          "protect", self);
+     pause;
+     exec("say I need a new pair of legs, the ones I have are "+
+          "all rotten, can you help me?", self);
+     pause;
+     exec("say Please nod if you can help me or shake if you can not.",
+	   self);
+
+     i := 0;
+     while (i < 5)
+     {
+	wait(SFB_CMD, activator #= pc);
+
+	if(command(CMD_NOD))
+	{
+	  goto quest_accepted;
+	}
+	else if(command(CMD_SAY))
+	{
+	  pause;
+          exec("say Nod if you want to continue, shake if not.", self);
+	}
+	else if(command(CMD_SHAKE))
+            goto no_quest;
+        i := i + 1;
+     }
+
+  :no_quest:
+  pause;
+  exec("say I shall never walk again.", self);
+  unsecure(pc);
+  goto waitawhile;
+
+  :quest_accepted:
+  pause;
+  exec("say Oh thank you! You are a valliant warrior.", self);
+
+  pause;
+  exec("say I need a pair of pants.", self);
+
+  pause;
+  exec("say I must have some fresh straw.", self);
+
+  pause;
+  exec("say I want a needle.", self);
+
+  pause;
+  exec("say and I require a spool of thread.", self);
+
+  pause;
+  exec("say I thank you, please return quickly.", self);
+
+  exec("emote waves goodbye to you.", self);
+  addextra(pc.quests, {CROW_ONGOING}, "");
+  unsecure(pc);
+  goto start;
+  }
+  else
+  {
+    exdp := CROW_ONGOING in pc.quests;
+    if (("spoola" in exdp.names) and
+        ("needlea" in exdp.names) and
+        ("strawa" in exdp.names) and
+        ("pantsa" in exdp.names))
+    {
+	pause;
+        subextra(pc.quests, CROW_ONGOING);
+        addextra(pc.quests, {CROW_COMPLETE}, "");
+        exec("say Lets get to work", self);
+	pause;
+        exec("emote takes the pants and stuffs them with straw", self);
+	pause;
+        exec("emote pulls off the bottom of his body.", self);
+	pause;
+        exec("emote pulls some shoes of the legs.", self);
+        pause;
+        exec("emote threads the needle.", self);
+        pause;
+        exec("emote sews the shoes onto the new pants.", self);
+        pause;
+        item := load("old_pants@hamlet");
+        exec("emote drops his old legs on the ground.", self);
+        link(item, self.outside);
+
+        exec("emote sews the new legs to his upper body.", self);
+	pause;
+        exec("smile", self);
+        pause;
+        exec("emote hops off of the sticks.", self);
+        pause;
+        exec("say now ill get those crows.", self);
+        pause;
+        exec("emote puts his hands in his pockets.", self);
+        pause;
+        exec("emote gets a surprised look on his face.", self);
+        pause;
+        exec("say well look what I found here.", self);
+        pause;
+        act("The scarecrow pulls a ring from his pocket.",
+	A_SOMEONE, pc, null, null, TO_CHAR);
+
+        act("The Scarecrow pulls a ring from his pocket.",
+	A_SOMEONE, self.outside, null, null, TO_ROOM);
+        pause;
+        exec("say I don't need this, you can have it.", self);
+        item := load("ring@hamlet");
+	link(item, pc);
+
+        act("The scarecrow gives you a ring.",
+	A_SOMEONE, pc, null, null, TO_CHAR);
+
+        act("The storyteller gives a ring to $1n.",
+	A_SOMEONE, self.outside, null, null, TO_ROOM);
+
+        experience(800, pc);
+	pause;
+        exec("say Thank you again, and good travels to you.", self);
+        pause;
+        exec("emote wanders off muttering something about crows.", self);
+    }
+  }
+  unsecure(pc);
+  goto start;
+
+	:waitawhile:
+	heartbeat := PULSE_SEC*60;
+	pause;
+	goto init;
+
+	:lostpc:
+        exec("say I am doomed for certain.", self);
+	pause;
+	exec("sigh", self);
+	goto start;
+}
+dilend
+
+dilbegin crow2();
+var
+  pc     : unitptr;
+  item   : unitptr;
+  exdp   : extraptr;
+
+  code
+  {
+    heartbeat := PULSE_SEC*5;
+    on_activation((self.position <= POSITION_SLEEPING) or
+	       (self.position == POSITION_FIGHTING), skip);
+
+    :start:
+    wait(SFB_CMD, command(CMD_GIVE) and (activator.type == UNIT_ST_PC));
+
+    :give:
+    if (not(CROW_ONGOING in activator.quests))
+	goto start;
+
+    pc := activator;
+    item := self.inside;
+    secure(pc, labsecure);
+    secure(item, labsecure);
+
+    wait(SFB_CMD | SFB_TICK, TRUE);
+    if(not(item #= self.inside))
+    {
+      unsecure(item);
+      exdp := CROW_ONGOING in pc.quests;
+
+      if("spoola" in self.inside.name)
+      {
+        addstring(exdp.names, "spoola");
+        exec("say Oh wonderful, the spool of thread!", self);
+	destroy(self.inside);
+      }
+      else if ("needlea" in self.inside.name)
+      {
+        addstring(exdp.names, "needlea");
+        exec("say Now I can sew.", self);
+	destroy(self.inside);
+      }
+      else if ("strawa" in self.inside.name)
+      {
+        addstring(exdp.names, "strawa");
+        exec("say With this I can restuff my legs.", self);
+	destroy(self.inside);
+      }
+      else if ("pantsa" in self.inside.name)
+      {
+	addstring(exdp.names, "pantsa");
+        exec("say With these I can walk again.", self);
+	destroy(self.inside);
+      }
+      else
+      {
+        exec("say This is not what I am looking for " +pc.name+ ".", self);
+	pause;
+	exec("say Please have it back.", self);
+	link(self.inside, pc);
+      }
+    }
+    unsecure(pc);
+
+    if((command(CMD_GIVE)) and (activator.type == UNIT_ST_PC))
+    {
+      goto give;
+    }
+    else
+      goto start;
+
+    :labsecure:
+    exec("sigh", self);
+    goto start;
+
+}
+dilend
+end
+
+
+
+				rabbit
+names {"rabbit"}
+title "a rabbit"
+descr "A rabbit hops around here."
+extra {}
+"A small rabbit hops around, occasionally munching on some plant or other."
+
+M_RABBIT(SEX_FEMALE)
+level 6
+special SFUN_RANDOM_ZONE_MOVE time 100 bits SFB_RANTIME
+end
+
+				red_fox
+
+names {"fox"}
+title "a red fox"
+descr "A red fox slinks out of the underbrush."
+extra {}
+"A beautiful red fox with a bushy tail slinks from the underbrush."
+
+M_FOX
+sex SEX_MALE
+level 7
+special SFUN_RANDOM_ZONE_MOVE time 100 bits SFB_RANTIME
+end
+
+				cat
+names {"cat", "sam"}
+title "Sam the cat"
+descr "A beautiful cat licks its paws and waits for mice."
+extra {}
+"A beautiful tabby named sam sits on his haunches and licks his paws.
+His job is to keep the mill free of mice."
+
+M_CAT(SEX_MALE)
+level 7
+money 2 COPPER_PIECE
+end
+
+				pony
+names {"pony"}
+title "a pony"
+descr "A pony stands here munching hay."
+extra {}
+"A painted pony looks at you while munching upon some sweet smelling
+hay."
+
+M_HORSE_PONY(SEX_FEMALE)
+level 6
+money 2 COPPER_PIECE
+end
+
+				deer
+names {"deer"}
+title "a deer"
+descr "A deer looks at you with baleful eyes."
+extra {}
+"A beautiful deer looks at you with its sweet eyes and you find it 
+a very serene sight.  It has some white spots on its flank."
+
+M_DEER(SEX_FEMALE)
+level 7
+money 2 COPPER_PIECE
+special SFUN_RANDOM_ZONE_MOVE time 100 bits SFB_RANTIME
+end
+
+
+				bear
+names {"bear"}
+title "a black bear"
+descr "A small black bear crashes from the underbrush."
+extra {}
+"The bear is beautiful and black, and it looks to be very dangerous."
+
+M_BEAR_GRIZZLY(SEX_FEMALE)
+level 12
+weight 400
+height 175
+money 2 COPPER_PIECE
+special SFUN_RANDOM_ZONE_MOVE time 100 bits SFB_RANTIME
+end
+
+
+				crow
+names {"crow"}
+title "a crow"
+descr "A crow sits on the corn stalk."
+extra {}
+"A crow sits on the corn stalk and pecks at the kernels."
+
+M_OWL(SEX_MALE)
+level 6
+money 4 IRON_PIECE
+special SFUN_RANDOM_ZONE_MOVE time 100 bits SFB_RANTIME
+end
+
+
+
+				cow
+names {"bessie", "cow"}
+title "Bessie the cow"
+descr "Bessie the cow stands here chewing her cud."
+extra {}
+"Bessie the cow chews her cud and looks at you contentedly.
+She is brown with white spots."
+
+M_COW(SEX_FEMALE)
+level 5
+money 3 COPPER_PIECE
+special SFUN_RANDOM_ZONE_MOVE time 100 bits SFB_RANTIME
+end
+				pig
+
+names {"pig"}
+title "a pig"
+descr "A pig is here rooting in the mud."
+extra {}
+"The pig looks at you with mournful eyes, you get the
+feeling that it is going to be slaughtered soon."
+M_BOAR(SEX_MALE)
+NATURAL_DEF(WPN_CRUSH, ARM_HLEATHER)
+level 6
+exp 105
+weight 500
+alignment 400
+money 3 COPPER_PIECE
+end
+
+
+				big_mouse
+names {"big mouse", "mouse"}
+title "a big mouse"
+descr "A big mouse bares its sharp teeth."
+extra {}
+"A big mouse is gray, furry, and looks to be displeased."
+
+M_RAT_GIANT(SEX_FEMALE)
+level 6
+money 3 COPPER_PIECE, 2 IRON_PIECE
+end
+	
+
+				mole
+names {"angry mole", "mole"}
+title "an angry mole"
+descr "An angry mole leers at you with its beady eyes."
+extra {}
+"The angry mole looks at you with its beady eyes and bears its sharp teeth."
+
+M_RAT_GIANT(SEX_FEMALE)
+romflags {CHAR_DETECT_INVISIBLE}  
+special SFUN_AGGRESSIVE time WAIT_SEC*25 bits SFB_RANTIME 
+end
+
+
+			
+				miller
+names {"alvin miller", "miller", "alvin"}
+title "Alvin Miller"
+descr "Alvin Miller toils away at his millstone."
+extra {}
+"Alvin is wearing a leather apron which is covered with flour.  He has 
+a happy glint in his eye as he tends to his millstone.  His hands are 
+rough and worn from years of hard work."
+
+M_AVG_HUMAN(10, SEX_MALE, RACE_HUMAN)
+alignment 400
+money 5 COPPER_PIECE
+
+
+dilbegin miller();
+external
+ integer walk_room (s:string,i:integer);
+var
+item : unitptr;
+tf:integer; 
+code
+{
+   on_activation((self.position == POSITION_FIGHTING), skip);
+
+  :start:
+  heartbeat := WAIT_SEC*5;
+  if((mudhour >= 13) and (mudhour < 14)) 
+  { 
+   goto lunch;
+  }   
+  if((mudhour >= 19) and (mudhour < 20)) 
+  {
+   goto dinner;
+  }
+  if((mudhour > 22) and (mudhour < 0)) 
+  {
+   goto bed;
+  }
+  if((mudhour >= 0) and (mudhour < 6)) 
+  {
+   goto bed;
+  }
+  else
+  {
+    goto work;
+  }
+  goto start;
+
+  :work:
+  heartbeat := PULSE_SEC*10;
+  self.outside_descr := "Alvin Miller toils away at his millstone.";
+  tf:=walk_room ("windmill@hamlet",20);
+  if (tf==TRUE)
+  {
+    pause;
+  }
+    exec("emote grabs a sack of grain.", self);
+    pause;
+    exec("emote pours the grain into a hopper.", self);
+    pause;
+    exec("emote inspects the grindstone.", self);
+    pause;
+    exec("emote gets a sieve from next to the grindstone.", self);
+    pause;
+    exec("emote sifts the semi-ground grain.", self);
+    pause;
+    exec("emote pours the un-ground kernels into the hopper.", self);
+    pause;
+    exec("emote gets an empty sack from a pile.", self);
+    pause;
+    exec("emote fills the sack with flour.", self);
+    pause;
+    exec("emote ties the sack shut.", self);
+    pause;
+    exec("emote hefts the sack onto his shoulder.", self);
+    tf:=walk_room ("windmill2@hamlet",30);
+    if (tf==TRUE)
+    {
+     pause;
+     item := load("sack@hamlet");
+     exec("drop sack", self);
+    }
+
+  goto start;
+
+  :lunch:
+  exec("say Oh good it's lunch time", self);
+  self.outside_descr := "Alvin Miller is on his way to lunch.";
+
+  tf:=walk_room ("hut2@hamlet",9);
+  if (tf==TRUE)
+  {
+    heartbeat := PULSE_SEC*15;
+    exec("emote gets some beef from a cupboard.", self);
+    exec("emote pours some water into a cup.", self);
+    pause;
+    exec("sit", self);
+    pause;
+    exec("emote eats the beef.", self);
+    pause;
+    exec("emote drinks the water.", self);
+    pause;
+    exec("burp", self);
+    :lun:
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    heartbeat := PULSE_SEC*30;
+    exec("stand", self);
+    exec("say Back to the mill.", self);
+   }
+  goto start;
+
+   :dinner:
+  exec("say Dinner time!", self);
+  self.outside_descr := "Alvin Miller is on his way to dinner.";
+  tf:=walk_room ("hut2@hamlet",9);
+  if (tf==TRUE)
+  {
+    heartbeat := PULSE_SEC*30;
+    exec("emote gets some beef from a cupboard.", self);
+    exec("emote pours some water into a cup.", self);
+    pause;
+    exec("sit", self);
+    pause;
+    exec("emote eats the beef.", self);
+    pause;
+    exec("emote drinks the water.", self);
+    pause;
+    exec("puke", self);
+    pause;
+    exec("say oooh.  My tummy hurts.", self);
+    :din:
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    heartbeat := PULSE_SEC*30;
+    exec("sigh", self);
+    exec("stand", self);
+    exec("say Back to the mill.", self);
+  } 
+    goto start;
+
+  :bed:
+  exec("yawn", self);
+  self.outside_descr := "Alvin Miller is on his way to bed.";
+  tf:=walk_room ("hut3@hamlet",9);
+  if (tf==TRUE)
+  {
+    :pre_sleep:
+    heartbeat := PULSE_SEC*30;
+    exec("sleep", self);
+    :sleeping:
+    exec("snore", self);
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    if(mudhour < 6)
+    {
+      goto sleeping;
+    }
+    heartbeat := PULSE_SEC*15;
+    exec("wake", self);
+   self.outside_descr := "Alvin Miller is on his way to work.";
+  }
+  goto start;
+}
+dilend
+end
+
+				grain_boy 
+names {"john the grain boy", "grain boy", "john", "boy"}
+title "John the grain boy"
+descr "John the grain boy is carrying sacks of flour."
+extra {}
+"John is a strong boy who works for Alvin Miller.  His job is to deliver sacks of grain to Barney the baker"
+M_AVG_HUMAN(6, SEX_MALE, RACE_HUMAN)
+alignment 350
+
+
+dilbegin grain_boy();
+external
+ integer walk_room (s:string,i:integer);
+var
+sack : unitptr;
+item : unitptr;
+tf:integer; 
+code
+{
+   on_activation((self.position == POSITION_FIGHTING), skip);
+
+  :start:
+  heartbeat := WAIT_SEC*5;
+ if((mudhour >= 13) and (mudhour < 14)) 
+  { 
+   goto lunch;
+  }   
+  if((mudhour >= 19) and (mudhour < 20)) 
+  {
+   goto dinner;
+  }
+  if((mudhour > 22) and (mudhour < 0)) 
+  {
+   goto bed;
+  }
+  if((mudhour >= 0) and (mudhour < 6)) 
+  {
+   goto bed;
+  }
+  else
+  {
+    goto work;
+  }
+  goto start;
+
+  :work:
+  heartbeat := PULSE_SEC*15;
+  tf:=walk_room ("windmill2@hamlet",15);
+  if (tf==TRUE)
+  {
+   self.outside_descr := "John the grain boy is carrying sacks of flour.";
+    pause;
+    exec("emote complains about something or other.", self);
+    pause;
+    exec("look", self);
+    pause;
+    sack := findunit(self, "sack", FIND_UNIT_SURRO, null);
+    if(sack != null)
+    {
+       :sack_gather:
+       link(sack, self);
+       exec("emote gets a sack of flour.", self);
+       pause;
+       sack := findunit(self, "sack", FIND_UNIT_SURRO, self.outside);
+       if(sack != null)
+       { 
+          goto sack_gather; 
+       }
+
+    }
+    exec("emote groans a bit under the weight of the flour.", self);
+    pause;
+    exec("emote tries to wipe his brow.", self);
+    pause;
+    exec("smile", self);
+    pause;
+    tf:=walk_room ("west_path3@hamlet",20);
+    if (tf==TRUE)
+    {
+    pause;
+    walkto(findroom("midgaard/baker_shop"));
+    exec("say here's some sacks of flour sir.", self);
+    pause;
+    exec("emote piles some sacks in a corner.", self);
+    pause;
+    destroy(self.inside);
+    walkto(findroom("hamlet/windmill"));
+    }
+  }
+  goto start;
+
+  :lunch:
+  exec("say Oh good it's lunch time.", self);
+  self.outside_descr := "The grain boy is on his way to lunch.";
+
+  tf:=walk_room ("hut2@hamlet",9);
+  if (tf==TRUE)
+  {
+    heartbeat := PULSE_SEC*15;
+    exec("emote gets some bread from a cupboard.", self);
+    exec("emote pours some water into a cup.", self);
+    pause;
+    exec("sit", self);
+    pause;
+    exec("emote eats the bread.", self);
+    pause;
+    exec("emote drinks the water.", self);
+    pause;
+    exec("burp", self);
+    :lun:
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    heartbeat := PULSE_SEC*30;
+    exec("stand", self);
+    exec("say Back to the deliveries.", self);
+  }
+  goto start;
+   :dinner:
+  exec("say Dinner time!", self);
+  self.outside_descr := "John the Grain Boy is on his way to dinner.";
+  tf:=walk_room ("hut2@hamlet",9);
+  if (tf==TRUE)
+  {
+    heartbeat := PULSE_SEC*30;
+    exec("emote gets some bread from a cupboard.", self);
+    exec("emote pours some water into a cup..", self);
+    pause;
+    exec("sit", self);
+    pause;
+    exec("emote eats the bread.", self);
+    pause;
+    exec("emote drinks the water.", self);
+    pause;
+    :din:
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    heartbeat := PULSE_SEC*30;
+    exec("sigh", self);
+    exec("stand", self);
+    exec("say Back to the deliveries.", self);
+    }
+    goto start;
+
+  :bed:
+  exec("yawn", self);
+  self.outside_descr := "John the grain boy is on his way to bed.";
+  tf:=walk_room ("hut2@hamlet",9);
+  if (tf==TRUE)
+  {
+    :pre_sleep:
+    heartbeat := PULSE_SEC*30;
+    exec("sleep", self);
+    :sleeping:
+    exec("snore", self);
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    if(mudhour < 6)
+    {
+      goto sleeping;
+    }
+    heartbeat := PULSE_SEC*15;
+    exec("wake", self);
+   self.outside_descr := "John the grain boy is on his way to work.";
+  }
+  goto start;
+}
+dilend
+end
+
+
+				butcher_wife
+names {"kate butcher", "butcher", "kate"}
+title "Kate Butcher"
+descr "Kate Butcher is here eviscerating pigs."
+extra {}
+"Kate Butcher is a strong woman who takes pride in her work.  She is however covered in blood, and reeks of pig intestines.  She has a twinkle in her eye, but it might not be such a good idea to mess with her."
+
+M_HUMAN_WARRIOR_AXE(10, SEX_FEMALE)
+alignment -200
+money 5 COPPER_PIECE
+
+
+dilbegin butcher_wife();
+external
+ integer walk_room (s:string,i:integer);
+var
+item : unitptr;
+tf:integer;
+i : integer; 
+boy : integer;
+pig : unitptr;
+code
+{
+  boy := interrupt (SFB_MSG, argument == "here", talk_me);
+  on_activation((self.position == POSITION_FIGHTING), skip);
+
+  :start:
+  heartbeat := WAIT_SEC*5;
+ if((mudhour >= 13) and (mudhour < 14)) 
+  { 
+   goto lunch;
+  }   
+  if((mudhour >= 19) and (mudhour < 20)) 
+  {
+   goto dinner;
+  }
+  if((mudhour > 22) and (mudhour < 0)) 
+  {
+   goto bed;
+  }
+  if((mudhour >= 0) and (mudhour < 6)) 
+  {
+   goto bed;
+  }
+  else
+  {
+    goto work;
+  }
+  goto start;
+
+  :work:
+  heartbeat := PULSE_SEC*10;
+  self.outside_descr := "Kate Butcher is here eviscerating pigs.";
+  tf:=walk_room ("abattoir@hamlet",30);
+  if (tf==TRUE)
+  {	
+    i := 0;		
+    i :=  i +1;		
+   :one:
+    pig := findunit(self, "dead pig", FIND_UNIT_SURRO, null);
+    if(pig == null)
+    {
+	exec("say Where the hell is my husband?", self);
+	pause;
+	exec("curse", self);
+	pause; 
+	pause; 
+	goto start;
+    }
+    pig := findunit(self, "dead pig", FIND_UNIT_SURRO, null);
+    link(pig, self);    
+    pause;
+    i :=  i +1;		
+   :two:
+    exec("emote hefts her cleaver.", self);
+    pause;
+    i :=  i +1;		
+   :three:
+    exec("emote whacks deftly at the carcass.", self);
+    pause;
+    i :=  i +1;		
+   :four:
+    exec("emote grabs a knife and slits the pig open.", self);
+    pause;
+    i :=  i +1;		
+   :five:
+    exec("emote pulls out the guts and throws them in the corner.", self);
+    pause;
+    i :=  i +1;		
+   :six:
+    exec("emote pours some blood into a pail.", self);
+    pause;
+    i :=  i +1;		
+   :seven:
+    exec("emote dresses the carcass.", self);
+    pause;
+    i :=  i +1;		
+   :eight:
+    exec("emote hangs the carcass on a hook.", self);
+    pig := findunit(self, "dead pig", FIND_UNIT_IN_ME, null);
+    destroy(pig);
+    item := load("carcass@hamlet");
+    link(item, self.outside);
+    pause;
+    i :=  i +1;		
+   :nine:
+    exec("grin", self);
+    pause;
+    i :=  i +1;		
+   :ten:
+    exec("wink", self);
+  }
+  goto start;
+
+  :lunch:
+  exec("say Oh good it's lunch time.", self);
+  self.outside_descr := "Kate Butcher is on her way to lunch.";
+
+  tf:=walk_room ("hut4@hamlet",9);
+  if (tf==TRUE)
+  {
+    heartbeat := PULSE_SEC*15;
+    exec("emote gets some pork from a cupboard.", self);
+    exec("emote pours some wine into a cup.", self);
+    pause;
+    exec("sit", self);
+    pause;
+    exec("emote eats the pork.", self);
+    pause;
+    exec("emote drinks the wine.", self);
+    pause;
+    exec("burp", self);
+    :lun:
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    heartbeat := PULSE_SEC*30;
+    exec("stand", self);
+    exec("say Back to the slaughter.", self);
+  }
+  goto start;
+   :dinner:
+  exec("say Dinner time!", self);
+  self.outside_descr := "Kate Butcher is on her way to dinner.";
+  tf:=walk_room ("hut4@hamlet",9);
+  if (tf==TRUE)
+  {
+    heartbeat := PULSE_SEC*30;
+    exec("emote gets some pork from a cupboard.", self);
+    exec("emote pours some wine into a cup.", self);
+    pause;
+    exec("sit", self);
+    pause;
+    exec("emote eats the pork.", self);
+    pause;
+    exec("emote drinks the wine.", self);
+    pause;
+    :din:
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    heartbeat := PULSE_SEC*30;
+    exec("sigh", self);
+    exec("stand", self);
+    exec("say Back to the slaughter.", self);
+  }
+    goto start;
+
+  :bed:
+  exec("yawn", self);
+  self.outside_descr := "Kate Butcher is on her way to bed.";
+  tf:=walk_room ("hut4@hamlet",9);
+  if (tf==TRUE)
+  {
+    :pre_sleep:
+    heartbeat := PULSE_SEC*30;
+    exec("sleep", self);
+    :sleeping:
+    exec("snore", self);
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    if(mudhour < 6)
+    {
+      goto sleeping;
+    }
+    heartbeat := PULSE_SEC*15;
+    exec("wake", self);
+    self.outside_descr := "Kate Butcher is on her way to work.";
+  }
+  goto start;
+
+
+:talk_me:
+exec("say Hey there boy.", self);
+on i goto one,two,three,four,five,six,seven,eight,nine,ten;
+}
+dilend
+end
+
+
+				butcher_husband
+names {"jack butcher", "butcher", "jack"}
+title "Jack Butcher"
+descr "Jack Butcher is here killing pigs."
+extra {}
+"Jack Butcher appears to take great pride in his work.  
+He kills each pig deftly and with one fell stroke."
+
+M_HUMAN_WARRIOR_AXE(10, SEX_MALE)
+alignment -200
+money 5 COPPER_PIECE
+
+
+dilbegin butcher_husband();
+external
+ integer walk_room (s:string,i:integer);
+var
+kate : unitptr;
+item : unitptr;
+tf : integer; 
+code
+{
+   on_activation((self.position == POSITION_FIGHTING), skip);
+
+  :start:
+  heartbeat := WAIT_SEC*5;
+ if((mudhour >= 13) and (mudhour < 14)) 
+  { 
+   goto lunch;
+  }   
+  if((mudhour >= 19) and (mudhour < 20)) 
+  {
+   goto dinner;
+  }
+  if((mudhour > 22) and (mudhour < 0)) 
+  {
+   goto bed;
+  }
+  if((mudhour >= 0) and (mudhour < 6)) 
+  {
+   goto bed;
+  }
+  else
+  {
+    goto work;
+  }
+  goto start;
+
+  :work:
+  heartbeat := PULSE_SEC*10;
+  self.outside_descr := "Jack Butcher is here killing pigs.";
+  tf:=walk_room ("pen@hamlet",30);
+  if (tf==TRUE)
+  {
+    pause;
+    exec("say Sooooeeeeee.", self);
+    pause;
+    exec("say here piggy pig pig.", self);
+    pause;
+    exec("emote grabs at a pig.", self);
+    pause;
+    exec("emote emote whacks at the pig with his cleaver.", self);
+    pause;
+    exec("emote grabs the dead pig.", self);
+    pause;
+    exec("giggle", self);
+    pause;
+    tf:=walk_room ("abattoir@hamlet",30);
+    if (tf==TRUE)
+    {
+      item := load("dead_pig@hamlet");
+      exec("drop pig", self);
+     pause;
+    }
+
+    kate := findunit(self, "kate", FIND_UNIT_SURRO, null);
+    if(kate != null)
+    {	
+      exec("french kate", self);
+      pause;
+      exec("lick kate", self);
+    	 pause;
+      exec("grin", self);
+      pause;
+      exec("wink", self);
+    }
+  }
+  goto start;
+
+  :lunch:
+  exec("say Oh good it's lunch time.", self);
+  self.outside_descr := "Jack Butcher is on his way to lunch.";
+
+  tf:=walk_room ("hut4@hamlet",9);
+  if (tf==TRUE)
+  {
+    heartbeat := PULSE_SEC*15;
+    exec("emote gets some pork from a cupboard.", self);
+    exec("emote pours some wine into a cup.", self);
+    pause;
+    exec("sit", self);
+    pause;
+    exec("emote eats the pork.", self);
+    pause;
+    exec("emote drinks the wine.", self);
+    pause;
+    exec("burp", self);
+    :lun:
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    heartbeat := PULSE_SEC*30;
+    exec("stand", self);
+    exec("say Back to the slaughter.", self);
+  }
+  goto start;
+   :dinner:
+  exec("say Dinner time!", self);
+  self.outside_descr := "Jack Butcher is on his way to dinner.";
+  tf:=walk_room ("hut4@hamlet",9);
+  if (tf==TRUE)
+  {
+    heartbeat := PULSE_SEC*30;
+    exec("emote gets some pork from a cupboard.", self);
+    exec("emote pours some wine into a cup.", self);
+    pause;
+    exec("sit", self);
+    pause;
+    exec("emote eats the pork.", self);
+    pause;
+    exec("emote drinks the wine.", self);
+    pause;
+    :din:
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    heartbeat := PULSE_SEC*30;
+    exec("sigh", self);
+    exec("stand", self);
+    exec("say Back to the slaughter.", self);
+    }
+    goto start;
+
+  :bed:
+  exec("yawn", self);
+  self.outside_descr := "Jack Butcher is on his way to bed.";
+  tf:=walk_room ("hut4@hamlet",9);
+  if (tf==TRUE)
+  {
+    :pre_sleep:
+    heartbeat := PULSE_SEC*30;
+    exec("sleep", self);
+    :sleeping:
+    exec("snore", self);
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    if(mudhour < 6)
+    {
+      goto sleeping;
+    }
+    heartbeat := PULSE_SEC*15;
+    exec("wake", self);
+   self.outside_descr := "Jack Butcher is on his way to work.";
+  }
+  goto start;
+}
+dilend
+end
+
+/* squeal like a */ pig_boy
+names {"pig boy", "boy"}
+title "pig boy"
+descr "The pig boy is delivering meat to the butcher."
+extra {}
+"The pig boy looks to be a strong lad, and he looks happy doing his job for 
+his mom and pop."
+
+M_HUMAN_WARRIOR_AXE(6, SEX_MALE)
+alignment -200
+
+
+dilbegin pig_boy();
+external
+ integer walk_room (s:string,i:integer);
+var
+pig : unitptr;
+item : unitptr;
+tf : integer; 
+kate : unitptr;
+code
+{
+   on_activation((self.position == POSITION_FIGHTING), skip);
+
+  :start:
+  heartbeat := WAIT_SEC*5;
+ if((mudhour >= 13) and (mudhour < 14)) 
+  { 
+   goto lunch;
+  }   
+  if((mudhour >= 19) and (mudhour < 20)) 
+  {
+   goto dinner;
+  }
+  if((mudhour > 22) and (mudhour < 0)) 
+  {
+   goto bed;
+  }
+  if((mudhour >= 0) and (mudhour < 6)) 
+  {
+   goto bed;
+  }
+  else
+  {
+    goto work;
+  }
+  goto start;
+
+  :work:
+  heartbeat := PULSE_SEC*15;
+  tf := walk_room ("abattoir@hamlet",15);
+  if (tf == TRUE)
+  {
+    self.outside_descr := "The pig boy is delivering meat to the butcher.";
+    pause;
+    kate := findunit(self, "kate", FIND_UNIT_SURRO, null);
+    if(kate != null)
+    {
+	exec("say Hi Mom", self);
+	sendto("here", kate);
+	exec("look kate", self);
+	pause; 
+    }
+    pig := findunit(self, "pork", FIND_UNIT_SURRO, null);
+    if(pig != null)
+    {
+       exec("say more carcasses, its always more carcasses.", self);
+       pause;
+       :pig_gather:
+       pig := findunit(self, "pork", FIND_UNIT_SURRO, null);
+       link(pig, self);
+       exec("emote gets a carcass.", self);
+       pause;
+       pig := findunit(self, "pork", FIND_UNIT_SURRO, null);
+       if(pig != null)
+       { 
+          goto pig_gather; 
+       }
+
+    }
+    exec("emote grumbles about something or other.", self);
+    pause;
+    kate := findunit(self, "kate", FIND_UNIT_SURRO, null);
+    if(kate != null)
+    {
+	   exec("kiss kate", self);
+	   pause;
+	   exec("giggle", self);
+	   pause;
+    }
+     tf:=walk_room ("east_path2@hamlet",20);
+    if (tf==TRUE)
+    {
+    pause;
+    walkto(findroom("midgaard/butcher_shop"));
+    exec("say Here's some more pork.", self);
+    pause;
+    exec("emote walks into the back room.", self);
+    pause;
+    exec("emote returns from the back room.", self);
+    pause;
+    destroy(self.inside);
+    walkto(findroom("hamlet/abatoire"));
+    }
+  }
+  goto start;
+
+  :lunch:
+  exec("say Oh good it's lunch time.", self);
+  self.outside_descr := "The pig boy is on his way to lunch.";
+  {
+
+    heartbeat := PULSE_SEC*15;
+    exec("emote gets some pork from a cupboard.", self);
+    exec("emote pours some wine into a cup.", self);
+    pause;
+    exec("sit", self);
+    pause;
+    exec("emote eats the pork.", self);
+    pause;
+    exec("emote drinks the wine.", self);
+    pause;
+    exec("burp", self);
+    :lun:
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    heartbeat := PULSE_SEC*30;
+    exec("stand", self);
+    exec("say Back to the deliveries.", self);
+  }
+  goto start;
+   :dinner:
+  exec("say Dinner time!", self);
+  self.outside_descr := "The Pig Boy is on his way to dinner.";
+  tf:=walk_room ("hut4@hamlet",9);
+  if (tf==TRUE)
+  {
+    heartbeat := PULSE_SEC*30;
+    exec("emote gets some pork from a cupboard.", self);
+    exec("emote pours some wine into a cup.", self);
+    pause;
+    exec("sit", self);
+    pause;
+    exec("emote eats the pork.", self);
+    pause;
+    exec("emote drinks the wine.", self);
+    pause;
+    :din:
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    heartbeat := PULSE_SEC*30;
+    exec("sigh", self);
+    exec("stand", self);
+    exec("say Back to the deliveries.", self);
+    }
+    goto start;
+
+  :bed:
+  exec("yawn", self);
+  self.outside_descr := "The pig boy is on his way to bed.";
+  tf:=walk_room ("hut4@hamlet",9);
+  if (tf==TRUE)
+  {
+    :pre_sleep:
+    heartbeat := PULSE_SEC*30;
+    exec("sleep", self);
+    :sleeping:
+    exec("snore", self);
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    if(mudhour < 6)
+    {
+      goto sleeping;
+    }
+    heartbeat := PULSE_SEC*15;
+    exec("wake", self);
+   self.outside_descr := "The pig boy is on his way to work.";
+  }
+  goto start;
+}
+dilend
+end
+
+				crazy_jake
+names {"crazy jake", "crazy", "jake"}
+title "Crazy Jake"
+descr "Crazy Jake the prospector wanders around mumbling."
+extra {}
+"Crazy Jake the prospector has a wild look in his eyes.  
+He stares at you intently, and a bit of drool escapes from his lower 
+lip.  You get the idea that he has been wandering 
+these woods for a long time."
+
+M_HUMAN_WARRIOR_AXE(9, SEX_MALE)
+alignment -500
+special SFUN_AGGRESSIVE time WAIT_SEC*25 bits SFB_RANTIME 
+
+dilbegin crazy_jake();
+external
+ integer walk_room (s:string,i:integer);
+var
+item : unitptr;
+tf:integer; 
+code
+{
+   on_activation((self.position == POSITION_FIGHTING), skip);
+
+  :start:
+  heartbeat := WAIT_SEC*5;
+ if((mudhour >= 13) and (mudhour < 14)) 
+  { 
+   goto lunch;
+  }   
+  if((mudhour >= 19) and (mudhour < 20)) 
+  {
+   goto dinner;
+  }
+  if((mudhour > 22) and (mudhour < 0)) 
+  {
+   goto bed;
+  }
+  if((mudhour >= 0) and (mudhour < 6)) 
+  {
+   goto bed;
+  }
+  else
+  {
+    goto work;
+  }
+  goto start;
+
+  :work:
+  heartbeat := PULSE_SEC*10;
+  tf:=walk_room ("moor_path@hamlet",30);
+  if (tf==TRUE)
+  {
+    exec("emote digs in the ground.", self);
+    pause;
+    exec("emote mutters something about gold.", self);
+  }
+  tf:=walk_room ("moor_path4@hamlet",30);
+  if (tf==TRUE)
+  {
+    exec("emote digs in the ground.", self);
+    pause;
+  }
+  tf:=walk_room ("moor_path8@hamlet",30);
+  if (tf==TRUE)
+  {
+    exec("emote digs in the ground.", self);
+    pause;
+  }
+  tf:=walk_room ("moor_path10@hamlet",30);
+  if (tf==TRUE)
+  {
+    exec("emote digs in the ground.", self);
+    pause;
+    exec("emote mutters something about gold.", self);
+  }
+  tf:=walk_room ("moor_path9@hamlet",30);
+  if (tf==TRUE)
+  {
+    exec("emote digs in the ground.", self);
+    pause;
+  }
+  tf:=walk_room ("moor_path17@hamlet",30);
+  if (tf==TRUE)
+  {
+    exec("emote digs in the ground.", self);
+    pause;
+  }
+  tf:=walk_room ("moor_path15@hamlet",30);
+  if (tf==TRUE)
+  {
+    exec("emote digs in the ground.", self);
+    pause;
+    exec("emote mutters something about gold.", self);
+  }
+
+  goto start;
+
+  :lunch:
+  exec("emote drools profusely.", self);
+
+  tf:=walk_room ("old_hut@hamlet",9);
+  if (tf==TRUE)
+  {
+    heartbeat := PULSE_SEC*15;
+    exec("emote gets his bread.", self);
+    pause;
+    exec("sit", self);
+    pause;
+    exec("emote eats the bread.", self);
+    pause;
+    exec("emote drools profusely.", self);
+    :lun:
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    heartbeat := PULSE_SEC*30;
+    exec("stand", self);
+    exec("emote drools profusely.", self);
+  }
+  goto start;
+   :dinner:
+  exec("emote drools profusely.", self);
+  tf:=walk_room ("old_hut@hamlet",9);
+  if (tf==TRUE)
+  {
+    heartbeat := PULSE_SEC*30;
+    exec("emote gets his bread.", self);
+    pause;
+    exec("sit", self);
+    pause;
+    exec("emote eats the bread.", self);
+    pause;
+    :din:
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    heartbeat := PULSE_SEC*30;
+    exec("sigh", self);
+    exec("stand", self);
+    exec("emote drools profusely.", self);
+    }
+    goto start;
+
+  :bed:
+  exec("yawn", self);
+  tf:=walk_room ("old_hut@hamlet",9);
+  if (tf==TRUE)
+  {
+    :pre_sleep:
+    heartbeat := PULSE_SEC*30;
+    exec("sleep", self);
+    :sleeping:
+    exec("snore", self);
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    if(mudhour < 6)
+    {
+      goto sleeping;
+    }
+    heartbeat := PULSE_SEC*15;
+    exec("wake", self);
+  }
+  goto start;
+}
+dilend
+end
+
+				farmer
+names {"joe farmer", "farmer", "joe"}
+title "Joe Farmer"
+descr "Joe Farmer inspects his crops."
+extra {}
+"Joe Farmer has a weathered look to him.  It is obvious that he has spent many years as a farmer, and this work has made him strong.  He bears a proud look, the one of a man who has lead an honest lifestyle."
+
+M_AVG_HUMAN(9, SEX_MALE, RACE_HUMAN)
+alignment 600
+money 4 COPPER_PIECE
+
+
+dilbegin farmer();
+external
+ integer walk_room (s:string,i:integer);
+var
+item : unitptr;
+tf:integer; 
+code
+{
+   on_activation((self.position == POSITION_FIGHTING), skip);
+
+  :start:
+  heartbeat := WAIT_SEC*5;
+  if((mudhour >= 13) and (mudhour < 14)) 
+  { 
+   goto lunch;
+  }   
+  if((mudhour >= 19) and (mudhour < 20)) 
+  {
+   goto dinner;
+  }
+  if((mudhour > 22) and (mudhour < 0)) 
+  {
+   goto bed;
+  }
+  if((mudhour >= 0) and (mudhour < 6)) 
+  {
+   goto bed;
+  }
+  else
+  {
+    goto work;
+  }
+  goto start;
+
+  :work:
+  heartbeat := PULSE_SEC*10;
+  tf:=walk_room ("field1@hamlet",20);
+  if (tf==TRUE)
+  {
+    pause;
+   self.outside_descr := "Joe Farmer is here cutting wheat.";
+  }
+    exec("emote raises his scythe.", self);
+    pause;
+    exec("emote slashes at the grain stalks.", self);
+    pause;
+    exec("sigh", self);
+    pause;
+    exec("emote gathers the wheat together.", self);
+    tf:=walk_room ("field1@hamlet",30);
+    if (tf==TRUE)
+    {
+     pause;
+     item := load("bail@hamlet");
+     link(item, self.outside);
+    }
+  tf:=walk_room ("field2@hamlet",20);
+  if (tf==TRUE)
+  {
+    pause;
+  }
+    exec("emote raises his scythe.", self);
+    pause;
+    exec("emote slashes at the grain stalks.", self);
+    pause;
+    exec("sigh", self);
+    pause;
+    exec("emote gathers the wheat together.", self);
+     pause;
+     item := load("bail@hamlet");
+     link(item, self.outside);
+  tf:=walk_room ("field3@hamlet",20);
+  if (tf==TRUE)
+  {
+    pause;
+  }
+    exec("emote raises his scythe.", self);
+    pause;
+    exec("emote slashes at the grain stalks.", self);
+    pause;
+    exec("sigh", self);
+    pause;
+    exec("emote gathers the wheat together.", self);
+     pause;
+     item := load("bail@hamlet");
+     link(item, self.outside);
+  tf:=walk_room ("field4@hamlet",20);
+  if (tf==TRUE)
+  {
+    pause;
+   self.outside_descr := "Joe Farmer is here cutting
+		wheat.";
+  }
+    exec("emote raises his scythe.", self);
+    pause;
+    exec("emote slashes at the grain stalks.", self);
+    pause;
+    exec("sigh", self);
+    pause;
+    exec("emote gathers the wheat together.", self);
+     pause;
+     item := load("bail@hamlet");
+     link(item, self.outside);
+  goto start;
+
+  :lunch:
+  exec("say Oh good it's lunch time", self);
+  self.outside_descr := "Joe Farmer is on his way to lunch.";
+
+  tf:=walk_room ("hut1@hamlet",9);
+  if (tf==TRUE)
+  {
+    heartbeat := PULSE_SEC*15;
+    exec("emote gets some bread from a cupboard.", self);
+    exec("emote pours some water into a cup.", self);
+    pause;
+    exec("sit", self);
+    pause;
+    exec("emote eats the bread.", self);
+    pause;
+    exec("emote drinks the water.", self);
+    pause;
+    exec("burp", self);
+    :lun:
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    heartbeat := PULSE_SEC*30;
+    exec("stand", self);
+    exec("say Back to the fields.", self);
+   }
+  goto start;
+
+   :dinner:
+  exec("say Oh how nice its dinner time.", self);
+  self.outside_descr := "Joe Farmer is on his way to dinner.";
+  tf:=walk_room ("hut1@hamlet",9);
+  if (tf==TRUE)
+  {
+    heartbeat := PULSE_SEC*30;
+    exec("emote gets some beef from a cupboard.", self);
+    exec("emote pours some water into a cup.", self);
+    pause;
+    exec("sit", self);
+    pause;
+    exec("emote eats the beef.", self);
+    pause;
+    exec("emote drinks the water.", self);
+    :din:
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    heartbeat := PULSE_SEC*30;
+    exec("sigh", self);
+    exec("stand", self);
+    exec("say Back to the fields.", self);
+  } 
+    goto start;
+
+  :bed:
+  exec("yawn", self);
+  self.outside_descr := "Joe Farmer is on his way to bed.";
+  tf:=walk_room ("hut1@hamlet",9);
+  if (tf==TRUE)
+  {
+    :pre_sleep:
+    heartbeat := PULSE_SEC*30;
+    exec("sleep", self);
+    :sleeping:
+    exec("snore", self);
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    if(mudhour < 6)
+    {
+      goto sleeping;
+    }
+    heartbeat := PULSE_SEC*15;
+    exec("wake", self);
+   self.outside_descr := "Joe Farmer is on his way to work.";
+  }
+  goto start;
+}
+dilend
+end
+
+				farmer_wife
+names {"karen farmer", "farmer", "karen"}
+title "Karen Farmer"
+descr "Karen Farmer inspects his crops."
+extra {}
+"Karen Farmer is a sturdy woman with hands that appear to be very strong.  
+She is heavy yet shapely, the kind of woman you would want to take home 
+to mom.  She is the woman of a renaissance painting."
+
+M_AVG_HUMAN(8, SEX_FEMALE, RACE_HUMAN)
+alignment 600
+money 4 COPPER_PIECE
+
+dilbegin farmer2();
+external
+ integer walk_room (s:string,i:integer);
+var
+wheat : unitptr;
+item : unitptr;
+tf : integer; 
+code
+{
+   on_activation((self.position == POSITION_FIGHTING), skip);
+
+  :start:
+  heartbeat := WAIT_SEC*5;
+ if((mudhour >= 13) and (mudhour < 14)) 
+  { 
+   goto lunch;
+  }   
+  if((mudhour >= 19) and (mudhour < 20)) 
+  {
+   goto dinner;
+  }
+  if((mudhour > 22) and (mudhour < 0)) 
+  {
+   goto bed;
+  }
+  if((mudhour >= 0) and (mudhour < 6)) 
+  {
+   goto bed;
+  }
+  else
+  {
+    goto work;
+  }
+  goto start;
+
+  :work:
+  heartbeat := PULSE_SEC*10;
+  tf:=walk_room ("field1@hamlet",30);
+  if (tf==TRUE)
+  {
+    pause;
+   self.outside_descr := "Karen Farmer is here beating the wheat.";
+    wheat := findunit(self, "wheat", FIND_UNIT_SURRO, null);
+    if(wheat != null)
+    {
+       :grain_gather:
+       exec("emote spreads out a cloth.", self);
+       pause;
+       exec("emote beats at the bundle of wheat with her rake.", self);
+       pause;
+       exec("emote gathers the chaff into a bundle.", self);
+       pause;
+       exec("emote puts the chaff into a bag.", self);
+       pause;
+       wheat := findunit(self, "wheat", FIND_UNIT_SURRO,self.outside);
+       link(wheat, self);
+       item := load("wheat_bag@hamlet");
+       link(item, self.outside); 
+       pause;
+       wheat := findunit(self, "wheat", FIND_UNIT_SURRO,self.outside);
+       if(wheat != null)
+       { 
+          goto grain_gather; 
+       }
+	
+    }	
+  } 
+  tf:=walk_room ("field2@hamlet",30);
+  if (tf==TRUE)
+  {
+    pause;
+   self.outside_descr := "Karen Farmer is here beating the wheat.";
+    wheat := findunit(self, "wheat", FIND_UNIT_SURRO, null);
+    if(wheat != null)
+    {
+       :grain_gathe:
+       exec("emote spreads out a cloth.", self);
+       pause;
+       exec("emote beats at the bundle of wheat with her rake.", self);
+       pause;
+       exec("emote gathers the chaff into a bundle.", self);
+       pause;
+       exec("emote puts the chaff into a bag.", self);
+       pause;
+       wheat := findunit(self, "wheat", FIND_UNIT_SURRO,self.outside);
+       link(wheat, self);
+       item := load("wheat_bag@hamlet");
+       link(item, self.outside); 
+       pause;
+       wheat := findunit(self, "wheat", FIND_UNIT_SURRO, self.outside);
+       if(wheat != null)
+       { 
+          goto grain_gathe; 
+       }
+    }
+  } 
+  tf:=walk_room ("field3@hamlet",30);
+  if (tf==TRUE)
+  {
+    pause;
+   self.outside_descr := "Karen Farmer is here beating the wheat.";
+    wheat := findunit(self, "wheat", FIND_UNIT_SURRO, null);
+    if(wheat != null)
+    {
+       :grain_gath:
+       exec("emote spreads out a cloth.", self);
+       pause;
+       exec("emote beats at the bundle of wheat with her rake.", self);
+       pause;
+       exec("emote gathers the chaff into a bundle.", self);
+       pause;
+       exec("emote puts the chaff into a bag.", self);
+       pause;
+       wheat := findunit(self, "wheat", FIND_UNIT_SURRO,self.outside);
+       link(wheat, self);
+       item := load("wheat_bag@hamlet");
+       link(item, self.outside); 
+       pause;
+       wheat := findunit(self, "wheat", FIND_UNIT_SURRO, self.outside);
+       if(wheat != null)
+       { 
+          goto grain_gath; 
+       }
+    }
+  } 
+  tf:=walk_room ("field4@hamlet",30);
+  if (tf==TRUE)
+  {
+    pause;
+   self.outside_descr := "Karen Farmer is here beating the wheat.";
+    wheat := findunit(self, "wheat", FIND_UNIT_SURRO, null);
+    if(wheat != null)
+    {
+    :grain_gat:
+       exec("emote spreads out a cloth.", self);
+       pause;
+       exec("emote beats at the bundle of wheat with her rake.", self);
+       pause;
+       exec("emote gathers the chaff into a bundle.", self);
+       pause;
+       exec("emote puts the chaff into a bag.", self);
+       pause;
+       wheat := findunit(self, "wheat", FIND_UNIT_SURRO,self.outside);
+       link(wheat, self);
+       item := load("wheat_bag@hamlet");
+       link(item, self.outside); 
+       pause;
+       wheat := findunit(self, "wheat", FIND_UNIT_SURRO, self.outside);
+       if(wheat != null)
+       { 
+          goto grain_gat; 
+       }
+    }
+  } 
+  goto start;
+
+  :lunch:
+  exec("say Oh good it's lunch time", self);
+  self.outside_descr := "Karen Farmer is on her way to lunch.";
+
+  tf:=walk_room ("hut1@hamlet",9);
+  if (tf==TRUE)
+  {
+    heartbeat := PULSE_SEC*15;
+    exec("emote gets some bread from a cupboard.", self);
+    exec("emote pours some water into a cup.", self);
+    pause;
+    exec("sit", self);
+    pause;
+    exec("emote eats the bread.", self);
+    pause;
+    exec("emote drinks the water.", self);
+    pause;
+    exec("burp", self);
+    :lun:
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    heartbeat := PULSE_SEC*30;
+    exec("stand", self);
+    exec("say Back to the fields.", self);
+   }
+  goto start;
+
+   :dinner:
+  exec("say Oh how nice its dinner time.", self);
+  self.outside_descr := "Karen Farmer is on her way to dinner..";
+  tf:=walk_room ("hut1@hamlet",9);
+  if (tf==TRUE)
+  {
+    heartbeat := PULSE_SEC*30;
+    exec("emote gets some beef from a cupboard.", self);
+    exec("emote pours some water into a cup.", self);
+    pause;
+    exec("sit", self);
+    pause;
+    exec("emote eats the beef.", self);
+    pause;
+    exec("emote drinks the water.", self);
+    :din:
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    heartbeat := PULSE_SEC*30;
+    exec("sigh", self);
+    exec("stand", self);
+    exec("say Back to the fields.", self);
+  } 
+    goto start;
+
+  :bed:
+  exec("yawn", self);
+  self.outside_descr := "Karen Farmer is on her way to bed.";
+  tf:=walk_room ("hut1@hamlet",9);
+  if (tf==TRUE)
+  {
+    :pre_sleep:
+    heartbeat := PULSE_SEC*30;
+    exec("sleep", self);
+    :sleeping:
+    exec("snore", self);
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    if(mudhour < 6)
+    {
+      goto sleeping;
+    }
+    heartbeat := PULSE_SEC*15;
+    exec("wake", self);
+   self.outside_descr := "Karen Farmer is on her way to work.";
+  }
+  goto start;
+}
+dilend
+end
+
+ farm_boy
+names {"farm boy", "boy"}
+title "farm boy"
+descr "The farm boy is delivering grain to Alvin Miller."
+extra {}
+"The farm boy looks to be a strong lad, and he looks happy doing his job 
+for his mom and pop."
+
+M_AVG_HUMAN(7, SEX_MALE, RACE_HUMAN)
+alignment 350
+
+
+dilbegin farm_boy();
+external
+ integer walk_room (s:string,i:integer);
+var
+miller : unitptr;
+sack : unitptr;
+item : unitptr;
+tf:integer; 
+code
+{
+   on_activation((self.position == POSITION_FIGHTING), skip);
+
+  :start:
+  heartbeat := WAIT_SEC*5;
+ if((mudhour >= 13) and (mudhour < 14)) 
+  { 
+   goto lunch;
+  }   
+  if((mudhour >= 19) and (mudhour < 20)) 
+  {
+   goto dinner;
+  }
+  if((mudhour > 22) and (mudhour < 0)) 
+  {
+   goto bed;
+  }
+  if((mudhour >= 0) and (mudhour < 6)) 
+  {
+   goto bed;
+  }
+  else
+  {
+    goto work;
+  }
+  goto start;
+
+  :work:
+  heartbeat := PULSE_SEC*15;
+  tf:=walk_room ("field1@hamlet",15);
+  if (tf==TRUE)
+  {
+    self.outside_descr := "The farm boy is picking up bags of wheat.";
+    pause;
+    exec("emote wipes his brow.", self);
+    pause;
+    exec("say I wish I could go and play with my friends.", self);
+    pause;
+    sack := findunit(self, "chaff", FIND_UNIT_SURRO, null);
+    if(sack != null)
+    {
+       :sack_gather:
+       link(sack, self);
+       exec("emote gets a bag of wheat.", self);
+       pause;
+       sack := findunit(self, "chaff", FIND_UNIT_SURRO, null);
+       if(sack != null)
+       { 
+          goto sack_gather; 
+       }
+
+    }
+    exec("emote grumbles about something or other.", self);
+    pause;
+    exec("smiles", self);
+    pause;          
+  }
+  tf:=walk_room ("field2@hamlet",15);
+  if (tf==TRUE)
+  {
+    self.outside_descr := "The farm boy is picking up bags of wheat.";
+    pause;
+    exec("emote wipes his brow.", self);
+    pause;
+    exec("say I wish I could go and play with my friends.", self);
+    pause;
+    sack := findunit(self, "chaff", FIND_UNIT_SURRO, null);
+    if(sack != null)
+    {
+       :sack_gathe:
+       link(sack, self);
+       exec("emote gets a bag of wheat.", self);
+       pause;
+       sack := findunit(self, "chaff", FIND_UNIT_SURRO,null);
+       if(sack != null)
+       { 
+          goto sack_gathe; 
+       }
+
+    }
+    exec("emote grumbles about something or other.", self);
+    pause;
+    exec("smiles", self);
+    pause;
+  }
+  tf:=walk_room ("field3@hamlet",15);
+  if (tf==TRUE)
+  {
+    self.outside_descr := "The farm boy is picking up bags of wheat.";
+    pause;
+    exec("emote wipes his brow.", self);
+    pause;
+    exec("say I wish I could go and play with my friends.", self);
+    pause;
+    sack := findunit(self, "chaff", FIND_UNIT_SURRO, null);
+    if(sack != null)
+    {
+       :sack_gath:
+       link(sack, self);
+       exec("emote gets a bag of wheat.", self);
+       pause;
+       sack := findunit(self, "chaff", FIND_UNIT_SURRO,null);
+       if(sack != null)
+       { 
+          goto sack_gath; 
+       }
+
+    }
+    exec("emote grumbles about something or other.", self);
+    pause;
+    exec("smiles", self);
+    pause;
+  }
+  tf:=walk_room ("field4@hamlet",15);
+  if (tf==TRUE)
+  {
+    self.outside_descr := "The farm boy is picking up bags of wheat.";
+    pause;
+    exec("emote wipes his brow.", self);
+    pause;
+    exec("say I wish I could go and play with my friends.", self);
+    pause;
+    sack := findunit(self, "chaff", FIND_UNIT_SURRO, null);
+    if(sack != null)
+    {
+       :sack_gat:
+       link(sack, self);
+       exec("emote gets a bag of wheat.", self);
+       pause;
+       sack := findunit(self, "chaff", FIND_UNIT_SURRO,null);
+       if(sack != null)
+       { 
+          goto sack_gat; 
+       }
+
+    }
+    exec("emote grumbles about something or other.", self);
+    pause;
+    exec("smiles", self);
+    pause;
+
+    tf:=walk_room ("windmill@hamlet",20);
+    if (tf==TRUE)
+    {
+    miller := findunit(self, "alvin", FIND_UNIT_SURRO, null);
+    if(miller != null)
+    {
+    exec("say here's some more grain.", self);
+    pause;
+    }
+    exec("emote drops the grain sacks in a corner.", self);
+    pause;
+    destroy(self.inside);
+  }
+  goto start;
+
+  :lunch:
+  exec("say Oh good it's lunch time.", self);
+  self.outside_descr := "The farm boy is on his way to lunch.";
+
+  tf:=walk_room ("hut1@hamlet",9);
+  if (tf==TRUE)
+  {
+    heartbeat := PULSE_SEC*15;
+    exec("emote gets some beef from a cupboard.", self);
+    exec("emote pours some water into a cup.", self);
+    pause;
+    exec("sit", self);
+    pause;
+    exec("emote eats the pork.", self);
+    pause;
+    exec("emote drinks the wine.", self);
+    pause;
+    exec("burp", self);
+    :lun:
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    heartbeat := PULSE_SEC*30;
+    exec("stand", self);
+    exec("say Back to the fields.", self);
+  }
+  goto start;
+   :dinner:
+  exec("say Dinner time!", self);
+  self.outside_descr := "The Farm Boy is on his way to dinner.";
+  tf:=walk_room ("hut1@hamlet",9);
+  if (tf==TRUE)
+  {
+    heartbeat := PULSE_SEC*30;
+    exec("emote gets some beef from a cupboard.", self);
+    exec("emote pours some water into a cup.", self);
+    pause;
+    exec("sit", self);
+    pause;
+    exec("emote eats the pork.", self);
+    pause;
+    exec("emote drinks the wine.", self);
+    pause;
+    :din:
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    heartbeat := PULSE_SEC*30;
+    exec("sigh", self);
+    exec("stand", self);
+    exec("say Back to the deliveries.", self);
+    }
+    goto start;
+
+  :bed:
+  exec("yawn", self);
+  self.outside_descr := "The farm boy is on his way to bed.";
+  tf:=walk_room ("hut1@hamlet",9);
+  if (tf==TRUE)
+  {
+    :pre_sleep:
+    heartbeat := PULSE_SEC*30;
+    exec("sleep", self);
+    :sleeping:
+    exec("snore", self);
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    if(mudhour < 6)
+    {
+      goto sleeping;
+    }
+    heartbeat := PULSE_SEC*15;
+    exec("wake", self);
+   self.outside_descr := "The farm boy is on his way to work.";
+  }
+  goto start;
+  }
+}
+dilend
+end
+
+gardener
+
+names {"joe gardener", "gardener", "joe"}
+title "Joe Gardener"
+descr "Joe Gardener looks at the vegetables."
+extra {}
+"Joe Gardener is a happy looking man who spends most of his time
+growing vegetables."
+
+M_AVG_HUMAN(6, SEX_MALE, RACE_HUMAN)
+alignment 700
+money 3 COPPER_PIECE
+
+dilbegin gardener();
+external
+ integer walk_room (s:string,i:integer);
+var
+item : unitptr;
+tf : integer; 
+code
+{
+   on_activation((self.position == POSITION_FIGHTING), skip);
+
+  :start:
+  heartbeat := WAIT_SEC*5;
+  if((mudhour >= 13) and (mudhour < 14)) 
+  { 
+   goto lunch;
+  }   
+  if((mudhour >= 19) and (mudhour < 20)) 
+  {
+   goto dinner;
+  }
+  if((mudhour > 22) and (mudhour < 0)) 
+  {
+   goto bed;
+  }
+  if((mudhour >= 0) and (mudhour < 6)) 
+  {
+   goto bed;
+  }
+  else
+  {
+    goto work;
+  }
+  goto start;
+
+  :work:
+  heartbeat := PULSE_SEC*10;
+  tf:=walk_room ("garden1@hamlet",30);
+  if (tf==TRUE)
+  {
+    pause;
+    self.outside_descr := "Joe Gardener is tending to the vegetables.";
+       exec("emote pulls out some weeds.", self);
+       pause;
+       exec("emote dusts off his hands.", self);
+       pause;
+       exec("emote looks fondly at the vegetables.", self);
+       pause;
+  }
+  tf:=walk_room ("garden2@hamlet",30);
+  if (tf==TRUE)
+  {
+    pause;
+       exec("emote pulls out some weeds.", self);
+       pause;
+       exec("emote dusts off his hands.", self);
+       pause;
+       exec("emote looks fondly at the vegetables.", self);
+       pause;
+  }
+  tf:=walk_room ("garden3@hamlet",30);
+  if (tf==TRUE)
+  {
+    pause;
+       exec("emote pulls out some weeds.", self);
+       pause;
+       exec("emote dusts off his hands.", self);
+       pause;
+       exec("emote looks fondly at the vegetables.", self);
+       pause;
+  }
+  tf:=walk_room ("garden4@hamlet",30);
+  if (tf==TRUE)
+  {
+    pause;
+       exec("emote pulls out some weeds.", self);
+       pause;
+       exec("emote dusts off his hands.", self);
+       pause;
+       exec("emote looks fondly at the vegetables.", self);
+       pause;
+  }
+  goto start;
+
+  :lunch:
+  exec("say Oh good it's lunch time", self);
+  self.outside_descr := "Joe Gardener is on his way to lunch.";
+
+  tf:=walk_room ("hut6@hamlet",9);
+  if (tf==TRUE)
+  {
+    heartbeat := PULSE_SEC*15;
+    exec("emote gets some bread from a cupboard.", self);
+    exec("emote pours some water into a cup.", self);
+    pause;
+    exec("sit", self);
+    pause;
+    exec("emote eats the bread.", self);
+    pause;
+    exec("emote drinks the water.", self);
+    pause;
+    exec("burp", self);
+    :lun:
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    heartbeat := PULSE_SEC*30;
+    exec("stand", self);
+    exec("say Back to the fields.", self);
+   }
+  goto start;
+
+   :dinner:
+  exec("say Oh how nice its dinner time.", self);
+  self.outside_descr := "Joe Gardener is on his way to dinner.";
+  tf:=walk_room ("hut6@hamlet",9);
+  if (tf==TRUE)
+  {
+    heartbeat := PULSE_SEC*30;
+    exec("emote gets some beef from a cupboard.", self);
+    exec("emote pours some water into a cup.", self);
+    pause;
+    exec("sit", self);
+    pause;
+    exec("emote eats the beef.", self);
+    pause;
+    exec("emote drinks the water.", self);
+    :din:
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    heartbeat := PULSE_SEC*30;
+    exec("sigh", self);
+    exec("stand", self);
+    exec("say Back to the fields.", self);
+  } 
+    goto start;
+
+  :bed:
+  exec("yawn", self);
+  self.outside_descr := "Joe Gardener is on his way to bed.";
+  tf:=walk_room ("hut6@hamlet",9);
+  if (tf==TRUE)
+  {
+    :pre_sleep:
+    heartbeat := PULSE_SEC*30;
+    exec("sleep", self);
+    :sleeping:
+    exec("snore", self);
+    heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+    wait(SFB_TICK, TRUE);
+    if(mudhour < 6)
+    {
+      goto sleeping;
+    }
+    heartbeat := PULSE_SEC*15;
+    exec("wake", self);
+   self.outside_descr := "Joe Gardener is on her way to work.";
+  }
+  goto start;
+}
+dilend
+end
+
+
+%reset 
+door pen SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door abattoir NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door hut4 SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door east_path2 NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door hut3 DOWN {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}      
+door basement UP {EX_OPEN_CLOSE, EX_CLOSED}
+door hut1 SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door west_path2 NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door windmill EAST {EX_OPEN_CLOSE, EX_CLOSED}
+door west_path3 WEST {EX_OPEN_CLOSE, EX_CLOSED}
+door hut6 WEST {EX_OPEN_CLOSE, EX_CLOSED}
+door east_path3 EAST {EX_OPEN_CLOSE, EX_CLOSED}
+load straw into shed max 2
+load needle into moor_path10 max 1
+load rabbit into moor_path10 zonemax 4
+load rabbit into moor_path15 zonemax 4
+load rabbit into garden1 zonemax 4
+load rabbit into garden3 zonemax 4
+load red_fox into moor_path4 zonemax 2
+load red_fox into moor_path9 zonemax 2
+load cat into windmill zonemax 1
+load pony into shed zonemax 1
+load deer into moor_path6 zonemax 2
+load deer into moor_path12 zonemax 2
+load bear into moor_path16 zonemax 1
+load crow into corn_field2 zonemax 3
+load crow into corn_fielda zonemax 3
+load crow into corn_field7 zonemax 3
+load gardener into hut6 max 1
+load sign into cross_road max 1
+load miller into windmill zonemax 1
+load grain_boy into windmill max 1
+load mole into basement zonemax 1
+load box into basement zonemax 1
+{ 
+   load coins max 1
+}
+load farmer_wife into hut1 zonemax 1
+{
+   load spool max 1
+}
+load farm_boy into hut1 zonemax 1
+load farmer into hut1 zonemax 1
+{
+   equip scythe position WEAR_WIELD
+}
+load big_mouse into windmill2 zonemax 1
+load dog into west_path2 zonemax 1
+load cow into shed zonemax 1
+load pig into pen zonemax 3
+load pig into pen zonemax 3
+load pig into pen zonemax 3
+load pig_boy into hut4 max 1
+load butcher_husband into hut4 zonemax 1
+{
+   load pants max 1
+   equip cleaver position WEAR_WIELD
+}
+load butcher_wife into hut4 zonemax 1
+{
+   equip cleaver position WEAR_WIELD
+}
+load crazy_jake into old_hut zonemax 1
+{
+   equip shovel position WEAR_WIELD
+}
+load scarecrow into patch max 1
+%end
+
+
+
+
+

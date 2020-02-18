@@ -1,0 +1,5200 @@
+/*
+filename    cloud
+password    fluff
+changedby   eirinn
+EmailAdd     Jpc (Gypsy) <clarej@tcd.ie>
+request     compile
+version     25
+END HEADER*/
+
+/* Fixed earrin quest - Eirinn */
+
+#include <composed.h>
+#include <values.h>
+#include <wmacros.h>
+#define RACE_DRAGON 5023
+#define CLOUD_ONGOING "Cloud Quest Ongoing"
+#define CLOUD_COMPLETE "Cloud Quest Complete"
+#define NUB_ONGOING "Gunthar Quest Ongoing"
+#define NUB_COMPLETE "Gunthar Quest Complete"
+
+%zone cloud
+lifespan 20
+reset RESET_ANYHOW
+creators {"tyk", "joeboo"}
+
+notes "As a precursor to several other zones that should follow, the cloud
+zone was written to provide a series of links for other zones.  Current plans
+include links to Asgaard, Good Dragons, Storm Giants, Sky Elves, and the
+Sprites and Bees.  Xerion may even link the Sun Zone in and Merlins' Castle
+will soon be here.  The zone itself has random flying folk designed for low
+levels as well as a quest for a pair of winged boots to protect from falling
+through the clouds.  Zex hates mail so write Tyk(Dan) at ddb2@po.cwru.edu."
+
+
+help "What?  You want everything handed to you???"
+
+%dil
+
+dilbegin neuth_aff(medi : unitptr, targ : unitptr, hm : integer);
+code
+{
+        act("$1n's Neuthon PUMMELS $3n!",
+        A_SOMEONE, self, null,targ, TO_NOTVICT);
+        act("$1n's Neuthon PUMMELS you!! ",
+        A_ALWAYS, self, null,null, TO_VICT);
+        act("Your Neuthon PUMMELS $3n!!",
+        A_ALWAYS, self, null, targ, TO_CHAR);
+        return;
+        }
+dilend
+
+dilbegin vick_aff(medi : unitptr, targ : unitptr, hm : integer);
+code
+{
+        act("The sky cracks sending a wave through your Vickram onto $3n!",
+        A_SOMEONE, self, null,targ, TO_CHAR);
+        act("The sky cracks sending a wave through $1n's Vickram onto you!! ",
+        A_ALWAYS, self, null,null, TO_VICT);
+        act("The sky cracks sending a wave through $1n's Vickram onto $3n!",
+        A_ALWAYS, self, null, targ, TO_NOTVICT);
+        return;
+        }
+dilend
+
+dilbegin drop();
+var
+        rand : integer;
+        wher : integer;
+        pc : unitptr;
+        boo : unitptr;
+
+code {
+        :init:
+{
+        heartbeat := PULSE_SEC*30;
+        on_activation(self.position != POSITION_STANDING, skip);
+}
+        :start:
+        wait (SFB_CMD, activator.type == UNIT_ST_PC);
+        rand := rnd(1, 100);
+        wher := rnd(1, 5);
+        pc := activator;
+        boo := findunit(activator, "winged boots",
+                FIND_UNIT_EQUIP, null);
+        if (boo #= null) {
+                if (rand < 10) {
+                        if (wher == 1)  {
+                                block;
+                                act("$1n falls through the clouds!", 
+                                A_SOMEONE, activator, null, null, TO_REST);
+                                act("You fall through the clouds!", 
+                                A_ALWAYS, activator, null, null, TO_CHAR);
+                                pc.hp := pc.hp - 50;
+                                link(pc, findroom("arabian/wharf_2"));                            
+                                exec("look", pc);     
+                                goto start;
+                        }
+                        if (wher == 2)  {
+                                block;
+                                act("$1n falls through the clouds!", 
+                                A_SOMEONE, activator, null, null, TO_REST);
+                                act("You fall through the clouds!", 
+                                A_ALWAYS, activator, null, null, TO_CHAR);
+                                pc.hp := 10;
+                                link(pc, findroom("haon_dor/rn_6009"));                            
+                                exec("look", pc);
+                                goto start;
+                        }
+                        if (wher == 3)  {
+                                block;
+                                act("$1n falls through the clouds!", 
+                                A_SOMEONE, activator, null, null, TO_REST);
+                                act("You fall through the clouds!", 
+                                A_ALWAYS, activator, null, null, TO_CHAR);
+                                pc.hp := pc.hp - 50;
+                                link(pc, findroom("urland/vil_path3"));                            
+                                exec("look", pc);      
+                                goto start;
+                        }
+                        if (wher == 4)  {
+                                block;
+                                act("$1n falls through the clouds!", 
+                                A_SOMEONE, activator, null, null, TO_REST);
+                                act("You fall through the clouds!", 
+                                A_ALWAYS, activator, null, null, TO_CHAR);
+                                pc.hp := pc.hp - 50;
+                                link(pc, findroom("midgaard/market_sq"));                            
+                                exec("look", pc);      
+                                goto start;
+                        }
+                        if (wher == 5)  {
+                                block;
+                                act("$1n falls through the clouds!", 
+                                A_SOMEONE, activator, null, null, TO_REST);
+                                act("You fall through the clouds!", 
+                                A_ALWAYS, activator, null, null, TO_CHAR);
+                                pc.hp := pc.hp - 50;
+                                link(pc, findroom("udgaard/square"));                            
+                                exec("look", pc);      
+                                goto start;
+                        }
+               }
+        }
+}
+dilend
+
+dilbegin zap();
+var
+        pc : unitptr;
+        rand : integer;
+
+code {
+        :init:
+{
+        heartbeat := PULSE_SEC*30;
+        on_activation(self.position != POSITION_STANDING, skip);
+}
+        :start:
+        wait (SFB_CMD, activator.type == UNIT_ST_PC);
+        pc := activator;
+        rand := rnd(1, 40);
+        if (rand < 2) {
+                act("$1n is zapped by lightning.", A_SOMEONE, activator,
+                null, null, TO_REST);
+                act("You are zapped by lightning.", A_ALWAYS, activator,
+                null, null, TO_CHAR);
+                activator.hp := activator.hp - 7;
+                goto start;
+        }
+}
+dilend
+     
+dilbegin poop();
+var
+        pc : unitptr;
+        rand : integer;
+code {
+        :init:
+{
+        heartbeat := PULSE_SEC*30;
+        on_activation(self.position != POSITION_STANDING, skip);
+}
+        :start:
+        wait (SFB_CMD, activator.type == UNIT_ST_PC);
+        pc := activator;                        
+        rand := rnd(1, 100);
+        if (rand < 3)    {
+              act("A bird poops on $1n's head causing $1n to loose balance and fall.", 
+              A_SOMEONE, activator, null, null, TO_REST);
+              act("A bird poops on your head causing you to lose balance and fall.", 
+              A_ALWAYS, activator, null, null, TO_CHAR);
+              pc.hp := pc.hp - 13;
+              link(pc, findroom("cloud/stalk"));                            
+              exec("look", pc);
+              goto start;
+         }
+}
+dilend
+
+
+
+%rooms
+                                clearing
+title "A Clearing at the Edge of Dark Wood"
+descr 
+"       The trees suddenly part to reveal a huge clearing.  The foliage drops
+away revealing an astounding sight to the north.  A beanstalk straight out of
+a fairy tale climbs up into the sky.  Huge broad leaves grow from the stalk
+and make natural rungs that seem quite climbable.  To the east you could
+gain a closer look, while a small path leads west."
+
+extra {"clearing", "center"}
+"This appears to be a natural clearing in the woods that may have been caused
+ by the massive beanstalk stretching skyward from its center."
+
+extra {"beanstalk", "stalk"}
+"Climbing upward straight into the clouds, this massive beanstalk resembles
+ the classic fairy tale plant.  It is covered with huge broad leaves and pea
+ pods of extraordinary size."
+
+extra {"huge broad leaves", "massive leaves", "broad leaves", "leaves"}
+"Amazingly large broad leaves grow from the beanstalk at irregular intervals.
+ They make excellent foot and hand holds.  There also seems to be a plethora
+ of massive pea pods growing off the stalk."
+
+flags {UNIT_FL_NO_MOB}
+movement SECT_FOREST
+north to stalk;
+west to cloud_ent@tower;
+end     
+
+                                stalk
+title "The Bottom of the Beanstalk"
+descr 
+"       At this end of the clearing is a sight straight out of a fairy
+ tale.  A beanstalk, at least 40 feet in diameter, grows out of the ground
+ and up into the clouds above.  Twisting and turning in upon itself, and
+ covered in massive leaves and pea pods, it looks quite climbable.  A path
+ going south leads from this clearing."
+
+extra {"clearing", "center"}
+"This appears to be a natural clearing in the woods that may have been caused
+ by the massive beanstalk stretching skyward from its center."
+
+extra {"beanstalk", "stalk"}
+"Climbing upward straight into the clouds, this massive beanstalk resembles
+ the classic fairy tale plant.  It is covered with huge broad leaves and pea
+ pods of extraordinary size."
+
+extra {"huge broad leaves", "massive leaves", "broad leaves", "leaves"}
+"Amazingly large broad leaves grow from the beanstalk at irregular intervals.
+ They make excellent foot and hand holds.  There also seems to be a plethora
+ of massive pea pods growing off the stalk."
+
+flags {UNIT_FL_NO_MOB}
+movement SECT_FOREST
+up to stalk1;
+south to clearing;
+end     
+
+                                stalk1
+title "Climbing the Beanstalk"
+descr 
+"       Clouds and the gentle breeze are your only companion at this point on
+ the beanstalk.  You cling tenaciously to the huge broad leaves and massive
+ pea pods that grow along the way.  From this view point you can see Kithryn
+ Tower and the stone dragon Ancalador far to the south, the Drabar hills to
+ the west and mountains to the east and north.  Ascending or descending the
+ beanstalk are your only options."
+
+extra {"clouds"}
+"White billowy and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"beanstalk", "stalk"}
+"Climbing upward straight into the clouds, this massive beanstalk resembles
+ the classic fairy tale plant.  It is covered with huge broad leaves and pea
+ pods of extraordinary size."
+
+extra {"huge broad leaves", "massive leaves", "broad leaves", "leaves"}
+"Amazingly large broad leaves grow from the beanstalk at irregular intervals.
+ They make excellent foot and hand holds.  There also seems to be a plethora
+ of massive pea pods growing off the stalk."
+
+movement SECT_FOREST
+up to stalk2;
+down to stalk;
+dilcopy poop@cloud();
+end
+
+                                stalk2
+title "Climbing the Beanstalk"
+descr 
+"       Clouds and the gentle breeze are your only companion at this point on
+ the beanstalk.  You cling tenaciously to the huge broad leaves and massive
+ pea pods that grow along the way.  From this view point you can see Kithryn
+ Tower and the stone dragon Ancalador far to the south, the Drabar hills to
+ the west and mountains to the east and north.  Ascending or descending the
+ beanstalk are your only options."
+
+extra {"clouds"}
+"White billowy and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"beanstalk", "stalk"}
+"Climbing upward straight into the clouds, this massive beanstalk resembles
+ the classic fairy tale plant.  It is covered with huge broad leaves and pea
+ pods of extraordinary size."
+
+extra {"huge broad leaves", "massive leaves", "broad leaves", "leaves"}
+"Amazingly large broad leaves grow from the beanstalk at irregular intervals.
+ They make excellent foot and hand holds.  There also seems to be a plethora
+ of massive pea pods growing off the stalk."
+
+movement SECT_FOREST
+up to stalk3;
+down to stalk1;
+dilcopy poop@cloud();      
+end
+
+                                stalk3
+title "Climbing the Beanstalk"
+descr 
+"       Clouds and the gentle breeze are your only companion at this point on
+ the beanstalk.  You cling tenaciously to the huge broad leaves and massive
+ pea pods that grow along the way.  From this view point you can see Kithryn
+ Tower and the stone dragon Ancalador far to the south, the Drabar hills to
+ the west and mountains to the east and north.  Ascending or descending the
+ beanstalk are your only options."
+
+extra {"clouds"}
+"White billowy and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"beanstalk", "stalk"}
+"Climbing upward straight into the clouds, this massive beanstalk resembles
+ the classic fairy tale plant.  It is covered with huge broad leaves and pea
+ pods of extraordinary size."
+
+extra {"huge broad leaves", "massive leaves", "broad leaves", "leaves"}
+"Amazingly large broad leaves grow from the beanstalk at irregular intervals.
+ They make excellent foot and hand holds.  There also seems to be a plethora
+ of massive pea pods growing off the stalk."
+
+movement SECT_FOREST
+up to stalk4;
+down to stalk2;
+dilcopy poop@cloud();      
+end
+
+                                stalk4
+title "Climbing the Beanstalk"
+descr 
+"       Clouds and the gentle breeze are your only companion at this point on
+ the beanstalk.  You cling tenaciously to the huge broad leaves and massive
+ pea pods that grow along the way.  From this view point you can see Kithryn
+ Tower and the stone dragon Ancalador far to the south, the Drabar hills to
+ the west and mountains to the east and north.  Ascending or descending the
+ beanstalk are your only options."
+
+extra {"clouds"}
+"White billowy and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"beanstalk", "stalk"}
+"Climbing upward straight into the clouds, this massive beanstalk resembles
+ the classic fairy tale plant.  It is covered with huge broad leaves and pea
+ pods of extraordinary size."
+
+extra {"huge broad leaves", "massive leaves", "broad leaves", "leaves"}
+"Amazingly large broad leaves grow from the beanstalk at irregular intervals.
+ They make excellent foot and hand holds.  There also seems to be a plethora
+ of massive pea pods growing off the stalk."
+
+movement SECT_FOREST
+up to stalk5;
+down to stalk3;
+dilcopy poop@cloud();      
+end
+
+                                stalk5
+title "Climbing the Beanstalk"
+descr 
+"       Clouds and the gentle breeze are your only companion at this point on
+ the beanstalk.  You cling tenaciously to the huge broad leaves and massive
+ pea pods that grow along the way.  From this view point you can see Kithryn
+ Tower and the stone dragon Ancalador far to the south, the Drabar hills to
+ the west and mountains to the east and north.  Ascending or descending the
+ beanstalk are your only options."
+
+extra {"clouds"}
+"White billowy and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"beanstalk", "stalk"}
+"Climbing upward straight into the clouds, this massive beanstalk resembles
+ the classic fairy tale plant.  It is covered with huge broad leaves and pea
+ pods of extraordinary size."
+
+extra {"huge broad leaves", "massive leaves", "broad leaves", "leaves"}
+"Amazingly large broad leaves grow from the beanstalk at irregular intervals.
+ They make excellent foot and hand holds.  There also seems to be a plethora
+ of massive pea pods growing off the stalk."
+
+movement SECT_FOREST
+up to stalk6;
+down to stalk4;
+dilcopy poop@cloud();      
+end
+
+                                stalk6
+title "Climbing the Beanstalk"
+descr 
+"       Clouds and the gentle breeze are your only companion at this point on
+ the beanstalk.  You cling tenaciously to the huge broad leaves and massive
+ pea pods that grow along the way.  From this view point you can see Kithryn
+ Tower and the stone dragon Ancalador far to the south, the Drabar hills to
+ the west and mountains to the east and north.  Just above your head, the
+ clouds obscure your view.  Ascending or descending the beanstalk are your
+ only options."
+
+extra {"clouds"}
+"White billowy and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"beanstalk", "stalk"}
+"Climbing upward straight into the clouds, this massive beanstalk resembles
+ the classic fairy tale plant.  It is covered with huge broad leaves and pea
+ pods of extraordinary size."
+
+extra {"huge broad leaves", "massive leaves", "broad leaves", "leaves"}
+"Amazingly large broad leaves grow from the beanstalk at irregular intervals.
+ They make excellent foot and hand holds.  There also seems to be a plethora
+ of massive pea pods growing off the stalk."
+
+flags {UNIT_FL_NO_MOB}
+movement SECT_FOREST
+up to cloud8;
+down to stalk5;
+dilcopy poop@cloud();      
+end
+                                cloud1
+title "In a Field of Clouds"
+descr 
+"       For as far as the eye can see stretches a field of white billowy
+clouds.  They seem quite capable of supporting your weight.  Occasionally the
+gentle breeze opens a gap in the clouds and you can catch a glimpse of the
+ground, far, far below.  Up is nothing but a crystal blue sky.  The field of
+clouds extends north and south."
+
+extra {"clouds"}
+"White billowy and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+movement SECT_DESERT
+north to bank1;
+south to cloud2;
+dilcopy drop@cloud();
+end
+
+                                cloud2
+title "In a Field of Clouds"
+descr 
+"       For as far as the eye can see stretches a field of white billowy
+clouds.  They seem quite capable of supporting your weight.  Occasionally the
+gentle breeze opens a gap in the clouds and you can catch a glimpse of the
+ground, far, far below.  Up is nothing but a crystal blue sky.  The field of
+clouds extends north, east, and west."
+
+extra {"clouds"}
+"White billowy and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+movement SECT_DESERT
+north to cloud1;
+east to cloud7;
+west to rim1;
+dilcopy drop@cloud();       
+end
+
+                                cloud4
+title "In a Field of Clouds"
+descr 
+"       For as far as the eye can see stretches a field of white billowy
+clouds.  They seem quite capable of supporting your weight.  Occasionally the
+gentle breeze opens a gap in the clouds and you can catch a glimpse of the
+ground, far, far below.  Up is nothing but a crystal blue sky.  The field of
+clouds extends east, west, and south."
+
+extra {"clouds"}
+"White billowy and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+movement SECT_DESERT
+south to cloud5;
+east to cloud9;
+west to rim3;
+dilcopy drop@cloud();       
+end
+
+                                cloud5
+title "In a Field of Clouds"
+descr 
+"       For as far as the eye can see stretches a field of white billowy
+clouds.  They seem quite capable of supporting your weight.  Occasionally the
+gentle breeze opens a gap in the clouds and you can catch a glimpse of the
+ground, far, far below.  Up is nothing but a crystal blue sky.  The field of
+clouds extends north.  The clouds appear to grow more sparse to the south."
+
+extra {"clouds"}
+"White billowy and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+flags {UNIT_FL_NO_MOB}
+movement SECT_DESERT
+north to cloud4;
+south to sparse1;
+dilcopy drop@cloud();       
+end
+
+                                cloud7
+title "In a Field of Clouds"
+descr 
+"       For as far as the eye can see stretches a field of white billowy
+clouds.  They seem quite capable of supporting your weight.  Occasionally the
+gentle breeze opens a gap in the clouds and you can catch a glimpse of the
+ground, far, far below.  Up is nothing but a crystal blue sky.  The field of
+clouds extends east, west, and south."
+
+extra {"clouds"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+movement SECT_DESERT
+south to cloud8;
+east to cloud12;
+west to cloud2;
+dilcopy drop@cloud();       
+end
+                                  cloud8
+title "The Top of the Beanstalk"
+descr 
+"       For as far as the eye can see stretches a field of white billowy
+clouds.  They seem quite capable of supporting your weight.  Occasionally the
+gentle breeze opens a gap in the clouds and you can catch a glimpse of the
+ground, far, far below.  Up is nothing but a crystal blue sky.  The field of
+clouds extends north and south.  There is a massive beanstalk here that
+can be climbed down."
+
+extra {"clouds"}
+"White billowy and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"beanstalk", "stalk"}
+"Climbing upward straight into the clouds, this massive beanstalk resembles
+ the classic fairy tale plant.  It is covered with huge broad leaves and pea
+ pods of extraordinary size."
+
+extra {"huge broad leaves", "massive leaves", "broad leaves", "leaves"}
+"Amazingly large broad leaves grow from the beanstalk at irregular intervals.
+ They make excellent foot and hand holds.  There also seems to be a plethora
+ of massive pea pods growing off the stalk."
+
+movement SECT_DESERT
+down to stalk6;
+north to cloud7;
+south to cloud9;
+end
+
+                                cloud9
+title "In a Field of Clouds"
+descr 
+"       For as far as the eye can see stretches a field of white billowy
+clouds.  They seem quite capable of supporting your weight.  Occasionally the
+gentle breeze opens a gap in the clouds and you can catch a glimpse of the
+ground, far, far below.  Up is nothing but a crystal blue sky.  The field of
+clouds extends north, east, and west."
+
+extra {"clouds"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+movement SECT_DESERT
+north to cloud8;
+east to cloud14;
+west to cloud4;
+dilcopy drop@cloud();       
+end
+
+                                cloud11
+title "In a Field of Clouds"
+descr 
+"       For as far as the eye can see stretches a field of white billowy
+clouds.  They seem quite capable of supporting your weight.  Occasionally the
+gentle breeze opens a gap in the clouds and you can catch a glimpse of the
+ground, far, far below.  Up is nothing but a crystal blue sky.  The field of
+clouds extends north, south, and east."
+
+extra {"clouds"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+movement SECT_DESERT
+north to bank3;
+south to cloud12;
+east to wall1;
+dilcopy drop@cloud();       
+end
+
+                                cloud12
+title "In a Field of Clouds"
+descr 
+"       For as far as the eye can see stretches a field of white billowy
+clouds.  They seem quite capable of supporting your weight.  Occasionally the
+gentle breeze opens a gap in the clouds and you can catch a glimpse of the
+ground, far, far below.  Up is nothing but a crystal blue sky.  The field of
+clouds extends north, east, and west."
+
+extra {"clouds"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+movement SECT_DESERT
+north to cloud11;
+east to wall2;
+west to cloud7;
+dilcopy drop@cloud();       
+end
+
+                                cloud14
+title "In a Field of Clouds"
+descr 
+"       For as far as the eye can see stretches a field of white billowy
+clouds.  They seem quite capable of supporting your weight.  Occasionally the
+gentle breeze opens a gap in the clouds and you can catch a glimpse of the
+ground, far, far below.  Up is nothing but a crystal blue sky.  The field of
+clouds extends east, west, and south."
+
+extra {"clouds"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+movement SECT_DESERT
+south to cloud15;
+east to wall4;
+west to cloud9;
+dilcopy drop@cloud();       
+end
+                                cloud15
+title "In a Field of Clouds"
+descr 
+"       For as far as the eye can see stretches a field of white billowy
+clouds.  They seem quite capable of supporting your weight.  Occasionally the
+gentle breeze opens a gap in the clouds and you can catch a glimpse of the
+ground, far, far below.  Up is nothing but a crystal blue sky.  The field of
+clouds north and east.  The clouds appear to grow more sparse to the south."
+
+extra {"clouds"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+flags {UNIT_FL_NO_MOB}
+movement SECT_DESERT
+north to cloud14;
+south to sparse3;
+east to wall5;
+dilcopy drop@cloud();       
+end
+
+                                wall1
+title "At the Cloud Wall"
+descr 
+"       Seemingly reaching straight to the heavens, billowy white clouds block
+your progress east.  Occasionally the gentle breeze opens a gap in the clouds
+and you can catch a glimpse of the ground, far, far below.  Up is nothing but
+a crystal blue sky.  The field of clouds proceeds west. The wall runs south."
+
+extra {"cloud wall", "clouds", "cloud", "wall"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+
+movement SECT_DESERT
+south to wall2;
+west to cloud11;
+end
+
+                                wall2
+title "At the Cloud Wall"
+descr 
+"       Seemingly reaching straight to the heavens, billowy white clouds block
+your progress east.  Occasionally the gentle breeze opens a gap in the clouds
+and you can catch a glimpse of the ground, far, far below.  Up is nothing but
+a crystal blue sky.  The field of clouds extends west.  The wall runs north
+and south."
+
+extra {"cloud wall", "clouds", "cloud", "wall"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+
+movement SECT_DESERT
+north to wall1;
+south to wall3;
+west to cloud12;
+end
+
+                                wall3
+title "Before the Cloud Gate"
+descr 
+"       Towering nearly forty meters high, the Cloud Gate stands to the east.
+It appears to be the only way to pass through the massive cloud wall.  Above
+you is an amazing crystal blue sky.  Below your feet, an occasional gap opens
+in the ground revealing more sky.  The field of clouds extends north and south
+along the cloud wall."
+
+extra {"cloud wall", "clouds", "cloud", "wall"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+
+movement SECT_DESERT
+north to wall2;
+south to wall4;
+end
+
+                                wall4
+title "At the Cloud Wall"
+descr 
+"       Seemingly reaching straight to the heavens, billowy white clouds block
+your progress east.  Occasionally the gentle breeze opens a gap in the clouds
+and you can catch a glimpse of the ground, far, far below.  Up is nothing but
+a crystal blue sky.  The field of clouds extends west.  The wall runs north 
+and south."
+
+extra {"cloud wall", "clouds", "cloud", "wall"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+
+movement SECT_DESERT
+north to wall3;
+south to wall5;
+west to cloud14;
+end
+
+                                wall5
+title "At the Cloud Wall"
+descr 
+"       Seemingly reaching straight to the heavens, billowy white clouds block
+your progress east.  Occasionally the gentle breeze opens a gap in the clouds
+and you can catch a glimpse of the ground, far, far below.  Up is nothing but
+a crystal blue sky.  The field of clouds extends west.  The wall runs north."
+
+extra {"cloud wall", "clouds", "cloud", "wall"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+
+movement SECT_DESERT
+north to wall4;
+west to cloud15;
+end
+                                sparse1
+title "Among Dissapating Clouds"
+descr 
+"       The clouds here have begun to break up as the sun's rays become
+stronger.  The occasional gap in the clouds has now become rather frequent
+and the ground leers up at you from thousands of feet below.  There is little
+to do but hop from one cloud to the next before you fall."
+
+extra {"cloud wall", "clouds", "cloud", "wall"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+
+movement SECT_DESERT
+north to cloud5;
+south to sparse4;
+east to sparse2;
+dilcopy drop@cloud();       
+end
+                                sparse2
+title "Among Dissapating Clouds"
+descr 
+"       The clouds here have begun to break up as the sun's rays become
+stronger.  The occasional gap in the clouds has now become rather frequent
+and the ground leers up at you from thousands of feet below.  There is little
+to do but hop from one cloud to the next before you fall."
+
+extra {"cloud wall", "clouds", "cloud", "wall"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+
+movement SECT_DESERT
+east to sparse3;
+west to sparse1;
+dilcopy drop@cloud();       
+end
+                                sparse3
+title "Among Dissapating Clouds"
+descr 
+"       The clouds here have begun to break up as the sun's rays become
+stronger.  The occasional gap in the clouds has now become rather frequent
+and the ground leers up at you from thousands of feet below.  There is little
+to do but hop from one cloud to the next before you fall."
+
+extra {"cloud wall", "clouds", "cloud", "wall"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+
+movement SECT_DESERT
+north to cloud15;
+south to sparse6;
+west to sparse2;
+dilcopy drop@cloud();       
+end
+                                sparse4
+title "Among Dissapating Clouds"
+descr 
+"       The clouds here have begun to break up as the sun's rays become
+stronger.  The occasional gap in the clouds has now become rather frequent
+and the ground leers up at you from thousands of feet below.  There is little
+to do but hop from one cloud to the next before you fall."
+
+extra {"cloud wall", "clouds", "cloud", "wall"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+
+movement SECT_DESERT
+north to sparse1;
+south to sparse7;
+west to sparse6;
+dilcopy drop@cloud();       
+end
+                                sparse6
+title "Among Dissapating Clouds"
+descr 
+"       The clouds here have begun to break up as the sun's rays become
+stronger.  The occasional gap in the clouds has now become rather frequent
+and the ground leers up at you from thousands of feet below.  There is little
+to do but hop from one cloud to the next before you fall."
+
+extra {"cloud wall", "clouds", "cloud", "wall"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+
+movement SECT_DESERT
+north to sparse3;
+south to sparse9;
+east to sparse4;
+dilcopy drop@cloud();       
+end
+                                sparse7
+title "Among Dissapating Clouds"
+descr 
+"       The clouds here have begun to break up as the sun's rays become
+stronger.  The occasional gap in the clouds has now become rather frequent
+and the ground leers up at you from thousands of feet below.  There is little
+to do but hop from one cloud to the next before you fall."
+
+extra {"cloud wall", "clouds", "cloud", "wall"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+
+movement SECT_DESERT
+north to sparse4;
+east to sparse8;
+dilcopy drop@cloud();       
+end
+                                sparse8
+title "Among Dissapating Clouds"
+descr 
+"       The clouds here have begun to break up as the sun's rays become
+stronger.  The occasional gap in the clouds has now become rather frequent
+and the ground leers up at you from thousands of feet below.  There is little
+to do but hop from one cloud to the next before you fall."
+
+extra {"cloud wall", "clouds", "cloud", "wall"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+
+movement SECT_DESERT
+west to sparse7;
+south to drop;
+east to sparse9;
+dilcopy drop@cloud();       
+end
+                                sparse9
+title "Among Dissapating Clouds"
+descr 
+"       The clouds here have begun to break up as the sun's rays become
+stronger.  The occasional gap in the clouds has now become rather frequent
+and the ground leers up at you from thousands of feet below.  There is little
+to do but hop from one cloud to the next before you fall."
+
+extra {"cloud wall", "clouds", "cloud", "wall"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+
+movement SECT_DESERT
+north to sparse6;
+west to sparse8;
+dilcopy drop@cloud();       
+end
+                                drop
+title "The Cloud Drop"
+descr 
+"       A massive drop off is before you.  You dare not go any further."
+
+extra {"cloud wall", "clouds", "cloud", "wall"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+
+movement SECT_DESERT
+north to sparse6;
+west to sparse8;
+dilcopy drop@cloud();       
+end
+                                
+                                bank1
+title "Before a Cloud Bank"
+descr 
+"       An endless cloud bank seems to rise before you.  Cool, damp moisture
+collects on everything in sight.  The bank reaches straight up into the
+crystal blue sky and seems quite climbable.  An occasional streak of 
+lightning criss-crosses the wispy surface of the piling clouds.  Below your
+feet the occasional gap in the clouds shows the ground leering up at you from 
+thousands of feet below."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+flags {UNIT_FL_NO_MOB}
+movement SECT_DESERT
+west to bank3;
+east to bank2;
+up to bank4;
+south to cloud1;
+dilcopy zap@cloud();
+end
+                                bank2
+title "Before a Cloud Bank"
+descr 
+"       An endless cloud bank seems to rise before you.  Cool, damp moisture
+collects on everything in sight.  The bank reaches straight up into the
+crystal blue sky and seems quite climbable.  An occasional streak of 
+lightning criss-crosses the wispy surface of the piling clouds.  Below your
+feet the occasional gap in the clouds shows the ground leering up at you from 
+thousands of feet below."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+flags {UNIT_FL_NO_MOB}
+movement SECT_DESERT
+up to bank5;
+west to bank1;
+east to bank3;
+dilcopy zap@cloud();
+
+dilbegin ent_cld ();
+var 
+        pc : unitptr;
+code {
+        :init:
+heartbeat := PULSE_SEC * 4; 
+        :start:
+wait (SFB_CMD, ((activator.type == UNIT_ST_PC) and (command(CMD_ENTER)) ));
+pc := activator;
+if ( ("cloud" in argument) and ("bank" in argument) ) {
+        secure (pc, lostpc);
+        block;
+        act("You enter the cloud bank. ",
+        A_ALWAYS, pc, null, null, TO_CHAR);
+        act("$1n enters the cloud bank. ",
+        A_ALWAYS, pc, null, null, TO_REST);
+        link (pc, findroom("cloud/inside18"));
+        }
+        :lostpc:
+        pause;
+        goto start;
+}
+dilend
+end
+                                bank3
+title "Before a Cloud Bank"
+descr 
+"       An endless cloud bank seems to rise before you.  Cool, damp moisture
+collects on everything in sight.  The bank reaches straight up into the
+crystal blue sky and seems quite climbable.  An occasional streak of 
+lightning criss-crosses the wispy surface of the piling clouds.  Below your
+feet the occasional gap in the clouds shows the ground leering up at you from 
+thousands of feet below."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+flags {UNIT_FL_NO_MOB}
+movement SECT_DESERT
+south to cloud11;
+up to bank6;
+west to bank2;
+east to bank1;
+dilcopy zap@cloud();
+end
+                                bank4
+title "Scaling a Cloud Bank"
+descr 
+"       Cool, damp moisture collects on everything in sight as you cling to
+the front of an immense bank of clouds.  The bank seems to reach straight up 
+into the crystal blue sky and an occasional streak of lightning criss-crosses 
+the wispy surface of the piling clouds.  Below your feet the occasional gap 
+in the clouds shows the ground leering up at you from thousands of feet below."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+
+movement SECT_DESERT
+down to bank1;
+up to bank7;
+west to bank6;
+east to bank5;
+dilcopy zap@cloud();
+end
+                                bank5
+title "Scaling a Cloud Bank"
+descr 
+"       Cool, damp moisture collects on everything in sight as you cling to
+the front of an immense bank of clouds.  The bank seems to reach straight up 
+into the crystal blue sky and an occasional streak of lightning criss-crosses 
+the wispy surface of the piling clouds.  Below your feet the occasional gap 
+in the clouds shows the ground leering up at you from thousands of feet below."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+
+movement SECT_DESERT
+down to bank2;
+up to bank8;
+west to bank4;
+east to bank6;
+dilcopy zap@cloud();
+end
+                                bank6
+title "Scaling a Cloud Bank"
+descr 
+"       Cool, damp moisture collects on everything in sight as you cling to
+the front of an immense bank of clouds.  The bank seems to reach straight up 
+into the crystal blue sky and an occasional streak of lightning criss-crosses 
+the wispy surface of the piling clouds.  Below your feet the occasional gap 
+in the clouds shows the ground leering up at you from thousands of feet below."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"ground", "gap"}
+"Looking down from this dizzying height among the clouds makes you quickly
+ turn away from your glimpse at the ground."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+
+movement SECT_DESERT
+down to bank3;
+up to bank9;
+west to bank5;
+east to bank4;
+dilcopy zap@cloud();
+end
+                                bank7
+title "Atop a Cloud Bank"
+descr 
+"       Sunlight streams seemingly from everywhere.  As your eyes adjust you
+see a massive bank of clouds dropping away just to the south.  The bank seems
+to descend onto a field of clouds that stretch away into the distance.  The 
+crystal blue sky seems to nearly touch your head.  A static feeling of 
+electricity reminds you to keep moving.  To the north appears to be some sort
+of plains."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+
+movement SECT_DESERT
+down to bank4;
+west to bank9;
+east to bank8;
+dilcopy zap@cloud();
+end
+                                bank8
+title "Atop a Cloud Bank"
+descr 
+"       Sunlight streams seemingly from everywhere.  As your eyes adjust you
+see a massive bank of clouds dropping away just to the south.  The bank seems
+to descend onto a field of clouds that stretch away into the distance.  The 
+crystal blue sky seems to nearly touch your head.  A static feeling of 
+electricity reminds you to keep moving.  To the north appears to be some sort
+of plains."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+down to bank6;
+west to bank7;
+east to bank9;
+dilcopy zap@cloud();
+end
+                                bank9
+title "Atop a Cloud Bank"
+descr 
+"       Sunlight streams seemingly from everywhere.  As your eyes adjust you
+see a massive bank of clouds dropping away just to the south.  The bank seems
+to descend onto a field of clouds that stretch away into the distance.  The 
+crystal blue sky seems to nearly touch your head.  A static feeling of 
+electricity reminds you to keep moving.  To the north appears to be some sort
+of plains."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+down to bank6;
+west to bank8;
+east to bank7;
+dilcopy zap@cloud();
+end
+
+                                inside11
+title "Inside a Cloud Bank"
+descr 
+"       The inside of the cloud bank is deathly silent, broken only by  
+occasional muffled claps of thunder from outside.  Cool, clingy, moisture
+pervades the air and it has grown dim as the sunlight cannot penetrate the
+clouds around you.  You immediately lose all sense of direction."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+up to inside17;
+down to inside14;
+north to inside21;
+south to inside31;
+east to inside12;
+west to inside13;
+end
+                                inside12
+title "Inside a Cloud Bank"
+descr 
+"       The inside of the cloud bank is deathly silent, broken only by  
+occasional muffled claps of thunder from outside.  Cool, clingy, moisture
+pervades the air and it has grown dim as the sunlight cannot penetrate the
+clouds around you.  You immediately lose all sense of direction."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+up to inside18;
+down to inside15;
+north to inside22;
+south to inside32;
+east to inside13;
+west to inside11;
+end
+                                inside13
+title "Inside a Cloud Bank"
+descr 
+"       The inside of the cloud bank is deathly silent, broken only by  
+occasional muffled claps of thunder from outside.  Cool, clingy, moisture
+pervades the air and it has grown dim as the sunlight cannot penetrate the
+clouds around you.  You immediately lose all sense of direction."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+up to inside19;
+down to inside16;
+north to inside23;
+south to inside33;
+east to inside11;
+west to inside12;
+end
+                                inside14
+title "Inside a Cloud Bank"
+descr 
+"       The inside of the cloud bank is deathly silent, broken only by  
+occasional muffled claps of thunder from outside.  Cool, clingy, moisture
+pervades the air and it has grown dim as the sunlight cannot penetrate the
+clouds around you.  You immediately lose all sense of direction."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+up to inside11;
+down to inside17;
+north to inside24;
+south to inside34;
+east to inside15;
+west to inside16;
+end
+                                inside15
+title "Inside a Cloud Bank"
+descr 
+"       The inside of the cloud bank is deathly silent, broken only by  
+occasional muffled claps of thunder from outside.  Cool, clingy, moisture
+pervades the air and it has grown dim as the sunlight cannot penetrate the
+clouds around you.  You immediately lose all sense of direction."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+up to inside12;
+down to inside18;
+north to inside25;
+south to bank2;
+east to inside16;
+west to inside14;
+end
+                                inside16
+title "Inside a Cloud Bank"
+descr 
+"       The inside of the cloud bank is deathly silent, broken only by  
+occasional muffled claps of thunder from outside.  Cool, clingy, moisture
+pervades the air and it has grown dim as the sunlight cannot penetrate the
+clouds around you.  You immediately lose all sense of direction."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+up to inside13;
+down to inside19;
+north to inside26;
+south to inside36;
+east to inside14;
+west to inside15;
+end
+                                inside17
+title "Inside a Cloud Bank"
+descr 
+"       The inside of the cloud bank is deathly silent, broken only by  
+occasional muffled claps of thunder from outside.  Cool, clingy, moisture
+pervades the air and it has grown dim as the sunlight cannot penetrate the
+clouds around you.  You immediately lose all sense of direction."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+up to inside14;
+down to inside11;
+north to inside27;
+south to inside37;
+east to inside18;
+west to inside19;
+end
+                                inside18
+title "Inside a Cloud Bank"
+descr 
+"       The inside of the cloud bank is deathly silent, broken only by  
+occasional muffled claps of thunder from outside.  Cool, clingy, moisture
+pervades the air and it has grown dim as the sunlight cannot penetrate the
+clouds around you.  You immediately lose all sense of direction."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+up to inside15;
+down to inside12;
+north to inside28;
+south to inside38;
+east to inside19;
+west to inside17;
+end
+                                inside19
+title "Inside a Cloud Bank"
+descr 
+"       The inside of the cloud bank is deathly silent, broken only by  
+occasional muffled claps of thunder from outside.  Cool, clingy, moisture
+pervades the air and it has grown dim as the sunlight cannot penetrate the
+clouds around you.  You immediately lose all sense of direction."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+up to inside16;
+down to inside13;
+north to inside29;
+south to inside39;
+east to inside17;
+west to inside18;
+end
+                                inside21
+title "Inside a Cloud Bank"
+descr 
+"       The inside of the cloud bank is deathly silent, broken only by  
+occasional muffled claps of thunder from outside.  Cool, clingy, moisture
+pervades the air and it has grown dim as the sunlight cannot penetrate the
+clouds around you.  You immediately lose all sense of direction."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+up to inside27;
+down to inside24;
+north to inside31;
+south to inside11;
+east to inside22;
+west to inside23;
+end
+                                inside22
+title "Inside a Cloud Bank"
+descr 
+"       The inside of the cloud bank is deathly silent, broken only by  
+occasional muffled claps of thunder from outside.  Cool, clingy, moisture
+pervades the air and it has grown dim as the sunlight cannot penetrate the
+clouds around you.  You immediately lose all sense of direction."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+up to inside28;
+down to inside25;
+north to inside32;
+south to inside12;
+east to inside23;
+west to inside21;
+end
+                                inside23
+title "Inside a Cloud Bank"
+descr 
+"       The inside of the cloud bank is deathly silent, broken only by  
+occasional muffled claps of thunder from outside.  Cool, clingy, moisture
+pervades the air and it has grown dim as the sunlight cannot penetrate the
+clouds around you.  You immediately lose all sense of direction."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+up to inside29;
+down to inside26;
+north to inside33;
+south to inside13;
+east to inside21;
+west to inside22;
+end
+                                inside24
+title "Inside a Cloud Bank"
+descr 
+"       The inside of the cloud bank is deathly silent, broken only by  
+occasional muffled claps of thunder from outside.  Cool, clingy, moisture
+pervades the air and it has grown dim as the sunlight cannot penetrate the
+clouds around you.  You immediately lose all sense of direction."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+up to inside21;
+down to inside27;
+north to inside34;
+south to inside14;
+east to inside25;
+west to inside26;
+end
+                                inside25
+title "Inside a Cloud Bank"
+descr 
+"       The inside of the cloud bank is deathly silent, broken only by  
+occasional muffled claps of thunder from outside.  Cool, clingy, moisture
+pervades the air and it has grown dim as the sunlight cannot penetrate the
+clouds around you.  You immediately lose all sense of direction."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+up to inside22;
+down to inside28;
+north to inside35;
+east to inside26;
+west to inside24;
+end
+                                inside26
+title "Inside a Cloud Bank"
+descr 
+"       The inside of the cloud bank is deathly silent, broken only by  
+occasional muffled claps of thunder from outside.  Cool, clingy, moisture
+pervades the air and it has grown dim as the sunlight cannot penetrate the
+clouds around you.  You immediately lose all sense of direction."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+up to inside23;
+down to inside29;
+north to inside36;
+south to inside16;
+east to inside24;
+west to inside25;
+end
+                                inside27
+title "Inside a Cloud Bank"
+descr 
+"       The inside of the cloud bank is deathly silent, broken only by  
+occasional muffled claps of thunder from outside.  Cool, clingy, moisture
+pervades the air and it has grown dim as the sunlight cannot penetrate the
+clouds around you.  You immediately lose all sense of direction."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+up to inside24;
+down to inside21;
+north to inside37;
+south to inside17;
+east to inside28;
+west to inside29;
+end
+                                inside28
+title "Inside a Cloud Bank"
+descr 
+"       The inside of the cloud bank is deathly silent, broken only by  
+occasional muffled claps of thunder from outside.  Cool, clingy, moisture
+pervades the air and it has grown dim as the sunlight cannot penetrate the
+clouds around you.  You immediately lose all sense of direction."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+up to inside25;
+down to inside22;
+north to inside38;
+south to inside18;
+east to inside29;
+west to inside27;
+end
+                                inside29
+title "Inside a Cloud Bank"
+descr 
+"       The inside of the cloud bank is deathly silent, broken only by  
+occasional muffled claps of thunder from outside.  Cool, clingy, moisture
+pervades the air and it has grown dim as the sunlight cannot penetrate the
+clouds around you.  You immediately lose all sense of direction."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+up to inside26;
+down to inside23;
+north to inside39;
+south to inside19;
+east to inside27;
+west to inside28;
+end
+                                inside31
+title "Inside a Cloud Bank"
+descr 
+"       The inside of the cloud bank is deathly silent, broken only by  
+occasional muffled claps of thunder from outside.  Cool, clingy, moisture
+pervades the air and it has grown dim as the sunlight cannot penetrate the
+clouds around you.  You immediately lose all sense of direction."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+up to inside37;
+down to inside34;
+north to inside11;
+south to inside21;
+east to inside32;
+west to inside33;
+end
+                                inside32
+title "Inside a Cloud Bank"
+descr 
+"       The inside of the cloud bank is deathly silent, broken only by  
+occasional muffled claps of thunder from outside.  Cool, clingy, moisture
+pervades the air and it has grown dim as the sunlight cannot penetrate the
+clouds around you.  You immediately lose all sense of direction."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+up to inside37;
+down to inside35;
+north to chain1;
+south to inside22;
+east to inside33;
+west to inside31;
+end
+                                inside33
+title "Inside a Cloud Bank"
+descr 
+"       The inside of the cloud bank is deathly silent, broken only by  
+occasional muffled claps of thunder from outside.  Cool, clingy, moisture
+pervades the air and it has grown dim as the sunlight cannot penetrate the
+clouds around you.  You immediately lose all sense of direction."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+up to inside39;
+down to inside36;
+north to inside13;
+south to inside23;
+east to inside31;
+west to inside32;
+end
+                                inside34
+title "Inside a Cloud Bank"
+descr 
+"       The inside of the cloud bank is deathly silent, broken only by  
+occasional muffled claps of thunder from outside.  Cool, clingy, moisture
+pervades the air and it has grown dim as the sunlight cannot penetrate the
+clouds around you.  You immediately lose all sense of direction."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+up to inside31;
+down to inside37;
+north to inside14;
+south to inside24;
+east to inside35;
+west to inside36;
+end
+                                inside35
+title "Inside a Cloud Bank"
+descr 
+"       The inside of the cloud bank is deathly silent, broken only by  
+occasional muffled claps of thunder from outside.  Cool, clingy, moisture
+pervades the air and it has grown dim as the sunlight cannot penetrate the
+clouds around you.  You immediately lose all sense of direction."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+up to inside32;
+down to inside38;
+north to inside15;
+south to inside25;
+east to inside36;
+west to inside34;
+end
+                                inside36
+title "Inside a Cloud Bank"
+descr 
+"       The inside of the cloud bank is deathly silent, broken only by  
+occasional muffled claps of thunder from outside.  Cool, clingy, moisture
+pervades the air and it has grown dim as the sunlight cannot penetrate the
+clouds around you.  You immediately lose all sense of direction."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+up to inside33;
+down to inside39;
+north to inside16;
+south to inside26;
+east to inside34;
+west to inside35;
+end
+                                inside37
+title "Inside a Cloud Bank"
+descr 
+"       The inside of the cloud bank is deathly silent, broken only by  
+occasional muffled claps of thunder from outside.  Cool, clingy, moisture
+pervades the air and it has grown dim as the sunlight cannot penetrate the
+clouds around you.  You immediately lose all sense of direction."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+up to inside34;
+down to inside31;
+north to inside17;
+south to inside27;
+east to inside38;
+west to inside39;
+end
+                                inside38
+title "Inside a Cloud Bank"
+descr 
+"       The inside of the cloud bank is deathly silent, broken only by  
+occasional muffled claps of thunder from outside.  Cool, clingy, moisture
+pervades the air and it has grown dim as the sunlight cannot penetrate the
+clouds around you.  You immediately lose all sense of direction."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+up to inside35;
+down to inside32;
+north to inside18;
+south to inside28;
+east to inside39;
+west to inside37;
+end
+                                inside39
+title "Inside a Cloud Bank"
+descr 
+"       The inside of the cloud bank is deathly silent, broken only by  
+occasional muffled claps of thunder from outside.  Cool, clingy, moisture
+pervades the air and it has grown dim as the sunlight cannot penetrate the
+clouds around you.  You immediately lose all sense of direction."
+
+extra {"cloud bank", "clouds", "cloud", "bank"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"lightning"}
+"Blue-white arcs of electricity occasional flash across the surface of the
+cloud bank.  It would be best to use caution and move quickly from this area."
+
+
+movement SECT_DESERT
+up to inside36;
+down to inside33;
+north to inside19;
+south to inside29;
+east to inside37;
+west to inside38;
+end
+                                path1
+title "A Path Among the Clouds"
+descr 
+"       Immense, billowing, and white, a cloud bank soars up to the crystal
+blue sky above you.  A path way of clouds leads along the edge of the cloud
+bank, magically supporting your weight.  The crystal blue sky surrounds you
+and awe over takes you as you look down upon the whole of Valhalla.  In the
+distance, what appears to be a huge golden chain stretches up into the
+heavens.  A winding path of fluffy clouds leads east.  You think you can
+climb the chain."
+
+extra {"cloud bank", "clouds", "cloud", "bank", "shelf"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"chain", "links"}
+"Apparently meant to serve as some sort of magically ladder, the links in this
+chain are larger then your average human, made of solid gold, and quite
+impervious to everything."
+flags { UNIT_FL_NO_MOB}
+movement SECT_DESERT
+east to chain1;
+
+dilbegin to_garden ();
+var
+        pc : unitptr ;
+        i : integer;
+
+code {
+        :init:
+{
+        heartbeat := PULSE_SEC*30;
+        on_activation(self.position != POSITION_STANDING, skip);
+}
+        :start:
+        wait (SFB_CMD, ( (activator.type == UNIT_ST_PC) and ( command(CMD_CLIMB)) 
+                                                and ("chain" in argument) ) );
+        
+        block;
+        pc := activator ;
+        secure (pc, lostpc);
+        i := rnd (1, 1000);
+        if ( i > 3)  {
+        act("You begin to climb the chain.", 
+                A_ALWAYS, pc, null, null, TO_CHAR);
+        act("$1n climbs the chain.",
+                A_ALWAYS, pc, null, null, TO_REST);
+        pause;
+        act("You successfully climb the chain to find yourself in a new location.",
+                A_ALWAYS, pc, null, null, TO_CHAR);
+        link (pc, findroom("east_sky@garden"));
+        exec("look", pc);
+        unsecure (pc);
+        goto start;
+        }
+        else {
+        act("You begin to climb the chain.", 
+                A_ALWAYS, pc, null, null, TO_CHAR);
+        act("$1n begins to climb the chain.",
+                A_ALWAYS, pc, null, null, TO_REST);
+        pause;
+        act("You slip and lose control......and begin falling...falling...falling.", 
+                A_ALWAYS, pc, null, null, TO_CHAR);
+        act("$1n loses control and falls to the ground.",
+                A_ALWAYS, pc, null, null, TO_REST);
+        pause;
+        pause;
+        link (pc, findroom("stalk@cloud"));
+        pc.hp := (pc.hp / 5);
+        position_update (pc);
+        exec("look", pc);
+        unsecure (pc);
+        goto start;
+        }
+        :lostpc:
+        pause;
+        goto start;
+
+}
+dilend
+end
+                                
+                                chain1
+title "Outside a Cloud Bank"
+descr 
+"       Immense, billowing, and white, a cloud bank soars up to the crystal
+blue sky above you.  You stand on the edge of a small cloud shelf jutting
+out of the face of the cloud bank.  In front of you a huge chain of pure gold 
+is magically anchored into the cloud.  The links are larger then your body
+and it appears as if you could climb it straight into the heavens.  A winding
+path of fluffy clouds leads west."
+
+extra {"cloud bank", "clouds", "cloud", "bank", "shelf"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"chain", "links"}
+"Apparently meant to serve as some sort of magically ladder, the links in this
+chain are larger then your average human, made of solid gold, and quite
+impervious to everything."
+
+movement SECT_DESERT
+up to chain2;
+west to path1;
+south to inside32;
+end
+                                chain2
+title "The Golden Chain"
+descr 
+"       Solid gold, with links as large as a man, this chain appears to climb
+straight to the heavens.  The crystal blue sky stretches as far as the eye
+can see and far below you see massive rolling clouds and cloud banks passing
+over Valhalla."
+
+extra {"cloud bank", "clouds", "cloud", "bank", "shelf"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"chain", "links"}
+"Apparently meant to serve as some sort of magically ladder, the links in this
+chain are larger then your average human, made of solid gold, and quite
+impervious to everything."
+flags { UNIT_FL_NO_MOB}
+movement SECT_DESERT
+up to chain3;
+down to chain1;
+end
+                                chain3
+title "The Golden Chain"
+descr 
+"       Solid gold, with links as large as a man, this chain appears to climb
+straight to the heavens.  The crystal blue sky stretches as far as the eye
+can see and far below you see massive rolling clouds and cloud banks passing
+over Valhalla."
+
+extra {"cloud bank", "clouds", "cloud", "bank", "shelf"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"chain", "links"}
+"Apparently meant to serve as some sort of magically ladder, the links in this
+chain are larger then your average human, made of solid gold, and quite
+impervious to everything."
+
+movement SECT_DESERT
+up to chain4;
+down to chain2;
+end
+                                chain4
+title "The Golden Chain"
+descr 
+"       Solid gold, with links as large as a man, this chain appears to climb
+straight to the heavens.  The crystal blue sky stretches as far as the eye
+can see and far below you see massive rolling clouds and cloud banks passing
+over Valhalla.  The glowing chain looks as though it could be climbed."
+
+extra {"cloud bank", "clouds", "cloud", "bank", "shelf"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"chain", "links"}
+"Apparently meant to serve as some sort of magically ladder, the links in this
+chain are larger then your average human, made of solid gold, and quite
+impervious to everything."
+flags { UNIT_FL_NO_MOB}
+movement SECT_DESERT
+down to chain3;
+
+
+dilbegin to_asgaard ();
+var
+        pc : unitptr ;
+        i : integer;
+
+code {
+        :init:
+{
+        heartbeat := PULSE_SEC*30;
+        on_activation(self.position != POSITION_STANDING, skip);
+}
+        :start:
+        wait (SFB_CMD, ( (activator.type == UNIT_ST_PC) and (command(CMD_CLIMB)) 
+                                                and ("chain" in argument) )  );
+        
+        block;
+        pc := activator;
+        secure (pc, lostpc);
+        i := rnd (1, 1000);
+        if ( i > 3)  {
+        act("You begin to climb the chain.", 
+                A_ALWAYS, pc, null, null, TO_CHAR);
+        act("$1n climbs the chain.",
+                A_ALWAYS, pc, null, null, TO_REST);
+        pause;
+        act("You successfully climb the chain to find yourself in a new location.",
+                A_ALWAYS, pc, null, null, TO_CHAR);
+        link (pc, findroom("bifrost_bridge@asgaard"));
+        exec("look", pc);
+        unsecure (pc);
+        goto start;
+        }
+        else {
+        act("You begin to climb the chain.", 
+                A_ALWAYS, pc, null, null, TO_CHAR);
+        act("$1n begins to climb the chain.",
+                A_ALWAYS, pc, null, null, TO_REST);
+        pause;
+        act("You slip and lose control......and begin falling...falling...falling.", 
+                A_ALWAYS, pc, null, null, TO_CHAR);
+        act("$1n loses control and falls to the ground.",
+                A_ALWAYS, pc, null, null, TO_REST);
+        pause;
+        pause;
+        link (pc, findroom("stalk@cloud"));
+        pc.hp := (pc.hp / 5);
+        position_update (pc);
+        exec("look", pc);
+        unsecure (pc);
+        goto start;
+        }
+        :lostpc:
+        pause;
+        goto start;
+
+}
+dilend
+
+end
+                                rim1
+title "The Rim of a Valley of Clouds"
+descr 
+"       Here the clouds begin a gentle downward slope towards what appears
+to be a magnificent fountain that dominates the center of the valley.  The
+crystal blue sky stretches to infinity overhead.  Massive cloud banks form
+the walls of the valley.  Far to the west a stream runs away from the 
+fountain.  The rim of the cloud valley runs south."
+
+extra {"cloud banks", "clouds", "cloud", "banks"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"magnificent fountain", "fountain"}
+"From your view point the fountain appears to sprinkling liquid gold into its
+basin.  Perhaps a closer look would reveal more.."
+
+extra {"valley", "center"}
+"This amazing valley is formed by what appears to be many low-level clouds
+ surrounded by huge cloud banks.  In the center is a magnificent fountain."
+
+
+movement SECT_DESERT
+south to rim2;
+east to cloud2;
+dilcopy drop@cloud();       
+end
+                                rim2
+title "The Rim of a Valley of Clouds"
+descr 
+"       Here the clouds begin a gentle downward slope towards what appears
+to be a magnificent fountain that dominates the center of the valley.  The
+crystal blue sky stretches to infinity overhead.  Massive cloud banks form
+the walls of the valley.  Far to the west a stream runs away from the 
+fountain.  The rim of the cloud valley runs north and south.  From here you 
+must go down to enter the valley."
+
+extra {"cloud banks", "clouds", "cloud", "banks"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"magnificent fountain", "fountain"}
+"From your view point the fountain appears to sprinkling liquid gold into its
+basin.  Perhaps a closer look would reveal more."
+
+extra {"valley", "center"}
+"This amazing valley is formed by what appears to be many low-level clouds
+ surrounded by huge cloud banks.  In the center is a magnificent fountain."
+
+flags {UNIT_FL_NO_MOB}
+movement SECT_DESERT
+down to valley1;
+south to rim3;
+north to rim1;
+dilcopy drop@cloud();       
+end
+                                rim3
+title "The Rim of a Valley of Clouds"
+descr 
+"       Here the clouds begin a gentle downward slope towards what appears
+to be a magnificent fountain that dominates the center of the valley.  The
+crystal blue sky stretches to infinity overhead.  Massive cloud banks form
+the walls of the valley.  Far to the west a stream runs away from the 
+fountain.  From here you must go down to enter the valley."
+
+extra {"cloud banks", "clouds", "cloud", "banks"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"magnificent fountain", "fountain"}
+"From your view point the fountain appears to sprinkling liquid gold into its
+basin.  Perhaps a closer look would reveal more."
+
+extra {"valley", "center"}
+"This amazing valley is formed by what appears to be many low-level clouds
+ surrounded by huge cloud banks.  In the center is a magnificent fountain."
+
+
+movement SECT_DESERT
+north to rim2;
+east to cloud4;
+dilcopy drop@cloud();       
+end
+                                rim4
+title "The Rim of a Valley of Clouds"
+descr 
+"       Here the clouds begin a gentle downward slope towards what appears
+to be a magnificent fountain that dominates the center of the valley.  The
+crystal blue sky stretches to infinity overhead.  Massive cloud banks form
+the walls of the valley.  Far to the west a stream runs away from the 
+fountain.  From here you must go down to enter the valley."
+
+extra {"cloud banks", "clouds", "cloud", "banks"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"magnificent fountain", "fountain"}
+"From your view point the fountain appears to sprinkling liquid gold into its
+basin.  Perhaps a closer look would reveal more."
+
+extra {"valley", "center"}
+"This amazing valley is formed by what appears to be many low-level clouds
+ surrounded by huge cloud banks.  In the center is a magnificent fountain."
+
+
+movement SECT_DESERT
+down to valley3;
+dilcopy drop@cloud();       
+end
+                                rim5
+title "The Rim of a Valley in the Clouds"
+descr 
+"       Here the clouds begin a gentle downward slope towards what appears
+to be a magnificent fountain that dominates the center of the valley.  The
+crystal blue sky stretches to infinity overhead.  Massive cloud banks form
+the walls of the valley.  Far to the west a stream runs away from the 
+fountain.  From here you must go down to enter the valley."
+
+extra {"cloud banks", "clouds", "cloud", "banks"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"magnificent fountain", "fountain"}
+"From your view point the fountain appears to sprinkling liquid gold into its
+basin.  Perhaps a closer look would reveal more."
+
+extra {"valley", "center"}
+"This amazing valley is formed by what appears to be many low-level clouds
+ surrounded by huge cloud banks.  In the center is a magnificent fountain."
+
+
+movement SECT_DESERT
+down to valley5;
+dilcopy drop@cloud();       
+end
+                                valley1
+title "A Valley in the Clouds"
+descr 
+"       The valley floor seems to be made of the same perfect, billowy, white,
+clouds that you have seen everywhere.  The cloud banks that surround the 
+valley appear much too sleep to climb as they stretch away to the crystal
+blue sky above.  A magnificent fountain awaits you in the center of the 
+valley."
+
+extra {"cloud banks", "clouds", "cloud", "banks"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"magnificent fountain", "fountain"}
+"From your view point the fountain appears to sprinkling liquid gold into its
+basin.  Perhaps a closer look would reveal more."
+
+extra {"valley", "center"}
+"This amazing valley is formed by what appears to be many low-level clouds
+ surrounded by huge cloud banks.  In the center is a magnificent fountain."
+
+
+movement SECT_DESERT
+up to rim2;
+west to valley2;
+dilcopy drop@cloud();       
+end
+                                valley2
+title "A Valley in the Clouds"
+descr 
+"       The valley floor seems to be made of the same perfect, billowy, white,
+clouds that you have seen everywhere.  The cloud banks that surround the 
+valley appear much too sleep to climb as they stretch away to the crystal
+blue sky above.  A magnificent fountain awaits you in the center of the 
+valley."
+
+extra {"cloud banks", "clouds", "cloud", "banks"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"magnificent fountain", "fountain"}
+"From your view point the fountain appears to sprinkling liquid gold into its
+basin.  Perhaps a closer look would reveal more."
+
+extra {"valley", "center"}
+"This amazing valley is formed by what appears to be many low-level clouds
+ surrounded by huge cloud banks.  In the center is a magnificent fountain."
+
+
+movement SECT_DESERT
+east to valley1;
+west to rfountain;
+dilcopy drop@cloud();       
+end
+                                valley3
+title "A Valley in the Clouds"
+descr 
+"       The valley floor seems to be made of the same perfect, billowy, white,
+clouds that you have seen everywhere.  The cloud banks that surround the 
+valley appear much too sleep to climb as they stretch away to the crystal
+blue sky above.  A magnificent fountain awaits you in the center of the 
+valley."
+
+extra {"cloud banks", "clouds", "cloud", "banks"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"magnificent fountain", "fountain"}
+"From your view point the fountain appears to sprinkling liquid gold into its
+basin.  Perhaps a closer look would reveal more."
+
+extra {"valley", "center"}
+"This amazing valley is formed by what appears to be many low-level clouds
+ surrounded by huge cloud banks.  In the center is a magnificent fountain."
+
+
+movement SECT_DESERT
+up to rim4;
+north to valley4;
+dilcopy drop@cloud();       
+end
+                                valley4
+title "A Valley in the Clouds"
+descr 
+"       The valley floor seems to be made of the same perfect, billowy, white,
+clouds that you have seen everywhere.  The cloud banks that surround the 
+valley appear much too sleep to climb as they stretch away to the crystal
+blue sky above.  A magnificent fountain awaits you in the center of the 
+valley."
+
+extra {"cloud banks", "clouds", "cloud", "banks"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"magnificent fountain", "fountain"}
+"From your view point the fountain appears to sprinkling liquid gold into its
+basin.  Perhaps a closer look would reveal more."
+
+extra {"valley", "center"}
+"This amazing valley is formed by what appears to be many low-level clouds
+ surrounded by huge cloud banks.  In the center is a magnificent fountain."
+
+
+movement SECT_DESERT
+north to rfountain;
+south to valley3;
+dilcopy drop@cloud();       
+end
+                                valley5
+title "A Valley of Clouds"
+descr 
+"       The valley floor seems to be made of the same perfect, billowy, white,
+clouds that you have seen everywhere.  The cloud banks that surround the 
+valley appear much too sleep to climb as they stretch away to the crystal
+blue sky above.  A magnificent fountain awaits you in the center of the 
+valley."
+
+extra {"cloud banks", "clouds", "cloud", "banks"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"magnificent fountain", "fountain"}
+"From your view point the fountain appears to sprinkling liquid gold into its
+basin.  Perhaps a closer look would reveal more."
+
+extra {"valley", "center"}
+"This amazing valley is formed by what appears to be many low-level clouds
+ surrounded by huge cloud banks.  In the center is a magnificent fountain."
+
+
+movement SECT_DESERT
+up to rim5;
+south to valley6;
+dilcopy drop@cloud();       
+end
+                                valley6
+title "A Valley of Clouds"
+descr 
+"       The valley floor seems to be made of the same perfect, billowy, white,
+clouds that you have seen everywhere.  The cloud banks that surround the 
+valley appear much too sleep to climb as they stretch away to the crystal
+blue sky above.  A magnificent fountain awaits you in the center of the 
+valley."
+
+extra {"cloud banks", "clouds", "cloud", "banks"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"magnificent fountain", "fountain"}
+"From your view point the fountain appears to sprinkling liquid gold into its
+basin.  Perhaps a closer look would reveal more."
+
+extra {"valley", "center"}
+"This amazing valley is formed by what appears to be many low-level clouds
+ surrounded by huge cloud banks.  In the center is a magnificent fountain."
+
+
+movement SECT_DESERT
+south to rfountain;
+north to valley5;
+dilcopy drop@cloud();       
+end
+
+                               rfountain
+title "Before the Fountain"
+descr 
+"       A breath-taking sight stands before you.  Soaring straight towards the
+crystal blue sky stands the most maginificent fountain you have ever seen.
+Angels carved of pure platinum sprinkle golden streams into the crystal basin 
+at their feet.  A soft, peaceful music wafts to you on the wind and the air
+is fresher and cleaner then you ever remember it.  A navigable stream meanders
+away to the west in golden hues.  To the south east and north the valley of
+clouds rises towards its rim.  This seems like a good spot to rest."
+
+extra {"cloud banks", "clouds", "cloud", "banks"}
+"White, billowy, and perfect, these clouds seem to be straight out of fairy
+ tales.  You feel as if you could almost walk on them."
+
+extra {"crystal blue sky", "blue sky", "sky"}
+"A perfectly crystal blue sky stretches away above you.  It looks as if it may
+ lead right in to the heavens."
+
+extra {"magnificent fountain", "fountain", "angels"}
+"From your view point the fountain appears to sprinkling liquid gold into its
+basin.  Perhaps a taste would reveal more."
+
+extra {"valley", "center"}
+"This amazing valley is formed by what appears to be many low-level clouds
+ surrounded by huge cloud banks.  In the center is a magnificent fountain."
+
+
+movement SECT_DESERT
+south to valley4;
+north to valley6;
+east to valley2;
+end
+
+%mobiles
+
+                                butterfly
+names {"butterfly"}
+title "a butterfly"
+descr "A huge butterfly is fluttering by."
+extra {}
+"A special creation of nature, this huge butterfly is one of the most 
+ beautiful things you have ever seen.  The broad wings have patterns of 
+ orange, yellow, and black.  A glitter of pink and gold sparkles radiates
+ about the butterfly."
+
+level 34
+alignment 0
+money 3 SILVER_PIECE
+sex SEX_NEUTRAL
+height 100
+weight 160
+race RACE_BUTTERFLY
+NATURAL_DEF(WPN_BITE, ARM_CLOTHES)
+MSET_ABILITY (20, 15, 10, 15, 10, 10, 15, 5)
+MSET_WEAPON (0, 10, 10, 0, 10, 10)
+MSET_SPELL (10, 0, 0, 0, 0, 5, 10, 10, 10, 5, 10)
+special SFUN_RANDOM_ZONE_MOVE time 300 bits SFB_RANTIME
+end
+
+                                pegasus
+names {"pegasus"}
+title "a pegasus"
+descr "A majestic pegasus is flying about here."
+extra {}
+"This majestic winged steed is a creature of myth.  It prances about horse
+ like but sprouts wings and flys with grace."
+
+level 39
+alignment 700
+money 3 SILVER_PIECE
+sex SEX_NEUTRAL
+height 140
+weight 220
+race RACE_WINGED_HORSE
+NATURAL_DEF(WPN_KICK, ARM_CLOTHES)
+MSET_ABILITY (15, 20, 10, 15, 10, 10, 10, 10)
+MSET_WEAPON (0, 15, 15, 0, 20, 0)
+MSET_SPELL (5, 0, 5, 5, 5, 5, 5, 5, 5, 5, 5)
+special SFUN_RANDOM_ZONE_MOVE time 300 bits SFB_RANTIME
+end
+
+                                cloud_golem
+names {"cloud golem", "golem"}
+title "a Cloud Golem"
+descr "A Cloud Golem is guarding the entrance here."
+extra {}
+"A solemn golem.  He stands stiff and cold.  Visible only through the 
+ outline of a body, the sky appears to be moving right through him.  
+ Awesome in size, he guards the Realms of the Sky."
+
+level 80
+alignment 360
+money 8 SILVER_PIECE
+sex SEX_MALE
+height 400
+weight 250
+race RACE_GOLEM
+NATURAL_DEF(WPN_CRUSH, ARM_CLOTHES)
+MSET_ABILITY (25, 10, 10, 25, 20, 10, 0, 0)
+MSET_WEAPON (10, 10, 10, 0, 15, 0)
+MSET_SPELL (5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5)
+end
+
+                                dragonfly
+names {"dragonfly", "fly"}
+title "a dragonfly"
+descr "A dragonfly is here hunting among the clouds."
+extra {}
+"This is one of the biggest dragonflies that you have every seen.  Long 
+ slender green body, with eyes enclosed in a grid, this is the phattest
+ dragonfly in the world."
+
+level 37
+alignment 0
+money 13 COPPER_PIECE
+sex SEX_NEUTRAL
+height 200
+weight 180
+race RACE_DRAGONFLY
+NATURAL_DEF(WPN_BITE, ARM_LEATHER)
+MSET_ABILITY (10, 20, 0, 15, 20, 10, 15, 10)
+MSET_WEAPON (10, 10, 0, 0, 15, 0)
+MSET_SPELL (10, 0, 0, 0, 0, 5, 10, 5, 10, 15, 10)
+special SFUN_RANDOM_ZONE_MOVE time 300 bits SFB_RANTIME
+end
+
+                                giant
+names {"oagvus the giant", "oagvus", "giant"}
+title "Oagvus the Giant"
+descr "Oagvus the Giant is here sniffing for humans."
+extra {}
+"At the height of seven foot eight inches, Oagvus is huge.  His body is 
+ muscular and built for destroying human flesh.  Most humans should be 
+ afraid."
+
+level 43
+alignment 300
+money 13 IRON_PIECE
+sex SEX_MALE
+height 600
+weight 400
+race RACE_GIANT
+NATURAL_DEF(WPN_CRUSH, ARM_CLOTHES)
+MSET_ABILITY (25, 15, 20, 15, 15, 5, 5, 0) 
+MSET_WEAPON (0, 10, 10, 10, 30, 10)
+MSET_SPELL (3, 0, 3, 3, 3, 3, 3, 3, 3, 3, 3)
+end
+
+                                sky_dragon
+names {"sky dragon", "dragon"}
+title "a Sky Dragon"
+descr "A magnificent Sky Dragon is here."
+extra {}
+"An image of pure beauty.  The Sky Dragon stands proud in his domain, the
+ clouds and the sky.  The Sky Dragon looks of great intelligence and purity.
+ He lends you an ear to speak to him. "
+
+level 90
+alignment 700
+sex SEX_MALE
+height 600
+weight 600
+race RACE_DRAGON_LAVA
+NATURAL_DEF(WPN_CLAW, ARM_HLEATHER)
+MSET_ABILITY (20, 20, 0, 15, 15, 10, 20, 0)
+MSET_WEAPON (10, 10, 0, 0, 10, 0)
+MSET_SPELL (10, 0, 0, 0, 5, 5, 10, 10, 10, 10, 10)
+special SFUN_COMBAT_MAGIC "cast icestorm"
+end
+
+                                cloud_dude
+names {"cloud figure", "figure"}
+title "a cloud figure"
+descr "A cloud figure drifts among the clouds."
+extra {}
+"Remarkably inconspicuous, a cloud figure appears to be watching over the 
+ sky.  Its purpose here is to maintain peace and happiness.  A 
+ protector of good, any evil appearance will disturb it."
+
+level 68
+alignment 500
+sex SEX_NEUTRAL
+height 300
+weight 180
+race RACE_SPIRIT
+NATURAL_DEF(WPN_CRUSH, ARM_LEATHER)
+MSET_ABILITY (15, 15, 0, 30, 15, 15, 10, 0)
+MSET_WEAPON (10, 7, 7, 7, 7, 7)
+MSET_SPELL (5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5)
+
+special SFUN_AGGRES_REVERSE_ALIGN "$1n ambushes $3n!" time 20 bits SFB_RANTIME
+special SFUN_RANDOM_ZONE_MOVE time 300 bits SFB_RANTIME
+
+dilbegin figure ();
+var
+        enemy : unitptr;
+        rand : integer;
+        align : integer;
+        percent : integer;
+
+code       {
+
+        :init:
+        on_activation(self.outside.position != POSITION_FIGHTING, skip);
+
+        :start:
+
+        wait(SFB_COM, (activator.type == UNIT_ST_PC));
+        enemy := activator;
+        align := (enemy.alignment) / 10 ;
+        rand := rnd(1, 100);
+        percent := rand - align ;
+        if (percent > 100) {
+                act("The goodness of the cloud figure burns $1n's soul.",
+                A_ALWAYS, self.outside, self, enemy, TO_NOTVICT);
+                act("The goodness of the cloud figure burns your soul.",
+                A_ALWAYS, self.outside, self, null, TO_VICT);
+                enemy.hp := (enemy.hp * 4 ) / 5 ;
+
+                }
+        goto start;
+        }
+dilend
+end
+
+                                kywall
+names {"kywall"}
+title "Kywall of Good-Heart"
+descr "Kywall of Good-Heart is standing here."
+extra {}
+"Kywall of Good-Heart.  He is of only good intentions.  Nothing else."
+
+level 80
+alignment 1000
+sex SEX_MALE
+height 100
+weight 100
+race RACE_GNOME
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY (10, 10, 20, 10, 10, 20, 10, 10)
+MSET_WEAPON (7, 10, 7, 7, 7, 7)
+MSET_SPELL (5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5)
+
+dilbegin newbie_only ();
+var
+        lev : integer;
+        enemy : unitptr;
+code {
+                :init:
+        on_activation(self.outside.position != POSITION_FIGHTING, skip);
+
+                :start:
+        wait(SFB_CMD, (activator.type == UNIT_ST_PC));
+        enemy := activator;
+        lev := enemy.level;
+        if ((command(CMD_KILL)) or (command(CMD_KICK)) or (command(CMD_BACKSTAB))
+                or (command(CMD_STEAL)) or (command(CMD_HIT))) { 
+                if (lev > 31 ) {
+                        block;
+                        act("Kywall's innocence breaks your heart.",
+                        A_ALWAYS, enemy, null, null, TO_VICT);
+                        act("Kywall's innocence breaks $1n's heart.",
+                        A_ALWAYS, enemy, null, null, TO_NOTVICT);
+                        enemy.hp := -9 ;
+                        goto start;
+                }
+        }
+        if (command(CMD_RESCUE)) { 
+                block;
+                act("HeHe.  I already thought of that.",
+                A_ALWAYS, enemy, self, null, TO_ALL);
+                goto start;
+        }
+}
+dilend
+end
+
+                                hum_bird
+names {"humming bird", "bird"}
+title "a giant humming bird"
+descr "A giant humming bird is here poking for nectar."
+extra {}
+"A giant form of the typical humming bird, this bird appears to have nearly
+ a 10 foot wing span.  Its beek is long and stretched out, approximately
+ 15 feet long.  It may just hurt pretty bad when it hits you."
+
+level 38
+alignment 400
+sex SEX_NEUTRAL
+height 200
+weight 400
+race RACE_BIRD
+NATURAL_DEF(WPN_CLAW, ARM_CLOTHES)
+MSET_ABILITY (25, 15, 13, 12, 25, 10, 0, 0)
+MSET_WEAPON (0, 10, 20, 0, 10, 0)
+MSET_SPELL (5, 5, 5, 5, 5, 5, 5, 10, 5, 5, 5)
+special SFUN_TEAMWORK "humming bird"
+special SFUN_RANDOM_ZONE_MOVE time 300 bits SFB_RANTIME
+end
+
+
+                                firconse
+names {"firconse the giant", "firconse", "giant"}
+title "Firconse the Giant"
+descr "Firconse the Giant is here sniffing for food."
+extra {}
+"Firconse is one of the biggest giants to roam the clouds.  His face 
+ rectangular, his hair flat.  Firconse is very hungry and will probably take 
+ a bite out of you."
+
+level 44
+alignment 100
+sex SEX_MALE
+height 600
+weight 500
+race RACE_GIANT
+money 4 SILVER_PIECE
+NATURAL_DEF(WPN_BITE, ARM_CLOTHES)
+MSET_ABILITY (20, 20, 5, 25, 25, 5, 0, 0)
+MSET_WEAPON (10, 10, 15, 0, 10, 0)
+MSET_SPELL (5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5)
+end
+
+                                batu
+names {"batu the magic man", "batu"}
+title "Batu the magic man"
+descr "Batu the magic man is here doing what he can."
+extra {}
+"Batu is a man of good heart.  An excellent maker of magic, Batu will sell
+ some of his magic too you."
+
+level 53
+alignment 300
+sex SEX_MALE
+height 100
+weight 120
+race RACE_GNOME
+money 5 SILVER_PIECE
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY (5, 25, 10, 25, 15, 0, 20, 0)
+MSET_WEAPON (10, 10, 0, 0, 10, 0)
+MSET_SPELL (10, 0, 0, 0, 0, 5, 5, 10, 10, 10, 20)
+special SFUN_COMBAT_MAGIC "cast acid drop"
+dilbegin batu();
+code {
+  :init:
+    heartbeat := PULSE_SEC*5;
+    on_activation((self.position <= POSITION_SLEEPING) or
+         (self.position == POSITION_FIGHTING), skip);
+  :start:
+    exec("em stares intently at the bottom of a distant cloud bank.", self); pause; pause;
+    exec("say We were close!  I could feel it....", self); pause; pause;
+    exec("sigh", self); pause; pause;
+    exec("say Damn that fool Dexter!  All that talk of dragons!", self); pause; pause;
+    exec("shake", self); pause; pause;
+    exec("say Well he's wrong!  Dragons!  Pah!  But he won't listen...", self); pause; pause;
+    exec("em stares at you with a fierce intensity.", self); pause; pause; pause; pause; pause;
+    exec("say The secret way to the realm of the gods lies past those clouds!", self); pause;
+    exec("say Right at the bottom of the cloud bank...  I am sure of it!", self); pause;
+    exec("curse", self); pause;  
+    exec("say But that lazy bastard Dexter will not tell me the secret words...", self); pause; pause;
+    goto init;
+}
+dilend
+
+end
+
+
+
+                                unicorn
+names {"unicorn"}
+title "an elegant unicorn"
+descr "An elegant unicorn is here roaming the clouds."
+extra {}
+"The amazing and beautiful unicorn is roaming through the clouds.  With a 
+ long horn on its head, it could be a dangerous attack."
+
+level 39
+alignment 1000
+sex SEX_NEUTRAL
+height 100
+weight 200
+race RACE_HORSE
+money 3 SILVER_PIECE
+NATURAL_DEF(WPN_KICK, ARM_CLOTHES)
+MSET_ABILITY (20, 15, 20, 20, 10, 5, 10, 0)
+MSET_WEAPON (0, 10, 10, 10, 15, 0)
+MSET_SPELL (5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5)
+special SFUN_RANDOM_ZONE_MOVE time 300 bits SFB_RANTIME
+end
+                                mist_dragon
+names {"mist dragon", "dragon"}
+title "a mist dragon"
+descr "A giant mist dragon is here."
+extra {}
+"Big and beautiful in stature, the mist dragon is busy preening to herself.
+ A kind smile stretches across her face as she expects you to go on your way.
+ The mist dragon appears to be covered with water droplets, making it hard
+ to see the exact form of her body."
+
+level 66
+alignment 0
+sex SEX_FEMALE
+height 300
+weight 513
+race RACE_DRAGON_LAVA
+money 6 SILVER_PIECE
+NATURAL_DEF(WPN_CLAW, ARM_HLEATHER)
+MSET_ABILITY (25, 22, 3, 15, 15, 5, 15, 0)
+MSET_WEAPON (10, 10, 10, 0, 15, 0)
+MSET_SPELL (5, 0, 0, 0, 5, 5, 5, 20, 5, 5, 5)
+special SFUN_COMBAT_MAGIC "cast frostball"
+special SFUN_RANDOM_ZONE_MOVE time 300 bits SFB_RANTIME
+end
+
+                                fred
+names {"fred"}
+title "Fred the Shepard"
+descr "Fred the Shepard is here looking for his sheep."
+extra {}
+"Fred is one fly dude.  Check him out."
+
+level 25
+alignment 0
+sex SEX_MALE
+height 100
+weight 30
+race RACE_HUMAN
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY (10, 10, 10, 10, 10, 20, 20, 10)
+MSET_WEAPON (10, 10, 0, 15, 10, 0)
+MSET_SPELL (5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5)
+special SFUN_RANDOM_ZONE_MOVE time 300 bits SFB_RANTIME  
+end
+                                mongenel
+names {"Mongenel"}
+title "Mongenel of the Hills"
+descr "Mongenel of the Hills is looking to go home here."
+extra {}
+"Check out the butt on this dude."
+
+level 25
+alignment 0
+sex SEX_MALE
+height 100
+weight 30
+race RACE_HUMAN
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY (10, 10, 10, 10, 10, 20, 20, 10)
+MSET_WEAPON (10, 10, 0, 15, 10, 0)
+MSET_SPELL (5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5)
+special SFUN_RANDOM_ZONE_MOVE time 300 bits SFB_RANTIME  
+end
+                                
+                                fire_fly
+names {"fire fly", "fly"}
+title "a glowing firefly"
+descr "A fire fly is here glowing in the room."
+extra {}
+"A bright little bug is glowing in this room.  His glow appears to be bring
+ a gentle warmth to the area."
+
+level 35
+alignment 400
+sex SEX_NEUTRAL
+height 100
+weight 100
+race RACE_OTHER_INSECT
+money 3 SILVER_PIECE
+NATURAL_DEF(WPN_BITE, ARM_LEATHER)
+MSET_ABILITY (20, 25, 15, 20, 15, 5, 0, 0)
+MSET_WEAPON (10, 10, 10, 0, 15, 0)
+MSET_SPELL (5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5)
+special SFUN_RANDOM_ZONE_MOVE time 300 bits SFB_RANTIME
+end
+
+                                lady_bug
+names {"lady bug", "bug"}
+title "a lady bug"
+descr "A lady bug is here, clinging to the stalk."
+extra {}
+"A gentle and small RED lady bug."
+
+level 32
+alignment 300
+sex SEX_NEUTRAL
+height 100
+weight 100
+race RACE_OTHER_INSECT
+money 3 SILVER_PIECE
+NATURAL_DEF(WPN_BITE, ARM_CLOTHES)
+MSET_ABILITY (20, 25, 5, 20, 15, 0, 15, 0)
+MSET_WEAPON (10, 10, 10, 0, 15, 0)
+MSET_SPELL (5, 0, 0, 0, 0, 25, 5, 5, 5, 5, 5)
+special SFUN_RANDOM_ZONE_MOVE time 300 bits SFB_RANTIME
+end
+
+                                breeze1
+names {"fierce breeze", "air elemental","elemental","wind","breeze"}
+title "the fierce breeze"
+descr "A fierce breeze is passing through."
+extra {}
+"A wind blowing straight from the mouths of the gods."
+race RACE_ELEMENTAL_AIR
+sex SEX_NEUTRAL
+level 33
+height 300
+weight 40
+NATURAL_DEF(WPN_CRUSH, ARM_CLOTHES)
+alignment 0
+MSET_ABILITY(15,15,20,20,15,15,0,0)
+MSET_WEAPON(6,6,6,6,14,6)
+MSET_SPELL(5,5,5,5,5,5,3,8,5,5,5)
+flags {CHAR_SNEAK,CHAR_HIDE,UNIT_FL_INVISIBLE}
+special SFUN_RANDOM_ZONE_MOVE time 300 bits SFB_RANTIME
+special SFUN_HIDEAWAY time WAIT_SEC * 120
+
+dilbegin breeze1();
+code
+{
+  heartbeat := PULSE_SEC*100;
+  on_activation(self.position != POSITION_STANDING, skip);
+
+  :start:
+  wait(SFB_CMD, activator.type == UNIT_ST_PC);
+  act("$1n is slammed to the ground by the fierce breeze.", A_SOMEONE, activator,
+      null, null, TO_REST);
+  act("The fierce breeze slams you to the ground.", A_ALWAYS, activator,
+      null, null, TO_CHAR);
+  if (activator.level < 200)
+  {
+     activator.hp := activator.hp - rnd(5,10);
+     position_update(activator);
+  }
+  pause;
+  goto start;
+}
+dilend
+end
+                                breeze2
+names {"fierce breeze", "air elemental","elemental","wind","breeze"}
+title "the fierce breeze"
+descr "A fierce breeze is passing through."
+extra {}
+"A wind blowing straight from the mouths of the gods."
+race RACE_ELEMENTAL_AIR
+sex SEX_NEUTRAL
+level 50
+height 300
+weight 40
+NATURAL_DEF(WPN_CRUSH, ARM_CLOTHES)
+alignment 0
+MSET_ABILITY(15,15,20,20,15,15,0,0)
+MSET_WEAPON(6,6,6,6,14,6)
+MSET_SPELL(5,5,5,5,5,5,3,8,5,5,5)
+flags {CHAR_SNEAK,CHAR_HIDE,UNIT_FL_INVISIBLE}
+special SFUN_RANDOM_ZONE_MOVE time 300 bits SFB_RANTIME
+special SFUN_HIDEAWAY time WAIT_SEC * 120
+
+dilbegin breeze2();
+code
+{
+  heartbeat := PULSE_SEC*100;
+  on_activation(self.position != POSITION_STANDING, skip);
+
+  :start:
+  wait(SFB_CMD, activator.type == UNIT_ST_PC);
+  act("$1n is slammed to the ground by the fierce breeze.", A_SOMEONE, activator,
+      null, null, TO_REST);
+  act("The fierce breeze slams you to the ground.", A_ALWAYS, activator,
+      null, null, TO_CHAR);
+  if (activator.level < 200)
+  {
+     activator.hp := activator.hp - rnd(10,20);
+     position_update(activator);
+  }
+  pause;
+  goto start;
+}
+dilend
+end
+
+                                fazdum
+names {"fazdum", "wanderer"}
+title "Fazdum the old wanderer"
+descr "Fazdum the old wanderer is here puttering about."
+extra {}
+"Wizened and wrinkled, Fazdum is obviously a VERY seasoned cloud adventuring
+ veteran.  You would do well to heed his advice."
+
+level 36
+alignment 300
+sex SEX_MALE
+height 100
+weight 120
+race RACE_GNOME
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY (10, 20, 10, 20, 10, 10, 10, 10)
+MSET_WEAPON (10, 10, 0, 0, 10, 0)
+MSET_SPELL (10, 0, 0, 0, 0, 5, 5, 10, 10, 10, 20)
+exp -100
+
+dilbegin quest_cld();
+var
+  pcname : string;
+  item: unitptr;
+  pc: unitptr;
+  i: integer;
+  exdp: extraptr;
+
+code
+{
+
+heartbeat := PULSE_SEC*4;
+
+:start:
+  wait(SFB_CMD,(activator.type == UNIT_ST_PC) and 
+             (not (CLOUD_COMPLETE in activator.quests)));
+
+  pc := activator; 
+  secure(pc, lostpc); 
+
+if (CLOUD_ONGOING in pc.quests)
+  goto quest_ongoing;
+
+      pause;
+      exec("say Welcome to the Sky Realm, "+pc.name, self); pause;
+      exec("bow", self); pause;
+      exec("say Many of your adventures will start from here.", self); pause;
+      exec("say But first you must prepare yourself for the local perils!", self); pause;
+      exec("smile", self); pause;
+      exec("say And I just happen to be the one who can help you.", self); pause; 
+      exec("snicker", self); pause;
+      exec("say So what do you say?", self); pause;
+      exec("say Will you indulge an old man in his whims?", self); pause;
+      exec("are And bring me a few things?", self); pause;
+      exec("grin "+pc.name, self); pause;
+      exec("say Nod if we have a deal young one.", self);
+  
+
+  :accept_loop:
+  wait(SFB_CMD, activator #= pc);
+  if (command(CMD_NOD))
+     goto quest_accepted; /* Goto the label if accepted */
+  else if (command(CMD_SHAKE))
+     goto no_quest;
+  else
+  {
+    exec("say Eh?  My hearing ain't getting any better.", self); pause;
+    exec("say Just nod if you will help.", self);
+         goto accept_loop;
+  }
+
+
+:no_quest:
+  pause;
+  exec("say Fine, be that way.", self); pause;
+  exec("say Get out of here then..........damn fool.", self);
+  unsecure(pc);
+  goto start;
+
+:quest_accepted:
+        pause;
+        exec("smile", self); pause;
+        exec("say Wonderful!", self); pause;
+        exec("emote rubs his frail old hands.", self); pause;
+        exec("say Now!  What you need is a good pair of boots...", self); pause;
+        exec("say But not just any boots.", self); pause;
+        exec("chuckle", self); pause;
+        exec("say We are talking about Winged Boots!", self); pause;
+        exec("say And I happen to be know how to make them.", self); pause;
+        exec("strut", self); pause;
+        exec("say Of course you will have to bring me the components.", self); pause;
+        exec("say So go get a quill and paper and write this down.", self); pause;
+        exec("twiddle", self); pause;
+        exec("say What?  You think you can remember!  Sheesh!  Newbies!", self); pause;
+        exec("chuckle", self); pause;
+        exec("say Ok!  One pair of leather boots, one metallic feather, and one gold coin to pay my expenses.", self); pause;
+        exec("say Got that you little pompous newbie?  Then get going!", self); pause;
+        exec("say I ain't getting any younger!", self); pause;    
+        exec("emote mutters something about 'Spoiled mudders.'", self); pause;unsecure(pc);
+  
+  addextra(pc.quests, {CLOUD_ONGOING}, "");
+  unsecure(pc);
+  goto start;
+
+:quest_ongoing:
+  exdp := CLOUD_ONGOING in pc.quests;
+
+if (("leather boots" in exdp.names) and ("metallic feather" in exdp.names) 
+                and ("gold coin" in exdp.names)) 
+{
+  pause;
+  subextra(pc.quests, CLOUD_ONGOING);
+  addextra(pc.quests, {CLOUD_COMPLETE}, "");
+  experience(2500, pc);
+  item := load("winged_boots@cloud");
+  exec("say Well well well.....I guess I owe you some boots.", self);pause;
+  exec("say Here you go.", self); pause;
+  link (self.inside, pc);
+  exec("emote gives you winged boots.", self);
+  exec("say Enjoy the domain of the Clouds!", self);
+  pause;
+}
+
+unsecure(pc);
+goto start;
+
+
+:lostpc:
+  exec("say GO AWAY!", self);
+  pause;
+  goto start;
+
+:ohno_combat:
+  heartbeat := PULSE_SEC*4;
+  exec("say Ok then, so it shall be this way with you...", self);
+  pause;
+  exec("say Die then you deadbeat!", self);
+  pause;
+  goto start;
+}
+dilend
+
+
+dilbegin cld_give();
+var
+  pc: unitptr;
+  item: unitptr;
+  exdp: extraptr;
+
+code
+{
+heartbeat := PULSE_SEC*3;
+
+interrupt(SFB_CMD, (  (command(CMD_SAY)) and ("give" in argument) and 
+                ("winged" in argument) and ("boots" in argument)
+                and (CLOUD_COMPLETE in activator.quests) ), int_replace); 
+
+:start:
+wait(SFB_DONE,( (command(CMD_GIVE)) and 
+              (target == self) and 
+              (activator.type == UNIT_ST_PC) and
+              (CLOUD_ONGOING in activator.quests)) );
+
+:give:
+
+pc := activator;
+item := medium;
+secure(pc, lostpc);
+exdp := CLOUD_ONGOING in pc.quests;
+
+  if ("coin@darkelf" == (self.inside.nameidx + "@" + self.inside.zoneidx))
+  {
+    addstring(exdp.names, "gold coin");
+    exec("say Ahh, a donation to the elderly, THANX!", self);
+    destroy(self.inside);
+  }
+  else if ("let_boots@manse" == (self.inside.nameidx + "@" + self.inside.zoneidx))
+  {
+    addstring(exdp.names, "leather boots");
+    exec("say Not Nike Air's now, but wait and see!!!", self);
+    destroy(self.inside);
+  }
+  else if ("feather@cloud" == (self.inside.nameidx + "@" + self.inside.zoneidx))
+  {
+     addstring(exdp.names, "metallic feather");
+     exec("say WOW!  If one of good heart gives you this, you must really be kewl.", self);
+     destroy(self.inside);
+  }
+  else
+  {
+    exec("slap "+pc.name, self); 
+    exec("say You twit.....", self);
+    pause;
+    link(self.inside, pc);
+  }
+
+unsecure(pc);
+goto start;
+
+:lostpc:
+exec("say Fine!", self);
+goto start;
+
+:int_replace:
+  pc := activator;
+  secure (pc, lostpc);
+  pause;
+  exec("say You seem to have lost your boots.  Here are some more...", self);
+  item := load("winged_boots@cloud");
+  link (self.inside, pc);
+  exec("emote gives you winged boots.", self);
+  goto start;
+
+}
+dilend
+
+end
+
+                                dexter
+names {"dexter", "man"}
+title "Dexter the man of no inspiration"
+descr "Dexter the man of no inspiration is slacking here."
+extra {}
+"Dexter resembles the echo in your mind not to do anything productive.  He is
+ a classic symbol of the mud.  If you are not careful enough, he could be
+ inside YOU!!"
+
+level 50
+alignment -1000
+sex SEX_MALE
+height 200
+weight 190
+race RACE_HUMAN
+money 5 SILVER_PIECE
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY (27, 18, 0, 30, 13, 0, 12, 0)
+MSET_WEAPON (15, 10, 10, 0, 10, 0)
+MSET_SPELL (5, 0, 0, 0, 0, 25, 5, 5, 5, 5, 5)
+special SFUN_COMBAT_MAGIC "cast fear"
+dilbegin dexter();
+code {
+  :init:
+    heartbeat := PULSE_SEC*5;
+    on_activation((self.position <= POSITION_SLEEPING) or
+         (self.position == POSITION_FIGHTING), skip);
+  :start:
+    exec("emote gazes lazily at you.", self); pause; pause;
+    exec("say Did that old geezer Batu send you?", self); pause; pause;
+    exec("snicker", self); pause; pause;
+    exec("say You know he thinks that there is a path to the gods up here?", self); pause; pause;
+    exec("shake", self); pause; pause;
+    exec("say Well there is not!  Only dragons!  But he won't listen...", self); pause; pause;
+    exec("shrug", self); pause; pause; pause; pause; pause;
+    exec("say So to protect him from himself, I didn't tell him the secret.", self); pause;
+    exec("giggle", self); pause;
+    exec("say Not like EVERYONE doesn't already know it.", self); pause;
+    exec("say After all, you just 'enter cloud' at the right place...", self); pause; pause;
+    goto init;
+}
+dilend
+end
+
+                                ploscik
+names {"ploscik", "man"}
+title "Ploscik of rhythmic sounds"
+descr "Ploscik of rhythmic sounds is laughing here."
+extra {}
+"A big man from the land of rhythmic sounds, Plosick is one who takes special
+ offense to ugly people.  He really likes to hurt you."
+
+level 52
+alignment -1000
+sex SEX_MALE
+height 200
+weight 190
+race RACE_HUMAN
+money 5 SILVER_PIECE
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY (20, 25, 5, 30, 20, 0, 0, 0)
+MSET_WEAPON (10, 10, 10, 0, 15, 0)
+MSET_SPELL (5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5)
+
+dilbegin choke ();
+var 
+        pc : unitptr;
+        dx : integer;
+        i : integer;
+code {
+        :init:
+        heartbeat := PULSE_SEC*5;
+        :start:
+        wait(SFB_COM, (command(CMD_AUTO_COMBAT)));
+        pc := activator;
+        dx := pc.abilities[ABIL_DEX];
+        i := rnd(1, 125);
+        if ( i > dx ) { 
+                act("Ploscik chokes the living energy out of you!",
+                A_ALWAYS, pc, null, null, TO_CHAR);
+                act("Ploscik chokes the living energy out of $1n!",
+                A_ALWAYS, pc, null, null, TO_REST);
+                pc.endurance := pc.endurance - 40;
+                wait(SFB_COM, command(CMD_AUTO_COMBAT));
+                goto start;
+        }
+}
+dilend
+end
+
+
+                                mcleaf
+names {"mcleaf", "man"}
+title "McLeaf"
+descr "McLeaf is here spitting on the ground and looking for a fight."
+extra {}
+"McLeaf happens to fond of slapping people.  He loves to be in fights and 
+ slapping people seems to provoke one.  McLeaf slaps you!!!"
+
+level 51
+alignment -1000
+sex SEX_MALE
+height 200
+weight 300
+race RACE_HUMAN
+money 5 SILVER_PIECE
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY (30, 13, 2, 30, 20, 5, 0, 0)
+MSET_WEAPON (10, 10, 10, 0, 15, 0)
+MSET_SPELL (5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5)
+
+dilbegin slap ();
+
+code {
+        :init:
+{
+        heartbeat := PULSE_SEC*30;
+        on_activation(self.position != POSITION_STANDING, skip);
+}
+        :start:
+        wait (SFB_CMD, activator.type == UNIT_ST_PC);
+        act("$1n is slapped by McLeaf.", A_SOMEONE, activator,
+        null, null, TO_REST);
+        act("You are slapped by McLeaf.", A_ALWAYS, activator,
+        null, null, TO_CHAR);
+        activator.hp := activator.hp - 5;
+        goto start;
+}
+dilend
+end
+                                gunthar
+names {"gunthar","man"}
+title "Gunthar"
+descr "Gunthar is squatting here."
+extra {}
+"You lookin too damn close."
+
+level 151
+alignment -1000
+sex SEX_MALE
+height 200
+weight 300
+race RACE_HUMAN
+money 2 GOLD_PIECE
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY (10, 5, 20, 10, 25, 15, 10, 5)
+MSET_WEAPON (10, 10, 10, 0, 15, 0)
+MSET_SPELL (5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5)
+
+dilbegin q_nub();
+var
+  pcname : string;
+  item: unitptr;
+  item2 : unitptr;
+  item3 : unitptr;
+  pc: unitptr;
+  i: integer;
+  exdp: extraptr;
+
+code
+{
+
+heartbeat := PULSE_SEC*3;
+
+:start:
+  wait(SFB_CMD,(activator.type == UNIT_ST_PC) and 
+             (not (NUB_COMPLETE in activator.quests)));
+
+  pc := activator; 
+  secure(pc, lostpc); 
+
+if (NUB_ONGOING in pc.quests)
+  goto quest_ongoing;
+
+  exec("say Hello young child.", self); pause;
+  exec("say The gods have left us all in disarray nowdays.", self); pause;
+  exec("say Nobody has any faith left in this world.", self); pause;
+  exec("sigh", self); pause;
+  exec("say What is one to believe in.", self); pause;
+  exec("say The only thing left is yourself.", self); pause;
+  exec("snicker", self); pause;
+  exec("say And maybe a few good friends, if there are any good people left.", self); pause;
+  exec("say Of course, now days people like to force you to do things.", self); pause;
+  exec("say Stupid S-O-B.", self); pause;
+  exec("say I can give you something to have faith in.  It comes from within.", self); pause;
+  exec("say Its the next best thing to just simple self pride and self love.", self); pause;
+  exec("say You will need to things, a nice flower and a good gem.", self); pause;
+  exec("say Bring me those and I will give you what you desire.", self); pause;
+  exec("say I know what you desire.", self); pause;
+  exec("grin", self); pause;
+  exec("say Just shout right now that IT COMES FROM WITHIN, and we can begin this righteous path.", self); pause;
+  exec("say Just shake your head if you are still in denial about self power.", self);
+
+  :accept_loop:
+  wait(SFB_CMD, activator #= pc);
+  if ( (command(CMD_SHOUT)) and ("it" in argument) and
+                        ("comes" in argument) and ("from" in argument) and  
+                        ("within" in argument) )
+     goto quest_accepted; /* Goto the label if accepted */
+  else if (command(CMD_SHAKE))
+     goto no_quest;
+  else
+  {
+    exec("say Come on boy, shout it, shout It comes from within!", self);
+         goto accept_loop;
+  }
+
+
+:no_quest:
+  exec("say You'll be of the most confused in Valhalla.", self); pause;
+  exec("say I know you will.", self);
+  unsecure(pc);
+  goto start;
+
+:quest_accepted:
+  pause;
+  exec("say I love you, cause you love yourself.", self); pause;
+  exec("say I think you should be able to find the items not to far off.", self); pause;
+  addextra(pc.quests, {NUB_ONGOING}, "");
+  unsecure(pc);
+  exec("say Go on now, bring me those things!", self);
+  goto start;
+
+:quest_ongoing:
+  exdp := NUB_ONGOING in pc.quests;
+
+if (("flower" in exdp.names) and ("gem" in exdp.names) ) 
+{
+  pause;
+  subextra(pc.quests, NUB_ONGOING);
+  addextra(pc.quests, {NUB_COMPLETE}, "");
+  experience(1500, pc);
+  item := load("beads_bottle@cloud");
+  item2 := load("ip_earring@cloud");
+  item3 := load("ip_earring@cloud");
+  link(item , pc);  
+  link(item2, pc);
+  link(item3, pc);
+  exec("say Here, I give this!", self); pause;
+  exec("say Pretty neat how I can mentally place these in your inventory, eh?", self); pause;
+  exec("dance", pc); pause;
+  exec("say Your own bottle of beads.", self); pause;
+  exec("say You can feel the power.", self); pause;
+  exec("say Anytime you are feeling down, just swollow a bead.", self); pause;
+  exec("say The problem with it is that the cap is on real tight.", self); pause;
+  exec("say All you have to do to get the cap off is....", self); pause;
+  exec("say Shout 'I have it in me' " , self); pause;
+  exec("say Something from the people of good heart here too.", self); pause;
+  exec("Some good basic jewelry.", self); pause;
+  pause;
+  unsecure(pc);
+  goto start;
+}
+
+:lostpc:
+  exec("say  ", self);
+  pause;
+  goto start;
+
+:ohno_combat:
+  heartbeat := PULSE_SEC*3;
+  pause;
+  goto start;
+}
+dilend
+
+
+dilbegin q_nub2();
+var
+  pc: unitptr;
+  item: unitptr;
+  item2 : unitptr;
+  exdp: extraptr;
+
+code
+{
+heartbeat := PULSE_SEC*3;
+interrupt(SFB_CMD, (  (command(CMD_SAY)) and ("give" in argument) and 
+                ("earrings" in argument) and ("please" in argument)
+                and (NUB_COMPLETE in activator.quests) ), int_replace); 
+
+
+:start:
+wait(SFB_DONE, command(CMD_GIVE) and 
+              (target == self) and 
+              (activator.type == UNIT_ST_PC) and
+                                  (NUB_ONGOING in activator.quests) );
+
+:give:
+
+pc := activator;
+item := medium;
+secure(pc, lostpc);
+exdp := NUB_ONGOING in pc.quests;
+
+  if ("flower1@cloud" == (self.inside.nameidx + "@" + self.inside.zoneidx))
+  {
+    addstring(exdp.names, "flower");
+    pause;
+    exec("say What a very nice flower it is.", self);
+    destroy(self.inside);
+  }
+  else if ("gem1@cloud" == (self.inside.nameidx + "@" + self.inside.zoneidx))
+  {
+    addstring(exdp.names, "gem");
+    pause;
+    exec("say One of the finest!", self);
+    destroy(self.inside);
+  }
+  else
+  {
+    exec("emote slaps "+pc.name, self); 
+    exec("say This is not good enough.", self); pause;
+    exec("say Try again sweet jimmy.", self); 
+    pause;
+    link(self.inside, pc);
+  }
+
+unsecure(pc);
+goto start;
+
+:lostpc:
+exec("say fine.", self);
+goto start;
+
+:int_replace:
+  pc := activator;
+  secure (pc, lostpc);
+  pause;
+  exec("say Lost the Inner Peace eh.....well here are some more.", self);
+  item := load("ip_earring@cloud");
+  item2 := load("ip_earring@cloud");
+  while (self.inside) {
+        link (self.inside, pc);  }
+  exec("emote gives 2 Inner Peace earrings.", self);
+  goto start;
+
+}
+
+dilend
+end
+
+%objects
+
+                                cloud_hammer
+names {"cloud war mattock", "cloud hammer", "war mattock", "mattock", "hammer"}
+title "a cloud war mattock"
+descr "A cloud war mattock is here."
+extra {}
+"This mysterious gear seems to be made of hardened cloud.  It is very brittle
+but seems to have some sort of magical properties."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_WAR_MATTOCK, 0, 0)
+WEAPON_SLAYER(RACE_HUMAN)
+weight 15
+cost 12 GOLD_PIECE
+rent 13 COPPER_PIECE
+dilcopy level_restrict@function (37,0,25,"");
+dilcopy abi_restrict@function (ABIL_DEX,20,0,25,"");
+
+end
+
+                                cloud_helmet
+names {"cloud helmet", "helmet"}
+title "a cloud helmet"
+descr "A cloud helmet is here."
+extra {}
+"This mysterious gear seems to be made of hardened cloud.  It is very brittle
+but seems to have some sort of magical properties."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+ARMOUR_CHAIN(0,0)
+weight 5
+cost 12 GOLD_PIECE
+rent 13 COPPER_PIECE
+dilcopy level_restrict@function (37,0,25,"");
+dilcopy abi_restrict@function (ABIL_CHA,10,0,25,"");
+dilcopy abi_restrict@function (ABIL_BRA,20,0,25,"");
+
+end
+
+                                cloud_plate
+names {"cloud breast plate", "cloud plate", "plate"}
+title "a cloud breast plate"
+descr "A cloud breast plate is here."
+extra {}
+"This mysterious gear seems to be made of hardened cloud.  It is very brittle
+but seems to have some sort of magical properties."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_CHAIN(0,0)
+weight 20
+cost 12 GOLD_PIECE
+rent 13 COPPER_PIECE
+dilcopy level_restrict@function (37,0,25,"");
+dilcopy abi_restrict@function (ABIL_STR,20,0,25,"");
+dilcopy abi_restrict@function (ABIL_DEX,20,0,25,"");
+end
+                                
+                                cloud_manacle
+names {"cloud manacle", "manacle"}
+title "a cloud manacle"
+descr "A cloud manacle is here being phat."
+extra {}
+"This mysterious gear seems to be made of hardened cloud.  It is very brittle
+but seems to have some sort of magical properties."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_WRIST}
+ARMOUR_CHAIN(0, 0)
+DEX_TRANSFER(+1)
+SPELL_TRANSFER(SPL_CONTROL_UNDEAD, 5)
+weight 5
+cost 12 GOLD_PIECE
+rent 13 COPPER_PIECE
+dilcopy level_restrict@function (37,0,25,"");
+dilcopy abi_restrict@function (ABIL_DEX,20,0,25,"");
+end
+
+                                cloud_ring
+names {"cloud ring", "ring"}
+title "a cloud ring"
+descr "A cloud ring is here."
+extra {}
+"This mysterious gear seems to be made of hardened cloud.  It is very brittle
+but seems to have some sort of magical properties."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FINGER}
+ARMOUR_LEATHER(0, 0)
+SPELL_TRANSFER(SPL_REMOVE_POISON, 5)
+weight 5
+cost 12 GOLD_PIECE
+rent 13 COPPER_PIECE
+dilcopy level_restrict@function (37,0,25,"");
+dilcopy abi_restrict@function (ABIL_DEX,40,0,25,"");
+end 
+                     
+                                cloud_ring2 
+names {"cloud ring", "ring"}
+title "a cloud ring" 
+descr "A cloud ring is here."
+ extra {} 
+"This mysterious gear seems to be made of hardened cloud.  It is very brittle
+but seems to have some sort of magical properties." 
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FINGER} 
+ARMOUR_LEATHER(0, 0)
+weight 5 
+cost 12 GOLD_PIECE 
+rent 13 COPPER_PIECE 
+dilcopy level_restrict@function (37,0,25,""); 
+dilcopy abi_restrict@function (ABIL_STR,40,0,25,""); 
+end 
+                                cloud_ring3
+names {"chipped cloud ring", "chipped ring", "ring"}
+title "a chipped cloud ring"
+descr "A chipped cloud ring of good heart is here."
+extra {}
+"This mysterious gear seems to be made of hardened cloud.  It is very brittle
+but seems to have some sort of magical properties.  Chipped by the previous
+beholders of the ring, it is led to believe that the people of good heart
+used these."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FINGER}
+ARMOUR_LEATHER(0,0)
+weight 5
+cost 12 GOLD_PIECE
+rent 22 COPPER_PIECE
+dilcopy level_restrict@function (37,0,25,"");
+dilcopy abi_restrict@function (ABIL_STR,60,0,25,"");
+
+end 
+                                cloud_ring4
+names {"chipped cloud ring", "chipped ring", "ring"}
+title "a chipped cloud ring"
+descr "A chipped cloud ring of good heart is here."
+extra {}
+"This mysterious gear seems to be made of hardened cloud.  It is very brittle
+but seems to have some sort of magical properties.  Chipped by the previous
+beholders of the ring, it is led to believe that the people of good heart
+used these."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FINGER}
+ARMOUR_LEATHER(0,0)
+weight 5
+cost 12 GOLD_PIECE
+rent 22 COPPER_PIECE
+dilcopy level_restrict@function (37,0,25,"");
+dilcopy abi_restrict@function (ABIL_STR,60,0,25,"");
+end 
+                                
+                                cloud_leggings
+names {"cloud leggings", "leggings"}
+title "cloud leggings"
+descr "A pair of cloud leggings are here."
+extra {}
+"This mysterious gear seems to be made of hardened cloud.  It is very brittle
+but seems to have some sort of magical properties."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+ARMOUR_CHAIN(0, 0)
+weight 10
+cost 12 GOLD_PIECE
+rent 13 COPPER_PIECE
+dilcopy level_restrict@function (37,0,25,"");
+dilcopy abi_restrict@function (ABIL_STR,20,0,25,"");
+dilcopy abi_restrict@function (ABIL_DEX,20,0,25,"");
+
+end
+
+                                cloud_gloves
+names {"cloud gloves", "gloves"}
+title "a pair of cloud gloves"
+descr "A pair of cloud gloves are here."
+extra {}
+"These gloves are specially designed to cover your hands and fingers.......
+ ......whether you have eight hands and six fingers, these gloves will fit
+ you just fine."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HANDS}
+ARMOUR_CHAIN(0, 0)
+weight 5
+cost 12 GOLD_PIECE
+rent 13 COPPER_PIECE
+dilcopy level_restrict@function (37,0,25,"");
+dilcopy abi_restrict@function (ABIL_CHA,20,0,25,"");
+dilcopy abi_restrict@function (ABIL_DEX,40,0,25,"");
+
+end
+
+                                cloud_sleeves
+names {"cloud sleeves", "sleeves"}
+title "a pair of cloud sleeves"
+descr "A pair of cloud sleeves are here."
+extra {}
+"This mysterious gear seems to be made of hardened cloud.  It is very brittle
+but seems to have some sort of magical properties."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ARMS}
+ARMOUR_CHAIN(0, 0)
+weight 10
+cost 12 GOLD_PIECE
+rent 13 COPPER_PIECE
+dilcopy level_restrict@function (37,0,25,"");
+dilcopy abi_restrict@function (ABIL_STR,40,0,25,"");
+dilcopy abi_restrict@function (ABIL_BRA,20,0,25,"");
+end
+
+                                cloud_belt
+names {"big buckled cloud belt", "cloud belt", "belt"}
+title "a Big Buckled cloud belt"
+descr "A Big Buckled cloud belt is here."
+extra {}
+"Its description says it all."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_WAIST}
+ARMOUR_CHAIN(0, 0)
+weight 5
+cost 12 GOLD_PIECE
+rent 13 COPPER_PIECE
+dilcopy level_restrict@function (37,0,25,"");
+dilcopy abi_restrict@function (ABIL_BRA,20,0,25,"");
+dilcopy abi_restrict@function (ABIL_DEX,40,0,25,"");
+
+end
+
+                                cloud_boots
+names {"cloud boots", "boots"}
+title "a pair of cloud boots"
+descr "A pair of cloud boots are here."
+extra {}
+"The most comfortable boots out in the market.  Built for hiking, walking,
+ running, fighting AND casting spells.  Specially padded with an air pad
+ in the soles for your comfort.  Remember, its gotta be the shoes."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+ARMOUR_CHAIN(0,0)
+weight 5
+cost 12 GOLD_PIECE
+rent 13 COPPER_PIECE
+dilcopy level_restrict@function (37,0,25,"");
+dilcopy abi_restrict@function (ABIL_STR,20,0,25,"");
+dilcopy abi_restrict@function (ABIL_CHA,20,0,25,"");
+end 
+
+                                winged_boots
+names {"winged boots", "winged", "boots"}
+title "a pair of winged boots"
+descr "A pair of winged boots are hovering above the ground here."
+extra {}
+"These boots will allow you to walk on the clouds."
+extra {"$identify"}
+"These boots will allow you to walk on the clouds and keep you from falling
+ and hurting yourself.  They also give you some dexterity."
+extra {"$improved identify"}
+"Nike Air Walk."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+DEX_TRANSFER(+3)
+SPELL_TRANSFER(SPL_FIND_PATH, 10)
+ARMOUR_LEATHER(+12, +10)
+weight 5
+cost 12 GOLD_PIECE
+rent 6 SILVER_PIECE
+
+dilbegin q_only ();
+code {
+        :start:
+wait (SFB_CMD, ((activator.type == UNIT_ST_PC) and (self.equip == WEAR_FEET)));
+if (not (CLOUD_COMPLETE in activator.quests)) {
+        act("You are not worthy to travel the sky.", 
+        A_ALWAYS, activator, null, null, TO_CHAR);
+        act("$1n is not worthy of traveling the sky.",
+        A_ALWAYS, activator, null, null, TO_REST);
+        link (self, self.outside.outside);
+}
+}
+dilend
+end 
+                                
+                                neuthon
+names {"Neuthon", "sword"}
+title "Neuthon"
+descr "A strange weapon glowing green is here."
+extra {}
+"It is a kewl looking sword.  It came from the clan of good-hearts.  With
+their special blessing and fight for good, this weapon can kick some butt.
+Careful of what your level is.  To activate the dil, command the sword
+to PUMMEL."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_LONG_SWORD, +3, +3)
+DEX_TRANSFER(+1)
+SKILL_TRANSFER(SKI_FLEE, 5)
+weight 15
+cost 12 GOLD_PIECE
+rent 13 COPPER_PIECE
+dilcopy level_restrict@function (15,0,25,"");
+dilcopy abi_restrict@function (ABIL_STR,20,0,25,"");
+dilcopy abi_restrict@function (ABIL_DEX,20,0,25,"");
+
+spell 25
+
+dilbegin recall shine();
+code
+{
+:start:
+heartbeat:=PULSE_SEC*SECS_PER_MUD_DAY/24;
+wait (SFB_TICK,(self.equip==WEAR_WIELD));
+heartbeat:=PULSE_SEC*5;
+act ("A man of good-heart appears and shines your $2N .",
+A_ALWAYS,self.outside,self,null,TO_CHAR);
+act ("A man of good heart appears and shines $1n's $2N. ",
+A_ALWAYS,self.outside,self,null,TO_REST);
+sendto ("add charge",self);
+goto start;
+}
+dilend
+
+
+dilbegin recall pummel();
+var
+        i : integer;
+        enemy :unitptr;
+        n:integer;
+        charge:integer;
+        pwr:integer;
+code
+{
+pwr:=10;
+:init:
+        heartbeat := PULSE_SEC*5;
+charge:=interrupt (SFB_MSG,((self==activator) and
+        (argument=="add charge")), charge);
+:start:
+wait (SFB_CMD,((command ("pummel")) and (self.equip==WEAR_WIELD)));
+block;
+enemy:=findunit (self.outside,argument,FIND_UNIT_SURRO,null);
+if ((enemy==null) and( self.outside.fighting!=null)) enemy:=self.outside.fighting;
+if (enemy==null) goto no_person;
+secure (enemy,start);
+if (pwr<=0) goto fail;
+pwr:=pwr-1;
+i := rnd (20, 90);
+if (i < self.outside.weapons[WPN_LONG_SWORD])
+         {
+        n:= cast_spell (SPL_COLOURSPRAY_1,self.outside,self,enemy,"neuth_aff@cloud");
+   }
+else
+        {
+        act ("You try to PUMMEL $2n but simply miss! ",
+                A_SOMEONE,self.outside,enemy,self,TO_CHAR);
+        act ("$1n tries to PUMMEL $2n but simply misses!",
+                A_SOMEONE,self.outside,enemy,self,TO_VICT);
+        act ("$1n tries to PUMMEL $2n but simply misses!",
+                        A_SOMEONE,self.outside,enemy,self,TO_NOTVICT);
+        }
+  goto start;
+
+        :fail:
+        act ("You try to PUMMEL $2n but the Neuthon is not pure and clean yet.",
+                A_SOMEONE,self.outside,enemy,self,TO_CHAR);
+                goto start;
+
+:charge:
+clear (charge);
+if (pwr<12)
+ pwr:=pwr+1;
+ goto init;
+  goto start;
+:no_person:
+act ("Nothing by that name here.",
+A_ALWAYS,self.outside,null,null,TO_CHAR);
+goto start;
+}
+dilend
+
+dilbegin newbie ();
+        var
+                jnd : integer;
+                pc : unitptr;  
+        code  {
+             
+             :init:
+             wait(SFB_CMD, (activator.type == UNIT_ST_PC) and (self.equip == WEAR_WIELD));
+             :start:
+             pc := activator ;
+             jnd := activator.level ;
+
+        if (jnd > 45 ) {
+
+                act("You overwhelm the Neuthon, destroying it completely.",
+                A_ALWAYS, self.outside, self, null, TO_CHAR);
+                act("$1 overwhelms the Neuthon, destroying it completely.",
+                A_ALWAYS, self.outside, self, null, TO_NOTVICT);
+                pc.hp := (pc.hp) / 13 ;
+                destroy (self);  }
+        goto init;  }
+dilend
+end
+                                vickram
+names {"Vickram", "short sword", "sword"}
+title "Vickram"
+descr "The almighty Vickram short sword is here."
+extra {}
+"It is a kewl looking sword.  It came from another of the good-hearts.  With
+their special blessing and fight for good, this weapon can kick some butt.
+Careful of what your level is.  To activate the dil, command the sword
+to JAYRAM."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_SHORT_SWORD, 0,0)
+weight 15
+cost 12 GOLD_PIECE
+rent 13 COPPER_PIECE
+dilcopy level_restrict@function (15,0,25,"");
+dilcopy abi_restrict@function (ABIL_STR,20,0,25,"");
+dilcopy abi_restrict@function (ABIL_DEX,20,0,25,"");
+
+spell 25
+
+dilbegin recall sky();
+code
+{
+:start:
+heartbeat:=PULSE_SEC*SECS_PER_MUD_DAY/24;
+wait (SFB_TICK,(self.equip==WEAR_WIELD));
+heartbeat:=PULSE_SEC*5;
+act ("The sky cries on your $2N .",
+A_ALWAYS,self.outside,self,null,TO_CHAR);
+act ("The sky cries on $1n's $2N. ",
+A_ALWAYS,self.outside,self,null,TO_REST);
+sendto ("add charge",self);
+goto start;
+}
+dilend
+
+
+dilbegin recall jayram();
+var
+        i : integer;
+        enemy :unitptr;
+        n:integer;
+        charge:integer;
+        pwr:integer;
+code
+{
+pwr:=10;
+:init:
+        heartbeat := PULSE_SEC*5;
+charge:=interrupt (SFB_MSG,((self==activator) and
+        (argument=="add charge")), charge);
+:start:
+wait (SFB_CMD,((command ("jayram")) and (self.equip==WEAR_WIELD)));
+block;
+enemy:=findunit (self.outside,argument,FIND_UNIT_SURRO,null);
+if ((enemy==null) and( self.outside.fighting!=null)) enemy:=self.outside.fighting;
+if (enemy==null) goto no_person;
+secure (enemy,start);
+if (pwr<=0) goto fail;
+pwr:=pwr-1;
+i := rnd (20, 90);
+if (i < self.outside.weapons[WPN_SHORT_SWORD])
+         {
+        n:= cast_spell (SPL_COLOURSPRAY_1,self.outside,self,enemy,"vick_aff@cloud");
+   }
+else
+        {
+        act ("The gods are not with you on this one! ",
+                A_SOMEONE,self.outside,enemy,self,TO_CHAR);
+        act ("$1n feels isolated.",
+                A_SOMEONE,self.outside,enemy,self,TO_VICT);
+        act ("$1n feels isolated.",
+                        A_SOMEONE,self.outside,enemy,self,TO_NOTVICT);
+        }
+  goto start;
+
+        :fail:
+        act ("The sky doesn't feel that this is necessary.",
+                A_SOMEONE,self.outside,enemy,self,TO_CHAR);
+                goto start;
+
+:charge:
+clear (charge);
+if (pwr<12)
+ pwr:=pwr+1;
+ goto init;
+  goto start;
+:no_person:
+act ("Nothing by that name here.",
+A_ALWAYS,self.outside,null,null,TO_CHAR);
+goto start;
+}
+dilend
+
+dilbegin newbie2 ();
+        var
+                jnd : integer;
+                pc : unitptr;  
+        code  {
+             
+             :init:
+             wait(SFB_CMD, (activator.type == UNIT_ST_PC) and (self.equip == WEAR_WIELD));
+             :start:
+             pc := activator ;
+             jnd := activator.level ;
+
+        if (jnd > 45 ) {
+
+                act("You overwhelm the Vickram, destroying it completely.",
+                A_ALWAYS, self.outside, self, null, TO_CHAR);
+                act("$1 overwhelms the Vickram, destroying it completely.",
+                A_ALWAYS, self.outside, self, null, TO_NOTVICT);
+                pc.hp := (pc.hp) / 13 ;
+                destroy (self);  }
+        goto init;  }
+dilend
+end
+                               
+                               bhutkhis
+names {"bhutkhis", "great sword", "sword"}
+title "the brown Bhutkhis"
+descr "A strange weapon wiped in brown is here."
+extra {}
+"A strange looking sword in appearance and shape, the Bhutkhis is one of a
+kind.  The edges look really dull, but looks like a fun sword to play with.
+This sword clearly requires great sword ability."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_GREAT_SWORD, -13, -8)
+STR_TRANSFER(-3)
+DEX_TRANSFER(-2)
+DIV_TRANSFER(-1)
+MAG_TRANSFER(-2)
+CON_TRANSFER(-1)
+SKILL_TRANSFER(SKI_FLEE, -1)
+SKILL_TRANSFER(SKI_RESCUE, -1)
+SKILL_TRANSFER(SKI_SHIELD, -1)
+SKILL_TRANSFER(SKI_BASH, -1)
+SKILL_TRANSFER(SKI_STEAL, -1)
+SKILL_TRANSFER(SKI_SEARCH, -1)
+weight 15
+CURSED_OBJECT
+dilcopy abi_restrict@function (ABIL_STR,2,0,25,"");
+dilcopy abi_restrict@function (ABIL_DEX,2,0,25,"");
+
+end
+                                bhutlik
+names {"bhutlik", "shield"}
+title "the brown Bhutlik Shield"
+descr "A shield wiped in brown is resting here."
+extra {}
+"It is regular shield.  There really is nothing special about it except maybe
+its shape.  It is shaped somewhat funny, but you can't figure out exactly 
+makes it look funny."
+extra {"$identify"}
+"DAMN!  I bet you are pissed you wasted mana for this line."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_SHIELD}
+SHIELD_DEF(SHIELD_LARGE, -20, -15)
+STR_TRANSFER (-1)
+DEX_TRANSFER (-1)
+DIV_TRANSFER(-1)
+MAG_TRANSFER(-2)
+CON_TRANSFER(-1)
+SKILL_TRANSFER(SKI_FLEE, -1)
+SKILL_TRANSFER(SKI_RESCUE, -1)
+SKILL_TRANSFER(SKI_SHIELD, -1)
+SKILL_TRANSFER(SKI_BASH, -1)
+SKILL_TRANSFER(SKI_STEAL, -1)
+SKILL_TRANSFER(SKI_SEARCH, -1)
+weight 15
+CURSED_OBJECT
+dilcopy abi_restrict@function (ABIL_STR,2,0,25,"");
+dilcopy abi_restrict@function (ABIL_DEX,2,0,25,"");
+end
+
+                                silk_cloth
+names {"silk cloth", "cloth"}
+title "a silk cloth"
+descr "A silk cloth is here."
+extra {}
+"Made from a rare silk, this cloth is really cool."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 2
+cost 12 GOLD_PIECE
+rent 13 COPPER_PIECE
+
+end
+
+                                feather
+names {"metallic feather", "feather"}
+title "a metallic feather"
+descr "A metallic feather is resting here."
+extra {}
+"It is just a simple metallic feather.  Probably a quest item."
+
+manipulate {MANIPULATE_TAKE}
+weight 1
+cost 12 GOLD_PIECE
+rent 1 COPPER_PIECE
+end
+                                hast_potion
+names {"bubbling green stuff", "bubbling green potion","green potion", "potion"}
+title "a bubbling green potion"
+descr "A flask full of bubbling green stuff is here."
+MATERIAL_ORGANIC("A mixture of organic compounds.")
+
+manipulate {MANIPULATE_TAKE}
+POTION_DEF(100, SPL_HASTE, SPL_NONE, SPL_NONE)
+weight 2
+cost 2 PLATINUM_PIECE
+
+extra {}
+"Looks as though a magic user had created something special really quick."
+
+extra {"$identify"}
+"This potion will enhance your speed."
+end
+                                cser_potion
+names {"bubbling aqua stuff", "bubbling aqua potion","aqua potion", "potion"}
+title "a bubbling aqua potion"
+descr "A flask full of bubbling aqua stuff is here."
+MATERIAL_ORGANIC("A mixture of organic compounds.")
+
+manipulate {MANIPULATE_TAKE}
+POTION_DEF(100, SPL_CURE_WOUNDS_2, SPL_CURE_WOUNDS_2, SPL_NONE)
+weight 2
+cost 2 PLATINUM_PIECE
+
+extra {}
+"Looks as though a magic user had created something special really medical."
+
+extra {"$identify"}
+"This potion will make you feel better."
+end
+                                
+                                sust_potion
+names {"bubbling red stuff", "bubbling red potion","red potion", "potion"}
+title "a bubbling red potion"
+descr "A flask full of bubbling red stuff is here."
+MATERIAL_ORGANIC("A mixture of organic compounds.")
+
+manipulate {MANIPULATE_TAKE}
+POTION_DEF(50, SPL_SUSTAIN, SPL_NONE, SPL_NONE)
+weight 2
+cost 2 PLATINUM_PIECE
+
+extra {}
+"Looks as though a magic user had created something to fill you up."
+
+extra {"$identify"}
+"This potion will enhance your ability to not be hungry."
+end
+
+                                poison_potion
+names {"bubbling blue stuff", "bubbling blue potion","blue potion", "potion"}
+title "a bubbling blue potion"
+descr "A flask full of bubbling blue stuff is here."
+MATERIAL_ORGANIC("A mixture of organic compounds.")
+
+manipulate {MANIPULATE_TAKE}
+POTION_DEF(50, SPL_POISON, SPL_POISON, SPL_POISON)
+weight 2
+cost 2 PLATINUM_PIECE
+
+extra {}
+"Looks as though a magic user had created something unholy."
+
+extra {"$identify"}
+"This potion will poison you."
+end
+
+                                awk_potion
+names {"bubbling holy stuff", "bubbling holy potion","holy potion", "potion"}
+title "a bubbling holy potion"
+descr "A flask full of bubbling holy stuff is here."
+MATERIAL_ORGANIC("A mixture of organic compounds.")
+
+manipulate {MANIPULATE_TAKE}
+POTION_DEF(50, SPL_AWAKEN, SPL_AWAKEN, SPL_AWAKEN)
+weight 2
+cost 2 PLATINUM_PIECE
+
+extra {}
+"Looks like vivrin."
+
+extra {"$identify"}
+"Tastes like vivrin.  Could it be vivrin?"
+end
+
+                                rsum_potion
+names {"bubbling yellow stuff", "bubbling yellow potion","yellow potion", "potion"}
+title "a bubbling yellow potion"
+descr "A flask full of bubbling yellow stuff is here."
+MATERIAL_ORGANIC("A mixture of organic compounds.")
+
+manipulate {MANIPULATE_TAKE}
+POTION_DEF(50, SPL_RAISE_SUMMONING, SPL_RAISE_SUMMONING, SPL_NONE)
+weight 2
+cost 2 PLATINUM_PIECE
+
+extra {}
+"Looks as though a magic user had created something magicless."
+
+extra {"$identify"}
+"This potion will raise your abilities in summoning."
+end
+
+                                invis_potion
+names {"bubbling clear stuff", "bubbling clear potion","clear potion", "potion"}
+title "a bubbling clear potion"
+descr "A flask full of bubbling clear stuff is here."
+MATERIAL_ORGANIC("A mixture of organic compounds.")
+
+manipulate {MANIPULATE_TAKE}
+POTION_DEF(50, SPL_INVISIBILITY, SPL_DET_INVISIBLE, SPL_NONE)
+weight 2
+cost 2 PLATINUM_PIECE
+
+extra {}
+"Looks as though a magic user had created something not noticable to the naked eye."
+
+extra {"$identify"}
+"This potion will make you invisibly and allow you to see invisible."
+end
+
+                                cb_potion
+names {"bubbling grey stuff", "bubbling grey potion","grey potion", "potion"}
+title "a bubbling grey potion"
+descr "A flask full of bubbling grey stuff is here."
+MATERIAL_ORGANIC("A mixture of organic compounds.")
+
+manipulate {MANIPULATE_TAKE}
+POTION_DEF(50, SPL_CURE_BLIND, SPL_NONE, SPL_NONE)
+weight 2
+cost 2 PLATINUM_PIECE
+
+extra {}
+"Looks as though a magic user had created something out of nowhere."
+
+extra {"$identify"}
+"This potion will cure the blind."
+end
+
+                                skin_potion
+names {"solid hard potion", "potion"}
+title "a solid hard potion"
+descr "A flask full of solid hard potion is here."
+MATERIAL_ORGANIC("A mixture of organic compounds..")
+
+manipulate {MANIPULATE_TAKE}
+POTION_DEF(75, SPL_STONE_SKIN, SPL_NONE, SPL_NONE)
+weight 2
+cost 2 PLATINUM_PIECE
+
+extra {}
+"Looks as though a magic user had created something strong."
+
+extra {"$identify"}
+"This potion will heal everybody."
+end
+
+                                sleep_potion
+names {"bubbling silver stuff", "bubbling silver potion","silver potion", "potion"}
+title "a bubbling silver potion"
+descr "A flask full of bubbling silver stuff is here."
+MATERIAL_ORGANIC("A mixture of organic compounds.")
+
+manipulate {MANIPULATE_TAKE}
+POTION_DEF(50, SPL_SLEEP, SPL_SLEEP, SPL_SLEEP)
+weight 2
+cost 2 PLATINUM_PIECE
+
+extra {}
+"Looks as though a magic user had created something in the night."
+
+extra {"$identify"}
+"This potion will make you sleep."
+end
+
+                                placid_helmet
+names {"placid helmet", "helmet"}
+title "a placid helmet"
+descr "A placid helmet is here."
+extra {}
+"Calm and cool, the placid helps relieve mental stress."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+ARMOUR_HRD_LEATHER(0, 0)
+weight 5
+cost 12 GOLD_PIECE
+rent 13 COPPER_PIECE
+dilcopy level_restrict@function (10,0,25,"");
+dilcopy abi_restrict@function (ABIL_BRA,20,0,25,"");
+dilcopy abi_restrict@function (ABIL_CHA,20,0,25,"");
+end
+
+                                placid_plate
+names {"placid breast plate", "breast plate", "plate"}
+title "a placid breast plate"
+descr "A placid breast plate is here."
+extra {}
+"Calm and cool, the placid helps relieve mental stress. "
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_HRD_LEATHER(0,0)
+weight 20
+cost 12 GOLD_PIECE
+rent 13 COPPER_PIECE
+dilcopy level_restrict@function (10,0,25,"");
+dilcopy abi_restrict@function (ABIL_STR,20,0,25,"");
+dilcopy abi_restrict@function (ABIL_DEX,20,0,25,"");
+
+end
+                                
+                                placid_manacle
+names {"placid manacle", "manacle"}
+title "a placid manacle"
+descr "A placid manacle is here being phat."
+extra {}
+"Calm and cool, the placid helps relieve mental stress. "
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_WRIST}
+ARMOUR_HRD_LEATHER(0, 0)
+weight 5
+cost 12 GOLD_PIECE
+rent 13 COPPER_PIECE
+dilcopy abi_restrict@function (ABIL_DEX,20,0,25,"");
+end
+ 
+                                placid_leggings
+names {"placid leggings", "leggings"}
+title "placid leggings"
+descr "A pair of placid leggings are here."
+extra {}
+"Calm and cool, the placid helps relieve mental stress. "
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+ARMOUR_HRD_LEATHER(0, 0)
+weight 10
+cost 12 GOLD_PIECE
+rent 13 COPPER_PIECE
+dilcopy level_restrict@function (10,0,25,"");
+dilcopy abi_restrict@function (ABIL_STR,20,0,25,"");
+dilcopy abi_restrict@function (ABIL_DEX,20,0,25,"");
+end
+
+                                placid_gloves
+names {"placid gloves", "gloves"}
+title "a pair of placid gloves"
+descr "A pair of placid gloves are here."
+extra {}
+"Calm and cool, the placid helps relieve mental stress.  "
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HANDS}
+ARMOUR_HRD_LEATHER(0, 0)
+weight 5
+cost 12 GOLD_PIECE
+rent 13 COPPER_PIECE
+dilcopy level_restrict@function (10,0,25,"");
+dilcopy abi_restrict@function (ABIL_STR,20,0,25,"");
+dilcopy abi_restrict@function (ABIL_DEX,20,0,25,"");
+end
+
+                                placid_sleeves
+names {"placid sleeves", "sleeves"}
+title "a pair of placid sleeves"
+descr "A pair of placid sleeves are here."
+extra {}
+"Calm and cool, the placid helps relieve mental stress."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ARMS}
+ARMOUR_HRD_LEATHER(0,0)
+weight 10
+cost 12 GOLD_PIECE
+rent 13 COPPER_PIECE
+dilcopy level_restrict@function (10,0,25,"");
+dilcopy abi_restrict@function (ABIL_STR,20,0,25,"");
+dilcopy abi_restrict@function (ABIL_BRA,20,0,25,"");
+end
+
+                                placid_boots
+names {"placid boots", "boots"}
+title "a pair of placid boots"
+descr "A pair of placid boots are here."
+extra {}
+"Calm and cool, the placid helps relieve mental stress."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+ARMOUR_HRD_LEATHER(0, 0)
+weight 5
+cost 12 GOLD_PIECE
+rent 13 COPPER_PIECE
+dilcopy level_restrict@function (10,0,25,"");
+dilcopy abi_restrict@function (ABIL_STR,20,0,25,"");
+dilcopy abi_restrict@function (ABIL_CHA,20,0,25,"");
+end
+                                ip_earring
+names {"inner peace earring", "earring"}
+title "an earring of Inner Peace"
+descr "An earring of Inner Peace is here."
+extra {}
+"Wearing these earrings will bring peace to your mind.  Live life stress
+ free!!"
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_EAR}
+DEX_TRANSFER(+2)
+weight 5
+cost 12 GOLD_PIECE
+rent 23 COPPER_PIECE
+
+dilcopy level_restrict@function (20,0,25,"");
+dilcopy abi_restrict@function (ABIL_STR,20,0,25,"");
+dilcopy abi_restrict@function (ABIL_CHA,20,0,25,"");
+
+dilbegin q2_only ();
+code {
+        :start:
+wait (SFB_DONE, ( command("wear") and (activator.type == UNIT_ST_PC) and 
+                  (activator==self.outside) and (  
+                (self.equip == WEAR_EAR_L) or (self.equip == WEAR_EAR_R))));
+if (not (NUB_COMPLETE in activator.quests)) {
+        act("Can't wear these earring unless you have talked to Gunthar.", 
+        A_ALWAYS, self.outside, null, null, TO_CHAR);
+        act("$1n has not talked to Gunthar, $1n can't wear those earrings.",
+        A_ALWAYS, self.outside, null, null, TO_REST);
+        link (self, self.outside.outside);
+}
+}
+dilend
+
+
+end
+
+                                back_plate
+names {"cloud back plate", "back plate", "plate"}
+title "a Cloud back plate"
+descr "A Cloud back plate is here."
+extra {}
+"The back plate will protect the back."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BACK}
+ARMOUR_LEATHER(0, 0)
+weight 5
+cost 12 GOLD_PIECE
+rent 23 COPPER_PIECE
+dilcopy level_restrict@function (50,0,25,"");
+dilcopy abi_restrict@function (ABIL_STR,20,0,25,"");
+dilcopy abi_restrict@function (ABIL_DEX,20,0,25,"");
+
+end
+                                back_plate2
+names {"cloud back plate", "back plate", "plate"}
+title "a chipped Cloud back plate"
+descr "A chipped Cloud back plate is here."
+extra {}
+"The back plate will protect the back, its been chipped by the people of 
+good heart so that the less experience can use it."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BACK}
+ARMOUR_LEATHER(0, 0)
+weight 5
+cost 12 GOLD_PIECE
+rent 23 COPPER_PIECE
+dilcopy level_restrict@function (30,0,25,"");
+dilcopy abi_restrict@function (ABIL_STR,20,0,25,"");
+dilcopy abi_restrict@function (ABIL_CHA,20,0,25,"");
+end
+                                
+                                fountain
+names {"magnificent fountain", "fountain", "angels", "vodka"}
+title "a magnificent golden fountain"
+descr "Golden nectar bubbles up from a magnificent fountain that is here."
+extra {}
+"This magnificent fountain brims with golden nectar that is being poured by
+statues of angels.  It all looks quite intoxicating."
+LIQ_DEF(LIQ_VODKA, 15, 20, 50, 0)
+end
+
+                        pea_pod
+names {"pea pod", "pod"}
+title "a gaigantic pea pod"
+descr "An amazingly large pea pod rests here."
+extra {}
+"This gigantic pea pod could only have come off of a magical beanstalk of
+enormous size.  It looks like you could hold quite a bit and keep your gear
+safe inside the tough fibrous shell."
+weight 15
+CONTAINER_DEF(200)
+open {EX_OPEN_CLOSE, EX_CLOSED}
+manipulate {MANIPULATE_ENTER, MANIPULATE_TAKE}
+end
+
+                        g_chain1
+names {"golden chain", "chain"}
+title "a Golden Chain"
+descr "A Golden Chain ready to be climbed is here."
+extra {}
+"Climbing this chain will get you to another area."
+
+weight 600
+
+dilbegin chain_gdn ();
+var
+        pc : unitptr ;
+        i : integer;
+
+code {
+        :init:
+{
+        heartbeat := PULSE_SEC*10;
+        on_activation(self.position != POSITION_STANDING, skip);
+}
+        :start:
+        wait (SFB_CMD, ( (activator.type == UNIT_ST_PC) and ( command(CMD_CLIMB)) 
+                                                and ("chain" in argument) ) );
+        
+        block;
+        pc := activator ;
+        secure (pc, lostpc);
+        i := rnd (1, 1000);
+        if ( i > 3)  {
+        act("You begin to climb the chain.", 
+                A_ALWAYS, pc, null, null, TO_CHAR);
+        act("$1n climbs the chain.",
+                A_ALWAYS, pc, null, null, TO_REST);
+        pause;
+        act("You successfully climb the chain to find yourself in a new location.",
+                A_ALWAYS, pc, null, null, TO_CHAR);
+        link (pc, findroom("path1@cloud"));
+        exec("look", pc);
+        unsecure (pc);
+        goto start;
+        }
+        else {
+        act("You begin to climb the chain.", 
+                A_ALWAYS, pc, null, null, TO_CHAR);
+        act("$1n begins to climb the chain.",
+                A_ALWAYS, pc, null, null, TO_REST);
+        pause;
+        act("You slip and lose control......and begin falling...falling...falling.", 
+                A_ALWAYS, pc, null, null, TO_CHAR);
+        act("$1n loses control and falls to the ground.",
+                A_ALWAYS, pc, null, null, TO_REST);
+        pause;
+        pause;
+        link (pc, findroom("stalk@cloud"));
+        pc.hp := (pc.hp / 5);
+        position_update (pc);
+        exec("look", pc);
+        unsecure (pc);
+        goto start;
+        }
+        :lostpc:
+        pause;
+        goto start;
+
+}
+dilend
+end
+
+                        g_chain2
+names {"golden chain", "chain"}
+title "a Golden Chain"
+descr "A Golden Chain ready to be climbed is here."
+extra {}
+"Climbing this chain will get you to another area."
+
+weight 600
+
+dilbegin chain_asg ();
+var
+        pc : unitptr ;
+        i : integer;
+
+code {
+        :init:
+{
+        heartbeat := PULSE_SEC*10;
+        on_activation(self.position != POSITION_STANDING, skip);
+}
+        :start:
+        wait (SFB_CMD, ( (activator.type == UNIT_ST_PC) and ( command(CMD_CLIMB)) 
+                                                and ("chain" in argument) ) );
+        
+        block;
+        pc := activator ;
+        secure (pc, lostpc);
+        i := rnd (1, 1000);
+        if ( i > 3)  {
+        act("You begin to climb the chain.", 
+                A_ALWAYS, pc, null, null, TO_CHAR);
+        act("$1n climbs the chain.",
+                A_ALWAYS, pc, null, null, TO_REST);
+        pause;
+        act("You successfully climb the chain to find yourself in a new location.",
+                A_ALWAYS, pc, null, null, TO_CHAR);
+        link (pc, findroom("chain4@cloud"));
+        exec("look", pc);
+        unsecure (pc);
+        goto start;
+        }
+        else {
+        act("You begin to climb the chain.", 
+                A_ALWAYS, pc, null, null, TO_CHAR);
+        act("$1n begins to climb the chain.",
+                A_ALWAYS, pc, null, null, TO_REST);
+        pause;
+        act("You slip and lose control......and begin falling...falling...falling.", 
+                A_ALWAYS, pc, null, null, TO_CHAR);
+        act("$1n loses control and falls to the ground.",
+                A_ALWAYS, pc, null, null, TO_REST);
+        pause;
+        pause;
+        link (pc, findroom("stalk@cloud"));
+        pc.hp := (pc.hp / 5);
+        position_update (pc);
+        exec("look", pc);
+        unsecure (pc);
+        goto start;
+        }
+        :lostpc:
+        pause;
+        goto start;
+
+}
+dilend
+end
+                                flower1
+names {"flower"}
+title "a simple flower"
+descr "A simple flower is here."
+extra {}
+"Looks like something that gunthar would want."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+end
+                                gem1
+names {"gem"}
+title "a simple gem"
+descr "A simple gem is here."
+extra {}
+"There is nothing else to this gem, though Gunthar might like it."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 2
+rent 1 COPPER_PIECE
+end
+
+                                
+                                beads_bottle
+names {"bottle of beads", "bottle"}
+title "Bottle of Beads"
+extra {}
+"Hold this bottle and shout for some beads.  Shout 'I love myself'."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 8
+rent 1 SILVER_PIECE
+
+dilbegin nub_bot ();
+var
+        item : unitptr;
+        pc : unitptr ;
+        i : integer;
+
+
+code 
+{
+        :start:
+wait (SFB_CMD, ( (activator.type == UNIT_ST_PC) and (self.equip==WEAR_HOLD) and
+                        (command(CMD_SHOUT)) and
+                        ("i" in argument) and ("love" in argument) and
+                        ("myself" in argument)  )  );
+pc := activator;
+pause;
+item := load("beads@cloud");
+link (item, self.outside);
+        act("You feel the warth of the beads near you.", 
+                A_ALWAYS, pc, null, null, TO_CHAR);
+        act("$1n just got some beads from within.",
+                A_ALWAYS, pc, null, null, TO_REST);
+goto start;
+}
+dilend
+end
+
+                                beads
+names {"beads"}
+title "Beads"
+extra {}
+"These beads will make you feel real good, try swallowing one."
+
+manipulate {MANIPULATE_TAKE}
+weight 4
+
+
+dilbegin nub ();
+var
+        item : unitptr;
+        pc : unitptr ;
+        i : integer;
+code 
+{
+        :start:
+wait (SFB_CMD, ( (activator.type == UNIT_ST_PC) and (command("swallow")) 
+                                and ("bead" in argument)  ) );
+block;
+pc := activator;
+pause;
+i := rnd(1, 11) - 5 ;
+pc.endurance := pc.endurance + i ;
+position_update (pc);
+        act("You feel the warmth.", 
+                A_ALWAYS, pc, null, null, TO_CHAR);
+        act("$1n feels the warmth.",
+                A_ALWAYS, pc, null, null, TO_REST);
+destroy (self);
+goto start;
+}
+dilend
+
+end
+
+
+%reset
+load pea_pod into stalk1
+load pea_pod into stalk2
+load pea_pod into stalk4
+load pea_pod into stalk6
+load pea_pod into stalk6
+load fountain into rfountain max 1
+load lady_bug into stalk1 max 10
+load lady_bug into stalk2 max 10
+load lady_bug into stalk4 max 10
+load lady_bug into stalk5 max 10
+load giant into stalk3 max 1
+        {equip placid_leggings position WEAR_LEGS
+        equip placid_helmet position WEAR_HEAD        
+        equip placid_manacle position WEAR_WRIST_R
+        equip placid_sleeves position WEAR_ARMS         
+        equip placid_manacle position WEAR_WRIST_L
+        equip placid_boots position WEAR_FEET
+        equip placid_plate position WEAR_BODY
+        equip placid_gloves position WEAR_HANDS
+        load awk_potion
+        load hast_potion}
+load firconse into stalk5 max 1
+        {equip placid_leggings position WEAR_LEGS
+        equip placid_sleeves position WEAR_ARMS         
+        equip placid_boots position WEAR_FEET
+        equip placid_helmet position WEAR_HEAD  
+        equip placid_manacle position WEAR_WRIST_R
+        equip placid_manacle position WEAR_WRIST_L
+        equip placid_plate position WEAR_BODY
+        equip placid_gloves position WEAR_HANDS
+        load silk_cloth
+        load rsum_potion
+        load skin_potion}
+load butterfly into cloud1 max 10
+        {load cser_potion}
+load butterfly into cloud2 max 10
+load butterfly into cloud4 max 10
+        {load cser_potion}
+load butterfly into cloud5 max 10
+load butterfly into cloud7 max 10
+load butterfly into cloud11 max 10
+load butterfly into cloud14 max 10
+load fire_fly into bank9 max 4
+load fire_fly into bank7 max 4
+load fire_fly into bank6 max 4
+load fire_fly into bank4 max 4
+load dragonfly into sparse1 max 4
+        {load sleep_potion}
+load dragonfly into sparse3 max 4
+        {load sleep_potion}
+load dragonfly into sparse7 max 4
+        {load invis_potion}
+load dragonfly into sparse9 max 4
+        {load invis_potion}
+load hum_bird into rim4 max 10
+        {load cser_potion}
+load hum_bird into rim5 max 10
+load hum_bird into rfountain max 10
+load hum_bird into chain4 max 10
+load pegasus into cloud1 max 6
+        {load cser_potion}
+load pegasus into cloud2  max 6
+        {load back_plate2}
+load pegasus into cloud4  max 6
+load pegasus into cloud8 max 6
+        {load cser_potion}
+/* XXX load pegasus into cloud10 max 6 */
+load pegasus into cloud12 max 6
+load pegasus into cloud14 max 6
+load unicorn into valley1 max 6
+load unicorn into valley3 max 6
+load unicorn into valley5 max 6
+load fazdum into cloud8 max 1
+load kywall into stalk max 1
+        {equip neuthon position WEAR_WIELD
+         equip cloud_ring3 position WEAR_FINGER_L
+         load feather}
+load dexter into valley5 max 1
+        {equip cloud_helmet position WEAR_HEAD
+         equip cloud_boots position WEAR_FEET
+         equip cloud_hammer position WEAR_WIELD}
+load mcleaf into rfountain max 1
+        {equip cloud_plate position WEAR_BODY
+         equip cloud_manacle position WEAR_WRIST_L
+         equip cloud_gloves position WEAR_HANDS
+         equip bhutkhis position WEAR_WIELD
+         load awk_potion}
+load batu into valley3 max 1
+        {load hast_potion
+         equip cloud_sleeves position WEAR_ARMS
+         equip cloud_leggings position WEAR_LEGS}
+load ploscik into rfountain max 1
+        {equip cloud_manacle position WEAR_WRIST_R
+         equip cloud_boots position WEAR_FEET
+         equip bhutkhis position WEAR_WIELD
+         load sust_potion}
+load breeze1 into bank5 max 4
+load breeze1 into bank8 max 4
+load breeze1 into cloud8 max 4
+load breeze1 into sparse2 max 4
+load breeze2 into inside14 max 5
+load breeze2 into inside16 max 5
+load breeze2 into inside34 max 5
+load breeze2 into inside36 max 5
+load breeze2 into chain3 max 5
+load mist_dragon into inside11 max 6
+load mist_dragon into inside13 max 6
+load mist_dragon into inside37 max 6
+load mist_dragon into inside39 max 6
+load mist_dragon into inside37 max 6
+load mist_dragon into inside37 max 6
+load cloud_dude into inside15 max 6
+load cloud_dude into inside15 max 6
+load cloud_dude into inside35 max 6
+load cloud_dude into inside24 max 6
+load cloud_dude into inside26 max 6
+load cloud_dude into inside26 max 6
+load sky_dragon into chain1 max 1
+        {equip cloud_ring position WEAR_FINGER_L
+         equip cloud_ring2 position WEAR_FINGER_R}
+load cloud_golem into wall3 max 2
+        {equip cloud_belt position WEAR_WAIST
+        load invis_potion}
+load cloud_golem into wall3 max 2
+        {equip cloud_belt position WEAR_WAIST
+        load cb_potion}
+load g_chain1 into east_sky@garden max 1
+load g_chain2 into bifrost_bridge@asgaard max 1
+load fountain into zex@hades6 max 1
+load fred into pt_d_fo@elfdom max 1
+        {equip gem1 position WEAR_HOLD}
+load mongenel into acid_forest9@ratswarf max 1
+        {load flower1}
+load wiz_board@wiz into zex2@hades6 max 1
+load gunthar into kingstreet1@ratswarf
+        {equip vickram position WEAR_WIELD
+         equip cloud_ring4 position WEAR_FINGER_L
+         equip back_plate position WEAR_BACK}
+load god_board@midgaard into zex@hades6 max 1
+
+%end
+
+

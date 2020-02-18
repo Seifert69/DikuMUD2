@@ -1,0 +1,130 @@
+#!/usr/local/bin/perl
+# File   : sign[.perl]						-*-Perl-*-
+# Version: 1.32
+# Author : gnort@daimi.aau.dk
+# Purpose: To present a message on a port
+#
+# Written as part of DikuII, but the DikuMUD license doesn't apply.
+# You are free to change, redistribute or print out and eat this file.
+# I'd be thankful if you acknowledged my authorship, though.
+# Bug-fixes, however unlikely, _must_ also go my way.
+
+sub usage {
+    print "Usage: $0 <port> <filename>|- [password]\n";
+    exit 1;
+}
+
+sub kill_me {
+    exit;
+}
+
+sub wait_up {
+    wait;
+}
+
+sub go_down {
+    if ($die) {
+	unlink "SIGN_PWD";
+	exit;
+    }
+    alarm(2);
+}
+
+eval "require 'sys/socket.ph'";
+if ($@) {
+    warn "Include of sys/socket.ph failed...";
+
+    # Check these values against the definitions in C-include <sys/socket.h>
+    # Or get your lazy sysadmin to run h2ph, so perl gets wider support!
+
+    eval 'sub AF_INET		{      2; }';
+    eval 'sub SOCK_STREAM	{      1; }';
+    eval 'sub SOL_SOCKET	{ 0xffff; }';
+    eval 'sub SO_REUSEADDR	{ 0x0004; }';
+}
+
+$up_time = 10;			# How long users are allowed to be connected
+
+$SIG{'ALRM'} = 'go_down';	# Check if the kids killed us :-)
+$SIG{'CHLD'} = 'wait_up';	# Can't leave dead children in the gutter
+
+($port, $file, $pwd) = @ARGV;
+&usage unless ($#ARGV == 1 || $#ARGV ==2 )
+    && $port =~ /^\d+$/; # Port must be numeric...
+
+if ($file =~ /^-$/) {		# Filename consists of a single `-'
+    if (-t STDIN) {		# Stdin is a tty
+	print "Input text (terminate with a '.')\n";
+	while (<STDIN>) {	# Read line from STDIN
+	    last if /^\.$/;	# Single dot on line...
+	    $text .= $_;	# Append line
+	}
+    }
+    else {			# Not a tty, probably a pipe
+	local($/) = (undef);	# Slurp in all text on <FOO>
+	$text = <STDIN>;
+    }
+}
+else {
+    open(IN, $file) || die "$file: $!";
+
+    local($/) = (undef);	# Slurp in all text on <FOO>
+    $text = <IN>;
+    close(IN);
+}
+
+# Setup socket
+$my_addr = pack('S n a4 x8', $AF_INET, $port, "\0\0\0\0");
+
+socket(S, &AF_INET, &SOCK_STREAM, 0)		|| die "socket: $!";
+
+# I'm really clueless why this doesn't work...
+#setsockopt(S, &SOL_SOCKET, &SO_REUSEADDR, 1)	|| die "setsockopt: $!";
+
+bind(S, $my_addr)				|| die "bind: $!";
+listen(S, 5)					|| die "listen: $!";
+
+# Force flush on filehandles...
+select((select(NS), $| = 1, select(S), $| = 1)[0]);
+
+if ($pid = fork) {		# Detach this process
+    print "Sign [port $port] running in the background [pid $pid]\n";
+    print "Password '$pwd'\n" if $pwd;
+    exit;
+}
+
+if ($pwd) {
+    open(FOO, "> SIGN_PWD");
+    print FOO "Current password for sign: $pwd\n";
+    close(FOO);
+}
+else {
+    unlink "SIGN_PWD";
+}
+
+$die = 0;
+
+alarm(2);			# Check for death with this frequency
+
+for (;;) {			# Loop forever
+    accept(NS, S) || die "accept: $!"; # Wait for new connection
+
+    if (fork == 0) {		# Let your children do all the work...
+	$SIG{'ALRM'} = 'kill_me'; # Put dynamite in the alarm clock	
+	alarm($up_time);	# Kill me in $up_time seconds
+
+	print NS $text;		# Send message
+	$input = <NS>;		# Wait for newline from user...
+	
+	# Bit weird pwd check, but the famed \r gets in the way
+	if ($pwd && ($input =~ /^$pwd\r?$/)) {
+	    print NS "Ok.  Sign going down.\n";
+	    $die = 1;		# Do the Menendez-dance...
+	}
+	close(NS);
+	exit;			# ...and close up
+    }
+    # No error checking on forking because connections aren't very important :)
+    close(NS);
+}
+

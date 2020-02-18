@@ -1,0 +1,2101 @@
+/*
+filename    xiyang2
+password    jello
+changedby   Palio
+EmailAdd     Palio <palio@blinksoft.com>
+request     compile
+version     8
+END HEADER*/
+
+#include <composed.h>
+
+
+
+#define MARRIED_MAN "Married Man"
+#define MARRIED_WOMAN "Married Woman"
+
+#define DIVORCED "Divorced"
+
+%zone 				xiyang2
+title ""
+lifespan 30
+reset RESET_ANYHOW
+
+creators {"Telegrim","palio"}
+
+notes
+"&l	Extension of xiyang.
+
+	Version 1.0
+
+&f"
+
+
+
+%dil
+
+dilbegin wedthrow();
+var
+    wordlist     : stringlist;
+    a            : unitptr;
+    enemy        : unitptr;
+    i            : integer;
+
+code
+{
+  :start:
+	unsecure (a);
+	unsecure ( enemy);
+  heartbeat := PULSE_SEC * 10;
+  wait(SFB_CMD, command("throw") and (self.equip == WEAR_HOLD) and 
+(argument in self.names));
+  block;
+  a := activator;
+  secure (a,losta);
+  secure (enemy,lostenemy);
+   {
+     enemy:=findrndunit (a,FIND_UNIT_SURRO,UNIT_ST_PC);
+     if (enemy == null) 
+          {
+        act("I see no " + enemy.name + " here!",
+             A_SOMEONE, a, null, null, TO_CHAR);
+        goto start;
+           }
+  else
+           {
+     act("You neatly launch the $2n into the air and it flies stright for " +
+         "$3n.", A_SOMEONE, a, self, enemy, TO_CHAR);
+     act("$1n neatly launches a $2n that flies stright for "+
+         "$3n ." ,A_SOMEONE, a, self, enemy, TO_REST);
+       link(self, enemy);
+        goto start;
+     }
+     } 
+
+                   :fail:
+                   pause;
+                   goto start;
+
+                   :losta:
+                    pause;
+                    goto start;
+
+                   :lostenemy:
+                   pause;
+                   goto start;
+}
+dilend
+
+
+
+
+
+
+
+
+
+
+
+%rooms
+
+                                 dock_enter
+
+title "At entrance of the Xiyang Harbor"
+names {"dock"}
+descr
+"   You are at the entrance of the Xiyang harbor.  The dock is made of
+stone marble.  Salt from the Sea of Fongyi fills your nose as you breath
+the sea air.  The city is to your south, and the stone marble pier continues
+to your north."
+extra {"stone","dock"}
+"The dock is made from fine marble."
+movement SECT_CITY
+flags {UNIT_FL_NO_MOB}
+north to dock7 descr
+"The doc continues to the north.";
+south to city_rd28@xiyang descr
+"A road leads to the south.";
+end
+
+                                 dock6
+title "On the dock"
+names {"dock"}
+descr
+"   This stone marble dock stretches east and west.  To your north the Sea
+of Fongyi stretches to the horizon.  The city is to the south.  Salt from the
+sea fills your nose.  There is a galley to the north."
+extra {"galley","ship"}
+"   This peculiar looking galley to the north."
+extra {"stone","dock"}
+"The dock is made from fine marble."
+
+movement SECT_CITY
+west to dock5 descr
+"The dock continues to the west.";
+east to dock7 descr
+"The dock continues to the east.";
+end
+
+                                dock5
+title "On the dock"
+names {"dock"}
+descr
+"   This stone marble dock stretches east and west.  To your north the Sea
+of Fongyi stretches to the horizon.  The city is to the south.  Salt from the
+sea fills your nose.  There is a bamboo boat to the north."
+extra {"bamboo boat","ship"}
+"   You see a bamboo boat full of tourists going to and from the ship."
+extra {"stone","dock"}
+"The dock is made from fine marble."
+movement SECT_CITY
+west to dock4 descr
+"The dock continues to the west.";
+east to dock6 descr
+"The dock continues to the east.";
+end
+
+                                dock4
+title "On the dock"
+names {"dock"}
+descr
+"   This stone marble dock stretches east and west.  To your north the Sea
+of Fongyi stretches to the horizon.  The city is to the south.  Salt from the
+sea fills your nose."
+extra {"stone","dock"}
+"The dock is made from fine marble."
+movement SECT_CITY
+west to dock3 descr
+" the doc continues to the west.";
+east to dock5 descr
+"The dock continues to the east.";
+end
+                                dock3
+title "On the dock"
+names {"dock"}
+descr
+"   This stone marble dock stretches east and west.  To your north the Sea
+of Fongyi stretches to the horizon.  The city is to the south.  Salt from the
+sea fills your nose.  There is a trireme to the north."
+extra {"trireme","ship"}
+"   You see a trireme made of solid gold.  A noble flag waves on the mast of
+the golden ship. This must belong to the Emperor of Xiyang, himself."
+extra {"stone","dock"}
+"The dock is made from fine marble."
+movement SECT_CITY
+west to dock2 descr
+"The dock continues to the west.";
+east to dock4 descr
+"The dock continues to the east.";
+end
+
+                                dock2
+title "On the dock"
+names {"dock"}
+descr
+"   This stone marble dock stretches east and west.  To your north the Sea
+of Fongyi stretches to the horizon.  The city is to the south.  Salt from the
+sea fills your nose. There is a sign on a gate to your west."
+extra {"sign"}
+"   AUTHORIZED PERSONNEL ONLY!"
+extra {"stone","dock"}
+"The dock is made from fine marble."
+movement SECT_CITY
+west to dock1 descr
+"The dock continues to the west.";
+east to dock3 descr
+"The dock continues to the west.";
+end
+
+                                dock1
+title "On the dock"
+names {"dock"}
+descr
+"   This stone marble dock stretches east.  To your north and west the Sea
+of Fongyi stretches to the horizon.  The city is to the south.  Salt from the
+sea fills your nose.  This dock seems to be bustling with Dynasty
+loyalists.  Stacks of wooden crates piles up on the dock ready to be
+transported on the ship.  There are dynasty warships to the north and west."
+extra {"warships","warship","ships","ship"}
+"   You see fleet of majestic Imperial warships armed with heavy cannons."
+extra {"crates","crate"}
+"    You see wooden crates bolted lock with painted words IMPERIAL ARMY
+ONLY."
+extra {"stone","dock"}
+"The dock is made from fine marble."
+movement SECT_CITY
+east to dock2 descr
+"The docks continue to the east.";
+end
+
+
+                                dock7
+title "On the dock"
+names {"dock"}
+descr
+"   This stone marble dock stretches east and west.  To your north the Sea
+of Fongyi stretches to the horizon.  The city is to the south.  Salt from the
+sea fills your nose.  There is a boat to the north."
+extra {"boat","ship"}
+"   You see a boat with nets dangling from the sides.  The boat seems to be
+netting fish and crabs."
+extra {"stone","dock"}
+"The dock is made from fine marble."
+movement SECT_CITY
+west to dock6 descr
+"The dock continues to the west.";
+east to dock8 descr
+"The dock continues to the east";
+south to dock_enter descr
+"The dock is to the south.";
+end
+
+                                dock8
+title "On the dock"
+names {"dock"}
+descr
+"   This stone marble dock stretches east and west.  To your north the Sea
+of Fongyi stretches to the horizon.  The city is to the south.  Salt from the
+sea fills your nose."
+extra {"stone","dock"}
+"The dock is made from fine marble."
+movement SECT_CITY
+west to dock7 descr
+"The dock continues to the west.";
+east to dock9 descr
+"The doc continues to the east.";
+end
+
+                                dock9
+title "On the dock"
+names {"dock"}
+descr
+"   This stone marble dock stretches east and west.  To your north the Sea
+of Fongyi stretches to the horizon.  The city is to the south.  Salt from the
+sea fills your nose. There is a yacht to the north."
+extra {"yacht","ship"}
+"   You see a small but luxurious boat.  The boat is owned by a wealthy
+citizen.  There are letters painted on the bow of boat."
+extra {"letters","letter"}
+"   TELEGRIM"
+extra {"stone","dock"}
+"The dock is made from fine marble."
+movement SECT_CITY
+west to dock8 descr
+"The dock continues to the west.";
+east to dock10 descr
+"The dock continues to the east.";
+end
+
+                                dock10
+title "On the dock"
+names {"dock"}
+descr
+"   This stone marble dock stretches east and west.  To your north the Sea
+of Fongyi stretches to the horizon.  The city is to the south.  Salt from the
+sea fills your nose.  There is a freighter to the north."
+extra {"freighter","ship"}
+"   This is a supply freighter."
+extra {"stone","dock"}
+"The dock is made from fine marble."
+movement SECT_CITY
+west to dock9 descr
+"The dock continues to the west.";
+east to dock11 descr
+"The dock continues to the east.";
+north to splank descr
+"You see a gang plank to the north.";
+end
+
+                                dock11
+title "On the dock"
+names {"dock"}
+descr
+"   This stone marble dock stretches east and west.  To your north the Sea
+of Fongyi stretches to the horizon.  The city is to the south.  Salt from the
+sea fills your nose."
+extra {"stone","dock"}
+"The dock is made from fine marble."
+movement SECT_CITY
+west to dock10 descr
+"The dock continues to the west.";
+east to dock12 descr
+"The dock continues to the east.";
+end
+
+                                dock12
+title "On the dock"
+names {"dock"}
+descr
+"   This stone marble dock stretches west.  To your north and east the Sea
+of Fongyi stretches to the horizon.  Salt from the sea fills your nose.  You
+notice a galleon sitting a ways off."
+extra {"stone","dock"}
+"The dock is made from fine marble."
+extra {"galleon","ship"}
+"   You see a Pirate galleon!  You wonder what riches they have on the ship."
+movement SECT_CITY
+west to dock11 descr
+"The dock continues to the west.";
+east to dock13 descr
+"The dock continues to the east.";
+up to gal_1 descr
+"You see the gang plank of a ship.";
+end
+
+                                dock13
+title "On the dock"
+names {"dock"}
+descr
+"   This stone marble dock stretches west.  To your north and east the Sea
+of Fongyi stretches to the horizon.  Salt from the sea fills your nose.  You
+sense something."
+extra {"stone","dock"}
+"The dock is made from fine marble."
+movement SECT_CITY
+west to dock12 descr
+"The dock continues to the west.";
+end
+
+                        entrance_chapel
+title "Entrance to the Wedding Chapel"
+descr
+"Before you lies an old, worn down building.  A smile takes your face
+as you feel welcome to all of the surroundings.  You are directly south
+of the wedding chapel.  There is a large sign at the entrance north.
+Exits are to the north and south."
+
+extra {"sign"}
+"To begin a wedding ceremony, present the wedding rings to Father Andrew."
+movement SECT_INSIDE
+north to chapel descr
+"You see the wedding chapel.";
+south to city_rd9@xiyang descr
+"You see the road to the south.";
+ALWAYS_LIGHT
+end
+
+			chapel
+title "Wedding Chapel"
+names {"wedding chapel", "chapel"}
+descr
+"You are in the heart of the wedding chapel.  A feeling of warmth and unity
+ overwhelms you. A large organ sits along one wall and a small alter sits
+in the middle of the room waiting for you to say to Father Andrew 'marry
+us'."
+extra {"organ"}
+"A large pipe organ. Outrageously over sized for such a small place."
+extra {"Alter"}
+"A simple wodden alter."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+south to entrance_chapel descr
+"You see the entrance to the chapel to the south.";
+ALWAYS_LIGHT
+end
+/*------------------------Ship------------------------------*/
+splank
+title "On the Gang Plank"
+names {"gang plank","gangplank"}
+descr
+"A plain wooden gang plank."
+movement SECT_INSIDE
+north to sdeck_1 descr
+"The deck is to the north.";
+south to dock10 descr
+"You see the dock below";
+end
+
+sdeck_1
+title "On the deck"
+names {"deck"}
+descr
+"You are on the deck of a frieght ship, use to carry frieght and rarely
+passangers across the waters. You can see a gang plank leading to the dock 
+below."
+movement SECT_CITY
+south to splank descr
+"A gang plank is to the south.";
+west to fdeck descr
+"The deck continues.";
+east to adeck descr
+"The deck continues.";
+down to hull_1 descr
+"You see the hull below you.";
+end
+
+fdeck
+title "On the Deck"
+names {"deck"}
+descr
+"You can look out for miles over the waters on a clear day. To the south 
+the city streatches out before you, never seeming to sleep."
+east to sdeck_1 descr
+"The deck continues";
+movement SECT_CITY
+end
+
+adeck
+title "On the Deck"
+names {"deck"}
+descr
+"You can look out for miles over the waters on a clear day. To the south 
+the city streatches out before you, never seeming to sleep. You notice a 
+hatch in the deck. " 
+down to hull_1 descr
+"You see the inside of the ship";
+west to sdeck_1 descr
+"The deck continues";
+movement SECT_CITY
+end
+
+hull_1
+title "Inside the ship"
+names {"ship"}
+descr
+"The inside of the ship is very dark, it is hard to get use it the 
+dimness of it. As your eyes focus you notice rows of benches with oar 
+handles spanning the width of the ship. This is obviously how the ship is 
+powered. You notice a thick wooden chair at one end of the room. You can 
+go on deck above you, or continue to the east or west."
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+extra {"chair"}
+"Very large thick chair, you get the feeling the supervisor sits here."
+extra {"oars"}
+"The oars are long and span the width of the ships"
+extra {"benches"}
+"Rows of benches for workers to sit on, they sure look uncomfortable."
+up to sdeck_1 descr
+"The deck is above you.";
+east to hull_2 descr
+"The hull continues to the east.";
+west to hull_3 descr
+"The hull continues to the west.";
+end
+
+hull_2
+title "Inside the ship"
+names {"ship"}
+descr
+"The room is very dark, as your eyes become acustome to the dark you 
+realise this room is also used to power the ship. Benches lined in rows 
+beside the handles of huge oars. Against one wall is a thick wooden chair 
+for a supervisor to sit in. You may go to the middle of the ship to the 
+west or there is a room to the east." 
+extra {"chair"}
+"Very large thick chair, you get the feeling the supervisor sits here."
+extra {"oars"}
+"The oars are long and span the width of the ships"
+extra {"benches"}
+"Rows of benches for workers to sit on, they sure look uncomfortable."
+west to hull_1 descr
+"The hull continues to the west.";
+east to hold_room descr
+"You notice a room to the east.";
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+end
+
+hull_3
+title "Inside the ship"
+names {"ship"}
+descr
+"The room is very dark, as your eyes become acustome to the dark you
+realise this room is also used to power the ship. Benches lined in rows
+beside the handles of huge oars. Against one wall is a thick wooden chair
+for a supervisor to sit in. You may go to the middle of the ship to the
+east or there is a hall to the west."
+extra {"chair"}
+"Very large thick chair, you get the feeling the supervisor sits here."
+extra {"oars"}
+"The oars are long and span the width of the ships"
+extra {"benches"}
+"Rows of benches for workers to sit on, they sure look uncomfortable."
+east to hull_1 descr
+"The hull continues to the east.";
+west to hall_1 descr
+"A hall";
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+end
+
+
+hall_1
+title "A hall in a ship"
+names {"hall"}
+descr 
+"The hall is dreary and dark. You can make out a door in every direction. 
+To the east is the rowing room."
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+east to hull_3 descr
+"The rowing room is east.";
+north to hold_room1 descr
+"You see a room to the north.";
+south to storage_room descr
+"You see a room to the south.";
+west to sleep_room descr
+"You see a room to the west.";
+end
+
+sleep_room
+title "The Sleeping quarters"
+names {"sleeping quarters"}
+descr
+"These quarters are in a bit better replair then the rest of the rooms 
+you have seen thus far on this ship. There are some cloths scattered 
+about the floor, with a pair of oil hip waders  laying haphazardly in the 
+walk way. There are a few hammocks hanging about the room. You can see 
+the hall to the east."
+extra {"hammock"}
+"A plain hammock swings in rythim to the sea."
+extra {"hip waders","waders"}
+"discarded boots."
+extra {"cloths"}
+"A mess on the floor."
+east to hall_1 descr
+"You see the hall to the east.";
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+end
+
+storage_room
+title "Storage Room"
+names {"storage room"}
+descr
+"The storage area is huge. It is stacked from floor to roof in boxes that 
+are being stored in here  in preperation for the ships next trip. You 
+notice some rats scurry making you want to leave."
+extra {"boxs","box"}
+"Plain wooden boxs"
+extra {"rat"}
+"ewww gross!"
+north to hall_1 descr
+"You see the hall to the north.";
+end
+
+hold_room
+title "Dreary Room"
+names {"dreary room"}
+descr
+"You are in a dreary room, it is dark and smells of sweat and unclean 
+bodies. There are mats laying about the floor  and on one of them you see 
+what could be a corpse. This place is obviously where they keep the 
+slaves that man the boats. Judging by what you see here the slaves are 
+kept in just good enough health to man the oars and not more."
+extra {"corpse"}
+"The corpse is stiff and has whip marks over its back."
+extra {"mats"}
+"filthy sleeping mats."
+west to hull_2 descr
+"You see the work rooms to the west.";
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+end
+
+
+
+hold_room1
+title "Dreary Room"
+names {"dreary room"}
+descr
+"You are in a dreary room, it is dark and smells of sweat and unclean 
+bodies. There are mats laying about the floor  and on one of them you see 
+what could be a corpse. This place is obviously where they keep the 
+slaves that man the boats. Judging by what you see here the slaves are 
+kept in just good enough health to man the oars and not more."
+extra {"corpse"}
+"The corpse is stiff and has whip marks over its back."
+extra {"mats"}
+"filthy sleeping mats."
+south to hull_3 descr
+"You see the work rooms to the south.";
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+end
+
+/* --------------------- Pirate Ship ----------------------- */
+                            gal_1
+title "On The Gang Plank"
+names {"gang plank"}
+descr
+"The gang plank itself is nothing more then a thick length of wood with
+raised pieces of wood to provide traction as you walk up it. From here you
+can see inside the ship. The deck is a hardwood with a number of wood
+cabins. Tall masts with ropes leading off in all directions provide a
+maze for the eye. Atop one of the highest masts is a thick woven wicker
+crows nest basket. The deck is to your north or you may go to dock below."
+movement SECT_CITY
+extra {"gang plank"}
+"A long length of wood with raised sections placed step like to provide
+traction when walking on the plank."
+flags {UNIT_FL_NO_MOB}
+extra {"masts","ropes"}
+"The masts are huge and a maze of ropes lead off from them."
+extra {"crows nest","basket"}
+"The crows nest is a large thick wicker basket strong enough to hold a
+large pirate."
+down to dock12 descr
+"You see the dock below you.";
+north to gal_2 descr
+"The deck continues to the north.";
+end
+
+                             gal_2
+title "Deck"
+names {"deck"}
+descr
+"The deck stretches out for a ways. The gaellon is obviously very large.
+Masts rise up to the sky, many of them with foot grips for climbing.
+>From here you can see the docks below. Out to sea you see a white bird
+floating effortlessly in the air, in search of some morsel of food. The
+deck continues to the north, cabins are to the east and west. You notice
+a gang plank leading off the ship to the south and a fair sized hatch
+ in the deck."
+movement SECT_CITY extra {"docks"}
+"People move about the docks in search of a boat selling its catch at a
+low cost."
+extra {"masts"}
+"Masts rise high above your head many of them climbable."
+extra {"bird"}
+"A white bird out scavaging food."
+south to gal_1 descr
+"The gang plank leads off the boat to the south.";
+north to gal_3 descr
+"The deck continues to the north.";
+west to galley descr
+"You see the galley to the west.";
+down to hatch descr
+"You see a hatch in the floor.";
+east to cap_quarters descr
+"You see a cabin to the east.";
+end
+
+cap_quarters
+title "Captains Quarters"
+names {"captains quarters"}
+descr
+"The quarters are neat and tidy, port holes in one wall provide light to
+the room during dayligh hours. There is a bed on a solid frame attached
+to one wall. In fact you notice that everything moveable is attached to
+the ship in some way. The table is secured to the floor and it has a
+slight wooden lip along its edge. An oil lamp hangs from the wall and a
+cedar chest is positioned at the foot of the bed. You may leave the way
+you came in to the west."
+extra {"table"}
+"The table is made from wood and has a slight wooden lip on it so that
+dishes do not slide off during rough weather."
+extra {"oil lamp"}
+"The oil lamp hangs on the wall to provide light at night."
+extra {"bed"}
+"A captains bed with drawers under it."
+extra {"chest"}
+"A beautiful chest obviously taken in some raid."
+movement SECT_CITY
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER}
+ALWAYS_LIGHT
+west to gal_2 descr
+"You see the deck to the west.";
+end
+
+                         gal_3
+title "Deck"
+names {"deck"}
+descr
+"The deck stretches out for a ways. The gaellon is obviously very large.
+Masts rise up to the sky, many of them with foot grips for climbing.
+>From here you can see the docks below. Out to sea you see a white bird
+floating effortlessly in the air, in search of some morsel of food. The
+deck continues to the south. You notice a large mast that looks like it
+may be climbable."
+movement SECT_CITY
+extra {"masts"}
+"Masts rise high above your head many of them climbable."
+extra {"bird"}
+"A white bird out scavaging food"
+south to gal_2 descr
+"The deck continues to the south.";
+
+dilcopy climb@basis("gal_3@xiyang2", 40, 25, CMD_UP);
+up to climb_pole descr
+"You may be able to climb the pole."
+keyword{"mast"};
+end
+
+hatch
+title "In the hatch"
+names {"hatch"}
+descr
+"You are hanging on a ladder between the upper and lower decks of the ship."
+extra {"ladder"}
+"The ladder is metal and attached to the wall."
+up to gal_2 descr
+"You can climb up to the deck above.";
+down to ldeck_1 descr
+"You see the lower deck below.";
+movement SECT_CITY
+end
+
+ldeck_1
+title "Lower Deck"
+names {"lower deck"}
+descr
+"The lower deck is kind of dingy with little natural light getting in and
+stagnant air. There is little here but doors leading off into sleeping
+and living areas. You notice a hatch to the main deck above you."
+up to hatch descr
+"You can climb out through the hatch.";
+west to sleep_area1 descr
+"You see a room to the west.";
+east to live_area descr
+"You see a room to the east.";
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER}
+ALWAYS_LIGHT
+movement SECT_CITY
+end
+
+sleep_area1
+title "cabin"
+names {"cabin"}
+descr
+"The cabin houses a number of men, bunks line the wall, each with a small
+foot locker beside it. Surprisingly enough the room is very neat."
+extra {"bunks","bed"}
+"The bed line the walls and are very neatly kept."
+east to ldeck_1 descr
+"You see the main lower area to the east.";
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+end
+
+live_area
+title "Living Area"
+names {"living area"}
+descr
+"The men spend alot of their time here when at sea. Bottles of rum and
+vodka are scattered around the room. Cards lay discarded on a round table
+indicate that at one time someone was gambling here."
+extra {"bottles"}
+"empty and near empty bottles are scattered around the room."
+extra {"table","cards"}
+"Cards lay discarded on a  table likely a game of porker forgotten in the
+excitement of being ashore."
+west to ldeck_1 descr
+"To the west you see the main lower deck area.";
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER}
+ALWAYS_LIGHT
+movement SECT_CITY
+end
+
+ galley
+title "The Galley"
+names {"galley"}
+descr
+"The galley is very obviously were the men of the ship eat. Large tables
+with wooden rims to prevent plates from sliding off the edge in rough seas
+line the rooms. Portholes provide some light to the room in day time
+hours and oil lamps provide light in night hours."
+extra {"oil lamp"}
+"The lamp are hurricane lamps and very sturdy."
+extra {"table"}
+"The tables are long with wooden rims around them to prevent spills."
+extra {"port holes"}
+"looking out you see the deck of the ship."
+east to gal_2 descr
+"You see the deck to the east.";
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER}
+ALWAYS_LIGHT
+movement SECT_CITY
+end
+
+climb_pole
+title "Climbing The Mast"
+names {"mast"}
+descr
+"You are about half way up a mast. You can see forever across the sea
+from where. A bird is circling you and you hope he does not 'bomb' you.
+You can continue up the mast or slide down to the deck below."
+movement SECT_CITY
+extra {"Masts"}
+"Masts rise high above your head many of them climbable."
+extra {"bird"}
+"A white bird out scavaging food"
+extra {"sea"}
+"The deep blue  of the sea is visible for miles from here."
+
+dilcopy climb@basis("gal_3@xiyang2", 20, 25, CMD_DOWN);
+
+down to gal_3 descr
+"You can see the deck below."
+keyword{"mast"};
+
+
+dilcopy climb@basis("crows_nest@xiyang2", 40, 25, CMD_UP);
+up to crows_nest descr
+"You see the crows nest above you."
+keyword{"mast"};
+ALWAYS_LIGHT
+movement SECT_CITY
+end
+
+crows_nest
+title "In The Crows Nest"
+names {"crows nest"}
+descr
+"You are in a fairly large wicker basket that is sturdy enough to hold
+your weight. Looking around you see birds circling over the deep blue of
+the Sea of Fongyi in search of some scraps of food or a small fish to
+eat. The scull and cross bones flags of the pirate ship fly just above
+your head. To the south you see a great city spread out before you.
+People wandering its streets day and night. You must climb back down the
+mast if you wish to leave."
+ movement SECT_CITY
+extra {"flag"}
+"The flag shows a skull and cross bones."
+extra {"city"}
+"Very busy and crowed you can hear the sounds of it even up here."
+extra {"Masts"}
+"Masts rise high above your head many of them climbable."
+extra {"bird"}
+"A white bird out scavaging food"
+extra {"sea"}
+"The deep blue  of the sea is visible for miles from here."
+dilcopy climb@basis("gal_3@xiyang2", 22, 25, CMD_DOWN);
+
+down to climb_pole descr
+"You should be able to climb back down the pole."
+keyword{"mast"};
+end
+
+
+
+/* --------------------- Tatto center ---------------------- */
+
+                            tat1
+
+names {"tattoo shop", "tatoo shop", "tatto shop", "shop"}
+title "Rainbow Dragon Tattoo"
+
+descr
+"You have entered a room filled with a wide array of colorful drawings
+hanging in big frames on the walls. A constant buzzing fills the air giving
+this place a frantic atmosphere.  As you stand looking at this madness of
+a shop. You suddenly realize that you have entered a new wonderful world
+of colors and images."
+
+
+extra {"draw", "drawings"}
+"The big frames that is hanging on the walls are filled with the most
+beautiful and intriguing motives and patterns. Huge full-body drawings
+of Dragons and Maidens to the little intriguing motive of a little red
+Devil with a trident. Celtic patterns hangs side by side with both small
+and cute rabbits, pink elephants on one side and black gothic inspired
+suns and buildings on the other."
+
+extra {"buzz", "buzzing"}
+"The constant buzz in the air make you look around only to discover that
+the sound comes from the machine presently used to tattoo a battlefield on
+the back of a cityguard."
+movement SECT_INSIDE
+ALWAYS_LIGHT
+south to city_rd37@xiyang descr
+"You see the road to the south";
+
+end
+
+
+/* -------------- >>>  Forbidden Palace  <<< ---------------- */
+gate1
+title "The Meridien Gate"
+names {"meridien gate","gate"}
+descr
+"   You see a massive six-storey high dull-red gatehouse in front of you.
+On the south side of the gatehouse is the emblem of the Huang dynasty,
+the phoenix and dragon entwined and interwoven. Blue and red banners
+are hang down from the side.On top of the of it lies a golden pavilion.
+There is one main entrance, north through the center of the gatehouse,
+and two side entrances on both sides. The main entrance is roughly
+enough for ten men to walk comfortably side by side past and nearly
+five men high. You see a gigantic two foot thick oak door which can
+be closed if so necessary. A round bronze emblem depicting the Huang's
+dragon and phoenix emblem in the center. You can see the spacious palace
+outer courts from here in the north."
+movement SECT_CITY
+south to city_rd3@xiyang  descr
+" South to Heaven's Way";
+north to palace1  descr
+" North to The Palace Outer Courts";
+flags {UNIT_FL_NO_MOB}
+ALWAYS_LIGHT
+end
+
+
+                                palace1
+title "Palace Outer Courts"
+names {"outer courts"}
+descr
+"   The Outer Courts have been paved with dull-grey granite stones spreading
+all around you. In the north and south, you see the Gate of Great Harmony
+and the Meridian Gate respectively. The Outer Courts spread around you paved
+with dull-grey granite stones. The Golden River flows in the north, with an
+impressive arched bridge spanning across it."
+movement SECT_CITY
+north to bridge1  descr
+" North to The Golden River Bridge";
+south to gate1  descr
+" South to The Meridien Gate";
+flags {UNIT_FL_NO_MOB}
+ALWAYS_LIGHT
+end
+
+                                bridge1
+
+title "The Golden River Bridge"
+names {"golden river bridge","bridge"}
+descr
+"   You stand on a white marble bridge. The Golden River flows gently below
+you. You see the Gate of Great Harmony to your north and the Meridian Gate
+in the south."
+movement SECT_CITY
+north to palace2  descr
+" North to The Palace Outer Courts";
+south to palace1  descr
+" South to The Palace Outer Courts";
+flags {UNIT_FL_NO_MOB}
+ALWAYS_LIGHT
+end
+
+
+                                palace2
+title "Palace Outer Courts"
+names {"outer courts"}
+descr
+"   The Outer Courts spread around you paved with dull-grey granite stones.
+You see the a river south, with an impressive arched bridge spanning across
+it. In the north and south, you see the Gate of Great Harmony and the
+Meridian Gate respectively. A river runs from west to east in between."
+movement SECT_CITY
+north to gate2  descr
+" North to The Gate of Great Harmony";
+south to bridge1  descr
+" South to The Golden River Bridge";
+flags {UNIT_FL_NO_MOB}
+ALWAYS_LIGHT
+end
+                                gate2
+title "Gate of Great Harmony"
+names {"harmony gate"}
+descr
+"   You are in the Palace Outer Courts. You notice a small yet old
+building straight ahead.  You see what resembles chared remains
+of the building.  What once was one of the main buildings of the
+city, its now nothing more then dabree.  Due to the danger
+presented, no one is permitted to proceed further.  In fact, a large
+wall has been built to prevent entry."
+movement SECT_CITY
+south to palace2  descr
+" South to The Palace Outer Courts";
+flags {UNIT_FL_NO_MOB}
+ALWAYS_LIGHT
+end
+
+
+
+
+                        grocer
+title "Xiyang Groceries"
+names {"grocer"}
+descr
+" This is the grocery store of the mighty Xiyang Empire.
+  It is here that the empire collects lots of its money by
+selling all the food it has stolen from the farmers."
+movement SECT_CITY
+west to  city_rd2@xiyang descr
+" West to the road.";
+ALWAYS_LIGHT
+end
+
+                pets_old
+title " The Ancient Pet Store"
+names {"pet shop","pets"}
+descr
+" You have entered the oldest pet store you have ever
+seen.  You gaze at the remarkable animals housed here.
+You notice a sign on the wall Pets for Sale:, but the
+rest is to hard to see without further examination."
+extra {"sign"}
+" &l              Pets for Sale:
+
+   Macaw       Rotweiler       Monkey
+   Lizard      Pitbull         Skunk
+   Cat         Budgie          Spider
+   Puppy       Hamster         Pig"
+movement SECT_CITY
+south to city_rd6@xiyang descr
+" South to the street.";
+ALWAYS_LIGHT
+end
+                         med_room
+title" Meditation Room"
+names {"meditation room"}
+descr
+" You have entered an ancient rooms used solely for
+meditation.  You see beautiful scrolls on the walls
+depicting the ancient technique of meditation.  You
+feel like sitting down and trying this."
+extra {"scrolls"}
+" The scrolls have written on them ancient symbols
+you can not make out"
+movement SECT_CITY
+south to city_rd20@xiyang descr
+" south to the road.";
+ALWAYS_LIGHT
+end
+
+                        stone_cut
+title "Stone Cutters, Inc."
+descr
+" You have entered the home of the stone cutter.  You
+realize that he is one of the people responsible for
+designing most of the city you see now.  You notice a
+letter on the floor."
+extra {"letter"}
+" To those who read this,
+
+        I am no longer living here, as many of you
+have never paid me for my services.  I am heading off
+to find better work elsewhere.
+
+                        Stone Cutters, Inc.
+"
+movement SECT_CITY
+north to city_rd48@xiyang descr
+" You see a road to the north.";
+ALWAYS_LIGHT
+end
+                                taylor_shop
+names {"Taylor's General Store","General Store","Store"}
+title "Taylor's General Store"
+descr
+" Your standing in a little shop filled to the limit with all kinds of
+stuff. Here is all from ancient weapons to neat clothing. The shop is
+likely owned by some profit motivated soul, trying to make some money by
+trading everything people are willing to sell. On the wall above the door
+is a sign."
+extra {"sign"}
+" I no longer sell anything thanks to the bloody Bounty Hunters.  They hold
+my child as their slave, and now I have lost my motivation to sell to
+you, so
+please leave me alone or else I will tell the police."
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT,UNIT_FL_NO_MOB}
+movement        SECT_INSIDE
+west    to taylor_ent  descr
+" West to The Entrance to Taylor's";
+ALWAYS_LIGHT
+end
+
+
+
+
+        taylor_ent
+names {"shop_entrance","entrance"}
+title "The Entrance to Taylor's."
+descr " Great pride has been used to decorate this room.  The
+room is decorated with all kind's of neat ornaments, looking like
+ they have been made of a skilled person."
+extra {"ornament"}
+" It looks like it's made out of some kind of metal."
+
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER}
+movement        SECT_INSIDE
+east    to taylor_shop  descr
+" East to the Shop";
+south to city_rd36@xiyang  descr
+" South to Eastern Sunway";
+ALWAYS_LIGHT
+end
+
+/* -------------- >>>  Tinker's <<< ---------------- */
+
+                                comms_shop1
+names {"nof's place"}
+title "Nof's Place"
+descr
+"       You have arrived at Nof's place. It is surprisingly tidy for a
+gnome. There are tools neatly stacked in a shelf beside you. There is a
+sign on a counter here. A large plaque is hung from one of the walls."
+extra {"sign"}
+"
+        If you need help press the bell.
+                                 - Nof  "
+extra {"bell"}
+"There is a small silver bell attached to the counter here."
+extra {"plaque"}
+"
+        This is to thank Nof for her contributions to the Dynasty.
+
+                                                (Huang's Seal) "
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+ALWAYS_LIGHT
+south to city_rd45@xiyang  descr
+" South to Cresent";
+north to comms_shop2 descr
+"You see a hidden panel in the wall."
+         open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+         keyword {"panel","wall","door"};
+         SECRET_DOOR_DIFFICULTY(NORTH,50)
+end
+                                comms_shop2
+names {"nof's workplace","workplace"}
+title "Nof's workplace"
+descr
+"You realize you have discovered the secret place of where Nof works."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+ALWAYS_LIGHT
+south to comms_shop1 descr
+"You see the front of the shop.";
+end
+
+
+
+
+
+
+ %mobiles
+
+                           slaver_1
+
+names {"sailor","slaver"}
+title "the Slaver"
+descr "The slaver is here beating slaves."
+extra {}
+"The slaver is a mean looking fat man, obviously he has spent more of his 
+life sitting on his butt, beating others into doing work then he has 
+actually doing any himself."
+ M_HUMAN_WARRIOR_SWORD(61, SEX_MALE) 
+end
+
+
+                           slave_1
+
+names {"slave"}
+title "a Slave"
+descr "A slave is here maning the oars."
+extra {}
+"The slave is here maning the oars to this huge boat, he is very dirty 
+and smelly, you really dont want to get too close." 
+M_HUMAN_WARRIOR_SWORD(55, SEX_MALE) 
+end
+
+
+
+
+                           sailor_1
+
+names {"sailor"}
+title "the Sailor"
+descr "The sailor is here singing happily."
+extra {}
+"The sailor is obviously very happy almost dancing a little job as he
+walks. You begin to wonder if some of his good mood came from a bottle."
+M_HUMAN_WARRIOR_SWORD(59, SEX_MALE)
+special SFUN_RANDOM_ZONE_MOVE time 300 bits SFB_RANTIME
+end
+
+
+
+                           sailor_2
+
+names {"sailor","pirate"}
+title "a Mean Pirate"
+descr "A mean pirate is standing here"
+extra {}
+"The pirate looks like a mean cuss, with a patch over one eye and a red
+bandana around his head."
+M_HUMAN_WARRIOR_SWORD(61, SEX_MALE)
+special SFUN_RANDOM_ZONE_MOVE time 300 bits SFB_RANTIME
+end
+
+
+                           sailor_3
+
+names {"captain","sailor","pirate"}
+title  "Captain Leary"
+descr "The captain is standing here"
+extra {}
+"The pirate looks like a mean cuss, with a patch over one eye and a red
+bandana around his head."
+M_HUMAN_WARRIOR_SWORD(63, SEX_MALE)
+special SFUN_RANDOM_ZONE_MOVE time 300 bits SFB_RANTIME
+end
+
+                           sailor_4
+
+names {"sailor","pirate"}
+title "a Mean Sailor"
+descr "A mean sailor is standing here"
+extra {}
+"The sailor looks like a mean cuss, he would probably sell his own mother."
+M_HUMAN_WARRIOR_SWORD(61, SEX_MALE)
+end
+
+parrot
+title "a Parrot"
+names {"parrot"}
+descr
+"A multi colored parrot is standing here."
+extra {}
+"The parrot is many different colors."
+M_OWL(SEX_MALE)
+level 50
+dilcopy echo_pet@hobgob();
+special SFUN_RANDOM_ZONE_MOVE time 300 bits SFB_RANTIME
+end
+
+                                lunis
+names   {"lunis","shopkeeper","grocer"}
+title   "Lunis"
+descr   "Lunis the grocer is eagerly waiting to trade with you."
+extra   {}
+"Lunis like others came here to find his fortune."
+M_SHOP_KEEPER(55,SEX_MALE,RACE_HUMAN)
+money   2 GOLD_PIECE
+special SFUN_COMBAT_MAGIC "cast colourspray"
+special SFUN_SHOP_INIT
+"&lProfit sell = 130
+Profit buy = 60
+Production = ~turkey_dstick@midgaard~ ~water_melon@midgaard~
+~garlic@midgaard~ ~apple@midgaard~
+Trade types = "+ITEM_DRINKCON+"
+Msg1 = ~$1n says, 'I'm afraid I dont have it at the moment.'~
+Msg2 = ~$1n says, 'You fool $3n, you don't even have it !!'~
+Msg3 = ~$1n says, '$2n it's about the only thing I dont trade with.'~
+Msg4 = ~$1n says, 'I don't want $2n in my shop!!'~
+Msg5 = ~$1n says, 'I give no credit $3n, get out of my shop!!'~
+Msg6 = ~$1n says, '%s is a bargain for $2n.'~
+Msg7 = ~$1n says, 'Here are %s for your lousy $2n, $3n, now get out before I chang my mind'~
+Hours1 = 4 12
+Hours2 = 13 23"
+
+end
+
+
+
+
+pet_keeper
+title "Tilis"
+names {"shopkeeper","tilis"}
+descr "Tilis the shopkeeper is standing here"
+extra {}
+"Tilis is a small man in stature with a kind face, but
+looks like he could be quite challenging in a fight"
+M_ELF_WARRIOR_POLE(53, SEX_MALE)
+alignment 0
+money 2 SILVER_PIECE
+special SFUN_SHOP_INIT
+"&lProfit sell = 110
+Profit buy = 10
+Production = ~cat_home@hobgob~ ~puppy_cage@hobgob~ ~rot_cage@hobgob~
+~pbull_cage@hobgob~ ~budgie_cage@hobgob~ ~macaw_cage@hobgob~
+~pig_crate@hobgob~ ~monkey_cage@hobgob~ ~skunk_cage@hobgob~
+~hamster_cage@hobgob~ ~lizard_cage@hobgob~ ~spider_cage@hobgob~
+
+Trade types = "+ITEM_OTHER+" Msg1 = ~$1n says, 'I've got no such item.'~
+Msg2 = ~$1n says, 'Why you haven't got it, $3n?'~
+Msg3 = ~$1n says, 'Would you like to buy something or not?'~
+Msg4= ~$1n says, 'I wont buy that!'~
+Msg5 = ~$1n says, 'This item $2n is too expensive for beggars like you,$3n.'~
+Msg6 = ~$1n says, 'That's %s for $2n.'~
+Msg7 = ~$1n says, 'That will be %s for your $2n.'~
+Hours1 = 4 12
+Hours2 = 13 23"
+end
+
+
+
+
+                           irezumi
+
+names {"irezumi", "master"}
+title "Irezumi"
+descr "Irezumi, the enlighted, is standing here."
+extra {}
+"You look at a man way past his prime age and he has his grey hair to prove
+it. His hand still stable as a rock holds a machine of odd construction
+it emits a buzzing that makes it seem as a living thing."
+M_HUMAN_WARRIOR_SWORD(53, SEX_MALE)
+end
+                        george
+names {"george", "player"}
+title "George"
+descr "George, the player, is here."
+extra {}
+"George was a protege as a youth.  He took organ lessons since he was five years
+ old through the end of his high school years.  At his prime he was rated one
+ of the best jazz organ players in the world.  After burning his fingers while
+ doing angel dust one day, George's abilities began to diminish. Hence, he now
+ plays here."
+money 6 SILVER_PIECE, 5 COPPER_PIECE
+M_HUMAN_WARRIOR_SWORD(53, SEX_MALE)
+alignment 400
+
+end
+
+                        father_andrew
+names {"father andrew", "father", "andrew"}
+title "Father Andrew"
+descr "Father Andrew, awaiting your wedding day, is here."
+extra {}
+"Father Andrew is a slim tall man.  A smile of wisdom and divinity stretches
+ across his face.  He is one of the most respected holy men in the world.  You
+ are lucky to have him here to wed you to your spouse. just say 'marry us'"
+M_HUMAN_WARRIOR_SWORD(70, SEX_MALE)
+alignment 1000
+dilbegin marriage();
+var
+  pcname : string;
+  item: unitptr;
+  i: integer;
+  groom : unitptr;
+  bride :unitptr;
+	exdp:extraptr;
+code
+{
+:init:
+heartbeat := PULSE_SEC*9;
+
+/*-----------------------Marriage Dil------------------------*/
+
+:start:
+wait(SFB_CMD, (activator.type == UNIT_ST_PC) and   (command("say"))
+and ("marry us" in argument));
+   pause;
+   exec("say Do you have the marriage license? If so may I please have "+
+"it",self);
+			 i:=0;
+:waitgive:
+i:=i+1;
+  wait(SFB_DONE, activator.type==UNIT_ST_PC);
+  if ((command(CMD_GIVE))	and ("marriage paper" in self.inside.name))
+	{
+    destroy(self.inside);
+		goto marry;
+		}
+  else if (command(CMD_SHAKE))
+     goto nopaper;
+  else
+  {
+   exec("say Do you have the marriage license? If so may I please have "+
+"it,  otherwise shake your head no.",self);
+if (i<=5)
+	 goto waitgive;
+	 else
+	 goto nopaper;
+  }
+
+:marry:
+    exec("say thank you we may now proceed.",self);
+    pause;
+/*-------------------------Who Are You?----------------------------*/
+    exec("say Very well Will the groom please state his name.", self);
+    wait(SFB_CMD, command(CMD_SAY));
+    pcname := argument;
+    groom := findunit(activator,argument, FIND_UNIT_SURRO,null);
+    if (groom  == null)
+      {
+       exec("say I see no " +pcname+ " here!" , self);
+       goto start;
+			 }
+    secure(groom,losthim);
+    pause;
+    exec("say Will the bride please state her name.", self);
+
+    wait(SFB_CMD, command(CMD_SAY));
+    pcname := argument;
+    bride := findunit(activator,argument, FIND_UNIT_SURRO,null);
+    if (bride  == null)
+     {
+      exec("say I see no " + pcname+ " here!" , self);
+      goto start;
+     }
+     secure(bride,losther);
+
+:check0:
+if (not(MARRIED_MAN in groom.quests) and not(MARRIED_WOMAN in bride.quests))
+     {
+     goto check;
+     }
+else
+     {
+     pause;
+     exec("say This church frowns on polygamy!",self);
+     goto start;
+     }
+
+/*-------------Are You The Right Gender? No? Lets Fix That!-----------*/
+
+:check:
+if ((bride.sex == SEX_FEMALE) and (groom.sex == SEX_MALE))
+{
+  pause;
+  heartbeat := PULSE_SEC*15;
+  exec("say very well I will marry " +groom.name+ " and " + bride.name+ "
+  this day let "+ "us proceed.", self);
+  pause;
+  exec("say According to the laws of the land and the laws of the gods We "+
+" are gathered here today to join this couple in holy matrimony. ", self);
+  pause;
+  exec("say Ok do you " +groom.name+ " take " +bride.name+ " to be your "+
+" lawful wedded wife? Do you promise to love her, obey her and heal her "+
+" in sickness and in health, for richer and poorer "+
+" till death do you part <then corpse retrieval to the farthest reaches "+
+" of the world?> ", self);
+ 
+ :waith:
+  wait(SFB_CMD,activator #= groom);
+
+   if ( not(command(CMD_SHAKE)) and not(command(CMD_NOD  )) )
+    {
+    pause;
+    exec("say Please NOD or SHAKE", self);
+    goto waith;
+    }
+   if (command(CMD_SHAKE))
+     {
+     goto bum;
+     }
+   else if (command(CMD_NOD))
+    {
+    pause;
+    exec("say and do you " +bride.name+ " take " +groom.name+ " to be your "+
+   " lawful wedded husband? Do you promise to love him, obey him and "+
+   " heal him in sickness and in health, for richer and poorer "+
+   " till death do you part <then corpse retrieval to the farthest "+  
+   " reaches of Valhalla>? ", self);
+
+    :waitt:
+
+    wait(SFB_CMD, activator #= bride);
+    if ( not(command(CMD_SHAKE)) and not(command(CMD_NOD  )) )
+      {
+       pause;
+       exec("say Please NOD or SHAKE", self);
+       goto waitt;
+      }
+
+    if (command(CMD_SHAKE))
+     {
+      goto bum;
+     }
+    else if (command(CMD_NOD))
+     {
+      pause;
+      exec("say let us pray", self);
+      pause;  
+      exec("say I call apon the great gods of Valhalla to bless this "+
+      " couple in all that they do. I beg of the gods to honour this " +
+      " newly wed couple with long lives and few deaths.",self);
+      pause;  
+      exec("say Place your wedding rings on your fingers.", self);
+      item := load("ring@xiyang2");
+      item.height := groom.height;
+      link(item, groom);
+      act("The groom receives his ring",A_SOMEONE,self,null,null,TO_ALL);
+      item := load("ring@xiyang2");
+      item.height := bride.height;
+      link(item, bride);
+      act("The bride receives her ring",A_SOMEONE, self, null, null, TO_ALL);
+      pause;
+      exec("say By the power vested in my by the Huang Dynasty and "+
+     " the power of the gods  I now pronounce you husband and wife", self);
+      pause;
+      exec("say You may now kiss the bride",self);
+      exec("shout I wish to proclaim the marriage of " +groom.name+ " and
+      " +bride.name+ " ALL HAIL!",self);
+      pause;
+      addextra(groom.quests, {MARRIED_MAN}, "");
+      addextra(bride.quests, {MARRIED_WOMAN}, "");
+      unsecure(groom);
+      unsecure(bride);
+      goto start;
+     }
+   }
+}
+else
+{
+  if (groom.sex != SEX_MALE)
+    {
+     groom.sex := SEX_MALE;
+     act("You leggings feel a bit tighter", A_SOMEONE, self, null, null,
+TO_ALL);
+    goto check;
+    }
+    if (bride.sex != SEX_FEMALE)
+    {
+     bride.sex := SEX_FEMALE;
+     act("SNIP SNIP",A_SOMEONE, self, null, null, TO_ALL);
+     pause;
+     goto check;
+     }
+}
+:bum:
+    exec("say stupid jerk to play with some one affections so carelessly. "+
+    "I think a visit to tiamat is in order!", self);
+     unsecure(groom);
+     unsecure(bride);
+     goto start;
+ :losther:
+pause;
+   exec("say Well the nerve! Little Hussy",self);
+   goto start;
+
+:losthim:
+  pause;
+  exec("say Well can you believe him walking out on his bride???",self);
+  goto start;
+
+:nopaper:
+    exec("say You need to have a marriage license to marry please go see "+
+    "the gift shop.",self);
+    pause;
+    goto start;
+}
+dilend
+end
+
+
+
+                  mayor
+
+title "Mayor Shino"
+names {"justice of the peace","mayor shino","mayor","shino"}
+descr "Mayor Shino is standing here."
+extra {}
+"Wanting everyone to be happy the mayor is willing to grant divorces to
+those that require. Just say 'I want a divorce' and he will help you out."
+M_HUMAN_WARRIOR_SWORD(65, SEX_MALE)
+dilcopy marriage@xiyang2();
+
+
+dilbegin divorce ();
+var
+        pc : unitptr;
+        item : unitptr;
+        list : extraptr;
+code
+{
+
+:init:
+heartbeat := PULSE_SEC*5;
+
+
+:start:
+wait(SFB_CMD, (activator.type == UNIT_ST_PC) and   (command("say"))
+and ("want a divorce" in argument));
+   pause;
+   exec("say You have the divorce papers? If so may I please have "+
+   "them",self);
+   pause;
+   :waitgive:
+     wait(SFB_CMD, command(CMD_GIVE));
+   pc := activator;
+   secure(pc,losthim);
+
+    pause;
+     if ("divorce certificate" in self.inside.name)
+   {
+
+   destroy(self.inside);
+
+                exec ("say Thank you, We may now continue. It is "+
+"obviously you intention to become free to marry again. Do not take "+
+"such a step lightly for it may be one you regret for a long time.",self);
+        pause;
+        exec("say I grant you a divorce at this time.", self);
+        pause;
+        addextra(pc.quests, {DIVORCED}, "");
+        subextra(pc.quests, MARRIED_MAN);
+        subextra(pc.quests, MARRIED_WOMAN);
+        pause;
+        exec("say You are now free to marry again please choose "+
+        "better the next time you decide to marry.",self);
+        pause;
+        unsecure(pc);
+        pause;
+        goto start;
+   }
+
+               else
+   {
+                exec("say I am sorry "+pc.name +" I can not grant you a "+
+"divorce with out the correct paper word.", self);
+                exec("say Go to the license off and obtain the papers "+
+"there. And thank you for the nice gift.", self);
+                goto start;
+    }
+
+
+:losthim:
+exec ("shrug", self);
+exec ("say Good another marriage saved", self);
+unsecure(pc);
+pause;
+goto start;
+
+
+}
+dilend
+
+end
+
+%objects
+
+patch
+title "an Eye Patch"
+names {"eye patch","patch"}
+descr "An eye patch is laying here."
+extra {}
+"It is an eye patch like a pirate would wear."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+ARMOUR_CLOTHES(0,0)
+end
+
+whip
+title "a cat-o-nine tails"
+names {"cat-o-nine tails","whip"}
+descr "A whip is laying here"
+extra {}
+"The cat-o-nine tails is a large whip with 9 ends on it."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_WHIP, 0,0 )
+weight 5
+cost 100 COPPER_PIECE
+end
+
+oar
+title "a Large Oar"
+names {"oar"}
+descr "An oar is laying here"
+extra {}
+"The oar is a long piece of wood used to move a ship"
+WEAPON_DEF(WPN_CLUB, 0,0 )
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+end
+
+rice
+names {"rice"}
+title "white rice"
+descr "Some grains of white rice are laying here."
+extra {}
+"Plain white rice. Maybe you can 'throw rice at someone'"
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+FOOD_DEF(3, 0)
+cost 3 SILVER_PIECE
+dilcopy blowaway@udgaard("Birds swoop down and quickly eat then rice then fly away.");
+
+
+dilbegin rice();
+var
+    wordlist     : stringlist;
+    a            : unitptr;
+    enemy        : unitptr;
+    i            : integer;
+
+code
+{
+  :start:
+	unsecure (a);
+	unsecure ( enemy);
+  heartbeat := PULSE_SEC * 10;
+  wait(SFB_CMD, command("throw") and (self.equip == WEAR_HOLD));
+  block;
+  a := activator;
+	secure (a,losta);
+  wordlist := getwords(argument);
+  if ((wordlist.[0] == "rice") or
+  (wordlist.[0] == "white rice"))
+  {
+     enemy := findunit(a,wordlist.[2],FIND_UNIT_SURRO,null);
+     if (enemy == null) {
+        act("I see no " + wordlist.[2] + " here!",
+             A_SOMEONE, a, null, null, TO_CHAR);
+        goto start;
+     }
+
+secure (enemy,lostenemy);
+   i:= rnd(1,100);
+  if ( i < 50 )
+    {
+act("You neatly launch the $2n into the air and it lands righ on " +
+         "$3n.", A_SOMEONE, a, self, enemy, TO_CHAR);
+     act("$1n neatly launches a $2n that lands right on " +
+         "$3n ." ,A_SOMEONE, a, self, enemy, TO_REST);
+       link(self, enemy);
+        goto start;
+     }
+
+
+
+if ( i < 100 )
+{
+    act("You neatly launch the $2n in a arc towards $3n "+
+      " but it goes wild and lands on the ground.",  
+       A_SOMEONE, a,self, enemy, TO_CHAR);
+   act("$1n neatly launches the $2n in a arc towards $3n "+ 
+" but it goes wild and lands on the ground." ,
+    A_SOMEONE, a, self, enemy, TO_REST); 
+block;
+link(self, self.outside.outside);
+goto start;
+}
+}
+
+:fail:
+pause;
+goto start;
+
+:losta:
+pause;
+goto start;
+
+:lostenemy:
+pause;
+goto start;
+}
+dilend
+end
+
+
+
+
+
+                                garter_belt
+names {"lace garter belt", "garter belt","lace","belt"}
+title "a Black and Red Lace Garter Belt"
+descr "Mistakenly  a lace garter belt lies here on the ground."
+extra {}
+"This garter belt was fashioned with the loving hands of Welsia the elven 
+seamstress. It is made from the finest black lace with silky red bows 
+around it. (dont forget to 'throw belt' after the wedding.)" 
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS, MANIPULATE_HOLD} 
+weight 2
+type ITEM_WORN
+cost 3 GOLD_PIECE
+MATERIAL_CLOTH("Ornate Lace")
+dilcopy wedthrow@xiyang2();
+
+end
+
+
+                             red_bouquet
+names {"bridal bouquet", "bouquet","flowers","roses"}
+title "a bridal bouquet of red roses"
+descr "A bridal bouquet of red roses has been left here."
+extra {} "The bouquet has been made from 3 dozen of the most
+perfect red rose buds nestled amongst spended green ferns and
+tiny baby's breath. (dont forget to 'throw flowers' after the wedding.) "
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+type ITEM_OTHER
+weight 1
+cost 2 GOLD_PIECE
+MATERIAL_ORGANIC("Well Red Roses I would assume!")
+dilcopy wedthrow@xiyang2();
+end
+                             white_bouquet
+names {"bridal bouquet","bouquet","flowers","roses"}
+title "a bridal bouquet of white roses"
+descr "A bridal bouquet of white roses has been left here."
+extra {} "The bouquet has been made from 3 dozen of the most
+perfect white rose buds nestled amongst spended green ferns and
+tiny baby's breath. (dont forget to 'throw flowers' after the wedding.)"
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+type ITEM_OTHER
+weight 1
+cost 2 GOLD_PIECE
+MATERIAL_ORGANIC("Well White Roses I would assume!")
+dilcopy wedthrow@xiyang2();
+end
+
+
+
+
+
+
+water_fountain
+names {"fountain", "water"}
+title "a fountain"
+descr "A fountain is softly trickling here."
+extra {}
+"It looks very clean and quite tastey."
+LIQ_DEF (LIQ_WATER, 20000, 20000, 20000, 0)
+MATERIAL_STONE("Ornately carved stone")
+end
+
+ring
+title "a Wedding Ring Of Pure Gold"
+names {"wedding ring","ring"}
+descr "A gold ring is laying here"
+extra {}
+"The ring is  made from pure gold"
+MATERIAL_METAL("Golden Ring")
+rent 50 COPPER_PIECE
+type ITEM_TREASURE
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FINGER, MANIPULATE_HOLD}
+end
+
+
+
+long_sword
+names {"sword", "long sword"}
+title "a Long Sword"
+descr "A long sword has been left here"
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_LONG_SWORD, 0, 0)
+MATERIAL_METAL("A long shiny steel blade")
+weight 8
+cost 1 SILVER_PIECE
+end
+
+
+
+                        white_collar
+names {"white collar", "collar"}
+title "a holy white collar"
+descr "A holy white collar lies here."
+extra {}
+"This purse white collar is made for the holy men across the world."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_NECK}
+extra {"$improved identify"}
+"When worn the white collar will add 3 to BRA and 2 to DIV."
+MATERIAL_CLOTH("stiff cloth collor")
+weight 1
+cost 3 GOLD_PIECE, 7 SILVER_PIECE, 2 COPPER_PIECE
+dilcopy level_restrict@function (50,0,0,"");
+dilcopy ali_restrict@function (1000,350,0,0,"");
+ 
+end
+
+
+%reset
+#define GENRAL_ARM \
+        equip bracers@xiyang position WEAR_ARMS    \
+        equip bplate@xiyang position WEAR_BODY \
+        equip helmet@xiyang position WEAR_HEAD  \
+        equip gloves@xiyang position WEAR_HANDS  \
+        equip boots@xiyang position WEAR_FEET \
+        equip leggings@xiyang position WEAR_LEGS    \
+
+load water_fountain into dock_enter
+load sailor_4 into fdeck zonemax 2
+{
+equip parang@xiyang position WEAR_WIELD
+equip linnen_trousers@xiyang position WEAR_LEGS
+equip linnen_shirt@xiyang position WEAR_BODY
+equip tonfa@xiyang position WEAR_SHIELD
+}
+load sailor_4 into adeck zonemax 2
+{
+equip parang@xiyang position WEAR_WIELD
+equip linnen_trousers@xiyang position WEAR_LEGS
+equip linnen_shirt@xiyang position WEAR_BODY
+equip tonfa@xiyang position WEAR_SHIELD
+}
+
+
+load slaver_1 into hull_1 zonemax 2
+{
+GENRAL_ARM
+equip whip position WEAR_WIELD
+}
+load slaver_1 into hull_3 zonemax 3
+{
+GENRAL_ARM
+equip whip position WEAR_WIELD
+}
+load slave_1 into hull_1 zonemax 6
+{
+equip oar position WEAR_WIELD
+equip dirty_trousers@xiyang position WEAR_LEGS
+equip dirty_shirt@xiyang position WEAR_BODY
+
+}
+load slave_1 into hull_1 zonemax 6
+{
+equip oar position WEAR_WIELD
+equip dirty_trousers@xiyang position WEAR_LEGS
+equip dirty_shirt@xiyang position WEAR_BODY
+}
+load slave_1 into hull_1 zonemax 6 
+{
+equip oar position WEAR_WIELD
+equip dirty_trousers@xiyang position WEAR_LEGS
+equip dirty_shirt@xiyang position WEAR_BODY
+}
+
+load slave_1 into hull_1 zonemax 6
+{
+equip oar position WEAR_WIELD
+equip dirty_trousers@xiyang position WEAR_LEGS
+equip dirty_shirt@xiyang position WEAR_BODY
+}
+
+load slave_1 into hull_1 zonemax 6
+{
+equip oar position WEAR_WIELD
+equip dirty_trousers@xiyang position WEAR_LEGS
+equip dirty_shirt@xiyang position WEAR_BODY
+}
+
+load slave_1 into hull_1 zonemax 6
+{
+equip oar position WEAR_WIELD
+equip dirty_trousers@xiyang position WEAR_LEGS
+equip dirty_shirt@xiyang position WEAR_BODY
+}
+
+load mayor into mayor_off@xiyang
+{
+equip  shoes@xiyang position WEAR_FEET
+equip  silk_kimono@xiyang position WEAR_ABOUT
+equip silk_sash@xiyang position WEAR_WAIST
+equip simperial_br1@xiyang position WEAR_ARMS
+equip  sai@xiyang position WEAR_SHIELD
+equip katana@xiyang position WEAR_WIELD
+}
+
+load sailor_1 into dock2 zonemax 4
+{
+equip parang@xiyang position WEAR_WIELD
+equip linnen_trousers@xiyang position WEAR_LEGS
+equip linnen_shirt@xiyang position WEAR_BODY
+equip tonfa@xiyang position WEAR_SHIELD
+}
+load sailor_1 into dock12 zonemax 4
+{
+equip parang@xiyang position WEAR_WIELD
+equip linnen_trousers@xiyang position WEAR_LEGS
+equip linnen_shirt@xiyang position WEAR_BODY
+equip tonfa@xiyang position WEAR_SHIELD
+}
+
+load sailor_1 into dock5 zonemax 4
+{
+equip parang@xiyang position WEAR_WIELD
+equip linnen_trousers@xiyang position WEAR_LEGS
+equip linnen_shirt@xiyang position WEAR_BODY
+equip tonfa@xiyang position WEAR_SHIELD
+}
+
+load sailor_1 into dock8 zonemax 4
+{
+equip parang@xiyang position WEAR_WIELD
+equip linnen_trousers@xiyang position WEAR_LEGS
+equip linnen_shirt@xiyang position WEAR_BODY
+equip tonfa@xiyang position WEAR_SHIELD
+}
+
+
+load sailor_2 into gal_2 zonemax 4
+{
+equip parang@xiyang position WEAR_WIELD
+equip linnen_trousers@xiyang position WEAR_LEGS
+equip linnen_shirt@xiyang position WEAR_BODY
+equip tonfa@xiyang position WEAR_SHIELD
+equip patch position WEAR_HEAD
+}
+
+
+load sailor_2 into sleep_area1 zonemax 4
+{
+equip parang@xiyang position WEAR_WIELD
+equip linnen_trousers@xiyang position WEAR_LEGS
+equip linnen_shirt@xiyang position WEAR_BODY
+equip tonfa@xiyang position WEAR_SHIELD
+equip patch position WEAR_HEAD
+}
+
+
+load sailor_2 into gal_3 zonemax 4
+{
+equip parang@xiyang position WEAR_WIELD
+equip linnen_trousers@xiyang position WEAR_LEGS
+equip linnen_shirt@xiyang position WEAR_BODY
+equip tonfa@xiyang position WEAR_SHIELD
+equip patch position WEAR_HEAD
+}
+
+load parrot into live_area zonemax 1
+
+load sailor_2 into crows_nest zonemax 4
+{
+equip parang@xiyang position WEAR_WIELD
+equip linnen_trousers@xiyang position WEAR_LEGS
+equip linnen_shirt@xiyang position WEAR_BODY
+equip tonfa@xiyang position WEAR_SHIELD
+equip patch position WEAR_HEAD
+}
+
+
+load sailor_3 into galley zonemax 1
+{
+equip nodachi@xiyang position WEAR_WIELD
+GENRAL_ARM
+}
+
+load nof@xiyang into comms_shop1 max 1
+{
+equip wakizashi@xiyang position WEAR_WIELD
+equip kimono@xiyang position WEAR_ABOUT
+equip  sash@xiyang position WEAR_WAIST
+equip sandals@xiyang position WEAR_FEET
+}
+
+door comms_shop1 NORTH {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+
+load lunis into grocer zonemax 1
+{
+equip long_sword position WEAR_WIELD
+load apple@midgaard
+load garlic@midgaard
+load turkey_dstick@midgaard
+load water_melon@midgaard
+}
+
+load pet_keeper into pets_old
+  {
+        load cat_home@hobgob
+        load puppy_cage@hobgob
+        load rot_cage@hobgob
+        load pbull_cage@hobgob
+        load budgie_cage@hobgob
+        load macaw_cage@hobgob
+        load pig_crate@hobgob
+        load monkey_cage@hobgob
+        load skunk_cage@hobgob
+        load hamster_cage@hobgob
+        load lizard_cage@hobgob
+        load spider_cage@hobgob
+        }
+
+
+load irezumi into tat1 max 1
+{
+equip long_sword position WEAR_WIELD
+}
+
+load george into chapel
+{
+equip plain_robes@xiyang position WEAR_WIELD
+}
+load father_andrew into chapel
+{
+equip white_collar position WEAR_NECK_1
+equip  priest_staff@xiyang position WEAR_WIELD
+equip priest_robes@xiyang position WEAR_ABOUT
+}
+
+%end
+

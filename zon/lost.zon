@@ -1,0 +1,3833 @@
+/*
+filename    lost
+password    canibal
+changedby   Papi
+EmailAdd    <>
+request     compile
+version     11
+END HEADER*/
+
+#include <composed.h>
+%zone lostlands
+title "Lost Lands"
+
+lifespan 20
+reset RESET_ANYHOW
+creators {"cabal"}
+notes
+"
+Created by Cabal: Previous to his departure
+Updated: January 1996 by Isildur - added dil to Ptha and
+Quetzal, in effect making the quest work."
+
+
+%rooms
+/*---------------------- JUNGLE RIVER --------------------*/
+
+			landslide
+names {"landslide"}
+title "A recent landslide"
+descr
+"     The steep slope of the mountain side has been recently cleared by a
+landslide. You gasp as you survey the huge valley that has opened up to the
+south. A small river runs across the valley through the teeming jungle, part
+of which has been squashed by the landslide. Fires to the southwest send
+columns of smoke into the air, and a stone pyramid breaks through the jungle
+canopy to the south east on the other side of the river."
+movement SECT_MOUNTAIN
+north to mnt_pass@ratswarf;
+south to sqsh_jungle;
+end
+
+			sqsh_jungle
+names {"squashed jungle", "jungle"}
+title "A squashed jungle"
+descr
+"     This area of  jungle has been crushed by tons of rock crashing down
+from the mountain to the north. An occasional frond of a squashed plant comes
+jutting up between the boulders. A path leads into the jungle to the south.
+Someone has recently planted a sign here among the rocks."
+movement SECT_MOUNTAIN
+north to landslide;
+south to jungle1;
+extra {"sign"}
+"                        CITIZENS OF THE KINGDOM
+Greetings from King Welmar. Due to the increasing number of citizens choosing
+to adventure in these strange lost lands, the King has established an embassy
+outside the native village. If you encounter any problems beyond the
+embassy's province, contact Cabal the Zombie (who seems to know more about
+this place than anyone).  Good travels.
+"
+end
+
+			jungle1
+names {"jungle trail"}
+title "A jungle trail"
+descr
+"     You are on the edge of a dark jungle on a narrow new trail. To the
+north, the jungle has been squashed by a recent landslide. The path continues,
+through thick vegetation, to the east."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+north to sqsh_jungle;
+east to jungle2;
+end
+
+			jungle2
+names {"jungle fork"}
+title "A fork in the jungle."
+descr
+"     Long vines hang down from the high trees here where a new path through
+the jungle is intersected by an animal trail leading north.  You can hear the
+sound of the jungle river nearby."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+west to jungle1;
+east to river_edge;
+north to jungle3;
+end
+
+			jungle3
+names {"animal trail"}
+title "An animal trail through the jungle."
+descr
+"     You are on a narrow animal trail through the deep jungle. To the south,
+the trail opens into a larger path, while to the east it crosses over a
+stagnant pool. The plants are thick, and the ground is twisted with their
+roots."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+south to jungle2;
+east to disease_p;
+end
+			jungle4
+names {"animal trail"}
+title "An animal trail through the jungle."
+descr
+"     The faint animal trail continues to wind through the dense jungle
+foliage. To the west, it crosses by a pool of stagnant water, while to
+the south it seems to end in a cluster of trees. It appears lighter to
+the south."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+south to monkey_nest;
+west to disease_p;
+east to kali_gard;
+SECRET_DOOR_DIFFICULTY (EAST, 40)
+end
+
+			disease_p
+names {"stagnant pool", "pool"}
+title "A stagnant pool"
+descr
+"     The animal trail, running fairly straight east and east through the
+jungle, comes along the edge of a large stagnant pool. The water stands only
+three inches deep, but fills the impressions between the strong roots of the
+jungle trees. It doesn't look like it is going to drain anytime soon.."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+west to jungle3;
+east to jungle4;
+end
+			monkey_nest
+names {"monkey nest", "nest"}
+title "A monkey nest in the jungle"
+descr
+"     You have stumbled into a monkey nest at the base of a group of tall
+jungle trees. Many small monkeys scatter into the trees screaming alarm. The
+foliage is too thick in this part of the jungle to move through, although a
+small animal trail leads away to the north. It looks like you could climb up
+one of the jungle trees here."
+movement SECT_SWAMP
+OUT_DARK_NON_NOON
+north to jungle4;
+up to up_monkeynest;
+end
+
+			river_edge
+names {"river edge", "edge"}
+title "Edge of a Jungle River"
+descr
+"     The trail ends suddenly at the muddy banks of a slow moving stagnant
+river through the jungle. You can see across the river to the southern shore,
+but can tell that river is too deep to cross on foot.  A path disappears into
+the thick underbrush to the west."
+movement SECT_SWAMP
+west to jungle2;
+south to river1;
+end
+
+			river1
+names {"jungle river"}
+title "A river through the thick jungle."
+descr
+"     You are on a languid, stagnant river through the thick jungle. A little
+more light reaches you here, breaking through the thinner canopy hanging over
+the river. To the north you see where a trail intersects the river. The river
+flows from the west to the east."
+movement SECT_WATER_SAIL
+special SFUN_FORCE_MOVE
+"lostlands/river2!The river's currents pull you down stream." time WAIT_SEC*120 bits SFB_RANTIME
+north to river_edge;
+east to river2;
+west to river7;
+end
+			river2
+names {"jungle river"}
+title "A river through the thick jungle."
+descr
+"     The river continues to flow east through the thick jungle. The stagnant
+water is becoming cleaner add the constant rainfall from the forest canopy
+mixes in."
+movement SECT_WATER_SAIL
+special SFUN_FORCE_MOVE
+"lostlands/river3!The river's currents pull you down stream." time WAIT_SEC*90 bits SFB_RANTIME
+east to river3;
+west to river1;
+end
+
+			river3
+names {"jungle river"}
+title "A river through the thick jungle."
+descr
+"     The canopy of trees is starting to close in again, forming almost a
+tunnel of jungle life with the river running through it. To the east, the
+river takes a sharp bend north."
+movement SECT_WATER_SAIL
+special SFUN_FORCE_MOVE
+"lostlands/river4!The river's currents pull you down stream." time WAIT_SEC*90 bits SFB_RANTIME
+east to river4;
+west to river2;
+end
+
+			river4
+names {"jungle river"}
+title "A turn in the jungle river."
+descr
+"     The river flows faster here, picking up speed as it flows from the
+west to north. To the north, the jungle canopy keeps out almost all light.
+There is a crude wooden boat dock to the south among the thick foliage."
+movement SECT_WATER_SAIL
+special SFUN_FORCE_MOVE
+"lostlands/river5!The river's currents pull you down stream." time WAIT_SEC*70 bits SFB_RANTIME
+north to river5;
+west to river3;
+south to tribal_dock;
+end
+			river5
+names {"jungle river"}
+title "A jungle river"
+descr
+"     The jungle canopy has closed over the river as it flows north. The
+current is continuing to pick up speed. You can see a crude boat dock
+upstream to the south."
+movement SECT_WATER_SAIL
+OUT_DARK_NON_NOON
+special SFUN_FORCE_MOVE
+"lostlands/river6!The river's currents pull you down stream." time WAIT_SEC*40 bits SFB_RANTIME
+north to river6;
+south to river4;
+end
+
+			river6
+names {"jungle river"}
+title "A jungle river"
+descr
+"     The current is becoming quite fierce now on this river. To the north,
+it appears that the river spins into some kind of whirlpool! Perhaps you
+should paddle south back up stream."
+movement SECT_WATER_SAIL
+OUT_DARK_NON_NOON
+special SFUN_FORCE_MOVE
+"lostlands/whirlpool!You are drawn into the whirlpool." time WAIT_SEC*40 bits SFB_RANTIME
+north to whirlpool;
+south to river5;
+end
+
+			whirlpool
+names {"whirlpool"}
+title "A whirlpool"
+descr
+"     You have been sucked into the whirlpool! You fight hard to keep control
+of your craft, but it appears there is no escape. You are being sucked down
+the whirlpool into some kind of underground rapids."
+movement SECT_WATER_SAIL
+OUT_ALWAYS_DARK
+special SFUN_FORCE_MOVE
+"lostlands/tun_rapid!You are swept underground." time WAIT_SEC*30 bits SFB_RANTIME
+end
+
+			tun_rapid
+names {"tunnel rapids"}
+title "Underground tunnel rapids."
+descr
+"     Everything is a confusion of bubbles, swirling waters and panic. You
+try to keep the boat from hitting the narrow walls of this underground tunnel
+as the current sweeps you further down."
+movement SECT_WATER_SAIL
+OUT_ALWAYS_DARK
+special SFUN_FORCE_MOVE
+"lostlands/tun_rapid2!You are swept along by the rapids." time WAIT_SEC*20 bits SFB_RANTIME
+end
+
+			tun_rapid2
+names {"tunnel rapids"}
+title "Underground tunnel rapids."
+descr
+"     The stream continues to drop into the earth, turning back upon itself
+time and time again. You have lost all sense of direction and are fighting
+to keep the boat from crashing to bits!"
+movement SECT_WATER_SAIL
+OUT_ALWAYS_DARK
+special SFUN_FORCE_MOVE
+"lostlands/tun_rapid3!You are swept along by the rapids." time WAIT_SEC*16 bits SFB_RANTIME
+end
+
+			tun_rapid3
+names {"tunnel rapids"}
+title "Underground tunnel rapids."
+descr
+"     After another bend in the underground rapids, you are now on a
+straightaway and you feel safer. The tunnel ceiling is less than a foot above
+your head. Suddenly, you notice that the stream is heading towards a fast
+underground waterfall, tumbling even deeper into the earth. You hang on
+tightly to your boat and pray that you survive the plummet."
+movement SECT_WATER_SAIL
+OUT_ALWAYS_DARK
+special SFUN_FORCE_MOVE
+"ww1/undergr_lake!You are swept over the waterfall!" time WAIT_SEC*20 bits SFB_RANTIME
+end
+
+			river7
+names {"jungle river"}
+title "A river through the thick jungle."
+descr
+"     The river begins to grow wider here and looks even more stagnant, full
+of algae and muck. You begin to notice subtle changes in the jungle landscape,
+such as ferns growing on the riverbed. The river flows from west to east."
+movement SECT_WATER_SAIL
+special SFUN_FORCE_MOVE
+"lostlands/river1!The river's currents pull you down stream." time WAIT_SEC*120 bits SFB_RANTIME
+north to river_edge;
+east to river1;
+west to river8;
+end
+
+
+			river8
+names {"jungle river"}
+title "A bend in the jungle river"
+descr
+"     The stagnant river bed is surround by tall ginkgo trees and thick ferns
+with long willowy arms. To the south, the river opens into a huge delta
+draining from a strange swamp."
+movement SECT_WATER_SAIL
+special SFUN_FORCE_MOVE
+"lostlands/river7!The river's currents pull you down stream." time WAIT_SEC*120 bits SFB_RANTIME
+east to river7;
+south to swamp_drain;
+end
+
+			swamp_drain
+names {"swamp drain", "swamp"}
+title "The primordal swamp delta"
+descr
+"     This swampy delta, sprinkled with strange giant ferns and scaly ginkgo
+trees, feeds a jungle river flowing north. To the south, you see the beginning
+of a wide primordal swamp. You can see huge shadows moving through the swamp.
+
+A sign has been recently placed here."
+movement SECT_SWAMP
+north to river8;
+south to pri_swamp1;
+extra {"sign"}
+" The sign, in large letter, proclaims:
+	    W A R N I N G
+	 Dinosaur Crossing
+      (Recommended Level 50+)"
+end
+
+			kali_gard
+names {"kali garden"}
+title "A strange jungle garden"
+descr
+"     You have stepped from the jungle trail into a carefully cultivated
+garden. Tall bushes in rows lead from the jungle in the west to a strange
+crypt in south. The bushes release a sweet herbal aroma. Someone has
+obviously been taking good care of these grounds: the plants all seem free
+of insects and disease. There is a bronze plaque mounted in the ground here."
+movement SECT_SWAMP
+ALWAYS_LIGHT
+west to jungle4;
+south to cabal_lair;
+extra {"plaque"}
+"
+     THE CRYPY GARDEN OF CABAL
+	Do Not Pick the Buds
+"
+end
+
+			cabal_lair
+names {"cabals lair"}
+title "Crypt in the strange garden"
+descr
+"     You have stumbled upon a white marble crypt surrounded by strange,
+aromatic bushes. The crypt bears no birthdate, but has a long list of death
+dates. A small statue by the crypt bears the names of fallen companions. It's
+list is also rather long! The garden continues north."
+movement SECT_FIELD
+ALWAYS_LIGHT
+north to kali_gard;
+end
+
+
+/*-------------------- TREE TOP MAZE --------------------*/
+
+			up_monkeynest
+names {"above monkey nest", "monkey nest"}
+title "Above the monkey's nest"
+descr
+"     Looking down through the branches of this huge jungle tree, you can see
+the nests of a colony of monkeys. It would be an easy climb down to the jungle
+from here, or it looks like a vine to the east would be strong enough to carry
+your weight."
+movement SECT_MOUNTAIN
+down to monkey_nest;
+east to vine_1;
+extra {"vine"}
+"It looks like you could just step east and grab the vine on the way!"
+end
+
+			banyan_tree
+names {"banyan tree", "tree"}
+title "High in a banyan tree"
+descr
+"     You are high in the branches of a banyan tree above the jungle. You are
+too high to drop back into the jungle, but strong vines lie to the south and
+east."
+movement SECT_MOUNTAIN
+south to vine_1;
+east to vine_3;
+extra {"vine"}
+"It looks like you could just step out and grab a vine on the way!"
+end
+
+			ginkgo_tree
+names {"ginkgo tree", "tree"}
+title "High in a ginkgo tree"
+descr
+"     You are high above the jungle on the scaly branches of a massive ginkgo
+tree. Below you, you can see a river running through the jungle. A massive
+vine, strong enough to support your weight, lies to the north."
+movement SECT_MOUNTAIN
+north to vine_3;
+extra {"vine"}
+"It looks like you could just step north and grab the vine on the way!"
+end
+
+			herbal_tree
+names {"herbal tree", "tree"}
+title "High in a herbal tree"
+descr
+"     Clinging to the branches of this huge, sweet-smelling tree, is easy
+since it seems to be slightly sticky. In fact, you could climb either up or
+down its trunk, or swing away on a vine to the east."
+movement SECT_MOUNTAIN
+up to jungle_top;
+down to kali_gard;
+east to vine_4;
+extra {"vine"}
+"It looks like you could just step west and grab the vine on the way!"
+end
+
+			jungle_top
+names {"jungle top"}
+title "High above the jungle canopy"
+descr
+"     You have broken above the jungle canopy, standing in a particularly
+dense and sticky batch of sweet-smelling leaves. The tree tops spread away in
+all directions like soft rolling green hills. You can see all kinds of birds
+and animals moving about the tree tops. You could climb back down into the
+foliage of the sweet-smelling tree."
+movement SECT_MOUNTAIN
+down to herbal_tree;
+end
+
+			tzan_porch
+names {"jungle porch", "porch"}
+title "A platform in the trees"
+descr
+"     You are on a platform made of wood, high in the trees of the jungle.
+A small rope ladder leads up into the trees, although the leaves are too thick
+for you to see where it leads. A sturdy vine that looks strong enough to bear
+your weight lies to the south."
+movement SECT_CITY
+south to vine_3;
+up to tzan_house;
+extra {"vine"}
+"It looks like you could just step south and grab the vine on the way!"
+extra {"ladder"}
+"The rope ladder, crudely made but strong, leads up."
+end
+
+			tzan_house
+names {"tarzan's house", "house"}
+title "Tarzan's jungle house"
+descr
+"     This small wooden house high in the jungle trees is obviously the home
+of the King of Jungle! The main give-away is that most of the stuff in this
+this jungle home bears little labels saying 'Universal Studios: Prop Depart-
+ment.' A small rope ladder leads down to a platform in the trees, and another
+of those strong vines that Tarzan loves so much leads to the north."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+north to vine_4;
+down to tzan_porch;
+extra {"vine"}
+"It looks like you could just step north and grab the vine on the way!"
+extra {"ladder"}
+"The rope ladder, crudely made but strong, leads down."
+end
+
+			vine_1
+names {"vine"}
+title "High in the jungle, swinging on a vine"
+descr
+"    This thick jungle vine is too narrow to crawl up or down, but it looks
+like you could swing west to above a monkey nest in the trees, or north into
+the branches of a huge banyan tree."
+movement SECT_MOUNTAIN
+west to up_monkeynest;
+north to banyan_tree;
+end
+
+			vine_3
+names {"vine"}
+title "High in the jungle, swinging on a vine"
+descr
+"    This thick jungle vine is too narrow to crawl up or down, but it looks
+like you could swing west into a banyan tree, south into a scaly ginkgo tree
+or north onto some kind of platform high in the trees."
+movement SECT_MOUNTAIN
+west to banyan_tree;
+north to tzan_porch;
+south to ginkgo_tree;
+end
+
+			vine_4
+names {"vine"}
+title "High in the jungle, swinging on a vine"
+descr
+"    This thick jungle vine is too narrow to crawl up or down, but it looks
+like you could swing west into a huge herbal tree or south into a high tree
+house in jungle."
+movement SECT_MOUNTAIN
+west to herbal_tree;
+south to tzan_house;
+end
+
+
+/*-------------------- JUNGLE VILLAGE --------------------*/
+
+
+			tribal_dock
+names {"village dock", "dock"}
+title "Village dock"
+descr
+"     You are on a primitive wooden boat dock on the south bank of the river,
+surrounded by thick jungle. A worn trail leads east towards a tall wall of
+sharpened logs."
+movement SECT_CITY
+north to river4;
+east to worn_trail;
+end
+
+			worn_trail
+names {"trail to village","worn trail", "trail"}
+title "Worn trail to village"
+descr
+"     You are on a short worn trail in the jungle. A primitive boat dock on
+the river lies to the west and the path leads to a large wooden gate to the
+east."
+movement SECT_CITY
+west to tribal_dock;
+east to out_wd_gate;
+end
+
+			out_wd_gate
+names {"outside wooden gate", "outside gate"}
+title "Outside the wooden gate"
+descr
+"     You are standing outside the large wooden gate of the jungle village.
+The village lies to the south. A worn path leads back into the jungle to the
+west. You can see some small farms to the east along the village. A large,
+grey tent has been pitched to the north, right outside the gate."
+movement SECT_CITY
+north to embassy;
+east to farm1;
+west to worn_trail;
+south to in_wd_gate open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"gate"};
+ALWAYS_LIGHT
+extra {"tent"}
+"The tent made from animal skins, is very large and bears the
+seal of King Welmar - a welcome sight in these strange parts."
+end
+
+			embassy
+names {"embassy", "king's embassy"}
+title "The King's embassy"
+descr
+"     You are inside the large tent, standing in a well-appointed room.
+Although the tent is decorated in the latest styles of Midgaard, the heat and
+humidity of the jungle keep this place from seeming truly civilized. Tent
+flaps lead east west."
+extra {"flaps"}
+"The flaps, left open, flutter slightly showing you the way
+out of the tent."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+south to out_wd_gate;
+east to emb_shrine;
+west to ambas_qtrs;
+ALWAYS_LIGHT
+end
+
+			emb_shrine
+names {"embassy shrine", "jungle shrine"}
+title "The shrine to Odin"
+descr
+"     This end of the tent has been decorated with holy symbols and icons of
+Odin. Although lacking the serenity of the temples found in more civilized
+lands, you can feel the hand of Odin on this place. A tent flap leads west."
+extra {"flap"}
+"The flap flutters slighty showing the way out of the tent."
+flags {UNIT_FL_NO_MOB, UNIT_FL_NO_WEATHER}
+flags {UNIT_FL_SACRED}
+movement SECT_INSIDE
+west to embassy;
+ALWAYS_LIGHT
+end
+
+			ambas_qtrs
+names {"ambassador's quarters"}
+title "The ambassador's quarters"
+descr
+"     Although this is obviously the living quarter's of the King's ambassador,
+it looks little better than some of the camps you've pitched in the wilderness.
+A tent flap leads back from this poor chamber into the main embassy tent."
+flags {UNIT_FL_NO_MOB, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+east to embassy;
+ALWAYS_LIGHT
+end
+
+			farm1
+names {"jungle farm", "small farm"}
+title "A small farm"
+descr
+"    You have wandered into a small area cleared from the jungle, which is
+being farmed by the jungle tribe. The village wall, made of sharpened wooden
+poles, runs along the south. You can see more farmland to the east, and the
+wooden gate sits to the west."
+movement SECT_FIELD
+west to out_wd_gate;
+east to farm2;
+end
+
+			farm2
+names {"jungle farm", "small farm"}
+title "A small farm"
+descr
+"    You have wandered into a small area cleared form the jungle, which is
+being farmed by the jungle tribe. The village wall, made of sharpened wooden
+poles, runs along the south. You can see more farmland to the west."
+movement SECT_FIELD
+west to farm1;
+SECRET_DOOR_DIFFICULTY (DOWN, 40)
+end
+
+
+			in_wd_gate
+names {"inside wooden gate", "inside gate"}
+title "Inside the wooden gate"
+descr
+"    You are inside the wooden gate of the jungle village, which leads north
+back into the jungle. The muddy ground of the village turns into a drier
+village commons to the south."
+movement SECT_CITY
+north to out_wd_gate open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"gate"};
+south to trib_common;
+ALWAYS_LIGHT
+end
+
+			trib_common
+names {"tribal village commons", "tribal commons"}
+title "Tribal village commons"
+descr
+"    On slightly higher ground than the rest of the jungle village, the ground
+of this commons is hard and dry. To the north you can see the wooden gate. To
+south, at the base of a tall pyramid, you see the bustle of the tribal
+commons. You can here a loud tribal beat coming from a huge hut to the east.
+Strange lights flicker from it's wide doorway."
+movement SECT_CITY
+north to in_wd_gate;
+south to trib_square;
+east to tribe_disco;
+ALWAYS_LIGHT
+end
+
+			tribe_disco
+names {"stewpot", "tribal", "hut"}
+title "The Cannibal's Stewpot"
+descr
+"    You have entered a huge hut in a jungle decor. Massive
+feather and bone decorations, complete with palm trees, give the place a
+campy atmosphere. tribal drum beats and chants make the flashy
+dance floor look even more exciting. There is sign hanging over
+the bar with additional markings on it."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+west to trib_common;
+ALWAYS_LIGHT
+extra {"markings","sign"}
+"The sign says is big letters, 'FREE DRINKS'. Under that, written
+in magic marker:
+'These natives haven't caught on to the idea of the barter
+system too well. I keep telling them they have to SELL the
+drinks, but they will figure that out soon enough. Enjoy the
+free drinks while you can.
+
+-Cabal'"
+extra {"dance floor", "dance"}
+"The dance floor is made up of dirt packed hard from the many
+dancing feet that use it."
+end
+
+			trib_square
+names {"tribal village square", "tribal square"}
+title "Tribal village square"
+descr
+"    You are standing in a great flagstoned square in the jungle village.
+To the north you see the village commons. A large brick road leads towards a
+bronze gate to the east while a muddy path leads to the west to even larger
+gold gate.  To south, built at the base of the massive pyramid, is a cruder
+wooden building."
+movement SECT_CITY
+south to pyrm_entry;
+east to brick_road;
+west to muddy_path;
+north to trib_common;
+ALWAYS_LIGHT
+end
+
+			brick_road
+names {"tribal brick road", "brick road"}
+title "Tribal brick road"
+descr
+"     This thick brick road was obviously not built by the jungle natives.
+It looks like it could be as old as the pyramid that looms over the village
+somewhere to the south.  The bustle of the tribal square are west and the
+bronze gates are east.  A small wooden hut sits to the south of the road,
+while a sturdier clay building has been erected to the north."
+movement SECT_CITY
+north to clay_bldg;
+south to wood_hut;
+east to in_brnze_gate;
+west to trib_square;
+ALWAYS_LIGHT
+end
+
+			in_brnze_gate
+names {"inside bronze gate", "inside gate"}
+title "Inside the bronze gate"
+descr
+"You are just west of the bronze village gate.  On the other side of the gate
+you see a sloping path that enters a jungle valley.  A brick road heads west
+from here towards the village square.
+Small wooden huts have been built to the north and south of here."
+movement SECT_CITY
+west to brick_road;
+south to wood_hut2;
+north to wood_hut3;
+east to entry2@cthulu descr
+"You see a Jungle valley.";
+ALWAYS_LIGHT
+end
+
+			clay_bldg
+names {"clay building"}
+title "Inside a clay building"
+descr
+"     You are inside a sturdy clay building supported by wood beams. Although
+sturdier in construction then the other wooden structures in the village, it
+is obviously inferior to the workmanship of the Pyramid. A doorway leads south
+to the brick road."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+south to brick_road;
+ALWAYS_LIGHT
+end
+
+			wood_hut
+names {"wooden hut"}
+title "Inside a wooden hut"
+descr
+"    You are in a small wooden hut, strewn with the belongings of an entire
+village family. The doorway leads north to the brick road."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to brick_road;
+ALWAYS_LIGHT
+end
+
+			wood_hut2
+names {"wooden hut"}
+title "Inside a wooden hut"
+descr
+"    You are in a small wooden hut, strewn with the belongings of an entire
+village family. The doorway leads north to inside the bronze gate."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to in_brnze_gate;
+ALWAYS_LIGHT
+end
+
+			wood_hut3
+names {"wooden hut"}
+title "Inside a wooden hut"
+descr
+"    You are in a small wooden hut, strewn with the belongings of an entire
+village family. The doorway leads south to inside the bronze gate."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+south to in_brnze_gate;
+ALWAYS_LIGHT
+end
+
+			muddy_path
+names {"tribal muddy path", "muddy path"}
+title "Tribal muddy path"
+descr
+"    You are on a small, muddy, but well-cleaned path, leading from inside the
+golden gate to the west to the village square to the east. To south, a hut
+sits upon huge stilts."
+movement SECT_CITY
+east to trib_square;
+west to in_gold_gate;
+south to under_hut;
+ALWAYS_LIGHT
+end
+
+			in_gold_gate
+names {"inside golden gate", "inside gate"}
+title "Inside the golden gate"
+descr
+"    You are inside the golden gates of the jungle village, which lead west
+into the jungle. You can hear strange howlings and insect sounds coming from
+behind the gate. A muddy path leads east toward the village square."
+movement SECT_CITY
+east to muddy_path;
+west to out_gold_gate key serp_key open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+keyword {"gate"};
+east to muddy_path;
+ALWAYS_LIGHT
+end
+
+
+			under_hut
+names {"under hut"}
+title "Under the Hut"
+descr
+"    You underneath a wooden hut on stilts. A ladder leads up into the hut
+with thick tangled bushes to the west and a wooden fence to the east and
+south."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_FIELD
+up to doc_hut;
+north to muddy_path;
+west to doc_gard1;
+end
+			doc_gard1
+names {"strange garden"}
+title "The strange jungle garden"
+descr
+"    You are in a strange and wondrous garden in the jungle village. The
+tribal witch doctor obviously uses this cultivated area to grow strange
+medical and magical plants. Through thick bushes to the east you can see
+the witch doctor's hut and the garden path leads south, with a small wooden
+sign beside it."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_FIELD
+east to under_hut;
+south to doc_gard2;
+extra {"sign"}
+"BEWARE: Man-Eating Plants"
+end
+
+			doc_gard2
+names {"strange garden"}
+title "The strange jungle garden"
+descr
+"    This back corner of the witch doctor's garden is choked with huge weeds
+and vines and other less savory plants. A small garden trail leads north
+past a huge pile of fertilizer."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_FIELD
+north to doc_gard1;
+extra {"fertilizer", "pile"}
+"This huge pile of fertilizer looks like it was made from flesh of
+some sort. Perhaps this is what becomes of all those human
+sacrifices!"
+end
+
+
+			doc_hut
+names {"witch doctor's hut", "hut"}
+title "The witch doctor's hut"
+descr
+"    This wooden hut has a fine view of the entire jungle village, including
+the impressive stone pyramid east of here.  The hut is strewn with strange
+herbs and magic symbols and has a strong musky odor, like death. A ladder
+leads down to the ground."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+down to under_hut;
+ALWAYS_LIGHT
+end
+
+			pyrm_entry
+names {"pyramid entry", "entry"}
+title "The pyramid entry"
+descr
+"    You are in a crude wooden structure, built to serve as an entry to the
+huge stone pyramid to the south. North of here, you see the bustle of the
+village square. To the south you see a large audience hall."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to trib_square;
+south to chief_hall;
+ALWAYS_LIGHT
+end
+
+			chief_hall
+names {"chief's hall"}
+title "The Chief's Hall"
+descr
+"    You are in the audience hall of the tribal chief. This weak wooden
+structure ends to the south, opening into a courtyard at the base of the
+pyramid. To the north the building leads towards the village square."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to pyrm_entry;
+south to pyrm_court;
+ALWAYS_LIGHT
+end
+
+			pyrm_court
+names {"pyramid courtyard", "pyramid base", "courtyard"}
+title "Courtyard before the pyramid"
+descr
+"    You are in a huge stone courtyard at the base of the pyramid.  A crude
+wooden wall surrounds the courtyard, blocking all possible exits except north
+into the chief's audience chamber and up the pyramid."
+movement SECT_FIELD
+north to chief_hall;
+up to pyrm_stairs;
+ALWAYS_LIGHT
+extra {"pyramid"}
+" The stone pyramid looms 50 cubits tall and is built of huge stone bricks. It is of
+sophisticated design and looks like it has stood forever. Stairs
+ascend steeply to the plaza at the structure's top, upon which you see some
+kind of altar."
+end
+
+			out_gold_gate
+names {"outside golden gate", "outside gate"}
+title "Outside the golden gate"
+descr
+"    You are standing outside a golden gate leading into the jungle village.
+The primordal jungle stretches off the the west. A deep gully, following
+along the village walls of sharpened logs, lies to the north. You could
+definitely slide down it, but would not able to climb back up.
+A sign has been recently placed here."
+movement SECT_FIELD
+west to pri_jungle5;
+north to pri_gully1;
+east to in_gold_gate key serp_key open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED} keyword {"gate"};
+ALWAYS_LIGHT
+extra {"sign"}
+"The sign proclaims in large letters:
+	   W A R N I N G
+	Dinosaur Crossing
+     Suggested Level over 50"
+end
+
+
+/*------------------- The Pyramid ---------------------*/
+
+			pyrm_stairs
+names {"pyramid stairs"}
+title "The pyramid stairs"
+descr
+"    These stairs ascending in the side of the pyramid are so steep that they
+leave you out of breath! You are about halfway up the side of the pyramid. You
+can climb further up to the top of the pyramid, or back down to the courtyard
+at the base."
+movement SECT_MOUNTAIN
+down to pyrm_court;
+up to pyrm_top;
+end
+
+			pyrm_top
+names {"pyramid top", "sacrificial altar"}
+title "The pyramid top"
+descr
+"    Standing at the top of you stone pyramid gives you a great view of the
+entire jungle village, out over the walls of sharpened logs to the jungles
+and marshes surrounding it. A sacrificial altar is set into the stone here,
+with long furrows to drain the blood into a shaft dropping into the pyramid.
+The stairs down the pyramid lie to the north."
+movement SECT_INSIDE
+down to shaft open {EX_OPEN_CLOSE};
+north to pyrm_stairs;
+end
+
+			shaft
+names {"pyramid shaft", "shaft"}
+title "the pyramid shaft"
+descr
+"    You are in a rough stone shaft dropping straight down into the pyramid.
+The walls are coated in blood, much of it dried, but some of it still moist to
+the touch."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+up to pyrm_top;
+down to base_shaft;
+extra {"blood"}
+"It looks like a mixture of blood poured down the shaft and some kind of blood
+oozing from the very rock"
+end
+
+			base_shaft
+names {"base of shaft", "shaft"}
+title "the base of the shaft"
+descr
+"    Light streams down a rough stone shaft into this large blood-splashed
+chamber. You cannot imagine how many people must have been sacrificed on the
+pyramid altar to have left this much blood. A large door with a strange lock
+leads west."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER}
+up to shaft;
+west to mosaic1 key pyrm_key open {EX_OPEN_CLOSE, EX_LOCKED, EX_PICKPROOF} keyword {"door"};
+extra {"lock"}
+"The lock looks like it would take a massive pyramid-shaped key to open."
+extra {"door"}
+"This is obviously the main door into the pyramid, although how you are going
+to get the door open is anyone's guess."
+end
+
+			mosaic1
+names {"mosaic hall"}
+title "A small mosaic room."
+descr
+"    You are in a small, cramped chamber whose walls are decorated with
+strange mosaics of half-animal monsters drinking the blood from human corpses.
+A large door with a massive lock blocks the way to the east, and this small
+hall empties into a larger room to the south."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER}
+east to base_shaft key pyrm_key open {EX_OPEN_CLOSE, EX_LOCKED, EX_PICKPROOF} keyword {"east door", "door"};
+south to gold_hall;
+extra {"lock"}
+"The lock looks like it would take a massive pyramid-shaped key to open."
+extra {"door"}
+"This is obviously the main door into the pyramid, although how you are going
+to get the door open is anyone's guess."
+extra {"mosaic"}
+"The mosaics show a half-snake woman drinking the blood from a pile of human
+corpses, all intricately made from tiny pieces of broken glass."
+end
+
+			gold_hall
+names {"gold hall"}
+title "A broad golden hall."
+descr
+"    The bricks of this grand hall are coated in beaten gold. Dim light from
+flickering eternal brazers send flashes of light bouncing off the reflective
+walls.  In the middle of the room, a small font of blood sits bubbling. A
+sturdy wooden ladder leads up through the frescoed ceiling, and a door leads
+west.  To the north, the golden hall turns into a small, mosaic chamber."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER}
+west to spot_garden open {EX_OPEN_CLOSE} keyword {"door"};
+north to mosaic1;
+up to enscroll_room;
+extra {"font", "blood"}
+"You think about the blood and whether or not you should drink some. Then,
+seeing all the small flying insect laying eggs into the blood makes you think
+again."
+extra {"gold"}
+"You hold a torch up to the gold. Yep, it's real. But you have no idea of how
+to get it of the bricks."
+extra {"ladder"}
+"It is a sturdy wooden ladder large enough for a giant."
+extra {"fresco", "frescos"}
+"The frescos on the ceiling depict the world, pierced by the bite of a giant
+mosquito, who is sucking the life from it. You shiver when you think of what
+hell Ulchonix would create with your world if given the chance."
+extra {"brazers"}
+"The brazers glow with a dull golden light, but give off no heat. They are too
+massive to be moved."
+extra {"$drink blood"}
+"From that font, with all the mosquitos in it? No way."
+end
+
+
+			spot_garden
+names {"spotlight garden"}
+title "A spotlight garden."
+descr
+"     This dirt floored chamber must be along the western edge of the pyramid,
+as the west wall sweeps steeply up at an angle. A row of holes in the wall,
+high out of reach, offer a tantalizing glimpse of the outside. Beams of light
+fall into the room through those holes, allowing some sparse plants to grow
+in the meager flicker.  A pool of blood lies along the northern wall of this
+strange garden ... you can see something murky inside of it. A door leads
+to the east."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER}
+east to gold_hall open {EX_OPEN_CLOSE} keyword {"door"};
+down to blood_tube open {EX_OPEN_CLOSE} keyword {"tube"};
+extra {"holes", "hole"}
+"The holes are far too high up the wall for you to reach. Even if you could
+reach them, it looks like it would be a tough squeeze through them."
+extra {"blood", "pool", "tube"}
+"You can see a pipe just under the surface of the blood pool. You could
+definitely reach into the pool to open the tube and could probably swim down
+through it (if you could hold your breath long enough)."
+extra {"spotlights", "lights"}
+"Falling from the holes in the wall, sunlight... so near and yet so far. Some
+sturdy plants grow in the small circles of sunlight."
+extra {"plants", "plant"}
+"Some of these plants actually look unusual, some twisted little gnomes
+reaching for the light. Others look like the canopy of jungle that you
+remember surrounds this pyramid."
+end
+
+
+			blood_tube
+names {"blood tube"}
+title "Blood-filled tube"
+descr
+"     You are holding your breath in a narrow stone tube filled with blood.
+There is no air here, and if you are going to swim somewhere, you better swim
+there fast.  You can see the surface of the blood pool above, and the tube
+taskes a twist to the north. The bloods looks seething with disease."
+movement SECT_UNDER_WATER
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER}
+special SFUN_DEATH_ROOM "10"
+special SFUN_FORCE_MOVE time PULSE_SEC * 30
+"lostlands/blood_pit!You are sucked down through a drain."
+   time WAIT_SEC*100 bits SFB_RANTIME
+north to u_loot;
+up to spot_garden;
+end
+
+			u_loot
+names {"ulchonix's loot", "treasury"}
+title "Ulchonix's Treasury"
+descr
+"     Emerging from the blood tube, you are shocked to find yourself within
+the treasury of the God of Jungle Fever.  Frescos cover every wall, depicting
+Ulchonix and his lizard-men Sleestak warriors washing an entire world in blood
+and disease.  The frescos all seem to stare at the end of the tube of blood
+leading back down."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER}
+down to blood_tube;
+end
+
+
+			blood_pit
+names {"blood pit", "pit"}
+title "The pit of blood"
+descr
+"     You have emerged into a deep pit, almost full of blood. You scissor kick
+your legs, keeping your head above blood. The ceiling lies nearly 5 feet above
+your head, well out of reach. A massive obsidian spike penetrates up from the
+blood, with strange inscriptions on its face. There are no obvious exits."
+movement SECT_WATER_SWIM
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER}
+up to gold_hall open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN} keyword {"rift"};
+SECRET_DOOR_DIFFICULTY (UP, 45)
+extra {"spike"}
+"The spike is made from smooth obsidian and more than large enough to impale a
+person. You're lucky you didn't materialize directly on it! There is no way to
+climb the spike. Strange inscriptions cover the surface of the spike."
+extra {"inscriptions", "inscription", "$read"}
+" Carved upon the obsidian spike are the words:
+    ' The rift between us, gulf of blood,
+      Shall pour from me in a hidden flood.
+      If from the blood you should arise,
+      Search blood again to reach the prize. '
+"
+extra {"blood"}
+"You are 'treading water' in warm blood. You have no idea how deep the shaft
+is, but you cannot feel any firm bottom."
+extra {"ceiling"}
+"You take a jump upwards, but the ceiling is well out of reach. You must be
+missing something.... there must be a way out!"
+extra {"walls"}
+"They are smooth and slippery with blood and offer no sign of exits."
+extra {"$drink blood"}
+"Your head dips below the surface and blood pours into your mouth like a flood
+into a canyon rift."
+end
+
+			enscroll_room
+names {"enscroll room"}
+title "The Divine Enscrolling Room"
+descr
+"     You are at the top of the ladder in a dark vaulted chamber of dark
+obsidian, polished to a shine. A stone railing lies on one side, with a
+massive book on a stand. The shiny black surfaces of the rooms must be playing
+tricks on your eyes, because it seems as if there is a dancing blue flame
+directly over your head, although you feel no heat."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_MAGIC, UNIT_FL_NO_WEATHER}
+down to gold_hall;
+up to lag open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN} keyword {"portal"};
+SECRET_DOOR_DIFFICULTY (UP, 50)
+extra {"portal"}
+"If you defocus your eyes, you can make out a crude portal in the flicking
+flames above you, leading into another dimension."
+extra {"flames", "flame"}
+"The flames look mystical, as if concealing a portal into another dimension."
+extra {"bookstand", "stand"}
+"It is carved from a massive block of the obsidian floor and is inscribed with
+the name 'Venom'."
+extra {"book"}
+"This massive spellbook is turned to an arcane spell. You have difficulty
+understanding it - this demi-god works strange spells - but you realize with
+a chill that it has something to do with spreading infection through some kind
+of quasi-plane called 'Lag Space'. "
+end
+
+
+			lag
+names {"lag space", "lag"}
+title "Lagspace"
+descr
+"     You have entered into a strange plane, somewhere beyond the world that
+you have known, in a space made up of stolen moments and
+glowing stars. Pulses of light spread out in all directions ... if you only you were as
+unsubstantial, so that you could sail away with the lights. One section of
+lights, however, pulses with a strange color and pattern, like the heartbeat
+of a fever victim. It's colors spread out like a wound through Lagspace."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_MAGIC, UNIT_FL_NO_WEATHER}
+east to disease_p open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN} keyword {"wound"};
+SECRET_DOOR_DIFFICULTY (EAST, 30)
+extra {"wound", "weave"}
+"It looks like some kind of seething sore on the network, like a deep wound
+pulsing with gangrene. Before your very eyes, you see it surge forth, becoming
+even larger."
+extra {"lights", "electrons"}
+"This vast network of energy looks like a world unto itself. A flashing light
+zooms by your face and you wish that you could join it in it's dance."
+extra {"sections"}
+"One section of the lagscape pulses with strange throbbing colors, like a
+wound."
+end
+
+
+			u_limbo
+names {"ulchonix's limbo", "ulimbo"}
+title "Ulchonix's limbo"
+descr
+"    How did you end up in this limbo, created by the blood sacrifices of a
+thousand tribesmen? Amazing the difficulties you can get in when you go
+random teleporting around, huh? This timeless, shifting place has no exits."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER}
+extra {""}
+"Didn't I tell you that there is nothing else to see?"
+end
+
+			lost_room
+names {"lostspace", "lost"}
+title "the Space of the Lost"
+descr
+"     You have arrived in strange, timeless place - the place that all lost
+things end up. You can see no exits from the featureless gray landscape."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER}
+extra {""}
+"Didn't I tell you that there is nothing else to see?"
+end
+
+
+/*----------- Dinosaur Area ---------*/
+
+			pri_swamp1
+names {"primordial swamp"}
+title "The primordial swamp"
+descr
+"    This massive primordial swamp drains into a delta to the north.
+Strange insects and primitive mosses choke the water dredged ground, making
+movement difficult. The ground only firm enough to travel to the south."
+movement SECT_SWAMP
+north to swamp_drain;
+south to pri_swamp2;
+end
+
+			pri_swamp2
+names {"primordial swamp"}
+title "The primordial swamp"
+descr
+"    The primordial swamp grows thicker here - with each step your feet sink
+below the algae filled ooze into the mud. A large sinkhole lies to the west."
+movement SECT_SWAMP
+north to pri_swamp1;
+south to pri_swamp3;
+east to pri_swamp4;
+extra {"sinkhole"}
+"The sinkhole is flooded with water, who knows how deep. You'll have to
+travel a different direction."
+end
+
+			pri_swamp3
+names {"primordial swamp"}
+title "The primordial swamp"
+descr
+"    The thick primordial swamp joins a thicker, drier jungle to the east.
+To the west, you see the edge of lava flow from the far-off volcano. Thick
+impassable jungle stretched to the south."
+movement SECT_SWAMP
+west to lava2;
+east to pri_jungle1;
+north to pri_swamp2;
+end
+
+			pri_swamp4
+names {"primordial swamp"}
+title "The primordial swamp"
+descr
+"    You are trudging along a muddy ridge in a primordial swamp. Deeper swamp,
+impassible, lies to the north and south. The ridge continues to the west and
+rises into a marsh to the east."
+movement SECT_SWAMP
+west to pri_swamp2;
+east to pri_marsh2;
+end
+
+			lava1
+names {"lava fields"}
+title "Hot lava fields"
+descr
+"    The primordial swamps and jungles haven been burnt to ashes by the thick
+lava flow coming form the erupting volcano to the west. The heat from the
+molten rock is so hot, that you can only move south."
+movement SECT_MOUNTAIN
+south to lava2;
+end
+
+			lava2
+names {"lava fields"}
+title "Hot lava fields"
+descr
+"    The primordial swamps and jungles haven been burnt to ashes by the thick
+lava flow coming form the erupting volcano to the west. The heat from the
+molten rock is so hot, that you can only move north and south along the edge
+of the flow."
+movement SECT_MOUNTAIN
+north to lava1;
+east to pri_swamp3;
+south to lava3;
+end
+
+			lava3
+names {"lava fields"}
+title "Hot lava fields"
+descr
+"    The primordial swamps and jungles haven been burnt to ashes by the thick
+lava flow coming form the erupting volcano to the west. The heat from the
+molten rock is so hot, that you can only move north."
+movement SECT_MOUNTAIN
+north to lava2;
+end
+
+			pri_jungle1
+names {"primordial jungle"}
+title "The primordial jungle"
+descr
+"    This narrow path through thick, primordial jungle ends to the west
+on the banks of a thick, murky swamp.  The path slopes back, slightly uphill,
+to the east."
+movement SECT_SWAMP
+west to pri_swamp3;
+east to pri_jungle3;
+end
+
+			pri_jungle2
+names {"primordial jungle"}
+title "The primordial jungle"
+descr
+"    This broad path through the primordial jungle ends to the west in a broad
+clearing. The path to the east looks like it was made by a large animals, with
+broken and trampled foliage everywhere."
+movement SECT_SWAMP
+east to pri_jungle4;
+west to pri_clearing;
+end
+
+			pri_jungle3
+names {"primordial jungle"}
+title "The primordial jungle"
+descr
+"    You are on a narrow trail through thick, primordial jungle. The trail
+continues east and west. To the south, you can see a wider trail, as if made
+by a stampede of large animals. To the north the jungle thins out into a
+marsh."
+movement SECT_SWAMP
+north to pri_marsh2;
+south to pri_jungle4;
+east to pri_jungle5;
+west to pri_jungle1;
+end
+
+			pri_jungle4
+names {"primordial jungle"}
+title "The primordial jungle"
+descr
+"    You are at one end of a broad path through the jungle stretching to
+the west. The jungle looks like it has been trampled by large beasts. Some
+has erected a clever hunting blind to the east."
+movement SECT_SWAMP
+north to pri_jungle3;
+east to pri_blind;
+west to pri_jungle2;
+end
+
+			pri_jungle5
+names {"primordial jungle"}
+title "The primordial jungle"
+descr
+"    You are on a narrow path through thick primordial jungle. Massive
+fern like plants coil above you and strange sounds echo from deep within the
+foliage. Down the trail to the east you see the massive gold gates of the
+jungle village. The trail continues west."
+movement SECT_SWAMP
+east to out_gold_gate;
+west to pri_jungle3;
+end
+
+			pri_jungle6
+names {"primordial jungle"}
+title "The primordial jungle"
+descr
+"    You are in a stretch of primordial jungle at the base of a short
+muddy cliff. You can easily move into a deep gully to the east or into the
+marshes to the north, but the mud makes the cliff to the south unscalable."
+movement SECT_SWAMP
+east to pri_gully1;
+north to pri_marsh3;
+end
+
+			pri_marsh1
+names {"primordial marsh"}
+title "The primordial marsh"
+descr
+"    This is as deep into the primordial swamp as you can travel. The ground
+becomes increasingly soft, as strange gases bubble up through the mud. The
+shore of the marsh stretches to the south and east."
+movement SECT_SWAMP
+south to pri_marsh2;
+east to pri_marsh3;
+end
+
+			pri_marsh2
+names {"primordial marsh"}
+title "The primordial marsh"
+descr
+"    You are on the edge of a primordial swamp. The vegetation becomes
+thicker to the west and you could get deeper into the swamp to the north.
+The jungle spreads out along the southern bank."
+movement SECT_SWAMP
+west to pri_swamp4;
+north to pri_marsh1;
+south to pri_jungle3;
+end
+
+			pri_marsh3
+names {"primordial marsh"}
+title "The primordial marsh"
+descr
+"    The marsh coast ends here in impassible mud swamps. You can duck back
+into the jungle to the south, or travel deeper into the marsh to the west."
+movement SECT_SWAMP
+south to pri_jungle6;
+west to pri_marsh1;
+end
+
+			pri_gully1
+names {"primordial gully"}
+title "The primordial gully"
+descr
+"    You are in a rocky gully at the base of the village walls. You can see
+the gold gate to the village south of here, at the top of a cliff you could
+never hope to climb. The primordial jungle lies to the west and the gully goes
+deeper to the north."
+movement SECT_MOUNTAIN
+north to pri_gully2;
+west to pri_jungle6;
+end
+
+			pri_gully2
+names {"primordial gully"}
+title "The primordial gully"
+descr
+"    You have come to the end of the gully at the base of the village wall.
+The high rocky walls are unscalable. The gully stretches to the south towards
+the jungle."
+movement SECT_MOUNTAIN
+south to pri_gully1;
+end
+
+			pri_clearing
+names {"primordial clearing"}
+title "The primordial clearing"
+descr
+"    You have burst from the jungle into a secluded clearing. Animals have
+grazed away most of the foliage in this area, although the only exit from
+the clearing is east."
+movement SECT_FIELD
+east to pri_jungle2;
+end
+
+			pri_blind
+names {"primordial blind"}
+title "A blind in the primordial jungle"
+descr
+"    Someone has cleared a section of the jungle into a hunters blind. You
+have a great view down the wide jungle path and feel well hidden from any
+roaming beasts. The blind opens into the jungle to the west."
+movement SECT_SWAMP
+flags {UNIT_FL_NO_MOB}
+west to pri_jungle4;
+end
+
+
+/*----------------------MOBILES-----------------------*/
+%mobiles
+
+
+/*--------------Environmental Imps-----------------*/
+
+			familiar1
+names {"familiar","daemon"}
+title "the tiny winged daemon"
+descr
+"A tiny winged demon, no more than a foot tall, stares at you intently."
+extra {}
+"This little guy looks like he could punch a wallop. You remember all the
+horror stories you have heard of hapless adventurers messing with a wizard's
+familiar only to meet some horrible death. Perhaps you should leave this
+daemon alone and allow it to complete it's mission for it's master."
+level 10
+position POSITION_SLEEPING
+race RACE_OTHER_CREATURE
+alignment 0
+weight 2
+NATURAL_DEF(WPN_BITE, ARM_HLEATHER)
+sex SEX_NEUTRAL
+capacity 1000
+romflags {CHAR_DETECT_INVISIBLE}
+MSET_ABILITY (20,15,10,10,15,15,15,0)
+MSET_WEAPON (8,8,8,8,8,0)
+MSET_SPELL (4,4,4,20,4,4,4,4,4,4,4)
+manipulate MANIPULATE_TAKE
+special SFUN_COMBAT_MAGIC_HEAL "c random teleport"
+special SFUN_COMBAT_POISON
+special SFUN_PAIN_INIT time WAIT_SEC*15 bits SFB_RANTIME
+" 100 I1000cabalist@
+  110 I2000statue@
+  120 Ctake all@
+  130 Cexit corpse@
+  140 Ccast controlled teleport bob@
+  150 Gudgaard/temple@
+  160 J2000@
+ 1000 Cstand@
+ 1005 R1010,80@
+ 1007 Cemote looks around curiously, as though sensing something.@
+ 1010 Cwake cabalist@
+ 1020 Cdrop all@
+ 1040 I1070beef@
+ 1050 lbasis/magic_food@
+ 1060 Cdrop beef@
+ 1065 A$1N makes strange guttural noises, much deeper than you would expect from $1s small body.@
+ 1070 I2000barrel@
+ 1080 lbasis/magic_water@
+ 1090 Cdrop barrel@
+ 1095 R2000,80@
+ 1097 AA glint appears in $1n's eyes.@
+ 2000 R2030,80@
+ 2020 Cemote giggles quietly to itself and rustles its wings.@
+ 2030 R2050,90@
+ 2040 Cfollow cabalist@
+ 2050 R2100,99@
+ 2060 Ctell cabalist I will bring you secret lost treasures!@
+ 2062 Ctell cabalist Meet me, my master, at the Udgaard temple while I fetch what treasures I can find.@
+ 2064 Ccast controlled teleport lostspace@
+ 2066 Ctake all@
+ 2068 Ccast controlled teleport bob@
+ 2070 Gudgaard/temple@
+ 2100 Clook@"
+end
+
+
+
+			marley
+names {"marley", "butterfly"}
+title "Marley the Psychodelic butterfly"
+descr
+"Marley, the Psychodelic butterfly, has fluttered to rest here."
+extra {}
+"Marley has wingspan of almost 2 feet, covered with hypnotic paisley patterns.
+Two long fuzzy antennae hang like dreadlocks from his head. You have a
+feeling that this is on extraordinary butterfly."
+level 20
+position POSITION_STANDING
+race RACE_OTHER_CREATURE
+alignment 0
+weight 2
+NATURAL_DEF(WPN_BITE, ARM_LEATHER)
+sex SEX_MALE
+capacity 1000
+romflags {CHAR_DETECT_INVISIBLE}
+MSET_ABILITY (20,15,10,10,15,15,15,0)
+MSET_WEAPON (8,8,8,8,8,0)
+MSET_SPELL (4,4,4,20,4,4,4,4,4,4,4)
+manipulate MANIPULATE_TAKE
+special SFUN_COMBAT_MAGIC "c colourspray"
+special SFUN_COMBAT_MAGIC_HEAL "c random teleport"
+end
+
+
+/*------------------Jungle Monsters-----------------*/
+			g_mosquito
+names {"giant mosquito", "mosquito"}
+title "giant mosquito"
+descr "A giant mosquito is buzzing here."
+position POSITION_STANDING
+default POSITION_STANDING
+alignment 0
+sex SEX_NEUTRAL
+level 21
+race RACE_OTHER_INSECT
+MSET_ABILITY (10,40,10,20,10,10,0,0)
+MSET_WEAPON (20,20,20,20,10,10)
+special SFUN_AGGRESSIVE time WAIT_SEC*30 bits SFB_RANTIME
+exp 125 /* agg+poison */
+NATURAL_DEF(WPN_STING, ARM_CHAIN)
+extra {}
+"This is the biggest mosquito you have ever seen! It stands as tall as
+you do. And if it has been in that festering water for long, who knows
+what diseases it might carry!"
+end
+
+			alligator
+names {"alligator"}
+title "alligator"
+descr "There is a large alligator snapping at you."
+position POSITION_STANDING
+default POSITION_STANDING
+alignment 0
+sex SEX_NEUTRAL
+level 25
+race RACE_ALLIGATOR
+NATURAL_DEF(WPN_BITE, ARM_PLATE)
+MSET_WEAPON (20,20,20,20,10,10)
+MSET_ABILITY (30,30,20,15,5,0,0,0)
+special SFUN_AGGRESSIVE time WAIT_SEC*60 bits SFB_RANTIME
+exp 105 /* agg */
+
+extra {}
+"It's broad jaws look like they could do some damage!"
+end
+
+
+			monkey_thief
+names {"monkey thief", "monkey"}
+title "a small furry monkey"
+descr "There is a small furry monkey hanging from the tree."
+position POSITION_STANDING
+default POSITION_STANDING
+alignment 0
+sex SEX_MALE
+level 23
+race RACE_MONKEY
+NATURAL_DEF(WPN_BITE, ARM_LEATHER)
+MSET_WEAPON (20,20,20,20,10,10)
+MSET_ABILITY (10,50,10,10,20,0,0,0)
+exp 105 /* irritating habit of stealing bags and things */
+romflags CHAR_WIMPY
+special SFUN_RANDOM_ZONE_MOVE time WAIT_SEC*20 bits SFB_RANTIME
+special SFUN_JANITOR time WAIT_SEC*120 bits SFB_RANTIME
+special SFUN_PAIN_INIT time WAIT_SEC*20 bits SFB_RANTIME
+"100 S200@
+ 110 H300bag@
+ 120 J320@
+ 200 Cget all@
+ 210 Cget all from corpse@
+ 300 Gmonkey_nest@
+ 310 Cdrop all@
+ 320 AThe fuzzy monkey scratches itself.@
+"
+extra {}
+"The monkey is one of the cutest things you've ever seen, almost
+human in appearance. It is quick, curious and has very fast hands."
+end
+
+			parrot
+names {"parrot"}
+title "a colorful parrot"
+descr "A colorful parrot is hopping around squawking here."
+position POSITION_STANDING
+default POSITION_STANDING
+alignment 0
+sex SEX_MALE
+level 25
+race RACE_BIRD
+NATURAL_DEF(WPN_BITE, ARM_CLOTHES)
+MSET_WEAPON (20,20,20,20,10,10)
+MSET_ABILITY (10,50,10,10,20,0,0,0)
+romflags CHAR_WIMPY
+special SFUN_RANDOM_ZONE_MOVE time WAIT_SEC*80 bits SFB_RANTIME
+special SFUN_JANITOR time WAIT_SEC*60 bits SFB_RANTIME
+special SFUN_PAIN_INIT time WAIT_SEC*40 bits SFB_RANTIME
+" 100 S1000@
+  110 AThe parrot squawks, 'DON'T pick the buds.... DON'T pick the buds'@
+  120 AThe parrot squawks, 'NASTY parrot thief.... NASTY parrot thief'@
+  130 AThe parrot whistles, 'Cabal gonna get me .... Cabal gonna get me'@
+  140 AThe parrot squawks, 'Tarzan, you weenie... ha ha'@
+ 1000 AThe colorful parrot struts around proudly.@"
+extra {}
+"This colorful parrot is one of the prettiest birds you've ever seen. It is
+carrying something in it's mouth, but the parrot keeps turning his head away
+so you can't see what it is."
+end
+
+
+			bury_beetle
+names {"elephant beetle", "beetle"}
+title "a huge elephant beetle"
+descr "A massive elephant beetle has emerged from underground."
+position POSITION_STANDING
+default POSITION_STANDING
+alignment 0
+sex SEX_NEUTRAL
+level 23
+race RACE_BEETLE
+flags {UNIT_FL_BURIED}
+NATURAL_DEF(WPN_BITE, ARM_PLATE)
+MSET_WEAPON (20,20,20,20,10,10)
+MSET_ABILITY (10,50,10,10,20,0,0,0)
+special SFUN_AGGRESSIVE time WAIT_SEC*10 bits SFB_RANTIME
+extra {}
+"This big green jungle beetle is the size of a small pony and has a huge horn
+curling up from the top of it's head. Guess you should be more careful when
+you are digging around."
+end
+
+
+			ptha
+names {"ptha","tribeswoman"}
+title "Ptha, the gentle native"
+descr "An innocent looking tribeswoman is tending the garden."
+extra {}
+"Ptha looks sweet and innocent as she tends the plants in Cabal's
+garden. She is obviously one of the jungle tribespeople, and yet you
+see no trace of the blood lust about her. Perhaps this is why Cabal
+rescued her from the village."
+position POSITION_STANDING
+default POSITION_STANDING
+alignment +500
+sex SEX_FEMALE
+level 29
+race RACE_HUMAN
+MSET_ABILITY (15,20,15,20,15,15,0,0)
+MSET_WEAPON (20,20,10,20,20,10)
+/*
+special SFUN_JANITOR time WAIT_SEC*60 bits SFB_RANTIME
+special SFUN_PAIN_INIT time WAIT_SEC*20 bits SFB_RANTIME
+" 100 S2000@
+  110 APtha bows most humbly towards you, tears welling in her eyes.@
+  120 Csay Oh, please.... I am in need of a champion! They have taken my child from me, and Kuh is going to sacrifice him to Ulchonix! You must save him!@
+  130 Csay The sacrifice is at noon.... oh please rescue my child and
+take him to the great healer Quetzal! He can protect my child.@
+  170 Csay I must stay here and keep the parrots from stealing the buds.@
+ 2000 APtha diligently searches the garden for any thieving parrots.@
+"
+*/
+
+#define PTHA_ONGOING "Child Rescue Ongoing"
+#define PTHA_COMPLETE "Child Rescue Complete"
+
+dilbegin ptha1();
+var
+  pcname   : string;
+  item     : unitptr;
+  pc       : unitptr;
+  i        : integer;
+  exdp     : extraptr;
+
+code
+{
+
+  :init:
+  heartbeat := PULSE_SEC*5;
+  on_activation((self.position <= POSITION_SLEEPING) or
+               (self.position == POSITION_FIGHTING), skip);
+
+  :start:
+  wait(SFB_CMD, (activator.type == UNIT_ST_PC) and (not
+      command(CMD_GIVE)));
+  if(PTHA_COMPLETE in activator.quests)
+   goto waitawhile;
+
+  pc := activator;
+  secure(pc, lostpc);
+
+  if(not(PTHA_ONGOING in pc.quests))
+    {
+     exec("emote bows most humbly towards you, tears welling in her "+
+          "eyes.", self);
+     pause;
+     exec("say Oh, please.... I am in need of a champion! " +
+          "They have taken my child from me, and Kuh is going to " +
+          "sacrifice him to Ulchonix!  You must save him!", self);
+     pause;
+     exec("say The sacrifice is at noon.... oh please rescue my "+
+          "child and take him to the great healer Quetzal!  He can "+
+          "protect my child.", self);
+     pause;
+     exec("say I must stay here and keep the parrots from "+
+          "stealing the buds.", self);
+     pause;
+     exec("say Can you help me?", self);
+     pause;
+     exec("say Please nod or shake.", self);
+
+     i := 0;
+     while (i < 5)
+     {
+        wait(SFB_CMD, activator #= pc);
+
+        if(command(CMD_NOD))
+        {
+          goto quest_accepted;
+        }
+        else if(command(CMD_SAY))
+        {
+          pause;
+          exec("say Nod if you will accept, shake " +
+               "if not.", self);
+        }
+        else if(command(CMD_SHAKE))
+        goto no_quest;
+        i := I + 1;
+     }
+
+  :no_quest:
+  pause;
+  exec("say You are no champion.", self);
+  unsecure(pc);
+  goto waitawhile;
+
+  :quest_accepted:
+  pause;
+  exec("say I thank thee in advance kind soul.", self);
+  pause;
+  addextra(pc.quests, {PTHA_ONGOING}, "");
+  unsecure(pc);
+  goto start;
+  }
+        :waitawhile:
+        heartbeat := PULSE_SEC*60;
+        pause;
+        goto init;
+
+        :lostpc:
+        exec("cry", self);
+        pause;
+        exec("say My poor child.", self);
+        goto start;
+}
+dilend
+end
+
+/*-------------------- Tarzan && Friends --------------------*/
+
+			tarzan
+names {"tarzan"}
+title "Tarzan"
+descr "Tarzan, the Lord of the Jungle, is here."
+position POSITION_STANDING
+default POSITION_STANDING
+alignment 500
+sex SEX_MALE
+level 27
+race RACE_HUMAN
+MSET_ABILITY (20,25,15,20,10,10,0,0)
+MSET_WEAPON (15,20,15,20,20,10)
+special SFUN_TEAMWORK "cheetah/jane"
+special SFUN_RESCUE "cheetah/jane"
+special SFUN_RANDOM_ZONE_MOVE time WAIT_SEC*120 bits SFB_RANTIME
+special SFUN_PAIN_INIT time WAIT_SEC*20 bits SFB_RANTIME
+" 100 S1000@
+  110 ATarzan grunts at you, looking you up and down.@
+  120 Csay Stranger to jungle.... Me Tarzan.... Seen Jane?@
+  130 Csay Cheetah and me hunt monkey... monkey steal stuff.@
+  140 Csmile@
+  150 Csay Go see Jane in treehouse.@
+ 1000 I1200monkey@
+ 1010 J2000@
+ 1200 Ckill monkey@
+ 2000 Cruffle cheetah@"
+extra {}
+"Tarzan is dressed in a loin cloth and a thick layer of dirt and grime. His
+eyes quickly scan the jungle landscape and his hands flex nervously."
+end
+
+			jane
+names {"jane"}
+title "Jane"
+descr "Jane, the beautiful bride of Tarzan, is working busily here."
+position POSITION_STANDING
+default POSITION_STANDING
+alignment 500
+sex SEX_FEMALE
+level 27
+race RACE_HUMAN
+MSET_ABILITY (20,25,15,20,10,10,0,0)
+MSET_WEAPON (15,20,15,20,20,10)
+special SFUN_TEAMWORK "cheetah/tarzan"
+special SFUN_RESCUE "cheetah/jane"
+special SFUN_PAIN_INIT time WAIT_SEC*20 bits SFB_RANTIME
+" 100 H1000tooth@
+  110 S2000@
+  120 Csmile@
+  130 Csay You are strangers to the jungle!@
+  140 Csay I know it is often dangerous here, especially all the nasty diseases.@
+  150 Csay If I could just get Tarzan to fetch me more alligator teeth... then I could whip up some more of the jungle cure!@
+  170 Csay If you would give me some alligator teeth, I'd make some for you.@
+  180 J2000@
+ 1000 Cgiggle@
+ 1010 AJane works busily with some pans and strange herbs.@
+ 1020 Ceat tooth@
+ 1030 llostlands/jungle_cure@
+ 1040 AJane spits the remnants of the tooth into the broth.@
+ 1050 Cdrop cure@
+ 1060 Csmile@
+ 1070 Csay Hope that helps you out! If you need more help than that can provide, then go see Quetzal. He is a powerful healer!@
+ 2000 AJane works busily cleaning the treehouse.@"
+extra {}
+"Jane is a pretty girl, obviously from a nice family in Urland. Why she would
+rather hang out with a barbarian in the jungle is beyond you."
+end
+
+
+			cheetah
+names {"cheetah", "chimp"}
+title "Cheetah the chimp"
+descr "A hairy chimp named Cheetah is following Tarzan around."
+position POSITION_STANDING
+default POSITION_STANDING
+alignment 0
+sex SEX_MALE
+level 26
+race RACE_MONKEY
+NATURAL_DEF(WPN_BITE, ARM_LEATHER)
+MSET_WEAPON (20,20,20,20,10,10)
+MSET_ABILITY (10,50,10,10,20,0,0,0)
+special SFUN_TEAMWORK "tarzan/jane"
+special SFUN_RESCUE "tarzan/jane"
+
+dilbegin prg1();
+code
+{
+    heartbeat := PULSE_SEC * 20;
+
+    :loop:
+    exec("ruffle tarzan", self);
+    pause;
+    exec("hug tarzan", self);
+    pause;
+    pause;
+
+    goto loop;
+}
+dilend
+
+extra {}
+"Even though this chimpanzee looks even dirtier than Tarzan, he does look
+almost as smart has his bigger buddy."
+end
+
+
+/*-------------------- Tribespeople --------------------*/
+
+			tribesman
+names {"tribesman"}
+title "a jungle tribesman"
+descr "A jungle village tribesman eyes you curiously."
+position POSITION_STANDING
+default POSITION_STANDING
+alignment -200
+sex SEX_MALE
+level 28
+race RACE_HUMAN
+MSET_ABILITY (15,20,15,20,15,15,0,0)
+MSET_WEAPON (20,20,10,20,20,10)
+special SFUN_TEAMWORK "tribesman/tribeswoman/headhunter/cabal"
+special SFUN_RESCUE "tribesman/tribeswoman/headhunter"
+special SFUN_RANDOM_ZONE_MOVE time WAIT_SEC*120 bits SFB_RANTIME
+extra {}
+"Small and quick, the jungle tribesman looks like he could blend
+into the jungle at a moments notice. He smiles at you through
+brown and discolored teeth."
+end
+
+			tribeswoman
+names {"tribeswoman"}
+title "a jungle tribeswoman"
+descr "A jungle village tribeswoman eyes you curiously."
+position POSITION_STANDING
+default POSITION_STANDING
+alignment -200
+sex SEX_FEMALE
+level 28
+race RACE_HUMAN
+MSET_ABILITY (15,20,15,20,15,15,0,0)
+MSET_WEAPON (20,20,10,20,20,10)
+special SFUN_TEAMWORK "tribesman/tribeswoman/headhunter/cabal"
+special SFUN_RANDOM_ZONE_MOVE time WAIT_SEC*120 bits SFB_RANTIME
+special SFUN_RESCUE "tribesman/tribeswoman/headhunter"
+extra {}
+"Small and quick, the jungle tribeswoman looks like she could
+blend into the jungle at a moments notice. She smiles at you through
+brown and discolored teeth."
+end
+
+			disco_native
+names {"native", "Uz"}
+title "Uz, a native"
+descr "A native named Uz is mixing drinks behind the bar."
+position POSITION_STANDING
+default POSITION_STANDING
+alignment -200
+sex SEX_MALE
+level 28
+race RACE_HUMAN
+MSET_ABILITY (15,20,15,20,15,15,0,0)
+MSET_WEAPON (20,20,10,20,20,10)
+special SFUN_TEAMWORK "tribesman/tribeswoman/headhunter/cabal"
+special SFUN_RESCUE "tribesman/tribeswoman/headhunter"
+special SFUN_PAIN_INIT time WAIT_SEC*100 bits SFB_RANTIME
+" 200 S600@
+  300 llostlands/trop_drink1@
+  310 A$1N mixes a tasty, brightly colored tropical drink!@
+  320 Cdrop mai-ti@
+  400 llostlands/trop_drink2@
+  420 A$1N mixes a tasty, brightly colored tropical drink!@
+  430 Cdrop zombie@
+  500 A$1N chants to the beathing drums!@
+  600 A$1N scratches his head, trying to figure out why he isn't making a profit.@
+  620 Csigh@
+  640 Csmile@"
+extra {}
+"This native has shed his normal jungle attire for latest
+Midgaard fashions. He can be seen bopping to the beatting of
+the tribal drums"
+end
+
+			cannibal1
+names {"cannibal guard", "cannibal", "guard"}
+title "a cannibal guard"
+descr "A jungle cannibal stands guard here."
+position POSITION_STANDING
+default POSITION_STANDING
+alignment -200
+sex SEX_MALE
+level 30
+race RACE_HUMAN
+MSET_ABILITY (15,20,15,20,15,15,0,0)
+MSET_WEAPON (15,20,15,20,20,10)
+special SFUN_TEAMWORK "tribesman/tribeswoman/headhunter/cabal/kuh"
+special SFUN_RESCUE "tribesman/tribeswoman/headhunter/kuh"
+special SFUN_PAIN_INIT time WAIT_SEC*120 bits SFB_RANTIME
+"100 Cclose gate@
+ "
+extra {}
+"This huge cannibal is standing guard over the gate. He wears
+ritual painting on his face and looks completely engrossed with
+his job."
+end
+
+			can_champ
+names {"cannibal champion", "cannibal", "champion"}
+title "the cannibal champion"
+descr "The cannibal champion stands here like a statue."
+position POSITION_STANDING
+default POSITION_STANDING
+alignment -300
+sex SEX_MALE
+level 32
+race RACE_HUMAN
+MSET_ABILITY (20,25,15,20,10,10,0,0)
+MSET_WEAPON (15,20,15,20,20,10)
+extra {}
+"This is the meanest and toughest of the cannibal warriors
+and has won the honor of being declared tribe champion.
+His face is a mass of tattoos marking his station. He guards
+the entrance to the pyramid courtyard to the south."
+end
+
+			kuh
+names {"kuh-Ulchonix", "kuh", "tribal priest", "priest", "chief", "servant"}
+title "the tribal priest kuh-Ulchonix"
+descr "The tribal priest kuh-Ulchonix stands here."
+position POSITION_STANDING
+default POSITION_STANDING
+alignment -600
+sex SEX_MALE
+level 35
+race RACE_HUMAN
+MSET_ABILITY (15,25,10,10,10,15,0,15)
+MSET_WEAPON (7,10,3,10,10,10)
+MSET_SPELL (15,0,0,20,0,0,0,0,15,0,0)
+special SFUN_COMBAT_MAGIC "cast cause serious wounds"
+special SFUN_COMBAT_MAGIC_HEAL "cast cure serious wounds"
+special SFUN_PAIN_INIT time WAIT_SEC*20 bits SFB_RANTIME
+" 100 W1000,11@
+  110 W1000,12@
+  120 W3000,14@
+  130 S4000@
+  150 Csay So, more interlopers from the outside! Ulchonix warned me you would come.@
+  160 Csay If you have come to witness the sacrifice, you should return near noon. If you seek the key to the dinosaur jungles, you will have to best our champion first!@
+  170 Cgrin@
+  180 Csay In any case, bother me not!@
+  210 J4000@
+ 1000 Csay The time has come to prepare for the glorious sacrifice to Ulchonix.@
+ 1010 Glostlands/pyrm_top@
+ 1040 Csay Oh, great and glorious Ulchonix! I, your servant, am ready to offer a young innocent to you!@
+ 1050 llostlands/child_sacrifice@
+ 1060 Csay This fertile young life... let it be a breeding ground for your invisible agents of power!@
+ 2010 Csay Let it be done in your name, mighty Ulchonix!@
+ 2020 llostlands/blood_bowl@
+ 2030 AKuh raises his dagger over the innocent child and slits it's throat, filling a small bowl with it's young blood.@
+ 2050 Copen shaft@
+ 2060 Glostlands/base_shaft@
+ 2080 Cgive child to demon@
+ 2090 Cgive bowl to demon@
+ 2110 Cgrin@
+ 2120 Glostlands/pyrm_top@
+ 2140 Cclose shaft@
+ 3000 Csay It is done.... Ulchonix is pleased.@
+ 3020 Glostlands/chief_hall@
+ 4000 AKuh contemplates the beauty of the mosquito, it's sublime function in the universe.@
+"
+extra {}
+"The jungle priest of Ulchonix, leader of his tribe, exists only to perform
+the blood sacrifice for his god. He is devoid even of a name other than
+servant (kuh) of Ulchonix. His face twitches and you have a feeling that
+he has lost something of his humanity."
+end
+
+
+
+			huzzo
+names {"huzzo", "witch doctor"}
+title "Huzzo"
+descr "Huzzo, the village witch doctor, is busy here."
+extra {}
+"The witch doctor's dark native face is painted bone white with deep
+black eye sockets, like a skull.  He has a twisted, evil look on his face."
+level 29
+alignment -400     /* quite evil and preverted */
+race RACE_HUMAN
+sex SEX_MALE
+position POSITION_STANDING
+default POSITION_STANDING
+romflags {CHAR_DETECT_INVISIBLE}
+MSET_ABILITY (10,10,10,20,20,15,15,0)
+MSET_WEAPON (10,10,10,10,10,0)
+MSET_SPELL (0,0,0,12,0,26,0,0,12,0,0)
+exp 105
+special SFUN_COMBAT_MAGIC "cast fear"
+special SFUN_PAIN_INIT time WAIT_SEC*10 bits SFB_RANTIME
+"100 H1000head@
+ 150 Glostlands/doc_hut@
+ 200 S1100@
+ 510 Csay Have you brought a head to Huzzo?@
+ 520 Csay Bring me a head and I'll shrink it!@
+ 530 J1100@
+ 999 *--- Head Shrinking ---*@
+1000 A$1N looks at the severed head and grins evilly.@
+1010 A$1N throws back his cloak and lovingly strokes the severed head. He screams, 'I shall shrink this one!'@
+1030 Cput head in shrinkfield@
+1040 A$1N chants strange ancient spells. He utters, 'bwithna shrinkydink', and a large sucking sound is heard.@
+1060 llostlands/shrunken_head@
+1070 Cgrin@
+1090 Cdrop head@
+1100 Csnicker@
+"
+end
+
+/*------------------------ Visitors ------------------------*/
+
+			cabal_spirit
+names {"spirit"}
+title "a translucent spirit of the dead"
+descr
+"A spirit of the dead hovers here patiently."
+position POSITION_STANDING
+default POSITION_STANDING
+alignment -1000
+sex SEX_NEUTRAL
+level 33
+race RACE_OTHER_CREATURE
+NATURAL_DEF(WPN_CLAW, ARM_CHAIN)
+MSET_ABILITY (20,35,20,20,5,0,0,0)
+MSET_WEAPON (20,20,20,20,10,10)
+special SFUN_HIDEAWAY time WAIT_SEC*30 bits SFB_RANTIME
+special SFUN_TEAMWORK "quetzal"
+extra {}
+"This spirit of the dead wears the mark of Cabal upon his forehead."
+end
+
+
+			quetzal
+names {"quetzal","serpent"}
+title "Quetzal the feathered serpent"
+descr
+"A magnificent serpent covered in multi-colored feathers is floating on a thin
+haze of smoke here."
+extra {}
+"Quetzal has a wise and noble demeanor. The sun shining his feathers is truly
+a magnificent site, but you notice that it also has long fangs that look less
+than gentle. Quetzal purrs and hums, at times almost warbling like a songbird,
+at other times hissing like a snake."
+level 36
+alignment 1000
+race RACE_OTHER_CREATURE
+sex SEX_NEUTRAL
+position POSITION_STANDING
+default POSITION_STANDING
+NATURAL_DEF(WPN_BITE, ARM_PLATE)
+MSET_ABILITY (10,10,10,10,15,15,15,15)
+MSET_WEAPON (10,10,10,10,10,0)
+MSET_SPELL (4,4,4,4,4,10,4,4,4,4,4)
+special SFUN_COMBAT_MAGIC "c harm"
+special SFUN_COMBAT_MAGIC_HEAL "cast heal"
+special SFUN_COMBAT_POISON
+special SFUN_TEAMWORK "spirit"
+exp 120
+
+#define PTHA_ONGOING "Child Rescue Ongoing"
+#define PTHA_COMPLETE "Child Rescue Complete"
+
+dilbegin quet1();
+var
+  pcname   : string;
+  item     : unitptr;
+  pc       : unitptr;
+  i        : integer;
+  exdp     : extraptr;
+
+code
+{
+
+  :init:
+  heartbeat := PULSE_SEC*5;
+  on_activation((self.position <= POSITION_SLEEPING) or
+               (self.position == POSITION_FIGHTING), skip);
+
+  :start:
+  wait(SFB_CMD, (activator.type == UNIT_ST_PC) and (not
+      command(CMD_GIVE)) and ((PTHA_ONGOING in activator.quests)));
+  if(PTHA_COMPLETE in activator.quests)
+   goto waitawhile;
+
+  pc := activator;
+  secure(pc, lostpc);
+  {
+    exdp := PTHA_ONGOING in pc.quests;
+    if (("child sacrifice" in exdp.names))
+    {
+      pause;
+      subextra(pc.quests, PTHA_ONGOING);
+      addextra(pc.quests, {PTHA_COMPLETE}, "");
+      experience(1250, pc);
+      exec("say Thank you " +pc.name+ ".", self);
+      pause;
+      exec("say You have saved the child from the evil Kuh."+
+           "  You are truly a champion, and Ptha will be "+
+           "pleased to hear the news.", self);
+
+    }
+  }
+
+      unsecure(pc);
+      goto start;
+
+        :waitawhile:
+        heartbeat := PULSE_SEC*60;
+        pause;
+        goto init;
+
+        :lostpc:
+        exec("say I thought they were a champion.", self);
+        pause;
+        exec("sigh", self);
+        goto start;
+}
+dilend
+
+dilbegin quet2();
+var
+  pc     : unitptr;
+  item   : unitptr;
+  exdp   : extraptr;
+
+  code
+  {
+    heartbeat := PULSE_SEC*5;
+    on_activation((self.position <= POSITION_SLEEPING) or
+               (self.position == POSITION_FIGHTING), skip);
+
+    :start:
+    wait(SFB_CMD, command(CMD_GIVE) and
+        (activator.type == UNIT_ST_PC));
+
+    :give:
+    if (not(PTHA_ONGOING in activator.quests))
+        goto start;
+
+    pc := activator;
+    item := self.inside;
+    secure(pc, labsecure);
+    secure(item, labsecure);
+
+    wait(SFB_CMD | SFB_TICK, TRUE);
+    if(not(item #= self.inside))
+    {
+      unsecure(item);
+      exdp := PTHA_ONGOING in pc.quests;
+
+      if("child sacrifice" in self.inside.name)
+      {
+        addstring(exdp.names, "child sacrifice");
+        exec("say Ahhh, the child.", self);
+        destroy(self.inside);
+      }
+      else
+      {
+        exec("say This is not Pthas' child " +
+              pc.name + ".", self);
+        pause;
+        exec("say Please have it back.", self);
+        link(self.inside, pc);
+      }
+    }
+    unsecure(pc);
+
+    if((command(CMD_GIVE)) and
+       (activator.type == UNIT_ST_PC))
+    {
+      goto give;
+    }
+      else
+        goto start;
+
+    :labsecure:
+    exec("sigh", self);
+    goto start;
+
+}
+dilend
+end
+
+
+			grace
+names {"grace jones", "grace"}
+title "Grace Jones"
+descr "Grace Jones looks elegant and menacing posing here."
+position POSITION_STANDING
+default POSITION_STANDING
+alignment 0
+sex SEX_FEMALE
+level 26
+race RACE_HUMAN
+NATURAL_DEF(WPN_CLAW, ARM_PLATE)
+MSET_WEAPON (20,20,20,20,10,10)
+MSET_ABILITY (20,20,20,15,15,10,0,0)
+
+special SFUN_PAIN_INIT time WAIT_SEC*20 bits SFB_RANTIME
+" 100 S4010@
+  400 Csay Are you man enough for me, cutie?@
+  410 AGrace Jones licks her chops, looking at you.@
+  415 Csay So, do you find me ... attractive?@
+  420 Csay I think your kind of cute!@
+  430 Cgrin@
+  440 Cyawn@
+  450 AGrace has obviously grown bored of you. Guess you had your chance.@
+  460 Csigh@
+ 1000 Cget tropical drink@
+ 1010 Cdrink tropical drink@
+ 1020 AGrace Jones smiles demurely.@
+ 2000 AGrace Jones moves onto the dance floor.@
+ 2010 AGrace is ripping up the dance floor, moving like a serpent.@
+ 2020 AGrace Jones growls at you. I guess she doesn't like you staring.@
+ 4010 Cdance@
+"
+extra {}
+"Grace Jones is definitely the toughest looking woman you have ever seen.
+Her nails are quite long and colored black with jungle dyes"
+
+end
+
+
+			aldrich
+names {"ambassador aldrich", "ambassador", "aldrich"}
+title "Ambassador Aldrich"
+descr
+"Ambassador Aldrich stands behind the desk, her arms crossed in front of her."
+position POSITION_STANDING
+default POSITION_STANDING
+alignment 500
+sex SEX_FEMALE
+level 27
+race RACE_HUMAN
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+MSET_WEAPON (20,20,20,20,10,10)
+MSET_ABILITY (20,20,20,15,15,10,0,0)
+
+special SFUN_JANITOR time WAIT_SEC*60 bits SFB_RANTIME
+extra {}
+"Ambassador Aldrich, although advancing in age, is still a beautiful woman and
+appears to be a competent fighter and diplomat. She looks very miserable in
+this jungle heat and humidity - she keeps trying to re-arrange her hair, only
+to have it fall again into her face."
+end
+
+
+			sharae
+names {"sharae langrace", "sharae"}
+title "Sharae the Explorer"
+descr
+"Sharae the Explorer is barely keeping her head above the surface of the
+blood."
+position POSITION_STANDING
+default POSITION_STANDING
+alignment -150
+sex SEX_FEMALE
+level 27
+race RACE_HUMAN
+MSET_ABILITY (20,25,15,20,10,10,0,0)
+MSET_WEAPON (15,20,15,20,20,10)
+
+extra {}
+"As beautiful as this woman is, Sharae also looks like a tough customer. There
+are many deep nicks in her scale mail, and her sword has been scratched in
+combat. It looks like her days spent in this pit of blood have sapped whatever
+remained of her sanity."
+end
+
+
+			labac
+names {"labac", "dward"}
+title "Labac the blind dwarf"
+descr
+"Labac the dwarf stands here looking at nothing."
+position POSITION_STANDING
+default POSITION_STANDING
+alignment 0
+sex SEX_MALE
+level  29
+race RACE_DWARF
+MSET_ABILITY (20,25,15,20,10,10,0,0)
+MSET_WEAPON (15,20,15,20,20,10)
+
+extra {}
+"This stout young dwarf looks in really bad shape. Fever sweat clings to his
+brow and a strange yellowish puss oozes from his eyes. He might have been a
+great warrior earlier in his life, but now he looks scarcely able to defend
+himself."
+end
+
+
+/*------------------Pyramid of Blood------------------*/
+
+			ulchonix
+names {"ulchonix", "jungle god", "insomniac"}
+title "Ulchonix"
+descr "Ulchonix, the God of Jungle Fever, has materialized here."
+extra {}
+"There is something strange about the God of Jungle Fever, as
+if his body was vibrating very quickly. You catch the impressions
+of a mosquito's silent wings, the reek of pussy infection, a litter
+of leprosied skin, and the panic that comes with fever. You avert
+your eyes from the demi-god quickly."
+level 37
+alignment -1000     /* evil personified */
+race RACE_OTHER_CREATURE
+sex SEX_MALE
+position POSITION_STANDING
+default POSITION_STANDING
+NATURAL_DEF(WPN_CLAW, ARM_PLATE)
+ATTACK_DEFENSE(+200, +200)
+MSET_ABILITY (10,10,10,10,15,15,15,15)
+MSET_WEAPON (10,10,10,10,10,0)
+MSET_SPELL (10,0,0,0,20,10,0,0,0,10,0)
+
+exp 120
+
+special SFUN_COMBAT_MAGIC "use staff"
+special SFUN_COMBAT_MAGIC_HEAL "cast heal"
+special SFUN_COMBAT_POISON
+end
+
+			blood_demon
+names {"blood demon", "demon"}
+title "the Blood Demon"
+descr
+"A massive Blood Demon fills the chamber, drooling and muttering."
+extra {}
+"This massive beast, a nightmare of fever-warmed blood, does not look like a
+being to be trifled with. It is difficult to focus on the demon to make out
+details, but it is large, and it is evil."
+level 33
+alignment -1000     /* evil personified */
+race RACE_OTHER_CREATURE
+sex SEX_MALE
+position POSITION_SITTING
+default POSITION_SITTING
+NATURAL_DEF(WPN_CLAW, ARM_PLATE)
+MSET_ABILITY (10,10,10,10,15,15,15,15)
+MSET_WEAPON (10,10,10,10,10,0)
+MSET_SPELL (4,4,4,4,4,10,4,4,4,4,4)
+special SFUN_COMBAT_MAGIC "cast fear"
+special SFUN_COMBAT_MAGIC_HEAL "cast cure serious wounds"
+special SFUN_COMBAT_POISON
+exp 120
+special SFUN_PAIN_INIT time WAIT_SEC*40 bits SFB_RANTIME
+" 100 H2000bowl of blood@
+  110 S3000@
+  120 AThe Blood Demon laugh gutturally, shaking the walls of the pyramid@
+  130 Csay Your blood will run thick with fever soon.@
+  140 Cgrin@
+  150 J3000@
+ 2000 Cdrink bowl@
+ 2010 Cgrowl@
+ 2020 Cshout I am fed!@
+ 2030 Cput bowl of blood in bag@
+ 2040 Cput child in bag@
+ 3000 AThe Blood Demon is longing for some fresh sacrifice.@
+"
+end
+
+			juggernaut
+names {"juggernaut", "jugger"}
+title "the massive juggernaut"
+descr
+"A massive clay juggernaut, fists at side, guards the chamber."
+extra {}
+"This massive statue of a man over 20 feet tall could hardly be described as
+inanimate. It's engraved eyes bear a look of detached malice "
+level 29
+alignment -1000     /* evil personified */
+romflags {CHAR_DETECT_INVISIBLE}
+race RACE_OTHER_CREATURE
+sex SEX_MALE
+position POSITION_STANDING
+default POSITION_STANDING
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+MSET_ABILITY (10,10,10,10,15,15,15,15)
+MSET_WEAPON (10,10,10,10,10,0)
+MSET_SPELL (4,4,4,4,4,10,4,4,4,4,4)
+special SFUN_COMBAT_MAGIC "cast blindness"
+special SFUN_COMBAT_MAGIC_HEAL "cast cure serious wounds"
+special SFUN_AGGRESSIVE time WAIT_SEC*40 bits SFB_RANTIME
+exp 110
+special SFUN_PAIN_INIT time WAIT_SEC*30 bits SFB_RANTIME
+" 100 S1000@
+  110 Csay You will die by fists for invading the Pyramid of Ulchonix!@
+ 1000 AThe juggernaut switches position.@
+"
+end
+
+			b_phirana
+names {"blood phirana", "phirana"}
+title "a swift blood phirana"
+descr "A phirana with large glittering teeth peers at you through the blood."
+position POSITION_STANDING
+default POSITION_STANDING
+alignment 0
+sex SEX_NEUTRAL
+level 20           /* meant as irritant - holds players in forced damage */
+race RACE_FISH
+NATURAL_DEF(WPN_BITE, ARM_CHAIN)
+MSET_ABILITY (50,10,20,19,1,0,0,0)
+MSET_WEAPON (20,20,20,20,10,10)
+special SFUN_AGGRESSIVE time WAIT_SEC*25 bits SFB_RANTIME
+
+extra {}
+"This glittering silver phirana is not a small fish - it looks the size of a
+large salmon, with teeth several inches long. It appears to be in heaven
+swimming through the blood."
+end
+
+			spirit_naga
+names {"spirit naga", "spirit", "naga", "insomniac"}
+title "the spirit naga"
+descr
+"The misty form the spirit naga fills your view."
+extra {}
+"Over 25 feet long, this serpent with the upper body of a woman appears only
+partially physical."
+level 25
+alignment -1000     /* evil personified */
+race RACE_OTHER_CREATURE
+sex SEX_FEMALE
+position POSITION_STANDING
+default POSITION_STANDING
+NATURAL_DEF(WPN_BITE, ARM_PLATE)
+MSET_ABILITY (10,10,10,10,15,15,15,15)
+MSET_WEAPON (10,10,10,10,10,0)
+MSET_SPELL (4,4,4,4,4,10,4,4,4,4,4)
+special SFUN_AGGRESSIVE time WAIT_SEC*45 bits SFB_RANTIME
+special SFUN_COMBAT_MAGIC "use staff"
+special SFUN_COMBAT_MAGIC_HEAL "cast cure serious wounds"
+special SFUN_COMBAT_POISON
+exp 110
+end
+
+			venom
+names {"venom", "insomniac"}
+title "Venom"
+descr
+"Venom, the Sleestak disciple of Ulchonix, is working strange magic."
+extra {}
+"Venom glares back at your through lidless eyes. His lizard scales and upright
+stance make him look more man than lizard. He clutches a strange black staff
+and mutters strange spells in the lagspace."
+level 29
+alignment -1000     /* evil personified */
+race RACE_OTHER_CREATURE
+sex SEX_MALE
+position POSITION_STANDING
+default POSITION_STANDING
+NATURAL_DEF(WPN_CLAW, ARM_CHAIN)
+MSET_ABILITY (10,10,10,10,15,15,15,15)
+MSET_WEAPON (10,10,10,10,10,0)
+MSET_SPELL (4,4,4,4,4,10,4,4,4,4,4)
+special SFUN_COMBAT_MAGIC "use staff"
+special SFUN_COMBAT_MAGIC_HEAL "cast heal"
+special SFUN_COMBAT_POISON
+exp 110
+end
+
+
+			lag_beast
+names {"lag beast", "beast", "lag"}
+title "a lurking lag beast"
+descr
+"The foggy shape of a lag beast hovers here."
+position POSITION_STANDING
+default POSITION_STANDING
+alignment 0
+sex SEX_NEUTRAL
+level 27
+race RACE_OTHER_CREATURE
+NATURAL_DEF(WPN_CLAW, ARM_CHAIN)
+MSET_ABILITY (20,35,20,20,5,0,0,0)
+MSET_WEAPON (20,20,20,20,10,10)
+special SFUN_AGGRESSIVE time WAIT_SEC*45 bits SFB_RANTIME
+special SFUN_HIDEAWAY time WAIT_SEC*30 bits SFB_RANTIME
+special SFUN_TEAMWORK "lag beast"
+extra {}
+"The lag beast is a hazy, vaguely bear-shaped mass of glowing energy. Its
+claws, light bursts of lightning, glow in the darkness."
+end
+
+
+/*---------------Pre-Historic Monsters---------------*/
+
+			carniv_plant
+names {"carnivorous plant", "mantrap", "plant"}
+title "a huge carnivorous plant"
+descr "A tall, moving plant is growing here."
+position POSITION_STANDING
+default POSITION_STANDING
+alignment 0
+sex SEX_NEUTRAL
+level 28
+race RACE_OTHER_PLANT
+NATURAL_DEF(WPN_CRUSH, ARM_PLATE)
+MSET_ABILITY (15,30,15,30,10,0,0,0)
+MSET_WEAPON (20,20,20,20,10,10)
+dilcopy fido@function("","");
+extra {}
+"The plant looks like it could be a giant relative of the Venus
+Flytrap with long vibrating vines. Maybe it's a Venus Mantrap!"
+end
+
+
+			t_rex
+names {"tyranasaurus rex", "tyranasaurus", "rex"}
+title "a Tyranasaurus rex"
+descr "A huge Tyranasaurus rex fills the end of the gully!"
+position POSITION_STANDING
+default POSITION_STANDING
+
+M_DINO_REX(SEX_FEMALE)
+level 62
+special SFUN_AGGRESSIVE time WAIT_SEC*60 bits SFB_RANTIME
+extra {}
+"The Tyranasaurus rex is over two stories tall and weighs many
+tons. It doesn't look very intelligent or very fast, but its teeth are
+the length of spear!"
+end
+
+
+
+			tri_top
+names {"triceratops"}
+title "a triceratops"
+descr "There is a huge triceratops grazing here."
+position POSITION_STANDING
+default POSITION_STANDING
+
+M_DINO_TRI(SEX_MALE)
+level 58
+special SFUN_PAIN_INIT time WAIT_SEC*60 bits SFB_RANTIME
+" 110 AThe tricerotaps rips out a huge piece of jungle foliage and chews it contentedly.@
+  200 Glostlands/pri_jungle4@
+  260 AThe tricerotaps licks water off a plant.@
+  300 Glostlands/pri_clearing@
+ "
+extra {}
+"The tricerotops is is massive and very well armored. Although it doesn't
+look aggressive, it's mass could be dangerous if it got violent and it's
+huge armored plates look as tough to pierce as plate mail."
+end
+
+			g_dragonfly
+names {"giant dragonfly", "dragonfly"}
+title "a giant dragonfly"
+descr "A giant dragonfly hovers nearby.."
+position POSITION_STANDING
+default POSITION_STANDING
+
+M_DRAGONFLY
+level 50
+special SFUN_PAIN_INIT time WAIT_SEC*120 bits SFB_RANTIME
+" 200 Glostlands/pri_marsh3@
+  300 Glostlands/pri_marsh2@
+  400 Glostlands/pri_marsh1@
+"
+extra {}
+"The dragonfly is over 2 meters long and flys on delicate
+membranous wings. It's multifaceted eyes take in the
+surroundings."
+end
+
+			raptor
+names {"raptor"}
+title "a menacing raptor"
+descr "There is menacing raptor here, quick and deadly."
+
+M_DINO_RAPTOR(SEX_MALE)
+level 54
+special SFUN_AGGRESSIVE time WAIT_SEC*45 bits SFB_RANTIME
+special SFUN_HIDEAWAY time WAIT_SEC*30 bits SFB_RANTIME
+special SFUN_TEAMWORK "raptor/Cabal"
+special SFUN_RANDOM_GLOBAL_MOVE time WAIT_SEC*40 bits SFB_RANTIME
+special SFUN_PAIN_INIT time WAIT_SEC*20 bits SFB_RANTIME
+" 100 AYou hear a strange rhythmic clicking from somewhere nearby.@
+  110 Ckill tricerotops@
+  120 Ckill tribesman@
+  130 Ckill tribeswoman@
+  140 Ckill cannibal@
+"
+extra {}
+"This two-meter tall dinosaur is probably the real terror
+If the primordial jungle. It looks significantly more intelligent
+than the other lizards, and it's 90cm long claws look razor
+sharp. It's rumored that these things hunt in packs!"
+
+/* An important note about the raptors - since they are global zone move, they
+could cause a lot of problems if summoned and then not killed - or if the gold
+gate to the village was left open, one could get into the village to kill all them off.
+That is why the village and dino areas are seperated from the rest of
+the mud by
+the river........ IF ANY DESIGNERS CONNECT AREAS to the Jungle Village or
+to the Primordial area, they should be aware that they will need to cope with the
+raptors in their design!!! */
+
+
+
+/* Have modified the raptor's pain so that they emit a clicking sound even
+while hidden, so that people can learn to associate the sound and flee! */
+
+end
+
+
+/*-----------------------OBJECTS------------------------*/
+%objects
+
+/*-----------------------Food Items----------------------*/
+
+			trop_fruit
+names {"tropical fruit", "fruit"}
+title "a piece of tropical fruit"
+descr "A piece of tropical fruit has fallen here."
+extra {}
+"You have never seen this strange fruit. It looks tasty (if a
+little over-ripe)."
+manipulate {MANIPULATE_TAKE}
+type ITEM_FOOD
+FOOD_DEF (5,0)
+weight 1
+cost 5 IRON_PIECE
+end
+
+/*----------------- Disco Drinks ----------------------*/
+
+		     trop_drink1
+
+names {"mai-ti", "mai ti", "tropical drink"}
+title "a huge Mai-ti"
+descr
+"A huge fresh Mai-ti is sitting here."
+extra {}
+"This huge tropical drink looks like it could be very tasty.
+It has a huge paper umbrella and a plastic sword full of
+fruit in it."
+type ITEM_DRINKCON
+manipulate {MANIPULATE_TAKE}
+LIQ_DEF(LIQ_VODKA,2, 8,8,0)
+cost 10 COPPER_PIECE
+end
+
+		     trop_drink2
+
+names {"zombie", "tropical drink"}
+title "a large Zombie"
+descr
+"A freshly squeezed Zombie has been served here."
+extra {}
+"This seething combination of rum and Ulchonix-knows
+what else looks like a very potent drink. It has a massive
+piece of pineapple in it."
+manipulate {MANIPULATE_TAKE}
+type ITEM_DRINKCON
+LIQ_DEF(LIQ_VODKA,10,10,10,0)
+cost 8 COPPER_PIECE
+end
+
+/*----------------- Mundane Items -------------------*/
+
+			water_skin
+names {"waterskin","skin", "water"}
+title "a leather waterskin"
+descr "A leather waterskin has been stashed here."
+extra{}
+"The waterskin is large."
+manipulate {MANIPULATE_TAKE}
+type ITEM_DRINKCON
+LIQ_DEF (LIQ_WATER,3,40,40,0)
+cost 5 IRON_PIECE
+end
+
+			blood_bowl
+names {"bowl of blood","bowl", "blood"}
+title "a bowl of blood"
+descr "A wooden blood-stained bowl has been placed here."
+extra{}
+"This bowl is full of sticky, warm human blood!"
+manipulate {MANIPULATE_TAKE}
+type ITEM_DRINKCON
+LIQ_DEF (LIQ_BLOOD,1,1,1,0)
+cost 5 IRON_PIECE
+end
+
+
+/*------------------------ weapons ---------------------*/
+
+		toothed_sword
+names {"toothed sword", "sword"}
+title  "a strange toothed sword"
+descr "A strange toothed sword lies on the ground."
+extra {}
+"Even though this sword is made of bronze, the wicked teeth along
+it's curved blade look like they could do damage."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+type ITEM_WEAPON
+WEAPON_DEF(WPN_BROAD_SWORD, 5, 0)
+weight 6
+cost 1 SILVER_PIECE
+end
+
+		dino_spear
+names {"jungle spear", "spear"}
+title  "an ornate jungle spear"
+descr "An ornate jungle spear is stuck in the ground here."
+extra {}
+"The head of this medium-length spear is a single dinosaur
+tooth over a foot long. It looks sharp and strong. It is decorated
+with feathers and beads."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+type ITEM_WEAPON
+WEAPON_DEF(WPN_SPEAR, 10, 0)
+weight 8
+cost 2 SILVER_PIECE
+end
+
+			machette
+names {"machette"}
+title "a heavy metal machette"
+descr "A heavy metal machette has been dropped here."
+extra {""}
+"This heavy machette was designed primarily to cut through the jungle
+underbrush, but it looks like it would carve through enemies just as easily."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+type ITEM_WEAPON
+WEAPON_DEF(WPN_KOPESH, 10, 0)
+weight 7
+cost 1 SILVER_PIECE
+end
+
+
+/*----------------------- Armors -------------------------*/
+
+			color_skirt
+names {"colored skirt", "skirt"}
+title  "a brightly colored skirt"
+descr "A brightly colored skirt has been left here."
+extra {}
+"This is a wrap around skirt of colorfully-dyed cloth."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+type ITEM_ARMOR
+ARMOUR_CLOTHES(10, 0)
+weight 1
+cost 15 IRON_PIECE
+end
+
+			feath_cloak
+names {"feathered cloak", "cloak"}
+title "an exotic feathered cloak"
+descr "An exotic feathered cloak has been discarded here."
+extra {}
+"The bright-colored feathers from native jungle birds have been woven
+together in a clever fashion to offer even more protection."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+type ITEM_ARMOR
+ARMOUR_CLOTHES(10, 10)
+STR_TRANSFER(2)
+weight 5
+cost 6 COPPER_PIECE
+end
+
+			feath_head
+names {"feathered headdress", "headdress"}
+title "an elaborate feathered headdress"
+descr "An elaborate feathered headdress is propped up here."
+extra {}
+"This ornamental headdress is almost 4 feet tall and made from several
+kinds of tropical bird feathers."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+type ITEM_ARMOR
+ARMOUR_CLOTHES(5,0)
+weight 10
+cost 7 COPPER_PIECE
+end
+
+			skull_helm
+names {"skull helmet", "helmet", "skull"}
+title "an eerie skull helmet"
+descr "An helmet made from pieces of a skull has been dropped here."
+extra {}
+"This skull looks like it is made from overlapping panels of human skull bone
+held in place by long gold bolts."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+type ITEM_ARMOR
+ARMOUR_HRD_LEATHER(10, 0)
+weight 7
+cost 1 SILVER_PIECE
+end
+
+
+			hvy_gld_shld
+names {"gold shield", "heavy shield", "shield"}
+title "a heavy gold shield"
+descr "A heavy shield of beaten gold lies face down in the mud."
+extra {}
+"Made of hand-beaten gold, what this heavy shield lacks in workmanship
+is surely made up by it's sheer value!"
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_SHIELD}
+type ITEM_SHIELD
+SHIELD_DEF(SHIELD_SMALL, 0, 0)
+weight 22
+cost 1 GOLD_PIECE
+end
+
+			parry_dagger
+names {"parry dagger", "dagger"}
+title "a sturdy parry dagger"
+descr "A sturdy parry dagger has been dropped here."
+extra {}
+"This intricate dagger is not designed to cause damage, but is
+crafted with a deep shielded handle to deflect weapon blows.
+It appears that it should be worn like shield!"
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_SHIELD,MANIPULATE_HOLD}
+type ITEM_SHIELD
+SHIELD_DEF (SHIELD_SMALL, 0, 0)
+weight 3
+cost 3 SILVER_PIECE
+end
+
+
+/*---------------------Treasures------------------------*/
+
+
+			sh_necklace
+
+names {"sharae's necklace", "necklace", "ebony necklace"}
+title "an ebony necklace"
+descr "An ebony necklace has been dropped here."
+type ITEM_TREASURE
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_NECK, MANIPULATE_HOLD}
+weight 1
+cost 10 COPPER_PIECE
+extra {}
+"The name Sharae Langrace is engraved on the clasp of the necklace."
+end
+
+
+/*--------------------Cabal's Stock---------------------*/
+
+			boa
+names {"boa", "constrictor", "snake"}
+title "a harmless boa constrictor"
+descr "A harmless boa constrictor is lounging here."
+extra {}
+"On close examination, you realize that this is a very handsome
+boa constrictor. It is almost a meter long and looks healthy and
+well fed. In fact, you think it might like you."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD, MANIPULATE_WEAR_NECK}
+type ITEM_OTHER
+weight 5
+cost 5 COPPER_PIECE
+end
+
+			bud
+names {"herbal bud", "bud"}
+title "an herbal bud"
+descr "A sticky, sweet smelling herbal bud has been dropped here."
+extra {}
+"This fresh bud of some sticky jungle path has obviously come from a carefully
+maintained garden. It has a sweet, aromatic scent ... you wonder if it might
+be valuable to someone..."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+type ITEM_OTHER
+weight 1
+cost 5 COPPER_PIECE
+end
+
+
+			shrunken_head
+names {"shrunken head", "head"}
+title "a shrunken head"
+descr "You see a disgusting shrunken head."
+extra {}
+"Someone has taken a severed head and shrunken it to a  fraction
+of it's former size!"
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_NECK}
+type ITEM_OTHER
+cost 5 COPPER_PIECE, 10 IRON_PIECE
+weight 1
+end
+
+			pyrm_key
+names {"pyramid key", "key"}
+title "a huge pyramid key"
+descr
+"A massive pyramid key has been placed here."
+extra {}
+"This massive pyramid key is carved from a single piece
+of bone and must weigh 35 pounds! It obviously unlocks
+something very important."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD,MANIPULATE_WEAR_WRIST}
+type ITEM_KEY
+weight 35
+flags {UNIT_FL_NOSAVE}
+end
+
+			serp_key
+names {"serpent key", "key"}
+title "a sturdy iron key shaped like a serpent"
+descr
+"An intricate key, carved to look like a serpent, has been dropped here."
+extra {}
+"This key is bound to unlock something important."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+type ITEM_KEY
+weight 1
+end
+
+
+		orange_frog
+names {"lsd frog", "orange frog", "tree frog","frog"}
+title "a bright-orange tree frog"
+descr "A bright orange tree frog lays comfortably on the ground."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+flags {UNIT_FL_MAGIC}
+type ITEM_POTION
+POTION_DEF (35,SPL_DISEASE_1, SPL_NONE,  SPL_NONE)
+extra {}
+"This small tree frog is the brightest colored animal you have ever
+seen. It is slick with some kind of glistening ooze. You try to
+remember if it is any fun to lick frogs?"
+extra {"$identify"}
+"You can't tell what it is going to do, but you are sure that you
+could swallow the whole frog if you quaffed it down."
+extra {"$improved identify"}
+"Ever heard about licking toads? Well, this frog should be just as
+fun!"
+weight 1
+cost 10 IRON_PIECE
+end
+
+			child_sacrifice
+names {"child sacrifice", "child", "sacrifice"}
+title "a child sacrifice"
+descr
+"A young child, wrapped in sacrificial clothes, has gotten lost in the shuffle
+and dropped here."
+extra {}
+"This child has been anointed for sacrifice to the Blood Demons of Ulchonix.
+How did someone misplace this child? You realize that your busy schedule
+leaves you no time to care for a child. Perhaps you can find someone who can
+keep it safe. The child looks sickly and weak."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+type ITEM_TRASH
+weight 6
+flags {UNIT_FL_NOSAVE}
+end
+
+			bead_pile
+names {"pile of beads", "pile", "beads"}
+title "a pile of pretty beads"
+descr
+"A small pile of colored beads is lying here."
+extra {}
+"Each bead seems to be of a different color, shape or finish. These would sure
+make a pretty necklace if you could figure some way to string them together."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+type ITEM_TRASH
+weight 1
+end
+
+			cabal_mark
+names {"reward mark", "mark"}
+title "a strange reward mark"
+descr
+"A mark of reward has been lost here."
+extra {}
+"This mark has been granted by Quetzal as a symbol of reward. Perhaps if you
+showed it to Cabal he would see fit to reward you for your clever questing.
+Who knows what wonders he might bestow upon you!"
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+type ITEM_TRASH
+weight 1
+end
+
+
+			gator_tooth
+names {"gator tooth", "tooth"}
+title "a chipped gator tooth"
+descr
+"A chipped tooth, probably from an alligator, has been lost in the commotion."
+extra {}
+"While this one tooth doesn't look so impressive, you can imagine that a mouth
+full of them could be impressive!"
+manipulate {MANIPULATE_TAKE}
+type ITEM_FOOD
+FOOD_DEF (1, 1)
+weight 1
+end
+
+			tomb_blossom
+names {"tomb blossom", "blossom"}
+title "a delicate tomb blossom"
+descr
+"A single delicate blossom is growing in the light here, giving off a musky aroma."
+extra {}
+"That such a fragile blossom could grow deep within a tomb makes you believe
+magic must be involved in the process."
+manipulate {MANIPULATE_TAKE}
+flags {UNIT_FL_MAGIC}
+type ITEM_FOOD
+FOOD_DEF (1, 1)
+weight 1
+end
+
+
+			fam1_manual
+names {"owner's manual", "owner manual", "manual"}
+title "a strange owner's manual"
+descr
+"A thin leather-bound manual has been placed here."
+extra {"$read"}
+"   A Cabalistic Familiar's Owner Manual
+
+Congratulations on obtaining a Cabalistic familiar! Hopefully, you haven't
+waked it up yet... it would be a good idea not to until you have found a god
+to perform a Ritual of Bonding on you and your new familiar. At that point,
+you might also ask the god about customizing your new familiar's name, title
+and description!
+
+WARNING! If you wake up your familiar before a god Bonds it to you, you are
+unleashing a masterless spirit on the world. You will be it's first target.
+You very likely might have to destroy it. If you are having problems
+convincing a god to perform the Ritual for you you, please send mudmail to
+Cabal, who will be glad to help.
+
+Once bonded to you, the familiar is a wonderful companion. When carried in
+inventory it actually sits on your shoulder and can interact with you and
+the environment. The Ritual of Bonding forces the spirit to serve you in a
+number of ways. It will make sure that you always have food and water in your
+possession, even creating it for you if necessary. It will not, however, fight
+for you... it is selfish and will only fight to save it's own hide.
+
+The most important function of the basic familiar is the way it will defend
+your possesions. If you should happen to perish, your familiar will gather
+up your possesions from your corpse and teleport to the Udgaard village
+temple to await your rebirth. It will automatically give you your possessions
+once you see it again.
+
+There have been some reports of strange events when more than one familiar
+is in the same room, although nothing dangerous. If you want to keep your
+familiar out of the way, just put it in a bag... If it gets injured in combat
+and is forced to teleport to safety, it will go to the temple again to wait
+for you. PLEASE MAKE SURE YOU HAVE YOUR FAMILIAR ON YOU WHEN YOU LEAVE THE
+GAME... it must be in your possession to be saved with your character.
+"
+manipulate {MANIPULATE_TAKE}
+type ITEM_NOTE
+weight 1
+end
+
+
+/*------------------------ Magic --------------------------*/
+
+		deciever
+names {"deciever", "sword"}
+title  "a steel sword, glowing blue"
+descr
+"A massive steel sword lies impaled in the ground. Strange blue flames
+flicker about the blade."
+extra {}
+"This sword looks like a massive weapon of rather poor quality and craft.
+However, it does look heavy enough to do at least some damage. The name
+DECIEVER is carved on it's hilt."
+extra {"$identify"}
+"This sword is nearly perfect in every way."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+type ITEM_WEAPON
+flags {UNIT_FL_MAGIC}
+WEAPON_DEF(WPN_BROAD_SWORD, +8, +5)
+STR_TRANSFER (+1)
+DEX_TRANSFER (+1)
+WEAPON_SLAYER (RACE_HUMAN)
+CHAR_FLAG_TRANSFER (CHAR_DETECT_INVISIBLE)
+dilcopy abi_restrict@function (ABIL_STR,50,0,25,"");
+weight 6
+cost  7 GOLD_PIECE
+rent 7 SILVER_PIECE
+end
+
+
+
+		dino_sword
+names {"iron atyl", "atyl"}
+title  "a wrought iron atyl"
+descr
+"A strange iron atyl is stuck point first in the ground."
+extra {}
+"This wicked, massive jungle sword is carved from wrought iron, depictions of
+great lizards lurking in the jungle etched onto the wide curving blade."
+extra {"$identify"}
+"This blade has been specially encrolled for slaying dinosaurs."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+type ITEM_WEAPON
+flags {UNIT_FL_MAGIC}
+WEAPON_DEF(WPN_FALCHION, +7, +4)
+STR_TRANSFER (+2)
+BRA_TRANSFER (-2)
+WEAPON_SLAYER (RACE_DINOSAUR)
+dilcopy abi_restrict@function (ABIL_STR,75,0,25,"");
+
+weight 6
+cost 232 COPPER_PIECE
+rent 116 IRON_PIECE
+end
+
+
+
+		jungle_cure
+names {"potion", "jungle cure", "cure"}
+title "a potent jungle cure"
+descr "A potent jungle cure has been discarded here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+type ITEM_POTION
+POTION_DEF (60,SPL_REM_DISEASE, SPL_REMOVE_POISON,  SPL_NONE)
+flags {UNIT_FL_MAGIC}
+extra {}
+"This potent potion, made using an ancient jungle recipe, could help you
+recover form all those nasty jungle ailments you have heard about."
+extra {"$identify"}
+"This cure provides a robust remove disease and remove poison in one handy
+container!"
+weight 1
+cost 95 COPPER_PIECE
+end
+
+
+		mana_fruit
+names {"glowing fruit", "fruit"}
+title "a glowing fruit"
+descr "A glowing piece of fruit has been dropped here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+flags {UNIT_FL_MAGIC}
+type ITEM_POTION
+POTION_DEF (35,SPL_MANA_BOOST, SPL_NONE,  SPL_NONE)
+extra {}
+"This long, banana-shaped tropical fruit looks like a thin membrane
+surrounding a juicy, glowing interior. It sparkles with an inner light."
+extra {"$identify"}
+"This appears to be a fruit from some sort of carnivorous plant. When
+such plants eat a magic creature, a fruit of this sort often forms. It
+must contain raw mana from it's meal! It should be quaffed like a potion."
+extra {"$improved identify"}
+"This potion restores mana to spellcasters when it is quaffed."
+weight 1
+cost 150 COPPER_PIECE
+end
+
+		virus_vial
+names {"vial", "tube"}
+title "a small vial"
+descr "A small vial has been carelessly dropped here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+/* NOT marked as magic because it is a virus culture */
+type ITEM_POTION
+POTION_DEF (60,SPL_POISON, SPL_SLEEP,  SPL_NONE)
+extra {}
+"The small vial seems to be a viquid container with a label on
+its side"
+extra {"$identify"}
+"You could certainly quaff the contents of this vial.
+Strangely, it is not magic, but it does seeth with life."
+extra {"label"}
+"The label has some unreadable markings on it"
+extra {"markings"}
+"Don't you learn? It said the markings are unreadable."
+weight 1
+cost 5 COPPER_PIECE
+end
+
+		goggles
+names {"goggles", "goggle"}
+title "a set of crystal goggles"
+descr
+"A set of strange crytsal goggles has been abandonded here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_HEAD}
+flags {UNIT_FL_MAGIC}
+type ITEM_WORN
+CHAR_FLAG_TRANSFER (CHAR_DETECT_INVISIBLE)
+extra {}
+"These crystal goggles, obviously made to the be worn on the head, have an
+elaborate strap system that would prevent you from also wearing a helm."
+extra {"identify"}
+"These goggles allow you to see things that are normally invisible."
+weight 1
+cost 150 COPPER_PIECE
+rent 50 IRON_PIECE
+end
+
+
+		bone_anklet
+names {"bone anklet", "bone anklets","anklet", "anklets"}
+title "a pair of bone anklets"
+descr "A pair of strange bone anklets have been dropped here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_FEET}
+flags {UNIT_FL_MAGIC}
+type ITEM_WORN
+CHAR_FLAG_TRANSFER(CHAR_SNEAK)
+CHAR_FLAG_TRANSFER(CHAR_DETECT_LIFE)
+CHAR_FLAG_TRANSFER(CHAR_WIMPY)
+extra {}
+"You suspect that this matching pair of anklets are made from
+human bones. You could wear them around your ankles, but not
+with any other kind of footware."
+extra {"$identify"}
+"These bones are from a sacrifice to the Blood Demon of
+Ulchonix. They improve the wearer's ability to move undetected,
+find hidden opponents and escape deadly situations."
+extra {"$improved identify"}
+"These anklets cause the wearer to sneak, detect life and throws
+the wearer into wimpy mode...."
+weight 1
+cost 150 COPPER_PIECE
+rent 75 IRON_PIECE
+end
+
+		anthrax_staff
+names {"anthrax staff", "staff"}
+title "the Anthrax Staff"
+descr
+"A twisted staff of diseased wood lies on the ground, pulsing sickly."
+manipulate {MANIPULATE_TAKE}
+flags {UNIT_FL_MAGIC}
+STAFF_DEF(86,8,SPL_DISEASE_1,SPL_SLEEP)
+extra {}
+"This staff has been made from a massive piece of twisted wood.
+A plusing green light escapes from the deep wormholes in its
+surface. Roughly carved into it's side are the words, 'Anthrax
+Leprosy Mu'."
+extra {"$identify"}
+"This magical staff spreads a toxic form of the disease Anthrax
+Leprosy Mu, a disease related to both accelerated leprosy and
+African sleeping sickness, over all who stand before you. I guess
+you could say it causes 'staff infections'."
+extra {"$improved identify"}
+"Enemies fall at the might of this staff, forged in the hands of
+the demi-god Ulchonix, that produces Sleep and Madness."
+weight 1
+rent 100 IRON_PIECE
+end
+
+		plague_staff
+names {"bubonic staff", "staff", "plague"}
+title "the Bubonic Staff"
+descr
+"An ebony staff shaped like a hooded cobra lies throbbing on the ground."
+manipulate {MANIPULATE_TAKE}
+flags {UNIT_FL_MAGIC}
+STAFF_DEF(86,8,SPL_DISEASE_2,SPL_STINKING_CLOUD_1)
+dilcopy ali_restrict@function (-1000,-350,0,25,"");
+extra {}
+"Straight and narrow, this ebony staff was never meant for combat. There is a
+dull green glow from the eyes of the cobra head at its top."
+extra {"$identify"}
+"This staff is used by the most powerful servants of Ulchonix to spread plague
+upon the face of the land, affecting multiple targets at once."
+extra {"$improved identify"}
+"One would have to be particularly evil to use this staff ... it's plague
+affects could spread to slay an entire nation."
+weight 1
+rent 200 IRON_PIECE
+end
+
+
+		quetzal_staff
+names {"mercy staff", "staff", "mercy"}
+title "the Mercy Staff"
+descr
+"A glowing staff, carved like a feathered serpent, is laying on the ground."
+manipulate {MANIPULATE_TAKE}
+flags {UNIT_FL_MAGIC}
+STAFF_DEF(60,10,SPL_REM_DISEASE,SPL_REMOVE_POISON)
+
+dilcopy ali_restrict@function (350,1000,0,25,"");
+alignment +750
+PROTECTION_FROM_EVIL
+
+extra {}
+"This finely crafted staff depicts a gentle feather serpant. It glows with a
+faint inner light."
+extra {"$identify"}
+"This staff is used to minister to the sick, allowing the curing of large
+groups at a single time. It was created by Quetzal to combat the evil plagues
+of Ulchonix."
+extra {"$improved identify"}
+"This powerful staff will remove disease and remove poison for everyone in the
+room, although not for the wielder of the staff itself. It is meant to be used
+by the forces of good to help others. However, when held, evil creatures will
+not attack you."
+weight 6
+rent 100 IRON_PIECE
+end
+
+
+		love_beads
+names {"love beads", "beads"}
+title "a necklace of magic beads of love"
+descr
+"You sense a strange feeling coming from the discarded love beads."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD, MANIPULATE_WEAR_NECK}
+flags {UNIT_FL_MAGIC}
+type ITEM_WORN
+CON_TRANSFER (+1)
+extra {}
+"This necklace of assorted colored beads"
+ extra {"$identify"}
+"This necklace, obviously magical, makes you feel one with the
+magical forces of love, resulting in greater popularity and a
+reliance on alternative medicine."
+extra {"$improved identify"}
+"The love beads raise charisma and constitution by one point each."
+weight 1
+cost 50 COPPER_PIECE
+rent 25 IRON_PIECE
+end
+
+		voodoo_hat
+names {"voodoo hat", "hat"}
+title "a tall black voodoo hat"
+descr
+"A strange looking tall black hat has been dropped here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+flags {UNIT_FL_MAGIC}
+type ITEM_ARMOR
+ARMOUR_CLOTHES(10,0)
+weight 2
+BRA_TRANSFER (+1)
+extra {}
+"This tall black hat has been decorated with shells and beads. It seems
+rather eerie."
+extra {"$identify"}
+"The voodoo hat seems to make it's wearer smarter."
+cost 50 COPPER_PIECE
+rent 25 IRON_PIECE
+end
+
+			fever_shld
+names {"fever shield", "mosquito shield", "shield", "fever"}
+title "a round gold shield"
+descr
+"A round shield of beaten gold, bearing the symbol of a mosquito, throbs on
+the ground here."
+extra {}
+"This shield is surprising light for being made of what appears to be solid
+gold. A stylized mosquito looming over a man adorns its front. The name Fever
+is inscribed on the back."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_SHIELD}
+type ITEM_SHIELD
+SHIELD_DEF (SHIELD_SMALL, 10, 10)
+flags {UNIT_FL_MAGIC}
+CON_TRANSFER (-2)
+BRA_TRANSFER (-2)
+DEX_TRANSFER (+1)
+STR_TRANSFER (+1)
+weight 6
+cost 100 COPPER_PIECE
+rent 50 IRON_PIECE
+end
+
+			devour_bag
+names {"bag of holding", "bag of devouring", "bag"}
+title "a bag of holding"
+descr
+"A dull black bag, difficult to focus on, has been dropped here."
+CONTAINER_DEF(500)
+cost 100 COPPER_PIECE
+weight 1
+manipulate {MANIPULATE_TAKE, MANIPULATE_ENTER}
+flags {UNIT_FL_MAGIC}
+special SFUN_FORCE_MOVE
+"lostlands/lost_room!The field collapses suddenly, hurling you through space."
+   time WAIT_SEC*20 bits SFB_RANTIME
+extra {}
+"This small bag looks like it could a lot before overflowing. You marvel at
+how much you could carry if you put it all in this bag of holding!"
+end
+
+
+/*---------------- Notes and Hints -------------------*/
+
+
+/*-------------- Stationary Objects -----------------*/
+
+			tribal_well
+names {"tribal well", "well", "water"}
+title "the tribal well"
+descr "A stone well sits in the middle of the commons."
+LIQ_DEF (LIQ_WATER, 4000, 20000, 20000, 0)
+cost 56 COPPER_PIECE
+weight 10000000
+extra {} "It is filled with water."
+end
+
+			kali_well
+names {"cabal's well", "well", "water"}
+title "Cabal's well"
+descr
+"A stone well, surrounded by carefully tended tropical flowers, has been set
+in the garden."
+LIQ_DEF (LIQ_WATER, 4000, 20000, 20000, 0)
+cost 6 COPPER_PIECE
+weight 10000000
+extra {} "It is filled with bubbling spring water."
+end
+
+
+			shrink_field
+names {"shrinkfield", "field"}
+title "Huzzo's Shrinkfield"
+descr
+"It is some kind of magical field, invisible to the naked eye."
+CONTAINER_DEF(5000)
+weight 1
+manipulate {MANIPULATE_ENTER}
+flags {UNIT_FL_INVISIBLE}
+special SFUN_FORCE_MOVE
+"lostlands/blood_pit!The field collapses suddenly, hurling you through space."
+   time WAIT_SEC*40 bits SFB_RANTIME
+extra {}
+"This shrinkfield seems to be involved with Huzzo's magic. If you were crazy,
+you could enter it."
+end
+
+			light_beam
+names {"light beam", "beam", "light"}
+title "a blazing beam of light"
+descr
+"A massive beam of light shoots down from the heavens here, illuminating a new
+set of runes carved into the ground."
+CONTAINER_DEF(5000)
+weight 1
+flags {UNIT_FL_TRANS}
+manipulate {MANIPULATE_ENTER}
+special SFUN_FORCE_MOVE
+"lostlands/landslide!You are transported by the beam to a new place.@$1n disappears from the beam in a flare of light."
+   time WAIT_SEC*10 bits SFB_RANTIME
+extra {}
+"This definately looks divine in nature. You wonder if the gods are trying to
+get you to look at the runes."
+extra {"runes", "$read runes"}
+"As many of you have been curious about the progress in the Lostlands, I have
+planted this transporter beam to take you there. There are several ways out of
+the jungle, but I will leave you to find them. It is, however, still under
+construction, so *please* report any bugs that you find by using the TYPO or
+IDEA commands. Thanks....
+
+------ Cabal the Jungle Zombie"
+end
+
+
+/*-------------------------RESET-------------------------*/
+%reset
+
+/*-------------- Stationary Objects-----------------*/
+load tribal_well into trib_common local 1
+load kali_well into kali_gard local 1
+load shrink_field into doc_hut local 1
+load light_beam into mnt_pass@ratswarf local 1
+
+/*-------------- Close Them Doors------------------*/
+door base_shaft WEST {EX_OPEN_CLOSE, EX_CLOSED,EX_LOCKED,EX_PICKPROOF}
+door mosaic1 EAST {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_PICKPROOF}
+door gold_hall WEST {EX_OPEN_CLOSE, EX_CLOSED}
+door spot_garden EAST {EX_OPEN_CLOSE, EX_CLOSED}
+door spot_garden DOWN {EX_OPEN_CLOSE, EX_CLOSED}
+door blood_pit UP {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door enscroll_room UP {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door lag EAST {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door in_gold_gate WEST {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+door out_gold_gate EAST {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+
+/*-------------Load Jungle Monsters ---------------*/
+load orange_frog into banyan_tree local 1
+load g_mosquito into disease_p max 2
+load monkey_thief into monkey_nest max 5
+load alligator into river_edge max 2
+{
+	load gator_tooth
+}
+load parrot into ginkgo_tree max 1
+{
+	load bud
+}
+
+load ptha into kali_gard max 1
+load marley into kali_gard max 1
+load jane into tzan_house max 1
+load tarzan into tzan_porch max 1
+{
+	follow cheetah max 1
+	{
+	       equip boa position WEAR_NECK_1
+	}
+}
+load quetzal into jungle_top max 1
+{
+	load devour_bag
+}
+load cabal_spirit into jungle_top max 1
+{
+	load devour_bag
+}
+/*---------------- Load Village ---------------------*/
+load disco_native into tribe_disco max 1
+load tribesman into wood_hut2 max 6
+{
+	equip color_skirt position WEAR_LEGS
+	load spear0@midgaard
+	load machette
+}
+load tribeswoman into wood_hut2 max 6
+{
+	equip color_skirt position WEAR_LEGS
+	load spear0@midgaard
+	load machette
+}
+load can_champ into chief_hall max 1
+{
+	equip feath_cloak position WEAR_ABOUT
+	equip dino_spear position WEAR_WIELD
+	equip bronze_bracers@midgaard position WEAR_ARMS
+	equip color_skirt position WEAR_LEGS
+	equip skull_helm position WEAR_HEAD
+	load serp_key
+}
+load cannibal1 into in_wd_gate local 1
+{
+	equip feath_cloak position WEAR_ABOUT
+	equip toothed_sword position WEAR_WIELD
+	equip bronze_bracers@midgaard position WEAR_ARMS
+	equip hvy_gld_shld position WEAR_SHIELD
+	equip color_skirt position WEAR_LEGS
+	equip feath_head position WEAR_HEAD
+}
+load cannibal1 into in_brnze_gate local 1
+{
+	equip feath_cloak position WEAR_ABOUT
+	equip toothed_sword position WEAR_WIELD
+	equip bronze_bracers@midgaard position WEAR_ARMS
+	equip hvy_gld_shld position WEAR_SHIELD
+	equip color_skirt position WEAR_LEGS
+	equip feath_head position WEAR_HEAD
+}
+load cannibal1 into in_gold_gate local 1
+{
+	equip feath_cloak position WEAR_ABOUT
+	equip toothed_sword position WEAR_WIELD
+	equip bronze_bracers@midgaard position WEAR_ARMS
+	equip hvy_gld_shld position WEAR_SHIELD
+	equip color_skirt position WEAR_LEGS
+	equip feath_head position WEAR_HEAD
+}
+load huzzo into doc_hut max 1
+{
+	equip feath_head position WEAR_HEAD
+	equip iron_bracers@midgaard position WEAR_ARMS
+	equip color_skirt position WEAR_LEGS
+	equip spear0@midgaard position WEAR_WIELD
+	equip bone_anklet position WEAR_FEET max 40
+}
+load kuh into chief_hall max 1
+{
+	equip feath_head position WEAR_HEAD
+	equip iron_bracers@midgaard position WEAR_ARMS
+	equip color_skirt position WEAR_LEGS
+	equip toothed_sword position WEAR_WIELD
+	equip feath_cloak position WEAR_ABOUT
+	equip parry_dagger position WEAR_SHIELD
+}
+load carniv_plant into doc_gard1 max 1
+{
+	equip mana_fruit position WEAR_HOLD max 40
+}
+load bury_beetle into doc_gard2 max 1
+/*------------------ Visitors ----------------------*/
+load grace into tribe_disco max 1
+{
+	load virus_vial
+}
+load sharae into blood_pit max 1
+{
+	equip sh_necklace position WEAR_NECK_1 max 1
+	equip midgaard/lsword0 position WEAR_WIELD max 1
+	equip midgaard/lantern position WEAR_HOLD max 1
+	equip goggles position WEAR_HEAD max 1
+	equip midgaard/scale_gloves WEAR_HEAD max 1
+	equip midgaard/scale_sleeves WEAR_ARMS max 1
+	equip midgaard/scale_jerkin WEAR_BODY max 1
+	equip midgaard/lth_boots WEAR_FEET max 1
+	equip midgaard/scale_skirt WEAR_LEGS max 1
+}
+load aldrich into embassy max 1
+{
+	equip midgaard/lsword0 position WEAR_WIELD max 1
+	equip midgaard/scale_gloves WEAR_HEAD max 1
+	equip midgaard/scale_sleeves WEAR_ARMS max 1
+	equip midgaard/scale_jerkin WEAR_BODY max 1
+	equip midgaard/lth_boots WEAR_FEET max 1
+	equip midgaard/scale_skirt WEAR_LEGS max 1
+}
+load labac into clay_bldg max 1
+{
+	equip midgaard/lsword0 position WEAR_WIELD max 1
+	equip midgaard/lantern position WEAR_HOLD max 1
+	equip midgaard/scale_gloves WEAR_HEAD max 1
+	equip midgaard/scale_sleeves WEAR_ARMS max 1
+	equip midgaard/scale_jerkin WEAR_BODY max 1
+	equip midgaard/lth_boots WEAR_FEET max 1
+	equip midgaard/scale_skirt WEAR_LEGS max 1
+	load dino_sword max 1
+	load midgaard/bag
+}
+
+/*---------  Load Pyramid Mobs ------------*/
+
+load ulchonix into u_limbo max 1
+{
+	equip pyrm_key position WEAR_WRIST_L max 1
+	equip anthrax_staff position WEAR_HOLD max 10
+}
+load blood_demon into base_shaft max 1
+{
+	load devour_bag
+}
+load juggernaut into gold_hall max 1
+load tomb_blossom into spot_garden max 1
+load b_phirana into blood_tube max 3
+load spirit_naga into u_loot max 1
+{
+	/* PAPI: No such thing???	load ulchon_treas */
+	equip anthrax_staff position WEAR_HOLD max 10
+	equip fever_shld position WEAR_SHIELD
+}
+load lag_beast into enscroll_room max 2
+load lag_beast into enscroll_room max 2
+load venom into lag max 1
+{
+	equip plague_staff position WEAR_HOLD max 10
+}
+load midgaard/janitor1 into lost_room max 1
+/*--------- Load Pre-Historic Mobs ------------*/
+load t_rex into pri_gully2 max 1
+load tri_top into pri_clearing max 3
+load tri_top into pri_clearing max 3
+load g_dragonfly into pri_marsh1 max 3
+load raptor into pri_swamp4 max 6
+load raptor into pri_jungle1 max 6
+
+%end
+

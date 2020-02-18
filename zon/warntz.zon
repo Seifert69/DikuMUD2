@@ -1,0 +1,4772 @@
+/*
+filename    warntz
+password    allison69
+changedby   Zig
+EmailAdd     Morgan Schafer <saor@maestro.com>
+request     compile
+version     74
+END HEADER*/
+
+
+#include <composed.h>
+
+%zone warntz
+title "Warntz Forest"
+lifespan 20
+reset RESET_ANYHOW
+
+creators {"zig"}
+
+notes
+"&c+rFor the sake of spam, I removed most the info from this file.&n
+Comments can be sent to me at &c+wmoses@flash.net&c+r. General&n
+Info, the zone is designed for 50+ adventurers, the owlbears and griffons &n
+are approximately. Level 90-100&cw"
+help
+"The forest is big, the creatures are fierce. Adventurers below level 50 &n
+should stay out.&n"
+%dil
+dilbegin damntree();
+var
+     i : integer;
+    code
+{
+     heartbeat := PULSE_SEC*20;
+
+     :start:
+     wait(SFB_CMD, (activator.type == UNIT_ST_PC));
+     i := rnd (1,50);
+     if (i > 1) goto start;
+     act("$1n hits $1s head on a large tree branch!",
+          A_ALWAYS, activator, null, null, TO_REST);
+     act("You smack your head on a large tree branch!",
+          A_ALWAYS, activator, null, null, TO_CHAR);
+     act("$1n screams loudly, in obvious pain!",
+          A_ALWAYS, activator, null, null, TO_REST);
+     act("You scream loudly, in obvious pain.",
+          A_ALWAYS, activator, null, null, TO_CHAR);
+     activator.hp := activator.hp - 5;
+     pause;
+     goto start;
+}
+dilend
+
+dilbegin for_cries();
+
+var
+     i : integer;
+
+code
+{
+     heartbeat := PULSE_SEC*20;
+
+     :start:
+     wait(SFB_CMD, (activator.type == UNIT_ST_PC));
+     i := rnd (1,50);
+     if (i > 1)
+        goto start;
+
+     act("A horrible cry pierces the eerie silence.",
+          A_ALWAYS, activator, null, null, TO_REST);
+     act("A horrible cry pierces the eerie silence.",
+          A_ALWAYS, activator, null, null, TO_CHAR);
+
+}
+dilend
+
+
+dilbegin hamm_aff();
+code
+{
+
+act("Suddenly your hammer screams 'DESTRUCTION!'",
+A_ALWAYS, self, null,target , TO_CHAR);
+act("$2n's hammer screams 'DESTRUCTION!'",
+A_SOMEONE, self, medium,target, TO_NOTVICT);
+act("$2n's hammer screams 'DESTRUCTION!'",
+A_SOMEONE, self, medium,null, TO_VICT);
+
+
+
+                                                 return;
+                                                 }
+                                                 dilend
+
+dilbegin splitter_aff (medi : unitptr, targ : unitptr, hm : integer);
+code
+{
+      act("You lose control and boldly CHOP $3n! " +
+	  "Fragments of flesh and bone fly about",
+          A_ALWAYS, self, null, targ,TO_CHAR);
+      act("$1n loses control and boldly CHOPS $3n! "+
+          "Fragments of flesh and bone fly about",
+          A_SOMEONE, self, null,targ,TO_NOTVICT);
+      act("$1n loses control, and boldy CHOPS you! "+
+          "Fragments of your flesh and bone fly off.",
+          A_SOMEONE, self, null,targ,TO_VICT);
+					return;
+}
+dilend
+
+dilbegin warhammer_aff (medi : unitptr, targ : unitptr, hm : integer);
+code
+{
+      act("Your hammer glows and &c+bBLASTS&cw $3n!",A_ALWAYS, self, null, targ,TO_CHAR);
+      act("$1ns hammer glows and &c+bBLASTS&cw $3n!",A_SOMEONE, self, null,targ,TO_NOTVICT);
+      act("$1ns hammer glows and &c+bBLASTS&cw you!",A_SOMEONE, self, null,targ,TO_VICT);
+					return;
+}
+dilend
+
+dilbegin swordaffect (medi : unitptr, targ : unitptr, hm : integer);
+code
+{
+      act("Your souledge glows and flames &c+rERUPT&cw upon $3n!",A_ALWAYS, self, null, targ,TO_CHAR);
+      act("$1n's souledge glows and flames &c+rERUPT&cw upon $3n!",A_SOMEONE, self, null,targ,TO_NOTVICT);
+      act("$1n's souledge glows and flames &c+rERUPT&cw upon you!",A_SOMEONE, self, null,targ,TO_VICT);
+					return;
+}
+dilend
+
+dilbegin owl_baby();
+code
+{
+        :start:
+        heartbeat := PULSE_SEC * 5;
+        interrupt(SFB_COM, self.position == POSITION_FIGHTING, combat);
+        exec("fol mom",self);
+        pause;
+        pause;
+        pause;
+        goto start;
+
+        :combat:
+        heartbeat := PULSE_SEC*3;
+        while (self.position == POSITION_FIGHTING) pause;
+        heartbeat := PULSE_SEC*10;
+        pause;
+        pause;
+        pause;
+        goto start;
+}
+dilend
+
+
+%rooms
+
+
+
+zigs_dorm
+names {"Zigs home"}
+title "&c+rZigs Apartment&cw"
+descr
+"       This is Zig's apartment. Zig's room is a normal apartment. Mountain &n
+Dew cans, and other assorted beverage bottles litter the place.  His clothes&n
+are strewn about.  However, it would seem that Zig has put a little effort &n
+into cleaning his room. Posters hang from the walls showing scantily clad &n
+models and sports figures. Messages dance on the monitor of Zig's computer. &n
+Zig's bed is perfectly made, like he spends no time in it, perhaps he plays&n
+Valhalla instead of sleeping. Music blares from behind you on Zig's stereo.&n
+Above the bed a picture hangs on the wall. &n
+&n
+&c+bA gigantic &c+ySIGN &c+bis spiked into the floor.&cw&n"
+extra {"sign"}
+"The sign reads: &c+wThe end is near.&cw"
+extra {"bed"}
+"The bed is perfectly made, its completley obious that Zig spends as little&n
+time here as possible.  Which explains why he is on Valhalla so late at &n
+night (morning).  The bed is enticing, it looks quite comfortable.&n"
+extra {"picture"}
+"A large picture has been placed on the wall, enclosed in a small wooden&n
+frame is a painting of the players Zig(Zag) has grown to love:&n
+&n
+&c+gOops(Malice), Wonko, Cinnamon, Dominic, Kuros, Hex, Rattlesnake, Boyz,&n
+&c+rShanna, Taz, Whistler, Palio, Silencer(Shhh), Zoe, Rikuo, Noblestone,&n
+&c+cDangerboy, Jem(Jager), Orin(Nexus), Troll, Adder, Volklod, Gearhead, &n
+&c+mOdo (Mon), Javelin(Sand), Batlin, Smurf(Marky), Faramir and Isildur. &cw"
+extra {"posters"}
+"Posters of Zig's favorite atheletes are plastered to the wall, as well as&n
+posters of Zig's favorite teams (Denver Broncos, Colorado Avalanche, && the&n
+Colorado Rockies dominate his walls. In addition beautiful models are &n
+placed on Zig's wall, so that he may pay hommage to their perfection."
+extra {"screen" , "monitor" , "computer"}
+"The screen displays favorite motto:&n &c+b When you mess with the best you die like the rest. &cw"
+extra {"mountain dew","cans"}
+"These Mountain Dew cans cleverly hide numerous bottles of alchohol."
+extra {"clothes"}
+"Zig's clothes are scattered all around the place. You wonder if there is a&n
+floor here anywhere."
+extra {"stereo"}
+"The stereo is a modest , with a CD player. Around the stereo CD cases&n
+are scattered about. Looking at the titles you see that Zig has the &n
+following CD's: Metallica, Alice In Chains, Pantera, Rage Against the &n
+Machine, Korn, Faith no More, and Anthrax. Obviously Zig has great taste."
+ALWAYS_LIGHT
+flags {UNIT_FL_SACRED}
+flags {UNIT_FL_INDOORS}
+north to zigs_dorm;
+south to zigs_dorm;
+east to zigs_dorm;
+dilbegin eastx();
+var
+        pc :  unitptr;
+        pc_name : string;
+code
+{
+:init:
+heartbeat := PULSE_SEC*3;
+:start:
+ wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and (command("east"))));
+ pc := activator;
+ secure(pc,lost);
+ block;
+ if((pc.name == "zig") or (pc.name == "zag") or (pc.name == "zyg") or (pc.name == "malice") or (pc.name == "oops"))
+  {
+  link(pc, findroom("malice_haven@farm"));
+  act(pc.name+" leaves east.",A_SOMEONE,self.inside,null,null,TO_REST);
+  exec("look",pc);
+  act(pc.name+" has arrived from the west.",A_SOMEONE,self.inside,null,null,TO_ALL);
+  unsecure(pc);
+  goto start;
+  }
+  else
+  {
+  act("You walk right into a wall, apprently you are not allowed to travel east.",A_SOMEONE,self.inside,null,null,TO_CHAR);
+  unsecure(pc);
+  goto start;
+  }
+
+:lost:
+ goto start;
+}               
+dilend          
+
+dilbegin northx();
+var
+        pc :  unitptr;
+        pc_name : string;
+code
+{
+:init:
+heartbeat := PULSE_SEC*3;
+:start:
+ wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and (command("north"))));
+ pc := activator;
+ secure(pc,lost);
+ block;
+ link(pc, findroom("inn@udgaard"));
+ act(pc.name+" leaves north.",A_SOMEONE,self.inside,null,null,TO_ALL);
+ exec("look",pc);
+ unsecure(pc);
+ goto start;
+
+:lost:
+ goto start;
+}               
+dilend          
+
+dilbegin southx();
+var
+        pc :  unitptr;
+        pc_name : string;
+code
+{
+:init:
+heartbeat := PULSE_SEC*3;
+:start:
+ wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and (command("south"))));
+ pc := activator;
+ secure(pc,lost);
+ block;
+ link(pc, findroom("cth_sanctum@midgaard"));
+ act(pc.name+" leaves north.",A_SOMEONE,self.inside,null,null,TO_ALL);
+ exec("look",pc);
+ unsecure(pc);
+ goto start;
+
+:lost:
+ goto start;
+}               
+dilend          
+
+dilbegin exits();
+var
+        pc :  unitptr;
+        pc_name : string;
+code
+{
+:init:
+ heartbeat := PULSE_SEC*3;
+:start:
+wait(SFB_CMD,(command("exits") or command("directions") or command("door")));
+ pc := activator;
+ if (command("exits"))
+ {
+  secure(pc,lost);
+  block;
+  act("East  - The Haven of Malice",A_ALWAYS, pc, null, null,TO_CHAR);
+  act("North - The Chicken's Rest",A_ALWAYS, pc, null, null,TO_CHAR);
+  act("South - Inner Sanctum",A_ALWAYS, pc, null, null,TO_CHAR);
+  unsecure(pc);
+  goto start;
+ }
+ if (command("directions"))
+ {
+  secure(pc,lost);
+  block;
+  act("East  - The Haven of Malice",A_ALWAYS, pc, null, null,TO_CHAR);
+  act("North - The Chicken's Rest",A_ALWAYS, pc, null, null,TO_CHAR);
+  act("South - Inner Sanctum",A_ALWAYS, pc, null, null,TO_CHAR);
+  unsecure(pc);
+  goto start;
+ }
+
+ if (command("doors")) 
+ {
+  secure(pc,lost);
+  block;
+  act("East  - The Haven of Malice",A_ALWAYS, pc, null, null,TO_CHAR);
+  act("North - The Chicken's Rest",A_ALWAYS, pc, null, null,TO_CHAR);
+  act("South - Inner Sanctum",A_ALWAYS, pc, null, null,TO_CHAR);
+  unsecure(pc);
+  goto start;
+ }
+
+ else
+ {
+ goto start;
+ }
+
+:lost:
+ goto start;
+}               
+dilend          
+
+end
+
+warntz_ent
+names {"entrance"}
+title "On the bank of the mountain lake"
+descr
+"    A gorgeous mountain lake lays to your south, while northwards the
+ominous Warntz Forest seems to blot out the sun.  The forest is deep and
+dangerous in appearance, and the lake is calm and peaceful.  Such a contrast
+makes you feel uneasy. You can enter the lake southwards, or enter the forest
+to the north."
+movement SECT_FIELD
+south to path_und@neptune descr
+"The lake lays to the south.";
+north to path1@warntz descr
+"The forest begins northwards.";
+end
+
+path1
+names {"path"}
+title "Entrance to the Wartnz Forest"
+descr
+"   The Warntz Forest stretches out here, it surrounds all that you see.
+As you look to the north you notice two huge towering trees of the
+forest which is very dark and forboding.  If you sit and listen you
+can hear the cries and screams of predators and their prey.  The forest
+is very thick and does not allow travel to the north. You can continue
+on the path to the east and south."
+extra {"trees"}
+"The trees stand tall, ominously towering over you making you far too aware
+of your own lack of size."
+extra {"cries"}
+"The cries are guttural, deep and piercing.  The screams, are tortured, and
+sound very similar to a scream of a tortured individual."
+movement SECT_FIELD
+east to path2 descr
+"The path continues east, deeper into the forest.";
+south to warntz_ent descr
+"The forest ends to the south.";
+dilcopy for_cries@warntz();
+end
+
+path2
+names {"path"}
+title "Path leading into the Warntz Forest"
+descr
+"    As you progress along this roughshod path, littered with stones and
+foilage, you notice a decline in the amount of light surrounding you.  You
+had heard fables of the effects this forest had upon the strongest warriors,
+and begin to wonder if these fables are true.  This path continues west and
+east.  And to the north you can entern the western part of the forest."
+extra {"path"}
+"The path is extremely rough, and obviously not maintained. Upon further
+examination, you wonder if it is a path indeed."
+extra {"light"}
+"As you enter the forest, the light surrounding you dims, as the sun is cut
+off by the towering trees"
+movement SECT_FIELD
+north to for2 descr
+"You can manage to squeeze between two smaller trees to the north.";
+west to path1 descr
+"The path continues west.";
+east to path3 descr
+"The path continues east.";
+dilcopy for_cries@warntz();
+end
+
+path3
+names {"path"}
+title "Bend in the path."
+descr
+"    The path takes a sudden turn here, the only directions you can travel
+are north and west. To the north the forest becomes extremeley dangerous in
+appearance.  Every single tree appears to have fought a battle, each is
+scarred and gnarled with abuse."
+extra {"trees"}
+"These trees are gnarled and bumpy. Perhaps even scarred, a handful of trees
+have what appears to be claw marks."
+extra {"claw marks"}
+"These marks seem to be a hybrid of a claw and talon. All the marks cut
+several inches into the trees. And you begin to think that you would like
+some thicker armor."
+movement SECT_FIELD
+north to path4 descr
+"The path leads north, deeper into the forest.";
+west to path2 descr
+"The path leads to the outskirts of the forest, west.";
+dilcopy for_cries@warntz();
+end
+
+
+for1
+names {"Warntz Forest"}
+title "Outskirts of Warntz Forest"
+descr
+"   It is  ironic that the outskirts of this forest is so deep and dense
+that it only allows passage to the east and north, all over directions are
+blocked by thick forest."
+movement SECT_FOREST
+east to for2 descr
+"You can continue east through the forest.";
+north to for4 descr
+"You can travel deeper in the forest, to the north.";
+dilcopy for_cries@warntz();
+end
+
+for2
+names {"Warntz Forest"}
+title "Outskirts of Warntz Forest"
+descr
+"    The forest is ominously quiet here.  No longer can you hear the piercing
+cries, and tortured screams.  You almost feel safe, however the trees around
+you are scarred and clawed. And the smell of death clouds the air.
+You can see a path leading  off to the south or you may enter the forest
+to the north and west."
+extra {"scars"}
+"The trees all have cut marks which are several inches deep."
+movement SECT_FOREST
+north to for5 descr
+"The forest continues north.";
+south to path2 descr
+"You can escape the forest to the south.";
+west to for1 descr
+"You can continue through the forest to the west.";
+dilcopy for_cries@warntz();
+end
+
+path4
+names {"path"}
+title "Path through the Warntz Forest"
+descr
+"    The forest continues to grow darker here. As you look in the southern
+direction, you notice the trail bends to the west. Any passage west or east
+is blocked by the towering trees of the Wartnz Forest."
+movement SECT_FIELD
+north to path5 descr
+"To the north the path continues.";
+south to path3 descr
+"The path bends to the south.";
+dilcopy for_cries@warntz();
+end
+
+for3
+names {"forest"}
+title "Outskirts of the Warntz Forest"
+descr
+"    The forest here, despite the fact this the so called outskirts the
+forest seems to be as deep, as dark and twice as dense as you have seen.
+You're suprised you can actually move anywhere. You can see all sorts
+of animal remains.  It dawns on you, that this would be an excellent spot
+for an ambush.  You can squeeze through two trees to the north."
+extra {"remains"}
+"This area is scattered with remains, upon closer examination these remains
+belong to mainly humanoid creatures."
+movement SECT_FOREST
+north to for6 descr
+"You can fit in bewteen two trees to the north.";
+dilcopy damntree@warntz();
+dilcopy for_cries@warntz();
+end
+
+for4
+names {"forest"}
+title "Inside the Warntz Forest"
+descr
+"    The deeper you go into the forest. The more intimidating the forest
+becomes. You can hear the cries of the predators of the forest which are
+very frightening. Near the edge of the forest, although you cannot see
+anything, you think you hear breathing and you feel eyes boring into
+your body. You may continue on in all directions except west which is
+blocked by thick trees."
+extra {"eyes"}
+"You can feel the eyes, you can hear the breathing, but you cannot determine
+the animal which is hunting you."
+movement SECT_FOREST
+south to for1 descr
+"To the south you can head toward the outskirts of the forest.";
+north to for9 descr
+"Northwards you can head deeper into the forest.";
+east to for5 descr
+"You can travel east through the forest.";
+end
+
+for5
+names {"forest"}
+title "Inside the Warntz Forest"
+descr
+"    The cries of the beasts of this forest have been somewhat subdued, maybe
+they have moved further away. Far to the south, lies a path however the
+forest still lays between you and the  path. You may follow the path to
+the south or continue in the forest to the west."
+movement SECT_FOREST
+west to for4 descr
+"The forest continues west.";
+south to for2 descr
+"The forest continues in a southerly direction.";
+dilcopy for_cries@warntz();
+end
+
+path5
+names {"path"}
+title "Path leading through The Warntz Forest"
+descr
+"The forests canopy blocks all but a minimal amount of light to the area.
+The path continues to the north and south or you can enter the forest to
+the east. Dense underbush prevents any travel to the west."
+movement SECT_FIELD
+south to path4 descr
+"The path continues south.";
+north to path6 descr
+"The path continues north.";
+east to for6 descr
+"You can enter the forest to the east.";
+dilcopy for_cries@warntz();
+end
+
+for6
+names {"forest"}
+title "Clearing in the Warntz Forest"
+descr
+"    This is not exactly your normal clearing. This 'clearing' is still
+densely wooded, and quite intimidating.  A brook runs north to south through
+this clearing, and the grass in many places is stomped down. You can continue
+in all directions except west further into the forest, to the west you exit
+the forest onto a path."
+extra {"brook"}
+"A babbling brook leads through the forest, the water is murky and dark.
+Very similar to the rest of the forest, you dont want to have anything to do
+with it."
+extra {"grass"}
+"Upon close examination it seems that these patches of grass make a bed, or
+nest for a very large animal."
+movement SECT_FOREST
+north to for11 descr
+"The forest continues north.";
+south to for3 descr
+"The forest continues south.";
+west to path5 descr
+"You can reach the path to the west.";
+east to for7 descr
+"You can travel further into the forest to the west.";
+dilcopy for_cries@warntz();
+end
+
+for7
+names {"forest"}
+title "Dead end in the Warntz Forest"
+descr
+"    You have entered a dead end in the Warntz Forest.  Travel is blocked by
+huge trees in all directions except to the west, where you can return to the
+clearing you came from. This portion of the forest is not as serene as the
+one you came from. Bones of all sorts of creatures litter this area. In fact,
+it becomes difficult for you to find an area of normal grass.  Recently killed
+corpses contribute to the gore of this area by creating a horrible smell of
+death."
+extra {"bones"}
+"Bones are strewn around aimlessly. Piling up."
+extra {"corpses"}
+"Recently killed corpses create a smell, which lingers in the air."
+movement SECT_FOREST
+west to for6 descr
+"You can enter a clearing to the west.";
+dilcopy damntree@warntz();
+dilcopy for_cries@warntz();
+end
+
+for8
+names {"forest"}
+title "Dead end in the Warntz Forest"
+descr
+"    This happens to be yet another dead end in the ever confusing Warntz
+Forest.  The forest in the directions of west, south, and east are blocked
+off by the towering trees. The only way you can get out of this portion of
+the forest is to travel north.  A terrible smell wafts from the west."
+extra {"trees"}
+"Not only do the trees prevent travel between you and most of the forest, it
+prevents you from travelling."
+movement SECT_FOREST
+north to for13 descr
+"You can travel northward through the forest.";
+dilcopy damntree@warntz();
+dilcopy for_cries@warntz();
+end
+
+for9
+names {"forest"}
+title "Inside the Warntz Forest"
+descr
+"     The cries refuse to cease, they only grow louder and closer. The forest
+is only darker and darker as you progress through it, in fact you fear that
+soon you may have to use your light to be able to see. But whether or not you
+want to see what surrounds you is questionable.  To the North, the forest is
+impassable, to west the same.  You can barely manage to travel east and
+south."
+movement SECT_FOREST
+south to for4 descr
+"You can travel through the forest to the south.";
+east to for10 descr
+"The forest seems lighter to the east.";
+dilcopy for_cries@warntz();
+end
+
+for10
+names {"forest"}
+title "Inside The Warntz Forest"
+descr
+"    The forest seems to break up here, instead of the towering trees, they
+are closer to the smaller sized Cypress tree. To the east you can travel on
+the path. And you can continue in the forest to the west."
+movement SECT_FOREST
+west to for9 descr
+"The forest seems darker to the west.";
+east to path6 descr
+"You can enter the path to the east.";
+dilcopy for_cries@warntz();
+end
+
+path6
+names {"path"}
+title "A path through the Warntz Forest"
+descr
+"  The path here seems to be well travelled, you can see ashes from old
+fires, and the ground seems to be level and flat.  It would seem that
+previous adventurers had found that this location was good to set up camp
+for the night. Many tree stumps are scattered about, and the tree trunks
+chopped for firewood. For some  reason this location feels safe. You can
+travel north, south on a path, west into the forest, or down into a hole in
+the ground."
+extra {"ashes"}
+"These are the remains from previous campfires"
+extra {"stumps"}
+"These stumps would make excellent chairs."
+extra {"trunks"}
+"With an axe, you could make quite the amount of firewood."
+movement SECT_FIELD
+down to store descr
+"You can enter a store if you go down.";
+south to path5 descr
+"The path continues south.";
+north to path7 descr
+"The path continues north.";
+west to for10 descr
+"You can enter the forest to the west.";
+dilcopy for_cries@warntz();
+end
+
+store
+names {"store"}
+title "General Store beneath the Warntz Forest"
+descr
+"    This store is no more than a large burrow.  The builder of this store
+hollowed out a large section of earth and reinforced it with wooden tree
+trunks, from the nearby forest. The hole above you is fairly small, large
+enough to grant you access, but not to the beasts.  The hole is scarred with
+claw marks."
+extra{"marks","claw marks","claw"}
+"Apparently the beasts of this forest have attempted to enter this store,
+but to no avail."
+flags {UNIT_FL_NO_MOB}
+ALWAYS_LIGHT
+up to path6 descr
+"You can return to the forest by going up.";
+dilcopy for_cries@warntz();
+end
+
+for11
+names {"forest"}
+title "The Warntz Forest"
+descr
+"    The forest here seems especially dense here, preventing passage north
+and west.  Despite the threat of danger, you think that this certain location
+would make a wonderful place for you to enjoy yourself after your adventuring
+days. It's very secluded and noone would know how to find you.  The cries of
+the beasts are quieter here, and the stench of death seems to have waned."
+movement SECT_FOREST
+east to for12 descr
+"The forest continues east.";
+south to for6 descr
+"A clearing lays to the south.";
+dilcopy for_cries@warntz();
+end
+
+for12
+names {"forest"}
+title "Deep in the Warntz Forest"
+descr
+"    From what you have seen thus far this portion of the forest
+is the darkest. The air is heavy with humidity. And every shadow you see
+seems to belong to a lurking beast.  You decide it would be best to continue
+to travel on, travel is possible west and east."
+extra {"shadow"}
+"You can not determine exactly what the beast is, you know its extremley
+large though."
+movement SECT_FOREST
+east to for13 descr
+"The forest continues east.";
+west to for11 descr
+"The forest continues west.";
+dilcopy for_cries@warntz();
+end
+
+for13
+names {"forest"}
+title "Bend in the Forest"
+descr
+"   The dense forest prevents one from telling how much further north it
+continues. Due to the fact that the trees are not quite as thick you can
+travel to the south and to the west.  The forest is forboding around
+you, encouraging you to travel quickly."
+movement SECT_FOREST
+west to for12 descr
+"The forest continues west.";
+south to for8 descr
+"The forest continues south.";
+dilcopy for_cries@warntz();
+end
+
+for14
+names {"forest"}
+title "Deep in the Warntz Forest"
+descr
+"    This is  what seems to be the the middle of the forest.  However you
+cannot be sure, because the forest surrounding you blocks all vision. However
+you are certain, that travel from here to the outskirts of the forest would
+be near impossible, and very perilous. You can travel through the forest to
+the north."
+movement SECT_FOREST
+north to for21 descr
+"The forest continues north.";
+dilcopy damntree@warntz();
+
+end
+
+for15
+names {"forest"}
+title "Deep in the Warntz Forest"
+descr
+"    This is seemingly the heart of the forest. The cries continue to fill
+the air.  These cries continue to be frightening and intimidating. The forest
+is as dense as ever, blocking out almost all sunlight, you have no idea what
+time it is, or even how long you have been in the forest.  The forest allows
+passage only to the east."
+extra {"cries"}
+"The cries seem to be a cross between a hoot and a growl. You find these
+cries very daunting."
+movement SECT_FOREST
+east to for16 descr
+"The forest continues east.";
+north to for22 descr
+"The forest continues north.";
+dilcopy for_cries@warntz();
+end
+
+for16
+names {"forest"}
+title "Deep in the Warntz Forest"
+descr
+"    Through the forest to the east you can make out what you believe is a
+path, however there seems to be no possible way to get to there.  Perhaps
+travelling north the would help you get to the path, you can also
+travel to the west, deeper into this horrid forest."
+extra {"path"}
+"You are certain now that you can see the path to the east, however upon close
+examination you also become certain that no creature, save the smallest
+insects and rodents, could pass through the dense forest."
+movement SECT_FOREST
+
+north to for23 descr
+"You can continue north through the forest.";
+west to for15 descr
+"You can continue west through the forest.";
+dilcopy for_cries@warntz();
+end
+
+path7
+names {"path"}
+title "Path through The Warntz Forest"
+descr
+"    The path at this point becomes extremley rocky, examining the rocks you
+wonder how so many rocks could get in a forest. The path however is still
+quite managable, you can continue on this path either south or north. The
+forest blocks any passage west. But you can manage to travel east through
+the forest."
+extra {"rocks"}
+"These rocks would suggest that mountains lie nearby."
+movement SECT_FIELD
+north to path8 descr
+"The path continues north.";
+south to path6 descr
+"A frequently used camping spot lays to the south.";
+east to for17 descr
+"You can enter the forest to the east.";
+dilcopy for_cries@warntz();
+end
+
+for17
+names {"forest"}
+title "The Warntz Forest"
+descr
+"    This happens to be a slightly less dense area of this horrible forest.
+You can travel in not only one, but two directions; north through the forest,
+and west back to the path."
+extra {"beasts"}
+"You cannot see, or even hear these predators, but you are aware of them, you
+know that they are out there."
+movement SECT_FOREST
+north to for24 descr
+"The forest continues north.";
+west to path7 descr
+"You can return to the path to the west.";
+dilcopy for_cries@warntz();
+end
+
+for18
+names {"forest"}
+title "Dead-End in the Warntz Forest"
+descr
+"    You can only travel to the east, from where you came from.  This dead
+end is quite contrasting from the surrounding area. It's considerably much
+more dense, you feel like you can barely turn around. This lack of
+manuverability is something to avoid."
+movement SECT_FOREST
+east to for19 descr
+"You can continue east, back into the hall.";
+dilcopy for_cries@warntz();
+dilcopy damntree@warntz();
+end
+
+for19
+names {"forest"}
+title "Natural Hall through the forest."
+descr
+"  Something, natural or super-natural has caused this portion of the forest
+to resemble a gigantic hall. Trees tower over you to the north and the south,
+but the remainder of this area is very clear. You can move about freely here,
+and the sun shines down on you for the first time in a long time. To the west
+the forest continues, and also to the east."
+movement SECT_FIELD
+west to for18 descr
+"A more densley wooded section lays west.";
+east to for20 descr
+"The forest continues east.";
+dilcopy for_cries@warntz();
+end
+
+for20
+names {"forest"}
+title "A Bend in the Forest"
+descr
+"    For some reason, the forest bends here, you can travel to the west,
+or to the north.  But the southern and eastern directions are hopelessly
+blocked off.  As you look east and south you notice several fresh
+carcasses, when it dawns on you that a predator could easily corner it's
+prey right here. You decide a hasty exit would be wise."
+extra {"carcasses"}
+"As you walk up to these corpses you notice that they are quite warm. A very
+recent kill."
+movement SECT_FOREST
+north to for27 descr
+"The forest continues north.";
+west to for19 descr
+"A hall of trees lays west.";
+dilcopy for_cries@warntz();
+end
+
+for21
+names {"forest"}
+title "Deep in The Warntz Forest"
+descr
+"   This forest has no end! The forest has frustrated you beyond belief by
+its vastness.  You yearn to feel the sun shine down, to see the
+blue sky and the clouds it contains.  But you cannot. The canopy above blocks
+out all but a little of the light, and you cannpt see the sky.  Your focus
+returns to your local area, you notice a gnarled old tree standing to the
+west.  This tree stands out from the others.  You can travel south and east
+through the forest."
+extra {"tree"}
+"This tree is horribly disfigured and downright ugly.  Its scarred and marked
+by hundreds of years of abuse. You wonder exactly how old the tree is."
+movement SECT_FOREST
+south to for14 descr
+"A dead end lays to the south.";
+east to for22 descr
+"The forest continues to the east.";
+dilcopy for_cries@warntz();
+end
+
+for22
+names {"forest"}
+title "Deep in The Warntz Forest"
+descr
+"    The cries of this forest's predators have become piercingly loud,
+causing you to momentarily shield your ears from them. To the north and the
+east the forest is impassable. You can continue south and west."
+movement SECT_FOREST
+west to for21 descr
+"You can continue through the forest westward.";
+south to for15 descr
+"You can travel south, through the forest.";
+dilcopy for_cries@warntz();
+end
+
+for23
+names {"forest"}
+title "Deep in the Warntz Forest"
+descr
+"    As you progress through this forest, you worry if you'll ever make it
+out.  You have rarely heard of adventurers telling tales of surviving in
+this forest, maybe if you live, you'll write a book.  But its advisable that
+you dont worry about that at this moment.  You notice that to your east you
+can return to the path, or venture further south into the forest."
+movement SECT_FOREST
+east to path8 descr
+"You can return to the path to the east.";
+south to for16 descr
+"You can travel further into the forest to the south.";
+dilcopy for_cries@warntz();
+end
+
+path8
+names {"path"}
+title "Path through the Warntz Forest"
+descr
+"    The path leads north to what seems to be a rather hilly area.  Beyond the
+hills majestic mountain peaks tower into the sky, surrounded by veils of
+clouds. Never before have you seen such beautiful mountains. You can continue
+north, towards the mountains, or south and west back through the forest."
+extra {"mountains"}
+"These mountains have to be the single largest mountains you've ever seen,
+they reach right up into the heavens beyond where your eyes can see."
+movement SECT_FOREST
+north to path9 descr
+"The path leads nort, cutting a swath through the forest.";
+south to path7 descr
+"The path leads south, through the forest.";
+west to for23 descr
+"You can enter the forest to the west.";
+dilcopy for_cries@warntz();
+end
+
+for24
+names {"forest"}
+title "Deep in the Warntz Forest"
+descr
+"     The forest seems to have no end, it is as deep, and as thick as
+ever here.  You can manage to hack through the forest to the south, and
+you can barely squeeze between a clump of trees to the east."
+movement SECT_FOREST
+east to for25 descr
+"You can continue through the forest to the east.";
+south to for17 descr
+"You can cut your way through the forest to the south.";
+dilcopy for_cries@warntz();
+end
+
+for25
+names {"forest"}
+title "Deep in The Warntz Forest"
+descr
+"    The forest continues to surround you, and block your view of the rest of
+the land. Your trip has began to take its toll and your body, your nerves
+are frazzled, and what you really need is big  bottle of Tubrog and a
+nice long sleep.  You can venture east or west through  the forest, or
+north onto a path."
+movement SECT_FOREST
+east to for26 descr
+"The forest continues to the east.";
+west to for24 descr
+"The forest continues to the west.";
+north to path11 descr
+"You can see a path to the north.";
+dilcopy for_cries@warntz();
+end
+
+for26
+names {"forest"}
+title "Deep in the Warntz Forest"
+descr
+"    The forest continues, for how long you cannot tell.  Looking up you see
+that the entire sun is blocked out by the canopy above you. The dense forest
+all around prevents any light from reaching the ground, which also explains
+why this location has no foilage or underbrush.  You begin to wonder if rain
+even reaches the ground, for it is dry and dusty here.  You can venture in
+only one direction, west."
+movement SECT_FOREST
+west to for25 descr
+"The forest continues to the west.";
+OUT_ALWAYS_DARK
+dilcopy for_cries@warntz();
+end
+
+for27
+names {"forest"}
+title "Deep in the Warntz Forest"
+descr
+"    The forest seems to be rather dark here.  The canopy seems to grow
+thicker. The forest seems gloomier as well.  Every shadows seeme to contain
+a beast.  Every snap of a branch has you terrified.  You can travel through
+the forest to the west, and to the south as well."
+movement SECT_FOREST
+south to for20 descr
+"The forest continues to the south.";
+west to for26 descr
+"The forest continues west.";
+dilcopy for_cries@warntz();
+end
+
+
+for28
+names {"forest"}
+title "Outskirts of Warntz Forest"
+descr
+"    Here it is, you have finally made it! The forest slowly wanes to just
+shrubs and small trees here.  The ground has gotten especially rocky here,
+and you continue to lose your footing.  The your north and west passage is
+blocked by steep hills, you can continue through the edge of the forest to
+the east."
+movement SECT_FOREST
+east to for29 descr
+"The forest continues to the east.";
+dilcopy damntree@warntz();
+dilcopy for_cries@warntz();
+end
+
+for29
+names {"forest"}
+title "Outskirts of Warntz Forest"      
+descr
+"    The forest rapidly thins out here, so thin that the light fully shines
+on the ground. The light is so foreign to you it nearly blinds you when you
+exit the forest, but you quickly adapt.  Hills lay to your north, and beyond
+those hill lay majestic mountains, you can travel northward into the hills,
+or east and west through the edge of the forest."
+movement SECT_FOREST
+north to hill2 descr
+"You can enter the hills to the north.";
+west to for28 descr
+"You continue through the forest to the west.";
+east to for30 descr
+"You can continue through the forest to the east.";
+dilcopy for_cries@warntz();
+end
+
+for30
+names {"forest"}
+title "Outskirts of the Warntz Forest."
+descr
+"    The forest here has declined to just sparse shubbery, it looks more like
+a field then a forest.  You feel relieved, and safe to have finally exited
+the forest.  To your north lies a series of steep hills,  to steep for you
+to travel north here. You can move through the edge of the forest in the
+directions of east and west."
+movement SECT_FOREST
+west to for29 descr
+"The forest continues west.";
+east to for31 descr
+"The forest continues east.";
+dilcopy for_cries@warntz();
+end
+
+for31
+names {"forest"}
+title "End of the Warntz Forest"
+descr
+"   There no longer are dark ominous trees towering over you.  No longer
+can you hear the cries of the forest, and no longer do you feel like you
+are being followed.  The forest now is just  sparse shrubbery, scattered
+with few trees. To your north are steep hills, beyond that mountains
+shoot straight up into the heavens.  You can travel north into the hills,
+west back into the forest, or east onto a foot path."
+movement SECT_FIELD
+east to path9 descr
+"You can enter the path to the east.";
+west to for30 descr
+"To the west you can see the edge of the forest.";
+north to hill4 descr
+"You can enter the hills to the north.";
+dilcopy damntree@warntz();
+dilcopy for_cries@warntz();
+end
+
+path9
+names {"path"}
+title "A path outside the Warntz Forest"
+descr
+"  At the edge of the Warntz Forest, no longer can you hear the cries of
+the forest's beasts, and no longer do you live in fear with each step you
+take.  As you pause and take a moment to survey your surroundings, you notice
+hills to the north. And beyond that mountains which seem to reach so high,
+that they tickle the god's feet!  You can enter the forest to the west or
+continue on this path either south or east."
+movement SECT_FIELD
+west to for31 descr
+"The forest begins to the west.";
+east to path10 descr
+"The path continues to the east.";
+south to path8 descr
+"The path continues to the south.";
+end
+
+path10
+names {"path"}
+title "A path outside the Warntz Forest"
+descr
+"    The path seems to grow rockier as you travel.  You glance at the
+forest and shudder, realizing that you will probably have to travel
+through that forest.  You  notice that this path continues east and west.
+The Zendar hills lie to your north, but you cannot travel that way, for
+the hills are too steep."
+movement SECT_FIELD
+west to path9 descr
+"The path continues west.";
+east to path11 descr
+"The patch continues east.";
+end
+
+path11
+names {"path"}
+title "A Path outside the Warntz Forest"
+descr
+"    The path seems to grow rockier as you travel. You glance at the
+forest and shudder realizing that you will probably have to travel
+through that forest.  You notice that this path continues east and west.
+The Zendar hills lie to your north, but you cannot travel that way, for
+the hills are too steep. You can enter the forest to the south.  There are
+footprints scattered about on the path around you."
+extra {"footprints","footprint"}
+"These footprints are extremley similar to those of a gnome."
+
+movement SECT_FOREST
+east to path12 descr
+"The path continues east.";
+west to path10 descr
+"The path continues west.";
+south to for25 descr
+"You can enter the forest to the south.";
+end
+
+path12
+names {"path"}
+title "A path outside the Warntz Forest."
+descr
+"   You see some mysterious gnomish footprints, you ponder on the
+fact that you havent seen any gnomes, or gnome villages.  Then you think,
+what sort of lunatic would choose to live in that forest?  By any means
+the Zendar hills lie north, and are far too steep to travel on, the path
+allows you to travel east or west."
+extra {"footprints","footprint"}
+"Whoever these footprints belong too, went to quite the effort to prevent
+someone from finding them."
+movement SECT_FIELD
+east to path13 descr
+"There is a bend in the path to the east.";
+west to path11 descr
+"You can continue on the path to the west.";
+end
+
+path13
+names {"path"}
+title "Entrance to the Zendar Hills"
+descr
+"   Here the path abruptly turns north, and you find that instead of having
+the forest surrounding you, that now what surrounds you are these massive
+hills.  You can travel north, further into the hills, or west back along the
+path."
+flags {UNIT_FL_NO_MOB}
+movement SECT_FIELD
+north to path14 descr
+"You can enter the hills to the North.";
+west to path12 descr
+"You can travel the path to the west.";
+end
+
+hill1
+names {"hills"}
+title "Zendar Hills"
+descr
+"    After a large amount of climbing  you have reached the ridge of the
+Zendar Hills, the ridge is rocky, but managable, to your north lies the path,
+however you cannot travel south, for the hills are too steep.  The forest
+is south from here, but you cannot travel there for the hill is to steep.
+To your west the hill quickly grows into a mountain, and blocks passage to
+the west, you can continue to travel to the east, along the ridge."
+movement SECT_HILLS
+east to hill2 descr
+"You can travel east along this ridge.";
+end
+
+hill2
+names {"hills"}
+title "Zendar Hills"
+descr
+"    Upon reaching the ridge of this hill, you notice that this portion of the
+Zendar Hills is a little lower in elevation, and is not quite as steep as the
+hills surrounding it.  The hills are barren of life, you havent really seen
+much of anything other than rocks and moss. You can continue to travel this
+ridge either east or west. Or enter the forest to the south."
+flags {UNIT_FL_NO_MOB}
+movement SECT_HILLS
+east to hill3 descr
+"You can travel the ridge to the east.";
+west to hill1 descr
+"You can travel the ridge to the west.";
+south to for29  descr
+"You can enter the forest to the south.";
+end
+
+hill3
+names {"hills"}
+title "Zendar Hills"
+descr
+"   You travel to the top of this hill, atop its ridge when you glance to the
+south, the Warntz Forest covers as far as your eye can see, to your north are
+the Tarceanian Mountains, and they reach into the sky as far as the eye can
+see. As you glance east and west you realize you can travel along this ridge
+only to the west, or you can travel north, onto a path."
+movement SECT_HILLS
+west to hill2 descr
+"You can travel this ridge to the west.";
+north to path21 descr
+"You can enter the path to the north.";
+end
+
+hill4
+names {"hills"}
+title "Zendar Hills"
+descr
+"    After much work to reach this point, you find that the hills around
+you prevent travelling north and west, however you can exit to the south,
+back into the forest. Or east along the ridge.  These hills are barren of
+life, the only life you can see is moss growing on rocks."
+flags {UNIT_FL_NO_MOB}
+extra {"moss"}
+"This moss is green, and spongy. As you examine the moss you recognize a
+footprint in the moss."
+extra {"footprint"}
+"This foot print is gnomish in appearance, however, moss doesn't hold a good
+footprint, so you can't be positive."
+movement SECT_HILLS
+south to for31 descr
+"You can enter the forest to the south.";
+east to hill5 descr
+"The ridge continues east.";
+end
+
+hill5
+names {"hills"}
+title "Zendar Hills"
+descr
+"    These hills are barren of life indeed, even the moss you had seen
+earlier has become rare.  Rocks are abound, and boulders make travel long
+and tedious.  You often worry that a boulder will give way and cause you to
+slip to your death.  Passage is impossible north and south, because the hill
+is far too steep. You can continue east and west along the ridge."
+movement SECT_HILLS
+east to hill6 descr
+"You can travel along the ridge to the east.";
+west to hill4 descr
+"You can continue along the ridge to the west.";
+end
+
+hill6
+names {"hills"}
+title "Zendar Hills"
+descr
+"The farther you travel east, the more barren these hills begin to get. You
+have a hard time spotting even the smallest amount of moss.  You begin to
+wonder if these hills are cursed, which is the only reasonable explanation
+you can come up with.  You can continue along the ridge either west or east."
+movement SECT_HILLS
+east to hill7 descr
+"This ridge continues east.";
+west to hill5 descr
+"The ridge continues to the west.";
+end
+
+hill7
+names {"plateau"}
+title "Plateau in the Zendar Hills"
+descr
+"    Oddly enough the Zendar Hills just flattened out, the lack of life from
+the hills seems to end here.  The plateau is teeming with life. It's very
+green and it even seems warmer here. As you look around, hills surround you
+on every side to the east, preventing passage in those directions. However
+to the east is a large white building. And you can travel the ridge to the
+west."
+extra {"building"}
+"This is a gleaming white, so bright that it makes you squint, building.
+at the front of the building, a towering statue of Tyr is found holding
+a scale in one hand, and a hammer in another."
+movement SECT_FIELD
+east to justice open {EX_OPEN_CLOSE,EX_CLOSED}
+        keyword {"door"};
+west to hill6 descr "The ridge continues west.";
+end
+
+justice
+names {"justice"}
+title "The High court of Tyr"
+descr
+"   Upon entering this sacred hall, gigantic pillars reach into the sky
+supporting the massive roof above you. Looking at the walls thousands of
+pages of law code have been carefully etched into the wall, and decorated
+with gold plating."
+ALWAYS_LIGHT
+flags {UNIT_FL_SACRED}
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+west to hill7 open {EX_OPEN_CLOSE, EX_CLOSED}
+        descr "There is a door to the west." keyword {"door"};
+end
+
+
+path14
+names {"path"}
+title "A path through the Zendar hills"
+descr
+"    You have progressed deep into the Zendar hills, the Zendar hills
+surround you on the west, and east, the path continues north and south. To
+the west you can see what seems to be a building, but you cannot travel to
+it, perhaps you can find a way around the hill to get to the building."
+extra {"building"}
+"The building is very large, and very white."
+movement SECT_FIELD
+south to path13 descr
+"The path continues south.";
+north to path15 descr
+"The path continues north.";
+end
+
+path23
+names {"path"}
+title "Path through the Zendar Hills"
+descr
+"    The path bends here to the north and to the east.  The path North seems
+skirt around the edges of the towering Tarceanian mountains. To the east
+the path separated the mountains and the hills."
+movement SECT_FIELD
+north to path24 descr
+"The path continues north.";
+east to path22 descr
+"The path continues to the east.";
+end
+
+path22
+names {"path"}
+title "Path through the Zendar Hills"
+descr
+"    The Tarceanian Mountains tower above you to the north, and prevent you
+from travelling in that direction. Laying to your south are the not nearly
+as impressive, Zendar hills. But they are equally impassable. You can travel
+east and west along this path."
+movement SECT_FIELD
+east to path21 descr
+"The path continues continues east.";
+west to path23 descr
+"The path continues to the west.";
+end
+
+path21
+names {"path"}
+title "Path through the Zendar Hills"
+descr
+"    To your north the impressive Tarceanian Mountains tower above you. These
+mountains cast a shadow across the path. To the south you see the Zendar
+Hills,  a path crawls up the hills to the south.  The path also continues
+west and east."
+movement SECT_FIELD
+west to path22 descr
+"The path continues west.";
+east to path20 descr
+"The path continues east.";
+south to hill3 descr
+"You can enter the hills to the the south.";
+end
+
+path20
+names {"path"}
+title "Path through the Zendar Hills"
+descr
+"    To the North you see the majestic Tarceanian Mountains, they cast a
+shadow all the way across the path.  The Zendar Hills lie to the south,
+dwarfed by the Tarceanian Mountains.  Travelling north or south is
+prevented by the mountains and hills, you can only travel east and west
+along the path."
+movement SECT_FIELD
+west to path21 descr
+"The path continues west.";
+east to path19 descr
+"The path continues east.";
+end
+
+
+path19
+names {"path"}
+title "Path through the Zendar Hills"
+descr
+"    The path runs through a valley, separating the Tarceanian Mountains,
+and the Zendar hills.  The mountains and the hills prevent you from
+travelling north or south.  But you can travel along the path east or west."
+movement SECT_FIELD
+east to path18 descr
+"The path continues to the east.";
+west to path20 descr
+"The path continues to the west.";
+end
+
+path18
+names {"path"}
+title "Path through the Zendar Hills"
+descr
+"    The Tarceanian Mountains, shoot straight into the sky to your north.
+The mountains reach so high, that they seem to touch the gods.  The
+mountains are not as impressive and steep to the north allowing travel in
+that direction. You can also travel east and west on this path.  The Zendar
+hills prevent travel to the south."
+movement SECT_FIELD
+north to mtn5 descr
+"You can enter the mountains to the North.";
+west to path19 descr
+"The path continues westward.";
+east to path17 descr
+"The path continues eastward.";
+end
+
+path17
+names {"path"}
+title "Path through the Zendar Hills"
+descr
+"    The impressive Tarceanian Hills lay north of your current position. They
+stand so high that the shadow they cast keeps this path perpetually dark. You
+feel fortunate to have your light.  The Zendar hills lay to your south.
+Passage north and south is prevented, and this path continues east and west."
+movement SECT_FIELD
+west to path18 descr
+"The path continues west.";
+east to path16 descr
+"The path continues to the east.";
+end
+
+path16
+names {"path"}
+title "Path through the Zendar Hills"
+descr
+"  The Zendar Hills to the south are dwarfed by the magnificant
+Tarceanian Mountains.  The path continues east and west but you find you
+cannot travel north or south because of the hills."
+movement SECT_FIELD
+east to path15 descr
+"To the east you see that the path bends.";
+west to path17 descr
+"The path continues West.";
+end
+
+path15
+names {"path","bend"}
+title "Bend in the path"
+descr
+"    The path continues south and west through the Zendar Hills.  The
+Tarceanian mountains tower to your north and east preventing travel in
+those directions."
+movement SECT_FIELD
+west to path16 descr
+"The path continues west.";
+south to path14 descr
+"The path continues south.";
+end
+
+
+path24
+names {"path"}
+title "A path through the Tarceanian Mountains"
+descr
+"    The path  is blocked to the north by the towering Tarceanian Mountains.
+Far to the south, beyond the Zendar Hills, you can see the vast expanses of
+the Warntz Forest. You can travel on this path either north and south or
+you can enter the mountains to the east."
+movement SECT_HILLS
+north to path25 descr
+"This path continues north.";
+east to mtn1 descr
+"You can enter the mountains to the east.";
+south to path23 descr
+"The path continues south.";
+end
+
+mtn1
+names {"mountains","Tarceanian Mountains"}
+title "Tarceanian Mountians"
+descr
+"    The Tarceanian Mountains reach into the depths of the sky. The air is
+considerably thinner in the mountains, making it difficult to breathe.
+Combined with the rocky terrain, travelling here is quite difficult. You
+can follow a path to the west or to the north and east you can go deeper
+into the mountains."
+movement SECT_MOUNTAIN
+west to path24 descr
+"The path lies to the west.";
+north to mtn6 descr
+"You can travel deeper into the mountains to the north.";
+east to mtn2 descr
+"You can travel deeper into the mountains westward.";
+end
+
+mtn2
+names {"mountains","Tarceanian Mountains"}
+title "Tarceanian Mountains"
+descr
+"    You have reached a peak in these glorius moutains.  Looking down you
+realize that you cannot see the hills, nor the forest.  The altitude is
+so high here, that you are above the clouds.  You can travel east and west
+through the mountains, and the hills are too steep to travel south and
+north."
+movement SECT_FOREST
+west to mtn1 descr
+"You can travel through the mountains to the east.";
+east to mtn3 descr
+"You can travel through the mountains to the west.";
+end
+
+mtn3
+names {"mountains","Tarceanian Mountains"}
+title "Tarceanian Mountains"
+descr
+"  Progressing down from the eatern peak, you have entered a dead end in the
+mountains. To the north south and east passage is blocked by the towering
+Tarceanian Mountains.  You can only return west where you came from."
+movement SECT_MOUNTAIN
+west to mtn2 descr
+"You can travel through the mountains to the west.";
+end
+
+mtn4
+names {"mountains","Tarceanian Mountains"}
+title "Traceanian Mountains"
+descr
+"    The mountains surround you in all 4 directions, making you appear rather
+insignificant.  The moutains are impassable west and south, however you can
+travel to the north and east."
+movement SECT_MOUNTAIN
+north to mtn9 descr
+"The mountains continue north.";
+east to mtn5 descr
+"The mountains continue east.";
+end
+
+mtn5
+names {"mountains","Tarceanian Mountains"}
+title "Tarceanian Mountains"
+descr
+"    The mountains here tower above you. You can travel south onto a path
+or west into the mountains. Travel is impossible to the  north and to the
+east due to the fact that mountains are far too steep."
+movement SECT_MOUNTAIN
+south to path18 descr
+"You can enter the path to the south.";
+west to mtn4 descr
+"You can travel through the mountains to the west.";
+end
+
+path25
+names {"path"}
+title "A path through the Tarceanian Mountains"
+descr
+"    The path leads you through a valley between two ridges of the Tarceanian
+Mountains, the ridges lay to the east and to the west, blocking any passage
+in those directions.  You can travel along the path to the north and to the
+south."
+movement SECT_MOUNTAIN
+south to path24 descr
+"The path continues south.";
+north to path26 descr
+"The path continues north.";
+end
+
+mtn6
+names {"mountains","Tarceanian Mountains"}
+title "Tarceanian Mountains"
+descr
+"    The mountains tower in all directions, you are travelling along a ridge
+that runs north and south. You can see in all directions for miles on end.
+You can continue on this ridge north, or travel through the mountains south."
+movement SECT_MOUNTAIN
+north to mtn10 descr
+"The ridge continues north.";
+south to mtn1 descr
+"You can travel through the mountains to the south.";
+end
+
+mtn7
+names {"mountains","Tarceanian Mountains"}
+title "Tarceanian Mountains"
+descr
+"    You enter what appears to be a valley within the mountains.  Mountains
+tower above you in all directions.  You can travel through the mountains to
+the north and to the east. Travel is impossible south and west."
+movement SECT_MOUNTAIN
+east to mtn8 descr
+"The mountains continue east.";
+north to mtn11 descr
+"The mountains continue north.";
+end
+
+mtn8
+names {"mountains", "Tarceanian Mountains"}
+title "Tarceanaian Mountains"
+descr
+"    The valley continues from the west and east, you can continue in this
+valley east and west. But you cannot travel north or south, due to the fact
+that each direction is blocked by towering sheer cliffs. "
+movement SECT_MOUNTAIN
+west to mtn7 descr
+"The valley continues westwards.";
+east to mtn9 descr
+"The valley continues eastwards.";
+end
+
+mtn9
+names {"mountains","Tarceanian Mountains"}
+title "Tarceanian Mountains"
+descr
+"    Right here, the valley bends suddenly. You can continue through the
+valley to the west, or to the south. Travel north and east is blocked off by
+the mountains. The rocks around you are scarred and pitted."
+extra {"rocks"}
+"As you examine the rocks, you figure that at one time a large glacier passed
+through these mountains."
+movement SECT_MOUNTAIN
+west to mtn8 descr
+"The valley continues west.";
+south to mtn4 descr
+"The valley contiues south.";
+end
+
+path26
+names {"path"}
+title "A path throught the Tarceanian Mountains"
+descr
+"    The path here continues north and south, travel to the east and west is
+impossible, due to the steep Tarceanian Mountains."
+movement SECT_HILLS
+north to path27 descr
+"The path ends to the north.";
+south to path25 descr
+"The path continues to the south.";
+end
+
+mtn10
+names {"mountains","Tarceanian Mountains"}
+title "Tarceanian Mountains"
+descr
+"    The ridge you are on runs north and south and you can travel along it.
+You find it much to steep to even concider traveling to the east and west."
+movement SECT_MOUNTAIN
+north to mtn13 descr
+"The ridge continues north.";
+south to mtn6 descr
+"The ridge continues south.";
+end
+
+mtn11
+names  {"mountains","Tarceanian Mountains"}
+title "Tarceanian Mountains"
+descr
+"    You are high on a peak among the Tarceanian Mountains.  To the south you
+can travel down into the valley. You can also travel east to another peak.
+The western and northern directions impassable due to the fact that the
+mountains are far too steep to travel there."
+movement SECT_MOUNTAIN
+south to mtn13 descr
+"A valley lies to the south.";
+east to mtn12 descr
+"You can travel up another peak to the east.";
+end
+
+mtn12
+names {"mountains","Tarceanian Mountains"}
+title "Tarceanian Mountains"
+descr
+"    You have reached the highest peak of the Tarceanian Mountains. You can
+see in all directions around you, for miles on end.  You can only travel back
+west. All other directions are certain death, because the mountain is far too
+steep."
+movement SECT_MOUNTAIN
+west to mtn11 descr
+"Another peak lies to the west.";
+end
+
+path27
+names {"end","path"}
+title "End of the Tarceanian Mountains"
+descr
+"Here at the Northern end of the Tarceanian mountains, the mountains begin
+to dwindle. Towering cliffs and rocks are replaced with smaller hills and
+rounded peaks. You can continue on this path to the south."
+movement SECT_HILLS
+south to path26 descr
+"The path continues south.";
+end
+
+mtn13
+names {"mountains","Tarceanian Mountains"}
+title "Tarceanian Mountains"
+descr
+"    Suddenly the ridge turns south and east here.  Passage is impossibe
+both north, and west.  You can travel south, along the ridge or east down
+into a valley."
+movement SECT_MOUNTAIN
+east to mtn14 descr
+"The mountains continues east.";
+south to mtn10 descr
+"The ridge continues south.";
+end
+
+mtn14
+names {"mountains","Tarceanian Mountains"}
+title "Tarceanian Mountains"
+descr
+"    You have reached a valley and a dead-end in the mountains.  The
+mountains are far too steep to the north, east and south to be able to
+travel on.  Your only choice for an exit is to the west."
+movement SECT_MOUNTAIN
+west to mtn13 descr
+"The mountains continue to the west.";
+end
+
+
+
+/*  ALL ROOMS FINISHED NOW SUCCESSFUL COMPILATION 12/12/95 */
+
+
+
+
+
+%mobiles
+
+/* Gnome Traveller */
+gnome_trvlr
+names {"Denrik","gnome traveller","gnome"}
+title "Denrik the gnome traveller"
+descr
+"Denrik the gnome traveller stands here, looking lost"
+extra {}
+"This gnome has obviously travelled very far. His shoes are worn through,
+and you can see his feet are bruised and blistered.  His clothes are merely
+tattered rags."
+alignment 700
+race RACE_GNOME
+level 92
+height 100
+weight 200
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+exp -100
+MSET_WEAPON(10,20,10,10,5,5)
+MSET_ABILITY(18,10,10,15,15,22,10,0)
+MSET_SPELL(4,2,2,2,2,2,2,6,6,6,6)
+sex SEX_MALE
+money 1 GOLD_PIECE
+position POSITION_STANDING
+default POSITION_STANDING
+special SFUN_COMBAT_MAGIC_HEAL "cast heal"
+#define DENRIK_ONGOING  "Denrik's Quest Ongoing"
+#define DENRIK_COMPLETE "Denrik's Quest Complete"
+
+dilbegin denrik_quest();
+var
+  pcname    :     string;
+  item      :     unitptr;
+  pc        :     unitptr;
+  i         :     integer;
+  exdp      :     extraptr;
+code
+{
+   on_activation((self.position <= POSITION_SLEEPING) or (self.position ==
+POSITION_FIGHTING),skip);
+ :init:
+   heartbeat := PULSE_SEC*5;
+ :start:
+   wait(SFB_DONE, activator.type & UNIT_ST_PC);
+   pc := activator;
+   secure(pc,lost_pc);
+   if(DENRIK_COMPLETE in pc.quests)
+   {
+    unsecure(pc);
+    goto start;
+   }
+   if((DENRIK_ONGOING in pc.quests) and (command("give") and (target==self)))
+   {
+      if(medium.nameidx in
+{"detectring","wdragon_bplate","gnome_medallion","bone_breaker1"})
+      {
+         exdp := DENRIK_ONGOING in pc.quests;
+         if(not(medium.nameidx in exdp.names))
+         {
+            if(medium.nameidx=="bone_breaker1")
+           {
+            exec("cackle",self);
+             exec("say I hope Gnort doesn't mind loaning his mighty Cruncher to me.",self);
+            addstring(exdp.names, medium.nameidx);
+             destroy(medium);
+             goto start;
+            }
+        else if(medium.nameidx=="detectring")
+           {
+            exec("peer",self);
+             exec("say This Ring of Detection will allow me to find my cousins.",self);
+             addstring(exdp.names, medium.nameidx);
+              destroy(medium);
+              goto start;
+            }
+        else if(medium.nameidx=="wdragon_bplate")
+            {
+            exec("grin",self);
+             exec("say Urgnak's plate shall protect me from these horrible monsters.",self);
+            addstring(exdp.names, medium.nameidx);
+               destroy(medium);
+               goto start;
+             }
+         else  if(medium.nameidx=="gnome_medallion")
+         {
+             exec("clap",self);
+             exec("say It is true!!! Svirfneblin Gnomes must live nearby.",self);
+            addstring(exdp.names, medium.nameidx);
+               destroy(medium);
+         }
+         }
+         else
+         {
+            exec("say You all ready gave me a
+"+medium.name+","+pc.name+"!",self);
+            exec("give "+medium.name+" "+pc.name, self);
+            goto check_quest;
+         }
+      }
+      else
+      {
+         exec("say I dont need a "+medium.name+", "+pc.name+"!",self);
+         exec("give "+medium.name+" "+pc.name, self);
+         goto check_quest;
+      }
+   }
+   
+
+ else if(DENRIK_ONGOING in pc.quests)
+    goto check_quest;
+   else
+   {
+      if(pc.level < 35) goto start;
+      if(pc.minv > 0) goto start;
+      pause;
+      exec("say Hello my friend.", self);
+      pause;
+      exec("say I have a favor to ask of you.", self);
+      pause;
+      exec("say I have been looking for my distant cousins the Svirfneblin Gnomes for quite some time.", self);
+      pause;
+      exec("sigh", self);
+      pause;
+      exec("say Unfortunatley Im not much of an adventurer and Im terrible with directions.", self);
+      pause;
+      exec("say Its of utmost importance that I find my cousins, I bear tragic news.", self);
+      pause;
+      exec("say I need the following items to assist in my journey.", self);
+      pause;
+      exec("say My cousins scout this area well, I need proof of their existence.", self);
+      pause;
+      exec("say These gnomes are clever and hide well, I will need a ring which will help me detect them.", self);
+      pause;
+      exec("say A godly statue has a might weapon, I require this weapon to defend myself.", self);
+      pause;
+      exec("say And finally, I require I fine piece of armor to protect myself, you may find this armor in the lair of the undead.", self);
+      pause;
+      exec("say Bring me these four items, and I will provide you with a wonderful reward.", self);
+      pause;
+      exec("say If you are a brave soul, nod to accept, if you are the coward I fear you are shake your head and begone.", self);
+      pause;
+
+      i := 0;
+      while (i<5)
+      {
+        wait (SFB_CMD, activator == pc);
+        if(command(CMD_NOD))
+         goto quest_accepted;
+        else if(command(CMD_SHAKE))
+         goto no_quest;
+        exec("say Nod if you wish to help, shake your head to decline.",self);
+        i := i+1;
+      }
+
+
+    :no_quest:
+      exec("say You are a cowardly bastard, the gods must truly despise you.",self);
+      exec("spit "+pc.name, self);
+      unsecure(pc);
+      goto check_quest;
+
+    :quest_accepted:
+      exec("clap",self);
+      pause;
+      exec("say Please hurry, I must find my cousins soon!",self);
+      addextra(pc.quests, {DENRIK_ONGOING}, "");
+      unsecure(pc);
+      goto start;
+    }
+    unsecure(pc);
+    goto start;
+
+  :check_quest:
+    if(DENRIK_ONGOING in pc.quests)
+    {
+       exdp:=DENRIK_ONGOING in pc.quests;
+       if(("detectring" in exdp.names)     and
+          ("bone_breaker1" in exdp.names)   and
+          ("wdragon_bplate" in exdp.names) and
+          ("gnome_medallion" in exdp.names))
+       {
+          exec("emote thanks the Gods profusely.",self);
+          pause;
+          exec("bounce "+pc.name, self);
+          pause;
+          exec("say And as I promised, your reward.",self);
+          pause;
+          exec("emote draws the Manacle of Destuction from his cloak.",self);
+          pause;
+          exec("emote holds the manacle up and closely examines it.",self);
+          pause;
+          exec("whistle",self);
+          pause;
+          exec("say I really hate to give this away, but...",self);
+          pause;
+          exec("say ..this manacle is far to powerful for me to use, someone of your capablities will be able to use it well!",self);
+          subextra(pc.quests, DENRIK_ONGOING);
+          addextra(pc.quests, {DENRIK_COMPLETE}, "");
+          item := load("mncl_dest2@warntz");
+          item.height := pc.height;
+          link(item,pc);
+          experience(3000, pc);
+          pause;
+          exec(", gives the Manacle of Destruction to "+pc.name, self);
+          pause;
+          exec("say Use this manacle well, and you shall be safe.",self);
+          pause;
+          exec("thank "+pc.name, self);
+          pause;
+          exec("say Good luck adventurer.",self);
+          pause;
+          exec("wave "+pc.name, self);
+       }
+    }
+
+    unsecure(pc);
+    goto init;
+
+  :lost_pc:
+    unsecure(pc);
+    exec("say Meddlesome little coward.",self);
+    pause;
+    exec("shrug",self);
+    goto start;
+
+}
+dilend
+end
+
+
+
+
+
+/* Replacement Quests */
+trader
+names {"forest trader","trader","man"}
+title "a forest trader"
+descr "a forest trader is here, looking to trade"
+extra {}
+"This man is haggard, he wears fur clothes and is quite filthy, however
+if you were to explain to him that you 'lost' your 'manacle' 
+He'd be able to help you out."
+money 1 GOLD_PIECE
+
+M_HUMAN_WARRIOR_AXE(95, SEX_MALE)
+
+#define RPLMCL_ONGOING "Manacle Replacement Ongoing"
+dilbegin replace_manacle();
+var
+  pcname : unitptr;
+  item   : unitptr;
+  pc     : unitptr;
+  exdp   : extraptr;
+  i      : integer;
+code
+{
+        :init:
+        heartbeat := PULSE_SEC*6;
+        :start:
+        wait(SFB_CMD,(activator.type == UNIT_ST_PC) and (DENRIK_COMPLETE in activator.quests) and (command (CMD_SAY)) and ("lost" in argument) and ("manacle" in argument));
+        pc := activator;
+        secure(pc, lostpc);
+        if (RPLMCL_ONGOING in pc.quests)
+         {
+          goto start;
+         }
+        else if ((DENRIK_COMPLETE in pc.quests) and not(findunit(activator,"the Manacle of Destruction", FIND_UNIT_INVEN,null)))
+         {
+         exec("say SO.. You screwed up, lost that powerful Manacle, didnt ya!",self);
+         pause;
+         exec("say Well, I guess its youre lucky day, them Manacles aint as rare as Denrik would like you to think.",self);
+         pause;
+         exec("say I think, that maybe, if it were worth it to me, that I could find this Manacle for you rather easily.",self);
+         pause;
+         exec("say Of course... Any kind of effort I put into this, is gonna cost you.",self);
+         pause;
+         exec("say Dont look suprised my friend. If you hadnt lost the manacle, you wouldnt have to worry about this.",self);
+         pause;
+         exec("say Since the item wont be too hard to find, I only want one item.",self);
+         pause;
+         exec("say In order to get this item, I need to trade for it, the individual who has this manacle of yours will require something in exchange.",self);
+         pause;
+         exec("think",self);
+         pause;
+         exec("say I know what would do quite nicely!",self);
+         pause;
+         exec("say I will go get your manacle now, as long as I understand you will be bringing me a pair of glowing gauntlets.",self);
+         pause;
+         exec("say Please nod if you'll complete this trade.",self);
+         :accept_loop:
+         wait (SFB_CMD, activator #= pc);
+          if (command(CMD_NOD))
+            goto quest_accepted;
+          else if (command(CMD_SHAKE))
+           goto no_quest;
+          else
+            {
+             exec("say Nod if this trade suits you, shake  your head to decline.",self);
+              goto accept_loop;
+            }
+                }
+             else if ((not(DENRIK_COMPLETE in pc.quests)) or (findunit(activator,"the Manacle of Destruction", FIND_UNIT_INVEN,null)))
+             {
+               exec("say I will make no trades with you.",self);
+               unsecure(pc);
+               goto start;
+             };
+              :no_quest:
+                 pause;
+                 exec("say Thats too bad, it was quite the fair trade.",self);
+                 unsecure(pc);
+                 goto start;
+
+              :quest_accepted:
+                  pause;
+                  exec("say I will find your manacle now, please hurry with the gauntlets.",self);
+                  addextra(pc.quests, {RPLMCL_ONGOING}, "");
+                  unsecure(pc);
+                  goto start;
+
+               :lostpc:
+               exec("boggle",self);
+               exec("say Wasn't someone just here?",self);
+               goto start;
+}
+dilend
+
+dilbegin get_manacle();
+var
+	pc	:	unitptr;
+	item	:	unitptr;
+	exdp	:	extraptr;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*5;
+   on_activation(self.position <= POSITION_SLEEPING, iamout);
+
+   :start:
+
+wait(SFB_DONE, command(CMD_GIVE) and
+              (target == self) and
+              (activator.type == UNIT_ST_PC) and
+                                  (RPLMCL_ONGOING in activator.quests) );
+
+   pc := activator;
+   item := medium;
+   secure(pc, labsecure);
+
+      exdp := RPLMCL_ONGOING in pc.quests;
+  if ("g_gauntlets@garden" == (self.inside.nameidx + "@" + self.inside.zoneidx))
+      {
+        addstring(exdp.names, "gauntlets");
+        exec("say Ahhh, the gauntlets shall complete this trade", self);
+        exec("bow",self);
+        destroy(self.inside);
+        goto check;
+      }
+
+else
+      {
+         exec("say This is not part of the trade, I have no use for it.", self);
+         exec("emote hands it back to you",self);
+          link(item,pc);
+         goto check;
+      }
+unsecure(pc);
+goto start;
+
+ :labsecure:
+   exec("say I guess it was too much for them.", self);
+   goto start;
+
+   :iamout:
+   heartbeat := PULSE_SEC*60;
+   while (self.position <= POSITION_FIGHTING)
+     pause;
+   goto init;
+
+
+
+ :check:
+  exdp := RPLMCL_ONGOING in pc.quests;
+
+       if ("gauntlets" in exdp.names)
+       {
+         if (DENRIK_COMPLETE in activator.quests)
+          {
+         pause;
+         subextra(pc.quests, RPLMCL_ONGOING);
+         item := load("mncl_dest2@warntz");
+         item.height := pc.height;
+         link(item, pc);
+  exec("say Here is your manacle, hang onto it this time.",self);
+         pause;
+         unsecure(pc);
+         goto start;
+           }
+       }
+}
+dilend
+end
+
+
+
+
+/* Postman */
+postman
+names {"postman","brian"}
+title "Brian"
+descr "Brian, Zig's postman"
+extra {}
+"This is Zig's postman, standing here waiting to send your letter, or 
+perhaps deliver some to you"
+M_HUMAN_WARRIOR_AXE(10, SEX_MALE)
+special SFUN_POSTMAN
+end
+
+
+/* Dagnath */
+dagnath
+names {"dagnath","man","executor"}
+title "Dagnath"
+descr "Dagnath, the executor."
+extra {}
+"The man stands here, seemingly towering far above you. His muscles are
+well defined. The axe in his hands frightens you."
+special SFUN_RESCUE "Tegral"
+special SFUN_TEAMWORK "Tegral"
+M_HUMAN_WARRIOR_AXE(151, SEX_MALE)
+money 2 GOLD_PIECE
+end
+
+judge
+names {"Tegral","judge", "man"}
+title "Tegral"
+descr "Tegral the judge and jury."
+extra {}
+"Tegral stands before you in a black judges robe, falling down beyond his
+feet. He has his gavel held firmly in one hand.  The stern expression on
+Tegral's face, and his black beady eyes make you feel he is not to be trifled
+with."
+M_HUMAN_WARRIOR_AXE(100, SEX_MALE)
+#define TEGRAL_ONGOING  "Tegral the Judge's Quest Ongoing"
+#define TEGRAL_COMPLETE "Tegral the Judge's Quest Complete"
+dilbegin tegral_quest();
+var
+  pcname    :     string;
+  item      :     unitptr;
+  pc        :     unitptr;
+  i         :     integer;
+  exdp      :     extraptr;
+code
+{
+   on_activation((self.position <= POSITION_SLEEPING) or (self.position ==
+POSITION_FIGHTING),skip);
+ :init:
+   heartbeat := PULSE_SEC*5;
+ :start:
+   wait(SFB_DONE, activator.type & UNIT_ST_PC);
+   pc := activator;
+   secure(pc,lost_pc);
+   if(TEGRAL_COMPLETE in pc.quests)
+   {
+    unsecure(pc);
+    goto start;
+   }
+   if((TEGRAL_ONGOING in pc.quests) and (command("give") and (target==self)))
+   {
+      if(medium.nameidx in
+{"intim_hamm","blue_robe","mncl_dest2","dark_mjollnir"})
+     {
+      exdp := TEGRAL_ONGOING in pc.quests;
+         if(not(medium.nameidx in exdp.names))
+         {
+            if(medium.nameidx=="intim_hamm")
+           {
+            exec("say This will serve quite well as a new gavel.",self);
+            addstring(exdp.names, medium.nameidx);
+            destroy(medium);
+             goto start;
+            }
+        else if(medium.nameidx=="blue_robe")
+           {
+             exec("say This godly cloak, will replace my robes quite well.",self);
+             addstring(exdp.names, medium.nameidx);
+              destroy(medium);
+              goto start;
+            }
+        else if(medium.nameidx=="mncl_dest2")
+            {
+            exec("say I will use the materials and magical powers of this manacle to construct a new hammer for you.",self);
+            addstring(exdp.names, medium.nameidx);
+               destroy(medium);
+               goto start;
+             }
+         else if(medium.nameidx=="dark_mjollnir")
+         {
+             exec("say This hammer will provide a wonderful base for the new hammer.",self);
+             exec("say However, I will have to draw the evil out of this hammer. But with your help, this shall be an easy task.",self);
+             addstring(exdp.names, medium.nameidx);
+               destroy(medium);
+         }
+         }
+         else
+         {
+            exec("say You all ready gave me a
+"+medium.name+","+pc.name+"!",self);
+            exec("give "+medium.name+" "+pc.name, self);
+            goto check_quest;
+         }
+      }
+      else
+      {
+         exec("say I dont need a "+medium.name+", "+pc.name+"!",self);
+         exec("give "+medium.name+" "+pc.name, self);
+         goto check_quest;
+      }
+   }
+   
+
+ else if(TEGRAL_ONGOING in pc.quests)
+    goto check_quest;
+   else
+   {
+      if(pc.exp < 6000000)
+        {
+        exec ("smile",self);
+        pause;
+        exec ("say Im afraid, little one, you need more experience to help me out.",self);
+        pause;
+        pause;
+        pause;
+        pause;
+        goto start;
+        }
+      pause;
+      exec("say Hello citizen of Valhalla.", self);
+      pause;
+      exec("say Im in grave need of some assistance from you.", self);
+      pause;
+      exec("say Vagabonds and criminals have eroded at the power of justice.", self);
+      pause;
+      exec("sigh", self);
+      pause;
+      exec("say Im in need of a strong warrior to help me rebuild justice in this land.", self);
+      pause;
+      exec("say  Justice can only be achieved when justice has strength.", self);
+      pause;
+      exec("say I need the following items to build up this strength.", self);
+      pause;
+      exec("say I require a new gavel, one that criminals in my court will find intimidating.", self);
+      pause;
+      exec("say My robes are tattered, I need you to bring me a cloak. A cloak of such power and prestige,", self);
+      pause;
+      exec("say That only one of the gods of this realm would posess it.",self);
+      pause;
+      exec("say Of course, your cooperation will be rewarded, but to reward you, I require some materials, and a little of your life force.", self);
+      pause;
+      exec("say The first item i require, is given by a confused lost gnome, who believes to have relatives in this forest.", self);
+      pause;
+      exec("say And the second item i require, is possesed by that deceptive old husk of a man in the lands under Sod's guardianship.", self);
+      pause;
+      exec("say If you wish to assist me in my quest to restore justice to this lawless land, nod. Otherwise, shake your head and crawl into the hole you came from.", self);
+      pause;
+
+      i := 0;
+      while (i<5)
+      {
+        wait (SFB_CMD, activator == pc);
+        if(command(CMD_NOD))
+         goto quest_accepted;
+        else if(command(CMD_SHAKE))
+         goto no_quest;
+        exec("say Nod if you wish to help, shake your head to decline.",self);
+        i := i+1;
+      }
+
+
+    :no_quest:
+      exec("say You are a cowardly bastard, the gods must truly despise you.",self);
+      exec("spit "+pc.name, self);
+      unsecure(pc);
+      goto check_quest;
+
+    :quest_accepted:
+      exec("clap",self);
+      pause;
+      exec("say Please do not return without these items, justice is in critical need of strength.",self);
+      addextra(pc.quests, {TEGRAL_ONGOING}, "");
+      unsecure(pc);
+      goto start;
+    }
+    unsecure(pc);
+    goto start;
+
+  :check_quest:
+    if(TEGRAL_ONGOING in pc.quests)
+    {
+       exdp:=TEGRAL_ONGOING in pc.quests;
+       if(("intim_hamm" in exdp.names)     and
+          ("mncl_dest2" in exdp.names)   and
+          ("dark_mjollnir" in exdp.names) and
+          ("blue_robe" in exdp.names))
+       {
+          exec("smi",self);
+          pause;
+          exec("say Justice has begun to be rebuilt.",self);
+          pause;
+          exec("emote tucks the intimidation into his robes.",self);
+          pause;
+          exec("emote hangs the blue robe on the wall.",self);
+          pause;
+          exec("say And as I promised, I shall repay this monumental favor.",self);
+          pause;
+          exec("emote holds the Manacle of Destruction in his hands and meditates.",self);
+          pause;
+          exec("emote gnashes his teeth as the magical essense is drawn from the Manacle.",self);
+          pause;
+          exec("emote quickly grabs the Dark Mjollnir in one hand, clasps "+pc.name+"'s hand in his hand.",self);
+          pause;
+          exec("emote and "+pc.name+" scream in agony!",self);
+          pc.hp := 1;
+          pause;
+          exec("emote draws the evil out of the Dark Mjollnir and destroys it.",self);
+          pause;
+          exec("emote combines the remaining power of the Dark Mjollnir and the magical essense from the Manacle together.",self);
+          pause;
+          subextra(pc.quests, TEGRAL_ONGOING);
+          addextra(pc.quests, {TEGRAL_COMPLETE}, "");
+          item := load("hamm_just@warntz");
+          item.height := pc.height;
+          link(item,pc);
+          experience(5000, pc);
+          pause;
+          exec(", gives the Hammer of Justice to "+pc.name, self);
+          pause;
+          exec("say Use this Hammer well! Spread Justice about the land!",self);
+       }
+    }
+
+    unsecure(pc);
+    goto init;
+
+  :lost_pc:
+    unsecure(pc);
+    exec("shrug",self);
+    goto start;
+
+}
+dilend
+end
+
+
+
+/* Newbie Hasseler */
+bully
+names {"bully"}
+title "a bully"
+descr "a bully stands here, looking for newbies to push around"
+extra {}
+"Obviously he not strong, hes not big. Just big enough pick on defenseless
+newbies. What a jerk."
+M_GNOME_MAGE_MIND(10, SEX_MALE,"cast leaving bully west")
+dilbegin bully ();
+var
+        pc : unitptr;
+code
+{
+        heartbeat := PULSE_SEC * 5;
+        interrupt(SFB_COM, self.position == POSITION_FIGHTING, combat);
+
+        :start:
+        wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and (self.position != POSITION_FIGHTING)));
+        pc := activator;
+        secure(pc, lost);
+	  if (pc.level > 10) goto start;
+          else if (pc.master.title == "the newbie guide") goto start;
+         else
+          exec("grin "+pc.name,self);
+	  pause;
+	  exec("moo",self);
+	  pause;
+	  exec("say You are a puny newbie!!!!", self);
+	  pause;
+	  exec("cackle "+pc.name, self);
+	  pause;
+	  exec("say You couldn't even hurt a skunk!!", self);
+	  pause;
+	  exec("poke "+pc.name, self);
+	  pause;
+	  exec("say You make me laugh.",self);
+	  pause;
+	  exec("cast invis bully", self);
+	  pause;
+	  exec("fol "+pc.name, self);
+	  pause;
+	  heartbeat := PULSE_SEC * 15;
+	  exec("punch "+pc.name, self);
+	  pause;
+	  exec("lick "+pc.name, self);
+	  pause;
+	  exec("say You cant stop me! Youre too puny!", self);
+	  pause;
+          exec("laugh "+pc.name, self);
+	  goto start;
+
+          :twait:
+          pause;
+          goto twait;
+
+          :lost:
+          pause;
+          unsecure(pc);
+          goto start;
+
+          :combat:
+          heartbeat := PULSE_SEC * 1;
+          pause;
+          exec("say DIE BASTARD, im tougher than you!!!",self);
+          pause;
+          pause;
+          heartbeat := PULSE_SEC * 5;
+          goto start;
+
+
+}
+dilend
+end
+
+/* Maniac */
+maniac
+names {"maniac"}
+title "a crazy maniac"
+descr "a crazy maniac stares at you here"
+extra {}
+"    Obviously this man has escaped from some sort of sanitarium. His mouth
+is parched from drooling, and he seems to want to hurt you"
+level 100
+height 160
+weight 160
+money 1 GOLD_PIECE
+
+sex SEX_MALE
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+exp 105
+alignment 0
+/* MSET_ABILITY (str,dex,con,hp,bra,cha,mag,div) */
+MSET_ABILITY(17,18,20,30,10,5,0,0)
+MSET_WEAPON(10,10,10,10,30,10)
+/* (div,pro,det,sum,cre,min,hea,col,cel,int,ext) */
+MSET_SPELL(2,2,2,2,2,2,2,2,2,1,1)
+special SFUN_COMBAT_MAGIC "fireball"
+dilbegin crazy_maniac();
+var
+        pc : unitptr;
+code
+{
+        heartbeat := PULSE_SEC * 4;
+        interrupt(SFB_COM, self.position == POSITION_FIGHTING, combat);
+
+        :start:
+        wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and (self.position != POSITION_FIGHTING)));
+        pc := activator;
+        secure(pc, lost);
+        if(pc.minv > 0) goto start;
+        exec("cackle",self);
+        pause;
+        exec("drool",self);
+        pause;
+        exec("bark "+pc.name, self);
+        pause;
+        exec("fondle self",self);
+        pause;
+        exec("say Do you have a funny white jacket for me?",self);
+        pause;
+        exec("lick "+pc.name, self);
+        pause;
+        exec("scratch",self);
+        pause;
+        exec("flee",self);
+        pause;
+        pause;
+        pause;
+
+        :twait:
+        pause;
+        goto twait;
+
+        :lost:
+        pause;
+        unsecure(pc);
+        goto start;
+
+        :combat:
+        heartbeat := PULSE_SEC*3;
+        while (self.position == POSITION_FIGHTING) pause;
+        heartbeat := PULSE_SEC*10;
+        pause;
+        pause;
+        pause;
+        goto start;
+
+}
+dilend
+end
+
+/* Owlbear Male */
+owlbear_male
+names {"owlbear"}
+title "an owlbear"
+descr "An owlbear stands here, staring at you."
+extra {}
+"    Clearly a freak of nature, perhaps the creation of a a crazed wizard.
+This is beast is a cross of an owl, and a bear. Its razor sharp talons scar
+the ground, it glares at you icily."
+race RACE_BEAR
+flags {UNIT_FL_NO_TELEPORT}
+level 90
+height 200
+weight 350
+sex SEX_MALE
+money 1 GOLD_PIECE
+speed 6
+NATURAL_DEF(WPN_CLAW, ARM_LEATHER)
+exp 105
+alignment -1000
+/* MSET_ABILITY (str,dex,con,hp,bra,cha,mag,div) */
+MSET_ABILITY(30,28,0,20,22,0,0,0)
+MSET_WEAPON(4,4,4,4,40,4)
+MSET_SPELL(4,4,2,21,2,2,1,1,1,1,1)
+special SFUN_RANDOM_ZONE_MOVE time 250 bits SFB_RANTIME
+special SFUN_AGGRESSIVE "$1n attacks $3n!" time 200
+                                        bits SFB_RANTIME
+end
+
+
+/* Owlbear Female */
+owlbear_female
+names {"owlbear","female","mom"}
+title "an owlbear"
+descr "A female owlbear stands here, defending her young."
+extra {}
+"Obviously this female owlbear is defending her young child.  The fur on her
+back immeditatley stands up when you approach."
+race RACE_BEAR
+flags {UNIT_FL_NO_TELEPORT}
+level 90
+height 250
+weight 350
+sex SEX_FEMALE
+money 1 GOLD_PIECE
+speed 6
+NATURAL_DEF(WPN_CLAW, ARM_LEATHER)
+exp 100
+alignment -1000
+/* (str,dex,con,hp,bra,cha,mag,div) */
+MSET_ABILITY(30,28,0,20,22,0,0,0)
+MSET_WEAPON(4,4,4,4,40,4)
+MSET_SPELL(4,4,2,21,2,2,1,1,1,1,1)
+special SFUN_RANDOM_ZONE_MOVE time 250 bits SFB_RANTIME
+end
+
+
+/* Owlbear Female Baby */
+owlbear_babyf
+names {"owlbear","baby"}
+title "an owlbear"
+descr "An immature owlbear stands here."
+extra {}
+"This is a younger owlbear. Not quite as big as her mother, but still
+much larger than you."
+race RACE_BEAR
+flags {UNIT_FL_NO_TELEPORT}
+level 90
+height 200
+weight 350
+sex SEX_FEMALE
+speed 6
+money 1 GOLD_PIECE
+NATURAL_DEF(WPN_CLAW, ARM_LEATHER)
+exp 100
+alignment -1000
+/* (str,dex,con,hp,bra,cha,mag,div) */
+MSET_ABILITY(30,28,0,20,22,0,0,0)
+MSET_WEAPON(4,4,4,4,40,4)
+MSET_SPELL(4,4,2,21,2,2,1,1,1,1,1)
+special SFUN_RANDOM_ZONE_MOVE time 250 bits SFB_RANTIME
+end
+
+/* Owlbear Male Baby */
+owlbear_babym
+names {"owlbear","baby"}
+title "an owlbear"
+descr "An immature owlbear stands here."
+extra {}
+"This is a younger owlbear. Not quite as big as his mother, but still
+much larger than you."
+race RACE_BEAR
+flags {UNIT_FL_NO_TELEPORT}
+level 90
+height 225
+weight 350
+sex SEX_MALE
+money 1 GOLD_PIECE
+speed 6
+NATURAL_DEF(WPN_CLAW, ARM_LEATHER)
+exp 100
+alignment -1000
+/* (str,dex,con,hp,bra,cha,mag,div) */
+MSET_ABILITY(30,28,0,20,22,0,0,0)
+MSET_WEAPON(4,4,4,4,40,4)
+MSET_SPELL(4,4,2,21,2,2,1,1,1,1,1)
+special SFUN_RANDOM_ZONE_MOVE time 250 bits SFB_RANTIME
+end
+
+
+/* Lost owlbear baby male */
+owlbear_sbabym
+names {"owlbear","baby"}
+title "an owlbear"
+descr "An immature owlbear stands here, looking for his mother."
+extra {}
+"This is a younger owlbear. Not quite as big as his mother, but still
+much larger than you."
+race RACE_BEAR
+level 90
+flags {UNIT_FL_NO_TELEPORT}
+height 225
+weight 250
+sex SEX_MALE
+money 1 GOLD_PIECE
+speed 6
+NATURAL_DEF(WPN_CLAW, ARM_LEATHER)
+exp 100
+alignment -1000
+/* (str,dex,con,hp,bra,cha,mag,div) */
+MSET_ABILITY(30,28,0,20,22,0,0,0)
+MSET_WEAPON(4,4,4,4,40,4)
+MSET_SPELL(4,4,2,21,2,2,1,1,1,1,1)
+special SFUN_RANDOM_ZONE_MOVE time 250 bits SFB_RANTIME
+end
+
+
+
+/* Lost owlbear baby female */
+owlbear_sbabyf
+names {"owlbear","baby"}
+title "an owlbear"
+descr "An immature owlbear stands here, looking for her mother."
+extra {}
+"This is a younger owlbear. Not quite as big as his mother, but still
+much larger than you."
+race RACE_BEAR
+level 90
+flags {UNIT_FL_NO_TELEPORT}
+height 225
+weight 250
+sex SEX_MALE
+money 1 GOLD_PIECE
+speed 6
+NATURAL_DEF(WPN_CLAW, ARM_LEATHER)
+exp 100
+alignment -1000
+/* (str,dex,con,hp,bra,cha,mag,div) */
+MSET_ABILITY(30,28,0,20,22,0,0,0)
+MSET_WEAPON(4,4,4,4,40,4)
+MSET_SPELL(4,4,2,21,2,2,1,1,1,1,1)
+special SFUN_RANDOM_ZONE_MOVE time 250 bits SFB_RANTIME
+end
+
+
+/* Single Mother Owlbear */
+owlbear_sfemale
+names {"owlbear","female"}
+title "an owlbear"
+descr "A female owlbear stands here, glaring at you."
+extra {}
+"Obviously this female owlbear is defending her young child.  The fur on her
+back immeditatley stands up when you approach."
+race RACE_BEAR
+level 90
+flags {UNIT_FL_NO_TELEPORT}
+height 250
+weight 275
+sex SEX_FEMALE
+money 1 GOLD_PIECE
+speed 6
+NATURAL_DEF(WPN_CLAW, ARM_LEATHER)
+exp 105
+alignment -1000
+/* (str,dex,con,hp,bra,cha,mag,div) */
+MSET_ABILITY(30,28,0,20,22,0,0,0)
+MSET_WEAPON(4,4,4,4,40,4)
+MSET_SPELL(4,4,2,21,2,2,1,1,1,1,1)
+special SFUN_RANDOM_ZONE_MOVE time 250 bits SFB_RANTIME
+special SFUN_AGGRESSIVE "$1n attacks $3n!" time 200
+                                        bits SFB_RANTIME
+end
+
+
+/* Griffon */
+griffon_male
+names {"griffon"}
+title "a griffon"
+descr "A griffon is perched here on the mountain"
+extra {}
+"    Griffons are ferocious winged beasts, with razor sharp talons. Griffons
+hunt in herds. You can safely assume that more than one is nearby. The beast
+is 4 feet in heighth. This beast could easily kill a horse."
+alignment 250
+race RACE_EAGLE
+level 101
+flags {UNIT_FL_NO_TELEPORT}
+height 120
+weight 160
+money 2 GOLD_PIECE
+NATURAL_DEF(WPN_CLAW, ARM_LEATHER)
+speed 6
+exp 100
+/* MSET_ABILITY(str,dex,con,hpp,bra,cha,mag,div)[SUM IS 100] */
+MSET_ABILITY(30,28,0,20,22,0,0,0)
+MSET_WEAPON(4,4,4,4,30,4)
+MSET_SPELL(14,4,2,21,2,2,1,1,1,1,1)
+sex SEX_MALE
+position POSITION_STANDING
+special SFUN_RANDOM_ZONE_MOVE time 250 bits SFB_RANTIME
+
+dilbegin griffon();
+code
+{
+        :start:
+        heartbeat := PULSE_SEC * 10;
+        interrupt(SFB_COM, self.position == POSITION_FIGHTING, combat);
+        exec("emote growls uneasily.",self);
+        pause;
+        pause;
+        pause;
+        goto start;
+
+        :combat:
+        heartbeat := PULSE_SEC*3;
+        while (self.position == POSITION_FIGHTING) pause;
+        heartbeat := PULSE_SEC*10;
+        pause;
+        pause;
+        pause;
+        goto start;
+
+}
+
+dilend
+end
+
+
+/* Griffon */
+griffon_female
+names {"griffon"}
+title "a griffon"
+descr "A griffon is perched here on the mountain"
+extra {}
+"    Griffons are ferocious winged beasts, with razor sharp talons. Griffons
+hunt in herds. You can safely assume that more than one is nearby. The beast
+is 4 feet in heighth. This beast could easily kill a horse."
+alignment 250
+race RACE_EAGLE
+level 101
+flags {UNIT_FL_NO_TELEPORT}
+height 110
+weight 140
+NATURAL_DEF(WPN_CLAW, ARM_LEATHER)
+exp 100
+speed 6
+/* MSET_ABILITY(str,dex,con,hpp,bra,cha,mag,div)[SUM IS 100] */
+MSET_ABILITY(30,28,0,20,22,0,0,0)
+MSET_WEAPON(4,4,4,4,30,4)
+MSET_SPELL(14,4,2,21,2,2,1,1,1,1,1)
+sex SEX_FEMALE
+money 2 GOLD_PIECE
+position POSITION_STANDING
+special SFUN_RANDOM_ZONE_MOVE time 250 bits SFB_RANTIME
+dilcopy griffon@warntz();
+end
+
+
+/* Retiree */
+advent_retir
+names {"retired adventurer","retiree","man","adventurer"}
+title "a retired adventurer"
+descr "A retired adventurer is standing here."
+extra {}
+"Obviously this individual has seen many battles, and many adventures.  His
+body is scarred from various altercations.  He is far from 'past his prime'."
+alignment 800
+race RACE_HUMAN
+level 90
+height 150
+weight 180
+money 1 GOLD_PIECE
+
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+exp 100
+/* MSET_ABILITY(str,dex,con,hpp,bra,cha,mag,div) */
+MSET_ABILITY(20,25,5,25,5,5,15,0)
+/* MSET_WEAPON(axe_ham,sword,club_mace,polearm,unarmed,special) */
+MSET_WEAPON(10,10,5,5,10,5)
+/* MEST_SPELL(div,pro,det,sum,cre,min,hea,cel,int,ext) */
+MSET_SPELL(0,0,0,0,0,0,10,20,10,10,5)
+special SFUN_COMBAT_MAGIC "fireball"
+dilbegin retiree();
+var
+        pc : unitptr;
+code
+{
+        heartbeat := PULSE_SEC * 10;
+        interrupt(SFB_COM, self.position == POSITION_FIGHTING, combat);
+
+        :start:
+        wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and (self.position != POSITION_FIGHTING)));
+        pc := activator;
+        secure(pc, lost);
+        if(pc.minv > 0) goto start;
+        exec("emote whistles a happy tune",self);
+        pause;
+        exec("say I bet you wish you were retired like me.",self);
+        pause;
+        exec("say I dont mind it myself.", self);
+        pause;
+        exec("emote smiles, and begin to whittle with his knife.",self);
+        pause;
+        exec("emote groans, as the wood breaks in his hands.",self);
+        pause;
+        exec("sigh",self);
+        pause;
+        exec("shrug",self);
+        pause;
+        exec("say Oh well, I have plenty of time to spare.",self);
+        pause;
+        exec("snicker",self);
+        pause;
+        exec("emote waves to you, have a nice journey.",self);
+        pause;
+        goto twait;
+
+        :twait:
+        pause;
+        goto twait;
+
+        :lost:
+        pause;
+        unsecure(pc);
+        goto start;
+
+        :combat:
+        heartbeat := PULSE_SEC * 3;
+        pause;
+        exec("emote mutters 'Kids these days.'",self);
+        pause;
+        exec("emote screams 'Why have you disturbed my retirement?!?!?!'",self);
+        exec("emote screams 'I just wanted to come here live out my life!'",self);
+        pause;
+        pause;
+        heartbeat := PULSE_SEC * 5;
+        goto start;
+
+}
+
+dilend
+
+end
+
+
+/* Forest Explorer */
+for_exp
+names {"Treng","explorer"}
+title "Treng the forest explorer"
+descr "Treng the forest explorer is here, exploring."
+extra {}
+"This man is haggard and dirty, clearly in need of a shower. Fable has it
+that Treng has been missing for many years. "
+alignment 200
+race RACE_HUMAN
+level 90
+height 150
+weight 150
+money 1 GOLD_PIECE
+
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+exp 105
+/* MSET ABILITY(str,dex,con,hpp,bra,cha,mag,div)[SUM IS 100] */
+MSET_ABILITY(20,20,10,30,5,10,0,5)
+/* MSET_WEAPON(axe_ham,sword,club_mace,polearm,unarmed,special) */
+MSET_WEAPON(28,15,5,5,5,5)
+/* MEST_SPELL(div,pro,det,sum,cre,min,hea,col,cel,int,ext) */
+MSET_SPELL(20,4,5,1,1,1,1,1,1,1,1)
+sex SEX_MALE
+dilbegin treng();
+var
+        pc : unitptr;
+code
+{
+        heartbeat := PULSE_SEC * 8;
+        interrupt(SFB_COM, self.position == POSITION_FIGHTING, combat);
+
+        :start:
+        wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and (self.position != POSITION_FIGHTING)));
+        pc := activator;
+        secure(pc, lost);
+        if(pc.minv > 0) goto start;
+        exec("smile",self);
+        pause;
+        exec("say Greetings!",self);
+        pause;
+        exec("say It's been a damned long time since I have see anyone!",self);
+        pause;
+        exec("emote slaps you on the back!",self);
+        pause;
+        exec("say I have quite the story for you. It's about an anxious young adventurer.",self);
+        pause;
+        exec("say Many years ago, this young adventurer heard of a daunting, perilous forest.",self);
+        pause;
+        exec("say So he promptly set out, to tame this wild forest.",self);
+        pause;
+        exec("say And to this day he remains in the forest. Forever exploring.",self);
+        pause;
+        exec("say Do you have any idea who this adventurer is?",self);
+        pause;
+        exec("point treng",self);
+        pause;
+        exec("chuckle",self);
+        pause;
+        exec("say Someday I hope to find my way home.",self);
+        pause;
+        exec("say But for the meantime I am content to explore this wonderful forest.",self);
+        pause;
+        exec("say By the way, be wary of these Owlbears! They're mighty nasty animals.",self);
+        pause;
+        exec("emote waves to you, have a nice journey.",self);
+        pause;
+        exec("kill owlbear",self);
+        pause;
+
+        :twait:
+        pause;
+        goto twait;
+
+        :lost:
+        pause;
+        unsecure(pc);
+        goto start;
+
+        :combat:
+        heartbeat := PULSE_SEC*3;
+        while (self.position == POSITION_FIGHTING) pause;
+        heartbeat := PULSE_SEC*10;
+        pause;
+        pause;
+        pause;
+        goto start;
+
+
+}
+dilend
+end
+
+/* Ragnok */
+ragnok_hunter
+names {"Ragnok","hunter"}
+title "the owlbear hunter"
+extra {}
+"This man stands tall, towering above you. His muscles are well defined,
+and barely contained in his armor. His ring draws special attention to
+you."
+M_HUMAN_WARRIOR_SWORD(92,SEX_MALE)
+money 1 GOLD_PIECE
+
+dilbegin ragnok_hunter();
+code
+{
+        :start:
+        heartbeat := PULSE_SEC * 35;
+        interrupt(SFB_COM, self.position == POSITION_FIGHTING, combat);
+        exec("say I hate owlbears!",self);
+        pause;
+        exec("say I kill them, and make trophies of their head!",self);
+        pause;
+        exec("cackle",self);
+        pause;
+        exec("kill owlbear",self);
+        pause;
+        pause;
+
+        :combat:
+        heartbeat := PULSE_SEC*3;
+        while (self.position == POSITION_FIGHTING) pause;
+        heartbeat := PULSE_SEC*10;
+        pause;
+        pause;
+        pause;
+        goto start;
+
+
+}
+dilend
+end
+
+
+/* Svirfneblin Scout */
+gnome_scout
+names {"gnome","scout"}
+title "a Svirfneblin Gnome Scout"
+descr "A Svirfneblin Gnome stands here, scouting."
+extra {}
+"This would be one of the reclusive Svirfneblin Gnomes, this gnome has
+travelled outside of his subterreanean home, to scout the surface."
+exp 105
+money 1 GOLD_PIECE
+
+M_GNOME_MAGE_MIND(95, SEX_MALE,"cast colourspray")
+dilbegin gnome_scout();
+var
+        pc : unitptr;
+code
+{
+        heartbeat := PULSE_SEC * 3;
+        interrupt(SFB_COM, self.position == POSITION_FIGHTING, combat);
+
+        :start:
+        wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and (self.position != POSITION_FIGHTING)));
+        pc := activator;
+        secure(pc, lost);
+        if(pc.minv > 0) goto start;
+        exec("emote is startled by your sudden approach!!!",self);
+        pause;
+        exec("gasp",self);
+        exec("cast invis scout",self);
+        exec("flee",self);
+        pause;
+
+
+        :twait:
+        pause;
+        goto twait;
+
+        :lost:
+        pause;
+        unsecure(pc);
+        goto start;
+
+        :combat:
+        heartbeat := PULSE_SEC*3;
+        while (self.position == POSITION_FIGHTING) pause;
+        heartbeat := PULSE_SEC*10;
+        pause;
+        pause;
+        pause;
+        goto start;
+}
+dilend
+end
+
+/* Grave Digger */
+grave_digger
+names {"digger","grave digger"}
+title "a grave digger"
+descr "a grave digger stands here, looking for corpses"
+extra {}
+"An employee of Marty the Mortician of Midgaard. The mortician sent this man
+out to clean up the forest of all the corpses."
+flags {CHAR_PROTECTED}
+M_HUMAN_WARRIOR_NATURAL(100, SEX_MALE)
+money 1 GOLD_PIECE
+
+alignment 500
+exp 100
+dilbegin grave_digger();
+var
+        pc : unitptr;
+code
+{
+        heartbeat := PULSE_SEC * 10;
+        interrupt(SFB_COM, self.position == POSITION_FIGHTING, combat);
+
+        :start:
+        wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and (self.position != POSITION_FIGHTING)));
+        pc := activator;
+        secure(pc, lost);
+        if(pc.minv > 0) goto start;
+        exec("say I hate this forest",self);
+        pause;
+        exec("curse",self);
+        pause;
+        exec("say Marty sent me here to clean up corpses, and bring them back to Midgaard.",self);
+        pause;
+        exec("emote hates Marty with all his being.",self);
+        pause;
+        exec("shrug",self);
+        pause;
+        exec("say This is the worst job in the whole world.",self);
+        pause;
+        exec("emote points at you!",self);
+        pause;
+        exec("say Do me a favor, don't die and make my job worse",self);
+        pause;
+        exec("wave",self);
+        pause;
+        pause;
+        pause;
+
+        :twait:
+        pause;
+        goto twait;
+
+        :lost:
+        pause;
+        unsecure(pc);
+        goto start;
+
+        :combat:
+        heartbeat := PULSE_SEC*3;
+        while (self.position == POSITION_FIGHTING) pause;
+        heartbeat := PULSE_SEC*10;
+        pause;
+        pause;
+        pause;
+        goto start;
+
+}
+dilend
+end
+
+
+kilnar
+names {"kilnar"}
+title "the forest shopkeeper"
+descr "Kilnar the multi purpose shopkeeper stands here"
+extra{}
+"Kilnar stands a bit above 6 feet tall, not an extremley powerful, but
+rather intelligent man."
+M_SHOP_KEEPER(95, SEX_MALE, RACE_HUMAN)
+special SFUN_SHOP_INIT
+"&lProfit sell = 110
+Profit buy = 10
+Production = ~bag@midgaard~ ~paper@midgaard~ ~quill@midgaard~ ~lantern@midgaard~
+ ~lacquer_coffin@warntz~ ~beer@warntz~ ~whiskey@warntz~ ~water@warntz~
+Trade types = "+ITEM_LIGHT+ITEM_WAND+ITEM_STAFF+ITEM_WEAPON+ITEM_POTION+ITEM_ARMOR+
+ITEM_WORN+ITEM_OTHER+ITEM_TRASH+ITEM_CONTAINER+ITEM_DRINKCON+ITEM_FOOD+"
+Msg1 = ~$1n says, 'FOOL! I have no product like that!.'~
+Msg2 = ~$1n says, 'Do you think me supid?! You haven't got it, $3n!'~
+Msg3 = ~$1n says, 'Are you going to buy something or not?'~
+Msg4 = ~$1n says, 'I have no use for that!!!'~
+Msg5 = ~$1n says, 'This item $2n is too expensive for beggars like you, $3n.'~
+Msg6 = ~$1n says, 'That's %s for $2n.'~
+Msg7 = ~$1n says, 'That will be %s for your $2n.'~
+Hours1 = 0 12
+Hours2 = 13 23"
+end
+
+/* Forest Thief */
+forest_thief
+names {"thief"}
+title "a forest thief"
+descr "A forest thief stands here, looking over your posessions."
+exp 100
+M_HUMAN_THIEF_SWORD(90, SEX_MALE)
+money 1 GOLD_PIECE
+
+special SFUN_RANDOM_ZONE_MOVE
+dilbegin forest_thief();
+var
+        pc : unitptr;
+code
+{
+        heartbeat := PULSE_SEC * 10;
+        interrupt(SFB_COM, self.position == POSITION_FIGHTING, combat);
+
+        :start:
+        wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and (self.position != POSITION_FIGHTING)));
+        pc := activator;
+        secure(pc, lost);
+        if(pc.minv > 0) goto start;
+        pause;
+        exec("say I like your belongings!", self);
+        pause;
+        exec("say Id like to relieve you of them!", self);
+        pause;
+        exec("cackle", self);
+        pause;
+        exec("say Should I take it now?", self);
+        pause;
+        exec("say Or take it off of your rotting corpse?", self);
+        pause;
+        exec("say I could kill you quickly!", self);
+        pause;
+        exec("say You could save me the trouble and hand over 5 platinum now.", self);
+        pause;
+        exec("say I must warn you though, Im may not be a man of my word.", self);
+        pause;
+        exec("moo", self);
+        pause;
+        exec("backstab "+pc.name, self);
+        pause;
+
+        :twait:
+        pause;
+        goto twait;
+
+        :lost:
+        pause;
+        unsecure(pc);
+        goto start;
+
+        :combat:
+        heartbeat := PULSE_SEC*3;
+        while (self.position == POSITION_FIGHTING) pause;
+        heartbeat := PULSE_SEC*10;
+        pause;
+        pause;
+        pause;
+        goto start;
+
+}
+dilend
+end
+
+/* Forest Scientist */
+for_sci
+names {"scientist"}
+title "a forest scientist"
+descr "A forest scientist stands here, studying the forest"
+extra {}
+"A smaller man, light in build and fairly intelligent. Obviously his
+interests never were in adventuring.  He looks quite content in his work."
+M_HUMAN_MAGE_ELECTRICITY(90, SEX_MALE,  "cast lightning")
+exp 105
+money 1 GOLD_PIECE
+
+#define SCIENTIST_ONGOING  "Scientist Quest Ongoing"
+#define SCIENTIST_COMPLETE "Scientist Quest Complete"
+
+dilbegin scientist_quest();
+var
+  pcname    :     string;
+  item      :     unitptr;
+  pc        :     unitptr;
+  i         :     integer;
+  exdp      :     extraptr;
+code
+{
+   on_activation((self.position <= POSITION_SLEEPING) or (self.position ==
+POSITION_FIGHTING),skip);
+ :init:
+   heartbeat := PULSE_SEC*5;
+ :start:
+   wait(SFB_DONE, activator.type & UNIT_ST_PC);
+   pc := activator;
+   secure(pc,lost_pc);
+   if(SCIENTIST_COMPLETE in pc.quests)
+   {
+    unsecure(pc);
+    goto start;
+   }
+   if((SCIENTIST_ONGOING in pc.quests) and (command("give") and (target==self)))
+   {
+      if(medium.nameidx in
+{"water","notebook","scalpel","egg"})
+      {
+         exdp := SCIENTIST_ONGOING in pc.quests;
+         if(not(medium.nameidx in exdp.names))
+         {
+            if(medium.nameidx=="water")
+           {
+            exec("smi"+pc.name, self);
+             exec("say This water will allow me to see better after I clean my glasses.",self);
+            addstring(exdp.names, medium.nameidx);
+             destroy(medium);
+             goto start;
+            }
+        else if(medium.nameidx=="notebook")
+           {
+            exec("cheer",self);
+             exec("say I lost this notebook ages ago, it containts all my important notes!",self);
+             addstring(exdp.names, medium.nameidx);
+              destroy(medium);
+              goto start;
+            }
+        else if(medium.nameidx=="scalpel")
+            {
+            exec("snort",self);
+             exec("say Some scientist I am, I want to study animals, but have no way to dissect them.",self);
+            addstring(exdp.names, medium.nameidx);
+               destroy(medium);
+               goto start;
+             }
+         else  if(medium.nameidx=="egg")
+         {
+             exec("clap",self);
+             exec("say This egg will allow me to study them much closer!!!",self);
+            addstring(exdp.names, medium.nameidx);
+               destroy(medium);
+         }
+         }
+         else
+         {
+            exec("say You all ready gave me a
+"+medium.name+","+pc.name+"!",self);
+            exec("give "+medium.name+" "+pc.name, self);
+            goto check_quest;
+         }
+      }
+      else
+      {
+         exec("say I dont need a "+medium.name+", "+pc.name+"!",self);
+         exec("give "+medium.name+" "+pc.name, self);
+         goto check_quest;
+      }
+   }
+   else if(SCIENTIST_ONGOING in pc.quests)
+    goto check_quest;
+   else
+   {
+      if(pc.minv > 0) goto start;
+      pause;
+      exec("say Hello there adventurer.", self);
+      pause;
+      exec("say I need some help finishing a study of mine.", self);
+      pause;
+      exec("say I have been studying these owlbears for quite some time.", self);
+      pause;
+      exec("sigh", self);
+      pause;
+      exec("say Tragically, I am missing some pertinent information and tools.", self);
+      pause;
+      exec("say In order for me to complete my study, I need to get these items.", self);
+      pause;
+      exec("say Im in need of the following items to complete my study.", self);
+      pause;
+      exec("say Firstly, I need my notebook, I lost it several days ago, and I havent been able to recover it.", self);
+      pause;
+      exec("say Secondly, I need a scalpel with which I can dissect and study these owlbears.", self);
+      pause;
+      exec("say Thirdly, my glasses are filthy, I need some water to clean these glasses of with.", self);
+      pause;
+      exec("say And lastly, much of my studies are about mature owlbears, I have no information on their young, could you please find me an owlbear egg to study?", self);
+      pause;
+      exec("say Bring me these four items, and I will provide you with a pelt Ive made from Owlbear hides.", self);
+      pause;
+      exec("say If you can help me with thise, please nod your head.", self);
+      pause;
+
+      i := 0;
+      while (i<5)
+      {
+        wait (SFB_CMD, activator == pc);
+        if(command(CMD_NOD))
+         goto quest_accepted;
+        else if(command(CMD_SHAKE))
+         goto no_quest;
+        exec("say Nod if you wish to help, shake your head to decline.",self);
+        i := i+1;
+      }
+
+
+    :no_quest:
+      exec("say I was afraid youd decline, now my study will never go completed.",self);
+      exec("sigh "+pc.name, self);
+      unsecure(pc);
+      goto check_quest;
+
+    :quest_accepted:
+      exec("clap",self);
+      pause;
+      exec("say Thank you very much! Maybe I will finally complete my study!",self);
+      addextra(pc.quests, {SCIENTIST_ONGOING}, "");
+      unsecure(pc);
+      goto start;
+    }
+    unsecure(pc);
+    goto start;
+
+  :check_quest:
+    if(SCIENTIST_ONGOING in pc.quests)
+    {
+       exdp:=SCIENTIST_ONGOING in pc.quests;
+       if(("water" in exdp.names)     and
+          ("scalpel" in exdp.names)   and
+          ("notebook" in exdp.names) and
+          ("egg" in exdp.names))
+       {
+          exec("emote uses the water to clean his glasses.",self);
+          pause;
+          exec("emote carefully begins to study through his notes.", self);
+          pause;
+          exec("emote holds the egg up to the light and closely examines it.",self);
+          pause;
+          exec("grin",self);
+          pause;
+          exec("emote tucks away his scalpel.",self);
+          pause;
+          exec("whistle",self);
+          pause;
+          exec("say I finally figured out what I was missing.",self);
+          pause;
+          exec("slap self",self);
+          pause;
+          exec("say It was so obvious! Im so embarassed.",self);
+          pause;
+          exec("say I cant begin to thank you enough "+pc.name+".",self);
+          pause;
+          exec("say I hope this pelt keeps you warm and protected well.",self);
+          subextra(pc.quests, SCIENTIST_ONGOING);
+          addextra(pc.quests, {SCIENTIST_COMPLETE}, "");
+          item := load("owl_pelt@warntz");
+          item.height := pc.height;
+          link(item,pc);
+          experience(2000, pc);
+          pause;
+          exec(", gives the owlbear pelt to "+pc.name, self);
+          pause;
+          exec("thank "+pc.name, self);
+          pause;
+          exec("wave "+pc.name, self);
+       }
+    }
+
+    unsecure(pc);
+    goto init;
+
+  :lost_pc:
+    unsecure(pc);
+    exec("say I wish someone could have helped me.",self);
+    pause;
+    exec("shrug",self);
+    goto start;
+
+}
+dilend
+
+end
+
+
+
+%objects
+/* Hammer of Justice */
+hamm_just
+names {"the Hammer of Justice","Hammer of Justice","hammer","justice"}
+title "&c+wthe Hammer of Justice&cw"
+descr "The Hammer of Justice lies here, seeking to distribute justice."
+extra {}
+"This hammer is crafted of the finest metal, its handle is intricatley&n
+designed in gold and silver. The sheer size of the weapon overwhelms you."
+extra {"$identify"}
+"This Hammer is an extraordinary hammer, given to only those who helped&n
+to rebuild Justice. By wielding this weapon, your strength, dexterity,&n
+skill in the war mattock category. Unfortunatley, the sheer size of this&n
+mighty hammer, will decrease your ability with the skill disarm.&n"
+extra {"$improved identify"}
+"This hammer is of craftmanship of 20, magical modifier of 13, it&n
+will increase your strength by 4, and your dexterity by 3. In addition&n
+your skill in the weapon category war mattock will be increased by 10%&n
+Unfortunatley do the the sheer size of this weapon, your skill in disarm&n
+will decrease 5% This hammer carries only the blessing of Tyr the god of&n
+Justice, and has no magical attack."
+dilcopy abi_restrict@function (ABIL_STR,100,0,0,"");
+dilcopy level_restrict@function (50,0,0,"");
+dilcopy quest_restrict@function ("Tegral the Judge's Quest Complete",100,50,"");
+DEX_TRANSFER(+3)
+STR_TRANSFER(+4)
+WEAPON_TRANSFER(WPN_WAR_MATTOCK, 10)
+SKILL_TRANSFER(SKI_DISARM, -5)
+MATERIAL_METAL("A strong, lustrous metal")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+flags {UNIT_FL_MAGIC}
+WEAPON_DEF(WPN_WAR_MATTOCK, 20, 13)
+cost 800 GOLD_PIECE
+weight 50
+dilbegin recall justice_dil();
+code
+{
+:start:
+heartbeat:=PULSE_SEC*SECS_PER_MUD_DAY/12;
+wait (SFB_TICK,(self.equip==WEAR_WIELD));
+heartbeat:=PULSE_SEC*3;
+act ("Your Hammer of Justice is blessed by Tyr the god of Justice.",
+A_ALWAYS,self.outside,self,null,TO_CHAR);
+act ("$1n's Hammer of Justice is blessed by Tyr the god of Justice.",
+A_ALWAYS,self.outside,self,null,TO_REST);
+goto start;
+}
+dilend
+end
+
+
+agony_pendant
+names {"pendant of agony","pendant"}
+title "a pendant of agony"
+descr "The pendant of agony throbs here, waiting to inflict pain upon you."
+extra {}
+"The pendant is incredibly evil looking, with sharp points and dangerous 
+blades dangling off of a beautiful silver chain."
+manipulate{MANIPULATE_TAKE, MANIPULATE_WEAR_NECK}
+rent 5 SILVER_PIECE
+extra {}
+"At the end of a dangling chain, is a charm of certain torture. The charm
+is bladed and spiked in nearly every aspect."
+extra {"$identify"}
+"This charm will increase your magic and dexterity capabilities, however
+it's bladed edges and spikes worry you greatly."
+extra {"$improved identify"}
+"This pendant will increase your magic by 2, and your dexterity by 3.
+However, wearing this pendant is more than likely  going to inflict a
+substantial amount of damage to its wearer. Wearing this pendant requires
+90 brain, and 35 magic."
+dilcopy abi_restrict@function (ABIL_BRA,90,0,0,"");
+dilcopy abi_restrict@function (ABIL_MAG,35,0,0,"");
+dilcopy level_restrict@function (50,0,0,"");
+dilbegin pendant_agony();
+var
+        pc : unitptr;
+code
+{
+:start:
+heartbeat:=PULSE_SEC*SECS_PER_MUD_DAY/8;
+wait (SFB_TICK,(self.equip==WEAR_NECK_1) or (self.equip==WEAR_NECK_2));
+pc := self.outside;
+heartbeat:=PULSE_SEC*5;
+if (pc.hp <= 75)
+{
+goto start;
+}
+act ("You scream as your Pendant of Agony cuts into your neck.",
+A_ALWAYS,self.outside,self,null,TO_CHAR);
+act ("$1n screams as $1e is cut by $1s Pendant of Agony.",
+A_ALWAYS,self.outside,self,null,TO_REST);
+pc.hp := pc.hp - 75;
+goto start;
+}
+dilend
+ 
+ 
+end
+ 
+ 
+souledge       
+names {"souledge","long sword","sword"}
+title "the Souledge"
+descr "the longsword Souledge is here, burning into the ground."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_LONG_SWORD, 0,0)
+weight 10
+cost 20 PLATINUM_PIECE
+rent 360 IRON_PIECE
+extra {}
+"Examining your sword, you see that the sword is glowing in a amber hue.
+You touch the sword's blade and pull your hand back quickly, realizing
+this blade is scalding hot."
+extra {"$wear_s"}
+"As you wield the sword, thoughts of carnage enter your soul.&n"
+extra {"$wear_o"}
+"$1n wields $2n, and $1s eyes become bloodshot."
+extra {"$rem_o"}
+"$1n's eyes clear up as $1e removes $1s $2n."
+extra {"$rem_s"}
+"You begin to feel calm as the thoughts of carnage leave your mind."
+dilcopy abi_restrict@function(ABIL_STR,90,0,25,"");
+dilcopy abi_restrict@function(ABIL_DEX,90,0,25,"");
+spell 75
+
+dilbegin recall sword_charger();
+code
+{
+:start:
+heartbeat:=PULSE_SEC*SECS_PER_MUD_DAY/12;
+wait (SFB_TICK,(self.equip==WEAR_WIELD));
+heartbeat:=PULSE_SEC*3;
+act ("Your Souledge is engulfed in a globe of dazzling light.",
+A_ALWAYS,self.outside,self,null,TO_CHAR);
+act ("$1n's souledge is engulfed in a globe of dazzling light.",
+A_ALWAYS,self.outside,self,null,TO_REST);
+sendto ("add charge",self);
+goto start;
+}
+dilend
+
+
+dilbegin recall aware souledge_erupt();
+var
+        i       : integer;
+        n       : integer;
+        charge  : integer;
+        pwr     : integer;
+        amount  : string;
+        pc      : unitptr;
+        enemy   : unitptr;
+
+code
+{
+
+pwr:=10;
+
+:init:
+ heartbeat := PULSE_SEC*3;
+ charge:=interrupt (SFB_MSG,((self==activator) and (argument=="add charge")), charge);
+
+:start:
+ wait(SFB_CMD, ((activator #= self.outside) and (self.equip == WEAR_WIELD)));
+ pc := activator;
+
+ if(command("erupt") and (pc.position != POSITION_FIGHTING))
+ {
+ block;
+ act ("A voice booms in your head, 'I can only be used during combat!'",
+ A_ALWAYS,self.outside,null,null,TO_CHAR);
+ goto start;
+ }
+
+ if(command("erupt") and (pwr<1) and (pc.position == POSITION_FIGHTING))
+ {
+ block;
+ goto no_charge;
+ }
+ 
+ if(command("erupt") and (pwr>0) and (pc.position == POSITION_FIGHTING))
+ {
+ block;
+ pwr:=pwr-1;
+ enemy:= self.outside.fighting;
+ n:=cast_spell(SPL_FIREBALL_1, self.outside, self, enemy, "swordaffect@warntz");
+ pause;
+ goto start;
+ }
+
+ if(command("mana") and (pwr<6))
+ {
+ block;
+ goto no_charge;
+ }
+ 
+ if(command("mana") and (pwr >= 6))
+ {
+ block;
+ pwr := pwr - 6;
+ act("Your Souledge surrounds you in a column of magical power!",
+ A_ALWAYS,pc,null,null,TO_CHAR);
+ act("$1n's Souledge surrounds $1m in a column of magical power!",
+ A_SOMEONE,pc,null,null,TO_REST);
+ cast_spell(SPL_MANA_BOOST,pc,self,pc);
+ pause;
+ goto start;
+ }
+
+ if(command("charges"))
+ {
+       block; 
+       if (pwr == 0)
+       {
+        amount := "Zero";
+       }
+       else
+        {
+        amount := itoa(pwr);
+        }
+        act("Your Souledge contains:&c+r "+amount+"&cw charges.", A_SOMEONE, pc,self,null,TO_CHAR);
+        goto start;
+}
+else
+{
+goto start;
+}
+
+:no_charge:
+block;
+act("A voice echoes in your head 'I do not have enough charges for that!'"
+, A_ALWAYS, pc, null, null,TO_CHAR);
+goto start;
+
+
+:charge:
+clear (charge);
+if (pwr<12)
+pwr:=pwr+1;
+if (pwr>12) pwr := 12;
+goto init;
+goto start;
+
+
+
+
+}
+dilend
+
+dilbegin souledge_death();
+code
+{
+        heartbeat := PULSE_SEC*3;
+        :start:
+        wait(SFB_COM, command(CMD_AUTO_COMBAT) and
+                (self.equip == WEAR_WIELD) and
+                (self.outside.fighting.hp < 10));
+      act("Flames erupt from your Souledge burning your enemy critically.",
+          A_ALWAYS, self.outside, null, self.outside.fighting, TO_CHAR);
+      act("Flames erupt from $1n's Souledge burning you critically.",
+          A_SOMEONE, self.outside, null, self.outside.fighting, TO_VICT);
+      act("Flames erupt from $1n's Souledge burning $3n critically.",
+          A_SOMEONE, self.outside, null, self.outside.fighting, TO_NOTVICT);
+        self.outside.fighting.hp := -10;
+        pause;
+        goto start;
+}
+dilend
+
+dilbegin souledge_powers();
+var
+        pc : unitptr;
+code
+{
+        :start:
+        heartbeat := PULSE_SEC*3;
+ 
+        wait(SFB_CMD,(activator #= self.outside) and (self.equip ==
+        WEAR_WIELD));
+ 
+        pc := activator;
+        secure(pc, start);
+ 
+        if(command("powers"))
+        {
+        block;
+         act("A voice rings out in your head, 'I can aid you in two ways. Firstly in  battle use "+
+        "the command: ERUPT.'",
+        A_ALWAYS, pc, null, null, TO_CHAR);
+        pause;
+        act("A voice in your head echoes, 'Secondly, use the command: MANA, "+
+       "to regain a portion of your mana points.'",
+       A_ALWAYS, pc, null, null, TO_CHAR); 
+        pause;
+        act("a voice echoes in your head, 'To see the quantity of charges I contain"+
+        " simply use the 'charges' command.'", A_ALWAYS, pc, null, null, TO_CHAR);
+        unsecure(pc);
+        goto start;
+        }
+        else
+        {
+        goto start;
+        }
+}
+dilend
+
+
+end
+
+
+ 
+ 
+ 
+
+  
+
+
+
+
+
+
+/* Ring of the Mighty */
+jade_ring
+names {"ring","a jade ring"}
+title "a jade ring"
+descr "a jade ring lays on the ground, pulsing"
+type ITEM_WORN
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FINGER}
+cost 2 PLATINUM_PIECE
+rent 1 GOLD_PIECE
+weight 1
+end
+
+
+
+
+/* Intimidation */
+intim_hamm
+names {"intimidation","hammer"}
+title "&crIntimidation&cw"
+descr "the warhammer named Intimidation lies here.. Intimidating you."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+flags {UNIT_FL_MAGIC}
+WEAPON_DEF(WPN_WAR_HAMMER,4,4)
+WEAPON_TRANSFER(WPN_WAR_HAMMER, +3)
+weight 15
+cost 100 PLATINUM_PIECE
+rent 2 SILVER_PIECE
+MATERIAL_METAL("silver reinforced with titanium")
+extra {}
+"The warhammer Intimidation seemingly growls at you when you begin to
+examine it. The warhammer fits its name very well, you pity the victim
+of the Intimidation. You get the impression that by saying: 'Intimidation'
+you can activate the weapons special abilities."
+extra {"$identify$"}
+"The warhammer is quite intimidating indeed, you feel that if you wield 
+this weapon, your strenth will be increased. And perhaps even your skill with
+this weapon."
+extra {"$improved identify"}
+"If you wield this weapon weapon, your strength by three and you dexterity
+by two. Your skill in the weapon in the war hammer category will increase
+by three percent. The craftmanship on this item is four, and the magical
+modifer is four."
+STR_TRANSFER(+3)
+dilcopy abi_restrict@function (ABIL_STR,70,0,0,"");
+dilbegin recall charging();
+code
+{
+:start:
+heartbeat:=PULSE_SEC*SECS_PER_MUD_DAY/12;
+wait (SFB_TICK,(self.equip==WEAR_WIELD));
+heartbeat:=PULSE_SEC*5;
+act ("Your &crIntimidation&cw growls.", A_ALWAYS, self.outside, self, null, TO_CHAR);
+act ("$1n's &crIntimidation&cw growls.", A_ALWAYS, self.outside, self, null, TO_REST);
+sendto ("add charge",self);
+goto start;
+}
+dilend
+
+dilbegin recall aware intim_blast();
+var
+        i : integer;
+        enemy :unitptr;
+				n:integer;
+        charge:integer;
+				pwr:integer;
+code
+{
+pwr:=10;
+:init:
+        heartbeat := PULSE_SEC*3;
+charge:=interrupt (SFB_MSG,((self==activator) and
+	(argument=="add charge")), charge);
+
+:start:
+
+wait (SFB_DONE,(command (CMD_SAY)) and ("Intimidation" in argument) and (activator == self.outside) and (self.equip==WEAR_WIELD));
+      pause;
+enemy:=self.outside.fighting;
+if (enemy==null) goto no_person;
+secure (enemy,start);
+if (pwr<=0) goto fail;
+pwr:=pwr-1;
+i := rnd (45,110);
+if (i < self.outside.abilities[ABIL_DEX])
+	 {
+                 n:= cast_spell (SPL_ACIDBALL_1,self.outside,self,self.outside.fighting,"warhammer_aff@warntz");
+   }
+else
+ 	{
+        act ("You attempt to blast your enemy, but look like an ass and fail miserably.",
+		A_SOMEONE,self.outside,enemy,self,TO_CHAR);
+	}
+  goto start;
+
+	:fail:
+        act ("Your Intimidation weighs heavy in your hands, it appears that"+
+	" it has no charges for you.",
+		A_SOMEONE,self.outside,enemy,self,TO_CHAR);
+		goto start;
+
+:charge:
+clear (charge);
+if (pwr<12)
+pwr:=pwr+1;
+ goto init;
+  goto start;
+:no_person:
+act ("Your hammer glows, and &c+bBLASTS&cw the ground beneath you.",
+A_ALWAYS,self.outside,null,null,TO_CHAR);
+act ("$1n's hammer glows and &c+bBLASTS&cw the ground beneath "+
+"$1s feet.",
+A_SOMEONE,self.outside,null,null,TO_REST);
+goto start;
+}
+dilend
+dilbegin intim_death();
+code
+{
+        heartbeat := PULSE_SEC*3;
+        :start:
+        wait(SFB_COM, command(CMD_AUTO_COMBAT) and
+                (self.equip == WEAR_WIELD) and
+                (self.outside.fighting.hp < 10));
+      act("You boldy &c+rTHUMP&cw $3n, rupturing $3s chest cavity.",
+          A_ALWAYS, self.outside, null, self.outside.fighting, TO_CHAR);
+      act("$1n boldly &c+rTHUMPS&cw you, rupturing your chest cavity.",
+          A_SOMEONE, self.outside, null, self.outside.fighting, TO_VICT);
+      act("$1n boldly &c+rTHUMPS&cw $3n, rupturing $3s chest cavity.",
+          A_SOMEONE, self.outside, null, self.outside.fighting, TO_NOTVICT);
+        self.outside.fighting.hp := -10;
+        pause;
+        goto start;
+}
+dilend
+end
+
+
+
+/* platinum sleeves */
+plat_sleeves
+names {"platinum sleeves","sleeves"}
+title "a pair of platinum sleeves"
+descr "platinum sleeves"
+extra {}
+"The shiny metal of your sleeves presents a perfect reflection of yourself.
+The sleeves are made of the finest material, and will surely protect you
+well in combat."
+MATERIAL_METAL("platinum")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ARMS}
+ARMOUR_PLATE(0,0)
+dilcopy abi_restrict@function (ABIL_STR,70,0,0,"");
+dilcopy abi_restrict@function (ABIL_DIV,40,0,0,"");
+dilcopy abi_restrict@function (ABIL_BRA,30,0,0,"");
+end
+
+
+/* Water */
+water
+names {"cleaning","water"}
+title "a bottle of cleaning water"
+descr "a bottle of cleaning water is here."
+extra {}
+"This water would be well suited to clean items. It doesnt look to healthy
+to drink. Perhaps in a pinch it would quench your thirst."
+weight 1
+manipulate {MANIPULATE_TAKE}
+LIQ_DEF (LIQ_WATER, 2, 20, 20, 0)
+flags {UNIT_FL_NOSAVE}
+end
+
+/* Owlbear Egg*/
+egg
+names {"owlbear egg","egg"}
+title "an owlbear egg"
+descr "an owlbear egg lies here"
+extra {}
+"This is the egg of an owlbear. It is yellowish, and feels hard to the touch."
+weight 5
+manipulate {MANIPULATE_TAKE}
+end
+
+/* Notebook */
+notebook
+names {"notebook"}
+title "a scientists notebook"
+descr "a scientists notebook is here, forgotten"
+extra {}
+"This is a scientists notebook, it is full of writing."
+extra {"writing"}
+"The writing seems to be detailed information about the species of animal
+called the owlbear, you find the reading dry and boring."
+weight 1
+flags {UNIT_FL_NOSAVE}
+manipulate {MANIPULATE_TAKE}
+end
+
+/* scalpel */
+scalpel
+names {"scalpel","knife"}
+title "a scientist's scalpel"
+descr "a scientist's scalpel is here"
+extra {}
+"This is a scientists scapel, its extremley sharp."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_DAGGER,0,0)
+rent 1 COPPER_PIECE
+end
+
+/* Owlbear Pelt */
+owl_pelt
+names {"owlbear pelt","pelt"}
+title "an Owlbear pelt"
+descr "an Owlbear pelt is discarded here"
+extra {}
+"This is a finley crafted owlbear pelt, it looks quite warm"
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_CHEST}
+STR_TRANSFER(+2)
+rent 5 COPPER_PIECE
+dilcopy quest_restrict@function ("Scientist Quest Complete",100,50,"");
+end
+
+
+/* wand */
+magic_wand
+  names {"wand"}
+  title "a magic wand"
+  descr "Zigs magic wand is laying here."
+  extra{}
+  "You should leave this alone. It has a big button on it. Perhaps if you&n
+were to CLICK the BUTTON, something would happen."
+  weight 1
+  manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+dilbegin wand();
+var
+  rm :unitptr;
+code
+{
+  heartbeat := PULSE_SEC * 3;
+ :start:
+	wait(SFB_CMD, command("click"));
+	if(("button" in argument) and (self.outside == activator)){
+		block;
+    act("You push a small button on the wand, *click* it says", 
+A_ALWAYS, self.outside, null, null, TO_CHAR);
+  	rm := findroom("zigs_dorm@warntz");
+
+  	if(isset(rm.flags, UNIT_FL_NO_TELEPORT)){
+  		unset(rm.flags, UNIT_FL_NO_TELEPORT);
+    }
+  	else set(rm.flags, UNIT_FL_NO_TELEPORT);
+
+  	if(isset(rm.flags, UNIT_FL_PRIVATE)){
+  		unset(rm.flags, UNIT_FL_PRIVATE);
+  	}
+  	else set(rm.flags, UNIT_FL_PRIVATE);
+
+      act("Zigs dorm has been changed.", A_ALWAYS, self.outside, null, null, TO_CHAR);
+  }
+  goto start;
+}
+dilend
+end
+
+
+
+
+/*Manacle of Destruction*/
+mncl_dest2
+names {"manacle of destruction","manacle","destruction"}
+title "the Manacle of Destruction"
+descr "a dark black manacle lies here, pulseing powerfully"
+cost 20 PLATINUM_PIECE
+MATERIAL_METAL("Hard stuff")
+extra {}
+"The manacle of Destruction to growl upon  closer examination.  The quality
+of this armor is of such quality that you suspect the gods themselves created
+it. This manacle has gone through extreme amounts of change. There seems to
+be some green gooey substance on the manacle."
+extra {"green","gooey","substance"}
+"It seems this manacle has a substantial amount of slime on it."
+flags {UNIT_FL_MAGIC}
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_WRIST}
+ARMOUR_PLATE(10,10)
+STR_TRANSFER(+2)
+DEX_TRANSFER(+2)
+dilcopy quest_restrict@function ("Denrik's Quest Complete",100,50,"");
+end
+
+/* Skull Splitter*/
+skull_splitter
+names {"skull splitter","the skull splitter","battle axe","axe","battleaxe"}
+title "the skull splitter"
+descr "the skull splitter rests here among a puddle of brains"
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+flags {UNIT_FL_MAGIC}
+WEAPON_DEF(WPN_BATTLE_AXE,5,5)
+WEAPON_TRANSFER(WPN_BATTLE_AXE, +8)
+cost 100 PLATINUM_PIECE
+rent 2 SILVER_PIECE
+weight 20
+spell 50
+MATERIAL_METAL("black and cold")
+extra {}
+"The battle axe's blade faintly catches a glint in the light, exposing its&n
+deathly capabilities. Blood stains and sticky bits of brain residue litter&n
+the entire length of the weapon. You have a feeling that if you cant use&n
+this items powers by saying: 'Im gonna CHOP you'"
+extra {"$identify"}
+"This weapon is deadly indeed! Wielding it will increase your skill with&n
+the weapon Battle Axe. Wielding this weapon will also increase your strenth&n
+dexterity, and charisma.&n"
+extra {"$improved identify"}
+"This weapon's craftmanship is 5, and its magical modifier is 5. Wielding&n
+the weapon will increase your skill with the weapon battle axe by 8%. Also&n
+Wielding the weapon will increase your strength by 3&n"
+STR_TRANSFER(+3)
+dilcopy level_restrict@function (50,0,0,"");
+dilcopy abi_restrict@function (ABIL_STR,100,0,0,"");
+dilbegin recall charger();
+code
+{
+:start:
+heartbeat:=PULSE_SEC*SECS_PER_MUD_DAY/12;
+wait (SFB_TICK,(self.equip==WEAR_WIELD));
+heartbeat:=PULSE_SEC*5;
+sendto ("add charge",self);
+goto start;
+}
+dilend
+
+dilbegin recall aware skull_blast();
+var
+        i : integer;
+        enemy :unitptr;
+				n:integer;
+        charge:integer;
+				pwr:integer;
+code
+{
+pwr:=10;
+:init:
+        heartbeat := PULSE_SEC*3;
+charge:=interrupt (SFB_MSG,((self==activator) and
+	(argument=="add charge")), charge);
+:start:
+wait (SFB_DONE,(command (CMD_SAY)) and ("Im gonna CHOP you" in argument) and (activator == self.outside) and (self.equip==WEAR_WIELD));
+      pause;
+enemy:=self.outside.fighting;
+if (enemy==null) goto no_person;
+secure (enemy,start);
+if (pwr<=0) goto fail;
+pwr:=pwr-1;
+i := rnd (45,110);
+if (i < self.outside.abilities[ABIL_DEX])
+	 {
+                 n:= cast_spell (SPL_FIREBALL_1,self.outside,self,self.outside.fighting,"splitter_aff@warntz");
+   }
+else
+ 	{
+	act ("You attempt to chop your enemy, but fail miserably.",
+		A_SOMEONE,self.outside,enemy,self,TO_CHAR);
+	}
+  goto start;
+
+	:fail:
+	act ("Your skull splitter weighs heavy in your hands, it appears that"+
+        " has no charges for you.",
+		A_SOMEONE,self.outside,enemy,self,TO_CHAR);
+		goto start;
+
+:charge:
+clear (charge);
+if (pwr<12)
+act ("Brains drip off of the blade of your "+self.name+".",
+A_ALWAYS,self.outside,self,null,TO_CHAR);
+act ("Brains drip off of the blade of $1n's "+self.name+".",
+A_ALWAYS,self.outside,self,null,TO_REST);
+pwr:=pwr+1;
+goto init;
+goto start;
+
+:no_person:
+act ("Insanity engulfs you, and you boldly CHOP the ground beneath you.",
+A_ALWAYS,self.outside,null,null,TO_CHAR);
+act ("A mad look crosses $1n's face and bodly CHOPS the ground beneath "+
+"$1s feet.",
+A_SOMEONE,self.outside,null,null,TO_REST);
+goto start;
+
+}
+dilend
+dilbegin splitter_death();
+code
+{
+        heartbeat := PULSE_SEC*3;
+        :start:
+        wait(SFB_COM, command(CMD_AUTO_COMBAT) and
+                (self.equip == WEAR_WIELD) and
+                (self.outside.fighting.hp < 10));
+      act("You boldly HACK into $3n's head! Brains splatter about your feet",
+          A_ALWAYS, self.outside, null, self.outside.fighting, TO_CHAR);
+      act("$1n HACKS at your head, you feel your brains oozing down your face.",
+          A_SOMEONE, self.outside, null, self.outside.fighting, TO_VICT);
+      act("$1n HACKS into $3n's head, brains splatter about the place.",
+          A_SOMEONE, self.outside, null, self.outside.fighting, TO_NOTVICT);
+        self.outside.fighting.hp := -10;
+        pause;
+        goto start;
+}
+dilend
+end
+
+/* Vendango */
+
+vendango
+names {"long sword","sword","long","Vendango"}
+title "the longsword Vendango"
+descr "Vendago is discarded here, gathering dust."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+flags {UNIT_FL_MAGIC}
+WEAPON_DEF(WPN_LONG_SWORD,0,0)
+cost 5 GOLD_PIECE
+rent 5 SILVER_PIECE
+MATERIAL_METAL("A lustrous, shiny metal")
+extra {}
+"The longsword Vendango shines brightly at you.  The edges of this sword
+remain razor sharp, never requriring sharpening. The blade is perfect clean,
+as if the sword never has been used."
+end
+
+
+/*Trengs Jerkin*/
+
+treng_plate
+names {"treng's jerkin","jerkin"}
+title "Trengs's Chain Jerkin"
+descr "The legendary Treng jerkin."
+extra {}
+"This is the Treng's Breastplate. Passed from on generation to the next,
+through the Treng family."
+MATERIAL_METAL("A dark metal")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+cost 3 SILVER_PIECE
+rent 1 COPPER_PIECE
+weight 25
+end
+
+
+sup_boots
+names {"boots"}
+title "a pair of supreme boots"
+descr "A pair of supreme boots has been left here."
+MATERIAL_METAL("A hard, dark metal")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+ARMOUR_CHAIN(0, 0)
+cost 3 SILVER_PIECE
+rent 1 COPPER_PIECE
+dilcopy abi_restrict@function (ABIL_STR,20,0,0,"");
+weight 0
+end
+
+mag_boots
+names {"boots"}
+title "a pair of blue boots"
+descr "a pair of blue boots have been neatly piled here."
+MATERIAL_METAL("blueish metal")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+ARMOUR_CHAIN(0,0)
+cost 3 SILVER_PIECE
+rent 3 COPPER_PIECE
+dilcopy abi_restrict@function (ABIL_MAG,50,0,0,"");
+MAG_TRANSFER(+3)
+weight 5
+end
+
+sup_leggings
+names {"leggings"}
+title "a pair of supreme leggings"
+descr "A pair of supreme leggings has been left here."
+MATERIAL_METAL("A hard, dark metal")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+ARMOUR_CHAIN(0, 0)
+cost 3 SILVER_PIECE
+rent 1 COPPER_PIECE
+weight 15
+end
+
+
+sup_plate
+names {"plate"}
+title "a supreme breast plate"
+descr "A supreme breast plate has been left here."
+MATERIAL_METAL("A hard, dark metal")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_CHAIN(0, 0)
+dilcopy abi_restrict@function (ABIL_STR,30,0,0,"");
+cost 3 SILVER_PIECE
+rent 1 COPPER_PIECE
+weight 25
+end
+
+sup_sleeves
+names {"sleeves"}
+title "a pair of supreme sleeves"
+descr "A pair of supreme sleeves has been left here."
+MATERIAL_METAL("A hard, dark metal")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ARMS}
+ARMOUR_CHAIN(0, 0)
+cost 3 SILVER_PIECE
+rent 1 COPPER_PIECE
+weight 20
+end
+
+sup_helmet
+names {"helmet"}
+title "a supreme helmet"
+descr "A supreme helmet has been left here."
+MATERIAL_METAL("A hard,dark metal")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+ARMOUR_CHAIN(0,0)
+dilcopy abi_restrict@function (ABIL_BRA,20,0,0,"");
+cost 3 SILVER_PIECE
+rent 1 COPPER_PIECE
+weight 10
+end
+
+
+
+
+
+
+
+/*  Black Lacquer Coffin */
+lacquer_coffin
+names {"coffin"}
+title "a black lacquer coffin"
+descr "a black lacquer coffin lies here"
+extra {}
+"This coffin is eerily large, as if it was created for a large person, or
+maybe to fit an adventurer with all of his or her armor and equipment."
+manipulate{MANIPULATE_TAKE , MANIPULATE_ENTER}
+CONTAINER_DEF(2500)
+open {EX_OPEN_CLOSE, EX_CLOSED, EX_INSIDE_OPEN}
+cost 1 PLATINUM_PIECE
+rent 10 IRON_PIECE
+weight 100
+MATERIAL_WOOD("A beautiful oak")
+end
+
+
+thief_robe
+names {"robe"}
+title "the thief's robe"
+descr "a thief's robe is here, most likely stolen goods."
+MATERIAL_CLOTH("a dark, shadowy cloth")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_CLOTHES(0,0)
+dilcopy abi_restrict@function (ABIL_DEX,20,0,0,"");
+end
+
+shrt_swrd
+names {"short sword","sword"}
+title "a supreme short sword"
+descr "a thief's short sword is laying here."
+flags {UNIT_FL_MAGIC}
+WEAPON_DEF(WPN_SHORT_SWORD,0,0)
+cost 5 GOLD_PIECE
+rent 5 SILVER_PIECE
+MATERIAL_METAL("A lustrous, shiny metal")
+extra {}
+"This is a beautiful shortsword, well crafted and jewelled. For such a deadly
+weapon, its appearance is contrary."
+DEX_TRANSFER(+1)
+end
+
+/* zags brew */
+beer
+names {"bottle","beer"}
+title "a bottle"
+descr "A bottle of some home brew is here."
+extra {}
+"The beer is very dark.  This beer could quench anyones thirst, anywhere."
+MATERIAL_GLASS("a dark brownish glass")
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+LIQ_DEF (LIQ_BEER, 2, 20, 20, 0)
+cost 1 SILVER_PIECE
+end
+
+/* bottle o whiskey */
+whiskey
+names {"bottle","whiskey","whisky"}
+title "a large bottle"
+descr "A large bottle of whiskey is here."
+extra {}
+"This whiskey is rich in color, and the smell of the alchohol is overpowering.
+This whisky was clearly created for the more stout drinkers."
+MATERIAL_GLASS("a clear glass")
+manipulate {MANIPULATE_TAKE , MANIPULATE_HOLD}
+LIQ_DEF (LIQ_WHISKY, 2, 20, 20, 0)
+cost 1 SILVER_PIECE
+end
+
+
+/* Spectacles */
+spectacles
+names {"glasses","spectacles"}
+title "a pair spectacles"
+descr "a pair of spectacles sit here."
+extra {}
+"This pair of spectacles is very crude indeed, crafted out of iron and glass.
+These spectacles are quite ugly. Yet for some reason, they appeal to you."
+manipulate {MANIPULATE_TAKE , MANIPULATE_WEAR_HEAD}
+ARMOUR_PLATE(0,0)
+flags {UNIT_FL_MAGIC}
+cost 5 GOLD_PIECE
+rent 3 SILVER_PIECE
+dilcopy abi_restrict@function (ABIL_BRA,35,0,0,"");
+end
+
+
+
+lab_coat
+names {"coat" , "lab coat"}
+title "the scientist's lab coat"
+descr "a scientists lab  coat is here."
+MATERIAL_CLOTH("cotton")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_CLOTHES(0,0)
+cost 3 SILVER_PIECE
+rent 1 COPPER_PIECE
+weight 10
+end
+
+ruler
+names {"ruler"}
+title "a ruler"
+descr "a ruler lies in the dirt here."
+extra {}
+"A ruler. About 12 inches long."
+MATERIAL_WOOD("oak")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_SHORT_SWORD, -10, -10)
+end
+
+brutal_coif
+names {"coif"}
+title "coif of brutality"
+descr "a mean looking coif rests here."
+extra {}
+"The coif is made of the finest chain material."
+MATERIAL_METAL("A fine metal")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+ARMOUR_CHAIN(0, 0)
+dilcopy abi_restrict@function (ABIL_STR,30,0,0,"");
+cost 3 SILVER_PIECE
+rent 1 COPPER_PIECE
+weight 10
+end
+
+/* Gauntlets of Swordsmanship */
+gauntlet_sword
+names {"gauntlets"}
+title "the gauntlets of swordsmanship"
+descr "the gauntlets of swordsmanship lay in the dirt here."
+extra {}
+"These gauntlets were created by one of the world's finest short and long
+sword craftsman. Perhaps these gauntlets will help you handle one of these
+swords better."
+MATERIAL_METAL("A hard,dark metal")
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HANDS}
+ARMOUR_CHAIN(0, 0)
+end
+
+/*Cinnamon Buns*/
+cinnamon_buns
+names {"cinnamon buns","buns"}
+title "some delicious cinnamon buns"
+descr "cinnamon buns rest here, begging to be ate"
+extra {}
+"The finest chefs of Midgaard spent hours to make these Cinnamon Buns, quite
+possibly the worlds perfect food."
+MATERIAL_ORGANIC("Yeast...Flour....Cinnamon")
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF(25,0)
+cost 5 IRON_PIECE
+end
+
+/*Platinum Ring*/
+plat_ring
+names {"ring","platinum ring"}
+title "a platinum ring"
+descr "a shiny ring glimmers in the dust here"
+extra {}
+"A beautiful ring"
+MATERIAL_METAL("Platinum")
+type ITEM_WORN
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FINGER}
+cost 10 GOLD_PIECE
+rent 5 SILVER_PIECE
+end
+
+/* Golden Earring */
+gold_earring
+names {"ring","earring","ear ring"}
+title "a gold earring"
+descr " a gold earring glistens in the dust"
+extra {}
+"A golden hoop earring"
+MATERIAL_METAL("Gold")
+type ITEM_WORN
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_EAR}
+cost 15 GOLD_PIECE
+rent 1 SILVER_PIECE
+end
+
+/* Mithril Earring */
+mith_earring
+names {"ring","earring","ear ring"}
+title "a mithril earring"
+descr "a mithril earring"
+extra {}
+"A mithril earring"
+MATERIAL_METAL("Mithril")
+type ITEM_WORN
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_EAR}
+cost 15 GOLD_PIECE
+rent 1 SILVER_PIECE
+end
+
+/* Gnome Medallion */
+gnome_medallion
+names {"gnome medallion","medallion"}
+title "a Svirfneblin Gnome Medallion"
+descr "a Svirfneblin Gnome Medallion lies here"
+extra {}
+"a beautiful gnomish medllion"
+MATERIAL_METAL("Silver")
+type ITEM_WORN
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_NECK}
+dilcopy abi_restrict@function (ABIL_BRA,50,0,0,"");
+cost 16 GOLD_PIECE
+rent 10 COPPER_PIECE
+end
+
+
+
+
+%reset
+/* Load and Equip Tegral */
+load judge into justice@warntz zonemax 1
+/* load and equip Dagnath */
+load dagnath into justice@warntz  zonemax 1
+{
+equip skull_splitter WEAR_WIELD
+}
+
+/* Load Owlbears */
+load owlbear_male into path2 zonemax 4
+load owlbear_male into path3 zonemax 4
+load owlbear_male into path9 zonemax 4
+load owlbear_male into for10 zonemax 4
+load owlbear_female into path10 zonemax 4
+load owlbear_female into for2 zonemax 4
+load owlbear_female into path12 zonemax 4
+load owlbear_female into path13 zonemax 4
+load owlbear_sfemale into path8 zonemax 3
+load owlbear_babym into path12 zonemax 3
+load owlbear_babym into for23 zonemax 3 
+load owlbear_babym into path5 zonemax 3
+load owlbear_babyf into path11 zonemax 3
+load owlbear_babyf into for2 zonemax 3
+load owlbear_babyf into path4 zonemax 3
+load owlbear_sbabym into for31 zonemax 2
+load owlbear_sbabym into path6 zonemax 2
+load owlbear_sbabyf into path7 zonemax 5
+
+
+
+
+
+
+
+/* Load Griffon */
+load griffon_male into path15 zonemax 9
+load griffon_male into path17 zonemax 9
+load griffon_male into path19 zonemax 9
+load griffon_male into path21 zonemax 9
+load griffon_male into path24 zonemax 9
+load griffon_male into path27 zonemax 9
+load griffon_male into mtn8 zonemax 9
+load griffon_male into path16 zonemax 9
+load griffon_female into path18 zonemax 9
+load griffon_female into path20 zonemax 9
+load griffon_female into path22 zonemax 9
+load griffon_female into path23 zonemax 9
+load griffon_female into path25 zonemax 9
+load griffon_female into path26 zonemax 9
+load griffon_female into mtn1 zonemax 9
+load griffon_female into mtn5 zonemax 9
+load griffon_female into mtn11 zonemax 9
+load griffon_female into mtn14 zonemax 9
+
+
+
+
+/* water */
+load water into udonate@udgaard max 2
+
+/* Load Bully */
+load bully into village_rd1@udgaard
+/* Load & Equip Maniac */
+load maniac into warntz_ent max 1
+{
+equip vendango position WEAR_WIELD
+load scalpel@warntz
+}
+
+/* Load & Equip Denrik */
+
+load gnome_trvlr into path9@warntz max 1
+
+/* Load and Equip Retired Adventurer */
+
+load advent_retir into for11@warntz max 1
+{
+equip sup_helmet position WEAR_HEAD
+equip sup_boots position WEAR_FEET
+equip sup_leggings position WEAR_LEGS
+equip sup_plate position WEAR_BODY
+equip sup_sleeves position WEAR_ARMS
+equip intim_hamm position WEAR_WIELD
+equip mith_earring position WEAR_EAR_L
+load carveknife@halfzon
+}
+
+/* Load and Equip Treng */
+
+load for_exp into path7@warntz max 1
+{
+equip treng_plate position WEAR_BODY
+equip intim_hamm position WEAR_WIELD
+}
+
+/* Lost notebook */
+load notebook into path6@warntz max 1
+
+/* Load and Equip Svirfneblin Gnome Scout */
+
+
+load gnome_scout into path27@warntz
+{
+equip sup_helmet position WEAR_HEAD
+equip mag_boots position WEAR_FEET
+equip sup_leggings position WEAR_LEGS
+equip sup_plate position WEAR_BODY
+equip sup_sleeves position WEAR_ARMS
+equip souledge position WEAR_WIELD
+load gnome_medallion
+}
+
+load gnome_scout into path25@warntz
+{
+equip sup_helmet position WEAR_HEAD
+equip sup_boots position WEAR_FEET
+equip sup_leggings position WEAR_LEGS
+equip sup_plate position WEAR_BODY
+equip sup_sleeves position WEAR_ARMS
+equip souledge position WEAR_WIELD
+load gold_earring
+
+}
+
+load gnome_scout into path21@warntz
+{
+equip sup_helmet position WEAR_HEAD
+equip sup_boots position WEAR_FEET
+equip sup_leggings position WEAR_LEGS
+equip sup_plate position WEAR_BODY
+equip sup_sleeves position WEAR_ARMS
+equip souledge position WEAR_WIELD
+load gnome_medallion
+}
+
+load ragnok_hunter into for22@warntz
+{
+equip souledge position WEAR_WIELD
+load egg
+}
+load grave_digger into for21@warntz
+{
+equip sup_boots position WEAR_FEET
+equip sup_leggings position WEAR_LEGS
+equip sup_plate position WEAR_BODY
+equip sup_sleeves position WEAR_ARMS
+load lacquer_coffin
+equip brutal_coif WEAR_HEAD
+}
+load kilnar into store@warntz
+{
+equip long_sword@halfzon position WEAR_WIELD
+load bag@midgaard
+load paper@midgaard
+load quill@midgaard
+load lantern@midgaard
+load dictionary@basis
+load lacquer_coffin
+load tuborg@udgaard
+load beer@warntz
+load whiskey@warntz
+}
+load forest_thief into path15@warntz
+{
+equip thief_robe position WEAR_BODY
+equip shrt_swrd position WEAR_WIELD
+load beer
+equip gauntlet_sword WEAR_HANDS
+}
+load for_sci into path5@warntz
+{
+equip ruler position WEAR_WIELD
+equip lab_coat position WEAR_BODY
+equip spectacles position WEAR_HEAD
+}
+load bull_board@udgaard into zigs_dorm
+
+/* load trader */
+load trader into path3@warntz
+%end
+
+

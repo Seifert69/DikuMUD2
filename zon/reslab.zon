@@ -1,0 +1,5057 @@
+/*
+filename    reslab
+password    inventor
+changedby   jem
+EmailAdd     Palio <palio@blinksoft.com>
+request     compile
+version     18
+END HEADER*/
+
+#include <composed.h>
+#define SAVE_RABBIT_ONGOING "Gonmork's Rabbits Ongoing"
+#define SAVE_RABBIT_COMPLETE "Gonmork's Rabbits Saved"
+
+%zone reslab
+title "Laboratory"
+lifespan 20
+reset RESET_ANYHOW
+creators {"jager"}
+
+notes
+"
+The John Patrick Research Laborotay is a huge research institute designed for the
+furthering of all knowledge - technical, battle, magical...  it was built with the money of
+one of Midgaard's richest citizens, John Patrick, a good friend of Tobas's in fact.
+The Lab is a busy place day and night, with people working around the clock at the
+development of new and amazing skills, technologies, spells and weapons.&n
+&n
+Help credits in no particular order (sorry if i missed anyone, there's been lots,
+and after a long night of coding and debugging, i usually wake up and don't even
+remember what i did much less who helped hehehehe):&n
+&n
+Javelin&n
+Whistler&n
+Palio&n
+Drevar&n
+Saor&n
+Trinity&n
+Questor&n
+Zadeh&n
+Rand&n
+&n
+a-briasp@microsoft.com&n
+&n
+History:&n
+11/30/95 - First code written&n
+12/10/95 - Finished ready for review&n
+12/15/95 - Finished review and necessary changes and installed at Valhalla&n
+07/20/95 - Updated items to use new rent, and changed the cart to a mountable donkey&n
+"
+
+
+help
+"If you shout 'JAGER HELP ME!!!' you might have more luck.&n"
+%dil
+
+dilbegin integer chance(Best : integer, Worst : integer, P1 : integer, V1 : integer, M1 : integer,
+	P2 : integer, V2 : integer, M2 : integer, P3 : integer, V3 : integer, M3 : integer);
+var
+	iPercent : integer;
+	iChance : integer;
+	iTemp : integer;
+code
+{
+	if(Best==Worst) return(0);
+
+	if(M1<1){M1:=1; P1:=0;}
+	if(P1<0) P1:=0;
+	if(V1<0) V1:=0;
+	if(V1>M1) V1:=M1;
+
+	if(M2<1){M2:=1; P2:=0;}
+	if(P2<0) P2:=0;
+	if(V2<0) V2:=0;
+	if(V2>M2) V2:=M2;
+
+	if(M3<1){M3:=1; P3:=0;}
+	if(P3<0) P3:=0;
+	if(V3<0) V3:=0;
+	if(V3>M3) V3:=M3;
+
+	iPercent:=100*((P1*V1/M1)+(P2*V2/M2)+(P3*V3/M3))/(P1+P2+P3);
+	iChance:=Worst+((Best-Worst)*iPercent/100);
+	return(iChance);
+}
+dilend
+
+dilbegin guitar();
+var
+	pc : unitptr;
+	song : string;
+	i : integer;
+code
+{
+	heartbeat:=PULSE_SEC * 4;
+:start:
+	wait(SFB_CMD, command("play"));
+	block;
+	pc := activator;
+	secure(pc, start);
+	i:=rnd(1,16);
+	if(i==1) song:="With or Without You";
+	else if(i==2) song:="Stairway to Heaven";
+	else if(i==3) song:="Hey Joe";
+	else if(i==4) song:="Wonderful Tonight";
+	else if(i==5) song:="Running to Stand Still";
+	else if(i==6) song:="Eruption";
+	else if(i==7) song:="Bad";
+	else if(i==8) song:="Leaving on a Jetplane";
+	else if(i==9) song:="Sunday Bloody Sunday";
+	else if(i==10) song:="She Talks to Angels";
+	else if(i==11) song:="316";
+	else if(i==12) song:="Dance the Night Away";
+	else if(i==13) song:="New Year's Day";
+	else if(i==14) song:="Knockin on Heaven's Door";
+	else if(i==15) song:="Lola";
+	else if(i==16) song:="For What It's Worth";
+	act("$1N plays '$3t' on Jager's guitar.", A_SOMEONE, pc, self, song, TO_REST);
+	act("You play '$3t' on Jager's guitar.", A_SOMEONE, pc, self, song, TO_CHAR);
+	unsecure(pc);
+	goto start;
+}
+dilend
+
+dilbegin jons_hwy();
+code
+{
+:start:
+	wait(SFB_CMD, (activator.type==UNIT_ST_PC) and (command(CMD_CLIMB)));
+	block;
+	act("You struggle and struggle but after a few minutes realize you are still on the ground and...  GODDAMN IT!  YOU'VE BROKEN A NAIL!", A_SOMEONE, activator, null, null, TO_CHAR);
+	act("$1N looks like a fool as $1s tries to climb up the cliffs.  Poor baby seems to have broken a nail too!", A_SOMEONE, activator, null, null, TO_REST);
+	goto start;
+}
+dilend
+
+dilbegin jav_couch();
+var
+	isit : integer;
+	isleep : integer;
+	pc : unitptr;
+code
+{
+	heartbeat:=PULSE_SEC * 10;
+:start:
+	isit:=interrupt(SFB_CMD, (command(CMD_SIT)) or (command(CMD_REST)), sit);
+	isleep:=interrupt(SFB_CMD, (command(CMD_SLEEP)), sleep);
+	while(TRUE) pause;
+:sit:
+	clear(isit);
+	clear(isleep);
+	pc := activator;
+	secure(pc, start);
+	if(pc.position==POSITION_STANDING)
+	{
+		act("$1N sits on Javelin's couch, the couch looks stressed.", A_SOMEONE, pc, self, null, TO_REST);
+		act("You plot your butt down on Javelin's couch, was that a groan you heard?", A_SOMEONE, pc, self, null, TO_CHAR);
+	}
+	unsecure(pc);
+	goto start;
+:sleep:
+	clear(isit);
+	clear(isleep);
+	pc := activator;
+	secure(pc, start);
+	if(pc.position>POSITION_SLEEPING)
+	{
+		act("$1N falls asleep on Javelin's couch, the couch looks stressed.", A_SOMEONE, pc, self, null, TO_REST);
+		act("You lay your sweet head on Javelin's couch, not a sqeak was emitted.", A_SOMEONE, pc, self, null, TO_CHAR);
+	}
+	unsecure(pc);
+	goto start;
+}
+dilend
+
+dilbegin aware moveme();
+var
+	room : unitptr;
+	dir : integer;
+	strdir : string;
+	strop : string;
+code
+{
+:start:
+	wait(SFB_CMD, (activator==self) and (command("md") or command("mu") or command("me") or command("mn") or command("mw") or command("ms")));
+	block;
+	if(self.outside.type!=UNIT_ST_ROOM) goto start;
+
+	room:=self.outside;
+
+	if(command("mn")){dir:=NORTH; strdir:="north"; strop:="the south";}
+	else if(command("ms")){dir:=SOUTH; strdir:="south"; strop:="the north";}
+	else if(command("me")){dir:=EAST; strdir:="east"; strop:="the west";}
+	else if(command("mw")){dir:=WEST; strdir:="west"; strop:="the east";}
+	else if(command("mu")){dir:=UP; strdir:="up"; strop:="below";}
+	else if(command("md")){dir:=DOWN; strdir:="down"; strop:="above";}
+
+	if(self.position==POSITION_SLEEPING) act("In your dreams, or what?", A_ALWAYS, self, null, null, TO_CHAR);
+	else if(self.position==POSITION_RESTING) act("Perhaps you should stand up first.", A_SOMEONE, self, null, null, TO_CHAR);
+	else if(self.position==POSITION_SITTING) act("Perhaps you should stand up first.", A_SOMEONE, self, null, null, TO_CHAR);
+	else if(room.exit_to[dir]==null) act("Alas, you cannot go that way...", A_SOMEONE, self, null, null, TO_CHAR);
+	else if(room.exit_info[dir]&EX_HIDDEN) act("Alas, you cannot go that way...", A_SOMEONE, self, null, null, TO_CHAR);
+	else if(room.exit_info[dir]&EX_CLOSED) act("The door seems to be closed.", A_SOMEONE, self, null, null, TO_CHAR);
+	else
+	{
+		act("$1N leaves $2t.", A_SOMEONE, self, strdir, strop, TO_REST);
+		link(self, room.exit_to[dir]);
+		exec("look", self);
+		act("$1N "+argument, A_SOMEONE, self, strdir, strop, TO_ALL);
+	}
+	goto start;
+}
+dilend
+
+dilbegin home_exits();
+code
+{
+:start:
+	wait(SFB_CMD, command(CMD_EAST) or command(CMD_UP) or command(CMD_DOWN) or command(CMD_EXITS));
+	block;
+	if(command(CMD_DOWN))
+	{
+		act("You step through the floor and leave Jager's house.", A_SOMEONE, activator, null, null, TO_CHAR);
+		act("$1N steps through the floor and is gone.", A_SOMEONE, activator, null, null, TO_REST);
+		link(activator, findroom("market_sq@midgaard"));
+		act("The sky is falling!  Wait!  It's $1N!  $1e lands with a thud.", A_SOMEONE, activator, null, null, TO_REST);
+		exec("look", activator);
+	}
+	else if(command(CMD_UP))
+	{
+		act("You are sucked through the ceiling, what fun!", A_SOMEONE, activator, null, null, TO_CHAR);
+		act("$1N is sucked through the ceiling and is gone.", A_SOMEONE, activator, null, null, TO_REST);
+		link(activator, findroom("hall_103@reslab"));
+		act("Suddenly $1N emerges from the ground!", A_SOMEONE, activator, null, null, TO_REST);
+		exec("look", activator);
+	}
+	else if(command(CMD_EAST))
+	{
+		act("You walk out Jager's door into the Chicken's Rest in Udgaard.", A_SOMEONE, activator, null, null, TO_CHAR);
+		act("$1N walks out the front door and is gone.", A_SOMEONE, activator, null, null, TO_REST);
+		link(activator, findroom("inn@udgaard"));
+		act("Suddenly a door opens where there was just blank wall and $1N walks in!", A_SOMEONE, activator, null, null, TO_REST);
+		exec("look", activator);
+	}
+	else if(command(CMD_EXITS))
+	{
+		act("East  - The Chicken's Rest", A_SOMEONE, activator, null, null, TO_CHAR);
+		act("Up    - First Floor Center Plaza", A_SOMEONE, activator, null, null, TO_CHAR);
+		act("Down  - The Market Square", A_SOMEONE, activator, null, null, TO_CHAR);
+	}
+	goto start;
+}
+dilend
+
+dilbegin stereo();
+var
+	imusic : integer;
+	itoggle : integer;
+	pc : unitptr;
+code
+{
+	heartbeat:=PULSE_SEC * 90;
+	itoggle:=0;
+:start:
+	imusic:=interrupt(SFB_CMD, (command("music")), music);
+:waiting:
+	if(itoggle==0)
+	{
+		pause;
+		goto waiting;
+	}
+	act("'See the storm set in your eyes,'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'See the thorn twist in your side.'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'I wait for you.'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	pause;
+	if(itoggle==0) goto waiting;
+	act("'Slight of hand and twist of fate,'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'On a bed of nails she makes me wait.'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'And I wait without you.'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	pause;
+	if(itoggle==0) goto waiting;
+	act("'Through the storm you reach the shore.'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'You give it all but I want more.'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'And I'm waiting for you.'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	pause;
+	if(itoggle==0) goto waiting;
+	act("'Desert sky, dream beneath a desert sky.'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'The rivers run but soon run dry,'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'we need new dreams tonight.'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	pause;
+	if(itoggle==0) goto waiting;
+	act("'Set me alight, we'll punch a hole right through the night.'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'Every day the dreamers die,'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'to see what's on the other side.'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	pause;
+	if(itoggle==0) goto waiting;
+	act("'October, and the trees are stripped bare,'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'of all they wear.  But do I care?'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'October, and kingdoms rise and kingdoms fall,'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'but you go on...'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	pause;
+	if(itoggle==0) goto waiting;
+	act("'If I, could through myself, set your spirit free,'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'I'd lead your heart away, see you break, break away...'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'Into the light, and to the day.'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	pause;
+	if(itoggle==0) goto waiting;
+	act("'Broken bottles under childrens feet,'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'bodies strewn across a dead end street!'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'But I won't heed the battle call,'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'puts my back up, puts my back up against a wall!'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	pause;
+	if(itoggle==0) goto waiting;
+	act("'And so she woke up, woke up from wear she was, lying still.'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'Said, I, I gotta do something about where we're going.'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'Step on a steam train, step outta the drivin' rain maybe,'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'run through the darkness, in the night.'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	pause;
+	if(itoggle==0) goto waiting;
+	act("'Sweeter the sin, but bitter the taste in my mouth.'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'I see seven towers, but I only see one way out.'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'You've got to cry without weepin' talk without speakin,'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'scream without raising your voice!'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'You know I took the poison from the poison stream, then I floated outta here...'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	pause;
+	if(itoggle==0) goto waiting;
+	act("'She runs through the streets, with her eyes painted red.'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'Under black belly of cloud in the rain.'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'In through a doorway, she brings me white gold and pearls,'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'stolen from the sea, she is raging, she is raging, and a storm blows up in her eyes.'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	act("'She will suffer the needle's chill, she's running to stand still.'", A_ALWAYS, self.inside, null, null, TO_ALL);
+	pause;
+	goto waiting;
+
+:music:
+	block;
+	clear(imusic);
+	pc := activator;
+	secure(pc, start);
+	if(itoggle==0)
+	{
+		itoggle:=1;
+		act("$1N flips on the stereo and you hear U2 playing one of your favourite songs.", A_SOMEONE, pc, self.inside, null, TO_REST);
+		act("You flip on the stereo and hear U2 playing one of your favourite songs.", A_SOMEONE, pc, self.inside, null, TO_CHAR);
+	}
+	else
+	{
+		itoggle:=0;
+		act("$1N turns the stereo off for now.", A_SOMEONE, pc, self.inside, null, TO_REST);
+		act("You turn the stereo off for now.", A_SOMEONE, pc, self.inside, null, TO_CHAR);
+	}
+	unsecure(pc);
+	goto start;
+}
+dilend
+
+dilbegin gauntlet_dam1(medi : unitptr, targ : unitptr, hm : integer);
+var
+	str : string;
+code
+{
+	if (hm > 80) str := "fatally";
+	else if (hm > 70) str := "critically";
+	else if (hm > 60) str := "gravely";
+	else if (hm > 50) str := "severely";
+	else if (hm > 40) str := "seriously";
+	else if (hm > 30) str := "fairly";
+	else if (hm > 20) str := "lightly";
+	else if (hm > 10) str := "slightly";
+	else str := "insignificantly";
+
+	act("You turn a gear on your $2N and they punch $3N "+str+".", A_SOMEONE, self, medi, targ, TO_CHAR);
+	act("$1n turns a gear on $1s $2N and they punch $3N "+str+".", A_SOMEONE, self, medi, targ, TO_NOTVICT);
+	act("$1n turns a gear on $1s $2N and they punch you "+str+".", A_SOMEONE, self, medi, targ, TO_VICT);
+	return;
+}
+dilend
+
+dilbegin gauntlet_dam2(medi : unitptr, targ : unitptr, hm : integer);
+var
+	str : string;
+code
+{
+	if (hm > 80) str := "fatally";
+	else if (hm > 70) str := "critically";
+	else if (hm > 60) str := "gravely";
+	else if (hm > 50) str := "severely";
+	else if (hm > 40) str := "seriously";
+	else if (hm > 30) str := "fairly";
+	else if (hm > 20) str := "lightly";
+	else if (hm > 10) str := "slightly";
+	else str := "insignificantly";
+
+	act("You flip a switch on your $2N and they PUMMEL $3N "+str+".", A_SOMEONE, self, medi, targ, TO_CHAR);
+	act("$1n flips a switch on $1s $2N and they PUMMEL $3N "+str+".", A_SOMEONE, self, medi, targ, TO_NOTVICT);
+	act("$1n flips a switch on $1s $2N and they PUMMEL you "+str+".", A_SOMEONE, self, medi, targ, TO_VICT);
+	return;
+}
+dilend
+
+dilbegin gauntlet_dam3(medi : unitptr, targ : unitptr, hm : integer);
+var
+	str : string;
+code
+{
+	if (hm > 80) str := "fatally";
+	else if (hm > 70) str := "critically";
+	else if (hm > 60) str := "gravely";
+	else if (hm > 50) str := "severely";
+	else if (hm > 40) str := "seriously";
+	else if (hm > 30) str := "fairly";
+	else if (hm > 20) str := "lightly";
+	else if (hm > 10) str := "slightly";
+	else str := "insignificantly";
+
+	act("You move a gizmo on your $2N and they *POUND* $3N "+str+".", A_SOMEONE, self, medi, targ, TO_CHAR);
+	act("$1n moves a gizmo on $1s $2N and they *POUND* $3N "+str+".", A_SOMEONE, self, medi, targ, TO_NOTVICT);
+	act("$1n moves a gizmo on $1s $2N and they *POUND* you "+str+".", A_SOMEONE, self, medi, targ, TO_VICT);
+	return;
+}
+dilend
+
+dilbegin gauntlet_dam4(medi : unitptr, targ : unitptr, hm : integer);
+code
+{
+	act("You hear a *CLICK* from inside your $2N and they destroy $3N instantly!", A_SOMEONE, self, medi, targ, TO_CHAR);
+	act("You hear a *CLICK* from inside $1N's $2N and they destroy $3N instantly!", A_SOMEONE, self, medi, targ, TO_NOTVICT);
+	act("You hear a *CLICK* from inside $1N's $2N and they destroy you instantly!", A_SOMEONE, self, medi, targ, TO_VICT);
+	return;
+}
+dilend
+
+dilbegin blanket_sleep(medi : unitptr, targ : unitptr, hm : integer);
+code
+{
+	act("Your $2N's warmth speeds your recovery.", A_SOMEONE, self, medi, targ, TO_CHAR);
+	return;
+}
+dilend
+
+dilbegin blanket_save(medi : unitptr, targ : unitptr, hm : integer);
+code
+{
+	act("$1N's $2N lovingly saves $1N from certain death.", A_SOMEONE, self, medi, targ, TO_REST);
+	act("Your $2N wraps itself lovingly around you and aids your recovery.", A_ALWAYS, self, medi, targ, TO_CHAR);
+	return;
+}
+dilend
+
+dilbegin errand_person();
+var
+	iFight : integer;
+	random : integer;
+code
+{
+	heartbeat:=(PULSE_SEC * 15) + rnd(0, 15);
+	on_activation(self.position == POSITION_FIGHTING, ina_fight);
+
+:start:
+	iFight := interrupt(SFB_COM, self.position==POSITION_FIGHTING, ina_fight);
+	walkto(findroom("mail_room@reslab"));
+	exec("emote picks up a package and scurries off.", self);
+	random:=rnd(1, 9);
+	if(random==1) walkto(findroom("kalin_room@reslab"));
+	else if(random==2) walkto(findroom("benkle_room@reslab"));
+	else if(random==3) walkto(findroom("del_room@reslab"));
+	else if(random==4) walkto(findroom("foukin_room2@reslab"));
+	else if(random==5) walkto(findroom("del_room@reslab"));
+	else if(random==6) walkto(findroom("pip_room@reslab"));
+	else if(random==7) walkto(findroom("roger_room@reslab"));
+	else if(random==8) walkto(findroom("guard_room11@reslab"));
+	else if(random==9) walkto(findroom("guard_room13@reslab"));
+	exec("emote drops off a package and heads back to the mail room.", self);
+	goto start;
+
+:ina_fight:
+	clear(iFight);
+	priority;
+	act("$1N looks scared but turns vicious and fights back.", A_SOMEONE, self, null, null, TO_REST);
+	while(self.position==POSITION_FIGHTING) pause;
+	nopriority;
+	goto start;
+}
+dilend
+
+dilbegin no_group();
+var
+	sameroom : integer;
+	folling : integer;
+	gonna : integer;
+code
+{
+:start:
+	wait(SFB_CMD, (activator.type==UNIT_ST_PC) and (activator.level<200) and ((activator.master!=null) or command(CMD_FOLLOW)));
+	folling:=(activator.master!=null);
+	gonna:=command(CMD_FOLLOW);
+	if(folling) sameroom:=(activator.outside==activator.master.outside); else sameroom:=TRUE;
+	if(sameroom){block; act("Traveling in groups are not allowed here, due to the overcrowding of this institution.", A_SOMEONE, activator, null, null, TO_ALL);}
+	else act("There is no need to follow someone who is not with you.", A_SOMEONE, activator, null, null, TO_ALL);
+	if(folling) exec("follow", activator);
+	goto start;
+}
+dilend
+
+dilbegin bill_quest();
+var
+	pc : unitptr;
+	recip : unitptr;
+	package : unitptr;
+	iFight : integer;
+	quest : extraptr;
+	minlev : integer;
+	maxlev : integer;
+	qnames : stringlist;
+	rtitle : string;
+	rdesc : string;
+	rlev : integer;
+	temp : integer;
+code
+{
+	heartbeat:=PULSE_SEC * 5;
+	on_activation(self.position == POSITION_FIGHTING, ina_fight);
+	package:=null;
+
+:init:
+	iFight := interrupt(SFB_COM, self.position==POSITION_FIGHTING, ina_fight);
+
+:start:
+	nopriority;
+	wait(SFB_DONE, (activator.type==UNIT_ST_PC) and (activator.outside==self.outside) and (command(CMD_SAY)) and (argument=="i need work"));
+	priority;
+	pc:=activator;
+	secure(pc, lostpc);
+
+	quest:="packagefor" in pc.quests;
+	if(quest!=null)
+	{
+		exec("say You have not yet delivered the package I gave you!", self);
+		exec("say I will clear you of the responsibility (and the quest flag),", self);
+		exec("say but you will be penalized and lose 150 xp.", self);
+		exec("say Nod if this is acceptable.", self);
+		wait(SFB_DONE, (pc.outside!=self.outside) or ((activator==pc) and (command(CMD_NOD))));
+		if(pc.outside!=self.outside) goto lostpc;
+		temp:=dildestroy("packagefor@reslab", pc);
+		subextra(pc.quests, "packagefor");
+		experience(-150, pc);
+		act("You lose 150 xp.", A_SOMEONE, pc, null, null, TO_CHAR);
+		unsecure(pc);
+		goto start;
+	}
+
+	minlev:=pc.level+(pc.level/10);
+	if(pc.level==50) maxlev:=199;
+	else maxlev:=pc.level+(pc.level/5);
+
+:loop:
+	recip:=findrndunit(pc, FIND_UNIT_WORLD, UNIT_ST_NPC);
+	secure(recip, loop);
+	rdesc:=recip.outside_descr;
+	rtitle:=recip.title;
+	rlev:=recip.level;
+	unsecure(recip);
+	if(((rlev<minlev) or (rlev>maxlev) or ("cityguard" in recip.names)) and (pc.level<GOD_LEVEL)) goto loop;
+
+	exec("say Oh you do eh? Fine, "+pc.name+"!", self);
+	exec("say I need you to deliver a package for me.", self);
+	exec("say If you deliver the package successfully you will get 300 xp.", self);
+	exec("say Just nod if you will.", self);
+
+	wait(SFB_DONE, (pc.outside!=self.outside) or ((activator==pc) and (command(CMD_NOD))));
+	if(pc.outside!=self.outside) goto lostpc;
+
+	package:=load("package@reslab");
+	package.title:="a package for "+rtitle;
+	package.outside_descr:="A package for "+rtitle+" lies here.";
+	addstring(package.names, rtitle);
+	qnames:={""};
+	addstring(qnames, "Package for "+rtitle);
+	addstring(qnames, "packagefor");
+	addstring(qnames, rtitle);
+	addextra(pc.quests, qnames, "");
+	if(not dilfind("packagefor@reslab", pc)) dilcopy("packagefor@reslab", pc);
+	exec("say OK the package is for "+rtitle+".", self);
+	exec("give packagefor "+pc.name, self);
+	exec("drop packagefor", self);
+	exec("say Don't you dare open that, it's not for you!", self);pause;
+	exec("say The recipient you are looking for looks like this:", self);
+	exec("say "+rdesc, self);
+	exec("say And don't worry about giving it to the wrong recipient,", self);
+	exec("say if you get it wrong it will be returned to you.", self);pause;
+	exec("say Now hurry!  That's an important package!", self);
+	unsecure(pc);
+	goto start;
+
+:ina_fight:
+	clear(iFight);
+	while(self.position==POSITION_FIGHTING) pause;
+	goto init;
+
+:lostpc:
+	exec("say Fine! Be that way! Next please?", self);
+	unsecure(pc);
+	goto start;
+}
+dilend
+
+dilbegin gonmork_quest();
+var
+	pc : unitptr;
+	potn : unitptr;
+	iFight : integer;
+	quest : extraptr;
+code
+{
+	heartbeat:=PULSE_SEC * 5;
+	on_activation(self.position == POSITION_FIGHTING, ina_fight);
+	potn:=null;
+
+:init:
+	iFight := interrupt(SFB_COM, self.position==POSITION_FIGHTING, ina_fight);
+
+:start:
+	nopriority;
+	wait(SFB_DONE, (not (SAVE_RABBIT_COMPLETE in activator.quests)) and (activator.type==UNIT_ST_PC));
+	priority;
+	pc:=activator;
+	secure(pc, lostpc);
+
+	if("save_rabbit_3" in pc.quests) goto finish;
+	else if("save_rabbit_2" in pc.quests) goto part4;
+	else if("save_rabbit_1" in pc.quests) goto part3;
+	else if(SAVE_RABBIT_ONGOING in pc.quests) goto part2;
+	else goto part1;
+
+:part1:
+	exec("say Hello there, "+pc.name+".", self); pause;
+	exec("emote looks sad.", self); pause;
+	exec("say I heard a nasty rumour today.", self); pause;
+	exec("say You know, I love rabbits, always have.  Wrote several books on them in fact!", self);pause;
+	exec("say That's why this pains me so much.  I heard that one of the inventor's here is not quite...", self);pause;
+	exec("say Well I heard he's been doing some unorthadox experiments on rabbits, the poor little things!", self);pause;
+	exec("say I'm far too old to do anything about it, but you could!", self);pause;
+	exec("say All you'd have to do is...", self);pause;
+	exec("grin", self);pause;
+	exec("say ...kill the bastard who is messin with my rabbits.", self);pause;
+	exec("emote gets a rather crazed look in his eyes.", self);pause;
+	exec("say bring me the head of that, that...", self);pause;
+	exec("emote sputters, looking for the right insult.  Apparently nothing is low enough for those who mess with rabbits.", self);pause;
+	exec("say Anyway will you do that? That would save my rabbits!  Please say 'i will' if you'll save them.", self);
+	wait(SFB_DONE, (pc.outside!=self.outside) or ((activator==pc) and (command(CMD_SAY)) and (argument=="i will")));
+	if(pc.outside!=self.outside) goto lostpc;
+	exec("say Oh thank you!  Please hurry, they are in pain I can feel it!", self);
+	addextra(pc.quests, {SAVE_RABBIT_ONGOING}, "");
+	unsecure(pc); pause;
+	goto start;
+
+:part2:
+	if((not command(CMD_GIVE)) or (target!=self))
+	{
+		unsecure(pc);
+		goto start;
+	}
+	if((medium.title=="a bloody head") and ("Donarius" in medium.outside_descr))
+	{
+		destroy(medium);
+		quest:=SAVE_RABBIT_ONGOING in pc.quests;
+		addstring(quest.names, "save_rabbit_1");
+		exec("say "+pc.name+", you did it!  Are my rabbits safe?", self);pause;
+		exec("say What's that?!? They've been MUTATED?!? Quickly, bring me the corpse of one, perhaps I can devise a remedy.", self);
+	}
+	else
+	{
+		exec("say I don't need this, here you keep it.", self);
+		exec("give "+medium.name+" "+pc.name, self);
+	}
+	unsecure(pc);
+	goto start;
+
+:part3:
+	if((not command(CMD_GIVE)) or (target!=self))
+	{
+		unsecure(pc);
+		goto start;
+	}
+	if((medium.title=="a corpse") and ("a mutated rabbit" in medium.outside_descr))
+	{
+		destroy(medium);
+		quest:=SAVE_RABBIT_ONGOING in pc.quests;
+		addstring(quest.names, "save_rabbit_2");
+		exec("say You got it, "+pc.name+"!", self); pause;
+		exec("emote studies the corpse.", self); pause;
+		exec("emote makes some arcane guestures, and the corpse turns to liquid!", self); pause;
+		exec("emote touches the liquid, then closes his eyes.", self); pause; pause;
+		exec("say I know the cure!", self); pause;
+		exec("say Bring me the herbs of death, to kill the evil spirit in the rabbits,", self); pause;
+		exec("say a potion of cure disease, to combat the physical ailments of the mutated rabbits,", self); pause;
+		exec("say and a barrel of milk to bind it all together, and allow the rabbits to digest it.", self); pause;
+		exec("say Now go!", self);
+	}
+	else
+	{
+		exec("say I don't need this, here you keep it.", self);
+		exec("give "+medium.name+" "+pc.name, self);
+	}
+	unsecure(pc); pause;
+	goto start;
+
+:part4:
+	if((not command(CMD_GIVE)) or (target!=self))
+	{
+		unsecure(pc);
+		goto start;
+	}
+
+	if((medium.nameidx=="p_cdisease") and (medium.zoneidx=="midgaard") and (not ("save_rabbit_3_1" in pc.quests)))
+	{
+		destroy(medium);
+		quest:=SAVE_RABBIT_ONGOING in pc.quests;
+		addstring(quest.names, "save_rabbit_3_1");
+		exec("say Thank you, "+pc.name+"!", self); pause;
+		exec("say I trust it didn't cost you too much?", self);
+		goto allitems;
+	}
+	if((medium.nameidx=="herbs_bad") and (medium.zoneidx=="halfzon") and (not ("save_rabbit_3_2" in pc.quests)))
+	{
+		destroy(medium);
+		quest:=SAVE_RABBIT_ONGOING in pc.quests;
+		addstring(quest.names, "save_rabbit_3_2");
+		exec("say Thank you, "+pc.name+"!", self); pause;
+		exec("say I hope they weren't too hard to get?", self);
+		goto allitems;
+	}
+	if((medium.nameidx=="barrel") and (medium.zoneidx=="manse") and (not ("save_rabbit_3_3" in pc.quests)))
+	{
+		destroy(medium);
+		quest:=SAVE_RABBIT_ONGOING in pc.quests;
+		addstring(quest.names, "save_rabbit_3_3");
+		exec("say Thank you, "+pc.name+"!", self); pause;
+		exec("say Now that wasn't hard was it?", self);
+		goto allitems;
+	}
+	else
+	{
+		exec("say I don't need this, here you keep it.", self);
+		exec("give "+medium.name+" "+pc.name, self);
+	}
+	unsecure(pc); pause;
+	goto start;
+
+:allitems:
+	if(("save_rabbit_3_1" in pc.quests) and ("save_rabbit_3_2" in pc.quests) and ("save_rabbit_3_3" in pc.quests))
+	{
+		quest:=SAVE_RABBIT_ONGOING in pc.quests;
+		addstring(quest.names, "save_rabbit_3");
+		pause;
+		exec("say You've given me all the ingredients, "+pc.name+"!", self); pause;
+		exec("emote takes careful portions of each ingredient.", self); pause;
+		exec("emote mixes them together in a small bowl.", self); pause;
+		potn:=load("rabbitpotion@reslab");
+		exec("give rabbitpotion "+pc.name, self); pause;
+		exec("drop rabbitpotion", self); pause;
+		exec("say Now hurry and bring that to the rabbits, just give the potion to them, they will like it and drink it.", self);
+		dilcopy("rabbitpotion@reslab", pc);
+	}
+	unsecure(pc); pause;
+	goto start;
+
+:finish:
+	if("save_rabbit_4" in pc.quests)
+	{
+		subextra(pc.quests, SAVE_RABBIT_ONGOING);
+		addextra(pc.quests, {SAVE_RABBIT_COMPLETE}, "");
+		experience(5000, pc);
+		exec("say You saved my rabbits, "+pc.name+"!!!", self); pause;
+		exec("hug "+pc.name, self); pause;
+		exec("say Please take this as a token of my gratitude.", self);
+		act("You gained 5000 xp.", A_SOMEONE, pc, null, null, TO_CHAR);pause;
+		exec("say I have a friend that has something valuable you would probably like, old Talbon.", self);pause;
+		exec("say If you find him just mention my name, he'll give you an object worthy of a hero like you.", self);
+	}
+	unsecure(pc); pause;
+	goto start;
+
+:ina_fight:
+	clear(iFight);
+	while(self.position==POSITION_FIGHTING) pause;
+	goto init;
+
+:lostpc:
+	exec("sniff", self);pause;
+	exec("say Well maybe someone else will save my bunnies...", self);pause;
+	exec("cry", self);
+	unsecure(pc);
+	goto start;
+}
+dilend
+
+dilbegin talbon_quest();
+var
+	pc : unitptr;
+	iFight : integer;
+	item : unitptr;
+code
+{
+	heartbeat:=PULSE_SEC * 5;
+	on_activation(self.position == POSITION_FIGHTING, ina_fight);
+
+:init:
+	iFight := interrupt(SFB_COM, self.position==POSITION_FIGHTING, ina_fight);
+
+:start:
+	nopriority;
+	wait(SFB_DONE, (activator.type==UNIT_ST_PC) and (command(CMD_SAY)) and ("gonmork" in argument));
+	priority;
+	pc:=activator;
+	secure(pc, start);
+
+	if(SAVE_RABBIT_COMPLETE in pc.quests) goto finish;
+
+	exec("say Oh you know old Gonmork do you?", self); pause;
+	exec("say Well you are not worthy of anything I might have, go away!", self); pause;
+	unsecure(pc); pause;
+	goto start;
+
+:finish:
+	exec("say Oh you know old Gonmork do you?", self); pause;
+	exec("say He speaks very highly of you!  Here, I have something for you.", self); pause;
+	item:=load("plate@reslab");
+        item.height := pc.height;
+	exec("give breastplate "+pc.name, self);
+	exec("drop breastplate", self);	pause;
+	exec("wave", self);
+	unsecure(pc); pause;
+	goto start;
+
+:ina_fight:
+	clear(iFight);
+	while(self.position==POSITION_FIGHTING) pause;
+	goto init;
+}
+dilend
+
+dilbegin portrait();
+var
+	pc : unitptr;
+	i : integer;
+code
+{
+	heartbeat:=PULSE_SEC * 4;
+:start:
+	wait(SFB_CMD, (command("sign") and ("portrait" in argument) and (self.outside==activator) and (activator.type==UNIT_ST_PC) and (activator.name in self.title)));
+	block;
+	pc := self.outside;
+	secure(pc, start);
+	act("$1N scribbles $1s name on the the front.", A_SOMEONE, pc, self, null, TO_REST);
+	act("You scribble your name on the the front.", A_SOMEONE, pc, self, null, TO_CHAR);
+	self.title:="an autographed Portrait of "+activator.name;
+	unsecure(pc);
+	i:=dildestroy("portrait@reslab", self);
+}
+dilend
+
+dilbegin aware packagefor();
+var
+	q1 : extraptr;
+	q2 : extraptr;
+	temp : integer;
+code
+{
+	heartbeat:=PULSE_SEC * 4;
+:start:
+	wait(SFB_DONE, (command(CMD_GIVE) and (activator==self) and ("packagefor" in medium.names) and (target.type==UNIT_ST_NPC)));
+	q1:="packagefor" in activator.quests;
+	q2:=target.title in activator.quests;
+	if((q1==q2) and (q1!=null) and (target.title in medium.names))
+	{
+		subextra(activator.quests, "packagefor");
+		experience(300, activator);
+		exec("say Thanks, I've been waiting for this, "+activator.name+"!", target);
+		act("You gain 300 xp.", A_SOMEONE, activator, null, null, TO_CHAR);
+		destroy(medium);
+		temp:=dildestroy("packagefor@reslab", self);
+		goto start;
+	}
+	else
+	{
+		exec("say Thanks, but I don't need this.  You keep it.", target);
+		exec("give packagefor "+activator.name, target);
+		exec("drop packagefor", target);
+		goto start;
+	}
+}
+dilend
+
+dilbegin aware rabbitpotion();
+var
+	quest : extraptr;
+	temp : integer;
+	newrabbit : unitptr;
+code
+{
+	heartbeat:=PULSE_SEC * 4;
+:start:
+	wait(SFB_DONE, (command(CMD_GIVE) and (activator==self) and ("rabbitpotion" in medium.names) and (target.type==UNIT_ST_NPC)));
+	quest:="save_rabbit_3" in activator.quests;
+	if((quest!=null) and (target.nameidx=="rabbit") and (target.zoneidx=="reslab"))
+	{
+		if(not ("save_rabbit_4" in quest.names)) addstring(quest.names, "save_rabbit_4");
+		destroy(target);
+		act("As you feed the rabbit the potion it starts to shrink, and heal!", A_SOMEONE, activator, null, null, TO_CHAR);
+		act("As $1N feeds the rabbit the potion it starts to shrink, and heal!", A_SOMEONE, activator, null, null, TO_REST);
+		newrabbit:=load("rabbit@haon_dor");
+		link(newrabbit, self.outside);
+		temp:=dildestroy("rabbitpotion@reslab", self);
+		goto start;
+	}
+	else
+	{
+		exec("say Do I look like a mutated rabbit to you?!?!  You keep it.", target);
+		exec("give rabbitpotion "+activator.name, target);
+		goto start;
+	}
+}
+dilend
+
+dilbegin rand_act();
+var
+	iRandom : integer;
+	pc : unitptr;
+code
+{
+	heartbeat:=PULSE_SEC * 720;
+:start:
+	pause;
+	iRandom:=rnd(1,100);
+	if(iRandom==1) act("From somewhere far off you hear a faint scream.", A_SOMEONE, self.inside, null, null, TO_ALL);
+	else if(iRandom==2) act("Is that the rhythmic sounds of a machine you hear?", A_SOMEONE, self.inside, null, null, TO_ALL);
+	else if(iRandom==3) act("Your zipper is undone!", A_SOMEONE, self.inside, null, null, TO_ALL);
+	else if(iRandom==4) act("Your socks fall down.", A_SOMEONE, self.inside, null, null, TO_ALL);
+	else if(iRandom==5) act("You get the feeling you are being watched...", A_SOMEONE, self.inside, null, null, TO_ALL);
+	else if(iRandom==6) act("Away put your weapon, I mean you know harm!", A_SOMEONE, self.inside, null, null, TO_ALL);
+	else if(iRandom==7) act("Get us outta here Chewie!", A_SOMEONE, self.inside, null, null, TO_ALL);
+	else if(iRandom==8) act("I'm givin 'er all she's got cap'n!", A_SOMEONE, self.inside, null, null, TO_ALL);
+	else if(iRandom==9) act("Hello, I love you, wont't you tell me your name?", A_SOMEONE, self.inside, null, null, TO_ALL);
+	else if(iRandom==10) act("Rejoice!", A_SOMEONE, self.inside, null, null, TO_ALL);
+	else if(iRandom==11) act("What's that? Jem's here? WHERE?!?!", A_SOMEONE, self.inside, null, null, TO_ALL);
+	else if(iRandom==12) act("You think about being a custodian and are overcome with emotion.", A_SOMEONE, self.inside, null, null, TO_ALL);
+	else if(iRandom==13) act("Someday you will be a Jedi-Janitor like your father.", A_SOMEONE, self.inside, null, null, TO_ALL);
+	else if(iRandom==14) act("You bite your nails.", A_SOMEONE, self.inside, null, null, TO_ALL);
+	else if(iRandom==15) act("Now where is that wascilly wabbit?", A_SOMEONE, self.inside, null, null, TO_ALL);
+	else if(iRandom==16) act("Whoah!!  That was ODD, looked like a small pink rabbit beating a drum just rolled by!", A_SOMEONE, self.inside, null, null, TO_ALL);
+	else if(iRandom==17) act("Your mouth starts to water as you ponder the joy it would be to clean for a living.", A_SOMEONE, self.inside, null, null, TO_ALL);
+	else if(iRandom==18) act("Your doing good!  Keep it up!", A_SOMEONE, self.inside, null, null, TO_ALL);
+	else if(iRandom==19) act("Give Jem money.", A_SOMEONE, self.inside, null, null, TO_ALL);
+	else if(iRandom==20) act("Whistler wants a hug!", A_SOMEONE, self.inside, null, null, TO_ALL);
+	else if(iRandom==21) act("QUICK!  IT'S A TRAP!  Shout 'I'm gullible!' or you will die!", A_SOMEONE, self.inside, null, null, TO_ALL);
+	else if(iRandom==22) act("You suddenly fall in love with Scully.", A_SOMEONE, self.inside, null, null, TO_ALL);
+	goto start;
+}
+dilend
+
+dilbegin fireplace();
+var
+	iRandom : integer;
+code
+{
+	heartbeat:=PULSE_SEC * 30;
+:start:
+	iRandom:=rnd(1,4);
+	if(iRandom==1) act("The warmth of the fire makes you not want to leave.", A_SOMEONE, self.inside, null, null, TO_ALL);
+	else if(iRandom==2) act("The fire flickers and snaps.", A_SOMEONE, self.inside, null, null, TO_ALL);
+	else if(iRandom==3) act("The smell of burning cedar makes you want to whip out your guitar.", A_SOMEONE, self.inside, null, null, TO_ALL);
+	pause;
+	goto start;
+}
+dilend
+
+dilbegin construction();
+var
+	iRandom : integer;
+code
+{
+	heartbeat:=PULSE_SEC * 10;
+:start:
+	iRandom:=rnd(1,6);
+	if(iRandom==1) act("You hear the sounds of a hammer hammering away.", A_SOMEONE, self.inside, null, null, TO_ALL);
+	else if(iRandom==2) act("Is that another language or a construction worker swearing?", A_SOMEONE, self.inside, null, null, TO_ALL);
+	else if(iRandom==3) act("You hear something large hit the ground, followed by a howl of pain.", A_SOMEONE, self.inside, null, null, TO_ALL);
+	else if(iRandom==4) act("Thump, thump, thump, 'OUCH!!!'", A_SOMEONE, self.inside, null, null, TO_ALL);
+	else if(iRandom==5) act("Somewhere you hear what sounds like furniture being moved.", A_SOMEONE, self.inside, null, null, TO_ALL);
+	pause;
+	goto start;
+}
+dilend
+
+%rooms
+
+tower_0
+	title "The Southeast Tower Guard Outpost"
+	names {"tower", "guard room", "room"}
+	descr
+	"You look around and see cold stone walls, and sparse furniture consisting of a bench and a table
+	surrounded by four chairs.  Torches fight a losing battle with the shadows.  You can leave back up
+	to the bottom of the tower."
+
+	movement SECT_CITY
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+
+	extra {"light", "torches", "torch", "wall"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	extra {"bench", "table", "chairs", "furniture"}
+	"The furniture in the room is simple but sturdy, built from solid wood from the cypress forest."
+
+	up to tower_1 descr
+	"The stairs lead back to the ground floor of the tower.";
+end
+
+tower_1
+	title "The Base of the Southeast Tower"
+	names {"tower", "room"}
+	descr
+	"The bottom of the tower is a large room with stone walls and stairways leading up into the tower or
+	down into the lower level.  The torches on the wall flicker but give little warmth.  There is a simple
+	wooden door that leads out of the tower to the south."
+
+	movement SECT_CITY
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+
+	extra {"light", "torches", "torch", "wall"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	up to tower_2 descr
+	"The stairs lead up toward the top of the tower.";
+
+	down to tower_0 descr
+	"The stairs lead down into the basement.";
+
+	north to wall_rd6@midgaard descr
+	"North is the wall road.";
+
+	south to jons_hwy0 descr
+	"The southeast tower entrance opens to the Canyon Highway."  keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+end
+
+tower_2
+	title "Halfway Up the Southeast Tower"
+	names {"tower", "room"}
+	descr
+	"You are on the staircase leading up into the tower and can go either up to the top or down to the base."
+
+	movement SECT_CITY
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+
+	extra {"light", "torches", "torch", "wall"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	up to tower_3 descr
+	"The stairs lead up to the top of the tower.";
+
+	down to tower_1 descr
+	"The stairs lead down to the base of the tower.";
+end
+
+tower_3
+	title "The Top of the Southeast Tower"
+	names {"top", "tower", "room"}
+	descr
+	"You arrive on the top of the southeast tower and your breath is taken away by the beautiful view around
+	you.  You look north over the great city and further you see the moors fading into the distance.  To the south
+	you see a highway cutting through a canyon and off in the distance you see the great research laboratory.
+	Looking off to the west you see the top of the Cypress forest, pristine from this position in the sky.  East
+	you see the King's Road and below you the city is a bustle of activity, tiny ants running frantically to and fro.
+	Stairs lead down into the tower."
+
+	movement SECT_CITY
+	ALWAYS_LIGHT
+
+	extra {"light", "torches", "torch", "wall"}
+	"The torches are built into the walls and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	down to tower_2 descr
+	"The stairs lead down to the base of the tower.";
+end
+
+jons_hwy0
+	title "Outside The Midgaard Wall"
+	names {"wall", "outside"}
+	descr
+	"You stand outside the wall of Midgaard, before a massive tower.  You can head south down the Jon's
+	Highway or west through some dense bushes."
+
+	movement SECT_CITY
+
+	extra {"city", "midgaaard"}
+"The great city of Midgaard, the Center of the Universe as far as most are concerned.
+You want to cry the sight is so beautiful to you.  Or maybe you want to cry because
+the smell is so bad...  hard to tell."
+
+	south to jons_hwy1 descr
+	"The Jon's Highway begins to the south leading down through canyons toward the Research Lab.";
+
+	west to connection descr
+        "You can push through the brush to the west.";
+end
+
+connection
+title "In the Brush"
+descr
+"You are pusing your way through some dense brush, and the sky is conpletely
+concealed from your view.  There appears to be a forest to the west, and
+you can see a road to the east.  The ground is carpeted in leaf mould, and
+thorny bushes block all passage to the north or south."
+extra {"brush"}
+"The bushes tear at your clothing."
+extra {"forest"}
+"The forest is dark and foreboding."
+extra {"road"}
+"The road appears to be well maintained."
+extra {"leaf mould", "ground", "mould"}
+"It appears to have collected here over the years."
+extra {"thorny bushes", "bushes"}
+"The bushes disalow passge to the north or south."
+west to etznab/n_woods6 descr
+"The Northern Etz-Nab Woods";
+east to jons_hwy0 descr
+"Outside the Midgaard Wall";
+end
+
+jons_hwy1
+	title "Beginning of the Canyon Highway"
+	names {"Canyon Highway", "road"}
+	descr
+	"The road is obviously very old, but still well used.  In fact it's used daily
+	by many inhabitants of Midgaard to get to and from the great Laboratory to the south.
+	To the north you see Midgaard itself, the sight is awe-inspiring to say the least.
+	On either side of you cliffs are beginning to rise.  The road continues north and
+	south."
+
+	movement SECT_CITY
+
+	extra {"city", "midgaaard"}
+	"The great city of Midgaard, the Center of the Universe as far as most are concerned.
+	You want to cry the sight is so beautiful to you.  Or maybe you want to cry because
+	the smell is so bad...  hard to tell."
+
+	extra {"road", "ground", "highway"}
+	"Yes, you COULD look at the ground all day, but it won't help you get where you are	going."
+
+	extra {"cliffs", "cliff"}
+	"The cliffs are smaller here, but still you think too high to climb...  WAIT!  Do you have the CLIMBING skill?"
+
+	dilcopy jons_hwy@reslab();
+
+	south to jons_hwy2 descr
+	"The road to the south seems much the same, but the cliffs get bigger.";
+
+	north to jons_hwy0 descr
+	"North takes you directly into the city.";
+end
+
+jons_hwy2
+	title "On the Canyon Highway"
+	names {"Canyon Highway", "road"}
+	descr
+	"The road is obviously very old, but still well used.  In fact it's used daily by
+	many inhabitants of Midgaard to get to and from the great Laboratory to the south.  Far
+	to the north you see Midgaard itself.  On either side of you huge cliffs block most of
+	they sky.  The road continues to the north and south."
+
+	movement SECT_CITY
+
+	extra {"midgaaard", "city"}
+	"It's pretty far away, you see just it's skyline on the horizon."
+
+	extra {"road", "ground", "highway"}
+	"Yes, you COULD look at the ground all day, but it won't help you get where you are going."
+
+	extra {"cliffs", "cliff"}
+	"The cliffs are dangerous, and far too high to climb...  WAIT!  Do you have the CLIMBING skill?"
+
+	dilcopy jons_hwy@reslab();
+
+	north to jons_hwy1 descr
+	"The road to the north seems much the same, but the cliffs are smaller.";
+
+	south to jons_hwy3 descr
+	"The road to the south seems much the same, but the cliffs seem to widen a bit.";
+end
+
+jons_hwy3
+	title "On the Canyon Highway"
+	names {"Canyon Highway", "road"}
+	descr
+	"The road is obviously very old, but still well used.  In fact it's used daily by
+	many inhabitants of Midgaard to get to and from the great Laboratory to the south.  Far
+	to the north you see Midgaard itself.  On either side of you huge cliffs block most of
+	they sky.  The road continues to the north and south."
+
+	movement SECT_CITY
+
+	extra {"midgaaard", "city"}
+	"It's pretty far away, you see just it's skyline on the horizon."
+
+	extra {"road", "ground", "highway"}
+	"Yes, you COULD look at the ground all day, but it won't help you get where you are going."
+
+	extra {"cliffs", "cliff"}
+	"The cliffs are dangerous, and far too high to climb...  WAIT!  Do you have the CLIMBING skill?"
+
+	dilcopy jons_hwy@reslab();
+
+	north to jons_hwy2 descr
+	"The road to the north seems much the same, but the cliffs are smaller.";
+
+	south to jons_hwy4 descr
+	"The road to the south seems much the same, but the cliffs seem to widen a bit.";
+end
+
+jons_hwy4
+	title "On the Canyon Highway"
+	names {"Canyon Highway", "road"}
+	descr
+	"The road is obviously very old, but still well used.  In fact it's used daily by
+	many inhabitants of Midgaard to get to and from the great Laboratory to the south.  Far
+	to the north you see Midgaard itself.  On either side of you huge cliffs block most of
+	they sky.  The road continues to the north and south."
+
+	movement SECT_CITY
+
+	extra {"midgaaard", "city"}
+	"It's pretty far away, you see just it's skyline on the horizon."
+
+	extra {"road", "ground", "highway"}
+	"Yes, you COULD look at the ground all day, but it won't help you get where you are going."
+
+	extra {"cliffs", "cliff"}
+	"The cliffs are dangerous, and far too high to climb...  WAIT!  Do you have the CLIMBING skill?"
+
+	dilcopy jons_hwy@reslab();
+
+	north to jons_hwy3 descr
+	"The road to the north seems much the same, but the cliffs are smaller.";
+
+	south to jons_hwy5 descr
+	"The road to the south seems much the same, but the cliffs seem to widen a bit.";
+end
+
+jons_hwy5
+	title "End of the Canyon Highway"
+	names {"Canyon Highway", "road"}
+	descr
+	"The road is obviously very old, but still well used.  In fact it's used
+	daily by many inhabitants of Midgaard to get to and from the great Laboratory
+	to the south.  Directly to the south you see the Lab itself.  On either side
+	of you the cliffs seem to widen.  The road continues to the north and
+	south."
+
+	movement SECT_CITY
+
+	extra {"laboratory", "lab"}
+	"To the south rises the famous John Patrick Research Laboratory.  It seems about five
+	stories tall and what's that? Looks like someone making a blowface at you in a 3rd
+	floor window!"
+
+	extra {"road", "ground", "highway"}
+	"Yes, you COULD look at the ground all day, but it won't help you get where you are
+	going."
+
+	extra {"cliffs", "cliff"}
+	"The cliffs have pretty much widened out and become a nice valley.  They are no longer
+	very steep...  perhaps now you could climb them?"
+
+	dilcopy jons_hwy@reslab();
+
+	north to jons_hwy4 descr
+	"The road to the north seems much the same, but the cliffs taller and more imposing.";
+
+	south to entrance descr
+	"To the south rises the famous John Patrick Research Laboratory.  It seems about five
+	stories tall and what's that? Looks like someone making a blowface at you in a 3rd
+	floor window!";
+end
+
+entrance
+	title "The Entrance to the John Patrick Research Labarotory"
+	names {"entrance", "lab"}
+	descr
+	"You stand in the great entrance to this renouned place of learning and experimentation, and
+	wonder what great mysteries and inventions are within its walls.  The arch above you is made
+	of granite and has an inscription on it.  To the south is the main hall, and to the north a
+	road leads back to Midgaard.  You notice a large sign by the door."
+
+	movement SECT_CITY
+	ALWAYS_LIGHT
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+/*	extra {"sign"}
+	"This zone is for levels 15-25 on the first level, 35-45 on the second and 50+ on the third.  NOTE:
+	This zone is for SOLO hunting only."*/
+
+	extra {"sign"}
+	"This zone is for levels 15-25.  NOTE: This zone is for SOLO hunting only."
+
+	extra {"arch", "inscription", "writing"}
+	"The inscription on the arch reads: Founded in the memory of John Patrick by Jager."
+
+	extra {"hall"}
+	"To the south you see the main north-south hallway, at the end of which you can make out a large stairway."
+
+	extra {"stairway", "stairs", "stair"}
+	"The stairs are too far away to make out any details."
+
+	north to jons_hwy5 descr
+	"The road to the north heads straight off toward Midgaard.";
+
+	south to hall_101 descr
+	"A hallway through the building lies south of you."  keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+end
+
+hall_101
+	title "A Large Hallway"
+	names {"hallway", "hall"}
+	descr
+	"Light flickers pleasantly from the torches on the walls.  To your west you see a door with some words carved
+	in it.  You can continue down the hallway south toward the plaza."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"light", "torches", "torch", "wall"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	extra {"door", "words", "word"}
+	"The door has written on it the words: 'Entrance Guards'."
+
+	north to entrance descr
+	"The main entrance is to the north." keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+
+	west to guard_room11 descr
+	"The door has written on it the words: 'Entrance Guards'." keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+
+	south to hall_102 descr
+	"The hallway continues to the south.";
+end
+
+guard_room11
+	title "Entrance Guard Room"
+	names{"room"}
+	descr
+	"the guard room is small and sparse.  Apparently this is just a place to rest their feet, not a full break
+	room because there seems to be no food or water available here.  There are shifts posted on one wall, and
+	a bench to rest on against another.  You can go east back to the main hallway."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"light", "torches", "torch", "wall"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	extra {"bench"}
+	"The bench is a simple wooden bench, looks well worn from many a nap."
+
+	extra {"schedule", "shifts", "sign"}
+	"Looks like Tenlas and Frojin are on the day shift, with Melissa and Emrik taking the night shift."
+
+	east to hall_101 descr
+	"The near the entrance is there." keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+end
+
+hall_102
+	title "A Large Hallway"
+	names {"hallway", "hall"}
+	descr
+	"Light flickers pleasantly from the torches on the walls.  To your west you see a door with a word
+	on it.  You can continue down the hallway to the intersection south of you."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"light", "torches", "torch", "wall"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	extra {"door", "word"}
+	"'Supplies'"
+
+	west to supply_room11 descr
+	"The door has written on it the word: Supplies" keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+
+	north to hall_101 descr
+	"The hallway continues to the north, toward the entrance.";
+
+	south to hall_103 descr
+	"There is a large intersection to the south with a sparkling fountain there.";
+end
+
+supply_room11
+	title "Supply Room"
+	names {"room"}
+	descr
+	"This room is just full of all sorts of supplies for the working inventor.  You see a wealth of quills, and
+	sheets of paper among other things.  You can go east from here back into the hallway or stay here and
+	draw pictures of Whistler all day."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"light", "torches", "torch", "wall"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	extra {"supplies", "stuff", "quills", "things", "paper", "sheets"}
+	"You look around and notice glass flasks, extra gears, a stack of portraits of Landolin(?), quills and much
+	more, but most of it has little use to anyone but the workers in this fine institution."
+
+	east to hall_102 descr
+	"That's the hallway!  Allright!" keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+end
+
+hall_103
+	title "First Floor Center Plaza"
+	names {"center", "court", "intersection"}
+	descr
+	"This large room is busy with people people bustling in and out.  On the walls you see
+	pictures of former inventors and their greatest inventions.  You can leave in any direction
+	from here, aways off to the south you see a stairway."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"people"}
+	"They are too busy to be bothered, in and out before you can so much as say hello."
+
+	extra {"pictures", "walls", "wall", "picture", "inventors", "inventor"}
+	"Some of the greatest inventors in all of Valhalla have pictures up here.  Tobas the
+	Wizard, Papi and God with their source code, Cabal with his familiars, Whistler casting a spell,
+	and look!  There is one of Jager!  It's awe inspiring, you are overcome."
+
+	extra {"stairway", "stairs", "stair"}
+	"Very large marble stairs are a ways to the south."
+
+	west to hall_106 descr
+	"A hallway leaves west.";
+
+	east to hall_104 descr
+	"A hallway leaves east toward the annex.";
+
+	south to hall_105 descr
+	"A hallway leaves south toward the stairs.";
+
+	north to hall_102 descr
+	"A hallway leaves north toward the entrance.";
+end
+
+hall_109
+	title "The Hallway to the Annex"
+	names {"hallway", "hall"}
+	descr
+	"Light flickers fiercely from the torches on the walls.  This part of the building gets much more modern,
+	but appears to be not entirely finished.  The walls are a lighter shade and the ceiling a little lower.
+	You can continue east into a large room or head back to the main building to the west."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"light", "torches", "torch", "wall"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	west to hall_108 descr "Oh my!";
+	east to annex_101 descr "That's the annex but, HAH!  You have to walk there to see what's there!";
+end
+
+annex_101
+	title "The West Side of the Annex"
+	names {"annex"}
+	descr
+	"This room is made of stone like the rest of the building, but seems much newer.  It has obviously been used
+	for violent purposes, with all kinds of burn marks, scratches, and other minor damage to the floors and walls.
+	You suspect this is a testing ground of some sort for new inventions."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"burn marks", "burns", "marks", "scratches", "damage", "floors", "floor", "walls", "wall"}
+	"Yup this room has seen lots of use, you can just imagine the battles and experiments that have taken
+	place here - long forgotten now, but for the small reminders they left in this room."
+
+	west to hall_109 descr "The annex hall leads back to the main building.";
+	north to annex_102 descr "The northwest corner of the annex.";
+	east to annex_104 descr "The east side of the annex.";
+	south to annex_106 descr "The southwest corner of the annex.";
+end
+
+annex_102
+	title "The Northwest Corner of the Annex"
+	names {"annex"}
+	descr
+	"This corner of the room is much the same as the rest, you can go south toward the annex hallway or
+	east to another corner of the annex."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	east to annex_103 descr "The northeast corner of the annex.";
+	south to annex_101 descr "The west side of the annex.";
+end
+
+annex_103
+	title "The Northeast Corner of the Annex"
+	names {"annex"}
+	descr
+	"From this corner of the annex you can head south or west."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	west to annex_102 descr "The northwest corner of the annex.";
+	south to annex_104 descr "The south side of the annex.";
+end
+
+annex_104
+	title "The East Side of the Annex"
+	names {"annex"}
+	descr
+	"From here you can go west to the entrance to the main building, or south or north to corners of the annex."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	west to annex_101 descr "The west side of the annex.";
+	north to annex_103 descr "The northeast corner of the annex.";
+	south to annex_105 descr "The southeast corner of the annex.";
+end
+
+annex_105
+	title "The Southeast Corner of the Annex"
+	names {"annex"}
+	descr
+	"This corner of the annex seems a bit less used, but is otherwise similar to the rest.  North and west get
+	you to different parts of the annex."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	west to annex_106 descr "The soutwest corner of the annex.";
+	north to annex_104 descr "The east side of the annex.";
+end
+
+annex_106
+	title "The Southwest Corner of the Annex"
+	names {"annex"}
+	descr
+	"This room seems new like the rest of the annex, but one portion of the wall here seems
+	older, like the main building.  You can go north toward the hallway back to the main building,
+	or east to another corner of the annex."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"wall"}
+	"You are not sure, but that wall looks suspiciously like it could be opened!"
+
+	north to annex_101 descr "The northwest corner of the annex.";
+	east to annex_105 descr "The east side of the annex.";
+
+	SECRET_DOOR_DIFFICULTY(WEST,20)
+	west to secret_101 descr "The annex hall leads back to the main building."
+	keyword {"wall", "door"} open {EX_OPEN_CLOSE,EX_CLOSED,EX_HIDDEN} descr "You think the wall could be opened!";
+end
+
+secret_101
+	title "A Little Room"
+	names {"room"}
+	descr
+	"This little room seems older than the entire building, but you realize it is probably the same as the main
+	portion, it's just that it has not been touched in centuries.  East gets you back into the annex, and there
+	seems to be a ladder leading down into darkness."
+
+	movement SECT_INSIDE
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	east to annex_106 descr "The southwest corner of the annex."
+	keyword {"wall", "door"} open {EX_OPEN_CLOSE,EX_CLOSED} descr "You think the wall could be opened!";
+	down to hall_001 descr "It is far to dark to see down there, you'll have to go down with a light.";
+end
+
+hall_001
+	title "An Ancient Passageway"
+	names {"hallway", "hall", "passageway", "passage"}
+	descr
+	"Looking at the lay of the rock walls and the ancient sconses, you are now sure this passage was
+	here long before the building above."
+
+	extra {"walls", "wall", "rock", "sconses"}
+	"You look at the wall and notice the rock seems to be laid by a master, each chunk fitting nearly
+	perfectly with the next.  The sconses on the wall no longer hold torches, they must have rotted away
+	long ago."
+
+	movement SECT_INSIDE
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+
+	west to hall_002 descr "You'll have to move there to see it, your light doesn't reach that far.";
+	up to secret_101 descr "That's a little room by the annex.";
+end
+
+hall_002
+	title "An Ancient Passageway"
+	names {"hallway", "hall", "passageway", "passage"}
+	descr
+	"This passage obviously was here long before the building above.  Laid rock walls, and ancient sconses
+	speak of times long past, and people now forgotten."
+
+	extra {"walls", "wall", "rock", "sconses"}
+	"You look at the wall and notice the rock seems to be laid by a master, each chunk fitting nearly
+	perfectly with the next.  The sconses on the wall no longer hold torches, they must have rotted away
+	long ago."
+
+	movement SECT_INSIDE
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+
+	west to hall_003 descr "You'll have to move there to see it, your light doesn't reach that far.";
+	east to hall_001 descr "You'll have to move there to see it, your light doesn't reach that far.";
+end
+
+hall_003
+	title "An Ancient Passageway"
+	names {"hallway", "hall", "passageway", "passage"}
+	descr
+	"This passage obviously was here long before the building above.  Laid rock walls, and ancient sconses
+	speak of times long past, and people now forgotten."
+
+	extra {"walls", "wall", "rock", "sconses"}
+	"You look at the wall and notice the rock seems to be laid by a master, each chunk fitting nearly
+	perfectly with the next.  The sconses on the wall no longer hold torches, they must have rotted away
+	long ago."
+
+	movement SECT_INSIDE
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+
+	west to hall_004 descr "You'll have to move there to see it, your light doesn't reach that far.";
+	east to hall_002 descr "You'll have to move there to see it, your light doesn't reach that far.";
+end
+
+hall_004
+	title "An Ancient Passageway"
+	names {"hallway", "hall", "passageway", "passage"}
+	descr
+	"This passage obviously was here long before the building above.  Laid rock walls, and ancient sconses
+	speak of times long past, and people now forgotten."
+
+	extra {"walls", "wall", "rock", "sconses"}
+	"You look at the wall and notice the rock seems to be laid by a master, each chunk fitting nearly
+	perfectly with the next.  The sconses on the wall no longer hold torches, they must have rotted away
+	long ago."
+
+	movement SECT_INSIDE
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+
+	west to hall_005 descr "You'll have to move there to see it, your light doesn't reach that far.";
+	east to hall_003 descr "You'll have to move there to see it, your light doesn't reach that far.";
+end
+
+hall_005
+	title "An Ancient Passageway"
+	names {"hallway", "hall", "passageway", "passage"}
+	descr
+	"This passage obviously was here long before the building above.  Laid rock walls, and ancient sconses
+	speak of times long past, and people now forgotten."
+
+	extra {"walls", "wall", "rock", "sconses"}
+	"You look at the wall and notice the rock seems to be laid by a master, each chunk fitting nearly
+	perfectly with the next.  The sconses on the wall no longer hold torches, they must have rotted away
+	long ago."
+
+	movement SECT_INSIDE
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+
+	west to hall_006 descr "You'll have to move there to see it, your light doesn't reach that far.";
+	east to hall_004 descr "You'll have to move there to see it, your light doesn't reach that far.";
+end
+
+hall_006
+	title "An Ancient Passageway"
+	names {"hallway", "hall", "passageway", "passage"}
+	descr
+	"This passage obviously was here long before the building above.  Laid rock walls, and ancient sconses
+	speak of times long past, and people now forgotten."
+
+	extra {"walls", "wall", "rock", "sconses"}
+	"You look at the wall and notice the rock seems to be laid by a master, each chunk fitting nearly
+	perfectly with the next.  The sconses on the wall no longer hold torches, they must have rotted away
+	long ago."
+
+	movement SECT_INSIDE
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+
+	south to hall_007 descr "You'll have to move there to see it, your light doesn't reach that far.";
+	east to hall_005 descr "You'll have to move there to see it, your light doesn't reach that far.";
+end
+
+hall_007
+	title "An Ancient Passageway"
+	names {"hallway", "hall", "passageway", "passage"}
+	descr
+	"This passage obviously was here long before the building above.  Laid rock walls, and ancient sconses
+	speak of times long past, and people now forgotten."
+
+	extra {"walls", "wall", "rock", "sconses"}
+	"You look at the wall and notice the rock seems to be laid by a master, each chunk fitting nearly
+	perfectly with the next.  The sconses on the wall no longer hold torches, they must have rotted away
+	long ago."
+
+	movement SECT_INSIDE
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+
+	west to hall_008 descr "You'll have to move there to see it, your light doesn't reach that far.";
+	north to hall_006 descr "You'll have to move there to see it, your light doesn't reach that far.";
+end
+
+hall_008
+	title "An Ancient Passageway"
+	names {"hallway", "hall", "passageway", "passage"}
+	descr
+	"This passage obviously was here long before the building above.  Laid rock walls, and ancient sconses
+	speak of times long past, and people now forgotten."
+
+	extra {"walls", "wall", "rock", "sconses"}
+	"You look at the wall and notice the rock seems to be laid by a master, each chunk fitting nearly
+	perfectly with the next.  The sconses on the wall no longer hold torches, they must have rotted away
+	long ago."
+
+	movement SECT_INSIDE
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+
+	up to secret_103 descr "You'll have to move there to see it, your light doesn't reach that far."
+	keyword {"trapdoor", "floor", "door"} open {EX_OPEN_CLOSE,EX_CLOSED} descr "A trapdoor is here!";
+	east to hall_007 descr "You'll have to move there to see it, your light doesn't reach that far.";
+end
+
+secret_103
+	title "An Ancient Room"
+	names {"room"}
+	descr
+	"This room seems old, but not so old as the passage you came from.  Looking around it seems like
+	an inventor's office, only one that has not been used in a long, long time."
+
+	movement SECT_INSIDE
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+
+	down to hall_008 descr "You'll have to move there to see it, your light doesn't reach that far."
+	keyword {"trapdoor", "floor", "door"} open {EX_OPEN_CLOSE,EX_CLOSED} descr "A trapdoor is here!";
+end
+
+hall_104
+	title "A Large Hallway"
+	names {"hallway", "hall"}
+	descr
+	"Light flickers oddly from the torches on the walls.  To your north you see a door with a name on it.
+	You can continue down the hallway east, or go west to the center plaza."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"light", "torches", "torch", "wall"}
+	"The door has written on it the name 'Gonmork'."
+
+	extra {"door", "name"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	west to hall_103 descr
+	"There is a large intersection to the west with a sparkling fountain there.";
+
+	east to hall_107 descr
+	"This hallway goes on and on and on...";
+
+	north to gonmork_room descr
+	"The door has written on it the name 'Gonmork'." keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+end
+
+gonmork_room
+	title "Gonmork's Room"
+	names{"room"}
+	descr
+	"This room looks more like a home than a research room, with a couch on one side, pictures on the
+	walls and a nice thick rug on the floor.  It's a warm comfy place, makes you think back to your
+	childhood...  (insert flashback)."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"pictures", "picture", "wall"}
+	"You see a picture of an old man smiling toothlessly with 3 little children on his lap, probably his grandchildren."
+
+	extra {"couch"}
+	"The couch is very old but looks incredibly comfortable, you are tempted to take a nap."
+
+	extra {"rug", "floor"}
+	"This beautiful shag rug covers most of the floor, it is a deep, dark red colour, and you get the urge to take off your
+	shoes and walk on it."
+
+	south to hall_104 descr
+	"That's the hallway for sure." keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+
+	north to gonmork_room2 descr
+	"You look north and see the other half of this room.";
+end
+
+gonmork_room2
+	title "Gonmork's Room"
+	names{"room"}
+	descr
+	"On this side of the room there is a warm fireplace next to a large comfy chair and a shelf full
+	of books on the other wall.  A desk sits in front of the books.  The room is pleasantly warm due
+	to the fire."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy fireplace@reslab();
+
+	extra {"books", "book case", "wall", "shelf", "shelves", "bookshelf"}
+	"The books look old indeed and probably haven't been read in years, on closer inspection you decide not
+	to take any however.  What would you do with a book on the relative advantages of Gonmorkian rabbit raising?"
+
+	extra {"chair"}
+	"What a great chair!  You definately need one of those when you finally settle down."
+
+	extra {"desk"}
+	"That desk looks loved, it's probably seen a lot of ideas get worked out on its surface."
+
+	extra {"fireplace", "fire"}
+	"A cozy little fire flickers lights and shadows throughout the room."
+
+	south to gonmork_room descr
+	"The other side of the room!  Good thinking!";
+
+end
+
+hall_107
+	title "A Large Hallway"
+	names {"hallway", "hall"}
+	descr
+	"Light flickers unpleasantly from the torches on the walls.  To your north and south you see doors
+	with signs on them.  You can continue down the hallway east, or	go west towards the center plaza."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"light", "torches", "torch", "wall"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	extra {"signs", "sign", "door"}
+	"The door to the north has 'Del' scrawled on it all fancy like.  The door to the south has written on it the
+	name 'Foukin'.  Yes, Foukin the great Foukin himself.  Foukin the magnificent.  You tremble at the very though."
+
+	west to hall_104 descr
+	"The hallway continues to the west toward the Center Plaza.";
+
+	east to hall_108 descr
+	"The hallway continues to the east toward the annex.";
+
+	north to del_room descr
+	"The door has trouble written all over it.  Just kiddin it says 'Del'." keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+
+	south to foukin_room descr
+	"You've found Foukin's room apparently." keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+end
+
+del_room
+	title "Del's Research Room"
+	names {"research room", "room"}
+	descr
+	"This room is filled with magical paraphernalia of all sorts, but more than anything you see scrolls.  Lots of
+	scrolls.  There are scorch marks all over a large desk.  You can leave south back to the hallway."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"door"}
+	"The door leads back out to the hallway."
+
+	extra {"scrolls", "magic", "paraphernalia"}
+	"The scrolls are obviosly of a magical sort, some glow, others feel cold to the touch."
+
+	extra {"desk", "marks", "mark", "scorch"}
+	"You are glad you were not in the room when that happened!  Looks like something(s) blew up on the desk."
+
+	south to hall_107 descr
+	"The door leads back out to the hallway." keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+end
+
+foukin_room
+	title "Foukin's Larger Research Room"
+	names {"research room", "room"}
+	descr
+	"This is a larger research room, with enough space for two people to spar in.  There is a tapestry
+	on the wall depicting a battle, it looks as if one of the combatants is punching the others skull in!  You
+	can leave north to the hallway or south to the other end of the room."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"door"}
+	"The door leads back out to the hallway."
+
+	extra {"tapestry", "wall", "battle"}
+	"On closer inspection that is one HELL of a nice punch, the gauntlets the guy is wearing look pretty cool too."
+
+	south to foukin_room2 descr
+	"Yes this room continues to the south, excited?";
+
+	north to hall_107 descr
+	"The door leads back out to the hallway." keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+end
+
+foukin_room2
+	title "Foukin's Larger Research Room"
+	names {"research room", "room"}
+	descr
+	"This is the southern end of the room.  Some equipment and spare parts are on a table along with some tools.
+	The room looks like it has seen a few battles, with scuff marks everywhere, and splatters of what might be
+	blood on the wall.  You can leave north to the other half of the room."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"scuffs", "scuff", "marks", "mark", "blood", "wall", "splatters"}
+	"Either someone had a helluva nose bleed or there has been some serious brain mashing goin on here."
+
+	extra {"tools", "table", "equipment", "eq", "parts"}
+	"Interesting to look at but the eq looks like it is being built still, and you don't need those tools,
+	you have enough problems tying your shoes."
+
+	north to foukin_room descr
+	"That would be where you just were, how clever of you to make sure it hasn't gone anywhere.";
+end
+
+hall_108
+	title "A Large Hallway"
+	names {"hallway", "hall"}
+	descr
+	"To your north you see a door with some names on it.  You can continue down the annex hallway
+	east, or go west toward the center plaza.  To your south is a door marked 'Utility Closet'."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"light", "torches", "torch", "wall"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	extra {"door", "sign"}
+	"The door to the north has written on it the names 'Benkle' and 'Kalin'.  Anyone with a name like Benkle...  you are
+	curios.  The door to the south has written on it the words 'Utility Closet'.  You are not sure, but you think it
+	might be a utility closet."
+
+	west to hall_107 descr
+	"The hallway continues to the west.";
+
+	east to hall_109 descr
+	"To the east is the annex, a recent addition to the building.";
+
+	north to benkle_room descr
+	"The door has written on it the names 'Benkle' and 'Kalin'.  Anyone with a name like Benkle...  you are curios."
+	 keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+
+	south to utility_room descr
+	"The door has written on it the words 'Utility Closet'.  You are not sure, but you think it may be a utility closet."
+	 keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+end
+
+utility_room
+	title "The Utility Room Part 1"
+	names {"utility room", "room"}
+	descr
+	"This room is filled with all the necessary tools to clean up all the messes you are likely to make.
+	Too bad you are not a professional house cleaner, you'd be in heaven.  You can go south for more cleaning
+	excitement, or north to the hallway.  Personally I think you should go south."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"door"}
+	"The door leads back out to the hallway."
+
+	extra {"tools", "stuff", "cleaning"}
+	"On second thought you decide to forgo a career in the custodial arts."
+
+	south to utility_room2 descr
+	"You peer southward and are giddy with the knowledge that you may find something to get that damn stain out
+	your shirt.";
+
+	north to hall_108 descr
+	"The door leads back out to the hallway." keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+end
+
+utility_room2
+	title "The Utility Room Part 2 - The Revenge"
+	names {"utility room", "room"}
+	descr
+	"Your eyes grow wide, and your tongue hangs out as you contemplate the sanitary possibilities provided
+	by this room.  Suddenly your conscious slaps you and you return your thoughts to killing, keeping your secret
+	dream to be a janitor deep inside.  You can go north if you want to leave this temptation."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"tools", "stuff", "cleaning"}
+	"Someday...  someday you will learn the ways of the broom, and be a Jedi-Janitor like your father."
+
+	north to utility_room descr
+	"That would be where you just were, how clever of you to make sure it hasn't gone anywhere.";
+end
+
+hall_106
+	title "A Large Hallway"
+	names {"hallway", "hall"}
+	descr
+	"The hallway you are now in is slightly less used than the others.  Directly to the east is the main
+	plaza, and to the west the hallway continues."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"light", "torches", "torch", "wall"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	west to hall_110 descr
+	"To the west the hallway continues, you think you see a T further down.";
+
+	east to hall_103 descr
+	"That's the center court, a busy place indeed.";
+end
+
+hall_110
+	title "A Large Hallway"
+	names {"hallway", "hall"}
+	descr
+	"As the hallway continues, you see a door to the south of you with a name on it and the Mail Room
+	lies north.  The door to the south has a sign tacked to it."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"light", "torches", "torch", "wall"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	extra {"door", "sign"}
+	"The door says 'Roger'.  The sign on Roger's door displays a cunning sense of humour: 'FIDO-LOVER INSIDE'."
+
+	west to hall_111 descr
+	"The hall way nears the end to the west.";
+
+	east to hall_106 descr
+	"You are still close enough to the center to see and hear the bustle there.";
+
+	north to mail_room descr
+	"The mail room is aptly named, it seems an in house mail system operates from there.";
+
+	south to roger_room descr
+	"The door says 'Roger' and there is a silly sign there." keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+end
+
+roger_room
+	title "Roger's Research Room"
+	names {"room"}
+	descr
+	"This guy must be the most studious guy you've ever seen, of course that probably makes him an incredible
+	inventor, looking around you see all sorts of glass flasks, potions and tubes."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"light", "torches", "torch", "wall"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	extra {"flasks", "flask", "glass", "tubes", "potions", "tube", "potion"}
+	"Man this guy is a chemist gone wild!  Through the maze of tubes and flasks runs
+	a disgusting purple ooze."
+
+	extra {"door", "sign"}
+	"The sign on Roger's door displays a cunning sense of humour: 'FIDO-LOVER INSIDE'."
+
+	north to hall_110 descr
+	"The mail room is aptly named, it seems an in house mail system operates from there." keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+end
+
+hall_111
+	title "A Large Hallway"
+	names {"hallway", "hall"}
+	descr
+	"Light flickers randomly from the torches on the walls.  Again you see a door to the north with a name.
+	To the west is a T-junction."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"light", "torches", "torch", "wall"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	extra {"door", "sign"}
+	"The door to the north is apparently Talias's."
+
+	east to hall_110 descr
+	"That's the hallway back to the center court.";
+
+	west to hall_112 descr
+	"There is a T-junction there where you can go north or south.";
+
+	north to talia_room descr
+	"'Talia'" keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+end
+
+talia_room
+	title "Talia's Research Room"
+	names {"room"}
+	descr
+	"Talia at least is tidy, unlike most of the researcher's you've encountered.  This simple room is
+	neatly kept with a bookshelf agains one wall, a large tinkering table, and a few chairs lying around,
+	as well as a slate hung on one wall with a strange drawing on it."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"light", "torches", "torch"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	extra {"slate", "blackboard", "board", "wall", "drawing"}
+	"Hmmmm an odd looking drawing is here:&c+w&l
+
+        __Y
+     (*)\/(*)
+
+&f&cw
+"
+
+	extra {"table"}
+	"The table is covered with neatly organized parts, chains, gears, other devices you
+	cannot name."
+
+	extra {"books", "book case", "shelf", "shelves", "bookshelf"}
+	"You take one look at books on such things as 'Why Gizmos are Better than Gadgets' and
+	immediately loose interest."
+
+	extra {"door", "sign"}
+	"'Talia'"
+
+	south to hall_111 descr
+	"You use your keen eyesight to discern that to the south of you is a hallway." keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+end
+
+hall_112
+	title "The T-Junction"
+	names {"hallway", "hall", "junction"}
+	descr
+	"Light flickers disgustingly from the torches on the walls.  You can't decide which way to go, north or
+	south seem the same."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"light", "torches", "torch", "wall"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	extra {"door"}
+	"What door? There's no door here!"
+
+	east to hall_111 descr
+	"Looks suspiciously like a hallway.";
+
+	north to hall_113 descr
+	"You'll never guess what's north...  a hallway!";
+
+	south to hall_115 descr
+	"Seems sorta hallway-ish.";
+end
+
+hall_113
+	title "A Large Hallway"
+	names {"hallway", "hall"}
+	descr
+	"Light flickers seductively from the torches on the walls.  You can continue north where you think you spy
+	a door, or south back to the T-junction."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"light", "torches", "torch", "wall"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	extra {"door"}
+	"It's not here, it's 1 north."
+
+	north to hall_114 descr
+	"Looks like the end of the hall.  Finally!";
+
+	south to hall_112 descr
+	"The T-Junction is there.";
+end
+
+hall_114
+	title "A Dead End of the Large Hallway"
+	names {"hallway", "hall", "dead end", "end"}
+	descr
+	"Light flickers softly from the torches on the walls.  Well you can go back the way you came or into the
+	door to the east."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"light", "torches", "torch", "wall"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	extra {"door"}
+	"The door is ugly.  Just downright ugly."
+
+	east to pip_room descr
+	"That door is REALLY ugly." keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+
+	south to hall_113 descr
+	"Looks like where you just came from.";
+end
+
+pip_room
+	title "Pip's Room"
+	names {"room"}
+	descr
+	"This room is pleasant enough, most of the stone walls are covered with
+	tapestries, and there is a small mat in one corner that looks as if it is
+	slept on regularly.  A little desk with papers and candles on it finish
+	this nice little room.  Too bad that door is so ugly, otherwise this room is great."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"light", "torches", "torch"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	extra {"wall", "tapestries", "tapestry"}
+	"Nice deep red velvet tapestries cover most walls of this room making it seem cozy and warm."
+
+	extra {"desk", "candles", "candle", "papers", "paper"}
+	"The candles on the desk flicker light over the papers which are covered with illegible scribbles."
+
+	extra {"mat", "bed", "corner"}
+	"This bed has definately been slept on, and by the looks of it, the sleeper is a rather small fellow."
+
+	extra {"door"}
+	"The door is ugly.  Just downright ugly."
+
+	west to hall_114 descr
+	"That door is REALLY ugly." keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+end
+
+hall_115
+	title "A Large Hallway"
+	names {"hallway", "hall"}
+	descr
+	"Light flickers humbly from the torches on the walls.  The door to the east appears to have a little sign
+	on it, and you can continue south or north back to the junction."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"light", "torches", "torch", "wall"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	extra {"door", "sign"}
+	"The door has written on it the word 'Donarius'."
+
+	east to rabbit_room descr
+	"The door has writtin on it the word 'Donarius'." keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+
+	north to hall_112 descr
+	"That would be a T-junction unless you are sorely mistaken.";
+
+	south to hall_116 descr
+	"Looks like a dead-end.";
+end
+
+rabbit_room
+	title "A Large Research Room"
+	names {"room"}
+	descr
+	"This room is very sterile feeling, you look at the whitewashed walls and the cold floor and wonder
+	how anyone can stand working in a room like this.  You notice what appear to be oversize rabbit pellets
+	lying all over the floor."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"light", "torches", "torch"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	extra {"wall"}
+	"The walls in this room, unlike the others are not left their natural stone colour but are whitewashed.
+	However the whitewashing looks like it needs to be redone."
+
+	extra {"rabbit pellets", "pellets", "droppings", "shit"}
+	"These look like rabbit pellets but then you realize they are much to large to be, besides that they smell
+	bad, and you can't avoid stepping on one or two."
+
+	south to rabbit_room2 descr
+	"The door has writtin on it the words 'Rabbit Storage'.";
+
+	west to hall_115 descr
+	"That is the hallway you just came from.  Keep an eye on it though, you think it is following you." keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+
+end
+
+rabbit_room2
+	title "A Large Research Room"
+	names {"room"}
+	descr
+	"This room is much like the room to the north, but just a little cleaner.  There is a large open cage in
+	one corner of the room which is littered with shredded bits of the Valhalla Times."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"light", "torches", "torch"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	extra {"wall"}
+	"The walls in this room, unlike the others are not left their natural stone colour but are whitewashed.
+	However the whitewashing looks like it needs to be redone."
+
+	extra {"cage"}
+	"The cage, while quite large, does not seem big enough for you to get into, nor would you want to; it smells bad."
+
+	extra {"door", "sign"}
+	"The door has written on it the word 'Donarius'."
+
+	extra {"rabbit pellets", "pellets", "droppings", "shit"}
+	"These look like rabbit pellets but then you realize they are much to large to be, besides that they smell
+	bad, and you can't avoid stepping on one or two."
+
+	north to rabbit_room descr
+	"That goes back north to the other side of this room.";
+end
+
+hall_116
+	title "A Large Hallway"
+	names {"hallway", "hall"}
+	descr
+	"Light flutters from the torches on the walls.  There is not much of interest in this lonely corner
+	of the building.  Your only option is to head back north."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"light", "torches", "torch", "wall"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	north to hall_115 descr
+	"That way leads back to the T-junction.";
+end
+
+hall_105
+	title "A Large Hallway"
+	names {"hallway", "hall"}
+	descr
+	"Light splatters vaguely from the torches on the walls.  You are in a hallway, no surprise there.  To
+	the west and east are doors with words carved in them indicating their purpose.  Just south of you
+	are the stairs."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"light", "torches", "torch", "wall"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	extra {"door", "sign"}
+	"The one to the east reads 'Guard Room', the one to the west 'Monster Storage'."
+
+	extra {"stairs"}
+	"The large stairs lead upwards, to the south."
+
+	west to mob_room descr
+	"You wouldn't be surprised to find some monsters behind that door." keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+
+	east to guard_room12 descr
+	"Probably the guard's break room." keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+
+	north to hall_103 descr
+	"The bustle of the center court amazes you.";
+
+	south to stair_101 descr
+	"The stairs to the south lead upwards to who knows what.";
+end
+
+mob_room
+	title "The Monster Storage Room"
+	names {"monster room", "room"}
+	descr
+	"Wow!  A room chuck full of monsters in
+	storage!  The room has to be carefully kept at a temperature slightly cooler than room temperature
+	for proper monster storage.  For this some sort of ventilation system has been put in place, you feel a
+	breeze on your cheek.  You can head south to the other side of the room."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"light", "torches", "torch"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	extra {"monsterss"}
+	"They are everywhere!  Some seem to be in a state of hybernation, others are wandering around aimlessly."
+
+	south to mob_room2 descr
+	"The other half of this rather large room.";
+
+	east to hall_105 descr
+	"Back out in the hallway north of the stairs." keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+end
+
+mob_room2
+	title "The Monster Storage Room"
+	names {"monster room", "room"}
+	descr
+	"Still more monsters!  You feel a breeze on your cheek.  Kinda makes you wonder eh? Is there more devious
+	inventing going on here than mere weapons and spells? You can go back north to the other side of the room."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"light", "torches", "torch"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	extra {"monsters"}
+	"They are everywhere!  Some seem to be in a state of hybernation, others are wandering around aimlessly."
+
+	north to mob_room descr
+	"The other half of this rather large room.";
+end
+
+guard_room12
+	title "The Guard Room"
+	names {"guard room", "room"}
+	descr
+	"This is the guard break room, you are shocked as you look around and see pictures of half naked girls on the
+	walls, half eaten food on the table, and empty bottles of tuborg everywhere!  You thought these guards were well
+	disciplined men, what is this world coming to? You can continue south to the other side of the room."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"light", "torches", "torch"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	extra {"pictures", "women", "girls"}
+	"That is one DAMN fine looking elf maiden!"
+
+	extra {"food"}
+	"Disgusting, simply disgusting."
+
+	extra {"bottles", "beer", "bottle"}
+	"You could use a beer about now yourself, too bad they are all empty."
+
+	extra {"pictures", "women", "girls"}
+	"That is one DAMN fine looking elf maiden!"
+
+	west to hall_105 descr
+	"The hallway south of the plaza lies west." keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+
+	south to guard_room13 descr
+	"The other half of this rather large room.";
+end
+
+guard_room13
+	title "The Guard Room"
+	names {"guard room", "room"}
+	descr
+	"This is the other side of the guard break room, and its no better
+	than the first.  You are thouroughly dissapointed and your impression of guards
+	will forever be marred."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"light", "torches", "torch"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	extra {"pictures", "women", "girls"}
+	"That is one DAMN fine looking elf maiden!"
+
+	extra {"food"}
+	"Disgusting, simply disgusting."
+
+	extra {"bottles", "beer", "bottle"}
+	"You could use a beer about now yourself, too bad they are all empty."
+
+	extra {"pictures", "women", "girls"}
+	"That is one DAMN fine looking elf maiden!"
+
+	north to guard_room12 descr
+	"The other half of this rather large room.";
+end
+
+mail_room
+	title "The Mail Room"
+	names {"mail room", "room"}
+	descr
+	"This room is busy as can be!  You see a desk from which the operator administers the mail, and packages
+	everywhere.  People bustle in and out, and the noise here is considerable.  There is a sign on the wall you should look at."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"light", "torches", "torch"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	extra {"sign", "wall"}
+	"HELP WANTED - If you need work please say 'i need work' and you will be given a package for delivery.  Good luck!
+	NOTE: you may do this quest as many times as you want, it gives a new recipient each time."
+
+	extra {"mail desk", "desk"}
+	"This desk is there one minute, gone the next as packages go over it, rest on it, and move their merry ways."
+
+	south to hall_110 descr
+	"That leads back to the hallway.";
+end
+
+stair_101
+	title "Large Stairs - First Floor"
+	names {"stairs", "stair"}
+	descr
+	"The beautiful stairway leads up to the next floor, but it seems to be boarded off,
+	there is a sign tacked to the wood.  Further to the north you can see the plaza."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+	dilcopy construction@reslab();
+
+	extra {"light", "torches", "torch", "wall"}
+	"The torches are built into the wall and cannot be taken, on closer inspection you notice the flame
+	is not quite right and you suspect they are magically enhanced."
+
+	extra {"stairs"}
+	"The large stairs are made out of beautiful hewn marble and lead upwards."
+
+	extra {"sign"}
+	"UNDER CONSTRUCTION - STAY OUT"
+
+	north to hall_105 descr
+	"Off to the north is the center court.";
+
+/*	up to stair_201@reslab2 descr
+	"You peer upwards but can't make much out.";*/
+end
+
+home
+	title "&c+bJager's Apartment&cw"
+	names {"apartment", "jagerhome"}
+	descr
+	"&ccYou look around at Jager's home and are amazed at all the paintings and posters
+    covering the walls.  There is a desk in one corner with his computer on it, and
+    a large entertainment center facing the couch and chair.  There are toys everywhere,
+    from legos to star wars figures. In a special place on the wall above the couch are
+    pictures of his friends and loved ones.&cw&n
+	&c+bA large stereo rests in the entertainment center.&cw&n
+	&cgJavelin's Comfey Couch sits under the window.&cw&n
+	&cyAn old guitar leans against the wall.&cw"
+
+	extra {"pictures", "wall"}
+	"There is a picture of Katie, the only woman he will ever need.
+	Pictures of Madmax and Javelin with Ilisha, a special picture of a smiling guy named
+	J.P., a picture of Jeremy and Jon, Gem and Cinnamon and She and Ashes, Trinity and Sarah,
+	Whistler and Palio in a	pic together with Bakka.  Then there's pictures of Isigow, Kuros,
+	Rattlesnake, Firework, Saor, Landolin, Hex, Pup, Smaug, Eti, Rand, Zadeh, Kyt and Zex, Papasmurf,
+	Ruemere, Tigika, Silencer, Firework, Rikuo, Questor, Aurelia, Torque, Scully, Light..."
+
+	extra {"guitar"}
+	"This guitar has seen a lot of use, from campfires in the moutains of Utah, to sittin
+	around in his apartment with friends playing and singing, or just playing alone to his favourite records, Jager
+	and this guitar will never part. Just use the 'play' command to play it."
+
+	extra{"stereo", "entertainment center", "centeR"}
+	"It's got a ten-disc CD changer, perfect for those long nights of mudding.  Just use
+	the 'music' command to turn it on and off."
+
+	extra {"couch"}
+	"The coziest couch you've seen in life.  It doesn't squeak and never stains..."
+
+	extra {"desk", "computer"}
+	"A powerful computer sits on the desk."
+
+	extra {"hot wheels", "cars", "toys", "figures", "star wars", "legos", "lego"}
+	"You look at Jager's toys and wonder if he ever grew up."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	flags {UNIT_FL_NO_TELEPORT}
+	flags {UNIT_FL_PRIVATE}
+	dilcopy stereo@reslab();
+	dilcopy home_exits@reslab();
+	dilcopy jav_couch@reslab();
+	dilcopy guitar@reslab();
+end
+
+benkle_room
+	title "A Research Room"
+	names {"research room"}
+	descr
+	"The room is very messy and in fact looks suspiciously like it is actually lived in.  There
+	are food remains everywhere and unless that is a REALLY big pile of papers, you suspect a desk
+	lies underneath."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"desk", "papers", "paper"}
+	"You'd have to kill the entire Haon-Dor Forest to match the amount of paper on that
+	desk, you suspect it will never really recover."
+
+	extra {"food", "remains"}
+	"Disgusting.  That's all there is to say."
+
+	north to kalin_room descr
+	"There is a door marked 'Kalin'." keyword {"door"} open {EX_OPEN_CLOSE};
+
+	south to hall_108 descr
+	"Back out into the dreaded hallway!" keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+end
+
+kalin_room
+	title "A Smaller Research Room"
+	names {"smaller research room", "research room"}
+	descr
+	"This room is smaller than most you've seen so far and seems relatively uncluttered.  There
+	is a desk in a corner with some pictures on it and a work table in the center of room covered
+	with piles of cloth of an unrecognizeable fabric.  There is a slate on the wall with formulas
+	and sketches on it."
+
+	movement SECT_INSIDE
+	ALWAYS_LIGHT
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"desk", "corner"}
+	"The desk in the corner is a small wooden leather covered contraption.  It looks rather
+	rickety and has one empty drawer on the left side."
+
+	extra {"drawer"}
+	"That is one nice looking drawer."
+
+	extra {"picture", "pictures"}
+	"There is a picture of a lovely woman with brown hair and blue eyes, and a picture of a
+	small boy playing with a puppy."
+
+	extra {"table", "cloth", "fabric"}
+	"The cloth on the table seems to glow faintly when seen in the corner of your eyes,
+	looked at directly it appears to be simple brown fabric.  When touched however you
+	know for sure it is not anything you have ever felt before."
+
+	extra {"slate", "blackboard", "board", "wall", "formulas", "formula"}
+	"You feel dizzy just looking at those formulas!  They mean nothing to your unlearned mind.  However something does strike
+	you as odd, there seems to be hinges on one side of the slate!"
+
+	south to benkle_room descr
+	"You contemplate going back throught that room, and feel ill." keyword {"door"} open {EX_OPEN_CLOSE};
+
+	SECRET_DOOR_DIFFICULTY(WEST,20)
+	west to secret_102 descr
+	"You feel dizzy just looking at those formulas!  They mean nothing to your unlearned mind.  However something does strike
+	you as odd, there seems to be hinges on one side of the slate!"
+	keyword {"door", "slate", "blackboard", "board", "wall", "formulas", "formula"} open {EX_OPEN_CLOSE,EX_CLOSED,EX_HIDDEN} descr "You think the slate is really a door!";
+end
+
+secret_102
+	title "A Hidden Room"
+	names {"hidden room", "room"}
+	descr
+	"This room is very small and very bare, you'd think it had not been used in a long
+	time except for the marks in the dust on the floor."
+
+	movement SECT_INSIDE
+	flags {UNIT_FL_NO_WEATHER}
+	dilcopy no_group@reslab();
+	dilcopy rand_act@reslab();
+
+	extra {"marks", "dust", "floor"}
+	"They don't mean much to you, just places where the dust has been displaced - fairly recently by the looks of it."
+
+	east to kalin_room descr
+	"Yes you can back out to Kalin's room any time you like."
+	keyword {"slate", "blackboard", "board", "wall", "formulas", "formula", "door"} open {EX_OPEN_CLOSE,EX_CLOSED};
+end
+
+%mobiles
+
+bill
+names {"Bill", "operator"}
+title "Bill"
+descr "Bill the Mail Desk Operator is busily doing things."
+extra {}
+"Bill is slightly overweight, and looks very overworked.  He is sweaty and balding
+but seems completely in control of the mail room.  To get a package for delivery
+simply say 'i need work' and you will be given a package for delivery.  Good luck!
+NOTE: you may do this quest as many times as you want, he gives a new recipient each time."
+alignment 100
+race RACE_HUMAN
+sex SEX_MALE
+level 25
+height 160
+weight 190
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+exp 5
+/*(str,dex,con,hpp,bra,cha,mag,div)*/
+MSET_ABILITY(13, 13, 12, 13, 13, 12, 12, 12)
+/*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+MSET_WEAPON(7, 7, 7, 7, 7, 7)
+/*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+MSET_SPELL(6,5,5,5,5,6,6,5,5,5,5)
+position POSITION_STANDING
+
+romflags {CHAR_DETECT_INVISIBLE}
+dilcopy bill_quest@reslab();
+
+dilbegin bill();
+var
+	iRandom : integer;
+	iFight : integer;
+code
+{
+	heartbeat:=PULSE_SEC * 5;
+	on_activation(self.position == POSITION_FIGHTING, ina_fight);
+
+:start:
+	iFight:=interrupt(SFB_COM, self.position==POSITION_FIGHTING, ina_fight);
+	if(self.outside!=findroom("mail_room@reslab"))
+	{
+		walkto(findroom("mail_room@reslab"));
+		exec("sit", self);
+	}
+	iRandom:=rnd(1,10);
+	if(iRandom==1) exec("emote grumbles to himself.", self);
+	else if(iRandom==2) exec("emote furiously scribbles on his pad.", self);
+	else if(iRandom==3) exec("fart", self);
+	else if(iRandom==4) exec("emote sweats profusely.", self);
+	else if(iRandom==5) exec("emote wishes time would speed up.", self);
+	else if(iRandom==6) exec("say Goddamn it where's that messenger kid when I need one?", self);
+	else if(iRandom==7) exec("emote ponders the meaning of life, the universe and mail.", self);
+	else if(iRandom==8) exec("emote scratches his balding head.", self);
+	else if(iRandom==9) exec("emote adjusts his glasses.", self);
+	else if(iRandom==10) exec("emote organizes some packages.", self);
+	pause; pause; pause;
+	pause; pause; pause;
+	goto start;
+
+:ina_fight:
+	clear(iFight);
+	priority;
+	act("$1N looks meaner than you thought, in fact you are in trouble!  FLEE!!!", A_SOMEONE, self, null, null, TO_REST);
+	while(self.position==POSITION_FIGHTING) pause;
+	nopriority;
+	goto start;
+}
+dilend
+end
+
+gonmork
+names {"Gonmork", "old man", "man"}
+title "Gonmork"
+descr "An old man stands here unsteadily."
+extra {}
+"Gonmork is just plain old.  His hair is long and grey, his skin wrinkled.  Though
+he looks like he once was tall he is now small and frail.  He does not seem to worry
+though, in fact he seems rather happy in general."
+alignment 700
+race RACE_HUMAN
+sex SEX_MALE
+level 15
+height 150
+weight 140
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+exp 130
+/*(str,dex,con,hpp,bra,cha,mag,div)*/
+MSET_ABILITY(5, 5, 5, 15, 30, 15, 20, 5)
+/*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+MSET_WEAPON(0, 5, 0, 0, 0, 0)
+/*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+MSET_SPELL(5,5,10,10,10,10,10,10,10,10,5)
+money 1 SILVER_PIECE
+position POSITION_STANDING
+
+dilcopy gonmork_quest@reslab();
+special SFUN_COMBAT_MAGIC "cast burn"
+
+dilbegin gonmork();
+var
+	iRandom : integer;
+	iFight : integer;
+code
+{
+	heartbeat:=PULSE_SEC * 5;
+	on_activation(self.position == POSITION_FIGHTING, ina_fight);
+
+:start:
+	iFight:=interrupt(SFB_COM, self.position==POSITION_FIGHTING, ina_fight);
+	if(self.outside!=findroom("gonmork_room2@reslab"))
+	{
+		walkto(findroom("gonmork_room2@reslab"));
+		exec("sit", self);
+	}
+	iRandom:=rnd(1,10);
+	if(iRandom==1) exec("emote looks around for his pet rabbit.", self);
+	else if(iRandom==2) exec("emote pulls a book of his shelf and starts reading.", self);
+	else if(iRandom==3) exec("emote dozes off for a quick nap, than wakes up with a start.", self);
+	else if(iRandom==4) exec("emote wonders where he is.", self);
+	else if(iRandom==5) exec("emote wishes time would slow down.", self);
+	else if(iRandom==6) exec("say My poor rabbits!", self);
+	else if(iRandom==7) exec("think", self);
+	else if(iRandom==8) exec("smile", self);
+	else if(iRandom==9) exec("cackle", self);
+	else if(iRandom==10) exec("sigh", self);
+	pause; pause; pause;
+	pause; pause; pause;
+	goto start;
+
+:ina_fight:
+	clear(iFight);
+	priority;
+	act("$1N may not look like much, but $1e's still got a spell or two for ya!", A_SOMEONE, self, null, null, TO_REST);
+	while(self.position==POSITION_FIGHTING) pause;
+	nopriority;
+	goto start;
+}
+dilend
+end
+
+talbon
+names {"Talbon", "ancient man", "man"}
+title "Talbon"
+descr "An ancient man stands here looking old."
+extra {}
+"Talbon is even older than Gonmork!  Easily the most ancient looking person you have ever
+seen."
+alignment 700
+race RACE_HUMAN
+sex SEX_MALE
+level 20
+height 150
+weight 140
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+exp 130
+/*(str,dex,con,hpp,bra,cha,mag,div)*/
+MSET_ABILITY(5, 5, 5, 15, 30, 15, 20, 5)
+/*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+MSET_WEAPON(0, 5, 0, 0, 0, 0)
+/*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+MSET_SPELL(5,5,10,10,10,10,10,10,10,10,5)
+money 2 SILVER_PIECE
+position POSITION_STANDING
+
+dilcopy talbon_quest@reslab();
+special SFUN_COMBAT_MAGIC "cast jolt"
+
+dilbegin talbon();
+var
+	iRandom : integer;
+	iFight : integer;
+code
+{
+	heartbeat:=PULSE_SEC * 15;
+	on_activation(self.position == POSITION_FIGHTING, ina_fight);
+
+:start:
+	iFight:=interrupt(SFB_COM, self.position==POSITION_FIGHTING, ina_fight);
+	if(self.outside!=findroom("secret_103@reslab"))
+	{
+		walkto(findroom("secret_103@reslab"));
+		exec("sit", self);
+	}
+	pause;
+	goto start;
+
+:ina_fight:
+	clear(iFight);
+	priority;
+	act("$1N may not look like much, but $1e's still got a spell or to for ya!", A_SOMEONE, self, null, null, TO_REST);
+	while(self.position==POSITION_FIGHTING) pause;
+	nopriority;
+	goto start;
+}
+dilend
+end
+
+donarius
+names {"Donarius", "man"}
+title "Donarius"
+descr "A rather indifferent looking man stands here."
+extra {}
+"Donarius looks absorbed in his own little world, every now and then
+he gets a glimmer in his eye and a sort of snear on his face.  You get
+the feeling he's not very nice."
+alignment -400
+race RACE_ELF
+sex SEX_MALE
+level 22
+height 190
+weight 140
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+exp 130
+/*(str,dex,con,hpp,bra,cha,mag,div)*/
+MSET_ABILITY(5, 15, 15, 15, 20, 15, 10, 5)
+/*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+MSET_WEAPON(5, 35, 5, 5, 5, 5)
+/*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+MSET_SPELL(0,5,5,0,5,5,5,5,5,0,5)
+money 4 SILVER_PIECE
+position POSITION_STANDING
+
+special SFUN_COMBAT_MAGIC "cast snowball"
+
+dilbegin donarius();
+var
+	iRandom : integer;
+	iFight : integer;
+code
+{
+	heartbeat:=PULSE_SEC * 5;
+	on_activation(self.position == POSITION_FIGHTING, ina_fight);
+
+:start:
+	iFight:=interrupt(SFB_COM, self.position==POSITION_FIGHTING, ina_fight);
+	if(self.outside!=findroom("rabbit_room2@reslab"))
+	{
+		walkto(findroom("rabbit_room2@reslab"));
+	}
+	iRandom:=rnd(1,10);
+	if(iRandom==1) exec("emote scratches his backside.", self);
+	else if(iRandom==2) exec("emote flips a page on his clipboard.", self);
+	else if(iRandom==3) exec("emote looks around suspiciously.", self);
+	else if(iRandom==4) exec("emote observes things for awhile then makes a mark on his chart.", self);
+	else if(iRandom==5) exec("emote looks around for one of his mutated rabbits.", self);
+	else if(iRandom==6) exec("say My little rabbits!", self);
+	else if(iRandom==7) exec("think", self);
+	else if(iRandom==8) exec("grin", self);
+	else if(iRandom==9) exec("cackle", self);
+	else if(iRandom==10) exec("emote looks evil.", self);
+	pause; pause; pause;
+	pause; pause; pause;
+	goto start;
+
+:ina_fight:
+	clear(iFight);
+	priority;
+	act("$1N grins evilly at the opportunity to slay you!", A_SOMEONE, self, null, null, TO_REST);
+	while(self.position==POSITION_FIGHTING) pause;
+	nopriority;
+	goto start;
+}
+dilend
+end
+
+rabbit
+names {"a mutated rabbit", "rabbit"}
+title "a mutated rabbit"
+descr "A large disgusting looking mutated rabbit is here."
+extra {}
+"How sad!  This once cute little beast is now a rather large thing with
+boggling red eyes, a slobbery mouth, grungy brown fir with extra growths
+sticking out, and 2 tails.  It's claws look longer than on any normal rabbit."
+alignment 0
+race RACE_RABBIT
+sex SEX_FEMALE
+level 18
+height 50
+weight 100
+NATURAL_DEF(WPN_CLAW, ARM_LEATHER)
+exp 100
+/*(str,dex,con,hpp,bra,cha,mag,div)*/
+MSET_ABILITY(13, 13, 12, 13, 13, 12, 12, 12)
+/*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+MSET_WEAPON(0, 0, 0, 0, 100, 0)
+
+dilbegin rabbit();
+var
+	iRandom : integer;
+	iFight : integer;
+code
+{
+	heartbeat:=PULSE_SEC * 5;
+	on_activation(self.position == POSITION_FIGHTING, ina_fight);
+
+:start:
+	iFight:=interrupt(SFB_COM, self.position==POSITION_FIGHTING, ina_fight);
+	iRandom:=rnd(1,10);
+	if(iRandom==1) exec("emote slobbers on the floor.", self);
+	else if(iRandom==2) exec("emote makes and ear splitting wail.", self);
+	else if(iRandom==3) exec("emote falls over and then gets up again.", self);
+	else if(iRandom==4) exec("emote scratches the wall in vain.", self);
+	else if(iRandom==5) exec("emote looks at you with red scary eyes.", self);
+	else if(iRandom==6) exec("emote scratches itself till it bleeds.", self);
+	else if(iRandom==7) exec("emote looks like it needs to be put out of its misery.", self);
+	else if(iRandom==8) exec("emote bites its own ear when it flops into its face.", self);
+	else if(iRandom==9) exec("emote cries out in pain.", self);
+	else if(iRandom==10) exec("emote has seen better days.", self);
+	pause; pause; pause;
+	pause; pause; pause;
+	goto start;
+
+:ina_fight:
+	clear(iFight);
+	priority;
+	act("$1N grins evilly at the opportunity to slay you!", A_SOMEONE, self, null, null, TO_REST);
+	while(self.position==POSITION_FIGHTING) pause;
+	nopriority;
+	goto start;
+}
+dilend
+end
+
+janitor
+names {"an insane janitor", "janitor"}
+title "an insane janitor"
+descr "An insane janitor is here alternately cleaning fanatically and drooling."
+extra{}
+"This guy is really wierd.  His eyes are glassed over and he has slobber all over
+his face, yet he is making sure his surroundings are more than clean, they are
+absolutely immaculate.  Anyhow, he scares you."
+alignment -200
+race RACE_HUMAN
+sex SEX_MALE
+level 18
+height 170
+weight 160
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+special SFUN_AGGRESSIVE	time 50
+exp 105
+/*(str,dex,con,hpp,bra,cha,mag,div)*/
+MSET_ABILITY(19, 13, 20, 13, 13, 12, 0, 10)
+/*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+MSET_WEAPON(7, 7, 7, 7, 7, 7)
+/*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+MSET_SPELL(6,5,5,5,5,6,6,5,5,5,5)
+money 2 COPPER_PIECE
+position POSITION_STANDING
+
+dilbegin janitor();
+var
+	iRandom : integer;
+	iFight : integer;
+code
+{
+	heartbeat:=PULSE_SEC * 5;
+	on_activation(self.position == POSITION_FIGHTING, ina_fight);
+
+:start:
+	iFight:=interrupt(SFB_COM, self.position==POSITION_FIGHTING, ina_fight);
+	iRandom:=rnd(1,10);
+	if(iRandom==1) exec("emote slobbers on the floor.", self);
+	else if(iRandom==2) exec("emote scrubs the floor at his feet for no reason.", self);
+	else if(iRandom==3) exec("emote picks up invisible garbage from the floor around him.", self);
+	else if(iRandom==4) exec("emote swings his broom menacingly.", self);
+	else if(iRandom==5) exec("emote looks at you with red scary eyes.", self);
+	else if(iRandom==6) exec("emote drools.", self);
+	else if(iRandom==7) exec("emote is really scary looking.", self);
+	else if(iRandom==8) exec("emote cleans the wall...  again.", self);
+	else if(iRandom==9) exec("emote looks completely nuts.", self);
+	else if(iRandom==10) exec("emote looks at you like you were dirt that needed to be swept away.", self);
+	pause; pause; pause;
+	pause; pause; pause;
+	goto start;
+
+:ina_fight:
+	clear(iFight);
+	priority;
+	act("$1N screams at you, 'You are not clean!  YOU ARE NOT CLEAN!!!' as $1e attacks with $1s broom.", A_SOMEONE, self, null, null, TO_REST);
+	while(self.position==POSITION_FIGHTING) pause;
+	nopriority;
+	goto start;
+}
+dilend
+end
+
+benkle
+names {"Benkle", "fat man", "man"}
+title "Benkle"
+descr "A fat man named Benkle looks like he forgot his work in the excitement of lunch."
+extra {}
+"The man seems intent on eating and doesn't notice you.  He is rather portly to say the least."
+alignment 100
+race RACE_HUMAN
+sex SEX_MALE
+level 18
+height 160
+weight 210
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+exp 120
+/*(str,dex,con,hpp,bra,cha,mag,div)*/
+MSET_ABILITY(25, 10, 15, 25, 15, 5, 5, 0)
+/*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+MSET_WEAPON(20, 10, 20, 10, 10, 10)
+/*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+MSET_SPELL(0,0,10,0,10,0,0,0,0,0,0)
+
+money 2 SILVER_PIECE
+position POSITION_SITTING
+
+dilbegin benkle();
+var
+	iRandom : integer;
+	iFight : integer;
+code
+{
+	heartbeat:=PULSE_SEC * 5;
+	on_activation(self.position == POSITION_FIGHTING, ina_fight);
+
+:start:
+	iFight:=interrupt(SFB_COM, self.position==POSITION_FIGHTING, ina_fight);
+	if(self.outside!=findroom("benkle_room@reslab"))
+	{
+		walkto(findroom("benkle_room@reslab"));
+		exec("sit", self);
+	}
+	iRandom:=rnd(1,11);
+	if(iRandom==1) exec("emote munches happily on his sandwich.", self);
+	else if(iRandom==2) exec("emote smears his hands on his shirt.", self);
+	else if(iRandom==3) exec("emote takes a big swig of tuborg.", self);
+	else if(iRandom==4) exec("burp", self);
+	else if(iRandom==5) exec("emote wishes he had more food.", self);
+	else if(iRandom==6) exec("say Hey Kalin!  Want a sandwich?", self);
+	else if(iRandom==7) exec("emote ponders the meaning of life, the universe and food.", self);
+	else if(iRandom==8) exec("emote dribbles mustard down his shirt.", self);
+	else if(iRandom==9) exec("emote looks on the floor for the piece of bologna that fell from his sandwich.", self);
+	else if(iRandom==10) exec("emote grins happily after another big gulp of beer.", self);
+	else if((iRandom==11) and (rnd(1,10)==1))
+	{
+		walkto(findroom("kalin_room@reslab"));
+		exec("smile kalin", self);
+		pause;
+		exec("emote gets a new quill from Kalin's desk.", self);
+		walkto(findroom("benkle_room@reslab"));
+		exec("sit", self);
+	}
+	pause; pause; pause;
+	pause; pause; pause;
+	goto start;
+
+:ina_fight:
+	clear(iFight);
+	priority;
+	if("warhammer" in self.inside.names) act("$1N throws $1s sandwich to the ground and knocks over $1s beer as $1e whips out $1s hammer.", A_SOMEONE, self, null, null, TO_REST);
+	while(self.position==POSITION_FIGHTING) pause;
+	nopriority;
+	goto start;
+}
+dilend
+end
+
+foukin
+names {"Foukin", "dwarf"}
+title "Foukin"
+descr "A large burly dwarf is here butting his head agains the wall."
+extra {}
+"The dwarf seems intent on mashing his brain to bits and doesn't yet notice you."
+alignment 0
+race RACE_DWARF
+sex SEX_MALE
+level 26
+height 120
+weight 200
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+exp 130
+/*(str,dex,con,hpp,bra,cha,mag,div)*/
+MSET_ABILITY(30, 20, 25, 25, 0, 0, 0, 0)
+/*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+MSET_WEAPON(10, 45, 15, 10, 10, 10)
+/*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+MSET_SPELL(0,0,0,0,0,0,0,0,0,0,0)
+
+money 1 SILVER_PIECE
+position POSITION_STANDING
+
+dilbegin foukin();
+var
+	iRandom : integer;
+	iFight : integer;
+code
+{
+	heartbeat:=PULSE_SEC * 5;
+	on_activation(self.position == POSITION_FIGHTING, ina_fight);
+
+:start:
+	iFight:=interrupt(SFB_COM, self.position==POSITION_FIGHTING, ina_fight);
+	iRandom:=rnd(1,15);
+	if(iRandom==1) exec("emote yells loudly then punches himself in the face - doesn't that hurt!?", self);
+	else if(iRandom==2) exec("grin", self);
+	else if(iRandom==3) exec("scream", self);
+	else if(iRandom==4) exec("emote fiddles with some parts on the table.", self);
+	else if(iRandom==5) exec("emote mutters to himself about nothing.", self);
+	else if(iRandom==6) exec("say Arglebargle, glop-glyf!?!", self);
+	else if(iRandom==7) exec("emote seems dazed and confused.  You're just guessing but it MIGHT be cause he keeps hitting himself.", self);
+	else if(iRandom==8) exec("emote seems accustomed to pain.", self);
+	else if(iRandom==9) exec("emote beats his chest like a neanderthal!", self);
+	else if(iRandom==10) exec("emote slaps himself in the face just for fun.", self);
+	else if((iRandom==11) and (rnd(1,10)==1)) walkto(findroom("foukin_room@reslab"));
+	else if((iRandom==12) and (rnd(1,10)==1)) walkto(findroom("foukin_room2@reslab"));
+	else if((iRandom==13) and (rnd(1,10)==1)) walkto(findroom("annex_102@reslab"));
+	else if((iRandom==14) and (rnd(1,10)==1)) walkto(findroom("annex_104@reslab"));
+	else if((iRandom==15) and (rnd(1,10)==1)) walkto(findroom("annex_106@reslab"));
+	pause; pause; pause;
+	pause; pause; pause;
+	goto start;
+
+:ina_fight:
+	clear(iFight);
+	priority;
+	act("It takes $1N a second to realize you are hitting $1m, and $1e is not hitting $1mself.", A_SOMEONE, self, null, null, TO_REST);
+	while(self.position==POSITION_FIGHTING) pause;
+	nopriority;
+	goto start;
+}
+dilend
+end
+
+talia
+names {"Talia", "woman"}
+title "Talia"
+descr "A nondescript woman stands here thinking."
+extra {}
+"This lady is rather bland, with brown hair in a bun and a conservative outfit.  She does look in shape however."
+alignment 0
+race RACE_HUMAN
+sex SEX_FEMALE
+level 17
+height 160
+weight 140
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+exp 100
+/*(str,dex,con,hpp,bra,cha,mag,div)*/
+MSET_ABILITY(10, 20, 25, 25, 20, 0, 0, 0)
+/*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+MSET_WEAPON(5, 75, 5, 5, 5, 5)
+/*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+MSET_SPELL(0,0,0,0,0,0,0,0,0,0,0)
+
+money 3 SILVER_PIECE
+position POSITION_STANDING
+
+dilbegin talia();
+var
+	iRandom : integer;
+	iFight : integer;
+code
+{
+	heartbeat:=PULSE_SEC * 5;
+	on_activation(self.position == POSITION_FIGHTING, ina_fight);
+
+:start:
+	iFight:=interrupt(SFB_COM, self.position==POSITION_FIGHTING, ina_fight);
+	if(self.outside!=findroom("talia_room@reslab"))
+	{
+		walkto(findroom("talia_room@reslab"));
+		exec("sit", self);
+	}
+	iRandom:=rnd(1,11);
+	if(iRandom==1) exec("emote makes some marks on the slate.", self);
+	else if(iRandom==2) exec("emote smiles as she realizes it might work.", self);
+	else if(iRandom==3) exec("smile", self);
+	else if(iRandom==4) exec("sigh", self);
+	else if(iRandom==5) exec("think", self);
+	else if(iRandom==6) exec("say It SHOULD work!", self);
+	else if(iRandom==7) exec("emote wonders if anyone will actually use it.", self);
+	else if(iRandom==8) exec("emote puts some gears together.", self);
+	else if(iRandom==9) exec("emote attaches a chain to a wheel.", self);
+	else if(iRandom==10) exec("emote can't wait to get home.", self);
+	else if((iRandom==11) and (rnd(1,10)==1))
+	{
+		walkto(findroom("hall_103@reslab"));
+		exec("drink water", self);
+		walkto(findroom("talia_room@reslab"));
+		exec("sit", self);
+	}
+	pause; pause; pause;
+	pause; pause; pause;
+	goto start;
+
+:ina_fight:
+	clear(iFight);
+	priority;
+	act("$1N grimly prepares to pound you.", A_SOMEONE, self, null, null, TO_REST);
+	while(self.position==POSITION_FIGHTING) pause;
+	nopriority;
+	goto start;
+}
+dilend
+end
+
+del
+names {"Del", "woman"}
+title "Del"
+descr "A lovely woman is here studying a scroll."
+extra {}
+"This is the best looking researcher you've seen all day!  She has dark brown hair to her waist and fiery eyes,
+I wouldn't mess with her."
+alignment -100
+race RACE_ELF
+sex SEX_FEMALE
+level 19
+height 190
+weight 140
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+exp 130
+/*(str,dex,con,hpp,bra,cha,mag,div)*/
+MSET_ABILITY(10, 20, 15, 20, 20, 5, 10, 0)
+/*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+MSET_WEAPON(0, 25, 0, 0, 0, 0)
+/*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+MSET_SPELL(5,5,5,5,5,5,5,25,5,5,5)
+special SFUN_COMBAT_MAGIC "cast snowball"
+
+money 3 SILVER_PIECE
+position POSITION_STANDING
+
+dilbegin del();
+var
+	iRandom : integer;
+	iFight : integer;
+code
+{
+	heartbeat:=PULSE_SEC * 5;
+	on_activation(self.position == POSITION_FIGHTING, ina_fight);
+
+:start:
+	iFight:=interrupt(SFB_COM, self.position==POSITION_FIGHTING, ina_fight);
+	if(self.outside!=findroom("del_room@reslab"))
+	{
+		walkto(findroom("del_room@reslab"));
+		exec("sit", self);
+	}
+	iRandom:=rnd(1,11);
+	if(iRandom==1) exec("emote scribbles on her scroll.", self);
+	else if(iRandom==2) exec("emote can't figure out why it won't work.", self);
+	else if(iRandom==3) exec("smile", self);
+	else if(iRandom==4) exec("sigh", self);
+	else if(iRandom==5) exec("think", self);
+	else if(iRandom==6) exec("emote studies some scrolls.", self);
+	else if(iRandom==7) exec("emote wishes she had a man.", self);
+	else if(iRandom==8) exec("emote gets frustrated and throws her scroll across the room, then sighs and retrieves it again.", self);
+	else if(iRandom==9) exec("emote does some calculations.", self);
+	else if(iRandom==10) exec("grin", self);
+	else if((iRandom==11) and (rnd(1,10)==1))
+	{
+		walkto(findroom("hall_103@reslab"));
+		exec("drink water", self);
+		walkto(findroom("del_room@reslab"));
+		exec("sit", self);
+	}
+	pause; pause; pause;
+	pause; pause; pause;
+	goto start;
+
+:ina_fight:
+	clear(iFight);
+	priority;
+	act("$1N stares at you with cold eyes and you fear for your life.", A_SOMEONE, self, null, null, TO_REST);
+	while(self.position==POSITION_FIGHTING) pause;
+	nopriority;
+	goto start;
+}
+dilend
+end
+
+roger
+names {"Roger", "man", "guy"}
+title "Roger"
+descr "A funny guy with glasses is here inventing things in his head."
+extra {}
+"You think he's sorta funny lookin, but on closer inspection wonder if he's got more to him than meets the eye?"
+alignment 300
+race RACE_HUMAN
+sex SEX_MALE
+level 18
+height 180
+weight 140
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+exp 100
+/*(str,dex,con,hpp,bra,cha,mag,div)*/
+MSET_ABILITY(15, 10, 15, 20, 25, 5, 10, 0)
+/*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+MSET_WEAPON(0, 25, 0, 0, 0, 0)
+/*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+MSET_SPELL(5,5,5,10,5,10,5,5,5,5,15)
+special SFUN_COMBAT_MAGIC "cast acid drop"
+
+money 2 SILVER_PIECE
+position POSITION_STANDING
+
+dilbegin roger();
+var
+	iRandom : integer;
+	iFight : integer;
+code
+{
+	heartbeat:=PULSE_SEC * 5;
+	on_activation(self.position == POSITION_FIGHTING, ina_fight);
+
+:start:
+	iFight:=interrupt(SFB_COM, self.position==POSITION_FIGHTING, ina_fight);
+	if(self.outside!=findroom("roger_room@reslab"))
+	{
+		walkto(findroom("roger_room@reslab"));
+		exec("sit", self);
+	}
+	iRandom:=rnd(1,13);
+	if(iRandom==1) exec("emote fantasizes about Del, that cute elf down the hall.", self);
+	else if(iRandom==2) exec("emote figures out the answer to the universe.  It's 3.", self);
+	else if(iRandom==3) exec("smile", self);
+	else if(iRandom==4) exec("sigh", self);
+	else if(iRandom==5) exec("think", self);
+	else if(iRandom==6) exec("say If that equals that, then that should equal that!", self);
+	else if(iRandom==7) exec("emote is hungry but doesn't feel like getting up.", self);
+	else if(iRandom==8) exec("emote scratches his head, lost in some deep thought.", self);
+	else if(iRandom==9) exec("emote adjusts some glass tubes.", self);
+	else if(iRandom==10) exec("emote tests a potion on himself.", self);
+	else if(iRandom==11) exec("emote says the alphabet backwards in record time.", self);
+	else if(iRandom==12) exec("giggle", self);
+	else if((iRandom==13) and (rnd(1,10)==1))
+	{
+		walkto(findroom("hall_103@reslab"));
+		exec("drink water", self);
+		walkto(findroom("roger_room@reslab"));
+		exec("sit", self);
+	}
+	pause; pause; pause;
+	pause; pause; pause;
+	goto start;
+
+:ina_fight:
+	clear(iFight);
+	priority;
+	act("$1N screams, 'How dare you interrupt me!!' and attacks!", A_SOMEONE, self, null, null, TO_REST);
+	while(self.position==POSITION_FIGHTING) pause;
+	nopriority;
+	goto start;
+}
+dilend
+end
+
+pip
+names {"Pip", "girl"}
+title "Pip"
+descr "Pip is here playing with an imaginary pet mouse."
+extra {}
+"When this kid first showed up as an orphan on their doorstep no one knew what sex it was so they
+just called it 'Pip' and the name stuck even after they realized Pip was a girl.  Now this child prodigy is
+one of the most brilliant inventors here, though a little immature."
+race RACE_HALFLING
+sex SEX_FEMALE
+level 20
+height 120
+weight 90
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+exp 110
+/*(str,dex,con,hpp,bra,cha,mag,div)*/
+MSET_ABILITY(15, 10, 15, 20, 25, 5, 10, 0)
+/*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+MSET_WEAPON(0, 25, 0, 0, 0, 0)
+/*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+MSET_SPELL(5,5,5,5,5,5,5,5,5,15,15)
+special SFUN_COMBAT_MAGIC "cast acid drop"
+
+money 2 SILVER_PIECE
+position POSITION_STANDING
+
+dilbegin pip();
+var
+	iRandom : integer;
+	iFight : integer;
+code
+{
+	heartbeat:=PULSE_SEC * 5;
+	on_activation(self.position == POSITION_FIGHTING, ina_fight);
+
+:start:
+	iFight:=interrupt(SFB_COM, self.position==POSITION_FIGHTING, ina_fight);
+	iRandom:=rnd(1,11);
+	if(iRandom==1) exec("emote plays with her imaginary pet mouse.", self);
+	else if(iRandom==2) exec("say No one will find us here my little pet mousey!", self);
+	else if(iRandom==3) exec("say They can't take you from me my little mousey!", self);
+	else if(iRandom==4) exec("say No what shall I name you? What about Mickey?", self);
+	else if(iRandom==5) exec("think", self);
+	else if(iRandom==6) exec("smile", self);
+	else if(iRandom==7) exec("giggle", self);
+	else if(iRandom==8) exec("bounce", self);
+	else if(iRandom==9) exec("emote pets her imaginary mouse gently.", self);
+	else if(iRandom==10) exec("emote laughs as she watches her mouse run around the room.", self);
+	else if(iRandom==11) exec("emote does not seem normal.", self);
+	pause; pause; pause;
+	pause; pause; pause;
+	goto start;
+
+:ina_fight:
+	clear(iFight);
+	priority;
+	act("$1N is like a cornered rat, and protects $1s mouse with amazing ferocity!", A_SOMEONE, self, null, null, TO_REST);
+	while(self.position==POSITION_FIGHTING) pause;
+	nopriority;
+	goto start;
+}
+dilend
+end
+
+guard
+names {"the security guard", "guard", "security"}
+title "the security guard"
+descr "A security guard stands here looking bored."
+extra {}
+"This guy is really a guard?? Pathetic."
+race RACE_HUMAN
+sex SEX_MALE
+level 25
+height 180
+weight 170
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+exp 100
+/*(str,dex,con,hpp,bra,cha,mag,div)*/
+MSET_ABILITY(20, 20, 10, 20, 25, 5, 0, 0)
+/*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+MSET_WEAPON(5, 5, 5, 75, 5, 5)
+/*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+MSET_SPELL(0,0,0,0,0,0,0,0,0,0,0)
+
+money 2 SILVER_PIECE
+position POSITION_STANDING
+
+dilbegin guard();
+var
+code
+{
+	heartbeat:=PULSE_SEC * 5;
+
+:start:
+	wait(SFB_COM, self.position==POSITION_FIGHTING);
+	act("$1N wishes $1e'd never taken this job.", A_SOMEONE, self, null, null, TO_REST);
+	while(self.position==POSITION_FIGHTING) pause;
+	goto start;
+}
+dilend
+end
+
+tester
+names {"the tester", "tester", "guy"}
+title "the tester"
+descr "An official research lab tester is here testing something or other."
+extra {}
+"Not only is there nothing interesting about this guy, there is nothing interesting about what he is testing!
+You hope your taxes and rent payments are not going for waste like THIS!"
+race RACE_HUMAN
+sex SEX_MALE
+level 20
+height 180
+weight 170
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+exp 100
+/*(str,dex,con,hpp,bra,cha,mag,div)*/
+MSET_ABILITY(20, 20, 10, 20, 25, 5, 0, 0)
+/*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+MSET_WEAPON(5, 5, 5, 75, 5, 5)
+/*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+MSET_SPELL(0,0,0,0,0,0,0,0,0,0,0)
+
+money 2 SILVER_PIECE
+position POSITION_STANDING
+
+dilbegin tester();
+var
+code
+{
+	heartbeat:=PULSE_SEC * 5;
+
+:start:
+	wait(SFB_COM, self.position==POSITION_FIGHTING);
+	act("$1N wishes $1e'd never taken this job.", A_SOMEONE, self, null, null, TO_REST);
+	while(self.position==POSITION_FIGHTING) pause;
+	goto start;
+}
+dilend
+end
+
+sponge
+names {"spongey crawler", "sponge", "spongey", "crawler", "creature"}
+title "a spongey crawler"
+descr "A square porous creature squishes at you."
+extra {}
+"It is small square untamed and unkempt, this sponge fell behind the dryer for many years and is now back with a vengence."
+alignment -200
+race RACE_OTHER_MARINE
+sex SEX_NEUTRAL
+level 16
+height 50
+weight 60
+NATURAL_DEF(WPN_STING, ARM_LEATHER)
+exp 100
+/*(str,dex,con,hpp,bra,cha,mag,div)*/
+MSET_ABILITY(20, 20, 10, 30, 10, 10, 0, 0)
+/*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+MSET_WEAPON(0, 0, 0, 0, 100, 0)
+/*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+MSET_SPELL(0,0,0,0,0,0,0,0,0,0,0)
+position POSITION_STANDING
+dilbegin sponge();
+var
+	iFight : integer;
+	pc : unitptr;
+code
+{
+	heartbeat:=PULSE_SEC * 5;
+	on_activation(self.position == POSITION_FIGHTING, ina_fight);
+
+:start:
+	iFight := interrupt(SFB_COM, self.position==POSITION_FIGHTING, ina_fight);
+	wait(SFB_DONE, FALSE);
+	goto start;
+:ina_fight:
+	clear(iFight);
+	priority;
+	act("The sponge flexes a pore and squishes in your general direction.", A_SOMEONE, self, null, null, TO_REST);
+	while(self.position==POSITION_FIGHTING) pause;
+	nopriority;
+	goto start;
+}
+dilend
+end
+
+spare_mary
+names {"a spare Mary", "spare mary", "spare", "mary"}
+title "a spare Mary"
+descr "An extra Mary, the lumberjack's wife leans against the wall patiently."
+extra {}
+"She looks like the original Mary, only without the air of usefulness.  Where was she when I wanted to do that damn quest?"
+alignment 500
+race RACE_HUMAN
+sex SEX_FEMALE
+level 16
+height 150
+weight 200
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+exp 100
+/*(str,dex,con,hpp,bra,cha,mag,div)*/
+MSET_ABILITY(10, 5, 15, 35, 25, 10, 0, 0)
+/*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+MSET_WEAPON(5, 5, 75, 5, 5, 5)
+/*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+MSET_SPELL(0,0,0,0,0,0,0,0,0,0,0)
+position POSITION_STANDING
+dilbegin mary();
+var
+	iFight : integer;
+	pc : unitptr;
+code
+{
+	heartbeat:=PULSE_SEC * 5;
+	on_activation(self.position == POSITION_FIGHTING, ina_fight);
+
+:start:
+	iFight := interrupt(SFB_COM, self.position==POSITION_FIGHTING, ina_fight);
+	wait(SFB_DONE, (command (CMD_CONSIDER) and (target == self)));
+	act("This Mary seems much tougher than the rabbit brewer of Haon-Dor.", A_SOMEONE, activator, null, null, TO_CHAR);
+	goto start;
+:ina_fight:
+	clear(iFight);
+	priority;
+	act("The spare Mary skilfully draws a wooden spoon and twirls it over her head shrieking 'Aiyeeeee!!'.", A_SOMEONE, self, null, null, TO_REST);
+	while(self.position==POSITION_FIGHTING) pause;
+	nopriority;
+	goto start;
+}
+dilend
+end
+
+kalin
+names {"Kalin", "man"}
+title "Kalin"
+descr "A tall lean, man wearing glasses is intent on his work."
+extra {}
+"He's thin, but well toned, you suspect he works out regularly.  He seems rather tired though, and a little sad."
+alignment 700
+race RACE_HUMAN
+sex SEX_MALE
+level 20
+height 200
+weight 160
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+exp 100
+/*(str,dex,con,hpp,bra,cha,mag,div)*/
+MSET_ABILITY(20, 30, 10, 20, 20, 0, 0, 0)
+/*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+MSET_WEAPON(5, 5, 5, 5, 75, 5)
+/*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+MSET_SPELL(0,0,0,0,0,0,0,0,0,0,0)
+
+money 2 SILVER_PIECE
+position POSITION_SITTING
+
+dilbegin kalin();
+var
+	iSleep : integer;
+	iFight : integer;
+code
+{
+	heartbeat:=PULSE_SEC * 5;
+	on_activation(self.position == POSITION_FIGHTING, ina_fight);
+
+:start:
+	iFight := interrupt(SFB_COM, self.position==POSITION_FIGHTING, ina_fight);
+	iSleep := interrupt(SFB_TICK, self.position<=POSITION_SLEEPING, fatigue);
+	if(self.outside!=findroom("kalin_room@reslab"))
+	{
+		walkto(findroom("kalin_room@reslab"));
+		exec("sit", self);
+	}
+	exec("emote mutters to himself, he is completely concentrated on what he is doing.", self);
+	pause; pause; pause;
+	exec("emote stops, sighs, then continues his work.", self);
+	pause; pause; pause;
+	exec("emote fiddles with some cloth.", self);
+	pause; pause; pause;
+	exec("think", self);
+	pause; pause; pause;
+	exec("emote makes a few changes to a formula, and fiddles with some more cloth.", self);
+	pause; pause; pause;
+	exec("smile", self);
+	exec("wear blanket", self);
+	if("blanket" in self.inside.names) exec("emote wears the blanket he's been working on sort of like a cloak.", self);
+	pause; pause; pause;
+	exec("emote looks very tired.  He has obviously not been getting enough sleep.", self);
+	pause; pause; pause;
+	pause; pause; pause;
+	pause; pause; pause;
+	exec("emote collapses from fatigue.", self);
+	goto fatigue;
+
+:ina_fight:
+	clear(iFight);
+	priority;
+	act("As you watch $1N move fluidly into a fighting position, you realize $1e is well trained in the martial arts.", A_SOMEONE, self, null, null, TO_REST);
+	while(self.position==POSITION_FIGHTING) pause;
+	nopriority;
+	goto fatigue;
+
+:fatigue:
+	clear(iSleep);
+	exec("sleep", self);
+	pause; pause; pause;
+	pause; pause; pause;
+	pause; pause; pause;
+	exec("wake",self);
+	exec("sit", self);
+	pause; pause; pause;
+	exec("rem blanket", self);
+	goto start;
+}
+dilend
+end
+
+errand_boy
+names {"the errand boy", "boy", "errand"}
+title "the errand boy"
+descr "An overworked stressed out little errand boy fidgets here."
+extra {}
+"This kid looks bad, just plain bad.  He's got too much to do and not enough time to do it."
+alignment 100
+race RACE_HUMAN
+sex SEX_MALE
+level 15
+height 160
+weight 150
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+exp 100
+/*(str,dex,con,hpp,bra,cha,mag,div)*/
+MSET_ABILITY(15, 20, 15, 20, 20, 0, 0, 10)
+/*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+MSET_WEAPON(5, 75, 5, 5, 5, 5)
+/*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+MSET_SPELL(0,0,0,0,0,0,0,0,0,0,0)
+
+money 1 SILVER_PIECE
+position POSITION_STANDING
+
+dilcopy errand_person@reslab();
+
+end
+
+vendor
+names {"the danish vendor", "vendor", "guy", "man"}
+title "the danish vendor"
+descr "A jolly looking guy selling danishes is here."
+extra {}
+"This man looks very round and very jolly.  He has a white outfit on with a red and white striped
+apron.  He wears a big white chefs hat and wants YOU to buy a danish."
+alignment 400
+race RACE_HUMAN
+sex SEX_MALE
+level 25
+height 150
+weight 190
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+exp 5
+
+/*(str,dex,con,hpp,bra,cha,mag,div)*/
+MSET_ABILITY(15, 20, 15, 20, 20, 0, 0, 10)
+/*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+MSET_WEAPON(15, 15, 5, 5, 55, 5)
+/*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+MSET_SPELL(0,0,0,0,0,0,0,0,0,0,0)
+
+money 1 SILVER_PIECE
+position POSITION_STANDING
+
+special SFUN_SHOP_INIT
+"&lProfit sell = 110
+Profit buy = 10
+Production = ~pastry@midgaard~
+Trade types = "+ITEM_FOOD+"
+Msg1 = ~$1N says, 'I don't have that!'~
+Msg2 = ~$1N says, 'Why you haven't got it, $3N?'~
+Msg3 = ~$1N says, 'Would you like to buy something or not?'~
+Msg4 = ~$1N says, 'I wont buy that!  Yuck!'~
+Msg5 = ~$1N says, 'This expensive $2N is to expensive for beggars like you, $3N.'~
+Msg6 = ~$1N says, 'That's %s for my famous $2N.'~
+Msg7 = ~$1N says, 'That will be %s for your $2N.'~
+Hours1 = 4 13
+Hours2 = 13 23"
+
+dilbegin vendor();
+var
+	iFight : integer;
+code
+{
+	heartbeat:=PULSE_SEC * 5;
+	on_activation(self.position == POSITION_FIGHTING, ina_fight);
+
+:start:
+	iFight := interrupt(SFB_COM, self.position==POSITION_FIGHTING, ina_fight);
+	if(self.outside!=findroom("hall_103@reslab"))
+	{
+		walkto(findroom("hall_103@reslab"));
+	}
+	exec("Danishes, I got danishes!  They're hot, they're fresh, they're cheap!", self);
+	pause; pause; pause;
+
+:ina_fight:
+	clear(iFight);
+	priority;
+	while(self.position==POSITION_FIGHTING) pause;
+	nopriority;
+	goto start;
+}
+dilend
+end
+
+errand_girl
+names {"the errand girl", "girl", "errand"}
+title "the errand girl"
+descr "An overworked stressed out little errand girl fidgets here."
+extra {}
+"This kid looks bad, just plain bad.  She's got too much to do and not enough time to do it."
+alignment 100
+race RACE_HUMAN
+sex SEX_FEMALE
+level 16
+height 160
+weight 150
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+exp 100
+/*(str,dex,con,hpp,bra,cha,mag,div)*/
+MSET_ABILITY(15, 20, 15, 20, 20, 0, 0, 10)
+/*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+MSET_WEAPON(5, 75, 5, 5, 5, 5)
+/*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+MSET_SPELL(0,0,0,0,0,0,0,0,0,0,0)
+
+money 1 SILVER_PIECE
+position POSITION_STANDING
+
+dilcopy errand_person@reslab();
+
+end
+
+donkey
+names {"donkey"}
+title "a donkey"
+descr "&cyA donkey with some odd attachments stands here, waiting for a rider.&cw"
+extra{}
+"Man this thing looks like it wants to bite your legs off!  It snorts and looks anxious to leave.  It's got
+something attached to the back, with levers extending to where your hands might be.  You steer it by pulling
+either of the levers near both hands, and stop by pulling both.  (All you really do is get in and off you go!)$n
+
+NOTE: when riding on your donkey it is impossible to be followed by anyone, and to move FAST just
+use ee or nn or ww or ss."
+
+race RACE_HORSE
+sex SEX_MALE
+level 20
+height 100
+weight 100
+NATURAL_DEF(WPN_KICK, ARM_LEATHER)
+exp -100
+/*(str,dex,con,hpp,bra,cha,mag,div)*/
+MSET_ABILITY(30, 15, 30, 25, 0, 0, 0, 0)
+/*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+MSET_WEAPON(0, 0, 0, 0, 100, 0)
+/*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+MSET_SPELL(0,0,0,0,0,0,0,0,0,0,0)
+position POSITION_STANDING
+flags{UNIT_FL_TRANS}
+manipulate {MANIPULATE_ENTER}
+capacity 1000
+
+dilbegin donkey();
+var
+	pc : unitptr;
+	room : unitptr;
+	dir : integer;
+	strdir : string;
+	strop : string;
+	cont : unitptr;
+	temp : unitptr;
+	i : integer;
+code
+{
+:start:
+	wait(SFB_CMD, ((activator.outside==self) and (activator.type==UNIT_ST_PC)));
+
+	if(command(CMD_LOOK) or command(CMD_DISMOUNT))
+		goto start;
+
+	block;
+
+	pc:=activator;
+	secure(pc, start);
+	room:=self.outside;
+
+	if(command(CMD_NORTH) or command("nn")){dir:=NORTH; strdir:="north"; strop:="the south";}
+	else if(command(CMD_SOUTH) or command("ss")){dir:=SOUTH; strdir:="south"; strop:="the north";}
+	else if(command(CMD_EAST) or command("ee")){dir:=EAST; strdir:="east"; strop:="the west";}
+	else if(command(CMD_WEST) or command("ww")){dir:=WEST; strdir:="west"; strop:="the east";}
+	else if(command(CMD_UP)){dir:=UP; strdir:="up"; strop:="below";}
+	else if(command(CMD_DOWN)){dir:=DOWN; strdir:="down"; strop:="above";}
+	else{
+		unsecure(pc);
+		link(pc, room);
+		secure(pc, start);
+		exec(cmdstr+" "+argument, pc);
+		unsecure(pc);
+		link(pc, self);
+		goto start;
+	}
+
+	if(pc.position==POSITION_SLEEPING)
+	{
+		act("In your dreams, or what?", A_ALWAYS, pc, self, null, TO_CHAR);
+		act("$1N dreams of riding around in $1s $2N.", A_SOMEONE, pc, self, null, TO_REST);
+		unsecure(pc);
+		goto start;
+	}
+	if(pc.position==POSITION_STUNNED)
+	{
+		act("All you can do right now, is think about the stars!", A_ALWAYS, pc, self, null, TO_CHAR);
+		unsecure(pc);
+		goto start;
+	}
+	if(pc.position==POSITION_INCAP)
+	{
+		act("You are in pretty bad shape, unable to do anything!", A_ALWAYS, pc, self, null, TO_CHAR);
+		unsecure(pc);
+		goto start;
+	}
+	if(pc.position==POSITION_MORTALLYW)
+	{
+		act("You are in pretty bad shape, unable to do anything!", A_ALWAYS, pc, self, null, TO_CHAR);
+		unsecure(pc);
+		goto start;
+	}
+	if(pc.position==POSITION_FIGHTING)
+	{
+		act("You are fighting for your life!", A_ALWAYS, pc, self, null, TO_CHAR);
+		unsecure(pc);
+		goto start;
+	}
+	if(not (room.exit_to[dir]!=null))
+	{
+		act("Alas, you cannot go that way...", A_SOMEONE, pc, self, null, TO_CHAR);
+		act("$1N tries and tries to get $1s $2N to go $3t, but fails miserably.", A_SOMEONE, pc, self, strdir, TO_REST);
+		unsecure(pc);
+		goto start;
+	}
+	if(room.exit_info[dir] & EX_HIDDEN)
+	{
+		act("Alas, you cannot go that way...", A_SOMEONE, pc, self, null, TO_CHAR);
+		act("$1N tries and tries to get $1s $2N to go $3t, but fails miserably.", A_SOMEONE, pc, self, strdir, TO_REST);
+		unsecure(pc);
+		goto start;
+	}
+	if(room.exit_info[dir] & EX_CLOSED)
+	{
+		act("The "+room.exit_names[dir].[0]+" seems to be closed.", A_SOMEONE, pc, self, null, TO_CHAR);
+		act("$1N tries and tries to get $1s $2N to go $3t, but fails miserably.", A_SOMEONE, pc, self, strdir, TO_REST);
+		unsecure(pc);
+		goto start;
+	}
+
+	if(command(CMD_NORTH) or command(CMD_SOUTH) or command(CMD_EAST) or command(CMD_WEST) or command(CMD_UP) or command(CMD_DOWN)){
+		exec(strdir, self);
+		act("$1N arrives from $3t on $1s $2N.", A_SOMEONE, pc, self, strop, TO_REST);
+		exec("look", pc);
+	}
+	else{
+		act("With a flurry of hooves, your $2N takes off running!", A_SOMEONE, pc, self, strdir, TO_CHAR);
+		act("With a flurry of hooves, $1N takes off to the $3t on $1s $2N.", A_SOMEONE, pc, self, strdir, TO_REST);
+		act("", A_SOMEONE, pc, self, strdir, TO_CHAR);
+		room:=room.exit_to[dir];
+		unsecure(pc);
+		link(self, room);
+		secure(pc, start);
+		while(room.exit_to[dir]!=null)
+		{
+			if((room.exit_info[dir]&EX_HIDDEN) or (room.exit_info[dir]&EX_CLOSED) or (room.exit_to[dir].movement>=SECT_SWAMP)) break;
+			act("$1N cruises through on $1s $2N, heading $3t.", A_SOMEONE, pc, self, strdir, TO_REST);
+			act("$3n", A_SOMEONE, pc, self, room, TO_CHAR);
+			room:=room.exit_to[dir];
+			unsecure(pc);
+			link(self, room);
+			secure(pc, start);
+		}
+		act("$1N comes screaming in from $3t on $1s $2N and skids to a halt.  The donkey glares at you.", A_SOMEONE, pc, self, strop, TO_REST);
+		act("", A_SOMEONE, pc, self, strdir, TO_CHAR);
+		exec("look", pc);
+		act("", A_SOMEONE, pc, self, strdir, TO_CHAR);
+		act("You come screaming into the room on your $2N and skid to a halt.  The donkey looks around with disdain.", A_SOMEONE, pc, self, strdir, TO_CHAR);
+	}
+
+	unsecure(pc);
+	goto start;
+}
+dilend
+end
+
+%objects
+
+dirty_coat
+names {"lab coat", "coat"}
+title "a dirty white laboratory coat"
+descr "A dirty white coat lies here looking used."
+extra {}
+"This lab coat is long and white and obviously not cleaned often."
+weight 1
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+cost 4 PLATINUM_PIECE
+rent 5 COPPER_PIECE
+end
+
+clean_coat
+names {"lab coat", "coat"}
+title "a clean white laboratory coat"
+descr "A clean white coat lies here."
+extra {}
+"This lab coat is long and white and obviously belongs to a tidy person."
+weight 1
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+cost 4 PLATINUM_PIECE
+rent 3 COPPER_PIECE
+end
+
+plate
+names {"breastplate", "plate"}
+title "a Magical Mirror Breastplate"
+descr "A breastplate lies on the floor giving a perfect reflection of its surroundings."
+extra {}
+"This perfectly smooth and glassy breastplate reflects your grinning face when you look at it."
+flags{UNIT_FL_MAGIC}
+extra {"$identify"}
+"This reflective breastplate amplifies your spells.  Use improved identify for more info."
+extra {"$improved identify"}
+"This is a very powerful reflecting breastplate.  All spells you cast are amplified for greater effect.
+This item adds +1 to magic and +2 to brain.
+Designed and built by Jager and Javelin, 12/07/95."
+weight 10
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+cost 4 PLATINUM_PIECE
+/*
+    Ability Bonus                 25 * 3	75
+    Skill/Spl/Wpn Bonus           8 * 0		0
+    Allows Detection
+    (such as detect invisible)    25 * 0	0
+    Allows hide/sneak etc         25 * 0	0
+    Slayer properties             50 * 0	0
+    Does DIL damage               50-500	0
+    Other DIL effects             25-100	0
+    Magical Modifier* (6-10)      8 * 5		40
+											115 copper
+	New Rule						/ 10
+*/
+rent 12 COPPER_PIECE
+MAG_TRANSFER(+1)
+BRA_TRANSFER(+2)
+ARMOUR_PLATE(+5, +5)
+special SFUN_RESTRICT_OBJ "lev = 20"
+special SFUN_RESTRICT_OBJ "strength = 30"
+spell 80
+
+dilbegin plate();
+var
+	pc1 : unitptr;
+	pc2 : unitptr;
+code
+{
+	heartbeat:=PULSE_SEC * 5;
+	interrupt(SFB_TICK, ((self.outside.type==UNIT_ST_PC) and (not (SAVE_RABBIT_COMPLETE in self.outside.quests)) and (self.outside.level<GOD_LEVEL)), getlost);
+:start:
+	wait(SFB_CMD, (command(CMD_CAST) and (self.outside==activator) and (self.equip==WEAR_BODY)));
+	pc1:=activator;
+	secure(pc1, start);
+	act("$1N's $2N glows as it amplifies then reflects $1N's spell!", A_SOMEONE, pc1, self, null, TO_REST);
+	act("Your $2N glows as it amplifies then reflects your spell!", A_SOMEONE, pc1, self, null, TO_CHAR);
+	unsecure(pc1);
+	goto start;
+
+:getlost:
+	pc2 := self.outside;
+	secure(pc2, start);
+	act("You did not earn your $2N and it moves itself to the ground.", A_SOMEONE, pc2, self, null, TO_CHAR);
+	act("$1N's $2N moves itself to the ground.", A_SOMEONE, pc2, self, null, TO_REST);
+	link(self, pc2.outside);
+	unsecure(pc2);
+	goto start;
+}
+dilend
+end
+
+potion
+names {"potion", "flask", "liquid"}
+title "a flask of purple liquid"
+descr "A flask of purple liquid has been left here."
+
+manipulate {MANIPULATE_TAKE}
+POTION_DEF(200,SPL_RAISE_STR, SPL_RAISE_DEX, SPL_RAISE_BRA)
+weight 1
+cost 5 PLATINUM_PIECE
+
+extra {} "This stuff looks gross!  It is purple and gooey."
+
+extra {"$identify"}
+"This incredible stuff raises strength, dexterity and brain."
+end
+
+scroll
+names {"scroll", "attack"}
+title "a scroll of attack"
+descr "A rolled up scroll has been left here."
+
+manipulate {MANIPULATE_TAKE}
+POTION_DEF(100,SPL_ACIDBALL_2, SPL_FIREBALL_2, SPL_FROSTBALL_2)
+weight 1
+cost 5 PLATINUM_PIECE
+
+extra {} "The title says: 'The Scroll of Attack'"
+
+extra {"$identify"}
+"This incredible scroll casts acid, fire and ice at the target."
+end
+
+fountain
+names {"fountain", "water"}
+title "a fountain"
+descr "&c+bA fountain is here happily being fountainish.&cw"
+extra {}
+"The fountain is a stone circle with a mermaid spitting clear liquid into the air."
+LIQ_DEF (LIQ_WATER, 20000, 20000, 20000, 0)
+MATERIAL_STONE("Very old grey rock, but kept clean by the hard working janitors.")
+flags{UNIT_FL_MAGIC}
+
+dilbegin fountain();
+var
+	i : integer;
+	pc : unitptr;
+code
+{
+	heartbeat:=PULSE_SEC * 4;
+:start:
+	wait(SFB_CMD, (command(CMD_DRINK) and (("water" in argument) or ("fountain" in argument) or ("liquid" in argument))));
+	pc := activator;
+	secure(pc, start);
+	act("The stone mermaid seems to smile slightly!", A_SOMEONE, pc, self, null, TO_ALL);
+	unsecure(pc);
+	goto start;
+}
+dilend
+end
+
+rabbitpotion
+names {"potion", "rabbitpotion"}
+title "a potion for curing mutated rabbits"
+descr "You see a pink potion lying on the ground."
+extra {}
+"This potion will cure any mutated rabbit.  You cannot quaff it, you can only GIVE the POTION to a RABBIT."
+weight 1
+manipulate {MANIPULATE_TAKE}
+end
+
+package
+names {"package", "packagefor"}
+title "a lost package"
+descr "A lost package lies here."
+extra {}
+"The package is nondescript, wrapped in brown paper and tied with string.  You dare not open it."
+weight 2
+manipulate {MANIPULATE_TAKE}
+
+dilbegin package();
+var
+	pc : unitptr;
+code
+{
+	heartbeat:=PULSE_SEC * 4;
+:start:
+	wait(SFB_CMD, (command(CMD_OPEN) and ("package" in argument)));
+	block;
+	pc := self.outside;
+	secure(pc, start);
+	act("$1N opens $2n and it explodes in $1s face, injuring $1m greatly!", A_SOMEONE, pc, self, null, TO_REST);
+	act("You open $2n and it explodes in your face, injuring you greatly!", A_SOMEONE, pc, self, null, TO_CHAR);
+	if(pc.hp>0) pc.hp := 0;
+	position_update(pc);
+	unsecure(pc);
+	destroy(self);
+}
+dilend
+end
+
+gauntlets
+names {"gauntlets"}
+title "the Gauntlets of Punching"
+descr "An awfully agressive set of gauntlets lies there on the ground."
+extra {}
+"The gauntlets are made from hardened steal and have some odd looking devices attached to them.  You get the feeling
+it would be awful hard to punch anyone unless you have ONE HAND FREE to punch with.  You get the feeling if you 'FIDDLE'
+(yes that was a hint) them they could be dangerous."
+extra {"$identify"}
+"These gauntlets do damage to your opponent during battle.  Use improved identify for more info."
+extra {"$improved identify"}
+"These gauntlets do damage to your opponent during battle based on your own level, strength, dexterity and skill in fist.  Designed and built by Jager, 12/02/95."
+weight 2
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HANDS}
+cost 2 PLATINUM_PIECE
+/*
+    Ability Bonus                 25 * 2	50
+    Skill/Spl/Wpn Bonus           8 * 0		0
+    Allows Detection
+    (such as detect invisible)    25 * 0	0
+    Allows hide/sneak etc         25 * 0	0
+    Slayer properties             50 * 0	0
+    Does DIL damage               50-500	250
+    Other DIL effects             25-100	0
+    Magical Modifier* ( < 5)      4 * 0		0
+											300 copper
+	New Rule						/ 10
+*/
+rent 30 COPPER_PIECE
+STR_TRANSFER(+2)
+DEX_TRANSFER(-1)
+ARMOUR_HRD_LEATHER(0, +0)
+MATERIAL_METAL("Looks like hardened steal, with some mechanical additions.")
+special SFUN_RESTRICT_OBJ "lev = 15"
+spell 50
+
+dilbegin recall gaunt_charger();
+code{
+:start:
+	heartbeat:=PULSE_SEC*SECS_PER_MUD_DAY/rnd(4, 8);
+	wait (SFB_TICK, (self.equip==WEAR_HANDS));
+	heartbeat:=PULSE_SEC*5;
+	act("You hear a winding noise from your $2N.", A_SOMEONE, self.outside, self, null, TO_CHAR);
+	sendto("add charge", self);
+	goto start;
+}
+dilend
+
+dilbegin recall aware gaunt_punch();
+external
+	integer chance@reslab(Best : integer, Worst : integer, P1 : integer, V1 : integer, M1 : integer,
+		P2 : integer, V2 : integer, M2 : integer, P3 : integer, V3 : integer, M3 : integer);
+var
+	pc : unitptr;
+	enemy : unitptr;
+	curitem : unitptr;
+	iPower : integer;
+	iRandom : integer;
+	iHands : integer;
+	iTemp : integer;
+	iLevel : integer;
+	sActDIL : string;
+	iCharges : integer;
+	iChance : integer;
+code
+{
+	iCharges:=10;
+
+:init:
+	heartbeat:=PULSE_SEC * 5;
+	interrupt(SFB_MSG, ((self==activator) and (argument=="add charge")), charge);
+
+:start:
+	wait(SFB_CMD, (self.equip==WEAR_HANDS));
+
+	if(not command("fiddle"))
+		goto start;
+
+	block;
+
+	pc := self.outside;
+	if(argument=="")
+		enemy:=pc.fighting;
+	else
+		enemy:=findunit(pc, argument, FIND_UNIT_SURRO, null);
+
+	if(enemy==null)
+		goto no_person;
+
+	secure(enemy,start);
+
+	if(iCharges<=0)
+		goto fail;
+	iCharges:=iCharges-1;
+
+	iHands:=0;
+
+	curitem:=equipment(pc, WEAR_HOLD);
+	if(curitem){
+		if(curitem.objectflags & OBJ_TWO_HANDS)
+			iHands:=iHands+2;
+		else
+			iHands:=iHands+1;
+	}
+	curitem:=equipment(pc, WEAR_WIELD);
+	if(curitem){
+		if(curitem.objectflags & OBJ_TWO_HANDS)
+			iHands:=iHands+2;
+		else
+			iHands:=iHands+1;
+	}
+
+	if(pc.level>50) iLevel:=50;
+	else iLevel:=pc.level;
+
+	if(enemy.hp<=(iLevel/5))
+	{
+		if(iHands>1)
+		{
+			act("A gear strains in your gauntlets, but they can't punch without a hand free!", A_SOMEONE, pc, null, null, TO_CHAR);
+			goto start;
+		}
+
+		enemy.hp := -10;
+		self.spells[SPL_LIGHTNING_2]:=50;
+		iTemp:=cast_spell(SPL_LIGHTNING_2, pc, self, enemy, "gauntlet_dam4@reslab");
+		goto start;
+	}
+
+	if(iHands>1)
+	{
+		act("A gear strains in your gauntlets, but they can't punch without a hand free!", A_SOMEONE, pc, null, null, TO_CHAR);
+		goto start;
+	}
+
+	if(pc.type==UNIT_ST_PC) iChance:=chance(50, 26, 10, iLevel, 50, 5, pc.abilities[ABIL_STR], 130, 5, pc.weapons[WPN_FIST], 100);
+	else iChance:=25;
+	self.spells[SPL_LIGHTNING_2]:=iChance;
+
+	if(iChance>=42)			sActDIL:="gauntlet_dam3@reslab";
+	else if(iChance>=34)	sActDIL:="gauntlet_dam2@reslab";
+	else					sActDIL:="gauntlet_dam1@reslab";
+
+	iTemp:=cast_spell(SPL_LIGHTNING_2, pc, self, enemy, sActDIL);
+
+	pause;
+	goto start;
+
+:charge:
+	iCharges:=10;
+	goto init;
+
+:no_person:
+	act("Your $2N rattle a bit, but can't find the target.", A_SOMEONE, pc, self, null, TO_CHAR);
+	goto start;
+
+:fail:
+	act("Your $2N sputter, but seem to have lost that zing.", A_SOMEONE, pc, self, null, TO_CHAR);
+	pause;
+	goto start;
+}
+dilend
+end
+
+portrait_lan
+names {"portrait", "picture"}
+title "a portrait of Landolin"
+descr "A small portrait lies on the ground face down."
+extra {}
+"There's good ol' Landolin, complete with silly grin.  There is a note on the back that says, to have
+Landolin's signature on your portrait of him, simply give it to him and have him 'sign portrait'."
+weight 1
+manipulate {MANIPULATE_TAKE}
+dilcopy portrait@reslab();
+end
+
+portrait_jav
+names {"portrait", "picture", "shot"}
+title "a glamour shot of Javelin"
+descr "A small portrait lies on the ground face down."
+extra {}
+"This picture of Javelin shows true artistic skill, never had beauty been captured in
+two dimensions so well.There is a note on the back that says, to have Javelin's
+signature on your portrait of him, simply give it to him and have him 'sign portrait'."
+weight 1
+manipulate {MANIPULATE_TAKE}
+dilcopy portrait@reslab();
+end
+
+wood_spoon
+names {"wooden spoon", "wooden", "spoon"}
+title "a wooden spoon"
+descr "A wooden spoon smelling of rabbit lays here."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_CLUB, 0, 0)
+weight 1
+cost 1 IRON_PIECE
+end
+
+blanket
+names {"blanket", "brown blanket"}
+title "a Blanket of Safety"
+descr "A small brown blanket looks lonely lying on the floor."
+extra {}
+"The banket seems normal when looked at directly, but from the corner of your eye,
+you see a faint glow.  You get the feeling the blanket is most useful when worn as
+a cloak, and when sleeping.  You get the feeling that it is a very protective blanket."
+extra {"$identify"}
+"This blanket will save you from death if you are mortally wounded, and heals you faster while you sleep.
+Use improved identify for more info."
+extra {"$improved identify"}
+"This blanket will save you from death if you are mortally wounded, and heals you faster while you sleep.
+It adds +2 con and +2 cha, as well as +5 flee.  You can only have one in your inventory at 1 time, but you don't
+need to wear it for it to save you from a mortal wound, or speed your healing during sleep.  You do need to wear it
+for the stat bonuses.  The blanket will leave you if you are higher than level 24.  This object was designed and built
+by Jager, 12/02/95."
+weight 1
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+cost 2 PLATINUM_PIECE
+/*
+    Ability Bonus                 25 * 2	50
+    Skill/Spl/Wpn Bonus           8 * 5		40
+    Allows Detection
+    (such as detect invisible)    25 * 0	0
+    Allows hide/sneak etc         25 * 0	0
+    Slayer properties             50 * 0	0
+    Does DIL damage               50-500	0
+    Other DIL effects             25-100	100
+    Magical Modifier* (6-10)      8 * 5		40
+											230 copper
+	New Rule						/ 10
+*/
+rent 23 COPPER_PIECE
+SKILL_TRANSFER(SKI_FLEE, +2)
+ARMOUR_CLOTHES(-5, 0)
+MATERIAL_CLOTH("Soft brown cloth, glows faintly when not looked at directly.")
+spell 25
+
+dilbegin recall blank_charger();
+code{
+:start:
+	heartbeat:=PULSE_SEC*SECS_PER_MUD_DAY/rnd(4, 8);
+	wait (SFB_TICK, (self.equip==WEAR_ABOUT));
+	heartbeat:=PULSE_SEC*5;
+	act("All of a sudden your $2N feels fluffier!", A_SOMEONE, self.outside, self, null, TO_CHAR);
+	sendto("add charge", self);
+	goto start;
+}
+dilend
+
+dilbegin recall aware blank_save();
+var
+	pc : unitptr;
+	i : integer;
+	iCharges : integer;
+code
+{
+	iCharges:=10;
+	self.spells[SPL_CURE_WOUNDS_1]:=25;
+	heartbeat:=PULSE_SEC * 5;
+
+:init:
+	interrupt(SFB_MSG, ((self==activator) and (argument=="add charge")), charge);
+
+:start:
+	wait(SFB_TICK, TRUE);
+
+	pc:=self.outside;
+
+	if((pc.type!=UNIT_ST_PC) and (pc.type!=UNIT_ST_NPC))
+		goto start;
+
+	if(self.position==WEAR_ABOUT)
+		goto start;
+
+	if((pc.hp<-10) or (pc.hp>=0))
+		goto start;
+
+	if(iCharges<=0)
+		goto start;
+	iCharges:=iCharges-1;
+
+	i:=rnd(1,pc.level);
+
+	if(i==1)
+		i:=cast_spell(SPL_AID, pc, self, pc, "blanket_save@reslab");
+
+	secure(pc, start);
+	wait(SFB_TICK, (pc.hp<-10) or (pc.hp>=0));
+
+	unsecure(pc);
+	goto start;
+
+:charge:
+	iCharges:=10;
+	goto init;
+}
+dilend
+
+dilbegin blank_sleep();
+var
+	pc : unitptr;
+	i : integer;
+code
+{
+	self.spells[SPL_CURE_WOUNDS_1]:=25;
+
+:init:
+	heartbeat:=PULSE_SEC * 5;
+
+:start:
+	wait(SFB_CMD, command(CMD_SLEEP) and (activator==self.outside));
+
+	pc := activator;
+
+	if((pc.type!=UNIT_ST_PC) and (pc.type!=UNIT_ST_NPC))
+		goto start;
+	if(self.position!=WEAR_ABOUT)
+		goto start;
+	if(pc.position<=POSITION_SLEEPING)
+		goto start;
+
+	secure(pc, init);
+
+	act("Your $2N wraps itself around you and you feel very safe.", A_ALWAYS, pc, self, null, TO_CHAR);
+	act("$1N's $2N wraps itself around $1m protectively while $1e sleeps.", A_SOMEONE, pc, self, null, TO_REST);
+
+	heartbeat:=PULSE_SEC * 90;
+
+:gettin_healed:
+	wait(SFB_TICK, TRUE);
+
+	if(self.outside!=pc){
+		unsecure(pc);
+		goto init;
+	}
+	if(pc.position>POSITION_SLEEPING){
+		act("You feel the love in your $2N as it loosens from around you.", A_SOMEONE, pc, self, null, TO_CHAR);
+		act("$1N's $2N loosens, but you get the feeling it likes being around $1N.", A_SOMEONE, pc, self, null, TO_REST);
+		unsecure(pc);
+		goto init;
+	}
+	if(pc.hp<pc.max_hp)
+		i:=cast_spell(SPL_CURE_WOUNDS_1, pc, self, pc, "blanket_sleep@reslab");
+
+	goto gettin_healed;
+}
+dilend
+
+dilbegin blank_limit();
+var
+	pc : unitptr;
+	inv : unitptr;
+	iCount : integer;
+code
+{
+	heartbeat:=PULSE_SEC * 5;
+
+:start:
+	wait(SFB_TICK, (self.outside.type==UNIT_ST_PC));
+
+	pc := self.outside;
+	secure(pc, start);
+
+	if(((pc.level<5) or (pc.level>15)) and (pc.level<GOD_LEVEL)){
+		act("Your $2N feels too small compared to your might, and moves itself to the ground.", A_SOMEONE, pc, self, null, TO_CHAR);
+		act("$1N's $2N feels too weak for such a high level person, and moves itself to the ground.", A_SOMEONE, pc, self, null, TO_REST);
+		link(self, pc.outside);
+	}
+	else{
+		inv:=pc.inside;
+		iCount:=0;
+		while(inv)
+		{
+			if("brown blanket" in inv.names) iCount:=iCount+1;
+			inv:=inv.next;
+		}
+
+		if(iCount>1)
+		{
+			act("Your $2N is jealous that you have more than one, and leaves you.", A_SOMEONE, pc, self, null, TO_CHAR);
+			act("$1N's $2N is jealous that $1e has more than one, and leaves $1m.", A_SOMEONE, pc, self, null, TO_REST);
+			link(self, pc.outside);
+		}
+	}
+
+	unsecure(pc);
+	goto start;
+}
+dilend
+end
+
+%reset
+
+load pip into secret_102 max 1
+{
+	equip dagger@halfzon position WEAR_WIELD
+	equip lth_pants@midgaard position WEAR_LEGS
+	equip lth_jerkin@midgaard position WEAR_BODY
+}
+
+load talbon into secret_103 max 1
+{
+	equip dagger@halfzon position WEAR_WIELD
+	equip lth_pants@midgaard position WEAR_LEGS
+	equip clean_coat position WEAR_ABOUT
+}
+
+load talia into talia_room max 1
+{
+	equip long_sword@halfzon position WEAR_WIELD
+	equip lth_pants@midgaard position WEAR_LEGS
+	equip dirty_coat position WEAR_ABOUT
+}
+
+load del into del_room max 1
+{
+	equip dagger@halfzon position WEAR_WIELD
+	load scroll max 3
+	equip lth_pants@midgaard position WEAR_LEGS
+	equip clean_coat position WEAR_ABOUT
+}
+
+load guard into guard_room11 zonemax 4
+{
+	equip spear@halfzon position WEAR_WIELD
+	equip slth_sleeves@midgaard position WEAR_ARMS
+	equip slth_jerkin@midgaard position WEAR_BODY
+	equip slth_pants@midgaard position WEAR_LEGS
+}
+
+load guard into guard_room13 zonemax 4
+{
+	equip spear@halfzon position WEAR_WIELD
+	equip slth_sleeves@midgaard position WEAR_ARMS
+	equip slth_jerkin@midgaard position WEAR_BODY
+	equip slth_pants@midgaard position WEAR_LEGS
+}
+
+load guard into hall_101 zonemax 4
+{
+	equip spear@halfzon position WEAR_WIELD
+	equip slth_sleeves@midgaard position WEAR_ARMS
+	equip slth_jerkin@midgaard position WEAR_BODY
+	equip slth_pants@midgaard position WEAR_LEGS
+}
+
+load guard into stair_101 zonemax 4
+{
+	equip spear@halfzon position WEAR_WIELD
+	equip slth_sleeves@midgaard position WEAR_ARMS
+	equip slth_jerkin@midgaard position WEAR_BODY
+	equip slth_pants@midgaard position WEAR_LEGS
+}
+
+load roger into roger_room max 1
+{
+	equip dagger@halfzon position WEAR_WIELD
+	load potion max 3
+	equip lth_pants@midgaard position WEAR_LEGS
+	equip dirty_coat position WEAR_ABOUT
+}
+
+/*load donkey into talia_room max 3*/
+
+load sponge into mob_room max 3
+
+load spare_mary into mob_room2 max 1
+{
+	equip wood_spoon position WEAR_WIELD
+	load portrait_jav
+}
+
+load fountain into hall_103 max 1
+
+load bull_board@udgaard into home zonemax 1
+
+load vendor into hall_103 max 1
+{
+	load pastry@midgaard
+	equip lth_pants@midgaard position WEAR_LEGS
+	equip lth_jerkin@midgaard position WEAR_BODY
+}
+
+load janitor into utility_room2 max 1
+{
+	equip w_broom@halfzon position WEAR_WIELD
+	equip lth_pants@midgaard position WEAR_LEGS
+	equip lth_jerkin@midgaard position WEAR_BODY
+}
+
+load tester into annex_101 zonemax 3
+{
+	equip halberd@halfzon position WEAR_WIELD
+	equip lth_pants@midgaard position WEAR_LEGS
+	equip lth_jerkin@midgaard position WEAR_BODY
+}
+
+load tester into annex_103 zonemax 3
+{
+	equip halberd@halfzon position WEAR_WIELD
+	equip lth_pants@midgaard position WEAR_LEGS
+	equip lth_jerkin@midgaard position WEAR_BODY
+}
+
+load tester into annex_105 zonemax 3
+{
+	equip halberd@halfzon position WEAR_WIELD
+	equip lth_pants@midgaard position WEAR_LEGS
+	equip lth_jerkin@midgaard position WEAR_BODY
+}
+
+load foukin into foukin_room2 max 1
+{
+	equip gauntlets position WEAR_HANDS
+	equip lth_pants@midgaard position WEAR_LEGS
+	equip lth_jerkin@midgaard position WEAR_BODY
+}
+
+load kalin into kalin_room max 1
+{
+	equip blanket position WEAR_ABOUT
+	equip lth_pants@midgaard position WEAR_LEGS
+	equip clean_coat position WEAR_ABOUT
+}
+
+load benkle into benkle_room max 1
+{
+	equip warhammer@halfzon position WEAR_WIELD
+	equip lth_pants@midgaard position WEAR_LEGS
+	equip dirty_coat position WEAR_ABOUT
+}
+
+load errand_boy into hall_103 max 3
+{
+	equip dagger@halfzon position WEAR_WIELD
+	equip lth_pants@midgaard position WEAR_LEGS
+	equip lth_jerkin@midgaard position WEAR_BODY
+}
+
+load errand_girl into hall_105 max 3
+{
+	equip dagger@halfzon position WEAR_WIELD
+	equip lth_pants@midgaard position WEAR_LEGS
+	equip lth_jerkin@midgaard position WEAR_BODY
+}
+
+load errand_boy into hall_107 max 3
+{
+	equip dagger@halfzon position WEAR_WIELD
+	equip lth_pants@midgaard position WEAR_LEGS
+	equip lth_jerkin@midgaard position WEAR_BODY
+}
+
+load errand_girl into hall_108 max 3
+{
+	equip dagger@halfzon position WEAR_WIELD
+	equip lth_pants@midgaard position WEAR_LEGS
+	equip lth_jerkin@midgaard position WEAR_BODY
+}
+
+load errand_boy into hall_115 max 3
+{
+	equip dagger@halfzon position WEAR_WIELD
+	equip lth_pants@midgaard position WEAR_LEGS
+	equip lth_jerkin@midgaard position WEAR_BODY
+}
+
+load errand_girl into hall_101 max 3
+{
+	equip dagger@halfzon position WEAR_WIELD
+	equip lth_pants@midgaard position WEAR_LEGS
+	equip lth_jerkin@midgaard position WEAR_BODY
+}
+
+load bill into mail_room max 1
+{
+	equip dagger@halfzon position WEAR_WIELD
+	equip lth_pants@midgaard position WEAR_LEGS
+	equip lth_jerkin@midgaard position WEAR_BODY
+}
+
+load gonmork into gonmork_room2 max 1
+{
+	equip dagger@halfzon position WEAR_WIELD
+	equip lth_pants@midgaard position WEAR_LEGS
+	equip clean_coat position WEAR_ABOUT
+}
+
+load donarius into rabbit_room2 max 1
+{
+	equip long_sword@halfzon position WEAR_WIELD
+	equip clean_coat position WEAR_ABOUT
+}
+
+load rabbit into rabbit_room max 5
+load rabbit into rabbit_room max 5
+load rabbit into rabbit_room max 5
+
+load rabbit into rabbit_room2 max 5
+load rabbit into rabbit_room2 max 5
+
+load rabbit@haon_dor into gonmork_room2 zonemax 2
+
+load quill@midgaard into supply_room11 zonemax 3
+load paper@midgaard into supply_room11 zonemax 3
+load portrait_lan@reslab into supply_room11 zonemax 3
+
+door tower_1 SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+
+/* XXX door jons_hwy0 NORTH {EX_OPEN_CLOSE, EX_CLOSED} */
+
+door hall_101 WEST {EX_OPEN_CLOSE, EX_CLOSED}
+door hall_102 WEST {EX_OPEN_CLOSE, EX_CLOSED}
+door hall_105 WEST {EX_OPEN_CLOSE, EX_CLOSED}
+door hall_105 EAST {EX_OPEN_CLOSE, EX_CLOSED}
+door hall_104 NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door hall_107 NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door hall_107 SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door hall_107 NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door hall_108 NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door hall_108 SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door hall_110 SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door hall_111 NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door hall_114 EAST {EX_OPEN_CLOSE, EX_CLOSED}
+door hall_115 EAST {EX_OPEN_CLOSE, EX_CLOSED}
+door supply_room11 EAST {EX_OPEN_CLOSE, EX_CLOSED}
+door guard_room11 EAST {EX_OPEN_CLOSE, EX_CLOSED}
+door guard_room12 WEST {EX_OPEN_CLOSE, EX_CLOSED}
+door talia_room	SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door roger_room	NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door pip_room WEST {EX_OPEN_CLOSE, EX_CLOSED}
+door rabbit_room WEST {EX_OPEN_CLOSE, EX_CLOSED}
+door annex_106 WEST {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door secret_101 EAST {EX_OPEN_CLOSE, EX_CLOSED}
+door hall_008 UP {EX_OPEN_CLOSE, EX_CLOSED}
+door secret_103 DOWN {EX_OPEN_CLOSE, EX_CLOSED}
+door benkle_room NORTH {EX_OPEN_CLOSE}
+door benkle_room SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door kalin_room SOUTH {EX_OPEN_CLOSE}
+door kalin_room WEST {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door secret_102 EAST {EX_OPEN_CLOSE, EX_CLOSED}
+door foukin_room NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door del_room SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door gonmork_room SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door utility_room NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door mob_room EAST {EX_OPEN_CLOSE, EX_CLOSED}
+
+%end
+

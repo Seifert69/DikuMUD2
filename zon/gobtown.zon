@@ -1,0 +1,3201 @@
+/*
+filename    gobtown
+password    oopsy
+changedby   oops
+EmailAdd     Jamie L Pupalitis <pupalijl@wilkes1.wilkes.edu>
+request     compile
+version     5
+END HEADER*/
+
+
+
+#include <composed.h>
+#include "values.h" 
+#include "wmacros.h"
+
+
+%zone gobtown
+title "Goblin Town"
+lifespan 20
+reset RESET_ANYHOW
+creators {"wynd","malice"}
+
+notes 
+
+"&lGeneral Notes:
+	This is Wynd and Malice's zone.  The main idea of the zone is a
+labyrinth which leads to a goblin city.  The main mobs of course are
+goblins (levels 70-80).  Eventually the zone will be expanded to include a
+castle.  This zone has been in progress since August of 1996, and
+undergoes changes frequently.  If you have any questions reguarding this
+zone, please e-mail Wynd/Wynne at pupalijl@wilkes1.wilkes.edu, or
+Malice/Oops at garubaja@wilkes1.wilkes.edu.  All questions having to do
+specifically with the Labyrinth may be directly referred to Wynd/Wynne. 
+
+Special Thanks:
+	I (Wynd/Wynne) would just like to give special thanks to those
+individuals that have helped/supported me with the making of this zone. 
+First, to Wonko, who sat with me and taught me how to write dil even when
+I couldn't understand.  Second, to Rand and Eirinn, for all the help they
+gave me when I couldn't find my mistakes.  Third, to Saor, Palio and
+Whistler, for editing and checking the zone (and for letting it in). And
+fourth, to everyone else, for your ideas and your patience (You know who
+you are and I love you all).  A very special thanks to Malice/Oops, who
+helped me realize my dream, and without whom this zone wouldn't be
+possible.  Thank you all very much." 
+
+
+
+/* Mob Defines */
+
+#define BASE_YETI(MLVL,GENDER,HEIGHT,WEIGHT) \
+race RACE_YETI \
+level MLVL \
+sex GENDER \
+height HEIGHT \
+weight WEIGHT \
+alignment 1000 \
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES) \
+MSET_ABILITY(15,15,10,20,20,10,10,0) \
+MSET_WEAPON(6,6,6,6,15,6) \
+MSET_SPELL(4,4,4,5,5,5,5,5,6,6,6) 
+
+
+
+%dil
+
+dilbegin crunch ();
+
+var
+	trav: unitptr;
+code
+{
+	:start:
+	wait(SFB_CMD, command(CMD_NORTH) or command(CMD_SOUTH) or 
+		command(CMD_WEST) or command(CMD_EAST));
+	trav:=activator;
+	if (rnd(1,100)<15)
+	{
+	act("The leaves crunch under your feet. &c+g*CRUNCH*&cw", A_SOMEONE, 
+		trav, null, null, TO_CHAR);
+	act("The leaves crunch under $1n's feet.  &c+g*CRUNCH*&cw", 
+		A_SOMEONE, trav, null, null, TO_REST);
+	}
+	goto start;
+ }
+dilend
+
+dilbegin ouch ();
+
+var
+	pat: unitptr;
+code
+  {
+	:start:
+	wait(SFB_CMD, command(CMD_NORTH) or command(CMD_SOUTH) or 
+		command(CMD_WEST) or command(CMD_EAST));
+	pat:=activator;
+	if (rnd(1,100)<10)
+	{
+	dilcopy("after@gobtown", pat);
+	}
+	goto start;
+}
+dilend
+
+
+dilbegin dtalk ();
+var
+	pc: integer;
+	cp: unitptr;
+code
+	{ 
+	heartbeat:=PULSE_SEC*9;
+	:fight:
+	pc:=interrupt(SFB_COM, self.position==POSITION_FIGHTING, stop); 
+	:start:
+	wait(SFB_DONE, (activator.type==UNIT_ST_PC) and (command("comfort")) and 
+(target==self));
+	cp:=activator;
+	secure(cp, stupid);
+	exec("sniff", self);
+	pause;
+	exec("say Woe is me!  I need help!", self);
+	pause;
+	exec(", looks around hopefully.", self);
+	pause;
+	exec("say But, alas, the time is not quite right yet.", self);
+	pause;
+	exec("cry", self);
+	pause;
+	exec("say One day soon, the time will be right and all will be 
+good again, but until then I will pray for all the lost souls.", self);
+	pause;
+	exec(", falls to his knees in the dust and prays 
+wholeheartedly.", self);
+	unsecure(cp);
+	goto start;
+	:stop:
+	pause;
+	goto fight;
+	:stupid:
+	exec("say No one will listen to me!", self);
+	pause;
+	exec("cry", self);
+	goto start;
+	}
+dilend
+
+dilbegin rumble (dir: integer);
+
+var
+	pc: unitptr;
+code
+	{
+	:start:
+	wait(SFB_CMD, command(dir));
+	pc:=activator;
+	act("&cgYou hear shifting behind you!&cw", A_SOMEONE, pc, null, 
+null, TO_ALL);
+	goto start;
+	}
+dilend
+
+dilbegin after ();
+
+
+code
+	{
+	heartbeat:=1;
+	act("&c+rA branch reaches out and pulls your hair! *OUCH*&cw", 
+		A_SOMEONE, self, null, null, TO_CHAR);
+	act("$1n's hair gets caught on a branch!", A_SOMEONE, self, null, null, 
+		TO_REST); 
+	self.hp:=self.hp-3;
+	position_update(self);
+	quit;
+	}
+dilend
+
+dilbegin grunt ();
+
+var
+	x: integer;
+	room: unitptr;
+	obj: unitptr;
+code
+	{
+	:start:
+	heartbeat:= PULSE_SEC*rnd(60, 120);
+	pause;
+	x:= 0;
+	while(x<=5)
+		{
+		room:= self.exit_to[x];
+		obj:= room.inside;
+		while(obj)
+			{
+			if("goblin" in obj.names)
+			goto here;
+			obj:= obj.next;
+			}
+		x:=x+1;
+		}
+	goto start;
+	:here:
+	act("You hear a goblin grunting in the distance.", A_SOMEONE, self.inside, 
+null, null, TO_ALL);
+	goto start;
+	}
+dilend
+
+
+
+
+/*This is Wonko's Bag dil.  We will use it for a quest item*/
+
+dilbegin recall makeitbig(real:integer);
+
+code
+	{
+	wait(SFB_CMD, (self.outside.nameidx !="light_bag") );
+	setweight(self,real);
+	quit;
+	}
+dilend
+
+dilbegin recall bag();
+
+var
+	object: unitptr;
+	contained: unitptr;
+	realweight: integer;
+	x: integer;
+code
+	{
+	:start:
+	wait(SFB_DONE, command(CMD_PUT) and (target==self));
+	object:=medium;
+	realweight:=object.weight;
+	if(object.idx==self.idx) goto start;
+	setweight(object,realweight/2);
+	dilcopy("makeitbig@gobtown("+itoa(realweight)+")",object);
+	goto start;
+	}
+dilend
+
+
+
+
+
+%rooms
+
+path1
+title "On a Path Through the Trees"
+descr "Walking along this path, you must weave in and out of many trees.  
+As you walk, the birds of the Etz-Nab woods sing merrily.  All along the 
+path green grass grows, and you can hear many woodland creatures 
+scurrying through the underbrush.  The path stretches to the north and 
+also to the west."
+
+movement SECT_INSIDE
+
+extra {"trees", "tree"}
+"The trees tower way above your head, and you must weave in and out of 
+them to stay on the path."
+extra {"green grass", "grass"}
+"The grass is very green and grows along the path."
+extra {"path"}
+"The path is very worn.  Many peoples must travel along it."
+extra {"underbrush"}
+"Looking at the underbrush, you can sense life, but you can't see anything."
+
+west to etzcon1@seren descr "The path to Serenity Forest lies that way.";
+north to path2 descr "The path looks much the same that way.";
+end
+
+path2
+title "On a Path Through the Trees"
+descr "Walking along this path, you must weave in and out of many trees.  
+As you walk, the sounds of the Etz-Nab woods can be faintly heard.  Green 
+grass with patches of brown grow along the path, and the sounds of 
+woodland creatures can be heard in the underbrush.  The path stretches to 
+the south and the east."
+
+movement SECT_INSIDE
+
+extra {"trees", "tree"}
+"The trees tower way above your head, and you must weave in and out of 
+them to stay on the path."
+extra {"green grass","brown grass", "grass"}
+"The grass is green with patches of brown and grows along the path."
+extra {"path"}
+"The path is very worn.  Many people must travel along it."
+extra {"underbrush"}
+"Looking at the underbrush, you can sense life, but you can't see anything."
+
+south to path1 descr "The path looks much the same that way.";
+east to path3 descr "You can see a hill from here";
+end
+
+path3
+title "At the Base of a Hill"
+descr "Standing at the base of a hill, you can see brown grass growing 
+along a small path.  The hill looms far above your head, and the rest of 
+the land is flat and dotted with trees.  You can either go over the hill, 
+or follow the path to the west."
+
+movement SECT_INSIDE
+
+extra {"hill", "base"}
+"The hill looms far above your head."
+extra {"land", "path"}
+"The path and the land around the path is very flat."
+extra {"brown grass", "grass"}
+"The grass is very brown and dead looking here."
+extra {"trees", "tree"}
+"The trees are very tall and stretch far above your head."
+
+up to path4 descr "The hill blocks your view";
+west to path2 descr "The path looks much the same that way";
+end
+
+path4
+title "On Top of a Hill"
+descr "Standing on top of the hill, looking down, you can see a sprawling 
+Labyrinth.  Beyond the Labyrinth, you can see a castle.  The grass on the 
+hill is very brown and dead, and looking down the other side of the hill you 
+can see a path leading towards woods.  You can either go down the hill or to 
+the east."
+
+movement SECT_INSIDE
+
+extra {"labyrinth"}
+"The Labyrinth looks very wide and very complicated.  It looks like it 
+would be easy to get lost there."
+extra {"castle"}
+"Even from here the castle looks dark and forbidding."
+extra {"brown grass", "grass"}
+"The grass is very obvioulsy dead."
+extra {"woods"}
+"You can see the tops of many trees."
+
+down to path3 descr "You can see a path down there.";
+east to path5 descr "The path continues to the east.";
+end
+
+path5
+title "On Top of a Hill"
+descr "Standing on top of the hill, looking down, you can see a sprawling 
+Labyrinth.  Beyond the Labyrinth, you can see a castle.  The grass on the 
+hill is very brown and dead, and looking down the other side of the hill you 
+can see a path leading towards woods.  You can either go down the hill or to 
+the west."
+
+movement SECT_INSIDE
+
+extra {"labyrinth"}
+"The Labyrinth looks very wide and very complicated.  It looks like it 
+would be easy to get lost there."
+extra {"castle"}
+"Even from here the castle looks dark and forbidding."
+extra {"brown grass", "grass"}
+"The grass is very obvioulsy dead."
+extra {"woods"}
+"You can see the tops of many trees."
+
+down to path6 descr "You can see a path down there.";
+west to path4 descr "The path stretches to the west.";
+end
+
+path6
+title "At the Base of a Hill"
+descr "Standing at the base of a hill, you can see brown grass growing
+along a small path.  To the east, there is a path that leads to a large
+wall, and to the west a hill blocks your path.  You can either go over the
+hill, or follow the path to the east." 
+
+movement SECT_INSIDE
+
+extra {"hill", "base"}
+"The hill looms far above your head."
+extra {"land", "path"}
+"The path and the land around the path is very flat."
+extra {"brown grass", "grass"}
+"The grass is very brown and dead looking here."
+extra {"large wall", "wall"}
+"From here the wall looks very large."
+
+up to path5 descr "There is a hill in the way, you can't see much.";
+east to laba_1 descr "You can see a path that leads to a large wall.";
+end
+
+laba_1
+names {"outside labyrinth"}
+title "Outside the Labyrinth before the Goblin City"
+descr "A large grey stone wall stands before you.  If you look closely, 
+you can see seams in the wall.  As you look closer, you think that the 
+seams sort of resemble a strange set of doors.  Your curiosity is piqued.  
+Might you try to open them?"
+
+flags{UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+
+extra {"large grey stone wall", "grey stone wall", "stone wall","large 
+wall", "walls", "wall"}
+"A very large grey stone wall stands before you.  Upon closer inspection 
+you can see what could be described as doors."
+
+west to path6 descr "A path stretches that way.";
+north to laba_4 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"doors", "door"} 
+descr "The wall blocks your way.";
+end
+
+laba_2
+title "Between Two Walls in a Labyrinth"
+descr "Standing between two large stone walls in a Labyrinth, you can
+see dead leaves and branches littering your path.  The walkway seems to
+stretch on to infinity to the west and likewise to the east.  You feel
+that no matter how long you walk you will never get any further than you
+are now." 
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"large grey stone wall", "grey stone wall", "stone wall","large 
+wall", "walls", "wall"}
+"Large, grey stone walls loom high above you here."
+extra {"branches", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+west to laba_7 descr "The pathway seems to stretch on forever in this 
+direction.";
+east to laba_3 descr "The pathway seems to stretch on forever in this 
+direction."; end
+
+laba_3
+title "Between Two Walls in a Labyrinth"
+descr "Standing between two strange stone walls in a Labyrinth, you can
+see dead leaves and branches littering your path.  The walkway seems to
+stretch on to infinity to the west and likewise to the east.  You feel
+that no matter how long you walk you will never get any further than you
+are now." 
+
+flags{UNIT_FL_NO_TELEPORT, UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+
+extra {"large grey stone wall", "grey stone wall","strange wall", "stone 
+wall","large wall", "walls", "wall"}
+"Large, grey stone walls loom high above you here, but they seem kind of 
+strange.  They almost look fake."
+extra {"branches", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+west to laba_2 descr "The pathway seems to stretch on forever in this 
+direction.";
+east to laba_4 descr "The pathway seems to stretch on forever in this 
+direction.";
+north to labb_1 open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN} keyword 
+{"door"} descr "The wall looks strange here."; 
+SECRET_DOOR_DIFFICULTY(NORTH,40)
+end
+
+laba_4
+title "Between Two Walls in a Labyrinth"
+descr "Standing between two large stone walls in a Labyrinth, you can
+see dead leaves and branches littering your path.  The walkway seems to
+stretch on to infinity to the west and likewise to the east.  You feel
+that no matter how long you walk you will never get any further than you
+are now." 
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"large grey stone wall", "grey stone wall", "stone wall","large 
+wall", "walls", "wall"}
+"Large, grey stone walls loom high above you here."
+extra {"branches", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+west to laba_3 descr "The pathway seems to stretch on forever in this 
+direction.";
+east to laba_5 descr "The pathway seems to stretch on forever in this 
+direction.";
+south to laba_1 descr "The pathway seems to stretch on forever in this 
+direction."; end
+
+laba_5
+title "Between Two Walls in a Labyrinth"
+descr "Standing between two large stone walls in a Labyrinth, you can see
+dead leaves and branches littering your path.  The walkway seems to
+stretch on to infinity to the west and likewise to the east.  You feel
+that no matter how long you walk you will never get any further than you
+are now." 
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"large grey stone wall", "grey stone wall", "stone wall","large 
+wall", "walls", "wall"}
+"Large, grey stone walls loom high above you here."
+extra {"branches", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+west to laba_4 descr "The pathway seems to stretch on forever in this 
+direction.";
+east to laba_6 descr "The pathway seems to stretch on forever in this 
+direction."; 
+end
+
+laba_6
+title "Between Two Walls in a Labyrinth"
+descr "Standing between two large stone walls in a Labyrinth, you can
+see dead leaves and branches littering your path.  The walkway seems to
+stretch on to infinity to the west and likewise to the east.  You feel
+that no matter how long you walk you will never be any further than you
+are now." 
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"large grey stone wall", "grey stone wall", "stone wall","large 
+wall", "walls", "wall"}
+"Large, grey stone walls loom high above you here."
+extra {"branches", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+west to laba_5 descr "The pathway seems to stretch on forever in this 
+direction.";
+east to laba_7 descr "The pathway seems to stretch on forever in this 
+direction."; 
+end
+
+laba_7
+title "Between Two Walls in a Labyrinth"
+descr "Standing between two large stone walls in a Labyrinth, you can
+see dead leaves and branches littering your path.  The walkway seems to
+stretch on to infinity to the west and likewise to the east.  You feel
+that no matter how long you walk you will never get any further than you
+are now." 
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"large grey stone wall", "grey stone wall", "stone wall","large 
+wall", "walls", "wall"}
+"Large, grey stone walls loom high above you here."
+extra {"branches", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+west to laba_6 descr "The pathway seems to stretch on forever in this 
+direction.";
+east to laba_2 descr "The pathway seems to stretch on forever in this 
+direction."; 
+end
+
+labb_1
+title "On a Path in a Labyrinth"
+descr "This is a path inside the main Labyrinth.  As you look around you
+can see large green hedges forming walls and paths all around you.  Your
+next decision could prove your fate.  Strange noises, almost like
+talking, can be heard around you.  To the north you see a path that is
+lush and green.  You see a similar path to the west and east, or you can
+go south and get out of the Labyrinth before you get lost." 
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+dilcopy grunt@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+
+south to laba_3 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+north to labb_4 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+east to labb_2 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+west to labc_1 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labb_2
+title "On a Path in a Labyrinth"
+descr "The green hedges that form the walls and in turn the paths of the
+Labyrinth stretch high above you.  They are very dense, thereby not
+permitting you to see where you are going.  Instincts may be the only way
+to get through this Labyrinth.  You see green hedges blocking your path to
+the east and south.  This leaves you with very little choice.  You must go
+either west or north." 
+
+flags{UNIT_FL_NO_TELEPORT, UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+
+west to labb_1 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+north to labb_3 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labb_3
+title "On a Path in a Labyrinth"
+descr "You are blocked in by hedges on all sides except from where you 
+came.  There seemed to have been a path this way before.  In this 
+Labyrinth nothing is what it seems."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+
+south to labb_2 descr "The only thing you can see is tall green hedges 
+and a single path.";
+end
+
+labb_4
+title "On a Path in a Labyrinth"
+descr "Large green hedges block your way to the north and east. Every 
+decision you make could be your last.  To the west you hear goblin 
+grunts.  You might go that way or you could turn around and go 
+south the way you came."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+dilcopy grunt@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+
+west to labb_5 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+south to labb_1 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labb_5
+title "On a Path in a Labyrinth"
+descr "The hedges now block your way to the north and south.  Are you going 
+the right way?  This path stretches to the west and east."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+
+west to labb_6 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+east to labb_4 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labb_6
+title "On a Path in a Labyrinth"
+descr "The hedges in all of their green, leafy stature now block your 
+path to the west and south.  Looking to the north you see the outline of 
+a large castle.  Might your journey finally be over?  You can either go 
+north toward the image on the horizon or back east the way you came to try 
+another path."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"large castle", "castle", "image"}
+"The castle sits on the horizon in front of you.  From here it looks 
+large and forbidding."
+
+north to labb_7 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+east to labb_5 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labb_7
+title "On a Path in a Labyrinth"
+descr "You are blocked in by hedges on all sides except from where you
+came.  The castle was right here a minute ago!  If you doubted it before
+you now know that nothing is what it seems here." 
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+
+south to labb_6 descr "The only thing you can see is tall green hedges 
+and a single path.";
+end
+
+labc_1
+title "On a Path in a Labyrinth"
+descr "The hedges block your path to the west.  Another path breaks off to 
+the north, east and south.  Confusion has become the name of the game.  
+Strange sounds assail your ears, and the crunching of the leaves beneath 
+your feet is enough to drive a person mad."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"leaves"}
+"Scattered on the ground are lots of dead leaves that crunch underfoot."
+
+north to labc_6 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+south to labc_2 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+east to labb_1 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labc_2
+title "On a Path in a Labyrinth"
+descr "Suddenly, an open space has appeared and paths point in every 
+direction.  In the middle of this open area is a large goblin statue.  
+It would seem that this Labyrinth is very complicated."
+
+extra{"goblin statue", "statue", "goblin"}
+"The goblin is depicted in the act of killing his enemy.  The brutality 
+of the death makes you want to cringe."
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+dilcopy grunt@gobtown();
+
+north to labc_1 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+south to labc_5 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+west to labc_4 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+east to labc_3 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labc_3
+title "On a Path in a Labyrinth"
+descr "Large green hedges block most of your path.  Dead leaves and 
+branches are strewn around on the ground in front of you.  You slowly 
+realize that the only path you can take now is the path from which you came."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are"
+extra {"branches", "dead leaves", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+west to labc_2 descr "The only thing you can see is tall green hedges 
+and a single path.";
+end
+
+labc_4
+title "On a Path in a Labyrinth"
+descr "Large green hedges block most of your path.  Dead leaves and 
+branches are strewn around on the ground in front of you.  You slowly 
+realize that the only path you can take now is the path from which you came."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"branches", "dead leaves", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+east to labc_2 descr "The only thing you can see is tall green hedges 
+and a single path.";
+end
+
+labc_5
+title "On a Path in a Labyrinth"
+descr "Large green hedges block most of your path.  Dead leaves and 
+branches are strewn around on the ground in front of you.  You slowly 
+realize that the only path you can take now is the path from which you came."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"branches","dead leaves", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+north to labc_2 descr "The only thing you can see is tall green hedges 
+and a single path.";
+end
+
+labc_6
+title "On a Path in a Labyrinth"
+descr "The path you are on is very confusing.  Green hedges form walls and 
+paths all around you.  You hear some noises in the hedges.  Turning your head 
+sharply you see nothing but green hedge.  There are paths leading off in all 
+directions except west."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+dilcopy grunt@gobtown();
+
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+
+east to labc_7 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+north to labd_1 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+south to labc_1 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labc_7
+title "On a Path in a Labyrinth"
+descr "The green hedges stretch high into the air preventing you from 
+seeing over them.  Strange noises invade your ears.  There is shuffling 
+of goblin feet everywhere, but you can never catch sight of them.  You 
+may go west or north from here."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+
+west to labc_6 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+north to labc_8 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labc_8
+title "On a Path in a Labyrinth"
+descr "With every step you take, the path you are on becomes increasingly 
+more confusing.  The green hedges loom over you, and occasionally they 
+seem aware of your presence.  Sometimes it even feels as though they are 
+pulling you in a certain direction.  There is a path to the west and 
+another to the south."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+
+south to labc_7 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+west to labc_9 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labc_9
+title "On a Path in the Labyrinth"
+descr "Dead leaves and branches are scattered along the ground in this 
+part of the Labyrinth.  Occasionally, you hear what sounds like goblins 
+grunting, and the green hedges that tower over you are silently laughing at 
+you.  A path leads off to the north and another leads to the east."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"branches", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+north to labc_10 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+east to labc_8 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labc_10
+title "On a Path in the Labyrinth"
+descr "The tall green hedges now block your path on all sides except to 
+the south.  There was a path here, or at least there seemed to have been 
+a path here, but now there is nothing but green hedges and dead leaves and 
+branches.  You have no choice but to turn back the way that you came."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"branches", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+south to labc_9 descr "The only thing you can see is tall green hedges 
+and a single path.";
+end
+
+labd_1
+title "On a Path in a Labyrinth"
+descr "Large green hedges block your path to the east.  Piles of dead 
+leaves are scattered around at your feet.  To your west you can hear what 
+sounds like goblins grunting.  Your other options are to the north and to 
+the south."
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+dilcopy rumble@gobtown(CMD_WEST);
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"dead leaves","leaves", "piles"}
+"There are very large piles of dead leaves here."
+
+west to labd_2 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+south to labc_6 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+north to labd_15 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labd_2
+title "On a Path in a Labyrinth"
+
+descr "Suddenly, things change. Green hedges are everywhere?  You look to
+the east and notice that there is a hedge there.  It wasn't there before. 
+Is there more to the hedges than just green leaves.  Dead leaves are all
+over the ground, and the crunching sound is irritating.  How could the
+hedges be so green when there are so many dead leaves on the ground?  You
+are left with only one direction in which you can go." 
+
+flags {UNIT_FL_NO_TELEPORT} 
+movement SECT_INSIDE 
+dilcopy crunch@gobtown(); 
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"dead leaves", "leaves"}
+"The leaves are scattered around your feet."
+
+west to labd_3 descr "The only thing you can see is tall green hedges 
+and a single path.";
+end
+
+labd_3
+title "On a Path in the Labyrinth"
+descr "The Labyrinth, being so vast, you can not tell where you are or if 
+you are going in the right direction.  Occasionally you can see the 
+goblin castle on the horizon.  Moving in that direction never seems to 
+get you closer.  You feel a very strong force pulling you in a northern 
+direction.  Then again there is a path to the east too."
+
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+	
+north to labd_4 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+east to labd_2 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labd_4
+title "On a Path in a Labyrinth"
+descr "The green hedges that form the walls and in turn the paths of the 
+Labyrinth stretch high above you.  Green is the predominant color which 
+is directly contrasted by the brown of the dead leaves on the ground at 
+your feet.  You may go on to the north or south."
+
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"branches", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+
+north to labd_5 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+south to labd_3 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labd_5
+title "On a Path in the Labyrinth"
+descr "It looks as if there is a turn in your path here.  The dead leaves 
+seem to have lessened.  The green hedges block the path to the north 
+and east.  You hear what could be described as goblin grunts to the west, 
+or is it to the south?  Choose your path wisely."
+
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+dilcopy grunt@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"branches","dead leaves", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+
+west to labd_6 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+south to labd_4 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labd_6
+title "On a Path in a Labyrinth"
+descr "There is something different here.  At first it is not noticable, 
+but upon closer inspection you notice that the hedges aren't quite as 
+well-kept as they were in other places in the Labyrinth.  The goblin 
+hedge clipper must not have made it this far.  Wonder what kept him from 
+his duty?  You can either go east or north from here."
+
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+dilcopy ouch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are, but 
+here they also look unmanaged."
+
+north to labd_7 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+east to labd_5 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labd_7
+title "On a Path in the Labyrinth"
+descr "The hedges around you are a little mismanaged in this section of 
+the Labyrinth.  The goblin hedge clipper must not have made it this far.  
+Stray branches from the unkempt hedges reach out and snag your hair.  The 
+dead leaves on the ground crunch under your boots. Eerie sounds reach 
+your ears. This is not the most pleasant place to be in. Your path now 
+leads to the west, to the south, or to the east."
+
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+dilcopy ouch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are, but 
+here the hedges also look unmanaged."
+extra {"branches"}
+"The stray branches look like fingers reaching for you from the unkempt 
+hedges."
+extra {"leaves"}
+"Scattered on the ground are dead leaves that crunch as you walk on them."
+
+south to labd_6 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+west to labd_8 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+east to labd_11 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labd_8
+title "On a Path in a Labyrinth"
+descr "The hedges in all of their green leafy stature loom high above 
+you.  At this point in the Labyrinth the hedges are so unkept that you 
+can barely see the path anymore.  That goblin hedge clipper had better 
+get on the ball.  How can you make your way through the Labyrinth if 
+you can't even see where you are going?  This is just a guess but you 
+may be able to go either to the north or to the east."
+
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+dilcopy ouch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are, but 
+here the hedges also look unmanaged."
+
+north to labd_9 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+east to labd_7 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labd_9
+title "On a Path in a Labyrinth"
+descr "The visibility of the path you are on is very bad.  The large 
+green hedges that form the walls and in turn the paths of the Labyrinth 
+are badly overgrown.  If there is a goblin hedge clipper then he is being 
+very derelict in his duties.  Best idea would be to continue to the north 
+or to the south."
+
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+dilcopy ouch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are, but 
+here the hedges also look unmanaged."
+
+south to labd_8 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+north to labd_10 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labd_10
+title "On a Path in a Labyrinth"
+descr "The hedges around you are a little mismanaged in this section of 
+the Labyrinth.  The goblin hedge clipper must not have made it this far.  
+Stray branches from the unkept hedges reach out and snag your hair.  The 
+dead leaves on the ground crunch under your boots. Eerie sounds reach 
+your ears. This is not the most pleasant place to be in. The only 
+directions you can go are north and south."
+
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+dilcopy ouch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are, but 
+here the hedges also look unmanaged."
+extra {"branches"}
+"The stray branches look like fingers reaching for you from the unkept 
+hedges."
+extra {"leaves"}
+"Scattered on the ground are dead leaves that crunch as you walk on them."
+
+north to labd_7 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+south to labd_9 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labd_11
+title "On a Path in a Labyrinth"
+descr "The green hedges are well groomed in this area of the Labyrinth.  
+Dead leaves still litter the ground at your feet however.  The crunching 
+sound is enough to drive a person crazy.  Above the continuous crunching 
+of the leaves, you can hear what could be described as goblins grunting.  
+You may go either west or north."
+
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"leaves"}
+"Scattered on the ground are dead leaves that crunch as you walk on them."
+	
+west to labd_7 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+north to labd_12 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labd_12
+title "On a Path in a Labyrinth"
+descr "Large green hedges loom high above you.  Dead leaves cover your
+feet and the continuous crunching is enough to make a person nuts.  You
+sense that you are being watched on all sides, but looking around, you see
+nothing.  You're continuously reminded that things are never what they seem
+in this Labyrinth.  If you look to the east you see the path stretching
+on, and you could also go south." 
+
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"leaves"}
+"Scattered on the ground are dead leaves that crunch as you walk on them."
+
+east to labd_13 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+south to labd_11 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labd_13
+title "On a Path in a Labyrinth"
+descr "Underfoot there are plenty of dead leaves.  The green hedges 
+around you are very well-kept here.  To the south you can hear what can 
+be described as goblins grunting, but there is a loud roaring sound that 
+can be heard just over the goblins.  It almost sounds like a hurt 
+animal.  You may go south towards the sound or you could go west.  All 
+other directions are blocked by the hedges."
+
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"leaves"}
+"Scattered on the ground are dead leaves that crunch as you walk on them."
+
+south to labd_14 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+west to labd_12 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labd_14
+title "On a Path in the Labyrinth"
+descr "The green hedges block your path to the south and to the west.  A 
+large tree grows directly in the middle of the path here.  A strange 
+contraption hangs down from the tree.  It almost looks like a harness for 
+a very large animal.  Strange noises, almost like a hurt animal can be 
+heard to the east.  You notice a path to the north too."
+
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"large tree", "tree"}
+"A very large tree grows directly in the middle of the path here.  The 
+tree is so large, looking upward, you cannot see the top." 
+extra {"harness", "contraption"}
+"Looking closely at the harness you can see what can only be described as 
+teeth marks.  It would seem that whatever animal was in this harness has 
+chewed it's way out."
+
+east to labd_15 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+north to labd_13 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labd_15
+title "On a Path in a Labyrinth"
+descr "Standing here you can hear a very loud roaring sound.  The sound 
+is so loud you can not be sure from which direction it is coming from.  
+You can also hear what can be described as goblin laughter, and also 
+goblins screaming. You also notice that a space has opened up.  In the 
+middle of this open area is a large goblin statue. The green hedges shake 
+with each re-occurring roar. You may go either east or west from here."
+
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+dilcopy grunt@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are.  You 
+also see them shake when you hear the loud roaring."
+extra {"goblin statue", "statue", "goblin"}
+"The goblin is in a marching position.  He is dressed in military garb.  
+Looking at him you can't help but notice how ugly he is."
+
+east to labe_1 descr "Looking in this direction you can see stone walls 
+instead of green hedges."; 
+west to labd_14 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labe_1
+title "On a Stone Path in a Labyrinth"
+descr "Where there was large green hedges now stand large grey walls.  
+The floor is made of stone, and now all you can see are the dull grey 
+walls.  The dead leaves and branches that were on the ground are now gone 
+too.  There is something strange about this section of the Labyrinth.  To 
+the east and west you can see the familiar green color of the hedges you 
+left behind.  There are also stone paths to the north and to the south."
+
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+
+extra {"large grey walls", "grey walls", "grey wall", "walls", "wall"}
+"Large, very depressing grey walls have replaced the green hedges.  The 
+grey is so depressing you almost hope for the annoying green and the 
+crunching leaves."
+
+east to labf_1 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+west to labd_15 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+north to labe_2 descr "Looking in this direction you can see stone walls 
+instead of green hedges.";
+south to labe_5 descr "Looking in this direction you can see stone walls 
+instead of green hedges.";
+end
+
+labe_2
+title "On a Stone Path in a Labyrinth"
+descr "Large grey stone walls are now standing where the green hedges 
+used to be. Their stone cold look is enough to drive a shiver down your 
+spine.  There are no leaves or branches anywhere.  In fact, there are no 
+distingiushing marks anywhere in this area of the Labyrinth.  Paths lead 
+off to the south, east, and west."
+
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy grunt@gobtown();
+
+extra {"large grey walls", "grey walls", "grey wall", "walls", "wall"}
+"Large, very depressing grey walls have replaced the green hedges.  The 
+grey is so depressing you almost hope for the annoying green and the 
+crunching leaves."
+
+south to labe_1 descr "Looking in this direction you can see stone walls 
+instead of green hedges.";
+north to labd_4 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+west to labe_4 descr "Looking in this direction you can see stone walls 
+instead of green hedges.";
+east to labe_3 descr "Looking in this direction you can see stone walls 
+instead of green hedges.";
+end
+
+labe_4
+title "On a Stone Path in a Labyrinth"
+descr "Large grey stone walls are now standing where the green hedges 
+used to be. Their stone cold look is enough to drive a shiver down your 
+spine.  There are no leaves or branches anywhere.  In fact, there are no 
+distingiushing marks anywhere in this area of the Labyrinth.  Paths lead 
+only to the east."
+
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+
+extra {"large grey walls", "grey walls", "grey wall", "walls", "wall"}
+"Large, very depressing grey walls have replaced the green hedges.  The 
+grey is so depressing you almost hope for the annoying green and the 
+crunching leaves."
+
+east to labe_2 descr "Looking in this direction you can see stone walls 
+instead of green hedges.";
+end
+
+labe_3
+title "On a Stone Path in a Labyrinth"
+descr "Large grey stone walls are now standing where the green hedges 
+used to be. Their stone cold look is enough to drive a shiver down your 
+spine.  There are no leaves or branches anywhere.  In fact, there are no 
+distingiushing marks anywhere in this area of the Labyrinth.  Paths lead 
+only to the west."
+
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+
+extra {"large grey walls", "grey walls", "grey wall", "walls", "wall"}
+"Large, very depressing grey walls have replaced the green hedges.  The 
+grey is so depressing you almost hope for the annoying green and the 
+crunching leaves."
+
+west to labe_2 descr "Looking in this direction you can see stone walls 
+instead of green hedges.";
+end
+
+labe_5
+title "On a Stone Path in a Labyrinth"
+descr "Large grey stone walls are now standing where the green hedges 
+used to be. Their stone cold look is enough to drive a shiver down your 
+spine.  There are no leaves or branches anywhere.  In fact, there are no 
+distingiushing marks anywhere in this area of the Labyrinth.  Paths only 
+to the west and north."
+
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy grunt@gobtown();
+
+extra {"large grey walls", "grey walls", "grey wall", "walls", "wall"}
+"Large, very depressing grey walls have replaced the green hedges.  The 
+grey is so depressing you almost hope for the annoying green and the 
+crunching leaves."
+
+west to labe_6 descr "Looking in this direction you can see stone walls 
+instead of green hedges.";
+north to labe_1 descr "Looking in this direction you can see stone walls 
+instead of green hedges.";
+end
+
+labe_6
+title "On a Stone Path in a Labyrinth"
+descr "Large grey stone walls are now standing where the green hedges 
+used to be. Their stone cold look is enough to drive a shiver down your 
+spine.  There are no leaves or branches anywhere.  In fact, there are no 
+distingiushing marks anywhere in this area of the Labyrinth.  Paths lead 
+of to the south and east."
+
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+
+extra {"large grey walls", "grey walls", "grey wall", "walls", "wall"}
+"Large, very depressing grey walls have replaced the green hedges.  The 
+grey is so depressing you almost hope for the annoying green and the 
+crunching leaves."
+
+south to labe_7 descr "Looking in this direction you can see stone walls 
+instead of green hedges.";
+east to labe_5 descr "Looking in this direction you can see stone walls 
+instead of green hedges.";
+end
+
+labe_7
+title "On a Stone Path in a Labyrinth"
+descr "Large grey stone walls are now standing where the green hedges 
+used to be. Their stone cold look is enough to drive a shiver down your 
+spine.  There are no leaves or branches anywhere.  In fact, there are no 
+distingiushing marks anywhere in this area of the Labyrinth.  Paths lead 
+off to the north and south."
+
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+
+extra {"large grey walls", "grey walls", "grey wall", "walls", "wall"}
+"Large, very depressing grey walls have replaced the green hedges.  The 
+grey is so depressing you almost hope for the annoying green and the 
+crunching leaves."
+
+north to labe_6 descr "Looking in this direction you can see stone walls 
+instead of green hedges.";
+south to labb_2 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labf_1
+title "On a Path in a Labyrinth"
+descr "The green hedges that form the walls and in turn the paths loom 
+high above you, but something is different here.  You notice that an 
+area of space has opened up.  In the middle of this open area is a large 
+goblin statue. To the left, under the shaddow of the hedge you can see a  
+pile of bones.  You can go in any direction from here."
+
+flags{UNIT_FL_NO_TELEPORT, UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"leaves"}
+"Scattered on the ground are dead leaves that crunch as you walk on them."
+extra {"bones", "bone", "pile"}
+"Looking closely at the pile of bones you can see they are those of 
+another adventurer that tried to make it through the Labyrinth."
+extra {"goblin statue", "statue", "goblin"}
+"The goblin depicted in the statue has been caught in the act of eating.  
+Bits of flesh streak it's ugly warted face with blood, and underneath him 
+are the bones of his enemy."
+
+west to labe_1 descr "Looking in this direction you can see stone walls 
+instead of green hedges.";
+north to labf_2 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+east to labd_15 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+south to labf_12 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labf_2
+title "On a Path in a Labyrinth"
+descr "The green hedges in all of their leafy glory stretch high into the 
+air, thereby not permitting you to see over them.  Occasionally you can 
+see the castle to the east of you, although moving in that direction 
+doesn't always get you to where you want to be.  The dead leaves still 
+coat the ground you walk upon.  The hedges block your path to the north 
+and west.  You may only go south or east."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+dilcopy rumble@gobtown(CMD_EAST);
+dilcopy grunt@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"leaves"}
+"Scattered on the ground are dead leaves that crunch as you walk on them."
+
+east to labf_3 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+south to labf_1 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labf_3
+title "On a Path in a Labyrinth"
+descr "You notice a subtle shift as you walk this way.  You slowly 
+realize that the way which you came in is now blocked by a large green 
+hedge.  The leaves on the ground seem denser, and the branches from the 
+hedges reach out and grab your hair.  You have only one way in which you  
+can go, and this could be a large set back."
+
+flags{UNIT_FL_NO_TELEPORT} 
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+dilcopy ouch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are, and you 
+also notice many branches reaching out to you."
+extra {"leaves"}
+"Scattered on the ground are dead leaves that crunch as you walk on them."
+
+north to labf_4 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labf_4
+title "On a Path in a Labyrinth"
+descr "This has to be an unused part of the Labyrinth.  There are piles 
+of leaves here and there, and the branches from the hedges reach out and 
+tug on your hair and extremities.  It almost feels as though they are 
+pulling you towards uncertain doom.  The hedges block your path except to 
+the south and east."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+dilcopy ouch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are, but 
+they are also unmanaged."
+extra {"leaves"}
+"Scattered on the ground are dead leaves that crunch as you walk on them."
+
+east to labc_3 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+south to labf_3 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labf_12
+title "On a Path in a Labyrinth"
+descr "The green hedges reach high into the air giving the feeling of a 
+mouse being trapped in a maze.  The leaves crunch underfoot creating a 
+mindless song that plays in your head. Far to the east you see the 
+castle.  You are at an intersection so you may go in any direction."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"leaves"}
+"Scattered on the ground are dead leaves that crunch as you walk on them."
+extra {"castle", "east"}
+"The goblin King's castle stands on top of a hill shrouded in black mist."
+
+east to labf_13;
+south to labg_1 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+west to labf_15 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+north to labf_1 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labf_13
+title "On a Path in a Labyrinth"
+descr "The large green hedges tower high above you.  They almost 
+look down on you, the crunching of the leaves becomes a laughter that 
+mocks your presence here.  To the east the castle looms closer.  You may 
+go east or west from here."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"leaves"}
+"Scattered on the ground are dead leaves that crunch as you walk on them."
+extra {"castle", "east"}
+"The goblin King's castle stands on top of a hill shrouded in black mist."
+
+east to labf_14;
+west to labf_12 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labf_14
+title "On a Path in a Labyrinth"
+descr "Like so many times before, you have reached a dead end in the 
+Labyrinth.  You can still see the castle to the east, but now you must 
+look for a different path to take you there.  The crunching of the leaves 
+turns into hysterical laughter, but there is a feeling that you are 
+getting closer to your goal."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"leaves"}
+"Scattered on the ground are dead leaves that crunch as you walk on them."
+extra {"castle", "east"}
+"The goblin King's castle stands on top of a hill shrouded in black mist."
+
+west to labf_13 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labf_15
+title "On a Path in a Labyrinth"
+descr "There is now a lot of shifting amongst the hedges.  There is almost 
+a forboding in the air.  You feel as though the hedges want you to go 
+south, but the path to the east looks somewhat promising too.  To the 
+south the leaves seem less dense, and the hedges somehow seem greener 
+than any other part of the Labyrinth.  You may go either south or east."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+dilcopy rumble@gobtown(CMD_SOUTH);
+dilcopy grunt@gobtown();
+
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"leaves"}
+"Scattered on the ground are dead leaves that crunch as you walk on 
+them.  To the south they seem less dense."
+
+south to labf_16 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+east to labf_12 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labf_16
+title "On a Path in a Labyrinth"
+descr "There is a slamming sound from directly behind you. Whirling 
+around, you notice the path you took has led you astray again. You can not 
+go back from whence you came.  The scattered leaves on the ground crunch 
+with laughter.  Nothing is as it seems in this Labyrinth.  You may only 
+go south."
+
+flags{UNIT_FL_NO_TELEPORT, UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"leaves"}
+"Scattered on the ground are dead leaves that crunch as you walk on them."
+
+south to labc_9 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labg_1
+title "On a Path in a Labyrinth"
+descr "Every move that you make through this Labyrinth is accented by the 
+goblins that you meet and the way that the hedges seem to laugh and mock 
+your travel.  Around every corner there is another path that you might 
+take to the city before the goblin castle, but in turn you may choose 
+wrong.  Right now you are at an intersection.  You may go in any 
+direction."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"branches", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+
+north to labf_12 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+south to labg_10 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+west to labg_7 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+east to labg_2 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labg_2
+title "On a Path in a Labyrinth"
+descr "The silent mocking of the hedges does not seem so bad here.  Even 
+the crunching laughter of the leaves has died down a bit.  The path looks 
+a bit clearer, and you can't hear as many goblins either.  There is a 
+path to the west and also one to the south.  The green hedges block your 
+progress in any other direction."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"branches", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+
+west to labg_1 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+south to labg_3 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labg_3
+title "On a Path in a Labyrinth"
+descr "The large green hedges loom high above you.  The dead leaves and 
+branches crunch and scrape under your feet.  You no longer get the sense 
+that you are being mocked here.  Sounds have become just sounds.  Might 
+you be getting closer to your destination?  You can go east or north from 
+here."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"branches", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+east to labg_4 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+north to labg_2 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labg_4
+title "On a Path in a Labyrinth"
+descr "An eerie silence has fallen over this part of the Labyrinth.  There
+is still the constant crunching of the leaves, and scrapping of dead
+branches, but there is no real life here.  The silent mocking has stopped. 
+Maybe this is finally the right track.  Paths lead in all directions but
+east." 
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+dilcopy grunt@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"branches", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+
+north to labg_5 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+south to labg_6 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+west to labg_3 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labg_5
+title "On a Path in a Labyrinth"
+descr "Dead leaves crunch underfoot, and the tall green hedges loom over 
+you, but you realize that there is nowhere for you to go from here.  
+The silent mocking stopped because you were going the wrong way.  Nothing 
+is as it seems.  Now you must turn around and go back the way you came."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"branches", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+
+south to labg_4 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labg_6
+title "On a Path in a Labyrinth"
+descr "Dead leaves crunch underfoot, and the tall green hedges loom over 
+you, but you realize that there is nowhere for you to go from here.  
+The silent mocking stopped because you were going the wrong way.  Nothing 
+is as it seems.  Now you must turn around and go back the way you came."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"branches", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+north to labg_4 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labg_7
+title "On a Path in a Labyrinth"
+descr "The silent mocking of the hedges does not seem so bad here.  Even 
+the crunching laughter of the leaves has died down a bit.  The path looks 
+a bit clearer, and you can't hear as many goblins either.  There is a 
+path to the east and also one to the south.  The green hedges block your 
+progress in any other direction."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"branches", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+
+east to labg_1 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+south to labg_8 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labg_8
+title "On a Path in a Labyrinth"
+descr "The large green hedges loom high above you.  The dead leaves and 
+branches crunch and scrape under your feet.  You no longer get the sense 
+that you are being mocked here.  Sounds have become just sounds.  Might 
+you be getting closer to your destination?  You can go west or north from 
+here."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+dilcopy grunt@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"branches", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+west to labg_9 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+north to labg_7 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labg_9
+title "On a Path in a Labyrinth"
+descr "Dead leaves crunch underfoot, and the tall green hedges loom over 
+you, but you realize that there is nowhere for you to go from here.  
+The silent mocking stopped because you were going the wrong way.  Nothing 
+is as it seems.  Now you must turn around and go back the way you came."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"branches", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+
+east to labg_8 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labg_10
+title "On a Path in a Labyrinth"
+descr "There is a subtle shift and looking around, you realize the path 
+to the north is no longer there.  You are now limited in which directions 
+you want to go in.  The large green hedges loom over you and laugh 
+silently as you walk among them.  The dead leaves and branches crunch and 
+break underfoot.  You can go in any direction except north from here."
+
+flags{UNIT_FL_NO_TELEPORT, UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"branches", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+north to labg_1 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+west to labg_15 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+east to labg_11 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+south to labh_1 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labg_11
+title "On a Path in a Labyrinth"
+descr "The green hedges reach high into the air.  Once again, you get the 
+distinct sense that they are mocking you, but it seems almost funny.  
+Almost as if they are trained to do it.  Hedges?  Trained?  Yet that is 
+the feeling that you get.  The leaves still crunch underfoot, and paths 
+lead off to the east and to the west."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"branches", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+west to labg_10 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+east to labg_13 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labg_13
+title "On a Path in a Labyrinth"
+descr "The crunching and the scraping of the leaves is enough to drive a 
+person crazy.  The green of the hedges around you will probably give you 
+nightmares, and if you hear one more goblin grunting you may scream.  You 
+do notice that the silent mocking of the hedges has died down a bit.  
+Paths lead of to the west and to the south."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"branches", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+south to labg_14 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+west to labg_11 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labg_14
+title "On a Path in a Labyrinth"
+descr "There is almost silence here.  The leaves still crunch underfoot, 
+and you can still hear the occasional goblin grunt, but the mocking 
+undertone is gone.  Slowly, you realize that you are at a dead end.  Your 
+only choice is to turn around and go back the way that you came."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"branches", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+north to labg_13 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labg_15
+title "On a Path in a Labyrinth"
+descr "The green hedges reach high into the air.  Once again you get the 
+distinct sense that they are mocking you, but it seems almost funny.  
+Almost as if they are trained to do it.  Hedges?  Trained?  Yet that is 
+the feeling that you get.  The leaves still crunch underfoot, and paths 
+lead off to the east and to the west."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"branches", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+west to labg_16 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+east to labg_10 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labg_16
+title "On a Path in a Labyrinth"
+descr "The silent mocking of the hedges is dying down a bit here.  Looking 
+to the north you can see the outline of the goblin castle.  In the past 
+the castle was always to the east of you.  Could this mean that you found 
+the right path?  You may go north or east."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+dilcopy grunt@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"branches"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+extra {"leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+extra {"castle", "north"}
+"The goblin King's castle stands on top of a hill shrouded in black mist."
+
+north to labg_17;
+east to labg_15 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labg_17
+title "On a Path in a Labyrinth"
+descr "The castle looms closer to you now.  It now looks as though it is 
+on the west horizon.  You can almost hear the sound of the goblins from 
+the city before the castle.  The hedges still mark your path, and right 
+now you can go west towards the castle or south."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"leaves"}
+"Scattered on the ground are dead leaves that crunch as you walk on them."
+extra {"castle", "west"}
+"The goblin King's castle stands on top of a hill shrouded in black mist."
+
+west to labg_18;
+south to labg_16 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labg_18
+title "On a Path in a Labyrinth"
+descr "The castle is before you.  You can almost smell the filth from the 
+city, but as you take a step towards the gates, the image fades.  You 
+realize that you are still in the Labyrinth at a dead end, and the castle is 
+not even in sight.  You must try to remember that nothing is as it seems  
+here."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"leaves"}
+"Scattered on the ground are dead leaves that crunch as you walk on them."
+extra {"castle"}
+"The castle looms before you, but then begins to shimmer and fade right 
+before your eyes."
+extra {"city gates","gates", "gate"}
+"The city gates are within arms reach, but soon they take on a see- 
+through quality and fade from your vision leaving you with nothing but 
+leaves and hedges."
+
+east to labg_17 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labh_1
+title "On a Path in a Labyrinth"
+descr "The air around you feels hot from the hostility radiating from the 
+large green hedges all around you.  The crunching laughter of the leaves 
+underfoot is monstrous.  You almost have to place your hands over your 
+ears.  This area of the Labyrinth looks rather unused.  Almost as if no 
+one had been through here in a very long time.  The hedges block you to 
+the south and west."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"leaves"}
+"Scattered on the ground are dead leaves that crunch as you walk on them."
+
+north to labg_10 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+east to labh_6 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labh_6
+title "On a Path in a Labyrinth"
+descr "The leaves are now roaring with crunching laughter, and the silent 
+mocking from the hedges is ever more apparent.  To the east you can see 
+the outline of the castle, and there is a path in that direction.  You 
+can also go west or south."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"leaves"}
+"Scattered on the ground are dead leaves that crunch as you walk on them."
+extra {"castle", "east"}
+"The goblin King's castle stands on top of a hill shrouded in black mist."
+
+east to labh_10;
+west to labh_1 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+south to labh_11 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labh_7
+title "On a Path in a Labyrinth"
+descr "The large green hedges loom high above you.  The dead leaves and 
+branches crunch and scrape under your feet.  You no longer get the sense 
+that you are being mocked here.  Sounds have become just sounds.  Might 
+you be getting closer to your destination?  You can go west or north from 
+here."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+dilcopy grunt@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"branches", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+west to labh_6 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+north to labh_8 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labh_8
+title "On a Path in a Labyrinth"
+descr "An eerie silence has fallen over this part of the Labyrinth.  
+There is still the constant crunching of the leaves, and scraping of 
+dead branches, but there is no real life here.  The silent mocking has 
+stopped.  You wonder if you have finally got on the right track.  Paths 
+lead in all directions but north."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"branches", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+south to labh_7 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+west to labh_10 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+east to labh_9 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labh_9
+title "On a Path in a Labyrinth"
+descr "Dead leaves crunch underfoot, and the tall green hedges loom over 
+you, but you realize that there is nowhere for you to go from here.  
+The silent mocking stopped because you were going the wrong way.  Nothing 
+is as it seems.  Now you must turn around and go back the way you came."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"branches", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+west to labh_8 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labh_10
+title "On a Path in a Labyrinth"
+descr "Dead leaves crunch underfoot, and the tall green hedges loom over 
+you, but you realize that there is nowhere for you to go from here.  
+The silent mocking stopped because you were going the wrong way.  Nothing 
+is as it seems.  Now you must turn around and go back the way you came."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"branches", "leaves"}
+"Scattered on the ground are lots of dead leaves and stray branches."
+
+east to labh_8 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labh_11
+title "On a Path in a Labyrinth"
+descr "The leaves underfoot are now screaming with crunching laughter.  
+The hedges radiate hostile energy, and to the east you can see the gates 
+of the goblin city, and behind them the castle looms high.  Dare you go 
+towards them when all other attempts have landed you in an earlier part 
+of the Labyrinth?"
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"leaves"}
+"Scattered on the ground are dead leaves that crunch as you walk on them."
+extra {"castle", "east"}
+"The goblin King's castle stands on top of a hill shrouded in black mist."
+extra { "city gates", "gates", "gate"}
+"The gates are to your east, and this time they look real."
+
+south to labh_13 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+east to labh_15;
+west to labh_12 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+north to labh_6 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labh_12
+title "On a Path in a Labyrinth"
+descr "The hostility and the screaming laughter has stopped.  There is an 
+almost eerie silence.  You have the distinct feeling that if you stay 
+here much longer something terrible will happen and you will not be able 
+to finish the Labyrinth.  Your only choice of direction is east."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"leaves"}
+"Scattered on the ground are dead leaves that crunch as you walk on them."
+
+east to labh_11 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labh_13
+title "On a Path in a Labyrinth"
+descr "Ominous silence has taken over this part of the Labyrinth.  The 
+leaves now just crunch as they always have underfoot, and the hedges 
+seem much less hostile.  There is a path to the east and also to the 
+north.  On the eastern horizon you can see the castle."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+dilcopy grunt@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"leaves"}
+"Scattered on the ground are dead leaves that crunch as you walk on them."
+extra {"castle", "east"}
+"The goblin King's castle stands on top of a hill shrouded in black mist."
+ 
+north to labh_11 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+east to labh_14 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labh_14
+title "On a Path in a Labyrith"
+descr "You can see the castle looming above you, but the path in that 
+direction is now blocked.  You can only turn around and find an alternate 
+route there.  As you turn around the leaves crunch underfoot."
+
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are."
+extra {"leaves"}
+"Scattered on the ground are dead leaves that crunch as you walk on them."
+extra {"castle", "east"}
+"The goblin King's castle stands on top of a hill shrouded in black mist."
+
+west to labh_13 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+end
+
+labh_15
+title "Before the Gates to the Goblin City"
+descr "As you step out from under the green plumage of the hedges, you 
+realize that you have finally made it out of the Labyrinth.  The silent 
+mocking has stopped, and this time it strikes fear in your heart.  As you 
+look at the gates to the city you see that they are made of heavy grey 
+metal.  Although you can't see through them you can certainly smell 
+the occupants of the city."
+
+flags{UNIT_FL_NO_TELEPORT, UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+dilcopy crunch@gobtown();
+dilcopy grunt@gobtown();
+
+extra {"green hedges", "green hedge", "hedges", "hedge"}
+"As you look at the hedges you notice how tall and green they are and 
+that you are finally out from under them."
+extra {"leaves"}
+"Scattered before the gate are dead leaves that crunch as you walk on them."
+extra {"city gates", "gates", "gate"}
+"The gates to the Goblin City are very large and made of heavy dark grey 
+metal.  They are meant to protect and you have no doubt that they do."
+
+west to labh_11 descr "The only thing you can see is tall green hedges 
+and lots of different paths.";
+east to road_A5@gobtown1 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"gates", 
+"gate"} descr "Large heavy grey metal gates block your way.";
+end
+
+my_room
+names {"solar"}
+title "&c+mThe Solar&cw"
+descr "This room is very large and circular.  The floor is made of cool
+grey stone.  Looking up you can see the sky through a hole in the roof.  A
+large bed covered in lace is in the middle of the floor here.  At the foot
+of the bed there is a beautifully carved chest.  Against one portion of
+the wall is a ceramic basin and pitcher. This room is full of light and
+has a very friendly air about it." 
+
+movement SECT_INSIDE
+
+extra {"floor"}
+"The floor is made of large, flat, grey stone.  This is the type of floor 
+that you can easily walk barefoot upon."
+extra {"hole", "roof", "sky"}
+"The hole in the roof lets in the bright warm sunlight.  The sunlight 
+brightens the room, and gives it a light friendly feeling."
+extra {"bed"}
+"The bed appears to be made of the same grey stones that the floor is 
+made of.  It almost looks as if the bed was etched from the floor.  There 
+is a mattress and pillows on the bed."
+extra {"mattress", "pillows"}
+"The mattress is king sized and made from the softest goose down.  The 
+pillows are large and appear to be very comfortable."
+extra {"basin", "pitcher"}
+"The basin and the pitcher look to be hand made.  This appears to be the 
+place where the occupant washes." 
+extra {"lace"}
+"The lace is so fine you can barely see it.  It gives the appearance of 
+mist falling over the bed."
+extra {"chest"}
+"The chest looks like it is made of the finest oak.  There is an 
+intricate picture carved into the lid of the chest."
+extra {"picture", "carving", "lid"}
+"Carved into the lid of the chest is a picture of the sun shining down 
+on a beautiful valley." 
+
+south to labh_15 descr "That way will take you to the gates of the goblin 
+city"; 
+north to laba_1 descr "That way will take you to the beginning of the 
+Labyrinth"; 
+east to labe_1 descr "That way lands you smack dab in the middle of the 
+Labyrinth"; 
+end
+
+
+
+%objects
+
+/*Quest objects*/
+
+light_bag
+names {"magic bag", "bag"}
+title "a magic bag"
+descr "A very magical bag lies on the ground here."
+extra {} 
+"This bag looks very magical."
+extra {"$identify"}
+"This bag has a very magical nature.  If you put an item in it, it will 
+get lighter."
+extra {"$improved identify"}
+"This bag has a very magical nature.  If you put an item into it, it's  
+weight will decrease by half."
+
+dilcopy bag@gobtown();
+manipulate {MANIPULATE_TAKE,MANIPULATE_ENTER}
+CONTAINER_DEF(200)
+weight 5
+cost 20 PLATINUM_PIECE
+end
+
+
+/*Labyrinth Objects*/
+
+hedge_clipper
+names {"hedge clippers", "sword", "clippers"}
+title "hedge clippers"
+descr "Hedge clippers are here."
+extra {}
+"These hedge clippers are very large, and very sharp.  They must be for 
+some very tough hedges."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_BROAD_SWORD,0,0)
+
+cost 4 SILVER_PIECE
+rent 2 SILVER_PIECE
+
+end
+
+
+pewter_ring
+names {"pewter ring", "ring"}
+title "a pewter ring"
+descr "A very ordinary pewter ring lies on the ground here."
+
+flags {UNIT_FL_MAGIC}
+
+extra {}
+"This ring is made of pewter and is plain in appearance."
+extra {"$identify"}
+"When you wear this ring it will increase your magic."
+extra {"$improved identify"}
+"Your magic increases by +2."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FINGER}
+
+MAG_TRANSFER(+2)
+
+dilcopy abi_restrict@function(ABIL_MAG,100,0,0,"");
+dilcopy abi_restrict@function(ABIL_BRA,100,0,0,"");
+
+weight 1
+
+
+cost 5 SILVER_PIECE
+rent 2 SILVER_PIECE
+
+end
+
+dark_bracer
+names {"dark bracer", "bracer"}
+title "a dark bracer"
+descr "A dark bracer is lying here."
+extra {} 
+"This is actually an ordinary looking dark colored bracer."
+extra {"$identify"}
+"When you wear this bracer it will increase your magic."
+extra {"$improved identify"}
+"Your magic increases by +2."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_WRIST}
+
+dilcopy abi_restrict@function(ABIL_MAG,100,0,0,"");
+dilcopy abi_restrict@function(ABIL_BRA,100,0,0,"");
+
+weight 2
+
+MAG_TRANSFER(+2)
+
+cost 5 SILVER_PIECE
+rent 3 SILVER_PIECE
+
+end
+
+
+dark_shield
+names {"dark shield", "shield"}
+title "a dark shield"
+descr "A dark shield seems to be hiding in the shadows."
+extra {} "For such a lightweight shield, this one appears to be very 
+durable."
+extra {"$identify"}
+"This shield will improve you skll in shield, and your dexterity too."
+extra {"$improved identify"}
+"Your shield skill will increase by 9%, and your dexterity by 2."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_SHIELD}
+
+SHIELD_DEF(SHIELD_LARGE,7,7)
+dilcopy abi_restrict@function(ABIL_DEX,100,0,0,"");
+
+weight 15
+
+cost 5 SILVER_PIECE
+rent 3 SILVER_PIECE
+
+DEX_TRANSFER(+2)
+SKILL_TRANSFER(SKI_SHIELD, +9)
+end
+
+glasses
+names {"glasses", "pair"}
+title "a pair of glasses"
+descr "A pair of glasses lay here looking lost."
+extra {}
+"This pair of glasses look like they belong to a very wise person."
+
+CHAR_FLAG_TRANSFER(CHAR_DETECT_INVISIBLE)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+
+cost 2 SILVER_PIECE
+rent 1 SILVER_PIECE
+
+end
+
+white_shirt
+names {"old white shirt","old shirt", "shirt"}
+title "an old white shirt"
+descr "An old looking white shirt has been discarded here."
+extra {}
+"This shirt looks old, but amazingly, it is still white."
+
+ARMOUR_CLOTHES(0,0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+
+weight 1
+cost 2 SILVER_PIECE
+rent 1 SILVER_PIECE
+
+end
+
+brown_pants
+names {"brown breeches", "breeches"}
+title "a pair of brown breeches"
+descr "A pair of brown breeches lies upon the ground here."
+extra {}
+"These breeches are deep brown in color, and a layer of dust covers the 
+knees.  It is almost as if the former owner spent a lot of time on their 
+knees."
+
+ARMOUR_CLOTHES(0,0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+weight 1
+cost 2 SILVER_PIECE
+rent 1 SILVER_PIECE
+
+end
+
+dwarf_sword
+names {"short sword", "sword"}
+title "a short sword"
+descr "A small wooden short sword lies here forgotten."
+extra {}
+"This weapon is made of wood that appears to be whittled into the 
+shape of a sword.  Although it is crude in its appearance, you realize 
+it took skill and time to make it."
+
+WEAPON_DEF(WPN_SHORT_SWORD,-3,0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+weight 2
+
+cost 4 SILVER_PIECE
+rent 2 SILVER_PIECE
+
+end
+
+goblin_halberd
+names {"crude halberd", "halberd"}
+title "a crude halberd"
+descr "A crude halberd is lying on the ground here."
+extra {}
+"This weapon looks like a spear with an axe at the top.  It is crudely 
+fashioned with a piece of sharp metal tied to a long wooden branch from a 
+bent tree."
+
+WEAPON_DEF(WPN_HALBERD,-2,0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+weight 2
+
+cost 4 SILVER_PIECE
+rent 2 SILVER_PIECE
+
+end
+
+goblin_trident
+names {"small pitchfork", "pitchfork","fork"}
+title "a small pitchfork"
+descr "A small pitchfork is sticking out of the ground here."
+extra {}
+"It looks like your typical three pronged pitchfork, but it looks as 
+though it was made for a very small creature."
+WEAPON_DEF(WPN_TRIDENT,0,0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+
+weight 1
+
+cost 4 SILVER_PIECE
+rent 2 SILVER_PIECE
+
+end
+
+goblin_spear
+names {"sharp goblin spear", "goblin spear", "sharp spear", "spear"}
+title "a sharp goblin spear"
+descr "A sharp goblin spear is here lying in a pool of blood."
+extra {}
+"It looks like it would hurt."
+
+WEAPON_DEF(WPN_SPEAR,0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+
+weight 1
+
+cost 4 SILVER_PIECE
+rent 2 SILVER_PIECE
+
+end
+
+
+
+%mobiles
+
+/*Labyrinth Mobs*/
+
+goblin_clipper
+names {"goblin hedge clipper", "clipper", "goblin"}
+title "a goblin hedge clipper"
+descr "A goblin hedge clipper is here sleeping."
+extra {}
+"This goblin is a hedge clipper, but he is being very derelict in his 
+duties because it would appear he has fallen asleep on the job."
+
+M_AVG_GOBLIN(75, SEX_MALE)
+alignment -1000
+money 3 COPPER_PIECE
+
+end
+
+
+goblin_clippera
+names {"goblin hedge clipper", "clipper", "goblin"}
+title "a goblin hedge clipper"
+descr "A goblin hedge clipper is busy clipping hedges."
+extra {}
+"This goblin is a hedge clipper and looks much like other goblins, only he 
+looks a bit dangerous."
+
+M_AVG_GOBLIN(77, SEX_MALE)
+alignment -1000
+money 3 COPPER_PIECE
+
+end
+
+
+tamlad
+names {"tamlad", "yeti", "creature"}
+title "Tamlad"
+descr "A large furry creature stands here roaring loudly."
+extra {}
+"This creature looks a bit like a yeti of the arctic, only his fur is 
+dark brown in color.  His roaring is enough to rattle anyone's ear drums.  
+He looks ferocious, but if you look in his eyes, you can see he is a 
+friendly creature."
+
+BASE_YETI(80,SEX_MALE,240,400)
+exp 100
+money 1 GOLD_PIECE
+end
+
+reinhot
+names {"reinhot", "dwarf"}
+title "Reinhot"
+descr "A wizened old dwarf stands here looking sad."
+extra {}
+"This old dwarf has a large bulbous nose, and piercing blue eyes.  A pair
+of glasses perched upon the end of his nose, make him look very sad.  His
+face looks worn and tired, and his dark hair is stained with tinges of
+grey.  He looks like he needs to be comforted." 
+
+M_DWARF_THIEF_SWORD(120,SEX_MALE)
+alignment 1000
+dilcopy dtalk@gobtown();
+end
+
+small_goblinm
+names {"small goblin","goblin"}
+title "a small goblin"
+descr "A small evil goblin is leering at you from the shadows."
+extra {}
+"He has putrid green leathery skin with small warts all over him.  You 
+would not want to touch him with a ten foot pole."
+
+M_GOBLIN_WARRIOR_POLE(70,SEX_MALE)
+special SFUN_AGGRESSIVE "$1n attacks $3n!" time 25 bits SFB_RANTIME
+money 3 COPPER_PIECE
+alignment -1000
+end
+
+small_goblinf
+names {"small goblin","goblin"}
+title "a small goblin"
+descr "A small evil goblin is leering at you from the shadows."
+extra {}
+"She has putrid green leathery skin with small warts all over her.  You 
+would not want to touch her with a ten foot pole."
+
+M_GOBLIN_WARRIOR_POLE(70,SEX_FEMALE)
+special SFUN_AGGRESSIVE "$1n attacks $3n!" time 25 bits SFB_RANTIME
+money 1 COPPER_PIECE
+alignment -1000
+end
+
+medium_goblinm
+names {"goblin"}
+title "a goblin"
+descr "A goblin walks around here grumbling to himself."
+extra {}
+"He has putrid green and brown skin with warts and sores all over his 
+ugly face.  This is a face only a mother could love."
+
+M_GOBLIN_WARRIOR_POLE(75,SEX_MALE)
+special SFUN_AGGRESSIVE "$1n attacks $3n!" time 30 bits SFB_RANTIME
+money 1 SILVER_PIECE
+alignment -1000
+end 
+
+medium_goblinf
+names {"goblin"}
+title "a goblin"
+descr "A goblin walks around here grumbling to herself."
+extra {}
+"She has putrid green and brown skin with warts and sores all over her 
+ugly face.  This is a face only a mother could love."
+
+M_GOBLIN_WARRIOR_POLE(75,SEX_FEMALE)
+special SFUN_AGGRESSIVE "$1n attacks $3n!" time 30 bits SFB_RANTIME
+money 5 COPPER_PIECE
+alignment -1000
+end 
+
+large_goblinm
+names {"large goblin","goblin"}
+title "a large goblin"
+descr "A large goblin stares at you from the shadows waiting for you to 
+strike." 
+extra {}
+"His leathery skin is green and covered with brown spots.  Looking 
+closely, you can see the remains of his lunch across his chest.  Bits of 
+flesh drip from his open mouth.  This creature is utterly revolting."
+
+M_GOBLIN_WARRIOR_POLE(80,SEX_MALE)
+special SFUN_RANDOM_ZONE_MOVE time 250 bits SFB_RANTIME
+special SFUN_AGGRESSIVE "$1n attacks $3n!" time 20 bits SFB_RANTIME
+money 4 SILVER_PIECE, 2 COPPER_PIECE
+alignment -1000
+end 
+
+
+large_goblinf
+names {"large goblin","goblin"}
+title "a large goblin"
+descr "A large goblin stares at you from the shadows waiting for you to 
+strike." 
+extra {}
+"Her leathery skin is green and covered with brown spots.  Looking 
+closely, you can see the remains of her lunch across her chest.  Bits of 
+flesh drip from her open mouth.  This creature is utterly revolting."
+
+M_GOBLIN_WARRIOR_POLE(80,SEX_FEMALE)
+special SFUN_RANDOM_ZONE_MOVE time 250 bits SFB_RANTIME
+special SFUN_AGGRESSIVE "$1n attacks $3n!" time 20 bits SFB_RANTIME
+money 3 SILVER_PIECE, 2 COPPER_PIECE
+alignment -1000
+end 
+
+
+
+%reset
+
+
+door laba_1 NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+
+door laba_3 NORTH {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+
+door labh_15 EAST {EX_OPEN_CLOSE, EX_CLOSED}
+
+/*LABYRINTH MOBS*/
+
+load goblin_clipper into labd_11 zonemax 1
+{
+equip hedge_clipper position WEAR_WIELD
+equip pewter_ring position WEAR_FINGER_L
+}
+
+load goblin_clippera into labf_1 zonemax 1
+{
+equip hedge_clipper position WEAR_WIELD
+}
+
+load tamlad into labe_2 zonemax 1
+
+load reinhot into laba_1 zonemax 1
+{
+equip glasses position WEAR_HEAD
+equip white_shirt position WEAR_BODY
+equip brown_pants position WEAR_LEGS
+equip dwarf_sword position WEAR_WIELD
+equip dark_shield position WEAR_SHIELD
+}
+
+load small_goblinm into laba_6 zonemax 13
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_trident position WEAR_WIELD
+}
+
+load small_goblinf into laba_3 zonemax 13
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_trident position WEAR_WIELD
+}
+
+load small_goblinm into labb_2 zonemax 13
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_trident position WEAR_WIELD
+}
+
+load small_goblinf into labb_5 zonemax 13
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_trident position WEAR_WIELD
+}
+
+load small_goblinm into labc_2 zonemax 13
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_trident position WEAR_WIELD
+}
+
+load small_goblinf into labc_7 zonemax 13
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_trident position WEAR_WIELD
+}
+
+load small_goblinm into labc_10 zonemax 13
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_trident position WEAR_WIELD
+}
+
+load small_goblinf into labd_1 zonemax 13
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_trident position WEAR_WIELD
+}
+
+load small_goblinm into labd_4 zonemax 13
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_trident position WEAR_WIELD
+}
+
+load small_goblinf into labd_8 zonemax 13
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_trident position WEAR_WIELD
+}
+
+load small_goblinm into labd_12 zonemax 13
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_trident position WEAR_WIELD
+}
+
+load small_goblinf into labd_15 zonemax 13
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_trident position WEAR_WIELD
+}
+
+load small_goblinm into labe_7 zonemax 13
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_trident position WEAR_WIELD
+}
+
+load small_goblinf into labe_4 zonemax 13
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_trident position WEAR_WIELD
+}
+
+load small_goblinm into labf_2 zonemax 13
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_trident position WEAR_WIELD
+}
+
+load small_goblinf into labf_12 zonemax 13
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_trident position WEAR_WIELD
+}
+
+load small_goblinm into labf_16 zonemax 13
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_trident position WEAR_WIELD
+}
+
+load small_goblinf into labg_8 zonemax 13
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_trident position WEAR_WIELD
+}
+
+load small_goblinm into labg_5 zonemax 13
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_trident position WEAR_WIELD
+}
+
+load small_goblinf into labg_16 zonemax 13
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_trident position WEAR_WIELD
+}
+
+load small_goblinm into labg_14 zonemax 13
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_trident position WEAR_WIELD
+}
+
+load small_goblinf into labh_1 zonemax 13
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_trident position WEAR_WIELD
+}
+
+load small_goblinm into labh_13 zonemax 13
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_trident position WEAR_WIELD
+}
+
+load small_goblinf into labh_10 zonemax 13
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_trident position WEAR_WIELD
+}
+
+load small_goblinm into labh_9 zonemax 13
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_trident position WEAR_WIELD
+}
+
+load small_goblinf into labd_10 zonemax 13
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_trident position WEAR_WIELD
+}
+
+load medium_goblinm into labb_3 zonemax 8
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_spear position WEAR_WIELD
+}
+
+load medium_goblinf into labc_1 zonemax 8
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_spear position WEAR_WIELD
+}
+
+load medium_goblinm into labd_4 zonemax 8
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_spear position WEAR_WIELD
+}
+
+load medium_goblinf into labd_12 zonemax 8
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_spear position WEAR_WIELD
+}
+
+load medium_goblinm into labe_6 zonemax 8
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_spear position WEAR_WIELD
+}
+
+load medium_goblinf into labf_12 zonemax 8
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_spear position WEAR_WIELD
+}
+
+load medium_goblinm into labg_4 zonemax 8
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_spear position WEAR_WIELD
+}
+
+load medium_goblinf into labg_18 zonemax 8 
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_spear position WEAR_WIELD
+}
+
+load medium_goblinm into labh_11 zonemax 8 
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_spear position WEAR_WIELD
+}
+
+load medium_goblinf into labc_10 zonemax 8 
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_spear position WEAR_WIELD
+}
+
+load medium_goblinm into labd_9 zonemax 8 
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_spear position WEAR_WIELD
+}
+
+load medium_goblinf into labg_13 zonemax 8 
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_spear position WEAR_WIELD
+}
+
+load medium_goblinm into labe_3 zonemax 8 
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_spear position WEAR_WIELD
+}
+
+load medium_goblinf into labb_7 zonemax 8 
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_spear position WEAR_WIELD
+}
+
+load medium_goblinm into labc_5 zonemax 8 
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_spear position WEAR_WIELD
+}
+
+load medium_goblinf into labf_2 zonemax 8 
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_spear position WEAR_WIELD
+}
+
+load large_goblinm into labb_1 zonemax 9
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_halberd position WEAR_WIELD
+equip dark_bracer position WEAR_WRIST_L
+}
+
+load large_goblinf into labc_2 zonemax 9
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_halberd position WEAR_WIELD
+}
+
+load large_goblinm into labc_8 zonemax 9
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_halberd position WEAR_WIELD
+}
+
+load large_goblinf into labd_3 zonemax 9
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_halberd position WEAR_WIELD
+}
+
+load large_goblinm into labd_6 zonemax 9
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_halberd position WEAR_WIELD
+}
+
+load large_goblinf into labd_14 zonemax 9
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_halberd position WEAR_WIELD
+}
+
+load large_goblinm into labe_5 zonemax 9
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_halberd position WEAR_WIELD
+}
+
+load large_goblinf into labe_4 zonemax 9
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_halberd position WEAR_WIELD
+}
+
+load large_goblinm into labf_3 zonemax 9
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_halberd position WEAR_WIELD
+}
+
+load large_goblinf into labf_15 zonemax 9
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_halberd position WEAR_WIELD
+}
+
+load large_goblinm into labf_14 zonemax 9
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_halberd position WEAR_WIELD
+}
+
+load large_goblinf into labg_2 zonemax 9
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_halberd position WEAR_WIELD
+}
+
+load large_goblinm into labg_8 zonemax 9
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_halberd position WEAR_WIELD
+}
+
+load large_goblinf into labg_11 zonemax 9
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_halberd position WEAR_WIELD
+}
+
+load large_goblinm into labg_16 zonemax 9
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_halberd position WEAR_WIELD
+}
+
+load large_goblinf into labh_8 zonemax 9
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_halberd position WEAR_WIELD
+}
+
+load large_goblinm into labh_6 zonemax 9
+{
+equip goblin_plate@gobtown1 position WEAR_BODY
+equip goblin_halberd position WEAR_WIELD
+}
+
+load large_goblinf into labh_13 zonemax 9
+{
+equip goblin_helmet@gobtown1 position WEAR_HEAD
+equip goblin_halberd position WEAR_WIELD
+equip dark_bracer position WEAR_WRIST_L
+}
+
+
+%end
+

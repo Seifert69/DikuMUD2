@@ -1,0 +1,3473 @@
+/*
+filename    seren1
+password    green1
+changedby   eirinn
+EmailAdd     Jpc (Gypsy) <clarej@tcd.ie>
+request     compile
+version     15
+END HEADER*/
+
+/* May 14th 1997	- Added elf traveller and Celerime's boots */
+
+/* May 2nd 1997	- brought into new limits */
+
+#include <composed.h> 
+ 
+%zone seren1
+ 
+title "" 
+ 
+lifespan 20 
+ 
+reset RESET_ANYHOW 
+ 
+creators {"eirinn"} 
+ 
+notes "Serenity: Zone 2/2. My second zone for Valhalla USA. This is the coven of priests. Any problems/bug reports(/advice? :)) - Please send them to clarej@alf2.tcd.ie."
+
+help "This zone is for those who have attained level 50. There is a book in the zone that explains its history. It can be found in the Temple of the Coven at the centre of the forest. Good luck!"
+
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++  E X T R A S  M A C R O S   +++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++*/
+
+/* MACROS for various extras throughout the zone */
+
+#define LAKE_EXTRAS \
+    extra {"black water", "water", "mirror"} \
+"The water is black as night and glassy like a mirror - it reflects all \
+light that hits it, denying your eyes any view of the depths." \
+    extra {"shore"} \
+"The shore is barely visible as it is slowly swallowed by the fog banks. \
+ You feel your sense of hope swallowed along with it." \
+    extra {"fog"} \
+"The Fog is unlike any you have seen before. It is thick and dense, almost \
+tangible, and it seems to withdraw as your boat passes through it. It feels \
+ almost alive." \
+
+#define OUT_TEMPLE_EXTRAS \
+    extra {"ground", "stone slabs", "slabs", "stone", "slab"} \
+"The stone slabs that pave the ground have been worn by age and the traffic \
+of large animals, probably horses." \
+    extra {"courtyard"} \
+"The courtyard is wide, and surrounds the Temple of Odin. It would make a \
+good exercise ground for horses. The courtyard itself is ringed with a fortified \
+wall which must have been built to protect the Temple from those who would \
+destroy or damage it." \
+    extra {"temple"} \
+"The Temple of the Coven to Odin stands in the centre of the Courtyard. It is \
+a large building and it appears to be very old, much older than the fortifications \
+around it. There appear to be two floors to it." \
+ 
+#define IN_TEMPLE_EXTRAS \
+    extra {"floor"} \
+"The floor is made of flat slabs of sheeted granite, tiled together in a simple \
+square pattern. Some of the stones bear inscriptions as to their origin and who \
+blessed them. Most of them read 'Brought to this Valley by Pater Drusus \
+Emalon in the Year of Hiding.' These must be the original stones, and Pater \
+Drusus one of the founders." \
+    extra {"ceiling"} \
+"The ceiling is about three metres high and quite flat. It looks like the same \
+granite as the floor stones." \
+    extra {"walls"} \
+"The walls are draped with tapestries. About every four metres, a torch is \
+mounted about two metres up on the wall, providing light. There aren't any \
+windows to provide this service." \
+    extra {"torches", "torch"} \
+"The torches are lit and seem to burn endlessly. You can't put them out, \
+no matter what you try. They provide an orange flickering light." \
+
+#define CELL_EXTRAS \
+    extra {"torch"} \
+"The torche is lit and seems to burn endlessly. You can't put it out, \
+no matter what you try. It provides an orange flickering light." \
+    extra {"floor"} \
+"The floor is made of flat slabs of sheeted granite, tiled together in a simple \
+square pattern. Some of the stones bear inscriptions as to their origin and who \
+blessed them. Most of them read 'Brought to this Valley by Pater Drusus \
+Emalon in the Year of Hiding.' These must be the original stones, and Pater \
+Drusus one of the founders." \
+    extra {"bed"} \
+"The bed is very Spartan. The mattress is very thin and it doesn't look \
+comfortable at all. It is quite low down too." \
+    extra {"chairs", "chair"} \
+"The chair is made of the same mahogany as the door, but is more like a stool \
+than a chair because the back is very low." \
+    extra {"table"} \
+"The table is quite low. It is of mahogany. The side of the Table makes you think \
+it is only intended for one person to use." \
+
+#define WALL_EXTRAS \
+    extra {"flagstones", "stones", "stone", "pavement", "ground"} \
+"The flagstones which pave this walkway inside the wall are similar \
+to those below in the courtyard, but they are slightly smaller and \
+less bleached from the sunshine." \
+    extra {"courtyard"} \
+"You can see the courtyard below you. The pavement there is more bleached \
+by the sun than the walkway of the wall, probably because the walkway gets \
+shade from the sun because of the wall itself." \
+    extra {"holes", "hole"} \
+"The holes let you peer out from the walls without fear of being spied \
+from below." \
+    extra {"forest", "trees", "tree"} \
+"You can see the Forest very well from here. The walls are about level \
+with the lower trees in the forest. Those around the Temple walls are \
+mainly Oak and Beech. Some come very close to the walls, you could almost \
+touch some of them." \
+
+#define STABLE_EXTRAS \
+    extra {"hay"} \
+"The hay is in stacks piled against the walls and in the corners. There \
+are scraps of it along the ground from when the horses dragged it out of \
+their cells on their feet." \
+    extra {"horse manure", "manure", "shit", "crap", "dung"} \
+"The horses are obviously well fed, but boy does it smell....." \
+    extra {"saddles", "saddle", "bridles", "bridle", "bits", "bit", "tack"} \
+"The various items that make up a horse's tack can be seen hanging on the \
+walls of the stable." \
+    extra {"stall door", "door"} \
+"The stall door is made from a cedar wood. It looks rather robust. It is \
+ a half-door, which means it can be opened to let the horse look out of \
+ its stall." \
+ 
+
+/* End EXTRAs macros */
+
+%dil
+
+/* ONLINE QUEST DIL */
+
+dilbegin board_setup(); 
+ 
+code
+{
+:start:
+wait(SFB_CMD,((command("start")) and (activator.level>=230)));
+block;
+act("QUEST STARTS NOW.", A_ALWAYS,self,null,null,TO_REST); 
+
+wait(SFB_CMD,((command("end")) and (activator.level>=230)));
+block;
+act("QUEST ENDS NOW.", A_ALWAYS,self,null,null,TO_REST); 
+
+:again:
+
+wait(SFB_CMD,((command("ended")) and (activator.level>=230)));
+block;
+act("QUEST HAS ALREADY ENDED.", A_ALWAYS,self,null,null,TO_REST); 
+
+goto again;
+}
+dilend /* board_setup */
+
+dilbegin mover(); /* moving about */
+ 
+var  
+   targ : unitptr;
+   stime : string;
+   time : integer;
+   pc : unitptr;
+   timestr : string;
+code 
+{ 
+
+:start: 
+wait(SFB_CMD,((command("space")) and (activator.level>=230)));
+pc:=activator;
+secure(pc, lostem);
+block;
+
+stime := argument;
+
+if (stime != "") 
+{
+time := atoi(getword(stime));
+}
+else time := 3;
+
+if ((time<1) or (time>5))
+{
+time := 3;
+} 
+
+timestr := itoa(time);
+sendtext("Tele time is set to " + timestr + " minutes.&n", pc);
+heartbeat := PULSE_SEC*(time*60);
+timestr := itoa(heartbeat);
+sendtext("Heartbeat is " + timestr + " ticks.&n", pc);
+unsecure(pc);
+goto tele;
+
+
+:tele:
+sendto("reseed",self); 
+
+pause;
+targ := findrndunit(self, FIND_UNIT_WORLD,UNIT_ST_ROOM);
+secure(targ,lostem);
+act("$1n disappears in a flash of light!",
+      A_SOMEONE,self,null,null,TO_REST);
+        link(self, targ);
+unsecure(targ);
+act("$1n arrives in a flash of light.",
+      A_SOMEONE,self,null,null,TO_REST);
+goto tele;
+
+
+:lostem: 
+unsecure(targ); 
+goto start; 
+} 
+dilend /* mover */ 
+
+
+dilbegin aware give_baton(batno:string); /* load baton */ 
+ 
+var  
+   baton : string;
+   givebaton : unitptr;
+   pc : unitptr;
+   seedme    : integer; 
+   j    :integer;
+
+code 
+{ 
+:init: 
+   heartbeat := PULSE_SEC*5; 
+
+seedme := interrupt(SFB_MSG,(activator==self) and 
+      (argument=="reseed"), reseedme);
+
+baton := batno + "@seren1"; 
+  j := 1;
+
+:start: 
+wait(SFB_CMD,( (command("dispense")) and (activator.type==UNIT_ST_PC) )); 
+pc := activator;
+secure(pc, lostem);
+block;
+
+if (j<1) goto allout;
+
+givebaton:=load(baton);  
+link(givebaton, pc);
+act("$1n makes some funny noises and out pops a baton.",
+      A_SOMEONE,self,null,null,TO_REST);
+act("You take the quest baton.",
+      A_SOMEONE,pc,null,null,TO_CHAR);
+act("$1 takes the quest baton.",
+      A_SOMEONE,pc,null,null,TO_REST);
+j:=0;
+goto start;
+
+
+:allout:
+act("$1n makes some funny noises and then stops.",
+      A_SOMEONE,self,null,null,TO_REST);
+act("Someone has already claimed the baton this turn.",
+      A_SOMEONE,pc,null,null,TO_CHAR);
+goto start;
+
+:reseedme:
+j := 1;
+goto start;
+
+:lostem: 
+unsecure(pc); 
+goto start; 
+} 
+dilend /* give_baton */ 
+
+dilbegin recall count_down(time : string);
+
+var
+   i          : integer;
+   life       : integer;
+   lifestring : string;
+
+code 
+{
+:init:
+   i := interrupt(SFB_CMD,command("life"),changelife);
+   life := atoi(time);
+
+:start:
+   self.value[1] := atoi(time);
+   heartbeat := PULSE_SEC*20; 
+   pause;
+
+:loop:
+   heartbeat := PULSE_SEC*60;
+   wait(SFB_TICK,TRUE);
+   self.value[1] := self.value[1] - 1;
+   if (self.value[1] < 1)
+   {
+      heartbeat := PULSE_SEC;
+      if (self.outside.type != UNIT_ST_ROOM)
+      {
+         sendtext("Quest item life terminated.&n",self.outside);
+      }
+      else
+      {
+         act("$1n is destroyed as online quest has ended.",
+            A_SOMEONE,self,null,null,TO_ALL);
+      }
+      pause;
+      destroy(self);
+   }
+   goto loop;
+
+:changelife:
+   block;
+   if (activator.level < GOD_LEVEL) goto start;
+
+   lifestring := getword(argument);
+   if (lifestring == "") goto report;      
+   life := atoi(lifestring);
+   if (life < 1)
+   {
+      life := 1;
+   }
+   self.value[1] := life;
+      if (self.outside.type != UNIT_ST_ROOM)
+      {
+         sendtext("Lifespan changed to "+itoa(life)+" minutes.&n",activator);
+         goto start;
+      }
+      else
+      {
+         act("$1n's lifespan has been changed to " + itoa(life)+" minutes!",
+              A_SOMEONE,self,null,null,TO_ALL);
+         goto start;
+      }
+
+:report:
+   act("$1n will self-destruct in "+itoa(life)+ "minutes.",
+        A_SOMEONE,self,null,null,TO_ALL);
+   goto start;
+
+}
+dilend /* count_down */
+
+%rooms
+
+/* God room for chat board - basically, a chatboard room for gods */
+
+                        chat_room
+names {"&c+cA place in the clouds&cw","epc"}
+title "&c+cBetween the clouds and the sky&cw"
+descr 
+" You marvel at this place - the only thing beneath your feet is a thin layer of cloud which you can put your hand through quite easily, yet supports your weight. This is a heavenly place, for above you is only blue sky. A divine being must have made this place for some cosmic reason. There is a small gap in the clouds through which you can see a forest far below, and the lands spread around it. How will you ever get down?"
+
+extra{"cloud", "clouds"}
+"The cloud is whispy and perfectly white. It looks almost artificial, and it spreads out in a field which seems to to be shaped in a circle."
+
+extra{"hole", "small gap", "gap"}
+"This hole is just big enough for you to see the lands below in the distance. You can just make out a dense green forest far below, while around it are spread the lands of the world, with midgaard to the north." 
+
+extra{"down"}
+"Down through the clouds"
+
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT, UNIT_FL_PRIVATE, UNIT_FL_SACRED}
+
+movement SECT_INSIDE
+
+dilcopy spell_block@seren();
+dilcopy shout_block@seren();
+dilcopy write_block@seren();
+dilcopy chat_room_dir@seren();
+dilcopy transfer_people@seren("chat_room@seren1");  /* Allow me to transfer people into the room (only my god rooms) at sub level 240 */
+
+ALWAYS_LIGHT
+
+end /* chat_room */
+
+/* End God chat room */
+
+/* BEGIN TEMPLE OF THE COVEN */ 
+
+
+temple1 
+names {"temple gate"} 
+title "The Outer Gates Of The Temple" 
+ 
+descr 
+" You are standing inside the Entrance, which is roofed, making a small tunnel open to the North and the South. There is a large sturdy double gate at the northern end of the entrance and another at the southern end. In both the east and west walls, there are two guard slits from which you could be observed entering the courtyard. The ground is paved with large stone slabs. The roof shades the entrance from a lot of light. In the centre of the Courtyard, you can see the main Temple. You can enter the Temple's courtyard through the south gate, or the Forest through the North gate." 
+ 
+extra {"walls", "wall", "slits", "slit"} 
+"The walls are about 3 metres tall and have slits in them. They are long and thin, ideal for firing an arrow through and for observing those who might enter the Temple with hostile intentions." 
+ 
+extra {"gates", "gate"} 
+"Each gate is made of a hard and strong dark metal which doesn't reflect the light. They are very sturdy and look as if you would need quite a ram to break them." 
+ 
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_MOB}
+ 
+OUT_TEMPLE_EXTRAS 
+ 
+movement SECT_INSIDE 
+ 
+north to forest32@seren open {EX_OPEN_CLOSE} keyword {"north gates", "north gate", "gates", "gate"} descr "Outside the walls"; 
+south to temple2 open {EX_OPEN_CLOSE} keyword {"south gates", "south gate", "gates", "gate"} descr "The Temple Courtyard"; 
+ 
+end  
+ 
+                                        temple2 
+names {"courtyard"} 
+title "In the Courtyard" 
+ 
+descr 
+" You are in the middle of the Courtyard which surrounds the Temple itself. The walls that were the side of the entrance extend out into the Courtyard a few metres, but the roof stops at the gates. This could be to funnel any attackers so that they can be managed by the Temple's defenders. The entire courtyard is paved with the same slabs as the entrance tunnel. You can see the Temple to the south and the courtyard leads in all directions, except north, which takes you to the Entrance." 
+ 
+extra {"gates", "gate"} 
+"The gates are made of a hard and strong dark metal which doesn't reflect the light. They are very sturdy and look as if you would need quite a ram to break them." 
+ 
+OUT_TEMPLE_EXTRAS 
+ 
+movement SECT_CITY 
+ 
+west to temple8 descr "North West corner of the courtyard"; 
+east to temple7 descr "North East corner of the courtyard"; 
+north to temple1 open {EX_OPEN_CLOSE} keyword {"gates", "gate"}  
+descr "The Entrance tunnel"; 
+south to temple15 descr "At the Temple doors"; 
+ 
+end 
+ 
+                                        temple3 
+names {"weapon room"} 
+title "The Weapon room" 
+ 
+descr 
+" This is what used to be the weapon room for the guards. Since the Olayans don't require weapons, but what Tyr gives them, this room is not used anymore - numerous weapons stand here, rusting away. The only exit is back west to the Guard room." 
+ 
+extra {"weapons", "weapon"} 
+"Rusting maces and war hammers lie here. The priests no longer use them since Tyr sent the Olayans to protect them." 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ 
+west to temple4 open {EX_OPEN_CLOSE} keyword {"door"}  
+descr "West to the Old Guard room"; 
+ 
+end 
+ 
+                                        temple4 
+names {"guard room"} 
+title "The East Guard Room" 
+ 
+descr 
+" This is the East Guard Room, where the priest guards once lived and watched for trespassers through the Guard holes. There is a small table in the corner. The Olayans now serve the purpose of guarding the Temple so the priests haven't had to worry about such matters for a long time. You can exit to the Courtyard through the South door, or enter what seems to be a weapons room to the east." 
+ 
+extra {"table"} 
+"This small table must be where the guards would eat." 
+ 
+extra {"holes", "hole", "slits", "slit"} 
+"The guard slits let the guards watch and shoot arrows from safety. You can see the tunnel quite clearly through them." 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ 
+east to temple3 open {EX_OPEN_CLOSE} keyword {"door"}  
+descr "East to the Old weapons room"; 
+south to temple7 open {EX_OPEN_CLOSE} keyword {"door"}  
+descr "South out into the Courtyard"; 
+ 
+end 
+ 
+                                        temple5 
+names {"guard room"} 
+title "The West Guard Room" 
+ 
+descr 
+" The West guard room is bare, with only a chair and a table left in it. There are two guard slits for people to shoot arrows out of, or observe people coming and going from the Temple. In old times this room must have been a lot by the guardian priests. The sleepless Olayans now perform this duty. There is a door in the west wall and this is open. You can go south to the courtyard." 
+ 
+extra {"chair"} 
+"The chair has a short back and looks decidedly uncomfortable. It is against the table." 
+ 
+extra {"table"} 
+"This small table must be where the guards would eat." 
+ 
+extra {"holes", "hole", "slits", "slit"} 
+"The guard slits let the guards watch and shoot arrows from safety. You can see the tunnel quite clearly through them." 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ 
+west to temple6 open {EX_OPEN_CLOSE} keyword {"door"}  
+descr "West to the guard's dormitory"; 
+south to temple8 open {EX_OPEN_CLOSE} keyword {"door"}  
+descr "South out into the Courtyard"; 
+ 
+end 
+ 
+                                        temple6 
+names {"guard room"} 
+title "The guard's dormitory" 
+ 
+descr 
+" This room is quite tidy and in good repair, as if someone has been using it recently. There are four bed frames each in one corner of the room. One of them has a clean mattress on it. Obviously one of the priests must still use this place. The only exit is back east to the Guard room." 
+ 
+extra {"bed frame", "frame", "bed"} 
+"There are 4 of them here, all have wooden frames, but all are bare save one which has a nice clean mattress on it, albeit spartan, but the priests enjoy few pleasures in life." 
+ 
+extra {"mattress"} 
+"The mattress is a white creamy colour and is too thin to be comfortable for the sleeper." 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ 
+east to temple5 open {EX_OPEN_CLOSE} keyword {"door"}  
+descr "East to the Guard room"; 
+ 
+end 
+ 
+                                        temple7 
+names {"courtyard"} 
+title "The North Eastern Courtyard" 
+ 
+descr 
+" You are standing in the North eastern part of the courtyard. To the north is a door into what looks like a guard room, and in the corner of the courtyard, a stone stairway up onto the walls around the courtyard. You can go west or south through the courtyard, north into the guard room, or up onto the walls." 
+ 
+OUT_TEMPLE_EXTRAS 
+ 
+movement SECT_CITY 
+ 
+north to temple4 open {EX_OPEN_CLOSE} keyword {"door"}  
+descr "North to the East Guard room"; 
+south to temple9 descr "The eastern part of the courtyard"; 
+west to temple2 descr "The northern part of the courtyard"; 
+up to twall1 descr "Up onto the walls"; 
+ 
+end 
+ 
+                                        temple8 
+names {"courtyard"} 
+title "The North Western Courtyard" 
+ 
+descr 
+" This is the north western part of the courtyard. You can see an out-building running along the west wall some ways to the south. It looks to be a stable. There is a door to the north into a guard room. A stone stairs is here in the north western corner and it leads up onto the walls. You can also go south towards the stables." 
+ 
+OUT_TEMPLE_EXTRAS 
+ 
+movement SECT_CITY 
+ 
+north to temple5 open {EX_OPEN_CLOSE} keyword {"door"}  
+descr "North to the West Guard room"; 
+south to temple10 descr "The western part of the courtyard"; 
+east to temple2 descr "The northern part of the courtyard"; 
+up to twall7 descr "Up onto the walls"; 
+ 
+end 
+ 
+                                        temple9 
+names {"courtyard"} 
+title "East of the Temple Entrance" 
+ 
+descr 
+" This area is probably an exercise ground for horses. It is very bare, and the paving stones have been worn a lot as if a lot of traffic has been around here. North is the northeast corner of the courtyard, south is alongside the Temple, and you can go west to just outside the main door of the Temple building itself." 
+ 
+OUT_TEMPLE_EXTRAS 
+ 
+movement SECT_CITY 
+ 
+north to temple7 descr "The north eastern corner of the courtyard"; 
+south to temple11 descr "Alongside the Temple Building"; 
+west to temple15 descr "At the Temple doors"; 
+ 
+end 
+ 
+                                        temple10 
+names {"courtyard"} 
+title "West of the Temple Entrance" 
+ 
+descr 
+" You are now between the stables and the Main Temple entrance. The stables building also has two stories like the Temple itself. There is a steep stairs up to the second floor of the stables to your west. You can go up there if you like, north to the northwest corner of the courtyard, south outside the stables entrance, or east before the Temple doors." 
+ 
+extra {"stairs", "stair"} 
+"The stair is cut out of the same stone as the stables and it leads up to the west." 
+ 
+extra {"stables", "stable"} 
+"The stables building is quite large, with two stories, although you doubt the horses could use the second floor. The Entrance is south of here." 
+ 
+OUT_TEMPLE_EXTRAS 
+ 
+movement SECT_CITY 
+ 
+up to stab2_1 descr "Up to the second floor of the Stables"; 
+north to temple8 descr "The north western corner of the courtyard"; 
+south to temple12 descr "Outside the Stables"; 
+east to temple15 descr "At the Temple doors"; 
+ 
+end 
+ 
+                                        temple11 
+names {"courtyard"} 
+title "East of the Temple Building" 
+ 
+descr 
+" The courtyard becomes narrow here because the Temple Building's east wing is very large. There is a chimney stack rising from the top of it to your west, with a thin smoke sneaking out of its top, and a large window is set in the wall of the Temple building. You can go south to the southeast corner of the courtyard, or north along the outer east wall." 
+ 
+extra {"chimney"} 
+"This chimney stack is quite wide. It runs all the way to the top of the second floor of the Temple, and a thin wispy smoke rises from its peak." 
+ 
+extra {"window"} 
+"The window is quite large and very clear. You can see people moving around inside what looks like a large hall." 
+ 
+OUT_TEMPLE_EXTRAS 
+ 
+movement SECT_CITY 
+ 
+north to temple9 descr "North around the Temple Building"; 
+south to temple13 descr "The southeast corner of the courtyard"; 
+ 
+end  
+ 
+                                        temple12 
+names {"outside stables"} 
+title "Outside The Stables" 
+ 
+descr 
+" The stables entrance is here. You are standing between the Main Temple Building and the stables to the west of the courtyard. The stables entrance is wide open and to your east, almost directly opposite the stables entrance, is a small closed door. A small window is set in the wall further south past the door. You can go north or south in the courtyard, enter the stables by going west, or try that door to your east." 
+ 
+extra {"window"} 
+"You can see a large kitchen through this window." 
+ 
+extra {"stables", "stable"} 
+" The stables building is quite big, as it runs along the west wall of the courtyard. You can enter it here." 
+ 
+OUT_TEMPLE_EXTRAS 
+ 
+movement SECT_CITY 
+ 
+east to temple36 open {EX_OPEN_CLOSE, EX_CLOSED} 
+descr "Side door to the Temple." keyword {"door"}; 
+west to stab1_1 descr "Into the stables"; 
+north to temple10 descr "North in the courtyard"; 
+south to temple14 descr "The southwest corner of the courtyard"; 
+ 
+end 
+ 
+                                        temple13 
+names {"courtyard"} 
+title "The Southeast corner of the Courtyard" 
+ 
+descr 
+" This is the southeast corner of the courtyard. You are south of the east wing and you can see a window set in its wall. From here you can see a walkway all around the courtyard wall, but no obvious way up. You can go west around the south wing of the Temple Building, or north around the east wing." 
+ 
+extra {"window"} 
+"The window is quite large and very clear. You can see people moving around inside what looks like a large hall." 
+ 
+OUT_TEMPLE_EXTRAS 
+ 
+movement SECT_CITY 
+ 
+west to temple21 descr "South of the Temple Building"; 
+north to temple11 descr "East of the Temple Building"; 
+ 
+end 
+ 
+                                        temple14 
+names {"courtyard"} 
+title "The Southwest corner of the Courtyard" 
+ 
+descr 
+" You are now in the southwest corner of the courtyard. The West wing of the Temple is to northeast. There is also a small window around the side of the wing. Out in the centre of the courtyard here is a well. The stables building is to the northwest of you, and it runs along the west wall of the courtyard. You can go north or east through the courtyard." 
+ 
+extra {"window"} 
+"This window is small, but quite clear to look through. The room inside looks like a porch." 
+ 
+OUT_TEMPLE_EXTRAS 
+ 
+movement SECT_CITY 
+ 
+east to temple22 descr "Through the courtyard"; 
+north to temple12 descr "Outside the stables"; 
+ 
+end 
+ 
+                                        temple15 
+names {"before temple"} 
+title "Before the Temple of the Coven" 
+ 
+descr 
+" The doors of the Temple itself stands before you. They are well decorated and made of a dark wood, both very old and strong. They each have a heavy handle as if they can be thrown back. The courtyard surrounds the Temple, and you can go north, east and west. South leads you through the doors." 
+ 
+extra {"doors", "door"} 
+"The doors are made of a strong dark wood, probably some kind of mahogany. They are quite tall and seem to be very heavy and thick. There are highly ornate patterns of carvings all around their edges and the central panels are covered in a decoration like that of a great head, with one eye wide open and the other empty in its socket. This must be their emblem to Odin." 
+ 
+OUT_TEMPLE_EXTRAS 
+ 
+movement SECT_CITY 
+ 
+north to temple2 descr "In the Courtyard"; 
+south to temple16 open {EX_OPEN_CLOSE, EX_CLOSED}  
+keyword {"doors", "door"} descr "Into the Temple of the Coven"; 
+east to temple9 descr "The Eastern courtyard"; 
+west to temple10 descr "The Western courtyard"; 
+ 
+end 
+ 
+                                        temple16 
+names {"temple antechamber"} 
+title "The Antechamber to the Main Temple" 
+ 
+descr 
+" This is the Antechamber to the Main Hall of Worship in the Temple which is through a large double door to the south. This short corridor is lit by torches on the walls. The ceiling and floor are made of the same granite as the rest of the building. There are two other doors, one on the west wall, one on the east wall, and you can also go north to the Courtyard through a set of large double doors. There is a small plaque set in the floor in front of you." 
+ 
+extra {"doors", "door"} 
+"The doors are made of a strong dark wood, probably some kind of mahogany." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+extra {"plaque"} 
+"&lThe inscription on the Plaque reads: 
+ 
+      'Let Odin tend your soul within these walls.' 
+   
+                        -Pater Ziehl" 
+ 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_MOB} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+north to temple15 open {EX_OPEN_CLOSE, EX_CLOSED}  
+keyword {"doors", "door"} descr "Out into the Courtyard"; 
+south to temple20 open {EX_OPEN_CLOSE, EX_CLOSED}  
+keyword {"doors", "door"} descr "The Main Hall of Worship"; 
+east to temple18 open {EX_OPEN_CLOSE, EX_CLOSED}  
+keyword {"door"} descr "Chief Priest's room"; 
+west to temple19 open {EX_OPEN_CLOSE, EX_CLOSED}  
+keyword {"door"} descr "Robing Room"; 
+ 
+end 
+ 
+                                        temple18 
+names {"chief priest room"} 
+title "The Chamber of the Chief Priest" 
+ 
+descr 
+" This room isn't very big. There is a desk of sorts against the southern wall. There is a small table and three chairs near the desk. A small bed is in the north eastern corner of the room, and a single torch lights the room. There are two exits, a door to the west and another to the east." 
+ 
+extra {"desk"} 
+"The desk has a manuscript on it, which looks as if it is in the process of being illuminated. The desk is rectangular and tall, made of the same mahogany as the rest of the wooden furniture in the room." 
+ 
+extra {"doors", "door"} 
+"The doors are made of a strong dark wood, probably some kind of mahogany." 
+ 
+CELL_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+east to temple29 open {EX_OPEN_CLOSE, EX_CLOSED}  
+keyword {"door"} descr "Steward's room"; 
+west to temple16 open {EX_OPEN_CLOSE, EX_CLOSED}  
+keyword {"door"} descr "The Antechamber to the Main Temple"; 
+ 
+end 
+ 
+                                        temple19 
+names {"robing room"} 
+title "The Robing Room" 
+ 
+descr 
+" This is the room where the priests prepare for ceremonies in the Hall of worship. There are two tables, each with various garments neatly folded on them. Torches light the room with an orange flickering light. The only exit is true the door in the east wall." 
+ 
+extra {"tables", "table"} 
+"The tables are made from the same mahogany as the door. They are situated at the north and south ends of the room." 
+ 
+extra {"garments", "garment"} 
+"Various fine ceremonial garments, embroidered with purple, yellow, blue and red thread." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+east to temple16 open {EX_OPEN_CLOSE, EX_CLOSED}  
+keyword {"door"} descr "The Antechamber to the Main Temple"; 
+ 
+end 
+ 
+                                        temple20 
+names {"north hall"} 
+title "The Main Hall Of Worship" 
+ 
+descr 
+" You are now standing in the Main Hall of Worship. It is very long and wide. There is very little light and an atmosphere of sacredness pervades the entire hall. There are four pillars here, two to the west and two to the east. The aisles of the Temple lye behind the pillars. Further south in the Hall is a large stone Table, and raise up behind it is the Altar. To reach the altar you must use one of two small stairways, situated each at the southern end of the aisles. You can go east and west into one of the aisles, south to the Stone Table, or north through the double doors to the Antechamber." 
+ 
+extra {"pillars", "pillar"} 
+"Each pillar is roughly a metre in diameter and reaches up from the ground to the ceiling 4 metres above. They are all made from a pink marble." 
+ 
+extra {"stone table", "table"} 
+"To the South, you can see a large circular stone table." 
+ 
+extra {"altar"} 
+"The altar is on a higher section of the Hall which can only be reached through the aisles." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+north to temple16 open {EX_OPEN_CLOSE, EX_CLOSED}  
+keyword {"doors", "door"} descr "The Antechamber to the Main Temple"; 
+south to temple25 descr "At the Stone Table"; 
+east to temple24 descr "The Eastern Aisle"; 
+west to temple23 descr "The Western Aisle"; 
+ 
+end 
+ 
+                                        temple21 
+names {"courtyard"} 
+title "South in the Courtyard" 
+ 
+descr 
+" You are now behind the south wing of the Main Temple Building. There are no windows or doors here. The masonry looks very old, but of the highest craftsmanship. You wonder how long after the elves left the Valley did this place get built? You can go east and west to the corners of the courtyard." 
+ 
+extra {"masonry"} 
+"The stone used to make this building seems to be a type of granite. Each slab is about three metres wide by three metres tall. The joints are almost seamless between each slab, even after so much exposure to the elements." 
+ 
+OUT_TEMPLE_EXTRAS 
+ 
+movement SECT_CITY 
+ 
+west to temple22 descr "Towards the southwest corner of the courtyard"; 
+east to temple13 descr "Southeast corner of the courtyard"; 
+ 
+end 
+ 
+                                        temple22 
+names {"courtyard"} 
+title "Near the Southwest Corner of the Courtyard " 
+ 
+descr 
+" You are now close to the southwest corner of the courtyard, directly south of the west wing of the Main Temple. There is a small door to the north here. You can go east behind the main Temple Building, west to the Southwest corner of the Courtyard, or you can try the door." 
+ 
+OUT_TEMPLE_EXTRAS 
+ 
+movement SECT_CITY 
+ 
+north to temple31 open {EX_OPEN_CLOSE, EX_CLOSED} 
+descr "Back door to the Temple." keyword {"door"}; 
+west to temple14 descr "The southwest corner of the Courtyard"; 
+east to temple21 descr "South of the Temple Building"; 
+ 
+end 
+ 
+                                        temple23 
+names {"western aisle"} 
+title "The Western Aisle" 
+ 
+descr 
+" The light for the Hall comes from the torches mounted at intervals along the west wall of this Aisle. You see various tapestries depicting scenes of the legends involving Odin the Skyfather hung on the west wall. Two pillars separate this aisle from the rest of the Hall of Worship. There are benches for kneeling and sitting every two metres along this aisle, and towards the southern end is a four stepped stairs leading up towards the raised altar." 
+ 
+extra {"tapestries", "tapestry"} 
+" Each tapestry depicts a scene from the various stories and legends surrounding Odin, Head of the Aesir and the God of this Temple." 
+ 
+extra {"benches", "bench"} 
+"Each bench is long and wooden. They seem to force those who use them to kneel rather than sit." 
+ 
+extra {"pillars", "pillar"} 
+"Each pillar is roughly a metre in diameter and reaches up from the ground to the ceiling 4 metres above. They are all made from a pink marble." 
+ 
+extra  {"stairway", "stair"} 
+"The stair separates the aisle from the altar space which is about a metre higher and situated at the southern end of the Hall." 
+ 
+extra {"altar"} 
+"The altar is on a higher section of the Hall which can only be reached from the stairs at the end of each aisle." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+south to temple26 descr "Up the Stairs"; 
+east to temple20 descr "The Main Hall of Worship"; 
+ 
+end 
+ 
+                                        temple24 
+names {"eastern aisle"} 
+title "The Eastern Aisle" 
+ 
+descr 
+" There are several torches along the eastern wall here, all lighting this part of the Hall. Along this wall there are paintings of what appears to be an account of how the Temple came to be, after the Elves left the Valley of Serenity. There are benches along the aisle, mainly for kneeling in worship. A short stairway at the southern end of the Aisle provides access to the Altar region of the Temple. Two Pillars mark the western side of the Aisle." 
+ 
+extra {"benches", "bench"} 
+"Each bench is long and wooden. They seem to force those who use them to kneel rather than sit." 
+ 
+extra {"paintings", "painting"} 
+" These paintings show the fall of the old elves of this Valley, and of how they cast down the dark ones only to become shadows of their former selves." 
+ 
+extra {"pillars", "pillar"} 
+"Each pillar is roughly a metre in diameter and reaches up from the ground to the ceiling 4 metres above. They are all made from a pink marble." 
+ 
+extra  {"stairway", "stair"} 
+"The stair separates the aisle from the altar space which is about a metre higher and situated at the southern end of the Hall." 
+ 
+extra {"altar"} 
+"The altar is on a higher section of the Hall which can only be reached from the stairs at the end of each aisle." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+south to temple27 descr "Up the Stairs"; 
+west to temple20 descr "The Main Hall of Worship"; 
+ 
+end 
+ 
+                                        temple25 
+names {"at the stone table"} 
+title "At the Stone Table" 
+ 
+descr 
+" This part of the Hall of Worship is situated north of the altar and lower down so one has to look up to see the Altar. This place doesn't seem to be used much, but the Stone Table seems to be a monument of some kind. You can only go north from here." 
+ 
+extra {"altar"} 
+"The altar is on a higher section of the Hall which can only be reached through the aisles." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+north to temple20 descr "The Main Hall of Worship"; 
+ 
+end 
+ 
+                                        temple26 
+names {"west of altar"} 
+title "West of the Altar" 
+ 
+descr 
+" You are now west of the Altar to Odin the Skyfather, Lord of the Aesir. This part of the Temple seems to be dedicated to Thor, second of the Aesir. This area is raised to the same level as the Altar, probably as a mark of respect to the Aesir. There is another Pillar here, supporting this part of the Temple. You can go north down the stairs, or east to the Altar of Odin." 
+ 
+extra {"altar"} 
+"The Altar can be seen from here, high, and seemingly made from marble, unlike most of the Temple, which is made from granite." 
+ 
+extra {"pillars", "pillar"} 
+"The Pillar is roughly a metre in diameter and reaches up from the ground to the ceiling 4 metres above. It is made from a pink marble." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+north to temple23 descr "The Western Aisle"; 
+east to temple28 descr "At the Altar of Odin"; 
+ 
+end 
+ 
+                                        temple27 
+names {"east of altar"} 
+title "East of the Altar" 
+ 
+descr 
+" The Altar to Odin is west of here. This southern end of the Temple is raised above the rest of the Hall, like the Altar, probably as a mark of respect to the Aesir. This place is dedicated to Tyr, third among the Aesir. A single Pillar supports the ceiling of this area of the Temple. You can go west to the Altar of Odin, or north down into the Eastern Aisle." 
+ 
+extra {"pillars", "pillar"} 
+"The Pillar is roughly a metre in diameter and reaches up from the ground to the ceiling 4 metres above. It is made from a pink marble." 
+ 
+extra {"altar"} 
+"The Altar can be seen from here, high, and seemingly made from marble, unlike most of the Temple, which is made from granite." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+north to temple24 descr "The Western Aisle"; 
+west to temple28 descr "At the Altar of Odin"; 
+ 
+end 
+ 
+                                        temple28 
+names {"at the altar"} 
+title "At The Altar Of Odin" 
+ 
+descr 
+" You are now at the highest point in the Temple Hall. A great tapestry is hung on the south wall, with illuminated letters from the Norse and Common tongues. There is a torch mounted either side of the Tapestry. You get an overwhelming feeling of power from this place - it is indeed sacred. You can go west and east to the statues of the other Aesir." 
+ 
+extra {"tapestry"} 
+"The tapestry is illuminated text of an excerpt from the legend of how Odin lost his eye and gained his clairvoyancy. Half is in Norse and the rest is a translation into the common tongue: &l  
+ 
+     'Alt veit ec, Odinn,           'I know exactly, Odin, 
+         hvar pu auga falt:              where your eye was hidden: 
+      i inum maera Mimis brunni.'    in the famous fountain of Mimir.' 
+      Dreccr miod Mimir              Mimir drinks mead each morning  
+        morgin hverian               from the pledge of Valfather. 
+      af vedi Valfodrs." 
+ 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_SACRED, UNIT_FL_NO_TELEPORT} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+west to temple26 descr "The place of Thor"; 
+east to temple27 descr "The place of Tyr"; 
+ 
+end 
+ 
+                                               temple29 
+names {"steward room"} 
+title "The Steward's Chamber" 
+ 
+descr 
+" You are now in the Steward's Chamber in the East wing of the Temple. This room is plain, with no windows. The only furniture in the room is a table, a chair and a low bed, like that in the Chief Priest's room. The only light comes from a single torch on the east wall. There are two doors to this room, one set in the south wall, another in the west wall. These are the only exits." 
+ 
+extra {"doors", "door"} 
+"The doors are made of a strong dark wood, probably some kind of mahogany." 
+ 
+CELL_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+west to temple18 open {EX_OPEN_CLOSE, EX_CLOSED}  
+keyword {"door"} descr "The Chief priest's room"; 
+south to temple30 open {EX_OPEN_CLOSE, EX_CLOSED}  
+keyword {"door"} descr "The Cleric's hall"; 
+ 
+end 
+ 
+                                                   temple30 
+names {"cleric room"} 
+title "Cleric's Hall" 
+ 
+descr 
+" This is a large, warm room, taking up most of the East Wing of the Temple Building. In the East wall is set a great fire place. There is a steady fire burning in the Hearth and a small wood pile has been built against the wall near the grate. There are a few chairs here. This is obviously the closest thing to relaxation the priests get. This room is very cosy and there are two windows, one in the east wall, and another set in the south wall. There is also a spiral staircase in the southwest corner of the room leading upwards. You can exit through the north door." 
+ 
+extra {"fireplace", "hearth", "grate", "fire"} 
+"The Fireplace is bricked with what looks like granite blocks. The flames and the heat obscure the view though. The Chimney stack runs up the wall and through the ceiling. There is a wood pile beside the fire, well away from the heat which warms the room so well. A big iron grate holds the fire in the hearth." 
+ 
+extra {"wood pile", "wood", "pile"} 
+"The wood looks to be young oak, perhaps a few decades old." 
+ 
+extra {"staircase", "stairway", "stairs"} 
+"The staircase winds upwards through the floor." 
+ 
+extra {"door"} 
+"The door is made of a strong dark wood, probably some kind of mahogany." 
+ 
+extra {"windows", "window"} 
+"Through the east window, you can see the east wall around the courtyard. Through the south window, the light streams in and you can see the southeast corner of the yard." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+north to temple29 open {EX_OPEN_CLOSE, EX_CLOSED}  
+keyword {"door"} descr "The Steward's Chamber"; 
+up to temple2_1 descr "Up to the second floor"; 
+ 
+end 
+ 
+                                temple31 
+names {"kitchen porch"} 
+title "The Kitchen Porch" 
+ 
+descr 
+" This is a porch where tools are stored. There are spades, brooms and other helpful tools stored around the room. There is a window in the West wall and a door-less opening to the North. There is a lovely smell of cooking emanating from the room north of you. You can go south through another doorway out into the Yard." 
+ 
+extra {"spades", "spade", "brooms", "broom", "tools", "tool"} 
+"There are spades, brooms and other tools here. They are all neatly laid against the east and west walls of the room." 
+ 
+extra {"window"} 
+"You can see the Stables building on the western side of the courtyard from this window, and a well to the southwest." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_MOB} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+north to temple32 descr "The Temple's Kitchen"; 
+south to temple22 open {EX_OPEN_CLOSE, EX_CLOSED}  
+keyword {"door"} descr "The courtyard"; 
+ 
+end 
+ 
+                                temple32 
+names {"kitchen"} 
+title "The Temple Kitchen" 
+ 
+descr 
+" You are now standing in the Temple Kitchen. It is a large room, with a fireplace set into the western wall with various pots on it, and a stove running off it too. You can smell vegetables stewing, probably cabbage, and in amongst the aroma is the smell of garlic. There is a door set in the north wall, and a doorway to the south, but it has no door. There is also a spiral stair case in the southeast corner of the room, leading up." 
+ 
+extra {"window"} 
+"You can see the Stables entrance from here on the western side of the courtyard." 
+ 
+extra {"fireplace", "hearth", "grate"} 
+"The Fireplace is bricked with what looks like granite blocks. The flames and the heat obscure the view though. The Chimney stack runs up the wall and through the ceiling. There is a wood pile beside the fire, well away from the heat which warms the room so well. A big iron grate holds the fire in the hearth. A frame over the grate allows pots and pans to rest on top." 
+ 
+extra {"stove"} 
+"The Stove seems to be made from iron and is sitting beside the fire." 
+ 
+extra {"pots", "pot"} 
+"There is a pot of boiling cabbage on the frame near the fire, and you can smell garlic seasoning from it." 
+ 
+extra {"frame"} 
+"The frame is to allow food preparation over the fire. It is tall and made of hard steel." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+north to temple34 open {EX_OPEN_CLOSE, EX_CLOSED}  
+keyword {"door"} descr "Store room corridor"; 
+south to temple31 descr "The kitchen porch"; 
+up to temple2_14 descr "The Common room"; 
+ 
+end 
+ 
+                                temple33 
+names {"store room"} 
+title "The Kitchen Store Room" 
+ 
+descr 
+" This room is the Temple store room. Mainly for foodstuffs, this is where the kitchen keeps its stocks. There is a large counter here, with lots of different foods set out on it for today's meals. The only exit is through the east door." 
+ 
+extra {"counter"} 
+"The counter is long and flat. Each meal's foods are set out here prior to preparation in the kitchen." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+east to temple34 open {EX_OPEN_CLOSE, EX_CLOSED}  
+keyword {"door"} descr "The Store room Corridor"; 
+ 
+end 
+ 
+                                temple34 
+names {"corridor"} 
+title "The Store Room Corridor" 
+ 
+descr 
+" You are standing in a corridor that leads north-south through the west wing of the Temple. A door is set in the south wall, leading to the Kitchen, one in the west wall which opens into the kitchen store room, and there is a bend in the corridor to the north." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+west to temple33 open {EX_OPEN_CLOSE, EX_CLOSED}  
+keyword {"door"} descr "The Store room"; 
+south to temple32 open {EX_OPEN_CLOSE, EX_CLOSED}  
+keyword {"door"} descr "The Kitchen"; 
+north to temple35 descr "A bend in the corridor"; 
+ 
+end 
+ 
+                                temple35 
+names {"bend in corridor"} 
+title "A bend in the Corridor" 
+ 
+descr 
+" The bend goes west-south through the west wing of the Temple. The torches on the walls are flickering in a draft. There must be a way outside near here. You can go west down the corridor towards a door, or south along the corridor leading to the kitchen." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_MOB} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+west to temple36 descr "Down the corridor"; 
+south to temple34 descr "Down the corridor"; 
+ 
+end 
+ 
+                                temple36 
+names {"corridor"} 
+title "A corridor in the West Wing" 
+ 
+descr 
+" You are standing in a corridor inside the west wing of the Temple of the Coven. There are torches on the walls here, flickering in the draft coming from the west door. You can exit via that door, or go east to a bend in the corridor." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+west to temple12 open {EX_OPEN_CLOSE, EX_CLOSED}  
+keyword {"door"} descr "Out into the Courtyard"; 
+east to temple35 descr "A bend in the corridor"; 
+ 
+end 
+ 
+/* BEGIN second floor of the Temple */ 
+ 
+                                temple2_1 
+names {"corridor"} 
+title "A Corridor in the Upper East Wing" 
+ 
+descr 
+" The corridor runs north-south through the upper east wing and is directly above the Cleric's room. There are no windows, just torches at intervals along the east wall. This wall bulges because of the chimney running through it. There is a small door set in the west wall. A spiral staircase at the south end of the corridor leads down and the corridor also continues north of here." 
+ 
+extra {"staircase", "stairway", "stairs", "stair"} 
+"The staircase winds its way down to the floor below. It is wooden, unlike most of the temple." 
+ 
+extra {"door"} 
+"The door is made of a strong dark wood, probably some kind of mahogany." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+north to temple2_2 descr "North along the corridor"; 
+west to temple2_3 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"door"} descr "A priest's cell"; 
+down to temple30 descr "The Cleric's Hall"; 
+ 
+end 
+ 
+                                temple2_2 
+names {"corridor"} 
+title "Along a Corridor in the Upper East Wing" 
+ 
+descr 
+" You are now at the end of a corridor in the Upper East wing. There is a door to your north, and another to the west. The corridor leads southwards towards a stairway. This part of the Temple seems to be where the lower priests have their cells. There is an illuminated text on the east wall." 
+ 
+extra {"door"} 
+"The door is made of a strong dark wood, probably some kind of mahogany." 
+ 
+extra {"staircase", "stairway", "stairs", "stair"} 
+"The staircase winds its way down to the floor below. It is wooden, unlike most of the temple." 
+ 
+extra {"illuminated test", "text"} 
+"This text is in the old southern tongue, often used by clerics and other holy men to write holy texts. There are two words, 'Caveat Creditor'." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+north to temple2_5 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"door"} descr "A priest's cell"; 
+west to temple2_4 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"door"} descr "A priest's cell"; 
+south to temple2_1 descr "Along the Corridor"; 
+ 
+end 
+ 
+                                temple2_3 
+names {"cell"} 
+title "A Priest's Cell" 
+ 
+descr 
+" This room is very small and plain, with no windows, just one door. There is a table, one chair and a short low bed, like the others you have seen throughout the Building, but if anything, even more uncomfortable to look at. The only light comes from a single torch mounted on the west wall. You can leave through the door in the east wall." 
+ 
+extra {"door"} 
+"The door is made of a strong dark wood. It is somewhat worn, but it still retains the majesty that polished mahogany always retains." 
+ 
+CELL_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+east to temple2_1 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"door"} descr "Out into the Corridor"; 
+ 
+end 
+ 
+                                temple2_4 
+names {"cell"} 
+title "An Initiate's Cell" 
+ 
+descr 
+" Unlike the other cells you have seen, this room is brighter and less plain. The occupant is probably an initiate, and, unlike the other priests, he has not yet gotten used to sacrificing self-comfort - the bed looks rather comfortable due to a sizable mattress. It's quite funny really. There is a candle holder built into the table here, obviously for reading at night. The only exit is the door to the east." 
+ 
+extra {"door"} 
+"The door is made of a strong dark wood. It is somewhat worn, but it still retains the majesty that polished mahogany always retains." 
+ 
+CELL_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+east to temple2_2 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"door"} descr "Out into the Corridor"; 
+ 
+end 
+ 
+                                temple2_5 
+names {"cell"} 
+title "A Large Cell in the Upper East Wing" 
+ 
+descr 
+" This cell is about twice the size of the others you have seen on this floor of the Temple. It links the upper east and north wings of the Temple but it is also the sleeping quaters of a cleric. It seems to have the normal furniture of a cell, having the bed, table and chair. These priests seem to deny themselves even the simple pleasures of life in service to their deity. You wonder if you too could endure those hardships for the love of a god.  There is a window in the North wall, providing more illumination than from just the torch. You can leave through the west or south doors." 
+ 
+ 
+extra {"window"} 
+"From this window you can see out into the courtyard below and the near reaches of the Forest of Serenity." 
+ 
+extra {"doors", "door"} 
+"The doors are made of a strong dark wood. Both are barely two metres tall." 
+ 
+CELL_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+west to temple2_6 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"door"} descr "West along a Corridor"; 
+south to temple2_2 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"door"} descr "South down a corridor"; 
+ 
+end 
+ 
+                                temple2_6 
+names {"corridor"} 
+title "A Long Corridor In The North Wing" 
+ 
+descr 
+" This Corridor stretches all the way across the upper north wing of the the Temple Building. There are 4 doors along here, heading westwards. You can feel a draft blowing down the corridor from up ahead. There are doors to your north and east. The corridor continues westward, lit by 4 flickering torches all along the south wall." 
+ 
+extra {"doors", "door"} 
+"The doors are made of a strong dark wood. All are barely two metres tall. There are 4 in this corridor." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+west to temple2_8 descr "Along the corridor"; 
+north to temple2_7 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"door"} descr "A priest's cell"; 
+east to temple2_5 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"door"} descr "A Large cell"; 
+ 
+end 
+ 
+                                temple2_7 
+names {"cell"} 
+title "A Priest's Cell" 
+ 
+descr 
+" This cell is larger than most you have seen so far. There is a bookcase against the east wall, but it is quite empty. There is a large window in the north wall, and a door to the south. That is the only exit. There is a bed and a single chair at its foot." 
+ 
+extra {"bookcase"} 
+"This bookcase is empty of books. Perhaps it is used as a shelf to store things, but that seems to be the only other use it could possibly have." 
+ 
+extra {"window"} 
+"From this window you can see out into the courtyard below and the near reaches of the Forest of Serenity. The Main Gate is north of here." 
+ 
+extra {"doors", "door"} 
+"The door is made of a strong dark wood. It is barely two metres tall." 
+ 
+CELL_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+south to temple2_6 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"door"} descr "An East-west Corridor"; 
+ 
+end 
+ 
+                                temple2_8 
+names {"corridor"} 
+title "A Corridor In The North Wing" 
+ 
+descr 
+" You are almost half-way down the corridor. There hairs on the back of your neck are tingling from the draft that you can feel here. The torch on the south wall is flickering, as if the air is coming from behind it. You can go north into another cell and west or east down the corridor." 
+ 
+extra {"doors", "door"} 
+"The doors are made of a strong dark wood. All are barely two metres tall. There are 4 in this corridor." 
+ 
+extra {"torch"} 
+"The torch is flickering as if there is a draft coming from behind it." 
+ 
+extra {"south wall", "wall"} 
+"The south wall looks slightly different here than the rest of its length, as if it has been pushed in slightly. Perhaps there is something else to be learned about this wall?" 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+west to temple2_10 descr "Along the corridor"; 
+east to temple2_6 descr "One end of the corridor"; 
+north to temple2_9 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"door"} descr "A priest's cell"; 
+south to temple2_15 open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN} 
+keyword {"door", "wall"}; 
+SECRET_DOOR_DIFFICULTY(SOUTH, 50) 
+ 
+end 
+ 
+                                temple2_9 
+names {"cell"} 
+title "A Priest's Cell" 
+ 
+descr 
+" As you enter this room, you are greeted by the large panelled window that is set in the north wall. There is a rather Spartan looking bed set underneath the window, and a small locker and chair at the bed's foot. There door leads back into the corridor to the south." 
+ 
+extra {"window"} 
+"From this window you can see out into the courtyard below and the near reaches of the Forest of Serenity. The Main Gate is north of here. There are four panels to the window. The frame is inlaid with a golden leaf." 
+ 
+extra {"doors", "door"} 
+"The door is made of a strong dark wood. It is barely two metres tall." 
+ 
+CELL_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+south to temple2_8 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"door"} descr "An East-west Corridor"; 
+ 
+end 
+ 
+ 
+                                temple2_10 
+names {"corridor"} 
+title "A Corridor In The North Wing" 
+ 
+descr 
+" There is a breeze here, a draft, coming from the east, but it doesn't seem to be from the doors along the north wall. These all lead into the different priests' cells. You can go west or east in this corridor, or north into a cell. There are doors at either end of the corridor." 
+  
+extra {"doors", "door"} 
+"The doors are made of a strong dark wood. All are barely two metres tall. There are 4 in this corridor." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+west to temple2_12 descr "The west end of the corridor"; 
+north to temple2_11 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"door"} descr "A priest's cell"; 
+east to temple2_8 descr "Along the Corridor"; 
+ 
+end 
+ 
+                                temple2_11 
+names {"cell"} 
+title "A Priest's Cell" 
+ 
+descr 
+" This room is a priest's cell. This is where they come at night to sleep, to pray in private, to study, and to be alone. There is a small table and a chair beside a rather uncomfortable bed, as in most of the other cells you have seen. There is a window set in the north wall and a door leading back out into the corridor to the south." 
+ 
+extra {"window"} 
+"From this window you can see out into the courtyard below and the near reaches of the Forest of Serenity. The Main Gate is north of here. You can also see the stables to the west of the courtyard." 
+ 
+extra {"door"} 
+"The door is made of a strong dark wood. It is barely two metres tall." 
+ 
+CELL_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+south to temple2_10 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"door"} descr "An East-west Corridor"; 
+ 
+end 
+ 
+ 
+                                temple2_12 
+names {"corridor"} 
+title "West end of the Corridor" 
+ 
+descr 
+" You are standing in a corridor that runs east-west through the upper north wing of the Temple. There are four doors set in the north wall stretching down the corridor to the east, and one of these is north of where you're standing. There is also a door to your west. A torch is set on the south wall." 
+ 
+extra {"doors", "door"} 
+"The doors are made of a strong dark wood. All are barely two metres tall. There are 4 in this corridor." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+west to temple2_14 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"door"} descr "The Common Room"; 
+north to temple2_13 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"door"} descr "A priest's cell"; 
+east to temple2_10 descr "Along the Corridor"; 
+ 
+end 
+ 
+                                temple2_13 
+names {"cell"} 
+title "Guest Quarters" 
+ 
+descr 
+" This room is quite different to the rest of rooms along this corridor. It appears to have been made for visitors to the Temple. The bed is surprisingly comfortable looking, there are curtains on the large window, and there is a desk beside the bed, together with a proper chair. You can leave this room through the south door." 
+ 
+extra {"window"} 
+" This window gives a view of the western side of the courtyard. You can see the Forest all around the Temple walls. The Main gates to the Temple appear to be open." 
+ 
+extra {"door"} 
+"The door is made of a strong dark wood. It is barely two metres tall." 
+ 
+extra {"bed"} 
+"This bed is quite high, and quite large. The Mattress is very thick and looks rather comfortable. The priests seem to spare no comfort for their esteemed guests, though otherwise the room is quite Spartan, probably to remind the one staying within these walls, that this is a place of devotion and worship." 
+ 
+extra {"desk"} 
+"The desk is intended for guests to take care of their affairs with. It is rather plain and simple, made from the same mahogany as the rest of the furniture in the room." 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+south to temple2_12 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"door"} descr "At one end of the Corridor"; 
+ 
+end 
+ 
+                                temple2_14 
+names {"common room"} 
+title "The Common Room" 
+ 
+descr 
+" This is the Common room, where the priests come to eat in the morning and the evening. There is a long table here and a lot of chairs surrounding it. A large window is set in the west wall and a spiral staircase can be seen in the southeast corner of the room. A chimney stack runs up the west wall, from the kitchen below. You can go down by the staircase, or east through a door in the northeast corner of the room." 
+ 
+extra {"window"} 
+"The Window in the west wall overlooks the stables building to the west side of the courtyard. You can see the Forest around the edges of the clearing outside the walls." 
+ 
+extra {"doors", "door"} 
+"The door is made of a strong dark wood. They are barely two metres tall." 
+ 
+extra {"table"} 
+"This table runs the length of the room, from north to south. There are chairs all around it. This must be where the priests eat their meals." 
+ 
+extra {"chairs", "chair"} 
+"The chairs are the same as most of the other chairs in the building. Whoever made them must have been a very boring person." 
+ 
+extra {"stairway", "staircase", "stairs", "stair"} 
+"A spiral wooden staircase, leading down to the Temple kitchen." 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+east to temple2_12 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"door"} descr "At one end of the Corridor"; 
+down to temple32 descr "Down to the Kitchen"; 
+ 
+end 
+ 
+                                temple2_15 
+names {"library"} 
+title "The Entrance to the Library" 
+ 
+descr 
+" You stand in awe before the Temple Library. In order to guard the sacred texts of the priests and to provide extra privacy, the entrance is concealed from the outside world. Before you stand three aisles, with two long bookcases standing in the room, and shelves on the east and west walls. This room is dimly lit by the torches. You can see a brighter room south past the book cases. You can go east and west to the northern ends of the east and west rows, or south through the centre row. The Library exit is in the north wall." 
+ 
+extra {"bookcases"} 
+"The bookcases are tall and laden down with old texts." 
+ 
+extra {"shelves", "shelf"} 
+"Like the bookcases, the shelves are also laden down with old books and illuminated texts." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+north to temple2_8 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"door"} descr "A corridor in the north wing"; 
+east to temple2_17 descr "The east row"; 
+west to temple2_16 descr "The west row"; 
+south to temple2_19 descr "Down the centre row"; 
+ 
+end 
+ 
+                                temple2_16 
+names {"library"} 
+title "The West Row" 
+ 
+descr 
+" This is the end of the west row. The North wall has torches mounted on it, providing a dim light to this area of the room. There are books and texts on shelves here, and the aisle runs south from here. You can go east or south from here." 
+ 
+extra {"bookcases"} 
+"The bookcases are tall and laden down with old texts." 
+ 
+extra {"shelves", "shelf"} 
+"Like the bookcases, the shelves are also laden down with old books and illuminated texts." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+east to temple2_15 descr "The head of the central row"; 
+south to temple2_18 descr "Down the Aisle"; 
+ 
+end 
+ 
+                                temple2_17 
+names {"library"} 
+title "The East Row" 
+ 
+descr 
+" There is a large bookcase against the east wall, and this runs along that wall southwards. You can proceed south through this, the east row, past a bookcase to the west, or you can go west beside the Library exit." 
+ 
+extra {"bookcases"} 
+"The bookcases are tall and laden down with old texts." 
+ 
+extra {"shelves", "shelf"} 
+"Like the bookcases, the shelves are also laden down with old books and illuminated texts." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+west to temple2_15 descr "The head of the central row"; 
+south to temple2_20 descr "Down the Aisle"; 
+ 
+end 
+ 
+                                temple2_18 
+names {"library"} 
+title "In the middle of the West Row" 
+ 
+descr 
+" A miriad of books line the bookcases to the west and east. Gold-gilt tomes of religious writings and all of the sagas involving the gods can be seen on each case. Some books have illuminated covers and others look like copies of books on the other shelves. That is one of the practices of the priests, the preservation and reproduction of ancient books. You can go north and south to each end of the row." 
+ 
+extra {"books", "book"} 
+"You can get books from the shelves." 
+ 
+extra {"bookcases"} 
+"The bookcases are tall and laden down with old texts." 
+ 
+extra {"shelves", "shelf"} 
+"Like the bookcases, the shelves are also laden down with old books and illuminated texts." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+north to temple2_16 descr "North end of the row"; 
+south to temple2_21 descr "South end of the row"; 
+ 
+end 
+ 
+                                temple2_19 
+names {"library"} 
+title "Half-way along the central row" 
+ 
+descr 
+" You are now standing in the centre of the room. To either side of you stand tall, large bookcases that stretch almost the length of the room from north to south. They are both laden with old books, many of which are illuminated text of holy events, or sacred legends involving Odin, the patron god of the Temple. You can go north and south from here." 
+ 
+extra {"books", "book"} 
+"You can get books from the shelves." 
+ 
+extra {"bookcases"} 
+"The bookcases are tall and laden down with old texts." 
+ 
+extra {"shelves", "shelf"} 
+"Like the bookcases, the shelves are also laden down with old books and illuminated texts." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+north to temple2_15 descr "At the Library exit"; 
+south to temple2_22 descr "Near the Scriptorium"; 
+ 
+end 
+ 
+                                temple2_20 
+names {"library"} 
+title "In the middle of the East row" 
+ 
+descr 
+" This is the the middle of the east row between to large bookcases. Some books with bright letters catch your eye on the west shelf. Most of the books appear to be extremely old, but most are in good repair, except those which have been used a lot. You can go north or south along the row." 
+ 
+extra {"books", "book"} 
+"You can get books from the shelves." 
+ 
+extra {"bookcases"} 
+"The bookcases are tall and laden down with old texts." 
+ 
+extra {"shelves", "shelf"} 
+"Like the bookcases, the shelves are also laden down with old books and illuminated texts." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+north to temple2_17 descr "North end of the row"; 
+south to temple2_23 descr "South end of the row"; 
+ 
+end 
+ 
+                                temple2_21 
+names {"library"} 
+title "South of the west row" 
+ 
+descr 
+" You are in the southwest corner of the Library. There are no books on the south wall, just torches mounted at intervals along it. A long aisle between the west wall and a large bookcase leads north from here, and you can go east to the end of another aisle." 
+ 
+extra {"bookcases"} 
+"The bookcases are tall and laden down with old texts." 
+ 
+extra {"shelves", "shelf"} 
+"Like the bookcases, the shelves are also laden down with old books and illuminated texts." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+north to temple2_18 descr "North along the aisle"; 
+east to temple2_22 descr "East near the Scriptorium"; 
+ 
+end 
+ 
+                                temple2_22 
+names {"library"} 
+title "Outside the Temple Scriptorium" 
+ 
+descr 
+" To the south is a small, brightly-lit room in which a small desk is situated with a lot of writing materials and some blank, together with partially written manuscripts, set upon it. You can proceed north through the central row, east and west to the end of the other rows, or south into the Scriptorium." 
+ 
+extra {"bookcases"} 
+"The bookcases are tall and laden down with old texts." 
+ 
+extra {"shelves", "shelf"} 
+"Like the bookcases, the shelves are also laden down with old books and illuminated texts." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+north to temple2_19 descr "North along the aisle"; 
+south to temple2_24 descr "South into the Scriptorium"; 
+west to temple2_21 descr "At the south end of an aisle"; 
+east to temple2_23 descr "At the south end of an ailse"; 
+ 
+end 
+ 
+                                temple2_23 
+names {"library"} 
+title "Southeast corner of the Library" 
+ 
+descr 
+" The eastern aisle of the Library is north from here. There aren't any bookshelves near the south wall, and the only adornment to be seen are a few torches which light this part of the Library. You can go north along the eastern aisle, or west to the end of the central aisle." 
+ 
+extra {"bookcases"} 
+"The bookcases are tall and laden down with old texts." 
+ 
+extra {"shelves", "shelf"} 
+"Like the bookcases, the shelves are also laden down with old books and illuminated texts." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+north to temple2_20 descr "North along the aisle"; 
+west to temple2_22 descr "At the south end of an aisle"; 
+ 
+end 
+ 
+                                temple2_24 
+names {"library"} 
+title "The Scriptorium" 
+ 
+descr 
+" This room is small, with a single chair and a writing desk in it. It is well lit though, by a torch on each wall. There are a number of writing and painting implements set on the desk, together with some manuscript paper and parchment. Small pots of coloured ink sit at the head of the desk. The only exit from this room is north into the Library." 
+ 
+extra {"chair"} 
+"The chair is higher than most of the chairs you have seen in the Temple, probably to give a little extra comfort to the scribe as he writes in his slow, delicate hand on the manuscript." 
+ 
+extra {"desk"} 
+"The desk is quite large, but this is necessary to hold all the writing materials which the scribe uses to practice art." 
+ 
+extra {"manuscript", "parchment", "paper"} 
+"The writing paper is cream coloured and of very high quality." 
+ 
+extra {"coloured ink", "ink"} 
+"The inks seem to be made from animal and vegitable dyes." 
+ 
+extra {"writing implements", "implements"} 
+"You can see pens, pencils, what looks like a scalpel, and an etching instrument. There are numerous tiny paint brushes too." 
+ 
+IN_TEMPLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+north to temple2_22 descr "North to the end of the Central Aisle"; 
+ 
+end 
+ 
+ 
+/* END second floor of the Temple */ 
+ 
+/* BEGIN Courtyard walls */ 
+ 
+                                        twall1 
+names {"courtyard wall"} 
+title "Inside the Northeast Wall" 
+ 
+descr 
+" You are now standing inside the Northeast Wall of the Temple courtyard. There are holes all around the wall and small notches which let you look out over the clearing and the Forest beyond it. To the west, the walkway ends bluntly in a wall which extends up from the entrance through the walls. You can go down to the courtyard, or south along the east wall." 
+ 
+WALL_EXTRAS 
+ 
+movement SECT_CITY 
+
+flags {UNIT_FL_NO_MOB}  
+
+south to twall2 descr "Inside the east wall of the courtyard"; 
+down to temple7 descr "Northeast in the courtyard"; 
+ 
+end 
+ 
+                                        twall2 
+names {"courtyard wall"} 
+title "Inside the East Wall" 
+ 
+descr 
+" This is the Eastern walkway inside the East wall. To your west you can see the east wing of the Temple Building itself, and looking out over the wall, the sea of green leaves stretches as far as the eye can see, but the Valley slopes up far to the east of here. You can go north and south along the wall." 
+ 
+WALL_EXTRAS 
+ 
+movement SECT_CITY 
+
+north to twall1 descr "Inside the Northeast wall"; 
+south to twall3 descr "Inside the Southeast wall"; 
+ 
+end 
+ 
+                                        twall3 
+names {"courtyard wall"} 
+title "Inside the Southeast Wall" 
+ 
+descr 
+" The trees of the Forest come very close to the walls here. If you stretch out your hand, you can just touch the nearest leaves. This is the Southeast corner of the wall around the courtyard. You can go north and west along the wall. There doesn't seem to be any way down to the courtyard." 
+ 
+WALL_EXTRAS 
+ 
+movement SECT_CITY 
+ 
+north to twall2 descr "Inside the East wall"; 
+west to twall4 descr "Inside the South wall"; 
+ 
+end 
+ 
+                                        twall4 
+names {"courtyard wall"} 
+title "Inside the South Wall" 
+ 
+descr 
+" The wall runs east-west here. You can see the rear of the Temple when you look north, without windows and out of place with all the fortifications around it. South through the holes in the wall you can see the forest canopy disappear suddenly in the distance. You can go west and east to the corners of the wall." 
+ 
+WALL_EXTRAS 
+ 
+movement SECT_CITY 
+ 
+east to twall3 descr "Inside the Southeast wall"; 
+west to twall5 descr "Inside the Southwest wall"; 
+ 
+end 
+ 
+                                        twall5 
+names {"courtyard wall"} 
+title "Inside the Southwest Wall" 
+ 
+descr 
+" This corner of the wall looks out over the compost patch behind the Temple walls. Inside the walls in the courtyard you can see a large well, and north of it, the stables. You can go north and east from here." 
+ 
+WALL_EXTRAS 
+ 
+movement SECT_CITY 
+ 
+east to twall4 descr "Inside the South wall"; 
+north to twall6 descr "Inside the West wall"; 
+ 
+end 
+ 
+                                        twall6 
+names {"courtyard wall"} 
+title "Inside the West Wall" 
+ 
+descr 
+" You are now overlooking the western part of the clearing which surrounds the walls. The ground looks moist below, as if there is an underground stream or other water source. East of you, the stables building extends into the courtyard from the wall. You can get onto the second floor of the stables by going east from here, or you can go north and south along the walls." 
+ 
+WALL_EXTRAS 
+ 
+movement SECT_CITY 
+ 
+south to twall5 descr "Inside the Southwest wall"; 
+east to stab2_1 descr "On the second floor of the stables"; 
+north to twall7 descr "Inside the Northwest wall"; 
+ 
+end 
+ 
+                                        twall7 
+names {"courtyard wall"} 
+title "Inside the Northwest Wall" 
+ 
+descr 
+" You are now standing inside the Northwest Wall of the Temple courtyard. There 
+are holes all around the wall and small notches which let you look out over the 
+clearing and the Forest beyond it. You can look out over the walls to the forest which seems to surround the Temple. To the northeast, you can see the top of a tower which rises up through the tree canopy. You can go south along the west wall, or down into the courtyard. Your way east is blocked by a wall which extends up from the entrance tunnel through the walls." 
+ 
+WALL_EXTRAS 
+ 
+movement SECT_CITY 
+
+flags {UNIT_FL_NO_MOB}  
+
+south to twall6 descr "Inside the west wall of the courtyard"; 
+down to temple8 descr "Northwest in the courtyard"; 
+ 
+end 
+ 
+/* END Courtyard walls */ 
+ 
+/* BEGIN Stables */ 
+ 
+                                        stab1_1 
+names {"stables entrance"} 
+title "The Temple stables" 
+ 
+descr 
+" This is the Temple Stable, where the priest's mounts are kept in case they need to travel or send messages. They also keep guests' horses in the stalls here, as a matter of courtesy. There are various items of tack hanging on the walls here, and large piles of hay stacked against the walls. An aroma, quite unique to stables, pervades the building. The smell is a mixture of horse manure, new and old hay and something else which you can't quite identify. There is a stall directly west of you. You can go north and south through the stables, or east out into the courtyard." 
+ 
+STABLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ 
+west to stab1_8 open {EX_OPEN_CLOSE, EX_CLOSED}  
+keyword {"stall door", "door"} descr "A stall"; 
+north to stab1_2 descr "Along the line of stalls"; 
+south to stab1_4 descr "Along the line of stalls"; 
+east to temple12 descr "Out into the courtyard"; 
+ 
+end 
+ 
+                                        stab1_2 
+names {"stables"} 
+title "Outside a stall" 
+ 
+descr 
+" You are now outside another stall in the Temple stables. The line of stalls runs north and south. You can here the noises of horses as they move in their stalls. You can go north from here to the end of the line of stalls, or south to the stables entrance. The stall door to your west doesn't appear to be locked." 
+ 
+STABLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ 
+west to stab1_9 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"stall door", "door"} descr "A stall"; 
+north to stab1_3 descr "End of the line of stalls"; 
+south to stab1_1 descr "Along the line of stalls"; 
+ 
+end 
+ 
+                                        stab1_3 
+names {"stables"} 
+title "End of the line of stalls" 
+ 
+descr 
+" This is the end of the line of stalls. You are standing outside the last stall in the line. You can't hear anything coming from inside. Perhaps the occupant is asleep. You can enter the stall, or go south towards the stables entrance." 
+ 
+STABLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ 
+west to stab1_10 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"stall door", "door"} descr "A stall"; 
+south to stab1_2 descr "Along the line of stalls"; 
+ 
+end 
+ 
+                                        stab1_4 
+names {"stables"} 
+title "Along the line of stalls" 
+ 
+descr 
+" This is the southern part of the stable. To the west is a large stall, and you can hear a horse shuffling around, obviously wanting its freedom. You can go north to the stable's entrance, south to the end of the line of stalls, or west into the horse stall." 
+ 
+STABLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ 
+west to stab1_7 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"stall door", "door"} descr "A stall"; 
+north to stab1_1 descr "The stables entrance"; 
+south to stab1_5 descr "End of the line of stalls"; 
+ 
+end 
+ 
+                                        stab1_5 
+names {"stables"} 
+title "End of the line of stalls" 
+ 
+descr 
+" You have reached the southern end of the line of stalls in the stable. There is a large pile of hay in the southeast corner and yet another horse stall to the west. You can go north back along the line of stalls or enter the horse stall to the west." 
+ 
+STABLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ 
+west to stab1_6 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"stall door", "door"} descr "A stall"; 
+north to stab1_4 descr "Along the line of stalls"; 
+ 
+end 
+ 
+                                        stab1_6 
+names {"stables"} 
+title "In a Stall" 
+ 
+descr 
+" You standing in a horse stall. There is hay on the ground and scuffed into the corners of the stall, and a bed of hay where the horse can sleep is also here. A water trough had been placed against the west wall. The only exit is back east." 
+ 
+extra {"water trough", "trough"} 
+"The water trough is just high enough for the horse to reach and drink from comfortably." 
+ 
+STABLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ 
+east to stab1_5 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"stall door", "door"} descr "Outside the stall"; 
+ 
+end 
+ 
+                                        stab1_7 
+names {"stables"} 
+title "In a Stall" 
+ 
+descr 
+" This is a horse stall with a water trough placed against the west wall and a half-door to the east. The floor is covered in new straw. A freshly made bed of hay covers the floor. The only exit is the east door." 
+ 
+extra {"straw"} 
+"The staw is very smelly." 
+ 
+extra {"water trough", "trough"} 
+"The water trough is just high enough for the horse to reach and drink from comfortably." 
+ 
+STABLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ 
+east to stab1_4 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"stall door", "door"} descr "Outside the stall"; 
+ 
+end 
+ 
+                                        stab1_8 
+names {"stables"} 
+title "In a Stall" 
+ 
+descr 
+" You standing in a horse stall. There is hay on the ground and scuffed into the corners of the stall, and a bed of hay where the horse can sleep is also here. A water trough had been placed against the west wall. The only exit is back east." 
+ 
+extra {"water trough", "trough"} 
+"The water trough is just high enough for the horse to reach and drink from comfortably." 
+ 
+STABLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ 
+east to stab1_1 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"stall door", "door"} descr "Outside the stall"; 
+ 
+end 
+ 
+                                        stab1_9 
+names {"stables"} 
+title "In a Stall" 
+ 
+descr 
+" This is a horse stall with a water trough placed against the west wall and a half-door to the east. The floor is covered in new straw. A freshly made bed of hay covers the floor. The only exit is the east door." 
+ 
+extra {"straw"} 
+"The staw is very smelly." 
+ 
+extra {"water trough", "trough"} 
+"The water trough is just high enough for the horse to reach and drink from comfortably." 
+ 
+STABLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ 
+east to stab1_2 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"stall door", "door"} descr "Outside the stall"; 
+ 
+end 
+ 
+                                        stab1_10 
+names {"stables"} 
+title "In a Stall" 
+ 
+descr 
+" You standing in a horse stall. There is hay on the ground and scuffed into the corners of the stall, and a bed of hay where the horse can sleep is also here. A water trough had been placed against the west wall. The only exit is back east." 
+ 
+extra {"water trough", "trough"} 
+"The water trough is just high enough for the horse to reach and drink from comfortably." 
+ 
+STABLE_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ 
+east to stab1_3 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"stall door", "door"} descr "Outside the stall"; 
+ 
+end 
+ 
+                                        stab2_1 
+names {"stables"} 
+title "Above the Main Stable" 
+ 
+descr 
+" You are now above the main stables, at the west wall. You can go west onto the walkway which runs around the inside of the courtyard wall, south into the stablemaster's cell, west into the tack room, or down to the courtyard." 
+ 
+movement SECT_CITY 
+ 
+flags {UNIT_FL_NO_MOB} 
+
+east to stab2_2 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"door"} descr "The Tack room"; 
+south to stab2_3 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"door"} descr "Priest's Cell"; 
+west to twall6 descr "Onto the Temple walls"; 
+down to temple8 descr "Down to the courtyard"; 
+ 
+end 
+ 
+                                        stab2_2 
+names {"stables"} 
+title "The Tack Room" 
+ 
+descr 
+" This room is quite large. There is an assortment of saddles, bridles, bits and other tack hanging on the walls. There is a wide window in the east wall overlooking the courtyard below and the Temple to the east. You can exit through the door which is set in the west wall." 
+ 
+extra {"window"} 
+"You can see the courtyard well from here. The Temple building is quite close." 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+STABLE_EXTRAS 
+ 
+movement SECT_CITY 
+ 
+west to stab2_1 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"door"} descr "Above the main stable"; 
+ 
+end 
+ 
+                                stab2_3 
+names {"cell"} 
+title "Stablemaster's Cell" 
+ 
+descr 
+" This cell is quite large. A panelled window is set in the east wall. There is a bed in the southwest corner of the room and a small table at its foot. A rather uncomfortable-looking chair is set beside the table. You can exit this room through the north door." 
+ 
+extra {"window"} 
+"From here you can see the West wing of the Temple Building. The courtyard is rather narrow in between." 
+ 
+extra {"doors", "door"} 
+"The door is made of a strong dark wood. It is barely two metres tall." 
+ 
+CELL_EXTRAS 
+ 
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER} 
+ 
+movement SECT_INSIDE 
+ALWAYS_LIGHT 
+ 
+north to stab2_1 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"door"} descr "Outside the Stablemaster's cell"; 
+ 
+end 
+ 
+ 
+/* END Stables */ 
+
+%mobiles
+/* 
+
+The elf traveller.
+
+	This guy is my walking billboard. Every 8 hours he changes location, so he is 
+either in the Forest of Serenity, Udgaard or Midgaard. He wakes up if slept, and he also stands up. He wanders around these zones while in them. He will attack evil people over level 45 in the Forest of Serenity (only here). He is nosummon/notele. While in Udgaard or Midgaard, he will size up pcs and if they are of good/neutral alignment and level 50, he will invite them to the Valley of Serenity. While in the Forest of Serenity, he will greet good/neutral pcs. If they are evil, he will threaten them (then attack if level 45+). During combat, he will attempt to disarm his enemy. He casts lightning bolt as an attack spell and he is able to heal himself. I've tried to make him so he isn't annoying, heh, but don't sue me.
+
+*/
+
+				traveller
+names {"elf traveller", "elf", "traveller", "Eldar"} 
+title "the elf traveller" 
+descr "The elf traveller is standing here, quietly observing you." 
+
+extra {} 
+"This elf is like none you have seen before. He looks almost like a ghost from the long-dead past. Standing more than two metres tall, he is an elf lord right out of a legend. His face is almost like a carving in its perfection. He has a stern, but kind expression, and when you look into his face, his power shows itself as a flickering light in the darkness of his eyes." 
+ 
+race RACE_ELF 
+sex SEX_MALE 
+height 230 
+weight 300 
+level 120 
+alignment 1000 
+exp 100 /* yep 100 */
+money 6 SILVER_PIECE 
+ 
+NATURAL_DEF(WPN_FIST, ARM_HLEATHER) 
+
+MSET_ABILITY(20,25,1,20,15,4,8,7) 
+MSET_WEAPON(6,6,6,20,6,6) 
+MSET_SPELL(15,2,2,2,2,2,2,2,15,3,3) 
+ 
+dilcopy combat_mag@function("lightning bolt","heal",20,1); 
+
+special SFUN_RANDOM_ZONE_MOVE time 600 bits SFB_RANTIME
+ 
+flags {UNIT_FL_NO_TELEPORT, CHAR_DETECT_INVISIBLE} 
+
+dilbegin wake_up(); /* Don't let me sleep or whatever */
+
+code
+{
+:init:
+   heartbeat := PULSE_SEC*5; 
+:start:
+wait(SFB_TICK,TRUE);  
+
+if (self.position==POSITION_SLEEPING)
+{
+   exec("wake", self);
+   exec("emote rubs his eyes.", self);
+}
+heartbeat := PULSE_SEC*1;
+pause;
+if ((self.position==POSITION_SITTING) or (self.position==POSITION_RESTING))
+{
+   exec("stand", self);
+   exec("say No rest for the wicked.", self);
+}
+heartbeat := PULSE_SEC*5;
+
+goto start;
+
+}
+dilend /* wake_up */
+
+dilbegin time_move(); /* Every 8 hours go somewhere else */
+
+var 
+dest : string;
+here : string;
+j    : integer;
+
+code 
+{
+:init:
+   heartbeat := SECS_PER_MUD_HOUR*8; /* 8 Hours */
+ :start:
+wait(SFB_TICK,TRUE);  
+
+:getadest:
+
+on rnd(0,2) goto udgaard, midgaard, seren;
+
+
+:udgaard:
+if (self.outside.zone == "udgaard") goto getadest;
+here := "Udgaard";
+dest := "village_rd1@udgaard"; 
+goto tele;
+
+
+:midgaard:
+if (self.outside.zone == "midgaard") goto getadest;
+here := "midgaard";
+dest := "out_wgate@cypress"; 
+goto tele;
+
+
+:seren:
+if (self.outside.zone == "seren") goto getadest;
+here := "the Valley of Serenity";
+dest := "forest1@seren";
+goto tele;
+
+
+:tele:
+
+act("$1n utters the words, 'Trans infinitum me mitto!'",  
+      A_SOMEONE,self,null,null,TO_REST); 
+act("$1n disappears in a flash of blue light!",  
+      A_SOMEONE,self,null,null,TO_REST); 
+
+	link(self,findroom(dest)); 
+
+act("$1n appears in a puff of blue smoke!",  
+      A_SOMEONE,self,null,null,TO_REST); 
+act("$1n gestures and the smoke vanishes.",  
+      A_SOMEONE,self,null,null,TO_REST); 
+heartbeat := PULSE_SEC*5;
+pause;
+exec("say Ah, " + here + ". What a wonderful place to be.", self);
+goto init;
+
+}
+dilend /* time_move */
+
+dilbegin talk_pc();
+
+var
+   i    : integer;
+   j    : integer;
+   pc   : unitptr;
+
+code
+{
+:init:
+   heartbeat := PULSE_SEC*5;
+   i := interrupt(SFB_COM,self.position==POSITION_FIGHTING,fight);
+:start:
+   wait(SFB_DONE,((activator.type==UNIT_ST_PC) and (self.position!=POSITION_SLEEPING) and ((command("north")) or (command("west")) or (command("east")) or (command("south")))));
+pc := activator;
+secure(pc,lostem);
+   pause;
+
+if ((self.outside.zone != "seren") and (self.outside.zone != "midgaard") and (self.outside.zone != "udgaard")) goto start;
+
+if (pc.level < 50) goto helpthem;
+
+if (pc.level > 50) goto start;
+
+if (pc.alignment < -349)
+{
+   if (self.outside.zone == "seren") 
+	{
+		exec("say " + pc.name + "! Get away from this place or I will " +
+			"destroy you! Your evil won't be tolerated here!", self);
+		pause;
+		pause;
+		if (pc.level > 45) /* Give them a chance */
+		{
+		exec("say So be it. Then die you foul evil creature!", self);
+		exec("kill " + pc.name, self);
+		}
+	unsecure(pc);
+            	pause;
+	pause;
+	pause;
+	pause;
+           		goto start;
+	}
+
+if ((self.outside.zone == "midgaard") or (self.outside.zone == "udgaard")) 
+{
+   exec("say " + pc.name + ", those who are evil like you will not be tolerated in " + 	"the Valley of Serenity.", self);
+   pause;
+   exec("growl " + pc.name, self);
+   unsecure(pc);
+   pause;
+   pause;
+   pause;
+   pause;
+   pause;
+   pause;
+goto start;
+}
+}
+
+if (self.outside.zone == "seren") 
+	{
+	exec("say Welcome to the Valley of Serenity, " + pc.name + ".", self);
+	unsecure(pc);
+	pause;
+	pause;
+            pause;
+	pause;
+	pause;
+	pause;
+           goto start;
+           	}
+
+
+
+if ((self.outside.zone == "midgaard") or (self.outside.zone == "udgaard")) 
+
+{
+
+   exec("say Greetings " + pc.name + ", you would be welcome to visit the Valley " +
+"of Serenity. It lies south of Midgaard and the Etz-Nab woods.", self);
+   pause;
+   exec("say One of your might would gain great experience there.", self);
+   unsecure(pc);
+   pause;
+   pause;
+   pause;
+   pause;
+   pause;
+   pause;
+   pause;
+goto start;
+
+}
+
+:helpthem:
+
+if ( ((self.outside.zone != "midgaard") and (self.outside.zone != "udgaard") and (self.outside.zone != "seren")) and (pc.level < 50))
+	{
+	exec("say Hi " + pc.name + ".", self);
+	unsecure(pc);
+	pause;
+	pause;
+	pause;
+	pause;
+           goto start;
+           	}
+
+:callempuny:
+
+on rnd(0,3) goto prepuny, postpuny, postpuny, postpuny;
+
+:prepuny:
+
+exec("say Live " + pc.name + ", grow stronger, you will be ready for the Valley of " +
+	"Serenity some day.", self);
+   pause;
+   exec("say Perhaps there are others I can tell.", self);
+   exec("wave " + pc.name,self);
+
+:postpuny:
+   unsecure(pc);
+   pause;
+   pause;
+   pause;
+   pause;
+goto start;
+
+:fight:
+   heartbeat := PULSE_SEC*3;
+   while (self.position == POSITION_FIGHTING) pause;
+   pause;
+   pause;
+   heartbeat := PULSE_SEC*5;
+   goto start;
+
+:lostem:
+unsecure(pc);
+exec("say Perhaps someone else would be a better listener.", self);
+goto start;
+}
+dilend /* talk_pc */
+
+dilbegin kill_chance(); /* Stop newbies committing suicide */ 
+ 
+var 
+    perp : unitptr; 
+ 
+code  
+{ 
+:start: 
+    wait(SFB_CMD,command(CMD_KILL)); 
+    perp := activator; 
+    secure(perp,lost); 
+     
+       if ((findunit(activator,argument,FIND_UNIT_SURRO,null)==self) and (perp.level < 25))
+       { 
+	block; 
+	exec("say " + perp.name + ", you can't kill me, so don't be foolish.", self);
+	exec("pat " + perp.name, self);
+	goto start; 
+       } 
+    goto start; 
+ 
+:lost: 
+    unsecure(perp); 
+    goto start; 
+} 
+dilend /* kill_chance */ 
+
+
+dilbegin combat_dil(); /* Let's kick some ass */
+
+var
+oppo : unitptr;
+
+code
+{
+:init:
+   heartbeat := PULSE_SEC*5; 
+:start:
+wait(SFB_COM,self.position==POSITION_FIGHTING);
+oppo := self.fighting;
+secure(oppo, lostem);
+
+if (oppo.level <= self.level)
+{
+exec("disarm " + oppo.name, self);
+pause;
+}
+while (self.position == POSITION_FIGHTING) pause;
+goto start;
+
+:lostem:
+unsecure(oppo);
+exec("strut", self);
+goto start;
+}
+dilend /* combat_dil */
+
+end /* traveller */
+
+%objects
+
+				elf_boots /* Elf traveller's boots */
+names {"Celerime's boots", "celerimes boots", "boots"}
+title "&cgCelerime's boots&cw"
+descr "A pair of leaf-green boots rest here, glistening with a light of their own."
+
+extra {}
+"These beautiful boots are made of a highly polished green cotton with leather soles. Legend has it that only the old elves knew how to make them. The fact that the boots seem to glisten in an unseen light tells you that these are no ordinary boots. Perhaps the ancient elves imbued them with some of their magic? That's curious, there are no laces."
+
+extra {"$identify"}
+"These boots endow the wearer with greater dexterity and intelligence. They can also increase the wearer's overall speed for a short time."
+
+extra {"$improved identify"}
+"Celerime's boots are of Craftsmanship/Magical modifiers 7/7. They will give the wearer a boon of +2 dexterity and +1 brain. While worn, if the wearer utters the word 'Quam', the boots will increase the wearer's speed in combat. The boots retain only 3 charges - to see the charges, type 'Fewl' while wearing them."
+
+extra {"$wear_s"}
+"As you put on Celerime's boots, you feel them magically hug your feet perfectly so that you don't need to lace them."
+
+extra {"$wear_o"}
+"As $1n puts on $1s boots, the boots seem to hug $1s feet perfectly."
+
+extra {"$rem_s"}
+"As you take off the boots, they suddenly let go of your feet and come away freely."
+
+extra {"$rem_o"}
+"As $1n removes $1s boots, the quickness in his step lessens."
+
+extra {"$get_s"}
+"A tingle of magical power runs through your fingers as you pick up the boots."
+
+extra {"$get_o"}
+"$1n's hand seems to twitch slightly as $1e picks up Celerime's boots."
+
+rent 250 IRON_PIECE
+cost 500 IRON_PIECE
+
+BRA_TRANSFER(+1)
+DEX_TRANSFER(+2)
+
+MATERIAL_METAL("Elf cotton")
+ARMOUR_PLATE(7,7)
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+
+weight 5 
+
+dilcopy level_restrict@function(40,0,0,"");
+
+dilcopy boot_charge@seren();
+dilcopy boot_haste@seren();
+
+end /* elf_boots */
+
+
+
+/* ONLINE QUEST OBJECTS */
+
+/* Board for organising the baton quest - has a lot of dil attached
+   to it */
+
+                        baton_board
+names {"baton online quest board","online board","board"}
+title "the Online Quest Board"
+descr "An Online Quest Board hovers in the air here."
+
+extra {}
+"This board is for messages relating to online quests."
+
+type ITEM_OTHER
+weight 1000
+
+dilcopy board_setup@seren1();
+
+special SFUN_BULLETIN_BOARD "online2"
+
+end /* baton_board */
+
+
+
+/* Baton dispenser 1 for each baton type (8 in total) */
+
+                                dispense1
+names {"a red quest baton dispenser","a baton dispenser","dispenser","qbd1","qbd"}
+title "a &crRed&cw Quest Baton Dispenser"
+descr "A &crRed&cw quest baton dispenser has been placed here."
+
+extra {}
+"This is a quest baton dispenser, which quite surprisingly dispenses online quest batons! Just type 'Dispense' and it will dispense a baton if it hasn't already done so this turn."
+
+type ITEM_OTHER
+
+weight 1000
+
+spell 50
+
+dilcopy mover@seren1();
+dilcopy give_baton@seren1("baton1");
+dilcopy count_down@seren1("90");
+
+end /* dispense1 */
+
+                                dispense2
+names {"a green quest baton dispenser","a baton dispenser","dispenser","qbd2","qbd"}
+title "a &cgGreen&cw Quest Baton Dispenser"
+descr "A &cgGreen&cw quest baton dispenser has been placed here."
+
+extra {}
+"This is a quest baton dispenser, which quite surprisingly dispenses online quest batons! Just type 'Dispense' and it will dispense a baton if it hasn't already done so this turn."
+
+type ITEM_OTHER
+
+weight 1000
+
+spell 50
+
+dilcopy mover@seren1();
+dilcopy give_baton@seren1("baton2");
+dilcopy count_down@seren1("90");
+
+end /* dispense2 */
+
+                                dispense3
+names {"a yellow quest baton dispenser","a baton dispenser","dispenser","qbd3","qbd"}
+title "a &c+yYellow&cw Quest Baton Dispenser"
+descr "A &c+yYellow&cw quest baton dispenser has been placed here."
+
+extra {}
+"This is a quest baton dispenser, which quite surprisingly dispenses online quest batons! Just type 'Dispense' and it will dispense a baton if it hasn't already done so this turn."
+
+type ITEM_OTHER
+
+weight 1000
+
+spell 50
+
+dilcopy mover@seren1();
+dilcopy give_baton@seren1("baton3");
+dilcopy count_down@seren1("90");
+
+end /* dispense3 */
+
+                                dispense4
+names {"a blue quest baton dispenser","a baton dispenser","dispenser","qbd4","qbd"}
+title "a &cbBlue&cw Quest Baton Dispenser"
+descr "A &cbBlue&cw quest baton dispenser has been placed here."
+
+extra {}
+"This is a quest baton dispenser, which quite surprisingly dispenses online quest batons! Just type 'Dispense' and it will dispense a baton if it hasn't already done so this turn."
+
+type ITEM_OTHER
+
+weight 1000
+
+spell 50
+
+dilcopy mover@seren1();
+dilcopy give_baton@seren1("baton4");
+dilcopy count_down@seren1("90");
+
+end /* dispense4 */
+
+                                dispense5
+names {"a purple quest baton dispenser","a baton dispenser","dispenser","qbd5","qbd"}
+title "a &cmPurple&cw Quest Baton Dispenser"
+descr "A &cmPurple&cw quest baton dispenser has been placed here."
+
+extra {}
+"This is a quest baton dispenser, which quite surprisingly dispenses online quest batons! Just type 'Dispense' and it will dispense a baton if it hasn't already done so this turn."
+
+type ITEM_OTHER
+
+weight 1000
+
+spell 50
+
+dilcopy mover@seren1();
+dilcopy give_baton@seren1("baton5");
+dilcopy count_down@seren1("90");
+
+end /* dispense5 */
+
+                                dispense6
+names {"a cyan quest baton dispenser","a baton dispenser","dispenser","qbd6","qbd"}
+title "a &ccCyan&cw Quest Baton Dispenser"
+descr "A &ccCyan&cw quest baton dispenser has been placed here."
+
+extra {}
+"This is a quest baton dispenser, which quite surprisingly dispenses online quest batons! Just type 'Dispense' and it will dispense a baton if it hasn't already done so this turn."
+
+type ITEM_OTHER
+
+weight 1000
+
+spell 50
+
+dilcopy mover@seren1();
+dilcopy give_baton@seren1("baton6");
+dilcopy count_down@seren1("90");
+
+end /* dispense6 */
+
+                                dispense7
+names {"a white quest baton dispenser","a baton dispenser","dispenser","qbd7","qbd"}
+title "a &c+wWhite&cw Quest Baton Dispenser"
+descr "A &c+wWhite&cw quest baton dispenser has been placed here."
+
+extra {}
+"This is a quest baton dispenser, which quite surprisingly dispenses online quest batons! Just type 'Dispense' and it will dispense a baton if it hasn't already done so this turn."
+
+type ITEM_OTHER
+
+weight 1000
+
+spell 50
+
+dilcopy mover@seren1();
+dilcopy give_baton@seren1("baton7");
+dilcopy count_down@seren1("90");
+
+end /* dispense7 */
+
+                                dispense8
+names {"a black quest baton dispenser","a baton dispenser","dispenser","qbd8","qbd"}
+title "a &c+nBlack&cw Quest Baton Dispenser"
+descr "A &c+nBlack&cw quest baton dispenser has been placed here."
+
+extra {}
+"This is a quest baton dispenser, which quite surprisingly dispenses online quest batons! Just type 'Dispense' and it will dispense a baton if it hasn't already done so this turn."
+
+type ITEM_OTHER
+
+weight 1000
+
+spell 50
+
+dilcopy mover@seren1();
+dilcopy give_baton@seren1("baton8");
+dilcopy count_down@seren1("90");
+
+end /* dispense8 */
+
+
+
+
+/* Batons - 8 types */
+
+				baton1 
+names {"an online quest baton","quest baton", "red baton", "baton","qb1","qb"}
+title "a &crRed&cw Quest Baton"
+descr "A short &crRed&cw quest baton is lying here."
+
+extra {}
+"This baton seems to be made from a light but sturdy metal. It has been painted bright &crred&cw. It is for use in online quests."
+
+extra {"$identify"}
+"This is a quest baton, given out by one of the baton despensers."
+
+type ITEM_OTHER
+
+weight 0
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+
+spell 199
+
+dilcopy count_down@seren1("120");
+
+end /* baton1 */
+
+                                baton2
+names {"an online quest baton","quest baton", "green baton", "baton","qb2","qb"}
+title "a &cgGreen&cw Quest Baton"
+descr "A short &cgGreen&cw quest baton is lying here."
+
+extra {}
+"This baton seems to be made from a light but sturdy metal. It has been painted bright &cggreen&cw. It is for use in online quests."
+
+extra {"$identify"}
+"This is a quest baton, given out by one of the baton despensers."
+
+type ITEM_OTHER
+
+weight 0
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+
+spell 199
+
+dilcopy count_down@seren1("120");
+
+end /* baton2 */
+
+                                baton3
+names {"an online quest baton","quest baton","yellow baton","baton","qb3","qb"}
+title "a &c+yYellow&cw Quest Baton"
+descr "A short &c+yYellow&cw quest baton is lying here."
+
+extra {}
+"This baton seems to be made from a light but sturdy metal. It has been painted bright &c+yyellow&cw. It is for use in online quests."
+
+extra {"$identify"}
+"This is a quest baton, given out by one of the baton despensers."
+
+type ITEM_OTHER
+
+weight 0
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+
+spell 199
+
+dilcopy count_down@seren1("120");
+
+end /* baton3 */
+
+                                baton4
+names {"an online quest baton","quest baton","blue baton", "baton","qb4","qb"}
+title "a &cbBlue&cw Quest Baton"
+descr "A short &cbBlue&cw quest baton is lying here."
+
+extra {}
+"This baton seems to be made from a light but sturdy metal. It has been painted bright &cbblue&cw. It is for use in online quests."
+
+extra {"$identify"}
+"This is a quest baton, given out by one of the baton despensers."
+
+type ITEM_OTHER
+
+weight 0
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+
+spell 199
+
+dilcopy count_down@seren1("120");
+
+end /* baton4 */
+
+                                baton5
+names {"an online quest baton","quest baton","purple baton","baton","qb5","qb"}
+title "a &cmPurple&cw Quest Baton"
+descr "A short &cmPurple&cw quest baton is lying here."
+
+extra {}
+"This baton seems to be made from a light but sturdy metal. It has been painted bright &cmpurple&cw. It is for use in online quests."
+
+extra {"$identify"}
+"This is a quest baton, given out by one of the baton despensers."
+
+type ITEM_OTHER
+
+weight 0
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+
+spell 199
+
+dilcopy count_down@seren1("120");
+
+end /* baton5 */
+
+                                baton6
+names {"an online quest baton","quest baton","cyan baton", "baton","qb6","qb"}
+title "a &ccCyan&cw Quest Baton"
+descr "A short &ccCyan&cw quest baton is lying here."
+
+extra {}
+"This baton seems to be made from a light but sturdy metal. It has been painted bright &cccyan&cw. It is for use in online quests."
+
+extra {"$identify"}
+"This is a quest baton, given out by one of the baton despensers."
+
+type ITEM_OTHER
+
+weight 0
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+
+spell 199
+
+dilcopy count_down@seren1("120");
+
+end /* baton6 */
+
+                                baton7
+names {"an online quest baton","quest baton", "white baton", "baton","qb7","qb"}
+title "a &c+wWhite&cw Quest Baton"
+descr "A short &c+wWhite&cw quest baton is lying here."
+
+extra {}
+"This baton seems to be made from a light but sturdy metal. It has been painted bright &c+wwhite&cw. It is for use in online quests."
+
+extra {"$identify"}
+"This is a quest baton, given out by one of the baton despensers."
+
+type ITEM_OTHER
+
+weight 0
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+
+spell 199
+
+dilcopy count_down@seren1("120");
+
+end /* baton7 */
+
+                                baton8
+names {"an online quest baton","quest baton", "black baton", "baton","qb8","qb"}
+title "a &c+nBlack&cw Quest Baton"
+descr "A short &c+nBlack&cw quest baton is lying here."
+
+extra {}
+"This baton seems to be made from a light but sturdy metal. It has been painted &c+nblack&cw. It is for use in online quests."
+
+extra {"$identify"}
+"This is a quest baton, given out by one of the baton despensers."
+
+type ITEM_OTHER
+
+weight 0
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+
+spell 199
+
+dilcopy count_down@seren1("120");
+
+end /* baton8 */
+
+
+
+%reset
+
+load chat_board@garden  into chat_room zonemax 1
+
+load guard_olayan@seren into temple1 zonemax 3
+load guard_olayan@seren into temple1 zonemax 3
+load guard_olayan@seren into temple15 zonemax 3
+
+load heart_olayan@seren into temple15 zonemax 1 
+{
+load olayan_heart@seren
+}
+
+load patrol_olayan@seren into twall1 zonemax 6
+load patrol_olayan@seren into twall7 zonemax 6
+load patrol_olayan@seren into twall5 zonemax 6
+load patrol_olayan@seren into twall3 zonemax 6
+load patrol_olayan@seren into temple12 zonemax 6
+load patrol_olayan@seren into temple11 zonemax 6 
+
+/* Horses */
+
+load stallion@seren into stab1_6 zonemax 4
+load stallion@seren into stab1_7 zonemax 4
+load stallion@seren into stab1_8 zonemax 4
+load stallion@seren into stab1_9 zonemax 4
+
+load mare@seren into stab1_6 zonemax 5
+load mare@seren into stab1_7 zonemax 5
+load mare@seren into stab1_8 zonemax 5
+load mare@seren into stab1_9 zonemax 5
+load mare@seren into stab1_10 zonemax 5
+
+/* PRIESTS */
+/* Ground floor */
+load guard_priest@seren into temple16 zonemax 7
+{
+equip priest_mace@seren position WEAR_WIELD
+equip priest_robes@seren position WEAR_ABOUT
+equip sandals@seren position WEAR_FEET
+}
+
+load guard_priest@seren into temple20 zonemax 7
+{
+equip priest_mace@seren position WEAR_WIELD
+equip priest_robes@seren position WEAR_ABOUT
+equip sandals@seren position WEAR_FEET
+}
+
+load guard_priest@seren into temple30 zonemax 7
+{
+equip priest_mace@seren position WEAR_WIELD
+equip priest_robes@seren position WEAR_ABOUT
+equip sandals@seren position WEAR_FEET
+}
+
+load guard_priest@seren into temple34 zonemax 7
+{
+equip priest_mace@seren position WEAR_WIELD
+equip priest_robes@seren position WEAR_ABOUT
+equip sandals@seren position WEAR_FEET
+}
+
+load grunt_priest@seren into temple30 zonemax 12
+{
+equip priest_robes@seren position WEAR_ABOUT
+equip sandals@seren position WEAR_FEET
+}
+
+load grunt_priest@seren into temple30 zonemax 12
+{
+equip priest_robes@seren position WEAR_ABOUT
+equip sandals@seren position WEAR_FEET
+}
+
+load grunt_priest@seren into temple23 zonemax 12
+{
+equip priest_robes@seren position WEAR_ABOUT
+equip sandals@seren position WEAR_FEET
+}
+
+load grunt_priest@seren into temple24 zonemax 12
+{
+equip priest_robes@seren position WEAR_ABOUT
+equip sandals@seren position WEAR_FEET
+}
+
+load high_priest@seren into temple18 zonemax 1
+{
+equip high_robes@seren position WEAR_ABOUT
+equip sandals@seren position WEAR_FEET
+equip passage_ring@seren position WEAR_FINGER_L
+}
+
+load steward_priest@seren into temple29 zonemax 1
+{
+equip priest_robes@seren position WEAR_ABOUT
+equip sandals@seren position WEAR_FEET
+}
+
+load cook_priest@seren into temple32 zonemax 1
+{
+equip priest_robes@seren position WEAR_ABOUT
+equip sandals@seren position WEAR_FEET
+}
+
+
+/* 1st floor */
+load stable_priest@seren into stab2_3 zonemax 1
+{
+equip priest_robes@seren position WEAR_ABOUT
+equip sandals@seren position WEAR_FEET
+equip hayfork@seren position WEAR_WIELD
+}
+
+load scribe_priest@seren into temple2_24 zonemax 1
+{
+equip quill@midgaard position WEAR_HOLD
+equip priest_robes@seren position WEAR_ABOUT
+equip sandals@seren position WEAR_FEET
+}
+
+load initiate@seren into temple2_4 zonemax 1
+{
+equip priest_robes@seren position WEAR_ABOUT
+equip sandals@seren position WEAR_FEET
+}
+
+load grunt_priest@seren into temple2_3 zonemax 12
+{
+equip priest_robes@seren position WEAR_ABOUT
+equip sandals@seren position WEAR_FEET
+}
+
+load grunt_priest@seren into temple2_5 zonemax 12
+{
+equip priest_robes@seren position WEAR_ABOUT
+equip sandals@seren position WEAR_FEET
+}
+
+load grunt_priest@seren into temple2_7 zonemax 12
+{
+equip priest_robes@seren position WEAR_ABOUT
+equip sandals@seren position WEAR_FEET
+}
+
+load grunt_priest@seren into temple2_9 zonemax 12
+{
+equip priest_robes@seren position WEAR_ABOUT
+equip sandals@seren position WEAR_FEET
+}
+
+load grunt_priest@seren into temple2_11 zonemax 12
+{
+equip priest_robes@seren position WEAR_ABOUT
+equip sandals@seren position WEAR_FEET
+}
+
+load grunt_priest@seren into temple2_13 zonemax 12
+{
+equip priest_robes@seren position WEAR_ABOUT
+equip sandals@seren position WEAR_FEET
+}
+
+load grunt_priest@seren into temple2_14 zonemax 12
+{
+equip priest_robes@seren position WEAR_ABOUT
+equip sandals@seren position WEAR_FEET
+}
+
+load grunt_priest@seren into temple2_14 zonemax 12
+{
+equip priest_robes@seren position WEAR_ABOUT
+equip sandals@seren position WEAR_FEET
+}
+
+load guard_priest@seren into temple2_6 zonemax 7
+{
+equip priest_mace@seren position WEAR_WIELD
+equip priest_robes@seren position WEAR_ABOUT
+equip sandals@seren position WEAR_FEET
+}
+
+load guard_priest@seren into temple2_2 zonemax 7
+{
+equip priest_mace@seren position WEAR_WIELD
+equip priest_robes@seren position WEAR_ABOUT
+equip sandals@seren position WEAR_FEET
+}
+
+load guard_priest@seren into temple2_14 zonemax 7
+{
+equip priest_mace@seren position WEAR_WIELD
+equip priest_robes@seren position WEAR_ABOUT
+equip sandals@seren position WEAR_FEET
+}
+
+
+/* TEMPLE Objects */
+
+load well@seren into temple14 zonemax 1
+
+load thor_statue@seren into temple26 zonemax 1
+load tyr_statue@seren into temple27 zonemax 1
+load odin_statue@seren into temple28 zonemax 1
+load altar_odin@seren into temple28 zonemax 1
+
+load holy_font@seren into temple16 zonemax 1
+
+load stone_table@seren into temple25 zonemax 1
+
+
+/* STABLE TACK ROOM */
+load broom@seren into stab2_2 local 1
+load hayfork@seren into stab2_2 local 1
+
+/* STABLE */
+load hay@seren into stab1_6 zonemax 6
+load hay@seren into stab1_4 zonemax 6
+load hay@seren into stab1_8 zonemax 6
+load hay@seren into stab1_3 zonemax 6
+load hay@seren into stab1_10 zonemax 6
+load hay@seren into stab1_1 zonemax 6
+
+load hayfork@seren into stab1_1 local 1
+
+/* ROBING ROOM */
+load priest_robes@seren into temple19 local 5
+load priest_robes@seren into temple19 local 5
+load priest_robes@seren into temple19 local 5
+load priest_robes@seren into temple19 local 5
+load priest_robes@seren into temple19 local 5
+
+load high_robes@seren into temple19 local 1
+
+load sandals@seren into temple19 local 2
+load sandals@seren into temple19 local 2
+
+/* CLERIC ROOM */
+load firewood@seren into temple30 local 4
+load firewood@seren into temple30 local 4
+load firewood@seren into temple30 local 4
+load firewood@seren into temple30 local 4
+
+/* COMMON ROOM */
+load kitchen_plate@seren into temple2_14 local 3
+load kitchen_plate@seren into temple2_14 local 3
+load kitchen_plate@seren into temple2_14 local 3
+
+load kitchen_fork@seren into temple2_14 local 3
+load kitchen_fork@seren into temple2_14 local 3
+load kitchen_fork@seren into temple2_14 local 3
+
+load kitchen_knife@seren into temple2_14 local 3
+load kitchen_knife@seren into temple2_14 local 3
+load kitchen_knife@seren into temple2_14 local 3
+
+
+/* TOOL ROOM */
+load broom@seren into temple31 local 2
+load broom@seren into temple31 local 2
+
+
+/* KITCHEN */
+load cooking_pot@seren into temple32 local 1
+{
+load garlic@seren
+load cabbage@seren
+load cabbage@seren
+}
+
+load firewood@seren into temple32 local 3
+load firewood@seren into temple32 local 3
+load firewood@seren into temple32 local 3
+
+
+/* STORE ROOM */
+load garlic@seren into temple33 zonemax 7
+load garlic@seren into temple33 zonemax 7
+load garlic@seren into temple33 zonemax 7
+load garlic@seren into temple33 zonemax 7
+load garlic@seren into temple33 zonemax 7
+
+load cabbage@seren into temple33 zonemax 10
+load cabbage@seren into temple33 zonemax 10
+load cabbage@seren into temple33 zonemax 10
+load cabbage@seren into temple33 zonemax 10
+load cabbage@seren into temple33 zonemax 10
+load cabbage@seren into temple33 zonemax 10
+load cabbage@seren into temple33 zonemax 10
+
+load carrot@seren into temple33 zonemax 10
+load carrot@seren into temple33 zonemax 10
+load carrot@seren into temple33 zonemax 10
+load carrot@seren into temple33 zonemax 10
+load carrot@seren into temple33 zonemax 10
+load carrot@seren into temple33 zonemax 10
+load carrot@seren into temple33 zonemax 10
+
+
+/* HIGH PRIEST ROOM */
+load quill@midgaard into temple18 local 1
+load paper@midgaard into temple18 local 1
+
+/* SCRIBE'S ROOM */
+load paper@midgaard into temple2_24 local 5
+load paper@midgaard into temple2_24 local 5
+load paper@midgaard into temple2_24 local 5
+load paper@midgaard into temple2_24 local 5
+load paper@midgaard into temple2_24 local 5
+
+load quill@midgaard into temple2_24 local 1
+
+/* MISC RESET */
+
+load book_case@seren into temple2_18 zonemax 3
+{
+load history@seren
+}
+
+load book_case@seren into temple2_19 zonemax 3
+{
+load creation@seren
+}
+
+load book_case@seren into temple2_20 zonemax 3
+{
+load creation@seren
+load history@seren
+}
+
+load traveller into forest19@seren max 1
+{
+equip chani_cloak@seren position WEAR_ABOUT
+equip flail1@midgaard position WEAR_WIELD
+equip elf_boots@seren1 position WEAR_FEET
+}
+
+/* DOOR RESET */
+
+door temple15 SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+
+door temple16 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+door temple16 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door temple16 NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+door temple16 SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+
+door temple18 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+door temple18 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+
+door temple19 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+
+door temple33 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door temple34 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+
+door temple12 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door temple36 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+
+door temple31 SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door temple22 NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+
+door stab1_10 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door stab1_3 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+
+door stab1_9 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door stab1_2 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+
+door stab1_8 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door stab1_1 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+
+door stab1_7 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door stab1_4 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+
+door stab1_6 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door stab1_5 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+
+door stab2_1 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door stab2_2 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+
+door stab2_1 SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door stab2_3 NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+
+door temple2_3 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door temple2_1 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+
+door temple2_4 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door temple2_2 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+
+door temple2_7 SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door temple2_6 NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+
+door temple2_9 SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door temple2_8 NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+
+door temple2_11 SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door temple2_10 NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+
+door temple2_13 SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door temple2_12 NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+
+door temple2_14 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door temple2_12 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+
+door temple2_8 SOUTH {EX_OPEN_CLOSE,EX_CLOSED,EX_HIDDEN}
+door temple2_15 NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+
+%end
+

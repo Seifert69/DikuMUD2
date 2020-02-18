@@ -1,0 +1,2996 @@
+/*
+filename    elfdom
+password    huppel
+changedby   Zig
+EmailAdd     "Brian C. Moses" <zag@diac.com>
+request     compile
+version     10
+END HEADER*/
+
+/*
+  1.00a	Beren	Original Version.
+  1.00b	Aragona	Added Ivory Tree for Isildur's quest.
+  Palio    	Updated zone to correct levels and armor type/material
+  Jager		Added a clan home link
+  		Added druid_staff in resets
+  Skay		Updated costs/restricts/descriptions to fit type
+		Minor spellcheck
+*/
+
+
+#include <composed.h>
+
+#define ISHA_QUEST "Isha Quest Complete"
+
+%zone                  elfdom
+title "Elfdom"
+lifespan 20
+reset RESET_ANYHOW
+
+creators {"beren","zig"}
+
+notes
+"This is the elfdom zone by Beren. --edited by Zig"
+
+%rooms
+
+                   pt_d_fo
+names {"path dark forest","path","forest"}
+title "A path in the dark forest"
+descr
+"    This a dark an windy path. Extremley dense foilage intertwined about
+the trunks of the trees prevents further examination north and south. 
+An acient oak tree towers here above the rest of the forest. ."
+extra {"ancient old tree", "tree","ancient","old","oak"}
+"This is a very beautiful old oak tree. It is obviously older than 
+Midgaard. It's about 70 feet tall and marked with cuts, probably from 
+past wars. It would also seem that the tree has some sort of hinges.
+Perhaps there is some kind of door in this tree?"
+extra {"cuts"}
+"The cuts could after further examination look like the outline of an oak 
+door." 
+extra {"oak door", "door"}
+"It looks like an oak door."
+flags {UNIT_FL_NO_MOB}
+movement SECT_FOREST
+east to haon_dor/rn_6137;
+in in_tree
+end
+
+
+                        in_tree
+names {"oak tree", "oak door", "tree"}
+title "Inside the tree"
+descr
+"    Inside this mighty oak tree it is quite dark in here.  A
+sign on the wall says 'Remember to close the door'. The only obvious way is
+a ladder leading downwards."
+movement SECT_CITY
+flags {UNIT_FL_NO_WEATHER}
+open {EX_OPEN_CLOSE,EX_CLOSED,EX_INSIDE_OPEN}
+down to under_tree;
+end
+
+                        gu_room
+names {"guardroom"}
+title "A guard room"
+descr
+"You have entered a small room. In the middle there is a round table.
+Around the table there are chairs, and on the table there are carvings. The
+only light there are in the room is from some torches on the wall."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+west to under_tree;
+extra {"carvings"}
+"'This is boring, being on guard.', one says. Another shows a heart with
+the text, 'Leola and Serion'."
+end
+
+                        under_tree
+title "Under the tree"
+descr
+"You are under the big old oak tree. There are a dim light from the torches
+on the wall. The air is hot and moist. On the wall you see a sign. A ladder
+is leading up into the tree. Right to the east you see a room. To the west
+you see a long dark tunnel."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+west to passage;
+east to gu_room;
+up to in_tree;
+extra {"sign"}
+"It says, 'Welcome in peace. May the good be with you and protect from
+evil'."
+end
+
+                        passage
+title "The dark passage"
+descr
+"This is the longest passage you ever been on. You looses all sense of time
+and place, though it seems you keep wander straight east. The passage leads
+downwards for about a mile then it goes upwards again."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+west to lad_ro;
+east to under_tree;
+end
+
+                        lad_ro
+names {"west tunnel","west end tunnel"}
+title "West end of the Tunnel"
+descr
+"   On the wall you see a face of a gargoyle. In the past stone gargoyles
+were
+supposed to keep evil spirits away. The people who have made this tunnel,
+wanted to be secure. To the east you see a dark tunnel. From the top of the
+tunnel you see light. A ladder is leading upwards."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_MOB}
+movement SECT_CITY
+east to passage;
+up to ent_elf;
+end
+
+                        ent_elf
+title "The T-cross"
+descr
+"   You are on a small footpath. The path leads west into a light forest.
+You
+notice that the north path is larger than the one leading west, and much
+greater than the one leading east. The ground is covered with leaves, and
+in
+the middle of those you notice a hole. A ladder is leading downwards."
+movement SECT_FOREST
+east to foot_pt3;
+west to foot_pt2;
+north to foot_pt4;
+down to lad_ro;
+end
+
+                        foot_pt1
+title "A small footpath west of the wooden bridge"
+descr
+"   A path twisting through the light forest leads to the north. To
+the east you see a old wooden bridge. You notice that the river is leading
+north, right beside the path"
+movement SECT_FOREST
+east to wood_br;
+north to riv_bank;
+end
+
+                        foot_pt2
+title "A small footpath east of the wooden bridge"
+descr
+"   Going east will take you to a broader path. East you see a old wooden
+bridge. You see an open spot to your north. There is no path going north,
+but you feel that if you make an effort you can accomplish it."
+movement SECT_FOREST
+north to op_spot;
+east to ent_elf;
+west to wood_br;
+end
+
+                        foot_pt3
+title "A bend in the footpath"
+descr
+"   Old trees rise about your head. Moss is covering the forest floor. On
+the ground and on the trees you see mushrooms. The footpath is leading
+north
+and west of here."
+extra {"mushrooms"} "They are in thousands of colours."
+movement SECT_FOREST
+north to fireplac;
+west to ent_elf;
+end
+
+                        foot_pt4
+title "In the light forest"
+descr
+"   You do not hear much to the native life in this part of the forest.
+The silence is overpowering. You stand on a path looking like it is
+frequently used. To your north a path leads to a huge tree. To
+your south you see the path continue into a T-cross. When you look to your
+west you see an open spot in the forest."
+movement SECT_FOREST
+north to tree_lad;
+west to op_spot;
+south to ent_elf;
+end
+
+                        op_spot
+title "An open spot in the forest"
+descr
+"   The grass here is about two feet tall here. Flowers in all colours are 
+covering the ground. You feel good here. Maybe this is a good place to 
+rest, maybe a good place to die. You see a path to the east, and light 
+forest to you south. High above you is a bridge."
+extra {"bridge","up"}
+"   You see a long bridge leading from a great tree north of you to a tree
+south of you."
+flags {UNIT_FL_SACRED}
+movement SECT_FOREST
+east to foot_pt4;
+south to foot_pt2;
+end
+
+                        fireplac
+title "At the fireplace"
+descr
+"   This is a dead end in the forest. The ground is covered with leaves,
+and
+a fireplace is almost in the edge of this area. The only passable way out
+is 
+to the south."
+extra {"fireplace","edge"}
+"   As you examine the fireplace you notice that it's still hot. You see
+that
+it have been used for roasting a rabbit because of the remains next to 
+the fire."
+south to foot_pt3;
+end
+
+                        tree_lad
+title "Front of a cypress tree"
+descr
+"   You stands in front of a cypress tree. A rope ladder is leading up 
+into the tree top. To your south you see a path"
+extra {"cypress","tree"}
+"It looks like a normal cypress tree"
+extra {"rope ladder","ladder","rope"}
+"It's strong. It would probably hold if you tried to climb it."
+flags {UNIT_FL_NO_MOB}
+up to up_tr1;
+south to foot_pt4;
+end
+
+                        wood_br
+title "On the wooden bridge"
+descr
+"   You are on an old wooden bridge, covered with moist and slowly 
+eroding. You can't help feeling uncomfortable by the thought of you falling
+through the bridge into the water, with the bridge collapsing on top of
+you.
+East and west a path continues into the forest. North and south you see the
+
+river." 
+extra {"river"}
+"The river is calm, the stream leading south."
+flags {UNIT_FL_NO_MOB}
+movement SECT_FOREST
+east to foot_pt2;
+west to foot_pt1;
+end
+
+                        calmriv1
+title "On the calm river"
+descr
+"   The stream is not strong at all, you wonder as you flow down the river.
+To your east and you west you see a riverbank. The river is leading from
+north to south."
+movement SECT_WATER_SAIL
+west to riv_bank;
+north to nat_pool;
+south to calmriv2;
+special SFUN_FORCE_MOVE "elfdom/calmriv2!The river makes you drift
+south..."
+   time 160 bits SFB_RANTIME
+end
+
+                        calmriv2
+title "On the calm river"
+descr
+"   As you flow down the river you see an old wooden bridge over your head.
+
+The river leads north and sout
+h." movement SECT_WATER_SAIL
+north to calmriv1;
+south to calmriv3;
+special SFUN_FORCE_MOVE "elfdom/calmriv3!The river makes you drift
+south..."
+   time 200 bits SFB_RANTIME
+end
+
+                        calmriv3
+title "On the calm river"
+descr
+"   The stream is not strong at all, you wonder as you flow down the river.
+It is leading from north and south into the mountain. When you look in the
+water you notice all kinds of different fish."
+movement SECT_WATER_SAIL
+north to calmriv2;
+south to mountriv;
+special SFUN_FORCE_MOVE time 200 bits SFB_RANTIME
+   "elfdom/mountriv!You drift south into the mountain."
+end
+
+
+                        mountriv
+title "On River in Mountain"
+descr
+"   You are at a bend in a seemingly endless dark tunnel which goes in a
+north
+and east direction. The river gently flows east along the bend, winding its
+way through the enormous mountain. Every little sound is echoed and makes
+it
+almost impossible to speak in here."
+
+movement SECT_WATER_SAIL
+IN_ALWAYS_DARK
+
+north to calmriv3;
+east to haon_dor/darkriver1;
+special SFUN_FORCE_MOVE time 200 bits SFB_RANTIME
+   "haon_dor/darkriver1!You finally drift south out of the mountain."
+end
+
+                        nat_pool
+title "In the natural pool"
+descr
+"   You have a arrived in a large natural pool. The stream is quite tough,
+and
+you have to use all your skill not to be driven south where the pool
+narrows
+into a river. A great waterfall is to the north."
+extra {"waterfall"}
+"You see only one way if you are on this waterfall, and that's DOWN to
+where
+you are now."
+movement SECT_WATER_SAIL
+south to calmriv1;
+special SFUN_FORCE_MOVE "elfdom/calmriv1!The strong current makes you drift
+south..." time 120 bits SFB_RANTIME
+end
+
+                        waterfall
+title "The fall"
+descr
+"   Maybe this wasn't such a good idea after all, but now there is no way
+ back as the stream carries you on.&l
+
+  You wonder whether you have made your last will or not.
+
+   Maybe you shouldn't have disowned your sister...
+
+    Maybe you shouldn't kicked your sister that hard....
+
+     Oh.. You see the edge of the fall.......
+
+       Maybe you. ..... . ..
+
+         ...  . .  .shouldn't
+
+                      . . . have .  .    .
+
+                            . ... taken .    .    .
+
+                                    .. .the. .  .. .                   . .
+                                                                    .
+                                         .. .
+                                 . .                   .          .
+                               .      ..  .  .    .        . .  .      .
+                                                .   .  .       .    .
+                                     .       .   .   .     .
+                                        .   W A T E R F A L L ! ..
+                                  .           .  .      .         ..
+                                    .    .  .     .   .     .  .     ."
+movement SECT_WATER_SAIL
+special SFUN_DEATH_ROOM time WAIT_SEC*10 "25"
+special SFUN_FORCE_MOVE time WAIT_SEC*20
+	"elfdom/nat_pool!You hurt yourself as you plunge down the waterfall!"
+end
+
+                        riv_bank
+title "The riverbank"
+descr
+"  You are at a riverbank. To the west you see a path leading into the
+forest.
+The forest to your west seems more dense and dark. The path is also 
+leading south. To the east you see the river." 
+movement SECT_FOREST
+west to fr_tree;
+east to calmriv1;
+south to foot_pt1;
+end
+
+
+                        fr_tree
+title "In front of an huge ivory tree"
+descr
+"   You are standing in front of an enormous ivory tree. The tree rises
+above the rest of the trees in this forest. To the west and south you see 
+bushes. The ground is covered with leaves and there is no flowers or 
+grass here. If you look up you see nothing but darkness. The sun can not 
+penetrate the top of the tree. The only obvious way out of here 
+is to the east." 
+extra {"tree","ivory tree","ivory"}
+"Just like in the description"
+extra {"bushes","bush"}
+"You notice a cave behind one of the bushes"
+movement SECT_FOREST
+east to riv_bank;
+
+dilbegin ivory();
+var
+  item : unitptr;
+  pc   : unitptr;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*5;
+   :start:
+   wait(SFB_CMD, (command("search") and
+       ("tree" in argument)));
+   block;
+   pc := activator;
+   secure(pc, lostpc);
+   {
+   act("You find a small hole in the tree, " +
+       "and put your finger in it.", A_SOMEONE,
+       pc, null, null, TO_ALL);
+   pause;
+   act("click", A_SOMEONE, pc, null, null, TO_ALL);
+   pause;
+   act("A small compartment on the trees side " +
+       "slides open revealing a small cup.",
+       A_SOMEONE, pc, null, null, TO_ALL);
+   pause;
+   item := load("ivory_grail@isledead");
+   link(item, pc);
+   }
+   unsecure(pc);
+     goto start;
+
+   :lostpc:
+     goto start;
+}
+dilend
+end
+
+
+                        cave
+names {"cave"}
+title "In the cave"
+descr
+"   Bones are scattered all over the floor in here. It's hot, but you can
+feel a breeze coming from outside this small cave. The walls are filled
+with
+scratches as if an animal of some kind have attacked them. You notice that
+there is no dust on the floor at all."
+extra {"bones"}
+"Those are bones of a rabbit."
+extra {"scratches"}
+"Maybe a dragon or a huge bear of some kind made those?"
+movement SECT_FOREST
+flags {UNIT_FL_NO_WEATHER}
+in fr_tree
+end
+
+                        up_tr1
+title "In a tree"
+descr
+"    You are standing on a platform in the eastern part of the small elf
+kingdom. A rope is leading down from the tree onto the forest floor. By
+closer examination you notice a narrow rope bridge leading from
+this platform to a small house in another tree to the west."
+movement SECT_FOREST
+down to tree_lad;
+west to up_tr2;
+end
+
+                        up_tr2
+title "A small house in a tree"
+descr
+"    The wooden house is beautifully enhanced by small portraitures hanging
+on the north and east wall. By the north wall you see a round table
+surrounded
+by chairs. There is a closet on the east wall. Narrow bridges lead east 
+and west. To the south you see a long bridge made of rope combined
+with wooden pieces."
+extra {"portraitures"}
+"  There are two portraitures. The first one illustrates a horse with a
+horn
+on the head. It's probably one of the so called unicorns. The second one
+shows
+a completely silvery dragon lying on the ground getting warmed up by the
+sun."
+extra {"closet"}
+"  It's an oak closet with a door (as all closets have)."
+movement SECT_CITY
+flags {UNIT_FL_NO_WEATHER}
+south to bridge;
+west to druid_ro;
+east to up_tr1;
+end
+
+                        closet_in_tr2
+names{"oak closet", "closet", "door"}
+title "In the closet"
+descr
+"   Clothes are hanging in this closet. You wonder why you have entered
+this
+place; maybe to get new dress? Well now you can say that you have been the
+closet monster!"
+movement SECT_CITY
+flags {UNIT_FL_NO_WEATHER}
+open {EX_OPEN_CLOSE, EX_CLOSED, EX_INSIDE_OPEN}
+in up_tr2
+end
+
+                        druid_ro
+title "The druids house"
+descr
+"   This house sparse decorated. It is VERY small, only containing a
+closet,
+a bed and a desk. On the desk you notice drawings of all kind and plant
+samples. Really pretty boring. It smells in here. You notice rotten fruits
+on the floor. Their smell make you sick!"
+extra{"desk"}
+"On the desk you see drawings revealing the owners interest in rare
+animals;
+A unicorn, and several dragons. Plant samples are scattered all over the
+desk."
+extra{"bed"}
+"The bed hasn't been made. The linnet half on the floor, half on the bed.
+The
+owner must have got up pretty early."
+extra{"red closet", "closet"}
+"This is a small red closet, with a door (as all closets hopefully got)."
+movement SECT_CITY
+flags {UNIT_FL_NO_WEATHER}
+east to up_tr2;
+end
+
+                        closet_in_druid
+names {"red closet", "closet", "door"}
+title "In the closet"
+descr
+"   Clothes are hanging in this closet. On the floor you see drawings. You
+wonder why you have entered this place."
+extra {"drawings"}
+"   The drawings shows a naked woman taking a bath under a waterfall."
+extra {"naked woman", "woman", "waterfall"}
+"   As you take the woman in for further examination, you notice a button
+concealed in her right eye."
+extra {"button", "right eye", "eye"}
+"Perhaps you can push the button?"
+extra {"secret door"}
+"There seems to be no way to open it."
+movement SECT_CITY
+flags {UNIT_FL_NO_WEATHER}
+open {EX_OPEN_CLOSE, EX_CLOSED, EX_INSIDE_OPEN}
+north to tres_ro open {EX_CLOSED, EX_HIDDEN}
+	keyword {"secret door", "closet", "door", "button","eye", "wall"};
+in druid_ro
+
+dilbegin button_push();
+code
+{
+   wait(SFB_CMD, command(CMD_PRESS) or command(CMD_PUSH));
+   block;
+
+   if (("button" in argument) or ("eye" in argument))
+   {
+      if (isset(self.exit_info[NORTH], EX_CLOSED))
+      {
+	 act("*click* A secret door slides opens in the north wall.",
+	     A_ALWAYS, self.inside, null, null, TO_ALL);
+	 unset(self.exit_info[NORTH], EX_CLOSED);
+
+	 act("A door slides open in the south wall.",
+	     A_ALWAYS, self.exit_to[NORTH].inside, null, null, TO_ALL);
+	 unset(self.exit_to[NORTH].exit_info[SOUTH], EX_CLOSED);
+      }
+      else
+	act("*click*", A_ALWAYS, self.inside, null, null, TO_ALL);
+   }
+   else
+   {
+      act("You can't press a "+argument+".",
+	  A_ALWAYS, self.inside, null, null, TO_ALL);
+   }
+}
+dilend
+end
+
+                        tres_ro
+title "In the druids treasure room"
+descr
+"   Paintings are on the east, west and north wall. The room is 'protected'
+with faces of angels hanging on the all four walls. On the floor you see a
+circle in which there is a star. A door leads south."
+extra{"painting"}
+"Which paintings do you wish to look at (north painting, etc.)"
+extra{"face"}
+"Which face do you wish to look at (north face, etc.)"
+extra{"north painting","n painting"}
+"A man in a white armour is fighting a black dragon.. The painting is old."
+extra{"west painting","w painting"}
+"A man in a white armour is fighting dark elves. This painting is old."
+extra{"east painting","e painting"}
+"A man in a white armour looks like he has captured a dark elf queen. In
+the
+background there is a unicorn. This picture is old."
+extra{"north face","n face"}
+"This is a face of a young angel. The angels face is made from white marble
+and looks like a face in peace. It is built into the wall and holds many
+scratches and cracks. Where its eyes are there is nothing but two gaping
+holes. It's probably quite old."
+extra{"south face","s face"}
+"This is a face of a old angel. The face looks like a face in
+disorientation.
+The symbol of this face is probably that someone has penetrated this room.
+and
+that the intruder isn't the owner?"
+extra{"east face","e face"}
+"This is a face of a elf angel. You wonder if there really exist
+ELF-angels.
+The face is the most beautiful of the faces on the wall."
+extra{"west face","w face"}
+"This is a face of a dwarf. You wonder if there really exist DWARF-angels.
+This face is the most well made face, even though it isn't a portrait of a
+beautiful person."
+movement SECT_CITY
+flags {UNIT_FL_NO_WEATHER}
+south to closet_in_druid open {EX_OPEN_CLOSE, EX_CLOSED}
+	keyword {"closet", "door"};
+north to out_dru open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+              keyword {"secret door", "door", "face", "eyes", "wall"};
+
+/* Average difficulty */
+SECRET_DOOR_DIFFICULTY(NORTH, 30)
+end
+
+                        out_dru
+title "On a small hidden platform."
+descr
+"   You are on a small windy platform right outside the druid's house. The
+leaves from the tree hides this place perfectly. To the south you see a
+door with a 'north face' code. To the north you see a long bridge made of
+rope."
+movement SECT_CITY
+south to tres_ro open {EX_OPEN_CLOSE, EX_CLOSED}
+              keyword {"door", "n face","north face"};
+north to br_ov_mo;
+end
+
+                        bridge
+title "The bridge"
+descr
+"   As you walk on the bridge you notice an open spot underneath you. The
+open spot is filled with flowers covering all the rainbows colours. This
+bridge made of rope and wood looks like a good craftsmanship. Looking
+around
+you can see that the whole elf kingdom is surrounded by mountains. The way
+you
+came in must be the only way. The bridge leads north to a small house and
+south to a wooden fortress."
+movement SECT_FOREST
+north to up_tr2;
+south to up_tr3 open {EX_OPEN_CLOSE} keyword "gate";
+end
+
+                        up_tr3
+title "The fortress"
+descr
+"   This is a small fortress, build to defend the bridge from enemy forces
+or
+from aggressive animals. It's very simple; A gate that can hold the enemy
+out
+and small holes in the wall so you can fire at them. To your west there is
+a bridge leading to a great wooden house."
+extra{"holes"}
+"Looking out the holes gives you a perfect view on the bridge."
+movement SECT_CITY
+flags {UNIT_FL_NO_WEATHER}
+north to bridge open {EX_OPEN_CLOSE} keyword "gate";
+west to up_tr4;
+end
+
+                        up_tr4
+title "A small room"
+descr
+"There's a sign hanging on the wall saying:&l
+
+   'You have now entered the castle of the great Elf king Quenos',
+
+&fand another one saying 'please wipe your feet off'. There is a small desk
+in the far side of this room. Exits are leading north and east."
+movement SECT_CITY
+flags {UNIT_FL_NO_WEATHER}
+north to up_tr5;
+east to up_tr3;
+end
+
+                        up_tr5
+
+title "A bend in the hallway"
+descr
+"   This is a bend in the hallway. It's leading west and then south into
+a small room."
+movement SECT_CITY
+flags {UNIT_FL_NO_WEATHER}
+west to hall_way;
+south to up_tr4;
+end
+
+                        hall_way
+title "A hallway"
+descr
+"   You are standing in a hallway beautifully decorated with paintings of
+the king. A red carpet is covering the floor. On the walls there are
+torches
+giving the hallway a dim light. An exit to the south is leading into the
+elf guards room. The hallway is leading east to a bend and west into a
+great
+hall."
+movement SECT_CITY
+flags {UNIT_FL_NO_WEATHER}
+west to elf_hall;
+east to up_tr5;
+south to elfguard;
+end
+
+                        elfguard
+title "The elf guards room"
+descr
+"   Light from a small window reveals beds and tables standing against the
+walls. On the walls you see a sign saying 'To serve and to do good'. On the
+wall hangs a bell with the text inscribed, 'In case of war or fire'. "
+extra {"bell"}
+"It's a dwarven bell, considered from the quality."
+movement SECT_CITY
+flags {UNIT_FL_NO_WEATHER}
+north to hall_way;
+end
+
+                        elf_hall
+title "A great hall"
+descr
+"   A great tapestry illustrating the elven history is covering the west
+side
+of this hall. A carpet in red and white is lying on the floor, giving this
+room a magnificent glow. Windows, ten feet tall and six feet wide
+illuminate
+the room. To the north you see a double oak door strengthened with iron
+bars.
+To the south you see a door leading to the kitchen and to the east you see
+the hallway."
+extra {"tapestry"}
+"  It illustrates a great war between elves led by a tall man in white
+armour
+and dark elves led by the dark elven queen Isha. In the end the white elves
+wins, and the tall man is riding in triumph trough Midgaard."
+movement SECT_CITY
+flags {UNIT_FL_NO_WEATHER}
+north to elf_throne open {EX_OPEN_CLOSE,EX_CLOSED}
+	keyword {"double oak door","double door", "oak door"};
+south to kitchen open {EX_OPEN_CLOSE,EX_CLOSED} keyword "door";
+east to hall_way;
+end
+
+                        kitchen
+title "The kitchen"
+descr
+"   As you enter the kitchen you feel overwhelmed from the shouting in
+there.
+People are running around preparing the King's dinner. Fruits and meat is
+being carried around, all in one big confusion. Glasses and plates are
+being cleaned for the big moment. The only obvious exit from here is to the
+north into the hall."
+movement SECT_CITY
+flags {UNIT_FL_NO_WEATHER}
+north to elf_hall open {EX_OPEN_CLOSE,EX_CLOSED} keyword "door";
+end
+
+
+                        elf_throne
+title "The elven throne room"
+descr
+"   Walls made of oak rising surround you on all sides. A small stairway 
+leading up to a great throne. Colourful tapestries are hiding parts of 
+the walls. on the ceiling you see carved figures of all the existing 
+races. Oil lamps illuminate the throne room with a glorious glow.
+To the east you see a black door with red carvings. To the south a 
+double door leads out of the hall." 
+movement SECT_CITY
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+south to elf_hall open {EX_OPEN_CLOSE,EX_CLOSED}
+	keyword {"double oak door","double door", "oak door"};
+east to damnroom open {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+                      keyword {"black door","door"};
+spell 50
+end
+
+                        damnroom
+title "The dark elven prison"
+descr
+"   On the walls in this dark room you see yellow and red symbols. The air
+in
+this room is cold and moist. The feeling of hatred and evil thoughts cuts
+into
+your bones as the sharpest knife, and you feel an overwhelming fear.
+Otherwise
+there's nothing at all in the room; No furniture's and no pictures, just a
+room
+with symbols carved on the wall."
+extra {"carvings","symbols"}
+"These symbols are obvious of a magical kind, but even YOU don't know
+them."
+movement SECT_CITY
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+west to elf_throne open {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+                         keyword {"black door","black"};
+
+/* 50 against UNLOCK and LOCK (protection) */
+spell 50
+end
+
+                        br_ov_mo
+title "A bridge over mountains"
+descr
+"   The bridge is obvious a friend of an air spirit, trying to shake you of
+into a certain death. The bridge is not a bridge that are built within the
+last thirty years, the rope half corroded and the wood rotten from age.
+Otherwise the view from here is magnificent, mountains stretching so far
+you can see. To the north you see a small valley in the mountains. To the
+south you see a small platform behind a house. The bridge is leading from
+the
+valley to the platform. Oh, then there are a big hole underneath you, not
+looking to friendly."
+movement SECT_FOREST
+north to peace1;
+south to out_dru;
+end
+
+                        peace1
+title "Beside the bridge"
+descr
+"   You are standing in a little valley in the mountains. You hear birds
+singing in a beautiful harmony. The nature life here is magnificent, and
+you
+can't help feeling a peace and goodness over this place. To the east you
+see
+a hill (probably a good view over the valley), to the north a small river
+bank
+and to the west another bank. A bridge is leading away from here to the
+south."
+movement SECT_FOREST
+north to riv_ba3;
+south to br_ov_mo;
+west to riv_ba1;
+east to hill;
+end
+
+                        peace2
+title "Eastern part of the valley"
+descr
+"   You are in the eastern part of the valley. Flowers are covering the
+green
+forest floor. Small rabbis are running around and birds are singing in joy.
+The view from here isn't that good. You see a tree circle to the north, a
+river bank to the east, and a hill to the south."
+movement SECT_FOREST
+north to holy_rock;
+south to hill;
+west to riv_ba3;
+end
+
+                        hill
+title "On a hill"
+descr
+"   From here you get a complete impression of the entire valley. It's a
+small
+one, surrounded by mountains. A river is cutting it into two parts. The
+western part, the other side of this, is a very small and light forest.
+This
+part is half hills and half light forest."
+extra {"north"}
+"To the north you see some forest. Further away you see the mountains raise
+above the forest."
+extra {"south"}
+"You looks directly into a mountain raise above your head. There's no way
+you
+can climb these mountain. Even the best mountain dwarf couldn't manage
+that!"
+extra {"east"}
+"The small hill you are standing on is in the south east corner of the
+valley.
+The only thing you can see is a mountain raise above your head."
+extra {"west"}
+"You see a bridge going away from the valley. Further away you nearly see a
+small river cutting trough, ending in a enormous waterfall. A mountain is
+in the other side of the valley."
+movement SECT_FOREST
+north to peace2;
+west to peace1;
+end
+
+                        riv_ba1
+title "A riverbank in the south side of the valley"
+descr
+"   You are standing on a small riverbank. A few trees is here, flowers
+covering the forest floor, giving you a feeling of idyll. The river is on
+your
+west. The stream is very strong, probably because of the waterfall you see
+to
+your south-west. The riverbank continues the north. To the east you see
+tree covered hills."
+movement SECT_FOREST
+north to riv_ba2;
+east to peace1;
+west to riv1;
+end
+
+                        riv_ba2
+title "At the riverbank"
+descr
+"   The river is strong here making water fall in to where you are
+standing.
+A few trees are miraculous surviving in the knee-high mud you are standing
+in.
+There's of course no flowers here, who would live in this. You see a bend
+in
+the river to your north-west. The stream is bringing branches and mud down
+from the mountains to the north."
+movement SECT_FOREST
+north to riv3;
+west to riv2;
+south to riv_ba1;
+east to riv_ba3;
+end
+
+                        riv_ba3
+title "Light forest beside riverbank"
+descr
+"   You are standing in a light forest right beside the riverbank. The
+trees
+standing almost in the river. To the west you see a part of the riverbank,
+almost over flooded. You wonder whatever keeping the river from destroying
+the
+rest of the valley. Maybe there's a God making sure that the river doesn't
+eat
+the ground."
+extra {"north"}
+"  The trees standing on the river keeps you from enter it."
+movement SECT_FOREST
+west to riv_ba2;
+south to peace1;
+east to peace2;
+end
+
+                        holy_rock
+title "A tree circle"
+descr
+"   A tree circle is surrounding a small red rock. The near you get to the
+rock
+the more peaceful you get. The rock is filled with drawings showing a
+unicorn.
+As you stand in the middle of the tree circle you hear soft voices from the
+past. Their words not recognisable, but comforting for people with a good
+attitude. You feel that the words tells you of the coming of a new good
+warrior
+that will drive the evil forces away."
+movement SECT_FOREST
+flags {UNIT_FL_SACRED}
+south to peace2;
+end
+
+                        riv1
+title "In front of a waterfall"
+descr
+"   The river here is broad and wild, with occasional flash of racing white
+water showing where the current run from north to the waterfall in the
+south.
+Willow and cypress clusters thickly along the banks. To the east you see a
+riverbank, and if you are lucky you might not have to go downstream into
+the
+waterfall."
+movement SECT_WATER_SAIL
+flags {UNIT_FL_NO_MOB}
+special SFUN_FORCE_MOVE "elfdom/waterfall!The strong current makes you
+drift into the waterfall..." time 80 bits SFB_RANTIME
+east to riv_ba1;
+south to waterfall;
+north to riv2;
+end
+
+
+                        riv2
+title "On the river"
+descr
+"   The river at this place is so strong that you feel scared. Branches and
+mud are driven south in what you think is an outrageous speed. You are also
+driven south. If you make an effort you can make it into the riverbank to
+your
+west or east, or north up the river."
+movement SECT_WATER_SAIL
+flags {UNIT_FL_NO_MOB}
+special SFUN_FORCE_MOVE "elfdom/riv1!The strong current makes you drift
+south..." time 120 bits SFB_RANTIME
+south to riv1;
+north to ri_be1;
+east to riv_ba2;
+west to light5;
+end
+
+                        ri_be1
+title "A north east bend in the river"
+descr
+"   The river is changing direction from north-south to east-west. Here and
+there tangled clumps of moonberry bushes driving trough the flood forces
+you
+to change direction for a while for then to get into correct course. To the
+west and north you see you see a few bushes clinging tenaciously to the
+poor
+soil, making it to an impossible landing spot. Your only possible way is
+either
+east or south."
+movement SECT_WATER_SAIL
+flags {UNIT_FL_NO_MOB}
+special SFUN_FORCE_MOVE "elfdom/riv2!The river makes you drift downstream
+(south)..."  bits SFB_RANTIME time 160
+south to riv2;
+east to riv3;
+end
+
+                        riv3
+title "On the river"
+descr
+"   The current here is doing it's best to dislodge you, but you manage to
+keep steady. On each side of you, you notice dark shadows going upstream in
+a speed you wouldn't have thought possible under water. On the south shore
+you
+see a small muddy riverbank. A cliff is rises to the north, casting a
+shadow
+down on the river."
+movement SECT_WATER_SAIL
+flags {UNIT_FL_NO_MOB}
+special SFUN_FORCE_MOVE "elfdom/ri_be1!The river makes you drift downstream
+(west)..." time 180 bits SFB_RANTIME
+west to ri_be1;
+east to ri_be2;
+south to riv_ba2;
+end
+
+                        ri_be2
+title "A north-west bend in the river"
+descr
+"   You feel a sudden bump as the river changes direction. The stream is
+steady and you hope that you won't get any more surprises. The riverbank is
+soil and you see no choice that to follow the river that goes north and
+west."
+movement SECT_WATER_SAIL
+flags {UNIT_FL_NO_MOB}
+special SFUN_FORCE_MOVE "elfdom/riv3!The river makes you drift downstream
+(west)..." time 180 bits SFB_RANTIME
+west to riv3;
+north to riv4;
+end
+
+                        riv4
+
+title "On the river in the southern part of the valley"
+descr
+"  This is a kind of corner, to the east and north a great mountain is
+rising.
+A cave in the northern side of the mountain reveals that the river has it's
+source inside the mountain. Several branches blocks the entrance, and makes
+it
+impossible for further examination. This is a kind of corner, to the east
+and
+north a great mountain is rising. The river leads from the cave to the
+south.
+You notice a small riverbank to your east, which is a perfect landing
+spot."
+movement SECT_WATER_SAIL
+flags {UNIT_FL_NO_MOB}
+special SFUN_FORCE_MOVE "elfdom/ri_be2!The river makes you drift downstream
+(south)..." time 180 bits SFB_RANTIME
+west to dragons_rest;
+south to ri_be2;
+/* If anybody wants to expand, the river could lead north trough the */
+/* mountain = north to ???/???  */
+end
+
+                        dragons_rest
+
+title "Silverdragons Rest"
+descr
+"   The sound of running and falling water is loud here and the minute you
+arrived you felt a faint scent of trees and flowers. The grass is green but
+still filled with yellow and red flowers. A small trail crinkles it's way
+to
+the west. You are on a small hill, the river flowing beside the hill to the
+side and ending right to your east."
+east to riv4;
+west to light1;
+end
+
+                        light1
+title "A small forest"
+descr
+"   Towering trees, whose tops blocks most of the sun, rises above your
+head,
+giving you a feeling of unworthiness to be here. The woods have the silence
+of
+a goodly place and are only interrupted by the nature life. Trails leads
+north,
+east and west."
+west to light2;
+east to dragons_rest;
+north to meadow2;
+end
+
+                        light2
+title "A trail in the light forest"
+descr
+"   The air here is hot but fresh, scented with balsam and pine and the
+damp
+of earth. The grass is sparkling with raindrops from the light mist hanging
+two-tree feet above the ground, glittering like diamonds in the light
+coming
+down from the tall elm trees. Sometimes you spot a deer looking interested
+at
+you, for the disappearing. Trails are leading in all directions."
+east to light1;
+west to light3;
+north to meadow1;
+south to light4;
+end
+
+                        light3
+title "A trail in the light forest"
+descr
+"   Trough the leaves in the trees, golden rays of sunlight slices trough
+the
+green forest floor, giving the trees a light green glow. Red and yellow
+mushrooms are beside the roots of the beautiful trees, like adornment. The
+small animal made trail is leading east, north and south."
+north to uni_home;
+south to grave_st;
+east to light2;
+end
+
+                        light4
+title "A trail in the light forest"
+descr
+"   Moist moss is covering the forest floor, drops glinting like diamonds.
+You
+hear the sound of running water to the east, probably the river running
+trough
+the valley. Trampled trails leads north, south and west."
+west to grave_st;
+north to light2;
+south to light5;
+end
+
+                        light5
+title "Southern part of the light forest"
+descr
+"   Old oak trees rises tall above you and whitethorn bushes covers most of
+the
+forest floor. Here and there you see flowers of all types standing as they
+wants to give their help to make this forest even more beautiful. This is
+the
+end of the valley, and the mountain raises to the south. You see that the
+small river runs to the east. A small trail leads to the north."
+north to light4;
+east to riv2;
+end
+
+                        grave_st
+title "At a small grave"
+descr
+"   A sunbeam cleaves trough the tree tops down to a small grave in the
+forest.
+A small wooden cross stands at the grave, almost destroyed by weather and
+time. Flowers surrounds the grave as if they honours over the person who is
+buried here. Red and yellow leaves lies on the grave as if the ancient
+trees
+here contributes to make this place even more godly."
+extra {"grave","cross"}
+"The cross on the grave says :
+
+            May you rest in the peace you rendered unto the world."
+north to light3;
+east to light4;
+end
+
+                        meadow1
+title "On a meadow"
+descr
+"   Dew clings to the leaves on the ground. The golden sun rays hit each
+tiny
+droplet of moisture and turns it into a glimmering gem. Every bush and
+flower
+seems to acquire inestimable value. To the south you see trees standing so
+close that you can call it a small light forest. The meadow continues to
+the
+east, to the west you see a small spring."
+east to meadow2;
+west to uni_home;
+south to light2;
+end
+
+                        meadow2
+title "On a meadow"
+descr
+"   Bees and butterflies fly around on their daily chores. A fresh wind
+ruffles
+the flowers and the tall grass; The sky billows bright and blue. To the
+south
+you see broad oaks and silver-leafed birch trees. The meadow continues to
+the
+west."
+west to meadow1;
+south to light1;
+end
+
+                        uni_home
+title "At a small spring"
+descr
+"   Birches ring a shady hollow where long grass grows, fed by a small
+spring.
+The liquid, crystalline call of a lark on a nearby branch splits the
+forest's
+green silence in half. Wild clover and tall grass ruffles in a soft warm
+wind,
+and flowers, mainly sunflowers stand around the birches as if they were
+guards.
+A patch of mint grows somewhere nearby; its cool scent tints the air. You
+hear
+the lone call of a bird to it's mate, a call of love. As you feel these
+impressions, you gets the feeling of a godly blessing of this place. Behind
+the birches
+to the north is a sheer wall of rock.  Small trampled trails lead east and
+south."
+east to meadow1;
+south to light3;
+
+SECRET_DOOR_DIFFICULTY(NORTH, 100)
+north to clan_home_000@clans
+keyword {"tree", "trees"} open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN} descr
+"Something funny...";
+
+end
+
+
+
+%objects
+
+                              bones
+
+names {"bones"}
+title "some bones"
+descr "Some bones have been left here."
+extra {}
+"The bones looks like human bones."
+flags {UNIT_FL_BURIED}
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+type ITEM_TRASH
+end
+
+
+			spell_robe
+names {"spellweaving robe","robe"}
+title "the spellweaving robe"
+descr "A robe lies here, shimmering in the weak light."
+extra {}
+"A wondorous robe of the elves, it channels magic from the nature into 
+the fabric and to the user. It shimmers with mana flares."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_ABOUT}
+type ITEM_WORN
+STR_TRANSFER(-1)
+weight 2
+cost 2 GOLD_PIECE
+rent 50 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_DIV,10,0,0,"");
+dilcopy abi_restrict@function(ABIL_MAG,10,0,0,"");
+end
+
+			elfboots
+names {"elven boots","boots"}
+title "elven boots"
+descr "A pair of beautiful elven boots lies here."
+extra {}
+"A pair of wonderfully crafted elven boots. The soft leather seems to 
+have the strength of metal and is richly decorated with elven designs."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_FEET}
+ARMOUR_CHAIN(5,5)
+CHAR_FLAG_TRANSFER(CHAR_SNEAK)
+rent 45 IRON_PIECE
+weight 2
+dilcopy abi_restrict@function(ABIL_DEX,35,0,0,"");
+end
+
+			spell_sword
+names {"spellweaving blade","blade"}
+title "the spellweaving blade"
+descr "A short blade lies here, glittering in the light."
+extra {}
+"A short, slightly curved blade of elven design. It is the famous blade 
+of elven spellweavers, used in weaving spells and cutting the threads of 
+reality."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+weight 1
+WEAPON_DEF(WPN_WAKIZASHI,0,0)
+rent 50 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_CHA,20,0,0,"");
+end
+
+                             unicorn_horn
+names {"unicorn horn","horn"}
+title "a unicorn horn"
+descr "A golden horn of a unicorn has carelessly been left here."
+extra {}
+"This is the most beautiful horn you have ever seen. It radiates an aura
+of good."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+cost 10 SILVER_PIECE
+rent 24 IRON_PIECE
+type ITEM_TREASURE
+end
+
+                                rotten_apple
+names {"rotten apple","apple"}
+title "a rotten apple"
+descr
+"A rotten apple has been dropped here"
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+FOOD_DEF(2,3)
+weight 1
+extra {} "You feel sick by the thought of eating this green soft thing."
+cost 1 IRON_PIECE
+end
+
+
+
+                                 fire_scroll
+
+names {"old scroll","fire scroll","scroll"}
+title "an old scroll"
+descr
+"An old scroll has carelessly been left here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+flags {UNIT_FL_MAGIC}
+/* #define SCROLL_DEF(power,spell1,spell2,spell3) */
+SCROLL_DEF(82, SPL_FIREBALL_1, SPL_NONE, SPL_NONE)
+weight 1
+cost 1 SILVER_PIECE
+extra {}
+"Written on the old scroll are the ancient runes:
+'Firum balum est geslagum im den hodum enimie futten aus'"
+end
+
+
+                                 fire_wand
+
+names {"old wand","fire wand","wand"}
+title "an old wand"
+descr
+"An old wand has carelessly been left here."
+weight 1
+/* #define WAND_DEF(power,charge,spell1,spell2) */
+WAND_DEF(50, 7,  SPL_FIREBALL_2, SPL_NONE)
+cost 2 GOLD_PIECE
+extra {}
+"Etched on the old wand are the ancient runes:
+'Firum balum est geslagum im den hodum enimie futten aus'"
+end
+
+
+			iggystaff
+names {"Smotslager","staff"}
+title "a staff called Smotslager"
+descr
+"A staff has been left here."
+extra {}
+"  This looks like a staff the grim reaper would like to get his fingers
+on. In each end you see a little metal bar."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_QUARTERSTAFF, 7, 0)
+weight 12
+WEAPON_TRANSFER(WPN_QUARTERSTAFF,+3)
+cost 15 COPPER_PIECE
+rent 24 IRON_PIECE
+end
+
+                        white_club
+names {"white club", "club"}
+title "a white club"
+descr
+"A white club has been left here."
+extra {}
+"  It's a beautiful club, made from the finest metal. It's white and small 
+carvings are in it. The carvings shows a small party in battle."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_CLUB, 0, 0)
+weight 14
+cost 3 COPPER_PIECE
+end
+
+                        white_pole
+names {"white halberd","polearm","halberd"}
+title "a white halberd"
+descr
+"A white halberd has been left here."
+extra {}
+"It's a beautiful one, made from the finest metal. It's white and small
+carvings are in it. The carvings shows a small party in battle."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_HALBERD, 0, 0)
+weight 22
+cost 3 COPPER_PIECE
+end
+
+                        white_mace
+names {"white mace","mace"}
+title "a white mace"
+descr
+"A white battle mace has been left here."
+extra {}
+" This mace is made from the finest metal. It's white and small
+carvings are in it. The carvings shows a small party in battle."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_MACE, 0, 0)
+weight 8
+cost 3 COPPER_PIECE
+end
+
+                        dirty_dagger
+names {"dirty dagger","dagger"}
+title "a small dirty dagger"
+descr
+"A small dirty dagger has been left here."
+extra {}
+"  The one who made this doesn't have the slightest idea about weapons.
+First of all it's rusty, which of course isn't the creators fault, but
+look at the shape! Bury this thing in somebody's bag."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_DAGGER, -15, 0)
+weight 1
+cost 3 IRON_PIECE
+end
+
+
+                        boss_sword
+names {"small sword","sword","small"}
+title "a small sword"
+descr
+"A small sword has been left here."
+extra {}
+"Great! Another hopeless weapon compared to the one you have. As 
+you examine the sword you notice writing on the blade saying 'Some time
+Legoes'."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_SHORT_SWORD, -15, 0)
+weight 5
+cost 5 IRON_PIECE
+end
+
+                        king_sword
+names {"fine two-handed sword","fine sword","sword"}
+title "a fine two-handed sword"
+descr
+"A fine two-handed sword has been left here."
+extra {}
+"  The craftsmanship of this weapon is fantastic! Steel and gold
+composes the weapon. You can't help but wonder what master craftsman has 
+been able to make a weapon like this.."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_GREAT_SWORD, 0, 0)
+weight 20
+cost 15 SILVER_PIECE
+rent 36 IRON_PIECE
+end
+
+
+
+                        funny_staff
+names {"funny staff","staff"}
+title "a funny staff"
+descr
+"A funny staff has been left here."
+extra {}
+"  The staff looks like something that's only possible to draw; It's 
+full of small holes and it it's all crippled. You wonder if this
+weapon are made specially for the seneschal."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_QUARTERSTAFF, -20, 0)
+weight 10
+cost 2 COPPER_PIECE
+end
+
+
+                        guard_club
+names {"elven guard club","guard club","elven club","club"}
+title "an elven guard club"
+descr
+"A elven guard club has been left here."
+extra {}
+"  It's a normal great club with the text inscribed; To serve and do good."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_BATTLE_CLUB, 0, 0)
+weight 10
+cost 1 COPPER_PIECE
+end
+
+                        guard_sword
+names {"elven guard sword","guard sword","elven sword","sword"}
+title "an elven guard sword"
+descr
+"A elven guard sword has been left here."
+extra {}
+"  It's a slender broad sword with the text inscribed; To serve and do 
+good." 
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_BROAD_SWORD, 0, 0)
+weight 5
+cost 3 COPPER_PIECE
+end
+
+                        heavy_hammer
+names {"heavy hammer","hammer"}
+title "a heavy hammer"
+descr
+"A heavy hammer has been left here."
+extra {}
+"This hammer looks like the type that the hill giants would use. Text is
+written on it; To serve and do good."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_WAR_MATTOCK, 0, 0)
+weight 20
+cost 16 COPPER_PIECE
+end
+
+                        hunter_flail
+names {"hunting spear","elven spear","spear"}
+title "an elven hunting spear"
+descr "A hunting spear has been left here."
+extra {}
+"An hunting spear with a long, slender head. The shaft is adorned by 
+feathers and small beads."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_SPEAR, 0, 0)
+weight 5
+cost 2 COPPER_PIECE
+rent 30 IRON_PIECE
+end
+
+                        humble_dagger
+names {"light dagger","dagger"}
+title "a light dagger"
+descr
+"A light dagger has been left here."
+extra {}
+"  The dagger looks like a light, cheap dagger."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_DAGGER, 0, 0)
+weight 1
+cost 4 IRON_PIECE
+end
+
+                        druid_staff
+names {"druid staff","quarterstaff","staff"}
+title "a druid staff"
+descr
+"A druid quarterstaff has been left here."
+extra {}
+"  It's made of oak, and is of fine craftsmanship, probably from an 
+elven creator. You have been lucky to find such a weapon."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_QUARTERSTAFF, 0, 0)
+weight 10
+cost 3 SILVER_PIECE
+rent 55 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_DIV,10,0,0,"");
+end
+
+			druid_robe
+names {"brown robe","robe"}
+title "a brown robe"
+descr "A brown robe lies here."
+extra {}
+"A simple brown robe."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_ABOUT}
+weight 2
+ARMOUR_CLOTHES(0,0)
+end
+
+			druid_sandals
+names {"sandals"}
+title "sandals"
+descr "A pair of sandals lies here."
+extra {}
+"A pair of simple sandals."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_FEET}
+weight 2
+ARMOUR_CLOTHES(0,0)
+end
+
+			elven_cloak
+names {"Elfweave Cloak","cloak","elfweave"}
+title "Elfweave Cloak"
+descr "An elven cloak lies here."
+extra {}
+"This wondorous cloak is made by the elves. It shields you from prying 
+eyes and protects you with the strength of the trees in the forest."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_ABOUT}
+ARMOUR_LEATHER(0,0)
+cost 2 GOLD_PIECE
+rent 62 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_DEX,20,0,0,"");
+end
+
+                        king_helmet
+names {"elven crown","crown"}
+title "an elven crown"
+descr
+"A beautiful crown of mithril and gold lies here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD, MANIPULATE_WEAR_HEAD}
+ARMOUR_CHAIN(0,0)
+weight 3
+cost 30 SILVER_PIECE
+extra {}
+"A beautiful crown of mithril and gold, slender and studded with precious 
+gems. A delicate mesh extends from the crown, protecting the head of the 
+wearer. The craftmanship of this crown can only be elven."
+CHA_TRANSFER(+1)
+rent 40 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_CHA,35,0,0,"");
+end
+
+                        helmet2
+names {"guard helmet","helmet"}
+title "a guard helmet"
+descr
+"A guard helmet has been left here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD, MANIPULATE_WEAR_HEAD}
+ARMOUR_HRD_LEATHER(0, 0)
+weight 5
+cost 2 COPPER_PIECE
+extra {}
+"It looks like a solid helmet of hard leather."
+end
+
+
+			helmet1
+names {"funny helmet","helmet"}
+title "a funny helmet"
+descr
+"A funny helmet has been left here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD, MANIPULATE_WEAR_HEAD}
+ARMOUR_HRD_LEATHER(0, 0)
+weight 5
+cost 1 COPPER_PIECE
+extra {}
+"This hard leather helmet is strangely shaped... made by someone with 
+strange sense of humor."
+end
+
+
+			helmet4
+names {"strong helmet","helmet"}
+title "a strong helmet"
+descr
+"A strong helmet has been left here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD, MANIPULATE_WEAR_HEAD}
+ARMOUR_CHAIN(0, 0)
+weight 10
+cost 5 COPPER_PIECE
+extra {}
+"This helmet is made of hard leather studded with steel rings for greater 
+protection." 
+dilcopy abi_restrict@function(ABIL_STR,25,0,0,"");
+end
+
+
+
+                        king_plate
+names {"royal armour","plate","armour"}
+title "royal elven armour"
+descr "An emblazoned royal armour has been left here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+ARMOUR_CHAIN(0, 0)
+weight 25
+cost 4 GOLD_PIECE
+rent 40 IRON_PIECE
+extra {} 
+"This plate covered chain armour is finely crafted and feels strong and 
+durable. The arms of elven kings are emblazoned on the chest."
+dilcopy abi_restrict@function(ABIL_STR,50,0,0,"");
+end
+
+			elftunic
+names {"green tunic","tunic"}
+title "a green tunic"
+descr "A green tunic has been left here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD, MANIPULATE_WEAR_BODY}
+ARMOUR_CLOTHES(0, 0)
+weight 1
+cost 30 IRON_PIECE
+extra {}
+"A green tunic of elven craftmanship."
+end
+
+                        plate1
+names {"funny breast plate","breast plate","plate"}
+title "a funny breast plate"
+descr "A funny breast plate has been left here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD, MANIPULATE_WEAR_BODY}
+ARMOUR_LEATHER(0, 0)
+weight 10
+cost 10 IRON_PIECE
+extra {} 
+"A strange-looking leather armour."
+end
+
+
+                        plate2
+names {"guard breast plate","breast plate","plate"}
+title "a guard breast plate"
+descr "A guard breast plate has been left here."
+extra {} 
+"It is a fine hard leather plate. You will like it. "
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD, MANIPULATE_WEAR_BODY}
+ARMOUR_HRD_LEATHER(0, 0)
+weight 10
+cost 1 COPPER_PIECE
+end
+
+
+                        plate4
+names {"strong breast plate","breast plate","plate"}
+title "a strong breast plate"
+descr
+"A strong breast plate has been left here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD, MANIPULATE_WEAR_BODY}
+ARMOUR_CHAIN(0, 0)
+weight 10
+cost 6 COPPER_PIECE
+extra {} 
+"A fine breast plate made of hard leather reinforced with steel rings for 
+even greater protection." 
+dilcopy abi_restrict@function(ABIL_STR,30,0,0,"");
+end
+
+
+
+                        king_leg
+names {"elven leggings","leggings"}
+title "elven leggings"
+descr
+"A pair of elven leggings has been left here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD, MANIPULATE_WEAR_LEGS}
+ARMOUR_CHAIN(0, 0)
+weight 10
+cost 7 SILVER_PIECE
+rent 24 IRON_PIECE
+SKILL_TRANSFER(SKI_SNEAK,+2)
+extra {} 
+"The leggings are weaved of some strange material, which seems to be as 
+durable as the finest steel. They are richly decorated and suitable for 
+nobility." 
+end
+
+                        leg1
+names {"funny leggings","leggings"}
+title "a pair of funny leggings"
+descr
+"A pair of funny leggings has been left here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD, MANIPULATE_WEAR_LEGS}
+ARMOUR_LEATHER(0, 0)
+weight 10
+cost 1 COPPER_PIECE
+extra {}
+"A pair of strange-looking leather leggings."
+end
+
+
+                        leg2
+names {"guard leggings","leggings"}
+title "a pair of guard leggings"
+descr
+"A pair of guard leggings has been left here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD, MANIPULATE_WEAR_LEGS}
+ARMOUR_HRD_LEATHER(0, 0)
+weight 10
+cost 6 COPPER_PIECE
+extra {} 
+"A pair of sturdy hard leather leggings of good craftmanship."
+end
+
+
+                        leg4
+names {"strong leggings","leggings"}
+title "a pair of strong leggings"
+descr
+"A pair of strong leggings has been left here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD, MANIPULATE_WEAR_LEGS}
+ARMOUR_CHAIN(0, 0)
+weight 10
+cost 4 COPPER_PIECE
+extra {} 
+"A pair of strong leather leggings, studded with rings for greater 
+protection and durability." 
+dilcopy abi_restrict@function(ABIL_STR,25,0,0,"");
+end
+
+
+
+                        king_boots
+names {"decorated boots","elven boots","boots"}
+title "richly-decorated boots"
+descr
+"A pair of richly decorated boots has been left here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_FEET}
+ARMOUR_CHAIN(0,0)
+weight 3
+cost 30 SILVER_PIECE
+rent 16 IRON_PIECE
+extra {} 
+"Made of the finest leather and studded with steel and gold rings, those 
+boots are worthy a king. They are very beautiful and also very
+comfortable."
+dilcopy abi_restrict@function(ABIL_DEX,30,0,0,"");
+end
+
+                        boots1
+names {"funny boots","boots"}
+title "some funny boots"
+descr
+"Some boots has been left here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD, MANIPULATE_WEAR_FEET}
+ARMOUR_LEATHER(0, 0)
+weight 10
+cost 1 COPPER_PIECE	
+extra {} 
+"A pair of strange boots made of leather."
+end
+
+
+                        boots2
+names {"guard boots","boots"}
+title "some guard boots"
+descr
+"Some guard boots has been left here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD, MANIPULATE_WEAR_FEET}
+ARMOUR_HRD_LEATHER(0, 0)
+weight 10
+cost 3 COPPER_PIECE
+extra {} 
+"A pair of strong hard leather boots."
+end
+
+                        boots4
+names {"strong boots","boots"}
+title "some strong boots"
+descr
+"Some strong boots has been left here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD, MANIPULATE_WEAR_FEET}
+ARMOUR_CHAIN(0, 0)
+weight 10
+cost 3 COPPER_PIECE
+extra {} 
+"A pair of strong, ring-studded leather boots.. They seem to offer very 
+good protection and are quite comfortable." 
+dilcopy abi_restrict@function(ABIL_STR,25,0,0,"");
+end
+
+
+
+                        king_gaun
+names {"royal gauntlets","elven gauntlets","gauntlets"}
+title "royal elven gauntlets"
+descr
+"A pair of elven gauntlets has been left here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD, MANIPULATE_WEAR_HANDS}
+ARMOUR_CHAIN(0, 0)
+weight 3
+cost 20 SILVER_PIECE
+rent 40 IRON_PIECE
+
+extra {} 
+"Those delicate yet strong gauntlets are richly decorated. They seem to 
+be made from thin mithril mesh, adorned with gold and precious gems."
+dilcopy abi_restrict@function(ABIL_CHA,30,0,0,"");
+end
+
+                        gaun1
+names {"funny gauntlets","gauntlets"}
+title "a pair of funny gauntlets"
+descr
+"A pair of funny gauntlets has been left here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD, MANIPULATE_WEAR_HANDS}
+ARMOUR_LEATHER(0, 0)
+weight 4
+cost 2 COPPER_PIECE
+extra {} 
+"A pair of strange leather gauntlets."
+end
+
+                        gaun2
+names {"guard gauntlets","gauntlets"}
+title "a pair of guard gauntlets"
+descr
+"A pair of guard gauntlets has been left here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD, MANIPULATE_WEAR_HANDS}
+ARMOUR_HRD_LEATHER(0, 0)
+weight 10
+cost 4 COPPER_PIECE
+extra {} 
+"A pair of sturdy hard leather gauntlets emblazoned with the arms of elven 
+guard." 
+end
+
+                        gaun4
+names {"strong gauntlets","gauntlets"}
+title "a pair of strong gauntlets"
+descr
+"A pair of strong gauntlets has been left here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD, MANIPULATE_WEAR_HANDS}
+ARMOUR_CHAIN(0, 0)
+weight 10
+cost 2 SILVER_PIECE
+extra {} 
+"A pair of strong gauntlets made of leather studded with rings for 
+greater protection." 
+dilcopy abi_restrict@function(ABIL_STR,25,0,0,"");
+end
+
+
+
+                        king_slee
+names {"elven bracers","bracers"}
+title "royal elven bracers"
+descr
+"A pair of beautiful bracers lies here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD, MANIPULATE_WEAR_ARMS}
+ARMOUR_CHAIN(0,0)
+CHA_TRANSFER(+1)
+weight 4
+cost 34 SILVER_PIECE
+rent 40 IRON_PIECE
+extra {} 
+"Those bracers are weaved of some strong material, as sturdy as any metal 
+but much lighter. They are beautifully decorated and studded with 
+precious stones."
+dilcopy abi_restrict@function(ABIL_CHA,30,0,0,"");
+end
+
+                        slee1
+names {"funny sleeves","sleeves"}
+title "some funny sleeves"
+descr
+"Some funny-looking sleeves has been left here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD, MANIPULATE_WEAR_ARMS}
+ARMOUR_LEATHER(0, 0)
+weight 5
+cost 1 COPPER_PIECE
+extra {} 
+"A pair of strange-looking leather sleeves."
+end
+
+                        slee2
+names {"guard sleeves","sleeves"}
+title "some guard sleeves"
+descr
+"Some guard sleeves has been left here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD, MANIPULATE_WEAR_ARMS}
+ARMOUR_HRD_LEATHER(0, 0)
+weight 8
+cost 3 COPPER_PIECE
+extra {} 
+"A pair of hard leather guard sleeves, emblazoned with the arms of elven 
+guards." 
+end
+
+                        slee4
+names {"strong armlets","armlets"}
+title "some strong armlets"
+descr
+"Some strong armlets has been left here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD, MANIPULATE_WEAR_ARMS}
+ARMOUR_CHAIN(0, 0)
+weight 10
+cost 5 COPPER_PIECE
+extra {} 
+"A pair of strong and sturdy hard leather armlets, covered with steel 
+rings for added protection."
+dilcopy abi_restrict@function(ABIL_STR,25,0,0,"");
+end
+
+
+
+%mobiles
+
+			sorgron
+
+names {"sorgron","mage"}
+title "sorgron"
+descr "Sorgron the mage is standing here."
+
+M_HUMAN_MAGE_FIRE(30, SEX_MALE, "cast firestorm")
+alignment -1000
+end
+
+/* ----------------------
+
+                       glemoor
+names {"glemoor"}
+title "glemoor"
+descr "Glemoor the human is resting here."
+extra {}
+"Glemoor is wearing an old dusty robe with the hood covering his head."
+extra {"head", "hood"}
+"Beneath the shadows of the hood you notice a light from his staring
+red eyes."
+
+M_HUMAN_THIEF_POLE(27, SEX_MALE)
+alignment -780
+
+dilbegin quest_give();
+var
+  pc : unitptr;
+
+code
+{
+   on_activation(self.position <= POSITION_SLEEPING, skip);
+
+   :init:
+   heartbeat := PULSE_SEC*15;
+   interrupt(SFB_COM, self.position == POSITION_FIGHTING, ohno_combat);
+
+   :start:
+   wait(SFB_CMD, (activator.type == UNIT_ST_PC) and (activator.level > 30)
+and not (ISHA_QUEST in activator.quests));
+   pc := activator;
+   secure(pc, start);
+
+   if (pc.alignment < -350)
+   {
+      exec("say "+pc.name+" of power and malice.", self);
+      pause;
+      exec("say I have a special task for thee, servant of darkness.",
+self);
+      pause;
+      exec("grin "+pc.name, self);
+      pause;
+      exec("say The daughter of darkness has been magically trapped by the
+king of elven kind.", self);
+   }
+   else
+   {
+      exec("say "+pc.name+" of honor, might and goodness.", self);
+      pause;
+      exec("say I have a quest of light and truth for you!", self);
+      pause;
+      exec("smile "+pc.name, self);
+      pause;
+      exec("say Many will try to mislead you by lying, amongst those the so
+called silver dragon.", self);
+      pause;
+      exec("say The daughter of the Sun has been magically trapped by the
+disguised drow king of elven kind inside the elven kingdom.", self);
+   }
+   pause;
+   exec("say There is but one way to unleash the power of her spirit.",
+self);
+   pause;
+   exec("say To free her spirit, three items must be brought to our master,
+sorgron", self);
+   pause;
+   exec("say Bring him Laric the Great, you must speak with the silver
+dragon.", self);
+   pause;
+   exec("say A horn of a unicorn must also be brought before him.", self);
+   pause;
+   exec("say The horrible Kipper of Midgaard is the final item to bring
+him.", self);
+   pause;
+   exec("emote gestures and disappears.", self);
+   destroy(self);
+
+   :ohno_combat:
+   heartbeat := PULSE_SEC * 3;
+   exec("say Fool!", self);
+   pause;
+   exec("emote disappears into thin air.", self);
+   destroy(self);
+}
+dilend
+end
+----------------------------- */
+
+                               silver_dragon
+names {"silverdragon","silver dragon","dragon","silver"}
+title "the silverdragon"
+descr "A silver dragon is here sunbathing."
+extra {}
+"   The immense blazing, five times the height of man, has spread its wings
+out to get them warmed up. The silver wings reflects in the sun, making the
+dragon looks larger. In spite of its great size and the teeth in the man
+high
+jaw, the dragon doesn't spread fear, but a feeling of safety."
+M_DRAGON_SILVER_YOUNG(SEX_NEUTRAL)
+level 25
+special SFUN_TEAMWORK "unicorn"
+special SFUN_RESCUE "unicorn"
+special SFUN_PAIN_INIT time 60 bits SFB_RANTIME
+" 5 * By Michael Curran and Lars Floe@
+  8 Cstand@
+ 10 S10@
+ 20 d10say %s, give me back my old iron sceptre and I will tell you a
+story.@
+ 25 d10say I hate that queen spider, %s... it steals like a thief.@
+ 30 H50iron sceptre@
+ 35 Csay Oh, I must have slept too long, it's summer already.@
+ 40 J20@
+ 50 d10say Ehhh, where did you find that, %s?@
+ 60 d10say Never mind... Now I will tell a story about %s the great.@
+ 70 d10say Oops, I mean Laric the great.@
+ 80 d10say Laric was a man, or was it a dragon? (mumble) NO, a man...@
+ 90 d10say ...I think.@
+100 S100@
+110 d10say ...Anyway, %s was very courageous in the battle against evil.@
+120 d10say I mean... Laric was the one I was talking about, wasn't it?@
+130 d10slap silver dragon@
+140 d10say The evil sorceress who's name I've forgotten gathered an army.@
+150 d10sigh@
+160 d10say And turned against Mudgaard...Or was it Midgaard?@
+170 d10say And Laric stopped her...@
+180 d10emote bends over and starts chewing on the grass.@
+190 d10say woithh hish omy...@
+200 d10emote wipes his mouth with the back of a claw.@
+210 d10say with his army, I mean.@
+220 d10cough@
+230 d10think@
+240 d10emote looks disturbed.@
+250 d10say Where was I?@
+260 d10say Oh yes, he is dead and gone by now, you know, %s?@
+270 d10say He is buried in this valley. Rest his soul.@
+275 *P280haon_dor/iron_sceptre@
+280 S280@
+290 d10say Did you know swallows fly south in the winter, %s ?@
+300 d10say Are you a man, %s ? Or a lizard ?@
+310 d10say You must be a man, a lizard has ten arms, yes?@
+320 d10point %s@
+330 d10say %s is a man. Or a woman ?@
+340 d10whisper %s It's time for my rest. Please leave now.@
+345 Crest@
+350 J8@"
+end
+
+                                iggy
+names {"evil iggy", "iggy"}
+title "the Evil Iggy"
+descr "The Evil Iggy is here making obscene gestures."
+extra {}
+"  You can't help disliking this character. His face is frozen in an ironic
+grin. In his left hand he is holding a rotten apple. With his right hand he
+is making obscene gestures."
+
+weight 200  /* 100kg */
+height 200  /* 2m    */
+level 30
+race RACE_HUMAN
+sex SEX_MALE
+alignment -1000
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+/*           str dex con hpp bra cha mag div   */
+MSET_ABILITY( 10, 20, 20, 20, 10, 10,  5,  5)
+/*          axe_ham  sword  club_mace  flail_pole  unarmed  special  */
+MSET_WEAPON(      5,     5,         5,         25,       5,    5)
+/*         div  pro  det  sum  cre  min  hea  col  cel  int  ext     */
+MSET_SPELL(  6,   0,   0,   7,   0,   7,   7,   0,   6,  10,   7)
+dilcopy combat_mag@function("madness","cure serious",50,2);
+
+special SFUN_PAIN_INIT time 60 bits SFB_RANTIME
+" 5 *By Lars@
+ 6 Cstand@
+ 7 S7@
+ 8 d200follow %s@
+10 d200taunt %s@
+20 d200spit %s@
+30 d200say You are so ugly %s, that even your mom is disgusted!@
+40 d200slap %s@
+50 d200puke %s@
+60 H80rotten apple@
+70 lelfdom/rotten_apple@
+80 d200give rotten apple to %s@
+90 d200say That's whats good enough for you %s.@
+100 d200laugh %s@
+110 d200pickpocket %s@
+120 d200lick %s@
+130 d200say Yuck! You taste like a load of manure, %s!@
+132 d200say You smell like manure! I gotta rest or I'll faint!@
+133 d200say Now go away, or I shall taunt you again!@
+134 Crest@
+136 Cfollow iggy@
+140 J6@
+
+200 Csay What a chicken!@
+210 Csay Bwooock bwooock bwooooock!@
+220 J6@"
+end
+
+                       duris
+names {"duris","fighter","dwarf"}
+title "Duris the fighter"
+descr "Duris the fighter is standing here."
+extra {}
+"Duris the fighter is a strong dwarf. He is dressed in white
+armour and wearing a red cloak. He is probably a nice fellow,
+even though he looks tough."
+
+M_DWARF_WARRIOR_CLUB(25, SEX_MALE)
+alignment 730
+
+special SFUN_RANDOM_ZONE_MOVE time 280
+special SFUN_TEAMWORK "peremaleos/lax"
+special SFUN_RESCUE "peremaleos/lax"
+
+special SFUN_PAIN_INIT time 45
+"1 * By Lars Floe @
+ 2 Crest@
+ 3 Cstand@
+ 6 Csmile@
+10 S10@
+20 d10say This is our quest, %s. Go or we have to kill you.@
+30 d10say Please go, %s. This is your last warning!@
+40 d10AYou notice that Duris the fighter draws his weapon.@
+50 d10kill %s@
+60 J6@"
+end
+
+                       peremaleos
+names {"Peremaleos","mage","elf"}
+title "Peremaleos the mage"
+descr "Peremaleos the mage is standing here."
+extra {}
+"Peremaleos is a beautiful elven mage. A white robe surrounds
+his shoulders, but underneath you see a white armour. Symbols
+are written all over his robe, symbols that you don't even try to 
+understand."
+M_ELF_MAGE_ACID(20, SEX_MALE, "cast spray of acid")
+alignment 840
+special SFUN_TEAMWORK "duris/lax"
+special SFUN_PAIN_INIT time 45
+"5 * by Lars Floe@
+ 6 Cfollow duris@
+10 S10@
+20 d10say We don't want to hurt anybody. Please go %s@
+30 d10emote the elf gets a spellbook.@
+40 J6@"
+end
+
+                             lax
+names {"Lax","human","cleric"}
+title "Lax the human"
+descr
+"Lax the human is standing here."
+extra {}
+"Lax is a fine human cleric. She is wearing a white
+shining armour, with silver carvings. The carvings looks like
+magic cleric symbols. Maybe a kind of protection. Around his
+neck you see a holy symbol."
+
+M_HUMAN_CLERIC_CLUB(27, SEX_FEMALE, "cast cause serious wounds", "cast 
+cure serious duris") 
+alignment 769
+
+special SFUN_TEAMWORK "peremaleos/duris"
+special SFUN_RESCUE "duris"
+
+special SFUN_PAIN_INIT time 45
+"5 * By Lars Floe@
+ 6 Cfollow duris@
+ 7 S7@
+10 d7emote wields her mace.@
+20 d7say You cannot win this fight %s. Leave or die.@
+30 J6@"
+end
+
+                        legoes
+names {"Legoes","washer","dishwasher","elf"}
+title "Legoes the dishwasher"
+descr "Legoes the dishwasher is here fumbling with his dishes."
+extra {}
+"He is a tall, rather ugly elf. His clothes is mainly wet, probably because
+of his job. He is obvious nervous, constantly looking around."
+M_AVG_ELF(20, SEX_MALE)
+alignment 730
+special SFUN_TEAMWORK "king/lifeguard/elfguard/boss/seneschal/servant"
+special SFUN_RESCUE "king"
+
+dilbegin dishwasher();
+var
+  i : integer;
+code
+{
+   :loop: 
+   heartbeat := PULSE_SEC * (30 + rnd(30, 120));
+   pause;
+   heartbeat := PULSE_SEC * 8;
+   i := rnd(1, 5);
+   if (i == 1)
+     goto break_plate;
+   else if (i == 2)
+     goto rest;
+   else if (i == 3)
+     exec("sigh", self);
+   else if (i == 4)
+     exec("yawn", self);
+
+   goto loop;
+
+   :break_plate:
+   exec("emote drops a plate. It breaks into thoursand pieces!", self);
+   pause;
+   exec("say Oops", self);
+   pause;
+   exec("emote cleans up the mess.", self);
+   wait(SFB_CMD, command("slap"));
+   pause;
+   exec("says sorry boss, it won't happen again!", self);
+   goto loop;
+
+   :rest:
+   exec("say Pfew, I need a rest.", self);
+   pause;
+   exec("rest", self);
+   pause;
+   exec("say Ah, that's better!", self);
+   wait(SFB_CMD, command("slap"));
+   pause;
+   exec("stand", self);
+   pause;
+   exec("says sorry boss, it won't happen again!", self);
+   goto loop;
+}
+dilend
+end
+
+                        boss
+names {"Erasit","boss","elf"}
+title "Erasit the boss"
+descr "Erasit the boss is standing here, looking angrily at the
+dishwasher."
+extra {}
+"  The boss is trying to hide himself from Legolas the dishwasher. His
+dress is almost worse than the dishwashers. It's probably because of his
+age and not because of his skill that he's the boss."
+M_AVG_ELF(24, SEX_MALE)
+alignment 400
+
+special SFUN_TEAMWORK "king/lifeguard/elfguard/legoas/seneschal/servant"
+special SFUN_RESCUE "king"
+special SFUN_PAIN_INIT time 40
+"10 isay@legoes@
+ 15 S30@
+ 20 d30whisper %s Please tell the king that Legoes has done it again.@
+ 30 Csay Legoes, WORK!@
+ 40 Cslap legoes@
+ 50 J10@"
+end
+
+                        elfking
+names {"Elshar","elfking","king","elven king","elf"}
+title "Elshar the king"
+descr
+"Elshar, the elven king is here, looking very important."
+extra {}
+"Elshar is the elven ruler of this kingdom, renowed for his beauty if not 
+for his wisdom or courage."
+M_ELF_WARRIOR_SWORD(35, SEX_MALE)
+alignment 1000
+
+special SFUN_TEAMWORK "lifeguard/elfguard/legoas/seneschal/servant"
+special SFUN_GUARD_DOOR "elf_throne@black door@@$1n stops you.@$1n prevents
+$3n from opening the door."
+special SFUN_PAIN_INIT time 100 bits SFB_RANTIME
+" 5 * By lars Floe@
+ 10 Csay Paragraph 21 is Ok. But it's still illegal to drink in public.@
+ 20 Cemote turns a page in a small grey book.@
+ 30 Csay I should say that humans and dwarves are common. Do not attack
+them.@
+ 35 Cemote stops reading.@
+ 40 Csay By the way, what did the king in Midgaard say about our
+suggestion?@
+ 50 Csay Ok, send the message that we make a book about our criminals.@
+ 60 Cemote turns a page in a small grey book.@
+ 65 Cmoan@
+ 70 Cemote puts a small grey book into a bag.@
+ 80 Csay What's for dinner?@
+ 90 Csay Oh, fried potatoes... What's that ?@
+100 Csay That really sounds disgusting, couldn't I have fruits instead?@
+110 Csmile seneschal@
+120 Cwhisper seneschal Hey switching with that NPC kills the PAIN.@
+130 Cemote gets a small grey book from a bag.@
+140 Csay I'll have to look on the new laws.@
+150 Cemote opens a small grey book.@
+160 Csay I was wondering about paragraph 4...@
+170 Csay I think we should change it to all residents, not only the new.@
+180 Cemote turns a page in a small grey book.@
+190 J10@"
+end
+
+                        seneschal
+names {"seneschal","elf"}
+title "the seneschal"
+descr "The seneschal is standing next to the royal throne."
+extra {}
+"The seneschal is very beautiful. She does not look at you at all,
+almost as if it was forbidden."
+
+M_ELF_CLERIC_STAFF(23, SEX_FEMALE, "cast cause serious wounds",
+                   "cast cure serious wounds king")
+alignment 785
+
+special SFUN_GUARD_DOOR "elf_throne@black door@@$1n stops you.@$1n prevents
+$3n from opening the door."
+special SFUN_TEAMWORK "king/lifeguard/elfguard/legoas/boss/servant"
+special SFUN_RESCUE "king"
+special SFUN_PAIN_INIT time 80
+" 5 * By Lars Floe@
+ 10 S10@
+ 20 d10say %s from Midgaard, bow for the king.@
+ 30 d10whisper %s You better do as I say or the king might go bananas.@
+ 40 d10smile king@
+ 50 d10agree king@
+ 60 d10say %s's attitude shows that he should be a true adventurer.@
+ 70 d10say I think we could use %s in the war against evil.@
+ 80 d10smile %s@
+ 90 S10@
+100 J90@"
+end
+
+                        elfguard1
+names {"elfguard","elven guard","elf","guard"}
+title "the elfguard"
+descr "An elfguard stands here looking straight at you."
+extra {}
+"Slender yet strong and battle-trained, this guard seems more than able 
+to eliminate any threat against the elven kingdom."
+
+M_ELF_WARRIOR_CLUB(20, SEX_MALE)
+alignment 490
+
+special SFUN_TEAMWORK
+"king/lifeguard/seneschal/elfguard/legoas/boss/servant"
+special SFUN_RESCUE "king/lifeguard/seneschal/elfguard/legoas/boss/servant"
+special SFUN_RANDOM_ZONE_MOVE time 240
+
+special SFUN_PAIN_INIT time 160 bits SFB_RANTIME
+" 5 * By Lars Floe@
+ 10 Cemote scratches his left ear.@
+ 20 Cthink@
+ 30 Cagree elfguard1@
+ 40 Csmile elfguard1@
+ 50 Csay Hello friend.@
+ 60 Csay Nice weather today ? Maybe a little cloudy, I think it gonna
+rain.@
+ 70 Csmile elfguard@
+ 80 Csay Well, you are not from this kingdom stranger, eh?@
+ 90 Csay I'll better look after this stranger.@
+100 J10@"
+end
+
+                        elfguard2
+names {"elfguard","elven guard","elf","guard"}
+title "the elfguard"
+descr "A elfguard are standing here looking straight at you."
+extra {}
+"This elven guard looks as if he are quite bored by being on duty. 
+His whole attitude gives you the impression that you should not provoke 
+him. He is a protector of the citizens of the elven kingdom."
+
+M_ELF_CLERIC_SWORD(23, SEX_MALE, "cast cause serious", "cast cure serious")
+alignment 490
+
+special SFUN_TEAMWORK
+"king/lifeguard/seneschal/elfguard/legoas/boss/servant"
+special SFUN_RESCUE "king/lifeguard/seneschal/elfguard/legoas/boss/servant"
+
+special SFUN_PAIN_INIT time 90 bits SFB_RANTIME
+" 5 * By Lars Floe@
+ 10 Csay How boring being on guard the whole day.@
+ 20 S20@
+ 30 d20tell %s Who are you stranger?@
+ 40 d20tell %s Not sure that we are can let you in here. Must consult the
+others.@
+ 50 d20whisper elfguard He, he. What a stupid-looking git.@
+ 60 d20smile %s@
+ 70 d20say You can go on %s.@
+ 80 d20smile %s@
+ 90 Csay Have a nice day friend.@
+100 J10@"
+end
+
+                        lifeguard
+names {"royal guard","guard","elf","lifeguard"}
+title "the royal guard"
+descr "The king's royal guard stands here, looking straight forward."
+extra {}
+"This elven guard sees protecting the life of the elven king as her only
+and
+most honoured duty and will die for him if needed. She seems to be aware 
+of your every movement."
+
+M_HUMAN_CLERIC_HAMMER(30, SEX_FEMALE, "cast ca se wo", "cast cu se wo")
+alignment 607
+
+special SFUN_TEAMWORK "king/seneschal/elfguard/legoas/boss/servant"
+special SFUN_RESCUE "king/seneschal/elfguard/legoas/boss/servant"
+special SFUN_GUARD_DOOR "elf_throne@black door@@$1n stops you.@$1n prevents
+$3n from opening the door."
+end
+
+                        hunter
+names {"elven hunter","hunter","elf"}
+title "the elven hunter"
+descr "An elven hunter is standing here looking for something to hunt
+down."
+extra {}
+"   At first you thought that she was a tree; Clothes in light and dark
+green,
+the way she moves around, not easy to see at all, and even harder to hear.
+You
+suspect that this girl knows more about the forest and forest life, than
+you
+would be able to even if you tried. She is wearing a brown leather bag, and
+in
+the top of that you notice a small red spellbook. This girl looks very
+content."
+
+weight 140 /* 70 kilo */
+height 190 /* 1,90 m  */
+sex SEX_FEMALE
+race RACE_ELF
+alignment 920
+level 25
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+romflags {CHAR_SNEAK}   /* CHAR_FL_SNEAK */
+MSET_ABILITY( 10, 20, 10, 10, 20, 10,  10,  10)
+MSET_WEAPON( 10, 0, 25, 0, 25, 0)
+MSET_SPELL( 10, 0, 0, 10, 0, 0, 10, 10, 0, 0, 0)
+dilcopy combat_mag@function("","cure serious",50,2);
+special SFUN_RANDOM_ZONE_MOVE time 240
+special SFUN_PAIN_INIT time 160 bits SFB_RANTIME
+" 5 * By Lars Floe @
+ 10 Cget corpse@
+ 20 H150corpse@
+ 30 R100,10@
+ 40 S10@
+ 50 d40 smile %s@
+ 60 d40 say Have you seen a small rabbit in this area ?@
+ 70 d40 say see you %s.@
+ 80 J10@
+
+100 Ccast gate rabbit@
+112 Chit rabbit@
+114 Chit rabbit@
+120 J10@
+
+150 Cbury corpse@
+160 J10@"
+end
+
+                         servant
+names {"servant","elf"}
+title "the servant"
+descr "A servant is here trying not to be noticed."
+extra {}
+"  The servant is a small guy, being commanded around by all the others,
+which
+of course reflects on his whole attitude; He is looking down, walking in
+the
+shadows and actually doing all that's in his power not to be noticed. His
+clothes is grey and dirty, not anything you would like to wear."
+weight 110 /* 55 kilo */
+height 160 /* 1,60 m  */
+sex SEX_MALE
+race RACE_ELF
+alignment 500
+level 20
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY( 23, 20, 23, 20, 14, 0,  0,  0)
+MSET_WEAPON( 20, 30 ,20 ,20 ,10 ,0 )
+MSET_SPELL( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+special SFUN_TEAMWORK
+"king/lifeguard/seneschal/elfguard/legoas/boss/servant"
+special SFUN_RESCUE "king/lifeguard/seneschal/boss"
+special SFUN_RANDOM_ZONE_MOVE time 240
+special SFUN_PAIN_INIT time 160 bits SFB_RANTIME
+" 5 * By Lars Floe @
+ 10 Cemote goes into the shadows.@
+ 20 Cagree servant@
+ 30 Cemote whispers !*&&^(%)&&$.@
+ 40 Cemote cries softly in the dark.@
+ 50 Csay How are you master?@
+ 60 S10@
+ 70 d60tell %s If you have a better job for me, I'm willing to take it !@
+ 80 d60tell %s Are we friends.@
+ 90 Csay Please let me take your coat, sir.@
+100 Csay Hmr, Well I'll guess not.@
+110 Csay You are very rude, master. The king doesn't like that!@
+120 J10@"
+end
+
+
+                        butterfly
+names {"butterfly"}
+title "the translucent butterfly"
+descr "A translucent butterfly is here, looking for some butter."
+extra {}
+"The butterfly is very beautiful, like most butterflies."
+weight 0   /* 1/2 kilo */
+height 5   /* 5 cm     */
+sex SEX_NEUTRAL
+race RACE_BUTTERFLY
+alignment 200
+level 10
+NATURAL_DEF(WPN_BITE, ARM_CLOTHES)
+romflags {CHAR_SNEAK}
+MSET_ABILITY( 5, 30, 5, 5, 5, 30, 10, 10)
+MSET_WEAPON( 10, 10, 10, 10, 10, 10)
+MSET_SPELL( 5, 0, 0, 5, 0, 5, 5, 5, 5, 5, 5)
+special SFUN_RANDOM_ZONE_MOVE time 160 bits SFB_RANTIME
+special SFUN_PAIN_INIT time 160 bits SFB_RANTIME
+" 5 * By Lars Floe @
+ 10 S100@
+ 30 d10emote lands on %s's shoulder.@
+ 40 J10@
+
+100 I210corpse@
+110 Cemote lands on the ground, flapping its wings gently.@
+120 J10@
+
+200 *P10basis/corpse@
+210 Cemote magically corrodes the corpse.@
+220 J10@"
+end
+
+
+                        druid
+names {"shriilag", "hierofant","druid","elf"}
+title "Shriilag the hierofant"
+descr "Shriilag the hierofant is here, searching for herbs."
+extra {}
+"   He is very old, his wrinkled face is even older. He is wearing a long
+green cloak, his long silvery hair rests on his shoulders. A belt holds
+all kinds of small bags. Although he looks old he appears to move like
+a young elf."
+weight 170 /* 85 kilo */
+height 195 /* 1,95 m  */
+sex SEX_MALE
+race RACE_ELF
+alignment 920
+level 20
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY( 10, 15, 10, 20, 15, 10,  10,  10)
+MSET_WEAPON( 5, 5, 5, 0, 5, 10)
+MSET_SPELL( 20, 0, 0, 0, 0, 10, 10, 10, 20, 0, 0)
+dilcopy combat_mag@function("cause serious","cure serious",50,2);
+special SFUN_RANDOM_ZONE_MOVE time 240 bits SFB_RANTIME
+special SFUN_PAIN_INIT time 160 bits SFB_RANTIME
+" 5 * By Lars Floe @
+  6 Cstand@
+ 10 Cemote picks his nose.@
+ 20 Cemote finds some herbs.@
+ 30 Cemote picks up some herbs and put them in his pouch.@
+ 40 Cemote look at the sky.@
+ 50 Cagree shriilag@
+ 60 Csay It is going to rain soon.@
+ 70 Cemote hums happily.@
+ 80 Csay Save the whales.@
+ 90 Cemote gets some herbs from his belt.@
+100 Cemote gets a small piece of bark from his pouch.@
+110 Cemote puts the herbs into the bark, and rools it between his fingers.@
+120 Cemote smokes a joint.@
+130 Csmile@
+140 Cemote smokes a joint.@
+150 Cgiggle@
+160 Csay You must listen to the wind...@
+170 Cemote smokes a joint.@
+180 Csay HEY! No colour spraying here!@
+190 Crest@
+200 Csleep@
+210 Csnore@
+220 Cwake@
+230 Cyawn@
+240 Csay Hmmmfff, my head hurts. No more joints (yet).@
+250 Cstand@
+260 J6@"
+end
+
+
+                        unicorn
+names {"unicorn"}
+title "the unicorn"
+descr "The white unicorn is here gazing in your direction."
+extra {}
+"   She is silvery white with large black eyes. A kind intelligent
+look is on her face. Rays of light sparkles on her beautiful skin,
+giving her an almost godly appearance."
+
+romflags {CHAR_WIMPY} 
+
+M_UNICORN(SEX_FEMALE)
+level 23
+special SFUN_RANDOM_ZONE_MOVE time 240 bits SFB_RANTIME
+special SFUN_PAIN_INIT time 160 bits SFB_RANTIME
+" 5 * By Lars Floe
+ 10 S10@
+ 15 Cemote looks afraid.@
+ 20 Cnorth@
+ 30 Csouth@
+ 40 Ceast@
+ 50 Cwest@"
+end
+
+			elfchamp
+names {"elven spellweaver","spellweaver","mage","weaver","elf"}
+title "the elven spellweaver"
+descr "A tall elf stares at you with a vacant look in her eyes."
+extra {}
+"A tall elf, her long hair cut into a mohawk and sides of her head 
+covered in strange symbols. Her eyes glow with power."
+weight 140 
+height 185 
+sex SEX_FEMALE
+race RACE_ELF
+alignment 800
+level 25
+exp 120
+flags {UNIT_FL_NO_TELEPORT}
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+MSET_ABILITY( 10, 20, 5, 20, 15, 10,  15,  5)
+MSET_WEAPON( 10, 10, 5, 5, 5, 5)
+MSET_SPELL( 10, 0, 0, 0, 0, 5, 20, 10, 5, 5, 5)
+dilcopy combat_mag@function("fireball","cure serious",50,2);
+end
+
+%reset
+
+load bones into grave_st max 1 /* They are buried */
+/* load glemoor into haon_dor/rn_6109 max 1 */
+
+
+load butterfly into ent_elf max 4
+load butterfly into foot_pt1 max 4
+load butterfly into peace1 max 4
+load butterfly into light2 max 4
+
+load elfchamp into in_tree max 1
+{
+ equip spell_robe		WEAR_ABOUT
+ equip spell_sword		WEAR_WIELD
+ equip elfboots			WEAR_FEET
+}
+
+load silver_dragon into dragons_rest max 1
+
+load druid into fr_tree max 1
+{ 
+equip druid_staff position WEAR_WIELD
+equip druid_sandals position WEAR_FEET
+equip druid_robe position WEAR_ABOUT
+}
+
+load unicorn into uni_home max 1
+{
+   equip unicorn_horn position WEAR_HEAD
+}
+
+load iggy into under_tree max 1
+{
+  equip slee4 position WEAR_ARMS max 1
+  equip gaun4 position WEAR_HANDS max 1
+  equip boots4 position WEAR_FEET max 1
+  equip leg4 position WEAR_LEGS max 1
+  equip plate4 position WEAR_BODY max 1
+  equip helmet4 position WEAR_HEAD max 1
+  equip iggystaff position WEAR_WIELD max 1
+  load fire_scroll zonemax 1
+}
+
+
+load duris into peace2 max 1
+{
+  equip slee4 position WEAR_ARMS
+  equip gaun4 position WEAR_HANDS
+  equip boots4 position WEAR_FEET
+  equip leg4 position WEAR_LEGS
+  equip plate4 position WEAR_BODY
+  equip helmet4 position WEAR_HEAD
+  equip white_club position WEAR_WIELD
+
+  load lax into peace2 max 1
+  {equip slee2 position WEAR_ARMS
+   equip gaun2 position WEAR_HANDS
+   equip boots2 position WEAR_FEET
+   equip leg2 position WEAR_LEGS
+   equip plate2 position WEAR_BODY
+   equip helmet2 position WEAR_HEAD
+   equip white_mace position WEAR_WIELD
+  }
+  load peremaleos into peace2 max 1
+  {equip slee1 position WEAR_ARMS
+   equip gaun1 position WEAR_HANDS
+   equip boots1 position WEAR_FEET
+   equip leg1 position WEAR_LEGS
+   equip plate1 position WEAR_BODY
+   equip helmet1 position WEAR_HEAD
+   equip white_pole position WEAR_WIELD
+   load fire_wand max 1
+  }
+}
+
+load elfguard1 into gu_room local 2 max 4
+{equip slee2 position WEAR_ARMS
+ equip gaun2 position WEAR_HANDS
+ equip boots2 position WEAR_FEET
+ equip leg2 position WEAR_LEGS
+ equip plate2 position WEAR_BODY
+ equip helmet2 position WEAR_HEAD
+ equip guard_club position WEAR_WIELD
+}
+load elfguard1 into gu_room local 2 max 4
+{equip slee2 position WEAR_ARMS
+ equip gaun2 position WEAR_HANDS
+ equip boots2 position WEAR_FEET
+ equip leg2 position WEAR_LEGS
+ equip plate2 position WEAR_BODY
+ equip helmet2 position WEAR_HEAD
+ equip guard_club position WEAR_WIELD
+}
+load elfguard2 into gu_room local 1
+{equip slee2 position WEAR_ARMS
+ equip gaun2 position WEAR_HANDS
+ equip boots2 position WEAR_FEET
+ equip leg2 position WEAR_LEGS
+ equip plate2 position WEAR_BODY
+ equip helmet2 position WEAR_HEAD
+ equip guard_sword position WEAR_WIELD
+}
+load elfking into elf_throne max 1
+{equip king_slee position WEAR_ARMS max 1
+ equip king_gaun position WEAR_HANDS max 1
+ equip king_boots position WEAR_FEET max 1
+ equip king_leg position WEAR_LEGS max 1
+ equip king_plate position WEAR_BODY max 1
+ equip king_helmet position WEAR_HEAD max 1
+ equip king_sword position WEAR_WIELD max 1
+}
+load seneschal into elf_throne max 1
+{equip slee1 position WEAR_ARMS
+ equip gaun1 position WEAR_HANDS
+ equip boots1 position WEAR_FEET
+ equip leg1 position WEAR_LEGS
+ equip plate1 position WEAR_BODY
+ equip helmet1 position WEAR_HEAD
+ equip funny_staff position WEAR_WIELD
+}
+load lifeguard into elf_throne max 1
+{equip slee4 position WEAR_ARMS
+ equip gaun4 position WEAR_HANDS
+ equip boots4 position WEAR_FEET
+ equip leg4 position WEAR_LEGS
+ equip plate4 position WEAR_BODY
+ equip helmet4 position WEAR_HEAD
+ equip heavy_hammer position WEAR_WIELD
+}
+load boss into kitchen max 1
+{equip slee1 position WEAR_ARMS
+ equip gaun1 position WEAR_HANDS
+ equip boots1 position WEAR_FEET
+ equip leg1 position WEAR_LEGS
+ equip plate1 position WEAR_BODY
+ equip helmet1 position WEAR_HEAD
+ equip boss_sword position WEAR_WIELD
+   load legoes into kitchen max 1
+   {equip slee1 position WEAR_ARMS
+    equip gaun1 position WEAR_HANDS
+    equip boots1 position WEAR_FEET
+    equip leg1 position WEAR_LEGS
+    equip plate1 position WEAR_BODY
+    equip helmet1 position WEAR_HEAD
+    equip dirty_dagger position WEAR_WIELD
+   }
+}
+
+load elfguard1 into elfguard local 2 max 4
+{equip slee2 position WEAR_ARMS
+ equip gaun2 position WEAR_HANDS
+ equip boots2 position WEAR_FEET
+ equip leg2 position WEAR_LEGS
+ equip plate2 position WEAR_BODY
+ equip helmet2 position WEAR_HEAD
+ equip guard_club position WEAR_WIELD
+}
+load elfguard1 into elfguard local 2 max 4
+{equip slee2 position WEAR_ARMS
+ equip gaun2 position WEAR_HANDS
+ equip boots2 position WEAR_FEET
+ equip leg2 position WEAR_LEGS
+ equip plate2 position WEAR_BODY
+ equip helmet2 position WEAR_HEAD
+ equip guard_club position WEAR_WIELD
+}
+load elfguard2 into up_tr3 local 1
+{equip slee2 position WEAR_ARMS
+ equip gaun2 position WEAR_HANDS
+ equip boots2 position WEAR_FEET
+ equip leg2 position WEAR_LEGS
+ equip plate2 position WEAR_BODY
+ equip helmet2 position WEAR_HEAD
+ equip guard_sword position WEAR_WIELD
+}
+
+load servant into elf_hall max 2
+{equip slee1 position WEAR_ARMS
+ equip gaun1 position WEAR_HANDS
+ equip boots1 position WEAR_FEET
+ equip leg1 position WEAR_LEGS
+ equip plate1 position WEAR_BODY
+ equip helmet1 position WEAR_HEAD
+ equip humble_dagger position WEAR_WIELD
+}
+load servant into elf_hall max 2
+{equip slee1 position WEAR_ARMS
+ equip gaun1 position WEAR_HANDS
+ equip boots1 position WEAR_FEET
+ equip leg1 position WEAR_LEGS
+ equip plate1 position WEAR_BODY
+ equip helmet1 position WEAR_HEAD
+ equip humble_dagger position WEAR_WIELD
+}
+load hunter into foot_pt4 max 1
+{
+ equip hunter_flail position WEAR_WIELD
+ equip elven_cloak position WEAR_ABOUT
+ equip boots1 position WEAR_FEET
+ equip leg1 position WEAR_LEGS
+ equip elftunic position WEAR_BODY
+}
+
+load haon_dor/rabbit into light2 zonemax 4
+load haon_dor/rabbit into riv_ba3 zonemax 4
+load haon_dor/deer into meadow2 zonemax 2
+load haon_dor/deer into op_spot zonemax 2
+load haon_dor/brown_bear into cave zonemax 1
+load haon_dor/fox into riv_bank zonemax 1
+load haon_dor/black_wolf into riv_bank zonemax 1
+
+/*
+pt_d_fo
+open {EX_OPEN_CLOSE,EX_CLOSED}
+
+                        closet_in_tr2
+open {EX_OPEN_CLOSE, EX_CLOSED, EX_INSIDE_OPEN}
+
+                        closet_in_druid
+open {EX_OPEN_CLOSE, EX_CLOSED, EX_INSIDE_OPEN}
+*/
+
+door closet_in_druid NORTH {EX_CLOSED, EX_HIDDEN}
+door tres_ro SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+
+door tres_ro NORTH {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door out_dru SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door bridge SOUTH {EX_OPEN_CLOSE}
+door up_tr3 NORTH {EX_OPEN_CLOSE}
+door elf_hall NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+door elf_hall SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door kitchen NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+door elf_throne SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door elf_throne EAST {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+door damnroom WEST {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+
+%end
+
+
+
+

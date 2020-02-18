@@ -1,0 +1,6353 @@
+/*
+filename    chess2
+password    dreamer1
+changedby   Palio
+EmailAdd     Palio <palio@blinksoft.com>
+request     
+version     38
+END HEADER*/
+
+
+
+
+#include <composed.h>
+#define STONE_QUEST_ONGOING "Birth Stone Ongoing"
+#define  STONE_QUEST_COMPLETE  "Birth Stone Quest Complete"
+
+#define BLACK_ARMY \
+		dilcopy white_agr@blcastle();
+#define BLACK_ARMOR \
+dilcopy ali_restrict@function (-350,-1000,0,0,"");\
+		flags {UNIT_FL_MAGIC}	\
+		extra {" $black army"}	\
+			"This makes the white army aggressive"
+
+
+%zone blcastle
+title ""
+lifespan 20
+reset RESET_ANYHOW
+creators {"palio"}
+
+notes
+"A special thanks to whistler, without who's help I would not have a
+quest."
+help
+"&l
+
+
+
+  &cgX-X-X-X-X-X-X-&crF-F-F-F-F-&cgX-X-X-X-X-X-X&cw
+  &cgX-X-X-X-X-X-X-&crF-F-F-F-F-&cgX-X-X-X-X-X-X&cw
+  &cgX-&cbM-M-M-M-M-&crF-F-F-F-F-F-F-&cbM-M-M-M-M-&cgX&cw
+  &cgX-&cbM&cw Black &cbM-&crF-F-F-F-F-F-F-&cbM&cw White &cbM-&cgX&cw
+  &cgX-&cbM&cw Castle&cbM-&crF-F-F-F-F-F-F-&cbM&cw Castle&cbM-&cgX&cw
+  &cgX-&cbM&cw       &cbM-&crF-F-F-F-F-F-F-&cbM&cw       &cbM-&cgX&cw
+  &cgX-&cbM-M-M-M-M-&crF-F-F-F-F-F-F-&cbM-M-M-M-M-&cgX&cw
+  &cgX-X-X-X-X-X-X-&crF-F-F-F-F-&cgX-X-X-X-X-X-X&cw
+  &cgX-X-X-X-X-X-X-&crF-F-F-F-F-&cgX-X-X-X-X-X-X&cw
+
+
+
+&cgGreen = Forest&cw
+&cbBlues = Moat&cw
+&crRed = Fields&cw
+
+
+
+History Of The Killing Fields
+===============================
+&f
+Long time ago before the times of destruction and despair, The Blanche
+and  the Noir clans where close friends. A budding romance rose up
+between the beautiful Lanairia and  the handsome Burtonious. Both
+kingdoms where pleased with the bonding of their children and their
+upcoming marriage would serve to join the kingdoms for all time. Both
+kingdoms prepared for months and months  to be ready for this auspicious
+occasion. Burtinious presented his wife to be with a small golden dagger
+as his wedding gift to her. His words to here where 'My love take this
+dagger and if every I stray from your love use it on me, for I never want
+to be far from your sweetness'. The wedding day dawned on a gentle summer
+day with not a cloud to mar the sky. As the wedding was about to proceed
+it was noticed that Burtonious was no where to be see. Groups from both
+kingdoms where sent out in search of the  wayward prince but he was
+never found. Trackers found horse prints in the ground indicating
+someone had galloped away from the castle at an outstanding speed. The
+princess  Lanairia was inconsolable and eventually took her own life with
+the very dagger that her love had given her as a wedding gift. Her father
+King Blanche was  furious and declared war on King Noir. To this day the
+two kingdoms fight bloody battles when ever they meet. The fields between
+the kingdoms eventually becoming named 'the killing fields'
+
+version 1
+
+"
+
+
+
+%dil
+
+/*chess board stuff*/
+dilbegin aware freeze_dil();
+code
+{
+   :loop:
+   wait(SFB_CMD, activator == self);
+                                  act ("The magical shield has surrounded you and you can't move.",
+                                  A_ALWAYS,self,null,null,TO_CHAR);
+   goto loop;
+}
+dilend
+
+
+
+
+dilbegin stringlist copy_list (s:stringlist);
+code
+{
+return (s);
+}
+dilend
+
+
+dilbegin game_board ();
+external
+  stringlist move_piece (ply_brd:stringlist,move1:string,move2:string);
+ stringlist move_word (words:stringlist,move1:string,move2:string,pc:unitptr);
+stringlist remove_piece (ply_brd:stringlist,word:stringlist,move:string);
+stringlist remove_word (words:stringlist,move:string,pc:unitptr);
+stringlist place_piece (ply_brd:stringlist,piece:string,move:string);
+stringlist place_word (words:stringlist,piece:string,move:string,pc:unitptr);
+stringlist copy_list (s:stringlist);
+  stringlist chess_brd (ply_brd:stringlist);
+  stringlist chess_word();
+  stringlist checker_brd (ply_brd:stringlist);
+  stringlist checker_word();
+  stringlist clear_brd();
+  show_brd (p:stringlist,pc:unitptr);
+var
+ply:stringlist;
+  onbrd:stringlist;
+  wordbrd:stringlist;
+  save_brd:stringlist;
+  save_word:stringlist;
+  custom_brd:stringlist;
+  custom_word:stringlist;
+  moves:stringlist;
+  pc:unitptr;
+  i:integer;
+  game_status:integer;
+  code
+  {
+  game_status:=0;
+onbrd:=clear_brd();
+onbrd:=chess_brd(onbrd);
+wordbrd:=chess_word();
+:start:
+ interrupt (SFB_CMD,(command ("gshow")) ,show_brd);
+
+wait (SFB_CMD,((command ("gstart")) and
+(("$"+activator.name+"gameboard") in self.extra)));
+block;
+if (game_status==0)
+  {
+  ply:=getwords(argument);
+
+if (not (activator.name in ply))
+    addstring (ply,activator.name);
+
+    act ("You start a game with the following players:",
+    A_ALWAYS,activator,null,null,TO_CHAR);
+    sendtext ("&n",activator);
+    i:=0;
+    while (ply.[i]!=null)
+      {
+      sendtext (ply.[i]+"&n",activator);
+      i:=i+1;
+      }
+
+  game_status:=1;
+  }
+else
+  {
+  act ("There is already a game ongoing use ' gend' to end the game.",
+  A_ALWAYS ,activator,null,null,TO_CHAR);
+  }
+
+ interrupt (SFB_CMD,((command ("gsave")) and
+ (activator.name in ply)),save_board);
+ interrupt (SFB_CMD,((command ("grestore")) and
+ (activator.name in ply)),rest_board);
+ interrupt (SFB_CMD, ((command ("gmove")) and
+ (activator.name in ply)),mment);
+ interrupt (SFB_CMD, ((command ("gplace")) and
+ (activator.name  in ply)),placement);
+ interrupt (SFB_CMD, ((command ("gremove")) and
+ (activator.name in ply )),take_piece);
+interrupt(SFB_CMD, ((command ("Gsetup")) and
+(activator.name in ply)) ,set_board);
+interrupt (SFB_CMD , ((command  ("gend")) and
+(("$"+activator.name+"gameboard") in self.extra)),game_end);
+
+goto start;
+
+:game_end:
+block;
+ply:={""};
+act ("The pieces scatter off the game board as you end the game.",
+A_ALWAYS, activator, null,null,TO_CHAR);
+act ("The pieces scatter off the game board as $1n ends the game.",
+A_SOMEONE, activator,self,null,TO_REST);
+game_status:=0;
+goto start;
+
+:set_board:
+block;
+pc:=activator;
+  secure (pc,set_board);
+
+if (argument=="chess")
+  {
+  onbrd:=clear_brd();
+  onbrd:=chess_brd(onbrd);
+  wordbrd:=chess_word();
+  act ("You set up a game of chess.",
+  A_ALWAYS,pc,null,null,TO_CHAR);
+  act ("$1n sets up a game of chess.",
+  A_SOMEONE,pc,null,null,TO_REST);
+  }
+else if (argument =="checkers")
+  {
+  onbrd:=clear_brd();
+  onbrd:=checker_brd(onbrd);
+  wordbrd:=checker_word();
+  act ("You set up a game of ccheckers.",
+  A_ALWAYS,pc,null,null,TO_CHAR);
+  act ("$1n sets up a game of checkers.",
+  A_SOMEONE,pc,null,null,TO_REST);
+  }
+else
+  act ("Would you like to setup a game of chess or checkers?",
+  A_ALWAYS,pc,null,null,TO_CHAR);
+
+  unsecure(pc);
+  goto start;
+
+:show_brd:
+if (not(activator.name in ply))
+  {
+  if (findunit (activator ,self.name,FIND_UNIT_HERE,null)!=self) goto start;
+  }
+block;
+pc:=activator;
+secure (pc,start);
+show_brd(onbrd,pc);
+unsecure(pc);
+goto start;
+
+:mment:
+block;
+pc:=activator;
+secure (pc,start);
+moves:=getwords (argument);
+onbrd:=move_piece (onbrd,moves.[0],moves.[1]);
+wordbrd:=move_word(wordbrd,moves.[0],moves.[1],pc);
+moves:={""};
+unsecure (pc);
+goto start;
+
+:save_board:
+block;
+pc:=activator;
+if (argument=="game")
+  {
+  save_brd:=copy_list (onbrd);
+  save_word:=copy_list(wordbrd);
+  act ("Saving your game.",
+  A_ALWAYS,pc,null,null,TO_CHAR);
+  }
+else if (argument == "custome")
+  {
+  custom_brd:=copy_list (onbrd);
+  custom_word:=copy_list(wordbrd);
+  act ("Saving your custom setup.",
+  A_ALWAYS,pc,null,null,TO_CHAR);
+  }
+else
+  {
+  act ("Save what? (Custom / game?)",
+  A_ALWAYS,pc,null,null,TO_CHAR);
+}
+goto start;
+
+:rest_board:
+block;
+pc:=activator;
+if (argument=="game")
+  {
+  if (save_brd.[0]==null)
+    {
+    act ("No game saved.",
+    A_ALWAYS,pc,null,null,TO_CHAR);
+    goto start;
+    }
+  onbrd:=copy_list(save_brd);
+  wordbrd:=copy_list(save_word);
+  act ("Restoring your game.",
+  A_ALWAYS,pc,null,null,TO_CHAR);
+  act ("$1n restores an old game.",
+  A_SOMEONE,pc,null,null,TO_REST);
+  }
+else if (argument == "custom")
+  {
+  if (custom_brd.[0]==null)
+    {
+    act ("No custom setup saved.",
+    A_ALWAYS,pc,null,null,TO_CHAR);
+    goto start;
+    }
+  onbrd:=copy_list(custom_brd);
+  wordbrd:=copy_list(custom_word);
+  act ("Restoring your custom setup.",
+  A_ALWAYS,pc,null,null,TO_CHAR);
+  act ("$1n sets the $2n up in a custom configuration.",
+  A_SOMEONE,pc,null,null,TO_REST);
+  }
+else
+  {
+  act ("Restore what? (Custom / game?)",
+  A_ALWAYS,pc,null,null,TO_CHAR);
+}
+
+goto start;
+
+:placement:
+block;
+pc:=activator;
+ moves:=getwords (argument);
+onbrd:=place_piece(onbrd,moves.[0]+ " "+moves.[1],moves.[2]);
+wordbrd:=place_word(wordbrd,moves.[0]+" " +moves.[1],moves.[2],pc);
+moves:={""};
+goto start;
+
+:take_piece:
+block;
+pc:=activator;
+onbrd:=remove_piece(onbrd,wordbrd,argument);
+wordbrd:=remove_word(wordbrd,argument,pc);
+goto start;
+
+}
+dilend
+
+dilbegin stringlist chess_word();
+var
+ words:stringlist;
+ code
+ {
+ words:={
+"blue rook","blue knight","blue bishop","blue king","blue queen","blue bishop",
+"blue knight", "blue rook",
+"blue pawn","blue pawn","blue pawn","blue pawn",
+"blue pawn","blue pawn","blue pawn","blue pawn",
+"blank","blank","blank","blank","blank","blank","blank","blank",
+"blank","blank","blank","blank","blank","blank","blank","blank",
+"blank","blank","blank","blank","blank","blank","blank","blank",
+"blank","blank","blank","blank","blank","blank","blank","blank",
+"white pawn","white pawn","white pawn","white pawn",
+"white pawn","white pawn","white pawn","white pawn",
+ "white rook","white knight","white bishop","white king","white queen","white bishop",
+"white knight", "white rook"};
+
+return (words);
+}
+dilend
+
+dilbegin show_brd (p:stringlist,pc:unitptr);
+var
+  i:integer;
+code
+{
+secure (pc,lost);
+
+sendtext ("    A B C D E F G H&n",pc);
+sendtext ("   +-+-+-+-+-+-+-+-+&n",pc);
+sendtext (" 8 |",pc);
+i:=0;
+while (i<8)
+  {
+  sendtext (p.[i],pc);
+  i:=i+1;
+  }
+sendtext("&n",pc);
+sendtext ("   +-+-+-+-+-+-+-+-+&n",pc);
+sendtext (" 7 |",pc);
+i:=8;
+while (i<16)
+  {
+  sendtext (p.[i],pc);
+  i:=i+1;
+  }
+sendtext("&n",pc);
+sendtext("   +-+-+-+-+-+-+-+-+&n",pc);
+sendtext (" 6 |",pc);
+i:=16;
+while (i<24)
+  {
+  sendtext (p.[i],pc);
+  i:=i+1;
+  }
+sendtext("&n",pc);
+sendtext ("   +-+-+-+-+-+-+-+-+&n",pc);
+sendtext(" 5 |",pc);
+i:=24;
+while (i<32)
+  {
+  sendtext (p.[i],pc);
+  i:=i+1;
+  }
+sendtext("&n",pc);
+sendtext("   +-+-+-+-+-+-+-+-+&n",pc);
+sendtext (" 4 |",pc);
+i:=32;
+while (i<40)
+  {
+  sendtext (p.[i],pc);
+  i:=i+1;
+  }
+sendtext("&n",pc);
+sendtext("   +-+-+-+-+-+-+-+-+&n",pc);
+sendtext (" 3 |",pc);
+i:=40;
+while (i<48)
+  {
+  sendtext (p.[i],pc);
+  i:=i+1;
+  }
+sendtext("&n",pc);
+sendtext ("   +-+-+-+-+-+-+-+-+&n",pc);
+sendtext (" 2 |",pc);
+i:=48;
+while (i<56)
+  {
+  sendtext (p.[i],pc);
+  i:=i+1;
+  }
+sendtext("&n",pc);
+sendtext ("   +-+-+-+-+-+-+-+-+&n",pc);
+sendtext (" 1 |",pc);
+i:=56;
+while (i<64)
+  {
+  sendtext (p.[i],pc);
+  i:=i+1;
+  }
+sendtext ("&n",pc);
+sendtext("   +-+-+-+-+-+-+-+-+&n",pc);
+:lost:
+
+return;
+}
+dilend
+
+dilbegin integer place (move:string);
+var
+ move_list:stringlist;
+ i:integer;
+code
+{
+
+move_list:={
+"a8","b8","c8","d8","e8","f8","g8","h8",
+"a7","b7","c7","d7","e7","f7","g7","h7",
+"a6","b6","c6","d6","e6","f6","g6","h6",
+"a5","b5","c5","d5","e5","f5","g5","h5",
+"a4","b4","c4","d4","e4","f4","g4","h4",
+"a3","b3","c3","d3","e3","f3","g3","h3",
+"a2","b2","c2","d2","e2","f2","g2","h2",
+"a1","b1","c1","d1","e1","f1","g1","h1"};
+
+i:=move in move_list;
+return (i-1);
+}
+dilend
+
+dilbegin string refresh (i:integer);
+var
+ spaces:stringlist;
+ code
+ {
+  spaces:=
+  {
+" |","&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|",
+  "&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|"," |",
+" |","&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|",
+  "&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|"," |",
+" |","&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|",
+  "&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|"," |",
+" |","&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|",
+  "&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|"," |"};
+
+return (spaces.[i]);
+}
+dilend
+
+
+dilbegin stringlist move_piece (ply_brd:stringlist,move1:string,move2:string);
+external
+  string refresh (i:integer);
+  integer place (move:string);
+var
+  start_p:integer;
+  end_p:integer;
+  ref:string;
+code
+{
+start_p:=place (move1);
+if (start_p<0)
+return (ply_brd);
+
+end_p:=place (move2);
+if (end_p<0)
+return (ply_brd);
+
+ref:=refresh(start_p);
+ply_brd.[end_p]:=ply_brd.[start_p];
+ply_brd.[start_p]:=ref;
+
+return (ply_brd);
+}
+dilend
+
+dilbegin stringlist place_piece (ply_brd:stringlist,piece:string,move:string);
+external
+  string piece_brd (word:string);
+  integer place (move:string);
+var
+temp:string;
+  end_p:integer;
+code
+{
+
+temp:=piece_brd(piece);
+if (temp=="blank")
+  return (ply_brd);
+
+end_p:=place (move);
+if (end_p<0)
+return (ply_brd);
+
+ply_brd.[end_p]:=temp;;
+return (ply_brd);
+}
+dilend
+
+dilbegin stringlist place_word (words:stringlist,piece:string,move:string,pc:unitptr);
+external
+string piece_brd (p:string);
+  integer place (move:string);
+var
+  end_p:integer;
+  put_piece:string;
+  take_piece:string;
+code
+{
+secure(pc,lost);
+
+put_piece:=piece_brd(piece);
+if (put_piece=="blank")
+{
+  act (piece+" is an illegal piece.",
+  A_ALWAYS,pc,null,null,TO_CHAR);
+  unsecure (pc);
+return (words);
+  }
+
+end_p:=place (move);
+if (end_p<0)
+  {
+  act (move+" is an illegal coordinate.",
+  A_ALWAYS,pc,null,null,TO_CHAR);
+  unsecure(pc);
+return (words);
+  }
+
+  take_piece:=words.[end_p];
+
+if (take_piece=="blank")
+{
+act ("$1n places a "+piece+" from off the board to "+move+".",
+A_SOMEONE,pc,null,null,TO_REST);
+act ("You place a "+piece+" from off the board to "+move+".",
+A_ALWAYS,pc,null,null,TO_CHAR);
+}
+else
+  {
+act ("$1n places a "+piece+" from off the board to "+move+" and takes a "+take_piece+".",
+A_SOMEONE,pc,null,null,TO_REST);
+act ("You place a "+piece+" from off the board to "+move+" and take  a "+take_piece+".",
+A_ALWAYS,pc,null,null,TO_CHAR);
+  }
+
+words.[end_p]:=piece;
+:lost:
+unsecure (pc);
+return (words);
+}
+dilend
+
+dilbegin stringlist move_word (words:stringlist,move1:string,move2:string,pc:unitptr);
+external
+  integer place (move:string);
+var
+  start_p:integer;
+  end_p:integer;
+  piece:string;
+  take_piece:string;
+code
+{
+secure(pc,lost);
+start_p:=place (move1);
+if (start_p<0)
+  {
+  act (move1+" is an illegal coordinate.",
+  A_ALWAYS,pc,null,null,TO_CHAR);
+  unsecure (pc);
+return (words);
+  }
+piece:=words.[start_p];
+if (piece=="blank")
+  {
+  act ("No piece at "+move1+".",
+  A_ALWAYS,pc,null,null,TO_CHAR);
+return (words);
+  }
+end_p:=place (move2);
+if (end_p<0)
+  {
+  act (move2+" is an illegal coordinate.",
+  A_ALWAYS,pc,null,null,TO_CHAR);
+  unsecure(pc);
+return (words);
+  }
+  take_piece:=words.[end_p];
+
+if (take_piece=="blank")
+{
+act ("$1n moves a "+piece+" from "+move1+" to "+move2+".",
+A_SOMEONE,pc,null,null,TO_REST);
+act ("You move a "+piece+" from "+move1+" to "+move2+".",
+A_ALWAYS,pc,null,null,TO_CHAR);
+}
+else
+  {
+act ("$1n moves a "+piece+" from "+move1+" to "+move2+" and takes a "+take_piece+".",
+A_SOMEONE,pc,null,null,TO_REST);
+act ("You move a "+piece+" from "+move1+" to "+move2+" and take  a "+take_piece+".",
+A_ALWAYS,pc,null,null,TO_CHAR);
+  }
+
+words.[end_p]:=words.[start_p];
+words.[start_p]:="blank";
+
+:lost:
+unsecure (pc);
+return (words);
+}
+dilend
+
+dilbegin stringlist remove_piece (ply_brd:stringlist,word:stringlist,move:string);
+external
+  string refresh (i:integer);
+  integer place (move:string);
+  string piece_brd (p:string);
+var
+  start_p:integer;
+  kind:string;
+  ref:string;
+code
+{
+
+start_p:=place (move);
+if (start_p<0)
+return (ply_brd);
+
+if ("blank"==word.[start_p])
+return (ply_brd);
+
+ref:=refresh(start_p);
+ply_brd.[start_p]:=ref;
+
+return (ply_brd);
+}
+dilend
+dilbegin stringlist remove_word (words:stringlist,move:string,pc:unitptr);
+external
+  integer place (move:string);
+  string piece_brd (p:string);
+var
+  start_p:integer;
+  kind:string;
+code
+{
+secure(pc,lost);
+start_p:=place (move);
+if (start_p<0)
+  {
+  act (move+" is an illegal coordinate.",
+  A_ALWAYS,pc,null,null,TO_CHAR);
+  unsecure (pc);
+return (words);
+  }
+kind:=words.[start_p];
+if (kind=="blank")
+  {
+  act ("No piece at "+move+".",
+  A_ALWAYS,pc,null,null,TO_CHAR);
+return (words);
+  }
+
+act ("$1n removes a "+words.[start_p]+" from "+move+".",
+A_SOMEONE,pc,null,null,TO_REST);
+act ("You remove a "+words.[start_p]+" from "+move+".",
+A_ALWAYS,pc,null,null,TO_CHAR);
+
+words.[start_p]:="blank";
+
+:lost:
+unsecure (pc);
+return (words);
+}
+dilend
+
+dilbegin stringlist clear_brd();
+var
+ spaces:stringlist;
+ code
+ {
+  spaces:=
+  {
+" |","&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|",
+  "&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|"," |",
+" |","&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|",
+  "&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|"," |",
+" |","&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|",
+  "&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|"," |",
+" |","&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|",
+  "&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|"," |","&cb=&cw|"," |"};
+
+return (spaces);
+}
+dilend
+
+dilbegin stringlist chess_brd (ply_brd:stringlist);
+  code
+  {
+  ply_brd.[0]:="&c+br&cw|";
+  ply_brd.[1]:="&c+bn&cw|";
+  ply_brd.[2]:="&c+bb&cw|";
+  ply_brd.[3]:="&c+bq&cw|";
+  ply_brd.[4]:="&c+bk&cw|";
+  ply_brd.[5]:="&c+bb&cw|";
+  ply_brd.[6]:="&c+bn&cw|";
+  ply_brd.[7]:="&c+br&cw|";
+  ply_brd.[8]:="&c+bp&cw|";
+  ply_brd.[9]:="&c+bp&cw|";
+  ply_brd.[10]:="&c+bp&cw|";
+  ply_brd.[11]:="&c+bp&cw|";
+  ply_brd.[12]:="&c+bp&cw|";
+  ply_brd.[13]:="&c+bp&cw|";
+  ply_brd.[14]:="&c+bp&cw|";
+  ply_brd.[15]:="&c+bp&cw|";
+
+  ply_brd.[48]:="&c+wP&cw|";
+  ply_brd.[49]:="&c+wP&cw|";
+  ply_brd.[50]:="&c+wP&cw|";
+  ply_brd.[51]:="&c+wP&cw|";
+  ply_brd.[52]:="&c+wP&cw|";
+  ply_brd.[53]:="&c+wP&cw|";
+  ply_brd.[54]:="&c+wP&cw|";
+  ply_brd.[55]:="&c+wP&cw|";
+  ply_brd.[56]:="&c+wR&cw|";
+  ply_brd.[57]:="&c+wN&cw|";
+  ply_brd.[58]:="&c+wB&cw|";
+  ply_brd.[59]:="&c+WQ&cw|";
+  ply_brd.[60]:="&c+wK&cw|";
+  ply_brd.[61]:="&c+wB&cw|";
+  ply_brd.[62]:="&c+wN&cw|";
+  ply_brd.[63]:="&c+wR&cw|";
+
+return (ply_brd);
+}
+dilend
+
+dilbegin stringlist checker_brd (ply_brd:stringlist);
+  code
+  {
+  ply_brd.[1]:="&c+bO&cw|";
+  ply_brd.[3]:="&c+bO&cw|";
+  ply_brd.[5]:="&c+bO&cw|";
+  ply_brd.[7]:="&c+bO&cw|";
+  ply_brd.[8]:="&c+bO&cw|";
+  ply_brd.[10]:="&c+bO&cw|";
+  ply_brd.[12]:="&c+bO&cw|";
+  ply_brd.[14]:="&c+bO&cw|";
+  ply_brd.[17]:="&c+bO&cw|";
+  ply_brd.[19]:="&c+bO&cw|";
+  ply_brd.[21]:="&c+bO&cw|";
+  ply_brd.[23]:="&c+bO&cw|";
+
+  ply_brd.[40]:="&c+wX&cw|";
+  ply_brd.[42]:="&c+wX&cw|";
+  ply_brd.[44]:="&c+wX&cw|";
+  ply_brd.[46]:="&c+wX&cw|";
+  ply_brd.[49]:="&c+wX&cw|";
+  ply_brd.[51]:="&c+wX&cw|";
+  ply_brd.[53]:="&c+wX&cw|";
+  ply_brd.[55]:="&c+wX&cw|";
+  ply_brd.[56]:="&c+wX&cw|";
+  ply_brd.[58]:="&c+wX&cw|";
+  ply_brd.[60]:="&c+wX&cw|";
+  ply_brd.[62]:="&c+wX&cw|";
+
+return (ply_brd);
+}
+dilend
+dilbegin stringlist checker_word();
+var
+ words:stringlist;
+ code
+ {
+ words:={
+"blank","blue O","blank","blue O","blank","blue O",
+"blank", "blue O",
+"blue O","blank","blue O","blank","blue O","blank",
+"blue O","blank",
+"blank","blue O","blank","blue O","blank","blue O",
+"blank", "blue O",
+"blank","blank","blank","blank","blank","blank","blank","blank",
+"blank","blank","blank","blank","blank","blank","blank","blank",
+ "white X","blank","white X","blank","white X","blank",
+"white X", "blank",
+ "blank","white X","blank","white X","blank","white X",
+ "blank","white X",
+ "white X","blank","white X","blank","white X","blank",
+"white X", "blank"};
+
+return (words);
+}
+dilend
+
+
+
+dilbegin string piece_brd (word:string);
+  code
+  {
+  if (word =="blue rook")
+  return ("&c+bR&cw|");
+else if ((word=="blue knight") or (word=="blue horse"))
+  return ("&c+bH&cw|");
+else if (word=="blue bishop")
+  return ("&c+bB&cw|");
+  else if (word=="blue king")
+  return ("&c+bK&cw|");
+else if (word=="blue queen")
+  return ("&c+bQ&cw|");
+else if (word=="blue pawn")
+  return ("&c+bP&cw|");
+else if (word=="blue o")
+  return ("&c+bO&cw|");
+else if (word=="blue x")
+  return ("&c+bX&cw|");
+else if (word=="white o")
+  return ("&c+wO&cw|");
+else if (word=="white x")
+  return ("&c+wX&cw|");
+else if (word =="white pawn")
+  return ("&c+wP&cw|");
+else if (word =="white rook")
+  return ("&c+wR&cw|");
+else if ((word=="white knight") or (word=="white horse"))
+  return ("&c+wH&cw|");
+else if (word=="white bishop")
+  return ("&c+wB&cw|");
+else if (word=="white queen")
+  return ("&c+WQ&cw|");
+else if (word=="white king")
+  return ("&c+wK&cw|");
+else
+  return ("blank");
+}
+dilend
+
+dilbegin string stone_name (i:integer);
+var
+  stones:stringlist;
+code
+{
+  stones:={"red_stone","purple_stone","lblue_stone","cless_stone",
+"emerald_stone","pink_stone","yellow_stone","mblue_stone",
+"blue_stone","green_stone","red1_stone","pearl_stone"};
+
+ return (stones.[i]);
+ }
+ dilend
+dilbegin stone_func (count:integer,i:integer);
+external
+  string stone_name (i:integer);
+var
+  namer:string;
+  place:unitptr;
+  stone:unitptr;
+code
+{
+  namer:=stone_name(count);
+  stone:=load (namer+"@"+"blcastle");
+  :loop:
+  if (i==0)
+  place:=findrndunit (self,FIND_UNIT_WORLD,UNIT_ST_NPC);
+  else
+  place:=findrndunit (self,FIND_UNIT_WORLD,UNIT_ST_ROOM);
+
+  if ((place==null) or
+  (place==self)) goto loop;
+  link (stone,place);
+  return ;
+  }
+  dilend
+
+
+dilbegin load_stone  ();
+external
+  stone_func (count:integer,i:integer);
+var
+ count:integer;
+ exclude:integer;
+ code
+ {
+ heartbeat:=PULSE_SEC*1200;
+ :start:
+ sendtoalldil ("destroy yourself","stone_dil@blcastle");
+ exclude:=rnd(0,11);
+ count:=-1;
+ while (count <12)
+  {
+  count:=count+1;
+  if (count==12) continue;
+  if (exclude==count)
+    {
+stone_func (exclude,1);
+stone_func (exclude,1);
+stone_func (exclude,1);
+stone_func (exclude,1);
+    }
+  else
+    {
+  stone_func(count,0);
+  stone_func (count,0);
+  stone_func(count,0);
+  stone_func (count,0);
+  }
+ }
+ wait (SFB_TICK,TRUE);
+
+goto start;
+}
+dilend
+
+
+
+
+
+
+
+dilbegin stone_dil ();
+var
+ temp:unitptr;
+code
+{
+:start:
+wait (SFB_MSG, argument =="destroy yourself");
+temp:=self.outside;
+while ((temp.type!=UNIT_ST_ROOM) and (temp.type!=UNIT_ST_PC))
+{
+  if ((temp.nameidx+"@"+temp.zoneidx)=="corpse@basis") goto start;
+  temp:=temp.outside;
+}
+if (temp.type==UNIT_ST_ROOM)
+destroy(self);
+  goto start;
+}
+dilend
+dilbegin integer stone_int (s:string);
+var
+i:integer;
+  stones:stringlist;
+code
+{
+  stones:={"red_stone","purple_stone","lblue_stone","cless_stone",
+"emerald_stone","pink_stone","yellow_stone","mblue_stone",
+"blue_stone","green_stone","red1_stone","pearl_stone"};
+
+i:= s in stones;
+if (i==0)
+  return (-1);
+else
+  return (i-1);
+}
+dilend
+
+dilbegin encode (tgt:unitptr);
+var
+  numbers:stringlist;
+  code_str:stringlist;
+  done_str:stringlist;
+  i:integer;
+  j:integer;
+code
+{
+numbers:={"$s 0","$s 1","$s 2","$s 3","$s 4","$s 5","$s 6","$s 7","$s 8","$s 9","$s 10","$s 11"};
+code_str:={"$stone code"};
+i:=11;
+while (i>-1)
+  {
+  j:=rnd (0,i);
+  addstring (code_str,numbers.[j]);
+  i:=i-1;
+  }
+  addstring (code_str,"$p 1");
+  addstring (code_str,"$c 1");
+
+addextra (tgt.extra,code_str,"blank");
+     return;
+}
+dilend
+
+dilbegin string decode (tgt:unitptr,item:string,index:integer);
+external
+  string stone_name (i:integer);
+var
+  code_ptr:extraptr;
+  i:integer;
+  name_str:string;
+  num_str:string;
+  scrap:string;
+code
+{
+code_ptr:="$stone code" in tgt.extra;
+num_str:=code_ptr.names.[index];
+scrap:=getword (num_str);
+i:=atoi(num_str);
+name_str:=stone_name(i);
+if (item==name_str)
+  return ("yes");
+else
+  return ("no");
+}
+dilend
+
+dilbegin integer get_place (tgt:unitptr);
+var
+  code_ptr:extraptr;
+  i:integer;
+  numbers:stringlist;
+code
+{
+code_ptr:="$stone code" in tgt.extra;
+numbers:=getwords (code_ptr.names.[13]);
+i:=atoi(numbers.[1]);
+return (i);
+}
+dilend
+
+dilbegin add_place (tgt:unitptr);
+var
+  code_ptr:extraptr;
+  i:integer;
+  numbers:stringlist;
+code
+{
+code_ptr:="$stone code" in tgt.extra;
+numbers:=getwords (code_ptr.names.[13]);
+i:=atoi(numbers.[1]);
+
+i:=i+1;
+code_ptr.names.[13]:="$p "+itoa(i);
+
+return;
+}
+dilend
+
+dilbegin clear_place (tgt:unitptr);
+var
+  code_ptr:extraptr;
+  i:integer;
+code
+{
+code_ptr:="$stone code" in tgt.extra;
+              i:=1;
+code_ptr.names.[13]:="$p "+itoa(i);
+
+return;
+}
+dilend
+
+dilbegin integer get_count (tgt:unitptr);
+var
+  code_ptr:extraptr;
+  i:integer;
+  numbers:stringlist;
+code
+{
+code_ptr:="$stone code" in tgt.extra;
+numbers:=getwords (code_ptr.names.[14]);
+i:=atoi(numbers.[1]);
+return (i);
+}
+dilend
+
+dilbegin add_count (tgt:unitptr);
+var
+  code_ptr:extraptr;
+  i:integer;
+  numbers:stringlist;
+code
+{
+code_ptr:="$stone code" in tgt.extra;
+numbers:=getwords (code_ptr.names.[14]);
+i:=atoi(numbers.[1]);
+
+i:=i+1;
+code_ptr.names.[14]:="$c "+itoa(i);
+
+return;
+}
+dilend
+
+dilbegin set_count (tgt:unitptr);
+var
+  code_ptr:extraptr;
+  i:integer;
+code
+{
+code_ptr:="$stone code" in tgt.extra;
+i:=length(code_ptr.names);
+if (i<15)
+  {
+  addstring (code_ptr.names,"$c "+itoa(1));
+  return;
+  }
+
+return;
+}
+dilend
+
+
+
+dilbegin place_stone ();
+external
+clear_place(tgt:unitptr);
+integer get_place (tgt:unitptr);
+add_place (tgt:unitptr);
+integer get_count (tgt:unitptr);
+add_count (tgt:unitptr);
+set_count (tgt:unitptr);
+  string decode (tgt:unitptr,item:string,i:integer);
+  integer stone_int (s:string);
+var
+  item:unitptr;
+  count:integer;
+  match:string;
+  i:integer;
+code
+{
+count:=1;
+:start:
+wait (SFB_DONE, command (CMD_PUT) and
+(self ==target));
+set_count(activator);
+if (not(STONE_QUEST_ONGOING in activator.quests)) goto start;
+item:=medium;
+i:=stone_int(item.nameidx);
+if ((i==-1)or
+(item.zoneidx!="blcastle"))
+  {
+  act ("$1n's $3n shakes violently and spits out $2n onto the ground.",
+  A_SOMEONE,activator,item,self,TO_REST);
+  act ("Your $3n shakes violently and spits out $2n onto the ground.",
+  A_SOMEONE,activator,item,self,TO_CHAR);
+  link (item,activator.outside);
+  goto start;
+  }
+
+i:=get_place (activator);
+match:= decode (activator,item.nameidx,i);
+
+if ((match=="yes")and
+(item.zoneidx=="blcastle"))
+{
+act ("$1n's $3n glows slightly and goes dark.",
+  A_SOMEONE,activator,null,self,TO_REST);
+act ("Your $3n glows slightly and goes dark.",
+  A_SOMEONE,activator,null,self,TO_CHAR);
+  destroy (item);
+  act ("A voice booms 'Good job stone "+itoa(i)+"is placed correctly",
+  A_ALWAYS, activator,null,null,TO_CHAR);
+  add_place(activator);
+i:=get_place (activator);
+count:=get_count(activator);
+  if (i>count)
+    {
+    experience ((1000*count), activator);
+    add_count(activator);
+    count:=get_count(activator);
+    }
+  }
+else
+  {
+  act ("$1n's $3n shakes violently and sounds of stones being crushed to bits"+
+  " can be heard from inside it.",
+  A_SOMEONE,activator,null,self,TO_REST);
+  act ("Your $3n shakes violently and sounds of stones being crushed to bits"+
+  " can be heard from inside it.",
+  A_SOMEONE,activator,null,self,TO_CHAR);
+  destroy (item);
+  act ("A voice booms 'Sorry that was not the correct stone.'",
+  A_ALWAYS, activator,null,null,TO_CHAR);
+  clear_place (activator);
+  goto start;
+  }
+
+
+if (count==13)
+  {
+  act ("Your $2n begins to heat up and change right before your eyes.",
+  A_ALWAYS,activator,self,null,TO_CHAR);
+  addextra (activator.quests,{"$lace sheath recieved"},"");
+  act ("Your $2n turns pure white and cools off.",
+  A_ALWAYS,activator,self,null,TO_CHAR);
+  item :=load ("lace_sheath@blcastle");
+  link (item,activator);
+  destroy (self);
+  }
+
+goto start;
+
+}
+dilend
+
+
+
+/*End chess board stuff*/
+
+
+dilbegin white_agr ();
+var
+pc:unitptr;
+u:unitptr;
+code
+{
+   on_activation(self.position == POSITION_SLEEPING, skip);
+
+heartbeat:=PULSE_SEC*5;
+
+:start:
+nopriority;
+wait (SFB_CMD, ((activator.type==UNIT_ST_PC) and
+(activator.fighting==null)));
+priority;
+pc:=activator;
+secure (pc,lostpc);
+
+if (isaff(PC,ID_SANCTUARY))
+{
+unsecure (pc);
+ goto start;
+ }
+if ((pc.level<=self.level) and
+(isaff(pc,ID_INVISIBILITY)))
+{
+unsecure (pc);
+goto start;
+}
+u:=pc.inside;
+while (u!=null)
+{
+      if (("$white army" in u.extra) and
+      (u.equip!=0))
+     {
+		 exec ("emote screams, 'Down with the White Kingdom!'",self);
+		 pause;
+		 set_fighting (self,pc);
+		 unsecure (pc);
+     goto start;
+     }
+     u:=u.next;
+}
+
+unsecure (pc);
+goto start;
+:lostpc:
+unsecure (pc);
+goto start;
+}
+dilend
+
+dilbegin black_agr ();
+var
+pc:unitptr;
+u:unitptr;
+code
+{
+   on_activation(self.position == POSITION_SLEEPING, skip);
+
+heartbeat:=PULSE_SEC*5;
+
+:start:
+nopriority;
+wait (SFB_CMD, ((activator.type==UNIT_ST_PC) and
+(activator.fighting==null)));
+priority;
+pc:=activator;
+secure (pc,lostpc);
+
+if (isaff(PC,ID_SANCTUARY))
+{
+unsecure (pc);
+ goto start;
+ }
+if ((pc.level<=self.level) and
+(isaff(pc,ID_INVISIBILITY)))
+{
+unsecure (pc);
+goto start;
+}
+u:=pc.inside;
+while (u!=null)
+{
+      if (("$black army" in u.extra) and
+      (u.equip!=0))
+     {
+		 exec ("emote screams, 'Down with the Black Kingdom!'",self);
+		 pause;
+		 set_fighting (self,pc);
+		 unsecure (pc);
+     goto start;
+     }
+     u:=u.next;
+}
+
+unsecure (pc);
+goto start;
+:lostpc:
+unsecure (pc);
+goto start;
+}
+dilend
+
+
+
+dilbegin bucket(s :string);
+var
+        i : integer;
+        j : integer;
+        pc : unitptr;
+        enemy : unitptr;
+code
+{
+        heartbeat := PULSE_SEC*35;
+        :start:
+        unsecure(pc);
+        unsecure(enemy);
+        wait(SFB_COM,(command(CMD_AUTO_COMBAT)) and
+        (self.equip == WEAR_WIELD));
+        pc := activator;
+        enemy := self.outside.fighting;
+        secure(enemy,lost);
+        secure(pc,lost);
+        i := rnd(1,100);
+        if (i < 10)
+         {
+        act("Brown slimy stuff flies out of $1n's  $2N and hits $3n in the "+
+        "face.",A_SOMEONE, pc, self, enemy, TO_ALL);
+      if (0 ==  dilfind("stink@blcastle",enemy))
+          {
+        dilcopy(s,enemy);
+         goto start;
+          }
+     else
+          goto start;
+          }
+
+        if (i < 15)
+         {
+        act("A strange odor wafts up from $1n's $2N.",
+        A_SOMEONE, pc, self, enemy, TO_ALL);
+        goto start;
+           }
+        if (i < 20)
+         {
+        act("$1n's $2N sloshes urine as $1s swings it around.",
+        A_SOMEONE, pc, self, enemy, TO_ALL);
+        goto start;
+           }
+
+:lost:
+goto start;
+
+
+}
+dilend
+
+
+dilbegin recall aware  stink();
+var
+ counter  : integer;
+code
+{
+ interrupt(SFB_CMD, ((command("cleanup"))), clean);
+
+ heartbeat := (rnd(0,5)*20) + (100 * PULSE_SEC);
+ counter := 10;
+
+:init:
+    act("The brown goo dribbles down your face.",
+       A_ALWAYS, self, null, null, TO_CHAR);
+act("The brown goo dribbles down $1n's face.",
+       A_ALWAYS, self, null, null, TO_REST);
+   pause;
+
+
+:start:
+ wait(SFB_TICK, TRUE);
+ counter := counter - 1;
+   act("You emit a strange odor",
+       A_ALWAYS, self, null, null, TO_CHAR);
+  act("$1n emits a strange odor",
+       A_ALWAYS, self, null, null, TO_REST);
+   pause;
+   goto count;
+
+  :count:
+
+         if (counter == 0)
+         {
+         quit;
+         }
+ goto start;
+
+               :clean:
+            {
+           block;
+           act("$1n washes the brown goo from $1s face. ",
+           A_SOMEONE, self, self, null, TO_REST);
+          act("You wash the goo from your face. ",
+          A_SOMEONE, self, self, null, TO_CHAR);
+          quit;
+
+            }
+}
+dilend
+
+
+
+
+dilbegin bridge_w (utime:integer,dtime:integer);
+var
+u:unitptr;
+cdescr:extraptr;
+code
+{
+heartbeat := PULSE_SEC*SECS_PER_MUD_HOUR;
+goto boot_up;
+
+:loop:
+wait (SFB_TICK, TRUE);
+:boot_up:
+if ((mudhour>=utime) and (mudhour<=dtime))
+	{
+	if (self.movement==SECT_WATER_SAIL) goto loop;
+	act ("You here the gears on the castle bridge grind as it begins to close.",
+		A_ALWAYS,self.exit_to[EAST].inside,null,null,TO_ALL);
+	act ("The castle bridge quickly closes and shuts with with a loud, 'BOOM!'",
+		A_ALWAYS, self.exit_to[EAST].inside,null,null,TO_ALL);
+	act ("You here the gears on the castle bridge grind as it begins to close.",
+		A_ALWAYS,self.exit_to[WEST].inside,null,null,TO_ALL);
+	act ("The castle bridge quickly closes and shuts with with a loud, 'BOOM!'",
+		A_ALWAYS,self.exit_to[WEST].inside,null,null,TO_ALL);
+
+	u:=null;
+	foreach (UNIT_ST_OBJ | UNIT_ST_PC | UNIT_ST_NPC, u)
+		{
+		if (u==self) continue;
+		act ("You start to slide as the draw bridge begins quickly raising.",
+			A_ALWAYS, u,null,null,TO_CHAR);
+		act ("The quick draw bridge jolts and sends you tumbling west.",
+			A_ALWAYS, u,null,null,TO_CHAR);
+		link (u,self.exit_to [WEST]);
+		if (u.type==UNIT_ST_OBJ)
+		act ("$2t tumbles down the raising draw bridge.",
+			A_ALWAYS, u,u.title,null,TO_REST);
+		else
+		act ("$1n tumbles down the raising draw bridge.",
+			A_ALWAYS, u,null,null,TO_REST);
+	}
+
+	self.movement:=SECT_WATER_SAIL;
+	cdescr:="$tmoat" in self.extra;
+	self.title:=cdescr.descr;
+	cdescr:="$moat" in self.extra;
+	self.inside_descr:=cdescr.descr;
+	  set(self.exit_info[WEST], EX_CLOSED);
+	set(self.exit_to[WEST].exit_info[EAST], EX_CLOSED);
+	unset(self.exit_info[WEST], EX_OPEN_CLOSE);
+	unset(self.exit_to[WEST].exit_info[EAST], EX_OPEN_CLOSE);
+	}
+else
+	{
+	if (self.movement==SECT_CITY) goto loop;
+	act ("You here the gears on the castle bridge grind as it begins to open",
+		A_ALWAYS,self.exit_to[EAST].inside,null,null,TO_ALL);
+	act ("The castle bridge quickly opens and hits the ground with a loud, 'BOOM!'",
+		A_ALWAYS,self.exit_to[EAST].inside,null,null,TO_ALL);
+	act ("You here the gears on the castle bridge grind as it begins to open",
+		A_ALWAYS,self.exit_to[WEST].inside,null,null,TO_ALL);
+	act ("The castle bridge quickly opens and hits the ground with a loud, 'BOOM!'",
+		A_ALWAYS,self.exit_to[WEST].inside,null,null,TO_ALL);
+	u:=null;
+	foreach (UNIT_ST_OBJ | UNIT_ST_PC | UNIT_ST_NPC, u)
+		{
+		if (u==self) continue;
+		act ("You here the gears on the draw bridge begin to creak as it  starts to open.",
+			A_ALWAYS, u,null,null,TO_CHAR);
+		act ("A safety net sweeps you south out from under the opening bridge.",
+			A_ALWAYS, u,null,null,TO_CHAR);
+		if (u.outside==self)
+			{
+			link (u,self.exit_to [SOUTH]);
+			act ("$2t is swept in from the north.",
+				A_ALWAYS, u,u.title,null,TO_REST);
+			}
+		}
+	self.movement:=SECT_CITY;
+	cdescr:="$tbridge" in self.extra;
+	self.title:=cdescr.descr;
+	cdescr:="$bridge" in self.extra;
+	self.inside_descr:=cdescr.descr;
+	unset(self.exit_info[WEST], EX_CLOSED);
+	unset(self.exit_to[WEST].exit_info[EAST], EX_CLOSED);
+	}
+
+								 goto loop;
+}
+dilend
+dilbegin brsave (utime:integer,dtime:integer);
+var
+u:unitptr;
+cdescr:extraptr;
+code
+{
+heartbeat:=240;
+
+:start:
+while ((mudhour<dtime) and (mudhour>=utime))
+{
+wait (SFB_TICK,TRUE);
+/*wait (SFB_CMD,command ("water"));
+block;*/
+}
+act ("You here the gears on the castle bridge grind as it begins to close.",
+A_ALWAYS,self.exit_to[EAST].inside,null,null,TO_ALL);
+act ("The castle bridge quickly closes and shuts with with a loud, 'BOOM!'",
+A_ALWAYS, self.exit_to[EAST].inside,null,null,TO_ALL);
+act ("You here the gears on the castle bridge grind as it begins to close.",
+A_ALWAYS,self.exit_to[WEST].inside,null,null,TO_ALL);
+act ("The castle bridge quickly closes and shuts with with a loud, 'BOOM!'",
+A_ALWAYS,self.exit_to[WEST].inside,null,null,TO_ALL);
+
+u:=null;
+foreach (UNIT_ST_OBJ | UNIT_ST_PC | UNIT_ST_NPC, u)
+{
+if (u==self) continue;
+act ("You start to slide as the draw bridge begins quickly raising.",
+A_ALWAYS, u,null,null,TO_CHAR);
+act ("The quick draw bridge jolts and sends you tumbling west.",
+A_ALWAYS, u,null,null,TO_CHAR);
+link (u,self.exit_to [WEST]);
+
+if (u.type==UNIT_ST_OBJ)
+act ("$2t tumbles down the raising draw bridge.",
+A_ALWAYS, u,u.title,null,TO_REST);
+else
+act ("$1n tumbles down the raising draw bridge.",
+A_ALWAYS, u,null,null,TO_REST);
+														}
+
+self.movement:=SECT_WATER_SWIM;
+cdescr:="$tmoat" in self.extra;
+self.title:=cdescr.descr;
+cdescr:="$moat" in self.extra;
+self.inside_descr:=cdescr.descr;
+
+	  set(self.exit_info[WEST], EX_CLOSED);
+	  set(self.exit_to[WEST].exit_info[EAST], EX_CLOSED);
+	  unset(self.exit_info[WEST], EX_OPEN_CLOSE);
+	  unset(self.exit_to[WEST].exit_info[EAST], EX_OPEN_CLOSE);
+
+goto start;
+
+}
+dilend
+
+%rooms
+
+whistler_room
+title "Dictator's Geriatric Ward"
+names {"geriatric ward","geriatric","wp"}
+descr
+"You are standing in a white room lined with beds. At the foot of each bed
+is a half-full bedpan. Beside each of the beds is an end table, on which
+sit glasses with dentures in them. There are a few walkers lining the
+walls and the odd J-cane leaning up against end tables. A small sign
+catches your eye."
+ALWAYS_LIGHT
+dilcopy load_stone@blcastle ();
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT, UNIT_FL_PRIVATE}
+extra {"bedpans","bedpan"}
+"Half-filled with pee..you notice the odd floating log too."
+extra {"walkers","cane"}
+"Handy for those old fogies"
+extra {"bed"}
+"Standard single bed..thin blankets and starched sheets"
+extra {"dentures"}
+"Hmmm remind you of grandpa!"
+extra {"sign"}
+"&l
+You can go 'TO' the following places.
+-sam (udgaard)
+-sanctum (midgaard)
+-wiz (gods only)
+-pp (gods only)
+-nightmare (gods only)
+"
+
+dilbegin to(); var
+        pc : unitptr;
+        pc_name : string;
+
+code
+{
+
+:init:
+heartbeat := PULSE_SEC*5;
+
+:start:
+        wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and
+        (command("to"))));
+        block;
+        pc := activator;
+        secure(pc,losthim);
+
+
+     if("sam" in argument)
+     {
+    link(pc, findroom("inn@udgaard"));
+      act("The air explodes in smoke.",
+     A_SOMEONE,self.inside,null,null,TO_ALL);
+      act("As the smoke clears you notice " +pc.name+" is gone",
+       A_SOMEONE,self.inside,null,null,TO_ALL);
+
+      exec("look",pc);
+      unsecure(pc);
+      goto start;
+      }
+
+     if("sanctum" in argument)
+     {
+    link(pc, findroom("cth_sanctum@midgaard"));
+      act("The air explodes in smoke.",
+      A_SOMEONE,self.inside,null,null,TO_ALL);
+      act("As the smoke clears you notice " +pc.name+" is gone",
+      A_SOMEONE,self.inside,null,null,TO_ALL);
+      exec("look",pc);
+      unsecure(pc);
+      goto start;
+      }
+
+     if (("wiz" in argument) and (activator.level > IMMORTAL_LEVEL))
+     {
+    link(pc, findroom("board_room@wiz"));
+      act("The air explodes in smoke.",
+      A_SOMEONE,self.inside,null,null,TO_ALL);
+      act("As the smoke clears you notice " +pc.name+" is gone",
+      A_SOMEONE,self.inside,null,null,TO_ALL);
+     exec("look",pc);
+     unsecure(pc);
+      goto start;
+      }
+
+     if (("pp" in argument) and (activator.level > IMMORTAL_LEVEL))
+     {
+    link(pc, findroom("home@hobgob"));
+      act("The air explodes in smoke.",
+       A_SOMEONE,self.inside,null,null,TO_ALL);
+      act("As the smoke clears you notice " +pc.name+" is gone",
+      A_SOMEONE,self.inside,null,null,TO_ALL);
+     exec("look",pc);
+     unsecure(pc);
+      goto start;
+     }
+   if (("nightmare" in argument) and (activator.level > IMMORTAL_LEVEL))
+     {
+    link(pc, findroom("nightmare@hobgob"));
+      act("The air explodes in smoke.",
+     A_SOMEONE,self.inside,null,null,TO_ALL);
+      act("As the smoke clears you notice " +pc.name+" is gone",
+       A_SOMEONE,self.inside,null,null,TO_ALL);
+     exec("look",pc);
+     unsecure(pc);
+      goto start;
+     }
+
+
+
+:losthim:
+goto start;
+}
+dilend
+
+end
+
+/*-----------------------------------BLACK CASTLE-------------------------*/
+
+/*bbridge
+title "Drawbridge"
+names {"drawbridge","bridge"}
+descr
+"The drawbridge consists of a large wooden platform that can be lowered
+down to allow people access in and out of the castle. When in the upright
+position the bridge effectively cuts the  castle off from the rest if
+the world. The bridge spans a large moat that seems to be filled with
+alligators and other frightening animals."
+extra {"platform" ,"bridge"}
+"The bridge platform is made from wood."
+east to field_15@fields descr
+"You see the killing fields to the east.";
+west to bcastle_wall descr
+"You see a large black castle to the west."
+ open {EX_CLOSED}
+ keyword {"drawbridge","bridge","gate"};
+end*/
+
+bcastle_wall
+title "Entrance To The Courtyard."
+names {"entrance"}
+descr
+"You are standing along side the walls that protect the castle from
+enemies. The drawbridge is directly to the east of you, and two doors
+lead into the wall towers to the north and south. You can see a large
+courtyard to the west."
+extra {"wall"}
+"The wall is made from stones."
+north to bwall3 descr
+"You see a door into the wall.";
+south to bwall4 descr
+"You see a door into the wall.";
+east to bmoat_7@forest descr
+"The draw bridge is to the east."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"drawbridge","gate"};
+west to bcastle_1 descr
+"The court yard is to the west.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER}
+end
+
+bcastle_1
+title "Black  Courtyard"
+names {"black courtyard"}
+descr
+"The courtyard is very large with ebony black cobble stones in decorative
+patterns around the yard. In the center of the courtyard is a huge rose
+bush with silky black roses. The path leads west into the castle or north
+and south around the castle."
+extra {"black rose","flower","rose"}
+"The bush is huge and filled with the most spectacular looking silky
+black roses. Each rose has perpetual dew drops on it, almost as if it
+where weeping."
+
+north to bpath_1 descr
+"The path leads off to the north.";
+south to bpath_4 descr
+"The path leads off to the south.";
+east to bcastle_wall descr
+"The drawbridge is to the east.";
+west to bcastle_ent descr
+"Huge stone arches lead into the castle to the west.";
+ end
+
+bwall1
+title "Tower"
+names {"Tower","wall"}
+descr
+"You are standing in a small dreary circular room. Little light gets in
+here, stone steps lead up to the top of the wall and down to the ground.
+There  is a small hole that is well covered over. It can be opened
+up so that  people in the castle can get a clear view of those
+approaching the castle."
+extra {"wall"}
+"The wall is made from stones."
+
+extra {"holes","hole"}
+"a hole"
+extra {"stairs"}
+"Stone stairs lead up to the top of the wall"
+up to btop1 descr
+"You see stairs leading up to the top of the wall.";
+down to bwall3 descr
+"The the stairs lead down";
+south to b_in1 descr
+"A passage continues to the south.";
+west to b_in2 descr
+"A passage continues to the west.";
+end
+
+bwall2
+title "Tower"
+names {"tower","wall"}
+descr
+"You are standing in a small dreary circular room. Little light gets in
+here, stone steps leading up to the top of the wall and down to the ground.
+There is a small hole that is well covered over. It can be opened  up so
+that people in the castle can get a clear view of those approaching the
+castle."
+extra {"wall"}
+"The wall is made from stones."
+extra {"holes","hole"}
+"a hole"
+
+extra {"stairs"}
+"Stone stairs lead up to the top of the wall"
+up to btop3 descr
+"You see stairs leading up to the top of the wall.";
+down to bwall4 descr
+"The courtyard is visible to the north.";
+north to b_in1 descr
+"A passage continues to the north.";
+west to b_in6 descr
+"A passage continues to the west.";
+end
+
+bwall3
+title "Tower"
+names {"Tower","wall"}
+descr
+"You are standing in a small dreary circular room. Little light gets in
+here, you  can see a flight of stone steps leading up to the top of the
+wall. There  is a small hole that is well covered over. It can be opened
+up so that  people in the castle can get a clear view of those
+approaching the castle."
+extra {"holes","hole"}
+"a hole"
+extra {"wall"}
+"The wall is made from stones."
+extra {"stairs"}
+"Stone stairs lead up to the top of the wall"
+up to bwall1 descr
+"You see stairs leading up to the top of the wall.";
+south to bcastle_wall descr
+"The exit is to the south";
+flags {UNIT_FL_NO_MOB}
+end
+
+bwall4
+title "Tower"
+names {"Tower","wall"}
+descr
+"You are standing in a small dreary circular room. Little light gets in
+here, you  can see a flight of stone steps leading up to the top of the
+wall. There  is a small hole that is well covered over. It can be opened
+up so that  people in the castle can get a clear view of those
+approaching the castle."
+extra {"holes","hole"}
+"a hole"
+extra {"wall"}
+"The wall is made from stones."
+
+extra {"stairs"}
+"Stone stairs lead up to the top of the wall"
+up to bwall2 descr
+"You see stairs leading up to the top of the wall.";
+north to bcastle_wall descr
+"The exit from the wall is to the north.";
+flags {UNIT_FL_NO_MOB}
+end
+
+b_in1
+title "Inside The Castle Wall"
+names {"in wall"}
+descr
+"You are inside the castle walls. Small holes allow you to peer through
+them and see the killing fields but they are by no means big enough to
+put a weapon through. The passages look like they were made to provide
+safe travel to the soldiers when the castle was under siege."
+extra {"holes","hole"}
+"a hole"
+extra {"wall"}
+"The wall is made from stones."
+north to bwall1 descr
+"You see the tower stairs to the north.";
+south to bwall2 descr
+"You see the tower stairs to the south.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+b_in2
+title "Inside The Castle Wall"
+names {"in wall"}
+descr
+"You are inside the castle walls. Small holes allow you to peer through
+them and see the killing fields but they are by no means big enough to
+put a weapon through. The passages look like they were made to provide
+safe travel to the soldiers when the castle was under siege."
+extra {"holes","hole"}
+"a hole"
+extra {"wall"}
+"The wall is made from stones."
+east to bwall1 descr
+"You see a flight of stone stairs to the east.";
+west to b_in3 descr
+"The passage continues to the west.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+b_in3
+title "Inside The Castle Wall"
+names {"in wall"}
+descr
+"You are inside the castle walls. Small holes allow you to peer through
+them and see the killing fields but they are by no means big enough to
+put a weapon through. The passages look like they were made to provide
+safe travel to the soldiers when the castle was under siege."
+extra {"holes","hole"}
+"a hole"
+extra {"wall"}
+"The wall is made from stones."
+west to btower_1 descr
+"You see the tower stairs to the west.";
+east to b_in2 descr
+"The passage continues to the east.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+b_in4
+title "Inside The Castle Wall"
+names {"in wall"}
+descr
+"You are inside the castle walls. Small holes allow you to peer through
+them and see the killing fields but they are by no means big enough to
+put a weapon through. The passages look like they were made to provide
+safe travel to the soldiers when the castle was under siege."
+extra {"holes","hole"}
+"a hole"
+extra {"wall"}
+"The wall is made from stones."
+south to btower_2 descr
+"You see the tower stairs to the south.";
+north to btower_1 descr
+"You see the tower stairs to the north.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+b_in5
+title "Inside The Castle Wall"
+names {"in wall"}
+descr
+"You are inside the castle walls. Small holes allow you to peer through
+them and see the killing fields but they are by no means big enough to
+put a weapon through. The passages look like they were made to provide
+safe travel for the soldiers when the castle was under siege."
+extra {"holes","hole"}
+"a hole"
+extra {"wall"}
+"The wall is made from stones."
+extra {"passages"}
+"a passage way"
+east to b_in6 descr
+"The passage continues to the east.";
+west to btower_2 descr
+"You see a flight of stone stairs to the west.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+b_in6
+title "Inside The Castle Wall"
+names {"in wall"}
+descr
+"You are inside the castle walls. Small holes allow you to peer through
+them and see the killing fields but they are by no means big enough to
+put a weapon through. The passages look like they were made to provide
+safe travel to the soldiers when the castle was under siege."
+extra {"holes","hole"}
+"a hole"
+extra {"wall"}
+"The wall is made from stones."
+east to bwall2 descr
+"You see the tower stairs to the east.";
+west to b_in5 descr
+"The passage continues to the west.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+btower_1
+title "Tower"
+names {"Tower","wall"}
+descr
+"You are standing in a small dreary circular room. Little light gets in
+here, you  can see a flight of stone steps leading up to the top of the
+wall. There  is a small hole that is well covered over. It can be opened
+up so that  people in the castle can get a clear view of those
+approaching the castle."
+extra {"holes","hole"}
+"a hole"
+extra {"wall"}
+"The wall is made from stones."
+extra {"stairs"}
+"Stone stairs lead up to the top of the wall"
+up to btop6  descr
+"You see stairs leading up to the top of the wall.";
+south to b_in4  descr
+"The passage continues to the south.";
+east to b_in3 descr
+"The passage continues to the east.";
+down to bbottom_1 descr
+"You see stairs leading down.";
+end
+
+btower_2
+title "Tower"
+names {"Tower","wall"}
+descr
+"You are standing in a small dreary circular room. Little light gets in
+here, you  can see a flight of stone steps leading up to the top of the
+wall. There  is a small hole that is well covered over. It can be opened
+up so that  people in the castle can get a clear view of those
+approaching the castle."
+extra {"wall"}
+"The wall is made from stones."
+extra {"window","hole"}
+"A hole"
+extra {"stairs","steps"}
+"Stone stairs lead up to the top of the wall"
+up to btop8  descr
+"You see stairs leading up to the top of the wall.";
+north to b_in4  descr
+"The passage continues to the north.";
+east to b_in5 descr
+"The passage continues to the east.";
+down to bbottom_2 descr
+"You see stairs leading down.";
+end
+
+
+btop1
+title "Tower"
+names {"tower"}
+descr
+"You are at the top of the tower which serves as a junction between the
+north and west walls that surround the castle. Windows allow you  to look
+out over the  killing fields to the north. Doors lead to a fairly wide walk
+way along the walls to the south and west."
+extra {"wall"}
+"The wall is made from stones."
+
+ extra {"cauldrons"}
+"Large black containers to pour oil onto the heads of attackers."
+south to btop2 descr
+"The wall continues to the south.";
+down to bwall1 descr
+"You see steps leading down into the wall.";
+west to btop4 descr
+"The wall continues to the west";
+ end
+
+btop2
+title "On Top Of The Castle Wall"
+names {"on the wall"}
+descr
+"Walking along the top of the wall you can see for miles over the killing
+fields. The wall itself has a stone barrier on either side to prevent
+falling off. There are large cauldrons positioned along the outer
+wall, used to pour boiling oil onto attacking forces if and when necessary.
+The wall continues to the north and south."
+extra {"wall"}
+"The wall is made from stones."
+ extra {"cauldrons"}
+"Large black containers to pour oil onto the heads of attackers."
+north to btop1 descr
+"The wall continues to the north.";
+south to btop3 descr
+"The wall continues to the south.";
+end
+
+btop3
+title "Tower"
+names {"tower"}
+descr
+"You are at the top of the tower which serves as a junction between
+the north and east walls that surround the castle. Windows allow you  to
+look out over the  killing fields to the north. Doors to the north and
+west lead to a fairly wide walk way leads along the outer walls."
+extra {"windows"}
+"A hole in the wall"
+extra {"wall"}
+"The wall is made from stones."
+extra
+{"cauldrons"}
+"Large black containers to pour oil onto the heads of attackers."
+west to btop10 descr
+"The wall continues to the west.";
+north to btop2 descr
+"The wall continues to the north.";
+down to bwall2 descr
+"You see steps leading down into the wall.";
+end
+
+btop4
+title "On Top Of The Castle Wall"
+names {"on the wall"}
+descr
+"Walking along the top of the wall you can see for miles over the killing
+fields to the east. The wall itself has a stone barrier on either side to
+prevent falling off. There are large cauldrons positioned along the
+outer wall, used to pour boiling oil onto attacking forces if and when
+necessary. You notice some scratching in the wall that are barely
+readable."
+extra {"wall"}
+"The wall is made from stones."
+extra {"cauldrons"}
+"Large black containers to pour oil onto the heads of attackers."
+extra {"scratching","scratches","words","writing"}
+"Looking closely you can just barely make out the words 'When will the
+pain end?'"
+east to btop1 descr
+"The wall continues to the east.";
+west to btop5 descr
+"The wall continues to the west.";
+end
+
+btop5
+title "On Top Of The Castle Wall"
+names {"on the wall"}
+descr
+"Walking along the top of the wall you can see for miles over the killing
+fields to the east. The wall itself has a stone barrier on either side to
+prevent falling off. There are large cauldrons positioned along the
+outer wall, used to  pour boiling oil onto attacking forces if and when
+necessary. The wall continues to the west and east."
+extra {"wall"}
+"The wall is made from stones."
+extra {"cauldrons"}
+"Large black containers to pour oil onto the heads of attackers."
+west to btop6 descr
+"The wall continues to the west.";
+east to btop4 descr
+"The wall continues to the east.";
+end
+
+btop6
+title "Tower"
+names {"tower"}
+descr
+"You are at the top of the tower which serves as a junction between the
+north and west walls that surround the castle. Windows allow you  to look
+out over the  killing fields to the north. Doors lead south and east to a
+fairly wide walk way leads along the walls."
+extra {"wall"}
+"The wall is made from stones."
+
+extra {"cauldrons"}
+"Large black containers to pour oil onto the heads of attackers."
+east to btop5 descr
+"The wall continues to the east.";
+south to btop7 descr
+"The wall continues to the south.";
+down to btower_1 descr
+"Stone stairs lead downwards.";
+
+end
+
+btop7
+title "On Top Of The Castle Wall"
+names {"on the wall"}
+descr
+"Walking along the top of the wall you can see for miles west. With the
+killing fields to the east of you. The wall itself forms a  stone barrier
+on either side to prevent falling off. There are large  cauldrons
+positioned along the outer wall, used to pour boiling oil onto  attacking
+forces if and when necessary."
+extra {"wall"}
+"The wall is made from stones."
+
+extra {"cauldrons"}
+"Large black containers to pour oil onto the heads of attackers."
+north to btop6 descr
+"The wall continues to the north.";
+south to btop8 descr
+"The wall continues to the south.";
+end
+
+btop8
+title "Tower"
+names {"tower"}
+descr
+"You are at the top of the tower which serves as a junction between the
+south and east walls that surround the castle. Windows allow you  to look
+out over the  killing fields to the north. Two doors lead to a fairly wide
+walk way leads along the walls to the north and east."
+extra {"wall"}
+"The wall is made from stones."
+extra {"cauldrons"}
+"Large black containers to pour oil onto the heads of attackers."
+east to btop9 descr
+"The wall continues to the east.";
+north to btop7 descr
+"The wall continues to the north.";
+down to btower_2 descr
+"Stone stairs lead downward.";
+end
+
+btop9
+title "On Top Of The Castle Wall"
+names {"on the wall"}
+descr
+"Walking along the top of the wall you can see for miles around the castle.
+With the killing fields to the east of you. The wall itself has a
+stone barrier on either side to prevent falling off. There are large
+cauldrons positioned along the outer wall, used to pour boiling oil onto
+attacking forces if and when necessary."
+extra {"wall"}
+"The wall is made from stones."
+ extra {"cauldrons"}
+"Large black containers to pour oil onto the heads of attackers."
+west to btop8 descr
+"The wall continues to the east.";
+east to btop10 descr
+"The wall continues to the west.";
+end
+
+btop10
+title "On Top Of The Castle Wall"
+names {"on the wall"}
+descr
+"Walking along the top of the wall you can see for miles around the castle.
+With the killing fields to the east of you. The wall itself has a
+stone barrier on either side to prevent falling off. There are large
+cauldrons positioned along the outer wall, used to pour boiling oil onto
+attacking forces if and when necessary."
+extra {"wall"}
+"The wall is made from stones."
+ extra {"cauldrons"}
+"Large black containers to pour oil onto the heads of attackers."
+east to btop3 descr
+"The wall continues to the east.";
+west to btop9 descr
+"The wall continues to the west.";
+end
+
+bcastle_ent
+title "Castle Entrance"
+names {"castle entrance"}
+descr
+"The entrance to the castle has two stations for guards to be positioned.
+>From this location the guards can clearly see the courtyard and the
+drawbridge. There are huge stone arches over the large path into the
+castle at the top of which resides a huge stone dragon, Its tail curling
+down the north side of the arch. The arches house the two huge wooden doors
+that allow entrance into the castle."
+extra {"arches","doors"}
+"The arches are constructed from a pure black stone and span the
+west-east road that leads into the castle. At the top of the arches
+perches a huge black dragon, its tail curling down the arch way. Two
+wooden doors when open allow entrance into the castle"
+extra {"road"}
+"The road is made from ebony black flag stones. and leads from the
+drawbridge into the castle."
+east to bcastle_1 descr
+"A large courtyard stretches out the east.";
+west to bfoyer descr
+"Doors lead to a foyer to the west."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+end
+
+bfoyer
+title "Black Foyer"
+names {"black foyer","foyer"}
+descr
+"The foyer is a large hall with a snow white carpet running the length or
+if. Along the east wall stands the most spectacular suit of armor you
+have ever seen. Small torches line the walls, providing light to the
+room. Doors lead off in all directions and the white of the carpet contrasts
+the black of the room majestically. To the west you notice the door
+out into the courtyard has two metal hooks so that a huge wooden beam can
+be slide into place to lock the castle in event of attack."
+extra {"carpet"}
+"The carpet is a pure white"
+extra {"suit of armor","armor","suit"}
+"This suit was obviously placed here in honor of some great warrior. It
+is larger then the average suit of armor making you wonder who or WHAT
+could have worn it. The suit is pure black plate armor with a large bastard
+sword in  front of it. As you glance at the sword you notice it seems to
+glow as if it where alive, breathing even. A faint hum is emitted from the
+sword."
+
+extra {"hooks","door"}
+"The doors has metal hooks to allow the door to be locked in event of an
+attack on the castle."
+west to bhall_1 descr
+"You see a hall to the west.";
+east to bcastle_ent descr
+"Doors lead to the courtyard."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+
+south to brecieve_1 descr
+"A large room is visible to the south."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+north to brecieve_2 descr
+"A large room is visible to the north."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+brecieve_1
+title "Black Receiving Room."
+names {"relieving room","room"}
+descr
+"The room is large with all the comforts one could desire. Visitors to the
+castle are left here to wait while the person they came to see it sought
+out. Very regal looking tapestries hang on the wall, each depicting a
+great battle. The chairs are all hand embroidered with such designs as
+can be pleasing to most eyes. A large picture window with a wooden seat
+padded in the finest silk allows one to sit and look out over the castle
+gardens. A large arched door leads north to the foyer and a smaller
+door leads west, out of the relieving room."
+extra {"tapestries"}
+"The tapestries are made of the finest material and are obviously made
+for royalty, the work on them was embroidered with spectacular care.
+Most of the the tapestries depict great battles won by the kings army. One
+how ever shows a might night sitting tall upon a black stallion."
+extra {"chairs"}
+"The chairs are made of the finest oak wood with embroidered silk
+cushions  on the seat. They have such designs as the kings garden in bloom."
+extra {"picture window","window"}
+"The window looks out over the royal gardens which even in this time of
+war are kept up with a multitude of flowers. In the middle of the garden
+is a small pond."
+north to bfoyer descr
+"An arched doorway leads to the foyer.";
+west to bsitting_1 descr
+"A small door leads west.";
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+
+
+brecieve_2
+title "Black Receiving room"
+names {"receiving room","room"}
+descr
+"The room is large with all the comforts one could desire. Visitors to the
+castle are left here to wait while the person they came to see it sought
+out. Very regal looking tapestries hang on the wall, each depicting a
+great battle. The chairs are all hand embroidered with such designs as
+can be pleasing to most eyes. A large picture window with a wooden seat
+padded in the finest black silk allows one to sit and look out over a huge
+fountain. A large arched door leads south to the foyer and a smaller
+door leads west, out of the receiving room."
+extra {"tapestries"}
+"The tapestries are made of the finest material and are obviously made
+for royalty, the work on them was embroidered with spectacular care.
+Most of the the tapestries depict great battles won by the kings army."
+extra {"chairs"}
+"The chairs are made of the finest oak wood with embroidered silk
+cushions  on the seat. They have such designs as the kings garden in bloom."
+extra {"picture window","window"}
+"The window looks out over a huge fountain, In the middle of it a statue
+of a raven."
+
+south to bfoyer descr
+"An arched doorway leads to the foyer.";
+west to bsitting_2 descr
+"A small door leads west.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+bsitting_1
+title "Sitting Room"
+names {"sitting room","room"}
+descr
+"The room is smaller then the previous one you where in. It has a
+fireplace at one end  and various chairs placed about the room. In the
+center of the room is two special looking chairs with a table in the
+center. A window looks out over the gardens and portraits of the king and
+queen hang on the wall."
+extra {"chairs","table"}
+"chairs are spaced about the room but two special chairs in the center of
+the room. These obviously are for the royal couple to sit in when they
+are receiving guests. There is a deep red/brown table in front of the
+chairs prepared for tea."
+extra {"window","garden"}
+"The window looks out over the garden which even in this time of war is
+kept up."
+east to brecieve_1 descr
+"You see the receiving rooms to the east.";
+west to bhall_3 descr
+"A hall leads to the west.";
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+bsitting_2
+title "Sitting Room"
+names {"sitting room","room"}
+descr
+"The room is smaller then the previous one you where in. It has a
+fireplace at one end  and various chairs placed about the room. In the
+center of the room is two special looking chairs with a table in the
+center. A window looks out over a huge fountain and portraits of the king
+and queen hang on the wall."
+extra {"chairs","table"}
+"chairs are spaced about the room but two special chairs in the center of
+the room. These obviously are for the royal couple to sit in when they
+are receiving guests. There is a deep red/brown table in front of the
+chairs prepared for tea."
+extra {"window","garden"}
+"The window looks out over a hug fountain."
+east to brecieve_2 descr
+"You see the receiving rooms to the east.";
+west to bhall_5 descr
+"A door leads off to the west.";
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+bhall_1
+title "A Large Hall"
+names {"hall"}
+descr
+"The hall is a fair size, big enough for a large party to proceed
+through. There is a suite of armor displayed in the hall. A pure white
+carpet contrasts the black of the room beautifully."
+extra {"suite of armor","armor"}
+"A spectacular set of full plate armor made for a king."
+extra {"carpet"}
+"the carpet is a pure white."
+east to bfoyer descr
+"You see the foyer to the east.";
+west to bgr_hall descr
+"You see a grandhall to the west";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+bstair_1
+title "Top Of The Stairs."
+names {"stairs"}
+descr
+"You are at the top of a grand flight of stairs made from a dark w They
+red wood. They are wide and well lit with pure white carpeting leading up
+them. Below you can see the grand hall below you where people wait for an
+audience with the king."
+
+extra {"carpet"}
+"A pure white carpet."
+down to bgr_hall descr
+"A flight of deep brown stairs with a white carpet lead down to the
+grandhall.";
+east to bhall_2 descr
+"A hall leads to the east.";
+west to bhall_4 descr
+"A hall leads to the west.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+bstair_2
+title "A Stair Well"
+names {"stair well"}
+descr
+"The stairs lead down into  the castle basement."
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+down to bbot_stair descr
+"The stairs lead down.";
+south to bhall_6 descr
+"You see the hall to the south.";
+end
+
+
+bwater_cl
+title "Water Closet"
+names {"water closet"}
+descr
+"The royal water closet looks much the same as any other water closet
+that one has seen except that the royal seats are covered in a soft
+padding to provide its user with the utmost comfort, and the room has a
+small wood stove to provide heat on those chilly mornings."
+extra {"stove"}
+"Just a small plain black stove."
+extra {"seat"}
+"softly padded to provide comfort to those tender royal tush's"
+south to bhall_3
+descr "You see the hall to the south."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+broyal_ch
+title "Royal Sleeping Chamber"
+names {"royal chamber","chamber"}
+descr
+"In the center of this huge room is a large four poster bed netting draped
+around it and royal red curtains over the netting. At the foot of the bed
+is a large cedar hope chest. The floor is covered in plush carpeting and
+along one wall is an elegant wash basin and pitcher. A huge fire blazes
+in the fireplace in front of which is two comfortable looking chairs."
+extra {"fireplace"}
+"The fire place has a huge fire burning in it to keep the room warm in
+readiness so that the royal couple may retire to their room at any time."
+extra {"hope chest","chest"}
+"The chest is made from cedar and contains memories."
+extra {"netting","curtains","bed"}
+"The bed is a huge four poster bed. It is enclosed totally in netting and
+over the netting hangs thick red curtains that provide not only privacy
+but warmth in the chilly night."
+
+south to bhall_2 descr
+"You see the hall to the south.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+bguest_ch
+title "Guest Chambers"
+names {"guest chambers","chambers"}
+descr
+"The room is large with a comfortable looking four poster bed which is
+enclosed in netting. Two chairs sit on a braided rug in front of a crackling
+fire."
+extra {"bed"}
+"A comfortable four poster bed."
+extra {"fireplace"}
+"A fire crackles happily in the fireplace."
+extra {"chairs","chair"}
+"Two chairs sit in front of a crackling fire."
+extra {"rug"}
+"Obviously hand braided"
+extra {"netting"}
+"It keeps the bugs off those in the bed."
+north to bhall_2 descr
+"You see the hall to the north.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+bball_room
+title "Ball Room"
+names {"ball room"}
+descr
+"The ball room is huge with ceilings that seem to be a mile high,
+royal red curtains cover the walls of the room and torches hang along
+the walls providing light for the room. The  floors are polished to a
+shine and at the east end of the hall is a large stage for  the royal
+orchestra."
+extra {"stage"}
+"A large stage big enough to hold an orchestra."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+south to bhall_4 descr
+"You see a hall the south.";
+end
+
+bport_room
+title "Portrait Room"
+names {"portrait room","portrait"}
+descr
+"The room is fairly large, spaced closely together along the walls are
+portraits of past kings and queens of the castle"
+extra {"portraits"}
+"The portraits are all painted by the best artists in the land. Your eye
+is drawn to the  most current portraits, those of the king, queen and
+prince."
+
+extra {"queen's portrait","queen"}
+"The queen is a very regal looking woman with her silky black hair put up
+into a bun under her crown."
+extra {"king's portrait","king"}
+"The king is a regal looking man. He has a handsome face with his shoulder
+length jet black hair tied back in a pony tail under his crown."
+extra {"price's portrait","prince"}
+"The prince is a strapping young man with a face that shines with honor.
+Looking at the portrait one would have difficulty believing that this
+noble prince could just run off on his love."
+north to bhall_4 descr
+"You see a hall to the north.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+
+bhall_2
+title "A Hall"
+names {"hall"}
+descr
+"The hall Continues west from here, a deep pure white carpet
+leading the way. A window at the east end of the hall
+lets in some light during the day and hanging on the walls, the large
+torches provide light for the people who travel the halls at night. A
+There are doors to the north  and south, they look like they may be some
+sort of sleeping chambers. "
+extra {"window"}
+"You can look out over the killing fields."
+extra {"carpet"}
+"The carpet is a pure white"
+
+west to bstair_1 descr
+"You see the staircase to the west.";
+north to broyal_ch descr
+"You see a majestic room to the north.";
+south to bguest_ch descr
+"You see a sleeping chamber to the south.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+bhall_3
+title "A Hall"
+names {"hall"}
+descr
+"The hall Continues west and east from here, a pure white carpet
+leading the way. There are doors in all directions except south. Hanging
+on the walls, the large torches provide light for the people who walk
+this way."
+extra {"carpet"}
+"The carpet is a pure white"
+
+north to bwater_cl descr
+"You see what looks like a water closet to the north"
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+east to bsitting_1 descr
+"A sitting room is to the east.";
+west to bhall_7 descr
+"The hall continues to the west.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+
+bhall_4
+title "A Hall"
+names {"hall"}
+descr
+"The hall Continues east from here, a pure white carpet
+leading the way. A window at the west end of the hall
+lets in some light during the day and hanging on the walls, the large
+torches provide light for the people who travel the halls at night. A
+There are doors to the north  and south."
+extra {"window"}
+"You can look out over the killing fields."
+extra {"carpet"}
+"The carpet is a pure white"
+
+east to bstair_1 descr
+"You see the staircase to the east.";
+north to bball_room descr
+"You see a majestic room to the north.";
+south to bport_room descr
+"You see a sleeping chamber to the south.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+
+
+
+
+
+bhall_5
+title "A Hall"
+names {"hall"}
+descr
+"The hall Continues west and east from here, a pure white carpet
+leading the way. There are doors in all directions except north. Hanging
+on the walls, the large torches provide light for the people who walk
+this way."
+extra {"carpet"}
+"The carpet is a pure white"
+south to bwater_cl2 descr
+"You see what looks like a water closet to the south"
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+east to bsitting_2 descr
+"A sitting room is to the east.";
+west to bhall_6 descr
+"The hall continues to the west.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+
+end
+
+
+
+bhall_6
+title "A Hall"
+names {"hall"}
+descr
+"The hall Continues to the east from here, a pure white carpet
+leading the way. Large torches provide light for the people who walk
+this way. There is a small door to the south and a flight of stairs to
+the north."
+extra {"carpet"}
+"The carpet is a pure white"
+north to bstair_2 descr
+"A flight of stairs.";
+
+south to bthrone descr
+"The throne room is the south."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+east to bhall_5 descr
+"The hall continues to the east.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+bhall_7
+title "A Hall"
+names {"hall"}
+descr
+"The hall Continues to the east and south from here, a pure white carpet
+leading the way. Large torches provide light for the people who walk
+this way. A door leads north to the throne room."
+extra {"carpet"}
+"The carpet is a pure white"
+south to bhall_8 descr
+"The hall continues to the south.";
+
+north to bthrone descr
+"The throne room is the north."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+east to bhall_3 descr
+"The hall continues to the east.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+bhall_8
+title "A  Servants Hall"
+names {"Hall"}
+descr
+"The hall Continues to the north from here. Large torches provide light
+for the people who walk this way. A door leads west to the kitchens"
+north to bhall_7 descr
+"The hall leads to the north.";
+west to bkitchen descr
+"The kitchens are to the west.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+bkitchen
+title "Black Kitchen"
+names {"kitchen"}
+descr
+"The kitchen is huge with many workers scurrying about  preparing for the
+next meal. Pots and pans hang from the roof on long hooks and large wooden
+spoons line  the walls. Wood stoves continually burn making the room
+almost unbearably  warm. Large Ice closets keep the perishable foods from
+going bad. One head  servant  is very obviously in charge of the whole
+kitchen as she walks  around checking everything and barking orders to
+those around her."
+extra {"stoves","stove"}
+"Large and very hot"
+extra {"ice closets"}
+"A large cupboard with a block of ice to keep perishable foods cool"
+extra {"pots","pans"}
+"Pots and pans hang from the roof on long hooks."
+extra {"wooden spoons","spoons"}
+"Wooden spoons line the walls."
+east to  bhall_8 descr
+"You see the hall to the east.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+bthrone
+title "The Throne Room"
+names {"throne room"}
+descr
+"Huge thrones take up pride of position in this room, accessible to the
+rest of the room by going up a few steps, obviously made this way to
+set their owners a bit above the rest. The chairs each a  royal red with
+a black raven on the back of each, the crest of the castle. Hanging behind
+the throne is a thick curtain of the richest red fabric you have ever
+seen, on each side of the curtain is a huge raven, exquisitely
+embroidered so that each and every feather is visible. Huge double doors
+lead out into the grand hall and to smaller doors are hardly noticeable to
+the north and south."
+ALWAYS_LIGHT
+extra {"throne"}
+"Each thrown is encrusted in jewels and has a soft seat of silk."
+extra {"curtains"}
+"blood red curtains with a ebony black raven on each side of it."
+extra {"steps"}
+"The steps look like they were made to keep the king and queen above the
+common folk"
+
+ south to bhall_7 descr
+"A hall is to the south."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+
+north to bhall_6 descr
+"A hall is to the north."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+
+east to bgr_hall descr
+"You see a grand hall to the east."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+end
+
+bgr_hall
+title "Grand Hall"
+names {"grand hall"}
+descr
+"A very large room with many seats. This is the place that the people sit
+and wait for theirs audience with the king and queen. Tapestries line the
+walls and a pure white carpet cushions your step beneath your feet. Huge
+double doors to the west lead to the throne room while the hall leads
+back to the west and a grand staircase twirls up to the second floor of the
+castle."
+extra {"tapestries"}
+"The tapestries depict great battles fought and won by the kings army."
+extra {"carpet"}
+"The carpet is a pure white"
+up to bstair_1 descr
+"You see a grand staircase leading up to the second floor.";
+west to bthrone descr
+"You see the throne room to the west."
+open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+east to bhall_1 descr
+"The hall continues to the east.";
+ALWAYS_LIGHT
+end
+
+
+bwater_cl2
+title "Water Closet"
+names {"water closet"}
+descr
+"The royal water closet looks much the same as any other water closet
+that one has seen except that the royal seats are covered in a soft
+padding to provide its user with the utmost comfort, and the room has a
+small wood stove to provide heat on those chilly mornings."
+extra {"stove"}
+"Just a small plain black stove."
+extra {"seat"}
+"softly padded to provide comfort to those tender royal tush's"
+north to bhall_5
+descr "You see the hall to the north."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"door"};
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+bpath_1
+title "A Path Around The Castle"
+names {"path"}
+descr
+"The path, which is composed of crushed black rocks, leads along side the
+castle front. Trees provide shade from the scorching daytime sun for
+those whole stroll the path during the day and torches line the path to
+provide light for night time stroller's. To the south a large courtyard is
+visible, the path continues north."
+extra {"weeping willow","willow"}
+"The weeping willows are large trees with branches that droop down over
+the path."
+extra {"torch"}
+"Torches are placed in the ground to provide light in the evenings."
+extra {"rocks","path"}
+"The path is made up of tiny crushed black rocks."
+extra {"trees"}
+"Large weeping willows provide shade from the sun."
+movement SECT_FIELD
+ALWAYS_LIGHT
+north to bpath_2 descr
+"The path continues to the north.";
+south to bcastle_1 descr
+"To the south you see a large courtyard.";
+end
+
+bpath_2
+title "A Path Around The Castle"
+names {"path"}
+descr
+"The path curves here, you can follow it south or west and torches line
+the path providing light for evening stroller's. In the corner of
+the curve someone has planted a small rose garden. The roses are a
+pure night black with tiny droplets of dew clinging to the silky
+petals. Weeping willows cover the path  and mournfully swaying in the
+gentle breeze. "
+extra {"weeping willow","willow"}
+"The weeping willows are large trees with branches that droop down over
+the path."
+ extra {"torch"}
+"Torches are placed in the ground to provide light in the evenings."
+extra {"rocks","path"}
+"The path is made up of tiny crushed black rocks."
+extra {"trees"}
+"Large weeping willows provide shade from the sun."
+extra {"rose garden","roses","rose"}
+"The rose garden has night black roses growing in it, each rose however is
+touched by a droplet  of dew, as if they are weeping."
+movement SECT_FIELD
+ south to bpath_1 descr
+"The path continues south.";
+west to bpath_3 descr
+"The path continues to the west";
+end
+
+bpath_3
+title "Fountain"
+names {"fountain"}
+descr
+"The path opens up here to a large clearing. In the clearing is a
+fountain with a statue of a raven. The fountain is very large and has
+stone seats carved into it. Sitting on these seats you can feel a gentle
+spray of water as the wind gently lifts it and sprays it through the air.
+Oddly enough, for the beauty of this place very few people actually
+come here, maybe because although beautiful in every way, is filled with
+a grief so strong one can feel it. You notice a small plaque on one of
+the stone seats around the fountain."
+movement SECT_FIELD
+ALWAYS_LIGHT
+east to bpath_2 descr
+"The path continues to the east.";
+end
+
+
+
+bpath_4
+title "A Path Around The Castle"
+names {"path"}
+descr
+"The path, which is composed of crushed black rocks, leads along side the
+castle front. Trees provide shade from the scorching daytime sun for
+those whole stroll the path and torches  line the path to provide light
+for evening stroller's. To the north a large courtyard is visible, the path
+continues south." extra {"rocks","path"}
+"The path is made up of tiny crushed black rocks."
+extra {"trees"}
+"Large weeping willows provide shade from the sun."
+movement SECT_FIELD
+ALWAYS_LIGHT
+extra {"torch"}
+"Torches are placed in the ground to provide light in the evenings."
+ south to bpath_5 descr
+"The path continues to the south.";
+north to bcastle_1 descr
+"To the north you see a large courtyard.";
+end
+
+bpath_5
+title "A Path Around The Castle"
+names {"path"}
+descr
+"The path curves here, you can follow it south or west. Weeping willows
+cover the path and the mournful swaying of their leaves seem to cry for
+some lost love. You can follow the path north and west from here."
+extra {"weeping willow","willow"}
+"The weeping willows are large trees with branches that droop down over
+the path."
+extra {"rocks","path"}
+"The path is made up of tiny crushed black rocks."
+extra {"trees"}
+"Large weeping willows provide shade from the sun."
+movement SECT_FIELD
+ALWAYS_LIGHT
+north to bpath_4 descr
+"The path continues north.";
+west to bpath_6 descr
+"The path continues to the west";
+end
+
+bpath_6
+title "Royal Gardens"
+names {"gardens"}
+descr
+"The royal gardens are kept up with the utmost pride. A multitude of
+spectacular flowers shine forth, their spray of colors trying to add some
+gaiety to the bleak, bleary world of war and destruction. Benches
+around the gardens provide places for people to sit under the weeping
+willows that provide a shady respite from the blazing sun. In the middle
+of the gardens is a small pond, stocked with silver and gold fish that
+glimmer when the sun hits them in the right way. The path can be followed
+to the east or on to the stables to the west."
+ALWAYS_LIGHT
+extra {"benches"}
+"Wooden benches placed about the gardens to sit and enjoy ones surroundings."
+extra {"silver fish","gold fish","fish"}
+"The fish shimmer and shine when the sun hits them."
+extra {"weeping willow","willow"}
+"The weeping willows are large trees with branches that droop down over
+the path."
+extra {"flowers"}
+"The flowers are available in a multitude of colors."
+extra {"pond"}
+"A small pond well stocked with silver and gold fish."
+extra {"trees"}
+"Weeping willows provide shade for the area."
+east to bpath_5 descr
+"The path leads back to the east.";
+west to bpath_7 descr
+"The path continues to the west.";
+movement SECT_FIELD
+end
+
+
+
+
+bpath_7
+title "A Path Around The Castle"
+names {"path"}
+descr
+"The path, which is composed of crushed white rocks, leads along side the
+side of the castle. Trees provide shade from the scorching daytime sun for
+those whole stroll the path and torches  line the path to provide light
+for evening stroller's. To the east is a large garden and pond, to the
+west a stable and the path continues to the south."
+extra {"rocks","path"}
+"The path is made up of tiny crushed white rocks."
+extra {"weeping willow","willow"}
+"The weeping willows are large trees with branches that droop down over
+the path."
+extra {"trees"}
+"Large weeping willows provide shade from the sun."
+movement SECT_FIELD
+ALWAYS_LIGHT
+extra {"torch"}
+"Torches are placed in the ground to provide light in the evenings."
+ east to bpath_6 descr
+"The path continues to the east.";
+west to bout_stable descr
+"You see a stable to the west.";
+south to bpath_8 descr
+"The path continues to the south.";
+end
+
+
+bpath_8
+title "A Path Around The Castle"
+names {"path"}
+descr
+"The path, which is composed of crushed white rocks, leads along side the
+side of the castle. Trees provide shade from the scorching daytime sun for
+those whole stroll the path and torches  line the path to provide light
+for evening stroller's. The path leads north and south from here."
+extra {"path"}
+"A quiet path."
+extra {"weeping willow","willow"}
+"The weeping willows are large trees with branches that droop down over
+the path."
+extra {"trees"}
+"Large weeping willows provide shade from the sun."
+movement SECT_FIELD
+ALWAYS_LIGHT
+extra {"torch"}
+"Torches are placed in the ground to provide light in the evenings."
+ north to bpath_7 descr
+"The path continues to the west.";
+south to bpath_9 descr
+"The path continues to the south.";
+end
+
+bpath_9
+title "A Path Around The Castle"
+names {"path"}
+descr
+"The path, which is composed of crushed white rocks, leads along side the
+side of the castle. Trees provide shade from the scorching daytime sun for
+those whole stroll the path and torches  line the path to provide light
+for evening stroller's. The path leads off to the north and a square is to
+the south."
+extra {"rocks","path"}
+"The path is made up of tiny crushed black rocks."
+extra {"trees"}
+"Large weeping willows provide shade from the sun."
+movement SECT_FIELD
+ALWAYS_LIGHT
+extra {"weeping willow","willow"}
+"The weeping willows are large trees with branches that droop down over
+the path."
+
+extra {"torch"}
+"Torches are placed in the ground to provide light in the evenings."
+ north to bpath_8 descr
+"The path continues to the north.";
+south to bent_square descr
+"You see a square ahead.";
+end
+
+bent_square
+title "Path Before The Square"
+names {"path"}
+descr
+"Two paths meet here and lead on as one to the square. A large building
+to the east is the stables with many fine riding animals. To the north a
+path leads off on a nice quiet walkway and to the west a small square
+provides the necessities of life to the people who live within the castle
+walls."
+movement SECT_FIELD
+ALWAYS_LIGHT
+extra {"path"}
+"Just an ordinary path of crushed black rock."
+north to bpath_9 descr
+"The path continues to the north.";
+west to bout_stable2 descr
+"You see the stables to the west.";
+east to bsquare_sw descr
+"You see the square to the east.";
+end
+
+
+
+
+bout_stable
+title "Out Side A Stable"
+names {"stable"}
+descr
+"A huge building to the west is obviously the royal stables. Neighs can
+be heard as horses talk to each other. Surprisingly the smell here is not
+as bad as one would expect. You  may enter the stables to the south or
+follow the path back to the east."
+extra {"stable"}
+"The stable is a large building to house the castle horses."
+east to bpath_7 descr
+"The path continues to the east.";
+south to bstable_1 descr
+"The stables are to the south.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+bout_stable2
+title "Castle Yards"
+names {"stables"}
+descr
+"The royal stables are to the east and a large square that is the center
+of life in the castle is to the west. On the ground is a huge pile of
+hay, looking up you see the hay loft above you."
+extra {"hay"}
+"The hay is in a huge pile and has been thrown down from the loft to feed
+the horses."
+west to bstable_4 descr
+"The stables are to the west.";
+east to bent_square descr
+"The path leads east.";
+end
+
+
+
+bstable_1
+title "Black Castle Stables"
+names {"stables"}
+descr
+"The stables are clean and well kept. There is none of that 'barnyard'
+smell one has come to expect from a barn. Bales of hay are stacked neatly
+along the walls. To the west is a tack room and to the east is the home
+of the stable boy. Further to the south you can see some stalls."
+extra {"hay"}
+"The bales of hay are stacked neatly along the wall"
+west to btack_room descr
+"You see a tack room to the west.";
+east to bstable_3 descr
+"The the east you see a living area of sorts.";
+north to bout_stable descr
+"The door to the north leads out of the stables.";
+south to bstable_2 descr
+"You see stalls to the south.";
+up to bhay_loft descr
+"You see a hay loft above you";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+bstable_2
+title "Black Castle Stables"
+names {"stables"}
+descr
+"The stable continues to the north and south and stall doors can be seen
+to the east and west."
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+east to bstall_1 descr
+"A stall"
+open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"stall door","door"};
+west to bstall_2 descr
+"A stall"
+open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"stall door","door"};
+south to bstable_4 descr
+"The stable continues to the south.";
+north to bstable_1 descr
+"You see the stable entrances.";
+end
+
+bstable_3
+title "Stable Boy's Home"
+names {"stable"}
+descr
+"This room is where the stable boy lives. A single bed takes up most of
+this small room. A small wood heater provides warmth for the cold
+nights."
+extra {"bed"}
+"A small comfortable looking bed."
+extra {"wood heater","heater"}
+"a small stove"
+west to bstable_1 descr
+"The entrance of the stables is to the west.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+bstable_4
+title "Black Castle Stables"
+names {"stables"}
+descr
+"Bales of hay line the south wall, You see a half door which leads
+into a stall to the west. You may leave to the north or east."
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+west to bstall_3 descr
+"A stall"
+open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"stall door","door"};
+east to bout_stable2 descr
+"The door leads out.";
+north to bstable_2 descr
+"The stable continues to the north.";
+end
+
+btack_room
+title "Tack Room"
+names {"tack room"}
+descr
+"The tack room  has every imaginable type of tack perfectly cleaned and
+hanging neatly on the wall. Saddles are stacked along one wall, all oiled
+to a gleaming shine. There is a bench for riders to sit on while they
+prepare for their ride. One end of the room has every imaginal barding
+available for the horses that go to battle. The door leads out to the east."
+extra {"saddles"}
+"Saddles for the horses are stacked neatly against one wall."
+extra {"bench"}
+"A fairly uncomfortable looking bench."
+
+extra {"barding"}
+"The armor for the mounts comes in all manor of materials including
+padded barding, leather barding, scale barding, ring barding, chain
+barding, splint barding, and of corpse for the royal riders full plate
+barding to name just a few."
+extra {"tack"}
+"Harnesses, bits, reins, stirrups and more hang neatly on the walls."
+east to bstable_1 descr
+"The entrance to the stables is to the east.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+bstall_1
+title "In A Stall"
+names {"stall"}
+descr
+"You are standing in a large stall. The floor is covered with clean straw
+and a water trough. The door to the west is a half door that allows the
+horse to look out into the stables."
+extra {"straw"}
+"clean straw provides a comfortable carpeting  on the floor."
+extra {"water trough"}
+"A water trough provides clean water for the horse."
+west to bstable_2 descr
+"You can leave the stall to the west."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"stall door","door"};
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+bstall_2
+title "In A Stall"
+names {"stall"}
+descr
+"You are standing in a large stall. The floor is covered with clean straw
+and a water trough. The door to the east is a half door that allows the
+horse to look out into the stables."
+extra {"straw"}
+"clean straw provides a comfortable carpeting  on the floor."
+extra {"water trough"}
+"A water trough provides clean water for the horse."
+east to bstable_2 descr
+"You can leave the stall to the east."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"stall door","door"};
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+bstall_3
+title "In A Stall"
+names {"stall"}
+descr
+"You are standing in a large stall. The floor is covered with clean straw
+and a water trough. The door to the north is a half door that allows the
+horse to look out into the stables."
+extra {"straw"}
+"clean straw provides a comfortable carpeting  on the floor."
+extra {"water trough"}
+"A water trough provides clean water for the horse."
+east to bstable_4 descr
+"You can leave the stall to the east."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"stall door","door"};
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+bhay_loft
+title "A Hay Loft"
+names {"hay loft"}
+descr
+"The hay loft is a large room the size of the entire barn. There is hay
+piled all over the place and you hear a faint rustling making you think
+there must be some small creature that has made its home up here. The
+south end of the hay loft opens up so that the hay can be thrown out to
+the ground below. Looking down you notice a large pile of hay below you."
+extra {"hay"}
+"The hay is all over and takes up a large majority of the room. Looking
+out the end of the hay loft you notice a pile of hay on the ground."
+down to bstable_1 descr
+"You see the main floor of the stables below you.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+
+dilbegin jump2(); var
+        pc : unitptr;
+        pc_name : string;
+
+code
+{
+
+:init:
+heartbeat := PULSE_SEC*5;
+
+:start:
+       wait(SFB_CMD, (command("jump")) );
+        block;
+        pc := activator;
+        secure(pc,losthim);
+     {
+      act("You jump out the opening at the end if the loft and aim for "+
+      "the hay pile below."
+      ,A_SOMEONE,pc,null,null,TO_CHAR);
+     act("$1n jumps out the opening at the end of the loft to the pile "+
+     "of hay below",
+      A_SOMEONE,pc,null,null,TO_REST);
+      pause;
+      act("WWWWWWWWEEEEEEEEEEEEEEEEEE."
+      ,A_SOMEONE,pc,null,null,TO_CHAR);
+
+      pause;
+      act("You land safety in the pile of hay."
+      ,A_SOMEONE,pc,null,null,TO_CHAR);
+      link(pc, findroom("bout_stable2@blcastle"));
+      exec("look",pc);
+      pause;
+      unsecure(pc);
+      goto start;
+      }
+
+
+
+:losthim:
+goto start;
+}
+dilend
+end
+
+
+bsquare_sw
+title "Black Castle Square"
+names {"square"}
+descr
+"The square is very large and has most of the stuff one would need to
+live within the castle walls. To the south you see a large building that
+looks like it may house soldiers. The square continues to the north and
+west."
+south to bbunk1 descr
+"You see the bunk house to the south.";
+north to bsquare_nw descr
+"The square continues north.";
+east to bsquare_se descr
+"The square continues to the east.";
+west to bent_square descr
+"The royal stables are to the west.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+bsquare_se
+title "Black Castle Square"
+names {"square"}
+descr
+"The square is very large and has most of the stuff one would need to
+live within the castle walls. To the south is the castle store house and
+to the west is another bunk house."
+east to bbunk2 descr
+"You see the bunk house to the east.";
+north to bsquare_ne descr
+"The square continues north.";
+west to bsquare_sw descr
+"The square continues to the west.";
+south to bstores descr
+"The store house is to the south.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+bsquare_nw
+title "Black Castle Square"
+names {"square"}
+descr
+"The square is very large and has most of the stuff one would need to
+live within the castle walls. The blacksmith is to the north and the
+square continues to the south and west"
+south to bsquare_sw descr
+"The square continues to the south.";
+north to bblacksmith descr
+"The blacksmith is to the north.";
+east to bsquare_ne descr
+"The square continues to the east.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+bsquare_ne
+title "Black Castle Square"
+names {"square"}
+descr
+"The square is very large and has most of the stuff one would need to
+live within the castle walls. To the north is an armorer shop and a food
+store is to the west."
+south to bsquare_se descr
+"The square continues to the south.";
+north to barmor descr
+"The armorer is to the north.";
+west to bsquare_nw descr
+"The square continues to the west.";
+east to bfood descr
+"The food store is to the east.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+bstores
+title "Black Stores Room"
+names {"stores"}
+descr
+"The stores room has everything needed to run the castle from blankets to
+plates and silverware. The goods here are not for sale to the general
+population and are only available to the people with in the castle walls."
+extra {"blankets"}
+"comfortable looking blankets."
+extra {"plates"}
+"A regular plate."
+extra {"silverware"}
+"Forks knives spoons"
+north to bsquare_se descr
+"The square is to the north.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+bbunk1
+title "Bunk House"
+names {"bunk house"}
+descr
+"The bunk house is a large room with bunk beds 6 high to the ceiling.
+Between each set of bunks stands cubbies for those living in this hall to
+store personal items. In the center of the room is a long table that the
+residents use to do everything from gambling to just sitting around
+talking. A large pot bellied stove provide heat for the room when they
+remember to stoke  the fire. the square is to the north."
+extra {"bunks"}
+"The reach the ceiling 6 bunks high."
+extra {"stove"}
+"A pot bellied stove for heat."
+extra {"table"}
+"a long multi-purposed table."
+extra {"cubbies"}
+"Used to store personal items."
+north to bsquare_sw descr
+"You see the square to the north.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+bbunk2
+title "Bunk House"
+names {"bunk house"}
+descr
+"The bunk house is a large room with bunk beds 6 high to the ceiling.
+Between each set of bunks stands cubbies for those living in this hall to
+store personal items. In the center of the room is a long table that the
+residents use to do everything from gambling to just sitting around
+talking. A large pot bellied stove provided heat for the room when they
+remember to stoke  the fire. The square is to the west."
+extra {"bunks"}
+"The reach the ceiling 6 bunks high."
+extra {"stove"}
+"A pot bellied stove for heat."
+extra {"table"}
+"a long multi-purposed table."
+extra {"cubbies"}
+"Used to store personal items."
+west to bsquare_se descr
+"You see the square to the west.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+bfood
+title "Black Food Store"
+names {"food"}
+descr
+"This is where the castle food stores are kept. It is exclusively for use
+by those living within the castle walls. Boxes of non-perishable foods
+line shelves to the ceiling."
+extra {"boxes"}
+"boxes are stacked to the ceiling."
+west to bsquare_ne descr
+"You see the square to the west.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+barmor
+title "Black Armorer"
+names {"Armor"}
+descr
+"The armorer has suites of every kind of armor imaginable  ready to be
+given out at a moments notice. The shop however is for exclusive use by
+those from within the castle walls."
+extra {"armor"}
+"There is everything from leather to full plate armor ready to wear into
+battle."
+south to bsquare_ne descr
+"The square is to the south.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+bblacksmith
+title "Black Blacksmith"
+names {"blacksmith"}
+descr
+"The blacksmith shop is kind of sooty due to the hot fires that must be
+kept burning. Along the building you see a couple of horses tethered,
+patiently waiting for new horseshoes. The 'ting ting' of hammer hitting
+hot metal telling you that it is being worked on at this moment. There is
+all manor of metal objects hanging from the walls and ceiling but most of
+them you have no idea what they are. A huge Anvil sits in the center of
+the shop next to the fire. You can leave to the south."
+extra {"anvil"}
+"A huge metal anvil used to place the hot metal being pounded into shape on."
+extra {"horseshoe"}
+"wow you wish you could find a luck horse show."
+extra {"fire"}
+"The fire is kept burning extra hot with coals."
+extra {"objects"}
+"Some of them seem to be nails others you have no idea...they look like
+some sort of torture devices"
+south to bsquare_nw descr
+"The square continues to the south.";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+
+
+bbot_stair
+title "Bottom Of The Stairs"
+names {"stairs"}
+descr
+"It is kind of dark and dreary down here. Torches hang on the walls
+giving off a low light due to the moisture in the air. There is a hall to
+the south."
+south to bbas_hall1 descr
+"A hall";
+up to bstair_2 descr
+"Stairs lead up";
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+bbas_hall1
+title "A Hall"
+names {"hall"}
+descr
+"The hall runs west to east from here. Torches hang on the walls to
+provide what little light is down here. Listening very closely you hear
+what sounds like rats or mice running around probably sharing the cells
+with the prisoners."
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+west to bbas_hall3 descr
+"The hall continues to the west.";
+east to bbas_hall2 descr
+"The hall continues to the east.";
+north to bbot_stair descr
+"There are stairs to the north.";
+end
+
+
+bbas_hall2
+title "A Hall"
+names {"hall"}
+descr
+"The hall runs west from here. Torches hang on the walls to
+provide what little light is down here. Listening very closely you hear
+what sounds like rats or mice running around probably sharing the cells
+with the prisoners."
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+north to bcell_1 descr
+"You see a cell to the north."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"cell door","door"};
+
+east to bcell_2 descr
+"You see a cell to the east."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"cell door","door"};
+
+west to bbas_hall1 descr
+"The hall continues to the west.";
+/*south to btort_1 descr
+"A torture chamber is to the south.";*/
+end
+
+bbas_hall3
+title "A Hall"
+names {"hall"}
+descr
+"The hall runs north and east from here. Torches hang on the walls to
+provide what little light is down here. Listening very closely you hear
+what sounds like rats or mice running around probably sharing the cells
+with the prisoners."
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+south to bcell_3 descr
+"You see a cell to the south."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"cell door","door"};
+
+east to bbas_hall1 descr
+"The hall continues to the east.";
+north to bbas_hall4 descr
+"The hall continues to the north.";
+west to bcell_4 descr
+"You see a cell to the west."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"cell door","door"};
+
+end
+
+bbas_hall4
+title "A Hall"
+names {"hall"}
+descr
+"The hall runs to the south from here. Torches hang on the walls to
+provide what little light is down here. Listening very closely you hear
+what sounds like rats or mice running around probably sharing the cells
+with the prisoners."
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+north to bcell_6 descr
+"You see a cell to the north"
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"cell door","door"};
+
+west to bcell_5 descr
+"You see a cell to the west."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"cell door","door"};
+
+east to bcell_7 descr
+"You see a cell to the east."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"cell door","door"};
+south to bbas_hall3 descr
+"The hall continues to the south.";
+end
+
+bcell_1
+title "A Dirty Cell"
+names {"cell"}
+descr
+"The cell is small and dirty with filthy straw on the floor. The prisoners
+live in their own feces with the rats and mice. Light filters in from
+the hall to show scratching some prisoner has made at some time."
+extra {"scratching","markings"}
+"H#LP #E! #h #OD ##LP M#!"
+extra {"straw"}
+"The straw is  dirty and blood stained amongst other things."
+extra {"feces"}
+"Shit what did you think  it was?"
+south to bbas_hall2 descr
+"The hall is to the south."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"cell door","door"};
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+
+end
+
+bcell_2
+title "A Dirty Cell"
+names {"cell"}
+descr
+"The cell is small and dirty with filthy straw on the floor. The prisoners
+live in their own feces with the rats and mice. Light filters in from
+the hall."
+extra {"straw"}
+"The straw is  dirty and blood stained amongst other things."
+extra {"feces"}
+"Shit what did you think  it was?"
+west to bbas_hall2 descr
+"The hall is to the west."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"cell door","door"};
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+
+end
+
+bcell_3
+title "A Dirty Cell"
+names {"cell"}
+descr
+"The cell is small and dirty with filthy straw on the floor. The prisoners
+live in their own feces with the rats and mice. Some light filters in
+from the hall but not much"
+extra {"straw"}
+"The straw is  dirty and blood stained amongst other things."
+extra {"feces"}
+"Shit what did you think  it was?"
+north to bbas_hall3 descr
+"The hall is to the north."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"cell door","door"};
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+
+bcell_4
+title "A Dirty Cell"
+names {"cell"}
+descr
+"The cell is small and dirty with filthy straw on the floor. The prisoners
+live in their own feces with the rats and mice. Light filters in from
+the hall to show scratching some prisoner has made at some time."
+extra {"scratching","markings"}
+"H#LP #E! #h #OD ##LP M#!"
+extra {"straw"}
+"The straw is  dirty and blood stained amongst other things."
+extra {"feces"}
+"Shit what did you think  it was?"
+east to bbas_hall3 descr
+"The hall is to the east."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"cell door","door"};
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+
+end
+
+bcell_5
+title "A Dirty Cell"
+names {"cell"}
+descr
+"The cell is small and dirty with filthy straw on the floor. The prisoners
+live in their own feces with the rats and mice. Light filters in from
+the hall to show scratching some prisoner has made at some time."
+extra {"scratching","markings"}
+"I love linia"
+extra {"straw"}
+"The straw is  dirty and blood stained amongst other things."
+extra {"feces"}
+"Shit what did you think  it was?"
+east to bbas_hall4 descr
+"The hall is to the east."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"cell door","door"};
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+
+end
+
+
+
+bcell_6
+title "A Dirty Cell"
+names {"cell"}
+descr
+"The cell is small and dirty with filthy straw on the floor. The prisoners
+live in their own feces with the rats and mice. Light filters in from
+the hall to show scratching some prisoner has made at some time."
+extra {"scratching","markings"}
+"Dont let them get your soul!"
+extra {"straw"}
+"The straw is  dirty and blood stained amongst other things."
+extra {"feces"}
+"Shit what did you think  it was?"
+south to bbas_hall4 descr
+"The hall is to the south."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"cell door","door"};
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+
+end
+
+
+bcell_7
+title "A Dirty Cell"
+names {"cell"}
+descr
+"The cell is small and dirty with filthy straw on the floor. The prisoners
+live in their own feces with the rats and mice. Light filters in from
+the hall to show scratching some prisoner has made at some time."
+extra {"scratching","markings"}
+"I will survive"
+extra {"straw"}
+"The straw is  dirty and blood stained amongst other things."
+extra {"feces"}
+"Shit what did you think  it was?"
+west to bbas_hall4 descr
+"The hall is to the west."
+ open {EX_OPEN_CLOSE, EX_CLOSED}
+ keyword {"cell door","door"};
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER , UNIT_FL_NO_TELEPORT}
+end
+bbottom_1
+title "Bottom Of The Stairs"
+names {"stairs","bottom"}
+descr
+"You are standing at the bottom of a flight of stairs. The air down here
+is old and stale with a definite dampness. You can follow the
+passage to the north or go up the stairs."
+north to bpassage_3 descr
+"The passage continues  to the north.";
+up to btower_1 descr
+"Stairs lead upward.";
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+end
+
+bbottom_2
+title "Bottom Of The Stairs"
+names {"stairs","bottom"}
+descr
+"You are standing at the bottom of a flight of stairs. The air down here
+is old and stale with a definite dampness. You can follow the
+passage to the south or go up the stairs."
+south to bpassage_5 descr
+"The passage continues  to the south.";
+up to btower_2 descr
+"Stairs lead upward.";
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+end
+
+ bpassage_1
+title "A Dark Passage."
+names {"passage"}
+descr
+"You are in a dark passage way inside the castle wall. The air is stale
+and seems to just hang there. You hear a rat scurry by and think it may
+be a good idea to leave quickly."
+west to bmoat_15@forest descr
+"The crack in the wall seems to lead to a passage."
+         open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+         keyword {"crack","door","wall"};
+         SECRET_DOOR_DIFFICULTY(WEST,40)
+south to bpassage_2 descr
+"The passage continues to the south.";
+north to bpassage_4 descr
+"The passage continues to the north.";
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+end
+
+bpassage_2
+title "A Dark Passage"
+names {"passage"}
+descr
+"The passage way is dark, dreary and damp. The sounds of some rodents out
+looking for supper offer little comfort to those who pass by this way.
+You may continue to the north or south."
+north to bpassage_1 descr
+"The passage continues to the north.";
+south to bpassage_3 descr
+"The passage continues to the south.";
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+end
+
+bpassage_3
+title "A Dark Passage"
+names {"passage"}
+descr
+"The passage way is dark, dreary and damp. The sounds of some rodents out
+looking for supper offer little comfort to those who pass by this way.
+You may continue to the north or south."
+north to bpassage_2 descr
+"The passage continues to the north.";
+south to bbottom_1 descr
+"The passage continues to the south.";
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+end
+
+bpassage_4
+title "A Dark Passage"
+names {"passage"}
+descr
+"The passage way is dark, dreary and damp. The sounds of some rodents out
+looking for supper offer little comfort to those who pass by this way.
+You may continue to the north or south."
+north to bpassage_5 descr
+"The passage continues to the north.";
+south to bpassage_1 descr
+"The passage continues to the south.";
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+end
+
+bpassage_5
+title "A Dark Passage"
+names {"passage"}
+descr
+"The passage way is dark, dreary and damp. The sounds of some rodents out
+looking for supper offer little comfort to those who pass by this way.
+You may continue to the north or south."
+north to bbottom_2 descr
+"The passage continues to the north.";
+south to bpassage_4 descr
+"The passage continues to the south.";
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+end
+
+%mobiles
+
+f_princess
+names {"crystallized princess","princess"}
+title "a princess"
+descr "the princess is lying  here and looks to be frozen."
+extra {}
+"The princes is dressed in the best of silk dresses and seems to be totally
+frozen.  A nasty  gaping wound in her chest is plugged only by the dagger that
+made it, maybe by some miracle a cure can be found before the spell that
+protects her wears off. The dagger draws your attention to itself."
+
+  extra {"dagger"}
+  "As you examine the dagger you notice it goes directly into the
+princess's  chest and pierces the heart. You could Take dagger from
+princess"
+
+weight 128
+
+dilbegin tdag ();
+var
+temp:stringlist;
+item:unitptr;
+pc:unitptr;
+sheath:unitptr;
+i:integer;
+item_str:string;
+code
+{
+heartbeat:=PULSE_SEC*3;
+:start:
+wait (SFB_CMD ,command (CMD_GET));
+heartbeat:=PULSE_SEC*3;
+item_str:=getword (argument);
+if (not ("dagger" in item_str)) goto start;
+block;
+
+pc:=activator;
+secure(pc,start);
+
+if (not(STONE_QUEST_ONGOING in pc.quests)) goto protect;
+sheath:=findunit (pc,"lace sheath",FIND_UNIT_INVEN,null);
+if (sheath ==null) goto protect;
+dilcopy ("freeze_dil@blcastle", pc);
+destroy(sheath);
+act ("As you reach out, the shield surrounding the princess shimmers as  your hand passes through it. ",
+A_ALWAYS, pc, null,null,TO_CHAR);
+act ("As $1n reaches out the shield surrounding the princess shimmers and  lets $1s hand pass through with out harm.",
+A_ALWAYS, pc, null,null,TO_REST);
+pause;
+act ("Through no will of your own, you grasp the dagger that is thrust into the princesses heart and slide it out.",
+A_ALWAYS,pc,null,null,TO_CHAR);
+act ("As though driven by some force $1n slides the dagger from the princess's body",
+A_ALWAYS, pc, null,null,TO_REST);
+pause;
+act ("The princess gasps for air, she is quickly dieing!",
+A_ALWAYS,pc,null,null,TO_ALL);
+pause;
+act ("Realizing its a race of life or death, you body quickly takes over as you side the dagger into the sheath!",
+A_ALWAYS, pc,null,null,TO_CHAR);
+act ("$1n quickly slides the dagger into a sheath",
+A_ALWAYS, pc, null,null,TO_REST);
+sheath:=load ("lth_sheath@blcastle");
+item:=load ("quest_dagger@blcastle");
+item.title := pc.name+"'s symefang dagger";
+item.outside_descr := pc.name+"'s symefang dagger lies here.";
+link (sheath,self);
+link (item,sheath);
+link (sheath,pc);
+
+pause;
+act ("As the dagger slips into place in the sheath a brilliant light explodes and bathes the whole room in its healing glow.",
+A_ALWAYS,pc,null,null,TO_ALL);
+pause;
+act ("Looking over you notice the wound in the princess's chest is now closed",
+A_ALWAYS,pc,null,null,TO_ALL);
+pause;
+act ("The princess's locket glows brightly and a young man in black appears in a cloud of smoke.",
+A_ALWAYS,pc,null,null,TO_ALL);
+pause;
+act ("The young man bows to you.",A_ALWAYS,pc,null,null,TO_CHAR);
+act ("The young man bows to $1n.",A_ALWAYS,pc,null,null,TO_REST);
+pause;
+heartbeat:=PULSE_SEC*6;
+act (" The man says 'Thank you for my life and the life of my love. I "+
+" was cast under a spell by an evil sorceress on the very eve of my "+
+" wedding and was not able to contact anyone from this world.'", A_ALWAYS,pc,null,null,TO_CHAR);
+
+act ("The man Thanks $1n. 'I was cast under a spell by an evil sorceress "+
+"on the very eve of my wedding and was not able to contact anyone from this world.'", A_ALWAYS,pc,null,null,TO_REST);
+pause;
+act ("The man says 'Only the true undieing love of my beloved was able "+
+" to free me. The sacrifice of her very own life force opened the portal "+
+" for me to return. ",A_ALWAYS,pc,null,null,TO_ALL);
+pause;
+act ("The man says 'But alas the very act that freed me, also caused me "+
+" to not want to return to this world. I could not return while there was "+
+" any doubt that my beloved would be there with me.'",
+A_ALWAYS,pc,null,null,TO_ALL);
+pause;
+act ("The man says 'I feared her forever "+
+"dead until I learned of the spell the magi cast over her. My only hope "+
+"was that some brave soul would be able to bring her back to life.'",
+A_ALWAYS,pc,null,null,TO_ALL);
+pause;
+act ("The man says 'In return for your great service I would like "+
+" you to keep this magical dagger.'", A_ALWAYS,pc,null,null,TO_CHAR);
+act ("The man says to $1n In return for your great service I would "+
+" like you to keep the magical dagger and sheath.'",
+A_ALWAYS,pc,null,null,TO_REST);
+pause;
+act ("The man utters 'Wieslius lfvuws' and your sheath glows brightly",
+A_ALWAYS,pc,null,null,TO_CHAR);
+act ("The man utters 'Wieslius lfvuws' and $1n's sheath glows brightly",
+A_ALWAYS,pc,null,null,TO_CHAR);
+pause;
+act("The man whispers 'Two other rewards I give to you, The first "+
+" is my mark. If you show this to my family they will teach you a very special "+
+"spell known only to my family and those that have done a service to us.",
+ A_ALWAYS,pc,null,null,TO_CHAR);
+act ("The man whispers something to $1n",A_ALWAYS,pc,null,null,TO_REST);
+pause;
+act ("The man reaches out and touches your arm, and says' so that my mother the Queen and Lasanora no you.'",
+A_ALWAYS,pc,null,null,TO_CHAR);
+act ("The man reaches out and touches $1n's arm",
+A_ALWAYS,pc,null,null,TO_REST);
+pause;
+act("You feel a burning sensation and then it is gone.",
+A_ALWAYS,pc,null,null,TO_CHAR);
+act("You hear a sizzle and smell searing flesh.",
+A_ALWAYS,pc,null,null,TO_REST);
+addextra (pc.extra,{"crest","brand"},
+"The crest of the black castle, a black raven's head marks you a hero.");
+pause;
+act("The man whispers something to $1n", A_ALWAYS,pc,null,null,TO_REST);
+act("The man whispers to you 'And finally, this game is very special to "+
+" me. I would like you to have it ",A_ALWAYS,pc,null,null,TO_CHAR);
+pause;
+act("The man hands you a board",A_ALWAYS,pc,null,null,TO_CHAR);
+act("The man hands $1n a board",A_ALWAYS,pc,null,null,TO_REST);
+item:=load ("game_board@blcastle");
+addstring (temp,"$"+pc.name+"gameboard");
+addextra (item.extra,temp,"");
+substring (temp,"$"+pc.name+"gameboard");
+link (item,pc);
+pause;
+act ("The young man bows to you and waves his hand, you suddenly notice "+
+" that he and the princess have both disappeared.",
+A_ALWAYS,pc,null,null,TO_ALL);
+experience (5000, activator);
+subextra (pc.quests,STONE_QUEST_ONGOING);
+addextra (pc.quests,{STONE_QUEST_COMPLETE},"");
+i:=dildestroy ("freeze_dil@blcastle",pc);
+destroy (self);
+:protect:
+pause;
+block;
+act ("A magical shield prevents you from doing that.",
+A_ALWAYS,pc,null,null,TO_CHAR);
+unsecure(pc);
+goto start;
+}
+dilend
+
+end
+
+mage
+title "Bifor"
+names {"Bifor","mage"}
+descr "Bifor the mage is standing here."
+extra {}
+"Bifor looks like a very powerful mage."
+M_ELF_MAGE_FROST (199,SEX_MALE,"cast icestorm")
+
+dilbegin mage_give ();
+external
+  encode(tgt:unitptr);
+var
+  pc:unitptr;
+  tries:integer;
+  item:unitptr;
+  i: integer;
+
+code
+{
+:start:
+heartbeat:=PULSE_SEC*60;
+self.minv:=220;
+wait (SFB_TICK,TRUE);
+self.minv:=0;
+pc:=findrndunit (self,FIND_UNIT_WORLD,UNIT_ST_PC);
+self.minv:=220;
+  while (pc.gprevious.type==UNIT_ST_PC)
+   pc:=pc.gprevious;
+     while (pc.type==UNIT_ST_PC)
+      {
+if ((not(STONE_QUEST_ONGOING in pc.quests)) and
+(not(STONE_QUEST_COMPLETE in pc.quests)) and
+((pc.zone =="blcastle") or
+(pc.zone=="wcastle") or
+(pc.zone=="forest") or
+(pc.zone=="fields")))
+goto talk;
+      pc:=pc.gnext;
+      }
+
+goto start;
+
+:talk:
+secure (pc,start);
+link (self,pc.outside);
+heartbeat:=PULSE_SEC*3;
+act ("A giant rift opens in front of you sending you sprawling.",
+A_SOMEONE,pc,null,null,TO_CHAR);
+act ("A giant rift opens in front of $1n sending $1m sprawling.",
+A_SOMEONE,pc,null,null,TO_REST);
+self.minv:=0;
+exec ("emote steps out of the rift and neatly closes it.",self);
+pause;
+act ("$2n bow's slightly to you.",
+A_SOMEONE,pc,self,null,TO_CHAR);
+act ("$2n bow's slightly to $1n.",
+A_SOMEONE,pc,self,null,TO_REST);
+
+exec("say Ello there!", self);
+pause;
+exec("emote mutters as his hat goes flying.",self);
+pause;
+exec("emote picks the hat up and sets it cockeyed on his head.",self);
+pause;
+exec("say Damn hat keeps flying off!", self);
+pause;
+exec("peer" +pc.name ,self);
+pause;
+exec("say You heard she tried to kill herself didn't you?", self);
+pause;
+exec("say Damn pity to, and so pretty.", self);
+pause;
+exec("say Well there is still hope, just need the stones.",self);
+pause;
+exec("peer" +pc.name, self);
+pause;
+exec("say Well? do you want to or not! Cant be waiting here all day "+
+"while you decide weather or not to help out!",self);
+
+i := 0;
+while (i < 5)
+{
+wait(SFB_CMD, activator #= pc);
+
+if (command(CMD_NOD))
+{
+goto quest_accepted; /* Goto the label if accepted */
+}
+else if (command(CMD_SAY))
+{
+pause;
+exec("say eh? what's that? just nod or shake!", self);
+}
+else if (command(CMD_SHAKE))
+
+goto no_quest;
+
+i := i+1;
+}
+:no_quest:
+pause;
+exec("say You will follow the path chosen for you sooner of later.", self);
+unsecure(pc);
+nopriority;
+goto start;
+
+
+:quest_accepted:
+pause;
+exec("say GOOD!", self);
+pause;
+exec("say Ok just take the sheath and fill it with the stones, theres a "+
+"good fellow!.", self);
+pause;
+exec("say What stones?",self);
+pause;
+exec("say surely I told you about the stones.",self);
+pause;
+exec("say no? Hmmm",self);
+pause;
+exec("say ok lets get this over  with fast I have to go find that dragon!",self);
+pause;
+exec("say You see the princess, after the terrible trouble with her "+
+"wedding, plunged her dagger into her own heart.",self);
+pause;
+exec("shake",self);
+pause;
+exec("say Luckily the palace magi had cast a spell on the dagger in "+
+"order to protect the princess.",self);
+pause;
+exec("say When the princess tried to kill herself she was placed into "+
+"a state of suspended animation.",self);
+pause;
+exec("say in order to bring her back to life you must put the 'twelve "+
+"elements of the years' into the sheath.",self);
+pause;
+exec("say you must put them into the sheath in the correct order..lord "+
+"knows what would happen if you put one in the wrong order!",self);
+pause;
+exec("say and of course if can be any order.",self);
+pause;
+exec("say if you make a mistake start over! It very important that you "+
+"get the 'twelve elements of the years'",self);
+pause;
+exec("say it might be an idea to keep track of YOUR order in case you have to start over.",self);
+pause;
+exec("say Once you are done, you must find the princess and take the "+
+"dagger from her body and slip it into the sheath.'",self);
+pause;
+exec("say King Blanche keeps the princess close by him at all times!",self);
+
+item:=load ("sheath@blcastle");
+act ("$3n gives $2n to you",
+A_SOMEONE, pc,item,self,TO_CHAR);
+act ("$3n gives $2n to $1n",
+A_SOMEONE, pc,item,self,TO_REST);
+link (item ,pc);
+addextra (pc.quests,{STONE_QUEST_ONGOING},"");
+encode (pc);
+pause;
+exec ("emote turns and spreads his hand opening a rift in front of him.",self);
+exec ("emote steps into the rift.",self);
+act ("The rift slowly closes.",
+A_ALWAYS,pc,null,null,TO_ALL);
+unsecure(pc);
+goto start;
+}
+dilend
+
+end
+
+
+
+wander_seller
+title "Lagnonik the peddler"
+names {"lagnonik","peddler"}
+descr "Lagnonik is here peddling his wares."
+extra {}
+"Lagnonik is a small weasly looking man. You get the feeling you should
+count your change if you buy anything from him...hmmm maybe you should
+count your change even if you dont buy anything from him."
+M_HUMAN_WARRIOR_NATURAL(21, SEX_MALE)
+dilcopy wander_zones@function("halfzon haon_dor cypress midgaard ratswarf urland", 25, 1, 0);
+money 4 GOLD_PIECE
+special SFUN_PAIN_INIT time WAIT_SEC*15 bits SFB_RANTIME
+"  100 Csay Jewelry for sale!@
+   110 Csay Some of the finest jewerly for sale.@
+   120 Csay Great prices on fine jewerly.@
+   130 Csay Buy your magical jewelry here!@
+   140 Csay Some of the finest gold in the land for sale!@
+"
+special SFUN_SHOP_INIT
+"Profit sell = 180
+Profit buy = 35
+Production = ~sh_pendant@blcastle~ ~lrg_ring@blcastle~
+~wedding_ring@udgaard~ ~ring@xiyang2~
+~wedding_ring1@xiyang~ ~ wedding_ring2@xiyang~ ~diamond_brac@xiyang~
+~silver_bracelet@xiyang~
+ Trade types = "+ITEM_TREASURE+"
+Msg1 = ~$1n says, 'I've got no such thing.'~
+Msg2 = ~$1n says, '$3n, you haven't even got such a thing!'~
+Msg3 = ~$1n says, 'I don't trade with things such as $2n'~
+Msg4 = ~$1n says, 'I can't afford that great item, sorry!'~
+Msg5 = ~$1n says, '$3n, you can't afford this fabulous $2n'~
+Msg6 = ~$1n says, 'That's %s for $2n'~
+Msg7 = ~$1n says, 'You get %s for $2n, you blood sucker.'~
+Hours1 = 6 12
+Hours2 = 13 23"
+end
+
+
+/*-----------------Black Mobs-----------------------*/
+
+queen
+title "Queen of Noir"
+names {"black queen","queen","black","noir"}
+descr "The Black Queen is standing here."
+extra {}
+"The queen is a regal looking woman with flowing black gown and cape and
+a spectacular crown of sparkling black gems"
+alignment -1000
+M_HUMAN_MAGE_FIRE(50, SEX_FEMALE,"fireball" )
+special SFUN_RESCUE "guard/king"
+special SFUN_TEAMWORK "guard/king"
+BLACK_ARMY
+dilcopy teach_q_block@function(STONE_QUEST_COMPLETE , "say Sorry you are not known as a friend of the family");
+
+special SFUN_TEACH_INIT
+"&lspells;0;
+$1n tells you, 'I have never heard of such a skill.';
+$1n tells you, 'I do not know how to teach this skill.';
+$1n tells you, 'You haven't got %s for me.';
+$1n tells you, 'You haven't got %d skill points.';
+$1n tells you, 'I can not teach you any more';
+$1n tells you, 'You must be unaffected by magic, otherwise I can't teach you';
+$1n tells you, 'Remove all equipment, please.';
+ 1; 100; sacred;        50; 100; 10; 0;"
+
+end
+
+king
+title "the King of Noir"
+names {"black king","black","king"}
+descr "The Black King is sitting on his throne."
+extra {}
+"The kings is a very regal looking man with a kind face and few extra
+pounds, he obviously likes to eat well."
+ M_HUMAN_MAGE_MIND(50,SEX_MALE, "colourbeam")
+special SFUN_RESCUE "guard/queen"
+special SFUN_TEAMWORK "guard/queen"
+alignment -1000
+BLACK_ARMY
+
+end
+
+guard1
+title "a Black Castle Guard."
+names {"castle guard","guard"}
+descr "A black castle guard is standing here."
+extra {}
+"The guard is a very large man with an impressive set of armor. He looks
+like he would lay down his very life to protect the castle from harm."
+M_HUMAN_WARRIOR_SWORD(50,SEX_MALE)
+special SFUN_RANDOM_ZONE_MOVE time 80 bits SFB_RANTIME
+special SFUN_RESCUE "king/queen"
+special SFUN_TEAMWORK "king/queen"
+alignment -1000
+BLACK_ARMY
+end
+
+
+citizen1
+title "Carleen"
+names {"carleen","woman"}
+descr "Carleen is standing here."
+extra {}
+"Carleen is a very pretty member of the black court."
+M_HUMAN_WARRIOR_SWORD(39, SEX_FEMALE)
+BLACK_ARMY
+alignment -1000
+end
+
+dancer
+title "a Dancer"
+names {"dancer","woman"}
+descr "A woman is here practicing her dance steps."
+extra {}
+"In a long black gown the woman seems to float around the room."
+M_HUMAN_WARRIOR_NATURAL(41, SEX_FEMALE)
+BLACK_ARMY
+alignment -1000
+end
+
+
+citizen2
+title "Lasanora"
+names {"Lasanora","woman"}
+descr "Lasanora is sitting here waiting for a visitor."
+extra {}
+"A very pretty woman, quite petite with flowing black hair."
+M_HUMAN_WARRIOR_SWORD(39, SEX_FEMALE)
+BLACK_ARMY
+alignment -1000
+dilcopy teach_q_block@function(STONE_QUEST_COMPLETE , "say Sorry you are not known as a friend of the family");
+special SFUN_TEACH_INIT
+"&labilities;0;
+$1n tells you, 'I have never heard of such an ability.';
+$1n tells you, 'I do not know how to teach this ability.';
+$1n tells you, 'You haven't got %s for me.';
+$1n tells you, 'You haven't got %d ability points.';
+$1n tells you, 'I can not teach you any more';
+$1n tells you, 'You must be unaffected by magic, otherwise I can't teach you.';
+$1n tells you, 'Remove all equipment, please.';
+  0;  6; Divine                        ;   4;  4000;   8;       0;
+"
+
+end
+
+citizen3
+title "Lanfor"
+names {"lanfor","man"}
+descr "Lanfor is standing here."
+extra {}
+"Lanfor is very obviously of the courts nobility. his hands are smooth as
+a babies bottom."
+M_HUMAN_WARRIOR_SWORD(39, SEX_MALE)
+BLACK_ARMY
+alignment -1000
+end
+
+citizen4
+title "Falnoff"
+names {"falnoff","man"}
+descr "Falnoff is standing here."
+M_HUMAN_WARRIOR_SWORD(39, SEX_MALE)
+BLACK_ARMY
+end
+
+
+citizen5
+title "Nek"
+names {"nek","man"}
+descr "Nek is standing here using the facilities."
+extra {}
+"Nek looks like he really does not want to be disturbed right now.
+He is using the water closet"
+M_HUMAN_WARRIOR_CLUB(39, SEX_MALE)
+
+dilbegin prg2();
+var
+        pc : unitptr;
+code
+{
+        heartbeat := PULSE_SEC * 7;
+        interrupt(SFB_COM, self.position == POSITION_FIGHTING, combat);
+
+        :start:
+   wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and (self.position
+!= POSITION_FIGHTING)));
+        pc := activator;
+        secure(pc, lost);
+         exec("emote turns around quickly looking very startled.",self);
+        pause;
+         exec( "emote dribbles on your leg", self);
+         pause;
+         exec("say Damn sorry bout that, oh well it should dry in "+
+         "time. Thats what you get sneaking up on a guy.",self);
+         pause;
+         exec("emote buttons up his pants.",self);
+         pause;
+         exec("say Ummm if you don't mind my asking, do you normally "+
+         "stand and watch when someone relieves themselves?",self);
+         pause;
+         exec("shake",self);
+         pause;
+         exec("say I cant believe the sickos in this world!",self);
+         pause;
+         exec("say I don't take kindly to perverts watching me!.",self);
+         pause;
+         exec("emote reaches over and grabs the slosh bucket that is "+
+         "leaning against the wall.",self);
+         pause;
+         exec("wield bucket",self);
+         pause;
+         exec("kill "+pc.name, self);
+         unsecure(pc);
+         goto start;
+        :lost:
+        pause;
+        unsecure(pc);
+        goto start;
+
+        :combat:
+        goto start;
+}
+dilend
+alignment -1000
+end
+
+
+
+mare
+title "a Black Mare"
+names {"mare","black"}
+descr "A black mare is standing here."
+extra {}
+"The mare is a fair size but looks to be very calm."
+M_HORSE_MEDIUM(SEX_FEMALE)
+special SFUN_RANDOM_ZONE_MOVE time 80 bits SFB_RANTIME
+level 40
+alignment -1000
+end
+
+horse
+title "a Black Stallion"
+names {"stallion","black"}
+descr "A black stallion is pawing the ground."
+extra {}
+"The most magnificent looking horse you have ever seen. It is well over
+20 hands tall with a pure white mane and tail. It dances in place because
+it has so much pent up energy it cant stay still. It would take a very
+skilled rider to handle such a horse."
+M_HORSE_HEAVY(SEX_MALE)
+special SFUN_RANDOM_ZONE_MOVE time 80 bits SFB_RANTIME
+level 45
+alignment -1000
+end
+
+
+
+stable
+title "Frendik"
+names {"frendik"}
+descr "Frendik is standing here tending to the tack."
+extra  {}
+"frendik is a large man, well able to toss around bails of hay when needed."
+M_HUMAN_WARRIOR_SWORD(37, SEX_MALE)
+BLACK_ARMY
+alignment -1000
+end
+
+
+smith
+title "Dornok"
+names {"blacksmith","dornok","smith"}
+descr "Dornok is standing here"
+extra {}
+"Muscles ripple under Dornoks apron, he obviously has worked lifting
+heavey weapons for many years."
+alignment -1000
+M_HUMAN_WARRIOR_NATURAL(35, SEX_MALE)
+special SFUN_SHOP_INIT
+"Profit sell = 180
+Profit buy = 35
+Production = ~dagger@blcastle~ ~short_sword@blcastle~ ~guard_sword@blcastle~
+  ~sword0@midgaard~ ~lsword0@midgaard~ ~ham0@midgaard~
+  ~flail1@midgaard~ ~spear0@midgaard~
+Trade types = "+ITEM_WEAPON+ITEM_FIREWEAPON+"
+Msg1 = ~$1n says, 'I've got no such weapon.'~
+Msg2 = ~$1n says, '$3n, you haven't even got such a weapon!'~
+Msg3 = ~$1n says, 'I don't trade with things such as $2n'~
+Msg4 = ~$1n says, 'I can't afford that great weapon, sorry!'~
+Msg5 = ~$1n says, '$3n, you can't afford this fabulous $2n'~
+Msg6 = ~$1n says, 'That's %s for $2n'~
+Msg7 = ~$1n says, 'You get %s for $2n, you blood sucker.'~
+Hours1 = 6 12
+Hours2 = 13 23"
+BLACK_ARMY
+end
+
+groc
+title "Talne"
+names {"talne"}
+descr "Talne is standing here."
+extra {}
+"Tilley is a no-nonsense type person who can tell you where everything is
+right down to the the last bag of flour."
+M_HUMAN_WARRIOR_NATURAL(30, SEX_FEMALE)
+alignment -1000
+special SFUN_SHOP_INIT
+"Profit sell = 180
+Profit buy = 35
+Production = ~beef@blcastle~ ~pork@blcastle~ ~chicken@blcastle~
+~pot_pie@blcastle~ ~bread@blcastle~
+
+ Trade types = "+ITEM_DRINKCON+ITEM_FOOD+"
+Msg1 = ~$1n says, 'I've got no such item.'~
+Msg2 = ~$1n says, 'Why you haven't got it, $3n?'~
+Msg3 = ~$1n says, 'Would you like to buy something or not?'~
+Msg4 = ~$1n says, 'I wont buy that!'~
+Msg5 = ~$1n says, 'This item $2n is too expensive for beggars like you,
+$3n.'~
+Msg6 = ~$1n says, 'That's %s for $2n.'~
+Msg7 = ~$1n says, 'That will be %s for your $2n.'~
+Hours1 = 4 10
+Hours2 = 11 23"
+BLACK_ARMY
+
+end
+
+
+gen
+title "Sharno"
+names {"sharno"}
+descr "Sharno is standing here."
+extra {}
+"Sharno is a older man and seems to be very helpful."
+M_HUMAN_WARRIOR_NATURAL(35, SEX_MALE)
+alignment -1000
+special SFUN_SHOP_INIT
+"Profit sell = 180
+Profit buy = 70
+Production = ~belt_bag@blcastle~  ~dictionary@basis~
+~torch@midgaard~ ~lantern@midgaard~ ~bag@midgaard~
+~paper@midgaard~ ~quill@midgaard~
+
+Trade types = "+ITEM_LIGHT + ITEM_OTHER + ITEM_CONTAINER + ITEM_NOTE +
+ ITEM_DRINKCON + ITEM_KEY + ITEM_PEN+"
+Msg1 = ~$1n says, 'I've got no such item!'~
+Msg2 = ~$1n says, '$3n, you haven't even got it!'~
+Msg3 = ~$1n says, 'I don't trade with things such as $2n'~
+Msg4 = ~$1n says, 'I can't afford it, sorry!'~
+Msg5 = ~$1n says, '$3n, you can't afford $2n'~
+Msg6 = ~$1n says, 'That's %s for $2n'~
+Msg7 = ~$1n says, 'Thank you $3n, here are %s for $2n.'~
+Hours1 = 6 12
+Hours2 = 13 23"
+BLACK_ARMY
+
+end
+
+
+arm
+title "Nitotemak"
+names {"nitotemak","armoror"}
+descr "Nitotemak is here checking over his armor."
+extra {}
+"An man with extrodinarly big arms, built up form year after year of
+working with heavy amour."
+M_HUMAN_WARRIOR_NATURAL(35, SEX_MALE)
+alignment -1000
+special SFUN_SHOP_INIT
+"Profit sell = 180
+Profit buy = 30
+Production = ~linnen_trousers@blcastle~ ~linnen_shirt@blcastle~
+   ~sandals@blcastle~ ~plain_dress@blcastle~ ~lady_gloves@blcastle~
+   ~belt_bag@blcastle~ ~cannon@blcastle~ ~doublet@blcastle~
+   ~shoes@blcastle~
+Trade types = "+ITEM_ARMOR+ITEM_SHIELD+"
+Msg1 = ~$1n says, 'I've got no such item!'~
+Msg2 = ~$1n says, '$3n, you haven't even got it!'~
+Msg3 = ~$1n says, 'I don't trade with things such as $2n'~
+Msg4 = ~$1n says, 'I can't afford it, sorry!'~
+Msg5 = ~$1n says, '$3n, you can't afford $2n'~
+Msg6 = ~$1n says, 'That's %s for $2n'~
+Msg7 = ~$1n says, 'Thank you $3n, here are %s for $2n.'~
+Hours1 = 6 12
+Hours2 = 13 23"
+BLACK_ARMY
+
+end
+
+maid
+title "a Maid"
+names {"woman","maid","girl"}
+descr "A maid is here cleaning"
+extra {}
+"The maid is a small woman with a black uniform on."
+M_HUMAN_WARRIOR_NATURAL(30, SEX_FEMALE)
+alignment -1000
+special SFUN_RANDOM_ZONE_MOVE time 80 bits SFB_RANTIME
+BLACK_ARMY
+
+end
+
+
+cook
+title "the Black Castle Cook"
+names {"cook"}
+descr "The cook for the black castle is standing here."
+extra {}
+"The cook is a fairly plump man. It is obvious that he insists on
+tasting everything  that leaves his kitchen."
+M_HUMAN_WARRIOR_SWORD(40,SEX_MALE)
+alignment -1000
+end
+
+
+guard
+title "a Black Castle Guard"
+names {"castle guard","guard"}
+descr "A black castle guard is standing here."
+extra {}
+"The guard is a very large man with an impressive set of armor. He looks
+like he would lay down his very life to protect the castle from harm."
+M_HUMAN_WARRIOR_SWORD(50,SEX_MALE)
+special SFUN_RANDOM_ZONE_MOVE time 80 bits SFB_RANTIME
+BLACK_ARMY
+alignment -1000
+end
+%objects
+
+                              dil_master
+
+names {"dil master", "dil"}
+title "the dil master"
+descr "A dil master has been left here."
+
+manipulate {MANIPULATE_TAKE}
+
+extra {}
+"This is a dil manipulation object:&l
+
+   zap unit
+"
+
+
+
+dilbegin dil_zap();
+var
+  u : unitptr;
+  s : string;
+  i : integer;
+code
+{
+   wait(SFB_CMD, command("zap"));
+   block;
+
+   if (activator.level < 200)
+     destroy(self);
+
+   u := findunit(activator, argument, FIND_UNIT_HERE, null);
+
+   if (u)
+   {
+   subextra (u.extra,"$stone code");
+         act("extra successfully removed.",
+           A_ALWAYS, activator, null, null, TO_CHAR);
+           }
+   else
+     act("No such unit found to zap.",
+         A_ALWAYS, activator, null, null, TO_CHAR);
+}
+dilend
+
+end
+
+
+/*chess board quest stuff*/
+pink_stone
+names {"stone","opal"}
+title "an opal"
+descr "An opal is laying here. -=It has a slight glow=-"
+extra {} "The opal is pink in color with a tiny star in its center. "
+type ITEM_WORN
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+flags {UNIT_FL_MAGIC}
+weight 2
+bright 5
+dilcopy stone_dil@blcastle ();
+spell 200
+end
+
+yellow_stone
+names {"agate","stone"}
+title "an agate"
+descr "A agate is laying here. -=It has a slight glow=-"
+extra {} "The agate is very cloudy."
+type ITEM_WORN
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+flags {UNIT_FL_MAGIC}
+weight 2
+bright 5
+dilcopy stone_dil@blcastle ();
+spell 200
+end
+
+mblue_stone
+names {"jasper","stone"}
+title "a jasper"
+descr "A jasper is laying here. -=It has a slight glow=-"
+extra {} "The jasper is brown in color."
+type ITEM_WORN
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+flags {UNIT_FL_MAGIC}
+weight 2
+bright 5
+dilcopy stone_dil@blcastle ();
+spell 200
+end
+
+blue_stone
+names {"sapphire","stone"}
+title "a sapphire"
+descr "A  sapphire is laying here. -=It has a slight glow=-"
+extra {} "The sapphire is blue in color."
+type ITEM_WORN
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+flags {UNIT_FL_MAGIC}
+weight 2
+bright 5
+dilcopy stone_dil@blcastle ();
+spell 200
+end
+
+green_stone
+names {"stone","onyx"}
+title "a onyx"
+descr "A onyx is laying here.  -=It has a slight glow=-"
+extra {} "The onyx is a multitude of  colors."
+type ITEM_WORN
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+flags {UNIT_FL_MAGIC}
+weight 2
+bright 5
+dilcopy stone_dil@blcastle ();
+spell 200
+end
+
+
+emerald_stone
+names {"emerald","stone"}
+title "an emerald"
+descr "An emerald is laying here.  -=It has a slight glow=-"
+extra {} "The emerald is green in color."
+type ITEM_WORN
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+flags {UNIT_FL_MAGIC}
+weight 2
+bright 5
+dilcopy stone_dil@blcastle ();
+spell 200
+end
+
+lblue_stone
+names {"bloodstone","stone"}
+title "a bloodstone"
+descr "A bloodstone stone is laying here.  -=It has a slight glow=-"
+extra {} "The bloodstone is a light blue in color."
+type ITEM_WORN
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+flags {UNIT_FL_MAGIC}
+weight 2
+bright 5
+dilcopy stone_dil@blcastle ();
+spell 200
+end
+
+cless_stone
+names {"diamond","stone"}
+title "a diamond"
+descr "A diamond stone is laying here. -=It has a slight glow=-"
+extra {} "The diamond is colorless."
+type ITEM_WORN
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+flags {UNIT_FL_MAGIC}
+weight 2
+bright 5
+dilcopy stone_dil@blcastle ();
+spell 200
+end
+
+
+red_stone
+names {"stone","jade"}
+title "a jade"
+descr "A jade is laying here.  -=It has a slight glow=-"
+extra {} "The jade is  dark green in color."
+type ITEM_WORN
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+flags {UNIT_FL_MAGIC}
+weight 2
+bright 5
+dilcopy stone_dil@blcastle ();
+spell 200
+end
+
+purple_stone
+names {"moonstone","stone"}
+title "a moonstone"
+descr "An moonstone is laying here. -=It has a slight glow=-"
+extra {} "The moonstone looks translucent with a pearly luster."
+type ITEM_WORN
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+flags {UNIT_FL_MAGIC}
+weight 2
+bright 5
+dilcopy stone_dil@blcastle ();
+spell 200
+end
+
+
+red1_stone
+names {"stone","ruby"}
+title "a ruby"
+descr "A ruby is laying here.  -=It has a slight glow=-"
+extra {} "The ruby is red in color."
+type ITEM_WORN
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+flags {UNIT_FL_MAGIC}
+weight 2
+bright 5
+dilcopy stone_dil@blcastle ();
+spell 200
+end
+
+pearl_stone
+names {"pearl","stone"}
+title "a pearl"
+descr "A pearl is laying here.  -=It has a slight glow=-"
+extra {} "The pearl is creamy in color with a tiny star in its center."
+type ITEM_WORN
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+flags {UNIT_FL_MAGIC}
+weight 2
+bright 5
+dilcopy stone_dil@blcastle ();
+spell 200
+end
+
+game_board
+
+names {"game board","board"}
+title "an oak game board."
+descr "an old game board is laying here forgotten."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_ENTER}
+weight 6
+cost 3 IRON_PIECE
+CONTAINER_DEF(20)
+extra {}
+"This is a very well kept old game board.  In order to play
+games on the game board use the following commands.&l
+
+gstart <player names>  example: gstart whistler palio
+gend  This command ends the game
+gsetup <chess or checkers>
+gshow  This shows the board.
+gmove <start move> <end move> example gmove a2 a4.
+gremove <piece> <position> example gremove white pawn a2
+gplace <piece> <position> example gplace white pawn a2
+gsave <game> or <custom>
+grestore <game> or <custom>"
+MATERIAL_WOOD("Oak")
+dilcopy game_board ();
+
+end
+
+sheath
+
+names {"gold dagger sheath","dagger sheath","gold sheath","sheath"}
+title "a gold dagger sheath"
+descr "A beautifully guilded golden dagger sheath is laying here abandoned."
+
+extra {}
+"The  sheath shimmers as you look at it and you get the feeling it is extremely magical."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_ENTER}
+weight 6
+cost 3 IRON_PIECE
+CONTAINER_DEF(20)
+MATERIAL_METAL("Cast iron")
+dilcopy place_stone ();
+
+end
+lth_sheath
+
+names {"leather dagger sheath","dagger sheath","leather sheath","sheath"}
+title "a leather dagger sheath"
+descr "A beautifully tooled leather dagger sheath is laying here abandoned."
+
+extra {}
+"This looks to be an ordinary sheath tooled by a master."
+dilcopy quest_restrict@function (STONE_QUEST_COMPLETE,0,25,"");
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_ENTER}
+weight 6
+cost 3 IRON_PIECE
+CONTAINER_DEF(20)
+MATERIAL_METAL("Cast iron")
+dilcopy place_stone ();
+
+end
+
+lace_sheath
+
+names {"lace dagger sheath","dagger sheath","lace sheath","sheath"}
+title "a lace dagger sheath"
+descr "A beautifully guilded lace dagger sheath is laying here abandoned."
+
+extra {}
+"Although this dagger sheath looks to be made from lace it feels as if
+it is solid steal and pulses with a magical energy."
+
+manipulate {MANIPULATE_TAKE,MANIPULATE_ENTER}
+weight 6
+cost 3 IRON_PIECE
+CONTAINER_DEF(20)
+MATERIAL_METAL("Cast iron")
+dilcopy place_stone ();
+
+end
+
+quest_dagger
+
+names {"dagger"}
+title "symefang dagger"
+descr "A symefang  dagger lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_DAGGER, 15,9)
+weight 5
+extra {}
+"This silver dagger looks to be that of a royal family with beautiful
+golden designs up and down the blade.  It has a disturbing blood stain on it."
+dilcopy quest_restrict@function (STONE_QUEST_COMPLETE,0,25,"");
+extra {"$identify"}
+" Simply say 'symefang bring to me <name>'. Your Symefang will attempt to
+bring that person to you. You will notice that you may look at the
+Symefang to see if it is charged enough to do your bidding."
+extra {"$improved identify"}
+" Simpley say 'symefang bring to me <name>'. Your Symefang will attempt to
+bring that person to you. You will notice that you may look at the
+Symefang to see if it is charged enough to do your bidding."
+
+spell 75
+dilbegin recall charger();
+var
+ i:integer;
+code
+{
+i:=0;
+:start:
+heartbeat:=PULSE_SEC*SECS_PER_MUD_DAY/24;
+while (i<12)
+{
+wait (SFB_TICK,(self.equip==WEAR_WIELD));
+i:=i+1;
+}
+I:=0;
+heartbeat:=PULSE_SEC*5;
+act ("your $2N glows softly.",
+A_ALWAYS,self.outside,self,null,TO_CHAR);
+act ("$1n's $2N glows softly.",
+A_ALWAYS,self.outside,self,null,TO_REST);
+sendto ("add charge",self);
+goto start;
+}
+dilend
+
+
+
+dilbegin dagger_sum();
+var
+   hour : integer;
+   i : integer;
+   s : string;
+   u : unitptr;
+   amount  : string;
+   charge  : integer;
+   pwr     : integer;
+   pc      : unitptr;
+
+code
+{
+
+pwr:=10;
+interrupt (SFB_DONE, ((command (CMD_LOOK)) and
+(self ==target)), check_chrg);
+:init:
+        heartbeat := PULSE_SEC*5;
+        charge:=interrupt (SFB_MSG,((self==activator) and
+        (argument=="add charge")), charge);
+
+        heartbeat := PULSE_SEC * 3;
+
+   :start:
+   wait(SFB_DONE, (activator == self.outside) and command(CMD_SAY));
+
+   if (not ("symefang bring to me" in argument))
+     goto start;
+
+   if (self.outside.position == POSITION_FIGHTING)
+   {
+      act("The $2N does not work in combat.",
+	  A_ALWAYS, self.outside, self, null, TO_CHAR);
+      goto start;
+   }
+
+   if (self.equip == 0)
+   {
+      act("The $2N must be worn for it to work.",
+	  A_ALWAYS, self.outside, self, null, TO_CHAR);
+      goto start;
+   }
+   s := getword(argument);
+   while (s != "me")
+      s := getword(argument);
+   u := findunit(self.outside, argument, FIND_UNIT_WORLD, null);
+
+   if ( not u )
+   {
+      act("The power in $2N dissipates.",
+          A_ALWAYS, self.outside, self, null, TO_CHAR);
+      goto start;
+   }
+   if ( pwr < 0 )
+   {
+      act("The $2N vibrates madly, unable to do your bidding.",
+          A_ALWAYS, self.outside, self, null, TO_CHAR);
+      goto start;
+   }
+   pwr:=pwr-1;
+   secure (u,start);
+   act("Your $2N glows as you call forth $3n.",
+       A_ALWAYS, self.outside, self, u, TO_CHAR);
+   act("$1n utters 'veol veforer'",
+       A_ALWAYS, self.outside, self, null, TO_REST);
+   i := cast_spell(SPL_GATE, self.outside, self, u, "");
+   if (i>=0)log (self.outside.name+"used his dagger to summon "+u.name);
+
+goto start;
+
+:check_chrg:
+       if (pwr == 0)
+        amount := "Zero";
+       else
+        amount := itoa(pwr);
+        act("Your $2n contains:&c+r "+amount+"&cw charges.",
+A_SOMEONE,self.outside,self,null,TO_CHAR);
+
+
+   goto start;
+
+:charge:
+clear (charge);
+if (pwr<12)
+ pwr:=pwr+6;
+ if (pwr>12) pwr:=12;
+ goto init;
+  goto start;
+:no_person:
+act ("Nothing by that name here.",
+A_ALWAYS,self.outside,null,null,TO_CHAR);
+goto start;
+}
+
+dilend
+
+end
+
+
+/*end chess board quest stuff */
+
+                           lrg_ring
+
+names {"large gold ring","gold ring","ring"}
+title "a large gold ring"
+descr "A large gold ring is laying here in the dust."
+extra {}
+"The ring is huge and made from gold and seems to extent a field around
+itself"
+type ITEM_TREASURE
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_FINGER}
+flags {UNIT_FL_MAGIC}
+cost 3 SILVER_PIECE
+rent 10 IRON_PIECE
+weight 5
+extra {"$identify"}
+"This ring makes you feel very secure and healthy."
+extra {"$improved identify"}
+"The ring protects you from being summoned, and it gives the wearer one
+extra cha."
+
+dilbegin ring_wear ();
+var
+   pc : unitptr;
+	 i:integer;
+code
+{
+heartbeat := PULSE_SEC*5;
+   :wear:
+   wait(SFB_DONE,((command(CMD_WEAR))and
+	 (medium== self)));
+   pc := activator;secure(pc,gone);
+      pc.flags := UNIT_FL_NO_TELEPORT;
+			interrupt (SFB_DEAD,pc==activator,dead);
+
+      act("A magical field surrounds you in a burst of light.",
+      A_ALWAYS,pc,null,null,TO_CHAR);
+      act("A magical field surrounds $1n  in a burst of light.",
+      A_ALWAYS,pc,null,null,TO_REST);
+      goto wear;
+:dead:
+      pc.flags := 0;
+      act("You slip from your magical field.",
+      A_ALWAYS,pc,null,null,TO_CHAR);
+   unsecure(pc);
+   goto wear;
+
+
+      :gone:
+      goto wear;
+      }
+      dilend
+
+dilbegin ring_remove ();
+var
+   pc : unitptr;
+	 i:integer;
+code
+{
+heartbeat := PULSE_SEC*5;
+:wear:
+   wait(SFB_DONE,((command(CMD_REMOVE))and
+	 (medium== self)));
+   pc := activator;secure(pc,gone);
+      pc.flags := 0;
+      act("You feel your magical field slip away.",
+      A_ALWAYS,pc,null,null,TO_CHAR);
+      act("You notice that $1n shimmers slightly.",
+      A_ALWAYS,pc,null,null,TO_REST);
+   :gone:
+			goto wear;
+}
+dilend
+end
+                         sh_pendant
+
+names {"shimmering pendant","pendant"}
+title "a shimmering pendant"
+descr "A shimmering pendant is floating above the ground."
+extra {}
+"The pendant shimmers so much that it is difficult to see. It is
+definatly magical and seems to extend a shield around itself."
+type ITEM_WORN
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_NECK}
+flags {UNIT_FL_MAGIC}
+cost 3 SILVER_PIECE
+rent 10 IRON_PIECE
+weight 5
+extra {"$identify"}
+"This pendant makes you feel very secure and strong."
+ extra {"$improved identify"}
+"The pendant protects you from unwanted gating and give you +1 brain"
+dilbegin pend_wear ();
+var
+   pc : unitptr;
+	 i:integer;
+code
+{
+heartbeat := PULSE_SEC*5;
+   :wear:
+   wait(SFB_DONE,((command(CMD_WEAR))and
+	 (medium== self)));
+   pc := activator;secure(pc,gone);
+      pc.flags := UNIT_FL_NO_TELEPORT;
+			interrupt (SFB_DEAD,pc==activator,dead);
+
+      act("A shimmering shield appears and surrounds you then disappears.",
+      A_ALWAYS,pc,null,null,TO_CHAR);
+      act("A shimmering shield appears and surrounds $1n then disappears.",
+      A_ALWAYS,pc,null,null,TO_REST);
+      goto wear;
+:dead:
+      pc.flags := 0;
+      act("You slip from your magical field.",
+      A_ALWAYS,pc,null,null,TO_CHAR);
+   unsecure(pc);
+   goto wear;
+
+
+      :gone:
+      goto wear;
+      }
+      dilend
+
+dilbegin pend_remove ();
+var
+   pc : unitptr;
+	 i:integer;
+code
+{
+heartbeat := PULSE_SEC*5;
+:wear:
+   wait(SFB_DONE,((command(CMD_REMOVE))and
+	 (medium== self)));
+   pc := activator;secure(pc,gone);
+      pc.flags := 0;
+act("The invisible shield that surrounds you disappears in a blast of sparks",
+      A_ALWAYS,pc,null,null,TO_CHAR);
+      act("You see sparks shooting from around $1n.",
+      A_ALWAYS,pc,null,null,TO_REST);
+   :gone:
+			goto wear;
+}
+dilend
+end
+
+
+water_fountain
+names {"fountain", "brandy"}
+title "a fountain"
+descr "A fountain with a large statue is here."
+extra {}
+"The fountain has a statue of a large raven in the center of it. Stone
+seats encircle the falling water letting those who sit in them be sprayed
+lightly with water. A small plaque is on one of the stone seats"
+extra {"plaque"}
+"In memory of my son Burtinious"
+LIQ_DEF(LIQ_BRANDY, 20000, 20000, 20000, 0)
+end
+
+
+pot_pie
+names {"pot pie","pie"}
+title "an Pot Pie"
+descr "An Pot Pie has been left here."
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF(30, 0)
+cost 1 GOLD_PIECE
+end
+
+beef
+names {"side of beef","beef"}
+title "a side of beef"
+descr "A side of beef has been left here."
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF(50, 0)
+cost 1 GOLD_PIECE
+end
+
+pork
+names {"pork pie","pie"}
+title "an Pork Pie"
+descr "An Pork Pie has been left here."
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF(30, 0)
+cost 1 GOLD_PIECE
+end
+
+chicken
+names {"chicken pie","pie"}
+title "an Chicken Pie"
+descr "An chicken Pie has been left here."
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF(30, 0)
+cost 1 GOLD_PIECE
+end
+
+bread
+names {"waybread","bread"}
+title "a waybread"
+descr "Some waybread has been left here."
+manipulate {MANIPULATE_TAKE}
+FOOD_DEF(30, 0)
+cost 1 GOLD_PIECE
+end
+
+
+
+short_sword
+title "a Short Sword"
+names {"short sword","short","sword"}
+descr "A short sword has been left here."
+extra {}
+"A plain short sword"
+WEAPON_DEF(WPN_SHORT_SWORD,4,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+weight 5
+MATERIAL_METAL("Sharp hard metal")
+cost 8 SILVER_PIECE
+end
+
+earrings
+title "a Ruby Earring"
+names {"ruby earring","ruby","earring"}
+descr "A ruby is laying here glittering in the light."
+extra {}
+"The earring is very small and pretty"
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_EAR}
+weight 1
+DIV_TRANSFER (+1)
+MATERIAL_STONE("ruby")
+rent 1 COPPER_PIECE
+end
+
+guard_sword
+title "a Bastard Sword"
+names {"bastard sword","sword"}
+descr "The hand and a half sword is laying here."
+WEAPON_DEF(WPN_LONG_SWORD,0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+romflags OBJ_TWO_HANDS
+
+dilbegin two_handed ();
+var
+item:unitptr;
+code
+{
+:start:
+wait (SFB_CMD,((self.outside==activator) and
+(command (CMD_WIELD)) and
+((self.names.[0] in argument) or
+(self.names.[1] in argument)) and
+("two" in argument) and
+(self.equip==0)));
+block;
+item:=activator.inside;
+while (item!=null)
+{
+if ((item.equip==WEAR_WIELD) or (item.equip==WEAR_HOLD) or
+                (item.equip==WEAR_SHIELD)) goto fail;
+item:=item.next;
+ }
+
+addequip (self,WEAR_WIELD);
+     self.objectflags := OBJ_TWO_HANDS;
+
+act ("You wield your $2N two handedly.",
+A_ALWAYS,self.outside,self,null,TO_CHAR);
+act ("$1n wields his $2N two handedly",
+A_SOMEONE,self.outside,self,null,TO_REST);
+
+goto start;
+
+:fail:
+act ("You need two free hands to do that.",
+A_ALWAYS,self.outside,self,null,TO_CHAR);
+
+goto start;
+}
+dilend
+
+end
+
+anklet
+title "a Small anklet with a bell on it."
+names {"small anklet","anklet","bell"}
+descr "A small anklet with a bell is laying on the ground"
+extra {}
+"The anklet is made from a fine silver chain and has a silver bell that
+jingles as you walk."
+manipulate  {MANIPULATE_WEAR_ANKLE,MANIPULATE_TAKE}
+MAG_TRANSFER (+1)
+rent 75 IRON_PIECE
+dilcopy abi_restrict@function (ABIL_DEX,5,0,0,"");
+dilbegin jingle_bell();
+code
+{
+        heartbeat := PULSE_SEC * 50;
+        :start:
+        pause;
+        if ((self.equip == WEAR_ANKLE_L) or
+          (self.equip == WEAR_ANKLE_R))
+        act("Jingle, jingle", A_ALWAYS,self.outside,self,null,TO_CHAR);
+        act("Jingle, jingle", A_ALWAYS,self.outside,self,null,TO_REST);
+
+        goto start;
+}
+dilend
+
+end
+
+
+
+knife
+title "a butcher knife"
+names {"butcher knife","dagger"}
+descr "A butcher knife has been left here."
+extra {}
+"A cooks butcher knife, made to cut through bone."
+WEAPON_DEF(WPN_DAGGER,0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+weight 5
+MATERIAL_METAL("Sharp hard metal")
+cost 8 SILVER_PIECE
+BLACK_ARMOR
+end
+
+
+dagger
+title "a dainty dagger"
+names {"dainty dagger","dagger"}
+descr "A tiny dagger has been left here."
+extra {}
+"A tiny dagger with rubies set in the handle"
+WEAPON_DEF(WPN_DAGGER,0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+weight 5
+MATERIAL_METAL("Sharp hard metal")
+MATERIAL_STONE("rubies")
+cost 8 SILVER_PIECE
+BLACK_ARMOR
+end
+
+
+royal_dagger
+title "a jewel encrusted dagger"
+names {"dagger"}
+descr "A small dagger encrusted with jewels has been left here."
+extra {}
+"A small dagger with all manor of jewels set in the handle"
+WEAPON_DEF(WPN_DAGGER,0,2)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+weight 5
+MATERIAL_METAL("Sharp hard metal")
+MATERIAL_STONE("all manor of gems")
+cost 5 PLATINUM_PIECE
+rent 75 IRON_PIECE
+dilcopy abi_restrict@function (ABIL_DEX,37,0,0,"");
+BLACK_ARMOR
+end
+
+
+
+slosh_bucket
+title "a slosh bucket"
+names {"slosh bucket","sloth","bucket"}
+descr "A slosh bucket is sitting here."
+extra {}
+"The slosh bucket is fairly full of urine and solid waste."
+
+WEAPON_DEF(WPN_CLUB,0,0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+MATERIAL_METAL("metal bucket")
+MATERIAL_ORGANIC("urine and solid waste")
+dilcopy bucket@blcastle("stink@blcastle");
+dilbegin smell();
+code
+{
+        heartbeat := PULSE_SEC * 50;
+        :start:
+        pause;
+        if (self.equip == WEAR_WIELD)
+                exec("emits a strange odor...Phewwww", self.outside);
+        goto start;
+}
+dilend
+BLACK_ARMOR
+end
+
+/*-------------clothes & armor----------------*/
+
+chef_hat
+title "a Chef's Hat"
+names {"chefs hat","hat"}
+descr "A black chef's hat is laying here."
+extra {}
+"A large black hat in the shape of a mushroom."
+ARMOUR_CLOTHES(0,0)
+MATERIAL_CLOTH("cloth")
+
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_HEAD}
+weight 1
+BLACK_ARMOR
+cost 1 SILVER_PIECE
+end
+
+       linnen_trousers
+names {"trousers"}
+title "plain trousers"
+descr "A pair of plain trousers lies here in a heap."
+extra {}
+"Plain black linnen trousers."
+ARMOUR_CLOTHES(0,0)
+MATERIAL_CLOTH("cloth")
+
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_LEGS}
+weight 1
+BLACK_ARMOR
+cost 4 SILVER_PIECE
+end
+
+
+        linnen_shirt
+names {"shirt"}
+title "a plain shirt"
+descr "A plain shirt lies here."
+extra {}
+"A simple shirt of black linnen."
+ARMOUR_CLOTHES(0,0)
+MATERIAL_CLOTH("cloth")
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+weight 1
+cost 4 SILVER_PIECE
+BLACK_ARMOR
+end
+
+
+
+        sandals
+names {"sandals","shoes"}
+title "a pair of sandals"
+descr "A pair of sandals lies here."
+extra {}
+"A pair of sandals, the soles are made of hard leather."
+ARMOUR_LEATHER(0,0)
+MATERIAL_SKIN("soft leather")
+
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_FEET}
+weight 1
+cost 3 SILVER_PIECE
+
+end
+
+
+plain_dress
+names {"plain dress","dress","cloth"}
+title "a plain black dress"
+descr "A pile of cloth is laying here."
+extra {}
+"A simple dress of black linnen."
+ARMOUR_CLOTHES(0,0)
+MATERIAL_CLOTH("black cloth")
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+weight 4
+cost 4 SILVER_PIECE
+end
+
+
+dress
+names {"emerald green dress","green dress","dress","cloth"}
+title "an emerald green dress"
+descr "A pile of green cloth is laying here."
+extra {}
+"An emerald green dress."
+ARMOUR_CLOTHES(0,0)
+MATERIAL_CLOTH("green cloth")
+
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+weight 4
+cost 4 SILVER_PIECE
+end
+
+dress1
+names {"yellow dress","dress","cloth"}
+title "a yellow dress"
+descr "A pile of yellow cloth is laying here."
+extra {}
+"A yellow dress."
+MATERIAL_CLOTH("yellow cloth")
+
+ARMOUR_CLOTHES(0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+weight 4
+cost 4 SILVER_PIECE
+end
+
+dress2
+names {"blue dress","dress","cloth"}
+title "a blue dress"
+descr "A pile of blue cloth is laying here."
+extra {}
+"A blue dress."
+ARMOUR_CLOTHES(0,0)
+MATERIAL_CLOTH("blue cloth")
+
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+weight 4
+cost 4 SILVER_PIECE
+end
+
+
+queen_dress
+names {"royal mauve dress","mauve dress","dress","cloth"}
+title "a royal mauve dress"
+descr "A pile of mauve cloth is laying here."
+extra {}
+"A royal mauve dress, made from only the best materials."
+MATERIAL_CLOTH("mauve cloth")
+
+ARMOUR_CLOTHES(0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+weight 4
+cost 4 SILVER_PIECE
+BLACK_ARMOR
+end
+
+
+ball_dress
+names {"ball room dress","ball dress","dress","cloth"}
+title "a fancy dress dress"
+descr "A pile of expensive looking cloth is laying here."
+extra {}
+"A fancy black dress with lace. It is has intricate designs beaded with
+tiny beads of pure silver and gold."
+ARMOUR_CLOTHES(0,0)
+MATERIAL_CLOTH("black cloth")
+MATERIAL_METAL("gold and silver beads")
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+weight 4
+cost 4 SILVER_PIECE
+end
+
+
+                     lady_gloves
+names{"gloves"}
+title "a black silk gloves"
+descr "A pair of black silk gloves is lying on the ground."
+extra {}
+"The gloves cover the arms up to the elbows and are made from black silk."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HANDS}
+ARMOUR_CLOTHES(0,0)
+MATERIAL_CLOTH("Black Silk")
+weight 4
+cost 4 SILVER_PIECE
+BLACK_ARMOR
+
+end
+
+
+  stockings
+names {"stockings"}
+title "a Pair of stockings"
+descr "A pair of stockings lies here in a heap."
+extra {}
+"Black silk stockings."
+ARMOUR_CLOTHES(0,0)
+MATERIAL_CLOTH("silk")
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_LEGS}
+weight 1
+cost 4 SILVER_PIECE
+end
+
+lady_cap
+title "a Ferronniere"
+names {"ferronniere","hat","cap"}
+descr "Some thin chains are laying here."
+extra {}
+"A thin chain worn across the forehead with a tiny mauve jewel in its
+center hold a chain cap on the head."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_HEAD}
+weight 4
+ARMOUR_CHAIN(0,0)
+MATERIAL_METAL("tiny chains")
+dilcopy abi_restrict@function (ABIL_CHA,37,0,0,"");
+rent 75 IRON_PIECE
+cost 5 PLATINUM_PIECE
+end
+
+
+belt_bag
+title "a Baldric"
+names {"baldric","belt","bag"}
+descr "A belt with a pouch is laying here."
+extra {}
+"The baldric is made from a black silk pouch attached to a belt woven
+with gold."
+cost 1 PLATINUM_PIECE
+weight 2
+MATERIAL_CLOTH("silk pouch")
+MATERIAL_CLOTH("black belt woven with gold")
+ARMOUR_CLOTHES(0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_CHEST,MANIPULATE_ENTER}
+CONTAINER_DEF (90)
+end
+
+cannon
+title "a pair of cannons"
+names {"cannons","pants"}
+descr "A pair of pants are laying here."
+extra {}
+"A pair of tight fitting pants that cover the legs down to the knee. They
+are embroidered with gold silk."
+MATERIAL_CLOTH("black cloth")
+ARMOUR_CLOTHES(0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_LEGS}
+end
+
+
+
+doublet
+names {"doublet"}
+title "a black doublet"
+descr "A pile of cloth is laying here."
+extra {}
+"The doublet is a shirt with buttons to fasten up the front. The buttons
+are made from silver and each have a small dove on them."
+ARMOUR_CLOTHES(0,0)
+MATERIAL_CLOTH("black cloth")
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+weight 4
+cost 4 GOLD_PIECE
+BLACK_ARMOR
+end
+
+        shoes
+names {"shoes"}
+title "a pair of shoes"
+descr "A pair of shoe lies here."
+extra {}
+"A pair of leather shoes with pointed toes that curl up."
+ARMOUR_LEATHER(0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_FEET}
+weight 1
+MATERIAL_SKIN("soft leather")
+cost 5 SILVER_PIECE
+end
+
+
+royal_robes
+title "a Royal Robe"
+names {"royal robe","black robe","robe"}
+descr "A black robe is laying here."
+extra {}
+"The robe is obviously made for royalty. It is pure black and richly
+embroidered with thread spun from real gold."
+ARMOUR_CLOTHES(0,1)
+dilcopy abi_restrict@function (ABIL_CHA,50,0,0,"");
+CHA_TRANSFER(+1)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+MATERIAL_CLOTH("black cloth")
+rent 98 IRON_PIECE
+cost 196 COPPER_PIECE
+BLACK_ARMOR
+end
+
+royal_hose
+names {"royal hose","hose"}
+title "Royal Hose"
+descr "A pair of  hose are laying here in a heap."
+extra {}
+"The hose are obviously meant for royalty. The were made with silver
+threads running through them."
+ARMOUR_CLOTHES(0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_LEGS}
+MATERIAL_CLOTH("made from cloth")
+MATERIAL_METAL("silver threads")
+weight 2
+cost 4 SILVER_PIECE
+end
+
+
+queen_crown
+title "the Black Queen's Crown"
+names {"black crown","crown"}
+descr "A black crown is laying here."
+extra {}
+"The crown is made from pure gold and decorated elaborate' with diamond,
+ruby's and other rare gems."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_HEAD}
+weight 7
+ARMOUR_PLATE(0,0)
+dilcopy level_restrict@function (37,0,0,"");
+
+rent 75 IRON_PIECE
+cost 10 PLATINUM_PIECE
+MATERIAL_METAL("Gold crown")
+MATERIAL_STONE("Various gems")
+BLACK_ARMOR
+end
+
+
+king_crown
+title "the Black King's Crown"
+names {"black crown","crown"}
+descr "A black crown is laying here."
+extra {}
+"The crown is made from pure gold and decorated elaborately with diamond,
+ruby's and other rare gems."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_HEAD}
+weight 7
+ARMOUR_PLATE(0,0)
+dilcopy level_restrict@function (37,0,0,"");
+
+rent 75 IRON_PIECE
+cost 1 PLATINUM_PIECE
+MATERIAL_METAL("Gold crown")
+MATERIAL_STONE("Various gems")
+BLACK_ARMOR
+end
+
+
+scepter
+title "the Kings Scepter"
+names {"black scepter","kings scepter","scepter"}
+descr "The black kings scepter is laying here."
+extra {}
+"The scepter is very large and heavy looking. It is encrusted with jewels
+of every kind known to man. When the sun light hits it colors jump from
+it to bath everything that is close to it. It looks very heavy and only
+the strongest of warriors can lift it."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+dilcopy level_restrict@function (37,0,0,"");
+weight 50
+MATERIAL_METAL("heavy iron shaft")
+MATERIAL_STONE("Every gem stone known to man")
+BLACK_ARMOR
+end
+
+
+                guard_boots
+names{"boots"}
+title "a pair of black boots"
+descr "A pair black boots are lying on the ground."
+extra {}
+"The boots are made from black rings."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+ARMOUR_CHAIN(0,0)
+MATERIAL_METAL("White rings")
+weight 5
+cost 8 SILVER_PIECE
+BLACK_ARMOR
+end
+
+
+
+	          guard_leggings
+names{"leggings"}
+title "a pair of black leggings"
+descr "A black leggings is lying on the ground."
+extra {}
+"The leggings are made from black rings."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+ARMOUR_CHAIN(0,0)
+MATERIAL_METAL("White rings")
+weight 7
+cost 8 SILVER_PIECE
+BLACK_ARMOR
+end
+
+         guard_bplate
+names{"breast plate","breastplate","plate"}
+title "a black breast plate"
+descr "A breast plate is lying on the ground."
+extra {}
+"The breast plate is made from black rings ."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_CHAIN(0,0)
+MATERIAL_METAL("White rings")
+weight 10
+cost 8 SILVER_PIECE
+BLACK_ARMOR
+end
+
+                      guard_gloves
+names{"gloves"}
+title "a pair of black gloves"
+descr "A pair of black gloves is lying on the ground."
+extra {}
+"The gloves are made from black rings ."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HANDS}
+ARMOUR_CHAIN(0,0)
+MATERIAL_METAL("White rings")
+weight 8
+cost 8 SILVER_PIECE
+BLACK_ARMOR
+end
+                 guard_bracers
+names{"bracers","bracer"}
+title "a pair of black bracers"
+descr "A pair of black bracers are lying on the ground."
+extra {}
+"The bracers are made of black rings."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ARMS}
+MATERIAL_METAL("black rings")
+ARMOUR_CHAIN(0,0)
+weight 7
+cost 8  SILVER_PIECE
+rent 144 IRON_PIECE
+BLACK_ARMOR
+end
+            guard_helmet
+names{"helmet"}
+title "a black helmet"
+descr "A black helmet is lying on the ground."
+extra {}
+"The helmet is made of black rings ."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+MATERIAL_METAL("black rings")
+ARMOUR_CHAIN(0,0)
+weight 5
+cost 8 SILVER_PIECE
+rent 144 IRON_PIECE
+BLACK_ARMOR
+end
+
+
+
+
+ %reset
+
+
+#define GUARD_ARM \
+        equip guard_bracers position WEAR_ARMS    \
+        equip guard_bplate position WEAR_BODY \
+        equip guard_helmet position WEAR_HEAD  \
+        equip guard_gloves position WEAR_HANDS  \
+        equip guard_boots position WEAR_FEET \
+        equip guard_leggings position WEAR_LEGS    \
+        equip guard_sword position WEAR_WIELD\
+
+#define COMMON_ARM \
+        equip linnen_shirt position WEAR_BODY \
+        equip sandals position WEAR_FEET \
+        equip linnen_trousers position WEAR_LEGS    \
+        equip short_sword position WEAR_WIELD\
+/*-----------quest mobs---------------*/
+load f_princess into casket_room@wcastle
+
+load mage into bcell_3 max 1
+
+/*------------------quest mobs--------------*/
+door bpassage_1 WEST {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+load wander_seller into wall_rd11@midgaard
+{
+load sh_pendant
+load lrg_ring
+load wedding_ring@udgaard
+load ring@xiyang2
+load wedding_ring1@xiyang
+load wedding_ring2@xiyang
+load diamond_brac@xiyang
+load silver_bracelet@xiyang
+equip lrg_ring position WEAR_FINGER_L
+}
+
+load water_fountain into bpath_3
+load guard into btop2 zonemax 8
+{
+GUARD_ARM
+}
+load guard into btop10 zonemax 8
+{
+GUARD_ARM
+}
+load guard into btop7 zonemax 8
+{
+GUARD_ARM
+}
+load guard into btop4 zonemax 8
+{
+GUARD_ARM
+}
+load guard into b_in1 zonemax 8
+{
+GUARD_ARM
+}
+load guard into b_in3 zonemax 8
+{
+GUARD_ARM
+}
+load guard into b_in5 zonemax 8
+{
+GUARD_ARM
+}
+load guard into b_in6 zonemax 8
+{
+GUARD_ARM
+}
+load dancer into bball_room zonemax 2
+{
+        equip ball_dress position WEAR_BODY
+        equip stockings position WEAR_LEGS
+        equip dagger position WEAR_WIELD
+        equip sandals position WEAR_FEET
+        equip lady_gloves position WEAR_HANDS
+        equip earrings position WEAR_EAR_R
+}
+
+load dancer into bball_room zonemax 2
+{
+        equip ball_dress position WEAR_BODY
+        equip stockings position WEAR_LEGS
+        equip dagger position WEAR_WIELD
+        equip sandals position WEAR_FEET
+        equip lady_gloves position WEAR_HANDS
+        equip earrings position WEAR_EAR_L
+        equip anklet position WEAR_ANKLE_R
+
+}
+
+load citizen1 into bpath_3 zonemax 1
+{
+        equip dress1 position WEAR_BODY
+        equip sandals position WEAR_FEET
+        equip stockings position WEAR_LEGS
+        equip dagger position WEAR_WIELD
+        equip lady_cap position WEAR_HEAD
+
+}
+
+load citizen2 into bsitting_1 zonemax 1
+{
+       equip dress2 position WEAR_BODY
+        equip sandals position WEAR_FEET
+        equip stockings position WEAR_LEGS
+        equip dagger position WEAR_WIELD
+        equip lady_cap position WEAR_HEAD
+       equip anklet position WEAR_ANKLE_L
+}
+
+load citizen3 into bsitting_2 zonemax 1
+{
+equip belt_bag position WEAR_CHEST
+equip short_sword position WEAR_WIELD
+equip cannon position WEAR_LEGS
+equip doublet position WEAR_BODY
+equip shoes position WEAR_FEET
+
+}
+load cook into bkitchen zonemax 1
+{
+equip knife position WEAR_WIELD
+equip chef_hat position WEAR_HEAD
+equip doublet position WEAR_BODY
+equip shoes position WEAR_FEET
+load pot_pie
+
+}
+
+load citizen4 into bpath_5 zonemax 1
+{
+equip belt_bag position WEAR_CHEST
+equip short_sword position WEAR_WIELD
+equip cannon position WEAR_LEGS
+equip doublet position WEAR_BODY
+equip shoes position WEAR_FEET
+}
+
+load citizen5 into bwater_cl zonemax 1
+{
+load slosh_bucket
+equip cannon position WEAR_LEGS
+equip doublet position WEAR_BODY
+equip shoes position WEAR_FEET
+}
+
+load maid into bhall_1 zonemax 3
+{
+        equip plain_dress position WEAR_BODY
+        equip sandals position WEAR_FEET
+}
+
+load maid into bhall_2 zonemax 3
+{
+        equip plain_dress position WEAR_BODY
+        equip sandals position WEAR_FEET
+}
+
+load maid into bhall_3 zonemax 3
+{
+        equip plain_dress position WEAR_BODY
+        equip sandals position WEAR_FEET
+}
+
+load smith into bblacksmith zonemax 1
+{
+COMMON_ARM
+load dagger@blcastle
+load short_sword@blcastle
+load guard_sword@blcastle
+load sword0@midgaard
+load lsword0@midgaard
+load ham0@midgaard
+load flail1@midgaard
+load spear0@midgaard
+}
+
+load arm into barmor zonemax 1
+{
+COMMON_ARM
+load linnen_trousers@blcastle
+load linnen_shirt@blcastle
+load sandals@blcastle
+load plain_dress@blcastle
+load lady_gloves@blcastle
+load belt_bag@blcastle
+load cannon@blcastle
+load doublet@blcastle
+load shoes@blcastle
+}
+
+load groc into bfood zonemax 1
+{
+COMMON_ARM
+}
+
+load gen into bstores zonemax 1
+{
+COMMON_ARM
+}
+
+load horse into bstall_1 zonemax 3
+load horse into bstall_2 zonemax 3
+load horse into bstall_3 zonemax 3
+
+load mare into bstall_1 zonemax 3
+load mare into bstall_2 zonemax 3
+load mare into bstall_3 zonemax 3
+load queen into bthrone zonemax 1
+
+{
+       equip queen_dress position WEAR_BODY
+        equip sandals position WEAR_FEET
+        equip stockings position WEAR_LEGS
+        equip dagger position WEAR_WIELD
+        equip queen_crown position WEAR_HEAD
+        equip royal_robes position WEAR_ABOUT
+        equip royal_dagger position WEAR_WIELD
+        equip lady_gloves position WEAR_HANDS  \
+
+}
+
+load king into bthrone zonemax 1
+{
+equip royal_hose position WEAR_LEGS
+equip doublet position WEAR_BODY
+equip shoes position WEAR_FEET
+equip king_crown position WEAR_HEAD
+equip royal_robes position WEAR_ABOUT
+equip royal_dagger position WEAR_WIELD
+equip scepter position WEAR_HOLD
+
+}
+load guard1 into bthrone zonemax 1
+{
+GUARD_ARM
+}
+
+%end
+

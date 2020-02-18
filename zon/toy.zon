@@ -1,0 +1,3510 @@
+/*
+filename    toy
+password    shortone
+changedby   Whistler
+EmailAdd     Whistler <whistler@blinksoft.com>
+request     compile
+version     2
+END HEADER*/
+
+
+#include<composed.h>
+
+%zone toy
+title "Toymakers house"
+
+lifespan 20
+reset RESET_ANYHOW
+creators {"Harloquin"}
+
+%dil
+
+/*okay, this revision of this dill does the following */
+/*it moves the player to another room.  It gives them */
+/*the message in the third arguement when they move */
+/*and everyone else gets the forth arguement as the */
+/*victom is moved.  The second arguement is the time */
+/*delay as a function of pulse sec and should be an integer */
+
+dilbegin force_out(rm:string,tme:integer, msgvict:string, msgnovict:string);
+var
+        room : unitptr;
+        vict : unitptr;
+code
+{
+        :init:
+        heartbeat := PULSE_SEC*tme;
+
+        :start:
+wait(SFB_DONE, activator.type & UNIT_ST_PC);
+vict := activator;
+secure(vict,damnleft);
+    room := findroom(rm);
+    act(msgvict,A_ALWAYS,self,null,vict,TO_VICT);
+    act(msgnovict,A_ALWAYS,self,null,vict,TO_NOTVICT);
+    link(vict,room);
+    unsecure(vict);
+    goto start;
+
+        :damnleft:
+unsecure(vict);
+goto start;
+
+}
+dilend
+
+
+
+dilbegin yard();
+
+var
+     i : integer;
+
+code
+{
+     heartbeat := PULSE_SEC*20;
+
+     :start:
+     wait(SFB_CMD, (activator.type == UNIT_ST_PC));
+     i := rnd (1,150);
+     if (i < 10)
+       {
+        goto start;
+       }
+     if(i<20)
+       {
+     act("The wind blows playfully through your hair.",
+          A_ALWAYS, activator, null, null, TO_REST);
+     act("The wind blows playfully through your hair.",
+          A_ALWAYS, activator, null, null, TO_CHAR);
+      goto start;
+        }
+     if(i<30)
+       {
+     act("You hear the sounds of the stream to the south.",
+          A_ALWAYS, activator, null, null, TO_REST);
+     act("You hear the sounds of the stream to the south.",
+          A_ALWAYS, activator, null, null, TO_CHAR);
+      goto start;
+        }
+     if(i<50)
+       {
+     act("You catch the smell of honeysuckle as a dandelion seed floats past you on the breeze.",
+          A_ALWAYS, activator, null, null, TO_REST);
+     act("You catch the smell of honeysuckle as a dandelion seed floats past you on the breeze.",
+          A_ALWAYS, activator, null, null, TO_CHAR);
+      goto start;
+        }
+goto start;
+}
+dilend
+
+
+dilbegin mario_fight();
+var
+        enemy : unitptr;
+        flux : integer;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC * 7;
+   wait(SFB_COM,(self.position == POSITION_FIGHTING));
+   enemy := self.fighting;
+   secure(enemy,damnleft);
+
+   :start:
+flux := rnd(0,100);
+pause;
+
+if (flux < 10)
+{
+act("$1n chokes you with $1s strings!",
+A_ALWAYS,self,null,enemy,TO_VICT);
+act("$1n chokes $3n with $1s strings!",
+A_ALWAYS,self,null,enemy,TO_NOTVICT);
+enemy.hp := enemy.hp - rnd(1,2);
+position_update(enemy);
+goto start;
+}
+if (flux < 20)
+{
+act("A quick slap from $1n's movement bar knocks you silly!",
+A_ALWAYS,self,null,enemy,TO_VICT);
+act("A quick slap from $1n's movement bar knocks $3n silly!",
+A_ALWAYS,self,null,enemy,TO_NOTVICT);
+enemy.hp := enemy.hp - rnd(0,2);
+position_update(enemy);
+goto start;
+}
+if (flux < 30)
+{
+act("$1n tries to charge you and trips over $1s's strings!",
+A_ALWAYS,self,null,enemy,TO_VICT);
+act("$1n tries to charge $3n but trips over $1s's own strings!",
+A_ALWAYS,self,null,enemy,TO_NOTVICT);
+enemy.hp := enemy.hp - rnd(0,0);
+position_update(enemy);
+goto start;
+}
+if (flux < 40)
+{
+act("$1n grabs you by you hair and over head slams you!",
+A_ALWAYS,self,null,enemy,TO_VICT);
+act("$1n grabs $3n by the hair and over head slams him!",
+A_ALWAYS,self,null,enemy,TO_NOTVICT);
+enemy.hp := enemy.hp - rnd(3,5);
+position_update(enemy);
+goto start;
+}
+if (flux < 50)
+{
+act("$1n's jaw drops open and $1s takes a bite out of you!",
+A_ALWAYS,self,null,enemy,TO_VICT);
+act("$1n's jaw opens and he bites $3n !",
+A_ALWAYS,self,null,enemy,TO_NOTVICT);
+enemy.hp := enemy.hp - rnd(0,1);
+position_update(enemy);
+goto start;
+}
+if (flux < 60)
+{
+act("$1n gets all tangled up in $1s's own ropes!",
+A_ALWAYS,self,null,enemy,TO_ALL);
+act("$1n gets totally tangled in $1s's own ropes!",
+A_ALWAYS,self,null,enemy,TO_ALL);
+self.abilities[ABIL_DEX] := (self.abilities[ABIL_STR])-rnd(1,2);
+position_update(self);
+goto start;
+}
+if (flux < 70)
+{
+act("$1n charges forward and head butts you!",
+A_ALWAYS,self,null,enemy,TO_VICT);
+act("$1n charges forward and head butts $3n!",
+A_ALWAYS,self,null,enemy,TO_NOTVICT);
+enemy.hp := enemy.hp - rnd(0,5);
+position_update(enemy);
+goto start;
+}
+else goto start;
+
+        :damnleft:
+exec("emote cackles maniacally.", self);
+unsecure(enemy);
+goto init;
+}
+dilend
+
+dilbegin soldier_fight();
+var
+        enemy : unitptr;
+        flux : integer;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC * 7;
+   wait(SFB_COM,(self.position == POSITION_FIGHTING));
+   enemy := self.fighting;
+   secure(enemy,damnleft);
+
+   :start:
+flux := rnd(0,100);
+pause;
+
+if (flux < 10)
+{
+act("$1n backhands you with $1s fist!",
+A_ALWAYS,self,null,enemy,TO_VICT);
+act("$1n backhands $3n across the cheek with $1s fist!",
+A_ALWAYS,self,null,enemy,TO_NOTVICT);
+enemy.hp := enemy.hp - rnd(1,3);
+position_update(enemy);
+goto start;
+}
+if (flux < 20)
+{
+act("$1n trips you!",
+A_ALWAYS,self,null,enemy,TO_VICT);
+act("$1n trips $3n!",
+A_ALWAYS,self,null,enemy,TO_NOTVICT);
+enemy.hp := enemy.hp - rnd(1,3);
+position_update(enemy);
+goto start;
+}
+if (flux < 30)
+{
+act("$1n kicks dirt in your face!",
+A_ALWAYS,self,null,enemy,TO_VICT);
+act("$1n kicks dirt in the face of $3n!",
+A_ALWAYS,self,null,enemy,TO_NOTVICT);
+enemy.hp := enemy.hp - rnd(1,3);
+position_update(enemy);
+goto start;
+}
+if (flux < 40)
+{
+act("A quick shot from $1n rocks your head back!",
+A_ALWAYS,self,null,enemy,TO_VICT);
+act("$1n hits $3n and knocks $3s's head back!",
+A_ALWAYS,self,null,enemy,TO_NOTVICT);
+enemy.hp := enemy.hp - rnd(1,2);
+position_update(enemy);
+goto start;
+}
+if (flux < 50)
+{
+act("$1n rakes your shin with $1s heel!",
+A_ALWAYS,self,null,enemy,TO_VICT);
+act("$1n rakes $3n across the shin with $1s heel!",
+A_ALWAYS,self,null,enemy,TO_NOTVICT);
+enemy.hp := enemy.hp - rnd(1,3);
+position_update(enemy);
+goto start;
+}
+if (flux < 60)
+{
+act("$1n lets out a battle cry",
+A_ALWAYS,self,null,enemy,TO_ALL);
+act("$1n looks more determined than ever!",
+A_ALWAYS,self,null,enemy,TO_ALL);
+self.abilities[ABIL_STR] := (self.abilities[ABIL_STR])+rnd(1,2);
+position_update(self);
+goto start;
+}
+if (flux < 70)
+{
+act("$1n gives a quick knee to your gut!",
+A_ALWAYS,self,null,enemy,TO_VICT);
+act("$1n knees $3n right in the gut!  That had to hurt!",
+A_ALWAYS,self,null,enemy,TO_NOTVICT);
+enemy.hp := enemy.hp - rnd(0,5);
+position_update(enemy);
+goto start;
+}
+else goto start;
+
+        :damnleft:
+unsecure(enemy);
+goto init;
+}
+dilend
+
+dilbegin jester_fight();
+var
+        enemy : unitptr;
+        flux : integer;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC * 7;
+   wait(SFB_COM,(self.position == POSITION_FIGHTING));
+   enemy := self.fighting;
+   secure(enemy,damnleft);
+
+   :start:
+flux := rnd(0,100);
+pause;
+
+if (flux < 10)
+{
+act("$1n reaches up and kisses you biting your lips!",
+A_ALWAYS,self,null,enemy,TO_VICT);
+act("$1n kisses $3n and bites $3n's lips!",
+A_ALWAYS,self,null,enemy,TO_NOTVICT);
+enemy.hp := enemy.hp - rnd(1,3);
+position_update(enemy);
+goto start;
+}
+if (flux < 20)
+{
+act("A back flip kick from $1n sends you backwards!",
+A_ALWAYS,self,null,enemy,TO_VICT);
+act("A back flip kick from $1n's sends $3n backwards!",
+A_ALWAYS,self,null,enemy,TO_NOTVICT);
+enemy.hp := enemy.hp - rnd(0,2);
+position_update(enemy);
+goto start;
+}
+if (flux < 30)
+{
+act("With a glimmer in $1s eye , $1n licks his finger and puts it in your ear!",
+A_ALWAYS,self,null,enemy,TO_VICT);
+act("With a glimmer in $1s eye, $1n licks his finger and puts it in $3n's ear!",
+A_ALWAYS,self,null,enemy,TO_NOTVICT);
+enemy.hp := enemy.hp - rnd(1,2);
+position_update(enemy);
+goto start;
+}
+if (flux < 40)
+{
+act("$1n winks at you!",
+A_ALWAYS,self,null,enemy,TO_VICT);
+act("$1n winks at $3n!",
+A_ALWAYS,self,null,enemy,TO_NOTVICT);
+enemy.hp := enemy.hp - rnd(0,0);
+position_update(enemy);
+goto start;
+}
+if (flux < 50)
+{
+act("$1n grabs your tongue and whips you around by it!",
+ A_ALWAYS,self,null,enemy,TO_VICT);
+act("$1n grabs $3n's tongue and whips him around by it!",
+A_ALWAYS,self,null,enemy,TO_NOTVICT);
+enemy.hp := enemy.hp - rnd(0,3);
+position_update(enemy);
+goto start;
+}
+if (flux < 60)
+{
+act("$1n does a quick Russian dance step and kicks your groin!",
+A_ALWAYS,self,null,enemy,TO_VICT);
+act("$1n does a quick Russian dance step and kicks $3n in the groin!",
+A_ALWAYS,self,null,enemy,TO_NOTVICT);
+enemy.hp := enemy.hp - rnd(1,3);
+position_update(enemy);
+goto start;
+}
+if (flux < 70)
+{
+act("$1n sticks two fingers up your nose and pulls!  OUCH!",
+A_ALWAYS,self,null,enemy,TO_VICT);
+act("$1n puts two fingers up $3n's nose and pulls!  That Hurt!",
+A_ALWAYS,self,null,enemy,TO_NOTVICT);
+enemy.hp := enemy.hp - rnd(0,5);
+position_update(enemy);
+goto start;
+}
+else goto start;
+
+        :damnleft:
+exec("emote grins evilly.", self);
+unsecure(enemy);
+goto init;
+}
+dilend
+
+%rooms
+
+home
+names {"harloquin home"}
+title "Harloquins cell"
+descr
+"This is the home of Harloquin.  The walls are thickly padded as is
+the floor.  All over the walls are painted images of faces all contorted
+as if mimicing the masks of tragedy and comody.  The light is what you
+would expect from a candel or other flickering light source though you
+do not see any odvious source.  The flickering light makes the images on
+the wall come to life and at times you wonder if perhapse they are looking
+at you.  You can not help but question the sanity of anyone who lived in
+a place like this.  To do it by choice Harloquin must be mad.  There is
+writing on the corner of the wall as well"
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"image", "images"}
+"As you look at the image it turns to you and winks."
+extra {"padding"}
+"Nice and thick."
+extra {"light"}
+"You cant find it."
+extra {"writing"}
+"Say square to go there or post for Hansen's most."
+
+dilbegin square();
+var
+        room : unitptr;
+        vict : unitptr;
+code
+{
+        :init:
+        heartbeat := PULSE_SEC*1;
+
+        :start:
+wait (SFB_DONE,(command(CMD_SAY))and (argument == "square"));
+
+vict := activator;
+secure(vict,damnleft);
+    act("One of the images on the wall grows to giant proportion and swallows you.",
+    A_ALWAYS,self,null,vict,TO_VICT);
+    act("$3n screams as an image on the wall grows and swallows $3s.",
+    A_ALWAYS,self,null,vict,TO_NOTVICT);
+    act("You find yourself in UD square!",
+    A_ALWAYS,self,null,vict,TO_VICT);
+    room := findroom("square@udgaard");
+    link(vict,room);
+    unsecure(vict);
+    pause;pause;
+    goto start;
+
+        :damnleft:
+unsecure(vict);
+goto start;
+}
+dilend
+
+dilbegin hansen();
+var
+        room : unitptr;
+        vict : unitptr;
+code
+{
+        :init:
+        heartbeat := PULSE_SEC*1;
+
+        :start:
+wait (SFB_DONE,(command(CMD_SAY))and (argument == "post office"));
+
+block;
+vict := activator;
+secure(vict,damnleft);
+    act("The images on the wall come to life and drags you into the wall!.",
+    A_ALWAYS,self,null,vict,TO_VICT);
+    act("$3n screams as the images come to life and drag $3s into the wall!",
+    A_ALWAYS,self,null,vict,TO_NOTVICT);
+    act("You find yourself at the post office!",
+    A_ALWAYS,self,null,vict,TO_VICT);
+    room := findroom("postoffice@udgaard");
+    link(vict,room);
+    unsecure(vict);
+    pause;pause;
+    goto start;
+
+        :damnleft:
+unsecure(vict);
+goto start;
+}
+dilend
+
+
+end
+
+
+
+path1
+names {"path"}
+title "Path in the Woods"
+descr
+"  The path you are walking on is narrow and in places
+overgrown due to lack of use.  The trees to either side
+make a canopy overhead that covers the path in shade
+regardless of how bright a day it might be.  These same
+shade trees make the way impassable to the east or west."
+movement SECT_FIELD
+extra {"path"}
+"This is actually a rather nice path. The kind you
+would like to walk on during a sunny day, preferably
+with a date."
+south to path2 descr
+"To the south the path continues.";
+north to rn_6017@haon_dor descr
+"To the north you see an intersection in the forest.";
+end
+
+path2
+names{"path"}
+title "Path in the woods"
+descr
+" The path makes a winding trail through the woods,
+turning here and there for exceptionally large trees.
+To the south it appears the path enters a forest
+clearing with some type of building or perhaps a
+home in it.  To the east and west the forest gets
+far more dense and the way becomes unpassable.  To
+the north the path continues through the woods."
+movement SECT_FIELD
+extra {"building", "home"}
+"It appears from here to be a normal sized house.
+Perhaps someone lives out here."
+extra {"path"}
+"This is actually a rather nice path. The kind you
+would like to walk on during a sunny day, preferably
+with a date."
+south to yard1 descr
+"To the south you see a clearing.";
+north to path1 descr
+"To the north the forest path continues.";
+end
+
+yard1
+names{"forest clearing"}
+title "Forest Clearing"
+descr
+"This is a nice clearing in the forest. The grass
+underfoot is lush and green, while the trees around
+the clearing provide just the right amount of shade
+during hot summer days.  There is a slight breeze
+blowing, causing the leaves to rustle in the trees.
+Looking around, you feel the tranquility of the place
+and the purity of it.  Even the small house to the south
+does not look unnatural here.  Just beyond it you can
+see a small stream.  There is a path leading off into
+the forest to the north, and the clearing itself is
+large enough to wander in for a bit in almost any
+direction."
+movement SECT_FIELD
+extra {"house"}
+"The house is a small cottage that looks like something
+more from an artists imagination than from a carpenters
+trade. "
+extra {"stream", "river"}
+"The stream bubbles quietly to the south."
+extra {"Path"}
+"The path looks like and inviting walk."
+east to yard2 descr
+"The clearing continues to the east.";
+west to yard3 descr
+"The clearing continues to the west.";
+south to yard4 descr
+"To the south is the small cottage.";
+north to path2 descr
+"To the north is an inviting forest path.";
+dilcopy yard();
+end
+
+yard2
+names{"forest clearing"}
+title "Forest Clearing"
+descr
+" The forest clearing is a perfect image of natural
+beauty.  The trees tower into the sky like giant
+guardians of this picturesque place.  The grass invites
+you to rest as no man-made chair could ever do and
+the sound of the stream to the south is somehow reminiscent
+of a childhood lullaby. The house to the southwest appears
+quaint and serene in this setting and bringing out in you
+perhaps a tinge of jealousy that it is not yours."
+movement SECT_FIELD
+extra {"house"}
+"The house is a nice little cottage.  Odd that you do not
+see a door though."
+extra {"tree", "trees"}
+"The trees here are mostly oak.  Really big oaks at that."
+extra {"stream"}
+"The stream bubbles quietly to the south."
+west to yard1 descr
+"The clearing continues to the west.";
+south to yard5 descr
+"The clearing continues to the south.";
+dilcopy yard();
+end
+
+yard3
+names{"forest clearing"}
+title "Forrest Clearing"
+descr
+" The northwestern end of the clearing is covered in
+honeysuckle and the sweet smell of it fills the air
+as the breeze gives the small flowers a movement
+much like a dance.  The stream to the south provided the
+music for the hypnotic dance of the yellow and white
+blooms.  The flowering vines run up the trees to the
+north and west making a wall of flowers and leaves.
+To the southeast the small house looks like
+something you would see in a bakers shop made of
+gingerbread."
+movement SECT_FIELD
+extra {"vine", "vines", "honeysuckle"}
+"These are small running vines that bloom in yellow and
+white flowers."
+extra {"flower", "flowers"}
+"The flowers are delicate little blooms about the size of
+your thumbnail."
+extra {"stream"}
+"The stream runs across the south edge of the clearing."
+extra {"house"}
+"The house somehow does not look real.  Perhaps it is the
+fact that it does not have a door."
+east to yard1 descr
+"The clearing continues to the east.";
+south to yard6 descr
+"The clearing continues to the south";
+dilcopy yard();
+end
+
+yard4
+names{"in front of the cottage"}
+title "In Front of the Cottage"
+descr
+" The middle of the clearing is occupied by a small
+cottage.  The building itself is apparently made of wood
+and fitted stone.  The windows are stained glass images
+of woodland scenes and children playing.  There is a small
+fountain or birdbath here and apparently a field mouse has
+made his burrow beneath it.  The most unusual feature of
+the house however is that there appears to be no door.
+Where you stand is certainly where the main entrance to
+the home should be, but it is simply not there.  As you
+look around, you notice that the house has a slight
+glow to it whenever you are not looking directly at it."
+movement SECT_FIELD
+extra {"window", "windows"}
+"The stained glass is of incredible workmanship."
+extra {"hole", "burrow"}
+"This is a small mouse hole."
+west to yard6 descr
+"The clearing continues to the west.";
+east to yard5 descr
+"The clearing continues to the east";
+north to yard1 descr
+"The clearing continues to the north";
+dilcopy yard();
+end
+
+yard5
+names{"clearing"}
+title "Clearing"
+descr
+" The clearing at this point is covered in sunflowers all
+in full bloom.  The bright yellow of the flowers contrasts
+so vividly with the lush green of the grass and woodland
+area that the flowers appear to have a yellow glow to them.
+As you take in the rustic beauty of this place, you feel
+a sense of calm and inner peace.  The small house to the
+west seems representative of a world alien to this beauty
+yet still it does not detract from it."
+movement SECT_FIELD
+extra {"house"}
+"The small cottage is man-made, but clearly it belongs here."
+extra {"flowers", "sunflowers"}
+"These beautiful yellow flowers keep their face to the sun."
+west to yard4 descr
+"To the west is the front of the cottage.";
+north to yard2 descr
+"The clearing continues to the north";
+south to yard9 descr
+"The stream lies to the south";
+dilcopy yard();
+end
+
+yard6
+names{"clearing"}
+title "Clearing"
+descr
+"This part of the clearing is covered in wild flowers
+of all sorts.  The yellows, reds, blues, purples, and
+oranges of the blooms seem to melt together to make
+a living blanket covering the ground with colors no
+weaver shall ever match.  To the south the stream
+bubbles quietly adding its watery voice to the
+whisper made by the wind.  To the east the single
+home sits looking more like a picture than a true
+building."
+movement SECT_FIELD
+extra {"flowers", "blooms"}
+"These beautiful flowers apparently grow wild here."
+extra {"house", "home", "building"}
+"This is just a small home that apparently has no door."
+extra {"stream"}
+"There is a small stream south of here"
+east to yard4 descr
+"The house is to the east.";
+south to yard7 descr
+"The small stream is to the south.";
+north to yard3 descr
+"The clearing continues to the north";
+dilcopy yard();
+end
+
+yard7
+names{"clearing"}
+title "Clearing"
+descr
+"The southwest edge of the clearing is covered in small
+flowering shrubs.  The grass here gives way to a large
+patch of clover that ends at the stream's edge to the
+south.  To the east the stream continues to define the
+southern border of the clearing while to the west the
+forest again becomes so dense as to be unpassable.
+The stream itself appears to be slow moving, yet quite
+deep.  As you look into it you quickly surmise that the
+lazy speed of the water is in fact an illusion caused
+by its depth and any passage across this river would
+have to be made elsewhere."
+movement SECT_FIELD
+extra {"river"}
+"The river is actually very deep and moving quite fast."
+extra {"clover"}
+"The clover here makes this look like a perfect place to rest."
+extra {"shrub", "shrubs"}
+"These are mid-sized plants covered in small blooms."
+north to yard6 descr
+"The clearing continues to the west.";
+east to yard8 descr
+"The clearing continues to the east.";
+south to river1 descr
+"The river is to the south.";
+dilcopy yard();
+end
+
+yard8
+names{"clearing"}
+title "Clearing"
+descr
+"The area of the clearing right behind the house is
+apparently used for some sort of vegetable garden.
+There are a number of rows of neatly placed plants
+growing a variety of food.  To the south the stream
+continues to move at a relentless pace making it
+impossible to go in that direction."
+movement SECT_FIELD
+extra {"plant", "plants"}
+"These plants must grow the food for whomever lives in the house."
+extra {"house", "home", "building"}
+"This is just a small home that apparently has no door."
+extra {"stream"}
+"There is a small stream south of here moving very quickly"
+east to yard9 descr
+"The clearing continues to the east.";
+west to yard7 descr
+"The clearing continues to the west.";
+south to river2 descr
+"The river is to the south.";
+dilcopy yard();
+end
+
+yard9
+names{"clearing"}
+title "Clearing"
+descr
+"The southeastern corner of the clearing is covered in
+dandelions spreading their seeds.  From the number of them
+it is a wonder they have not taken over the entire clearing.
+As the breeze blows through it becomes difficult to see due
+to the number of seeds in the air.  To the south the river
+flows at a pace that makes it impossible to cross.  To the
+west you see a small garden behind the cottage."
+movement SECT_FIELD
+extra {"dandelions"}
+"These little white capped plants spread their seeds on the wind."
+extra {"house", "home", "building"}
+"This is just a small home that apparently has no door."
+extra {"stream"}
+"There is a small stream south of here moving at a very fast pace."
+west to yard8 descr
+"There is a small garden to the west.";
+north to yard5 descr
+"The clearing continues to the north";
+south to river3 descr
+"The river is to the south.";
+dilcopy yard();
+end
+
+mouse1
+names {"mouse hole"}
+title "Inside a Mouse Hole"
+descr
+" You are in what appears to be a mouse hole. The walls
+are made of scratched out dirt with roots dangling. The
+best way out appears to be up, however it is not possible
+to climb the walls of the hole.  The hole itself becomes a
+tunnel that leads south."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"roots"}
+"The roots of the grass and other plants dangle down into the hole."
+south to mouse2 descr
+"The mouse tunnel continues to the south.";
+end
+
+mouse2
+names {"mouse hole"}
+title "Inside a Mouse Hole"
+descr
+" The mouse tunnel is rather barren actually.  The bare walls
+are covered in some sort of glowing moss that allows you to
+see without the aid of other light.  The size of the mouse
+tracks make you feel certain that you do not want to encounter
+the mouse that dug this tunnel.  The tunnel itself continues to
+the north and south."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"roots"}
+"The roots of the grass and other plants dangle down into the hole."
+south to mouse3 descr
+"The mouse tunnel continues to the south.";
+north to mouse1 descr
+"The mouse tunnel continues to the north.";
+
+end
+
+mouse3
+names {"mouse hole"}
+title "Inside a Mouse Hole"
+descr
+" The mouse tunnel widens out here becoming a full burrow.
+There are all sorts of things lying about to make the mouses
+bed a bit more livable. String and shredded paper are apparently
+a favorite with this mouse.  The tunnel itself continues to the
+north and south."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"string"}
+"Just a bit of string."
+extra {"paper"}
+"A bit of shredded paper used to make a mouse bed."
+south to mouse4 descr
+"The mouse tunnel continues to the south.";
+north to mouse2 descr
+"the mouse tunnel continues to the north.";
+end
+
+mouse4
+names {"mouse hole"}
+title "Inside a Mouse Hole"
+descr
+" The mouse tunnel is narrow here and the walls are not of dirt
+but rather of scratched out masonry.  It appears as though the
+maker of this tunnel has actually dug through the foundation of
+the house.  There is light visible from above and the way looks
+passable.  Tunnel itself continues to the north."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"walls", "masonry"}
+"The tunnel has apparently been dug through the mortar of the house."
+north to mouse3 descr
+"The mouse tunnel continues to the north.";
+up to house1 descr
+"There is light above.";
+end
+
+house1
+names {"toy makers house"}
+title "Inside the Toy Maker's House"
+descr
+"This is what appears to be a giant larder of some kind.  There
+is food far above you in quantity and proportion to feed a giant.
+The shelves are far too high to climb up to however.  To the
+west side of the larder you see a bag of flower the size of which
+amazes you.  It would appear that the bag was at one time opened
+as there are weevils in the flour.  To the south you see a hole
+made by a mouse.  Due to the amazing size of this place you find
+that you can easily walk under the door to the north."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"flour", "bag"}
+"A bag of flour at least 30 feet high with large weevils in it."
+extra {"hole"}
+"It is a mouse hole."
+extra {"food"}
+"There is bread and pasta and other things.  Too bad you are too small
+to get to them."
+extra {"door"}
+"This is a giant door that you are small enough to walk under."
+south to mouse4 descr
+"The mouse tunnel is south.";
+north to house2 descr
+"You can walk under the door to the north.";
+end
+
+house2
+names {"toy makers house"}
+title "Inside the Toy Maker's House"
+descr
+"This is a giant sized kitchen.  The floor is made of large
+tile squares fitted together with mortar.  To the south you
+see a pantry door with enough space under it for you to walk
+without danger of bumping your head.  To the west you see an
+oven and basin of water atop a giant counter.  As you look at
+it you see there is no way to scale it from here.  To the east
+you see nothing but the wall.  North of here you can see into
+other rooms in the house."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"tile", "floor"}
+"It is just a tile floor."
+extra {"basin"}
+"It is a large bowl that holds water."
+extra {"oven"}
+"A big thing you use to cook things in."
+extra {"door"}
+"This is a giant door that you are small enough to walk under."
+south to house1 descr
+"The pantry is to the south.";
+north to house3 descr
+"The rest of the house is to the north.";
+end
+
+house3
+names {"toy makers hall"}
+title "Inside the Toy Maker's Hall"
+descr
+"This hallway makes up the center of the house. It stretches
+from the south kitchen to the north study with an opening on
+both the east and west leading to a bedroom and workroom
+respectively.  The hall itself is nicely carpeted for a giant
+making it very difficult for someone the size of a mouse to
+walk through."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_SWAMP
+extra {"carpet"}
+"It is a nice plush gray carpet."
+south to house2 descr
+"The kitchen is to the south.";
+north to house4 descr
+"The study is to the north.";
+east to house6 descr
+"The workroom is to the east";
+west to house5 descr
+"A bedroom is to the west";
+end
+
+house4
+names {"toy makers study"}
+title "Inside the Toy Maker's Study"
+descr
+"You have entered into what can only be a giant study.
+There are two chairs here big enough to support someone
+a hundred feet tall.  There is a desk by the north window
+again built on a monstrous scale.  At ground level behind
+the desk you see a small vent of some sort.  On the east and
+west walls you see bookshelves holding books of such immense
+size that you doubt you would be much larger than a single
+letter.  To the south you see the central hallway to the house.  "
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"book", "books", "bookshelf", "bookshelves"}
+"The east and west walls are covered in books.  Alas you can not reach
+them."
+extra {"desk"}
+"It appears to be a large writing desk."
+extra {"window"}
+"The window is made of stained glass and shows children playing."
+extra {"vent"}
+"There is a vent to the north that perhaps you can pass through."
+south to house3 descr
+"The hall is to the south.";
+north to heating5 open {EX_OPEN_CLOSE, EX_CLOSED}
+descr "There is a vent on the north wall." keyword {"vent"};
+end
+
+house5
+names {"toy makers bedroom"}
+title "Inside the Toy Maker's Bedroom"
+descr
+"This is a bedroom for a giant.  The bed stands some twenty feet
+off the floor and is a good eighty feet long.  There is a nightstand
+table to the south with a large door upon it.  To the north
+there is a door leading to a closet.  You think you could walk
+under the north door with only a little effort.  The floor here
+is made of hard wood polished to a shine.  The walls are some
+sort of panelling and light is provided by a giant lantern
+on top of the night stand.  To the east is the main hallway
+for the house."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"stand", "nightstand"}
+"It is a large wooden table with a door on it."
+extra {"lantern"}
+"This is a giant sized lantern providing light for the room."
+extra {"bed"}
+"A big four post bed."
+south to house8 open {EX_OPEN_CLOSE, EX_CLOSED}
+        descr "There is a door on the night stand south." keyword {"door"};
+
+north to house7 descr
+"The closet is to the north.";
+east to house3 descr
+"The hall is to the east.";
+end
+
+
+house6
+names {"toy makers workroom"}
+title "Inside the Toy Maker's Workroom"
+descr
+"You have entered the workroom of the toy maker.  The ground is
+covered in sawdust and wood chips and stained with spots of
+paint in all imaginable colors.  Against the east wall is a
+work bench that is easily fifty feet tall.  Atop it you can
+just make out the tools of a toy makers trade.  To the north
+is an open room filled with toys of all sorts.  To the west you
+can see the hallway that leads to the rest of the house.  You
+can feel an odd energy in the room as if the air itself had a
+magic to it.  At the base of the east wall you see a small vent."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"dust",  "chips", "wood", "sawdust"}
+"This is what is left over after the toy maker carves a toy."
+extra {"bench", "work bench"}
+"This is where the toy maker makes his toys."
+extra {"tools"}
+"You see a chisel and a leath and a few other wood working tools."
+north to house9 descr
+"The storeroom is to the north.";
+east to heating9 open {EX_OPEN_CLOSE, EX_CLOSED}
+descr "There is a vent on the east wall." keyword {"vent"};
+west to house3 descr
+"The hall is to the west";
+end
+
+
+house7
+names {"toy makers closet"}
+title "Inside the Toy Maker's Closet"
+descr
+"This is a very large clothes closet.  It contains a simple array
+of clothing all in a size fit for a giant.  From here you can see
+that the occupant of this house does not have very extravagant
+taste in clothing.  It all looks very simple and is dyed in
+a host of bright colors.  The room itself is made of a simple
+wood panel that seems common enough.  To the west you see a vent
+of some sort while the main bedroom of the house is found south
+of here."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"clothes", "clothing"}
+"These are brightly colored pants and shirts.  The type children might
+find attractive."
+extra {"panelling"}
+"This is just wood panelling."
+extra {"vent"}
+"there is a vent in the west wall that maybe you could enter."
+west to heating1 open {EX_OPEN_CLOSE, EX_CLOSED}
+        descr "There is a vent on the west wall." keyword {"vent"};
+south to house5 descr
+"The bedroom is to the south.";
+end
+
+house8
+names {"toy makers nightstand"}
+title "Inside the Toy Maker's NightStand"
+descr
+"You have entered a night stand table.  The table is made
+of wood stained black and is engraved with a nice diamond
+pattern.  There is not much to look at on the inside of
+a night stand and thus it is a rather dull place."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to house5 open {EX_OPEN_CLOSE, EX_CLOSED}
+        descr "The door to the night stand is north." keyword {"door"};
+end
+
+house9
+names {"toy makers storeroom"}
+title "Inside the Toy Maker's Storeroom"
+descr
+"This is the toy makers storeroom.  It is a large room with
+rows upon rows of shelves lining three walls.  On every shelf
+you see a large toy of some kind.  As you watch you see the
+toys move around with a life of their own.  Some walk from
+shelf to shelf while others are apparently having a conversation.
+To the west you see a ladder apparently put there for the living
+toys to have a way down.  To the south you see the toy makers
+workroom where all these marvelous toys came to life."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+south to house6 descr
+"To the south is the workroom of the toy maker";
+up to shelf1 descr
+"Up the ladder you see a shelf";
+end
+
+shelf1
+names {"shelf"}
+title "On the Shelf"
+descr
+"This is the western-most shelf of the first row of shelves
+in the toy makers storage room.  From here you can see
+the shelves on the north and east walls.  The shelf you are
+standing on is covered in a light layer of dust with odd tracks
+running through it.  You can walk to the first shelf on the north
+wall from here or you can continue to climb the ladder to the
+second layer of shelves."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to shelf5 descr
+"To the north the shelves continue";
+up to shelf2 descr
+"Up the ladder you see the second row of shelves.";
+down to house9 descr
+"Down the ladder is the floor of the storeroom";
+end
+
+shelf2
+names {"shelf"}
+title "On the Shelf"
+descr
+"This is the western-most shelf of the second row of shelves
+in the toy makers storage room.  You are still able to see the
+northern and eastern shelves from here.  This shelf appears a
+little more solidly constructed than the one below it.  From
+here you are able to traverse the second row of shelves by
+going to the north or you can go to a higher or lower set of
+shelves bye going up to down the ladder."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to shelf6 descr
+"To the north the shelves continue";
+up to shelf3 descr
+"Up the ladder you see the third row of shelves.";
+down to shelf1 descr
+"Down the ladder is the first row of shelves.";
+end
+
+shelf3
+names {"shelf"}
+title "On the Shelf"
+descr
+"This is the far western shelf of third tier of shelving.
+The shelf itself appears to be made of plaster as though it
+was originally part of the wall, not a wooden add on like the
+others.  You are able to circle the room using the shelf by
+going to the north.  Should you choose to go up or down, you
+simply have to use the ladder that connects the western
+shelves."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to shelf7 descr
+"To the north the shelves continue";
+up to shelf4 descr
+"Up the ladder you see the third row of shelves.";
+down to shelf2 descr
+"Down the ladder is the first row of shelves.";
+end
+
+shelf4
+names {"shelf"}
+title "On the Shelf"
+descr
+"This is the highest of the shelves in the storage room.
+>From here you realize that it is a great deal of distance
+from here to the floor.  As with the other rows of shelves
+you can go around the room from here simply by going north.
+The only other exit from here is to go back down the ladder."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to shelf8 descr
+"To the north the shelves continue";
+down to shelf3 descr
+"Down the ladder is the first row of shelves.";
+end
+
+shelf5
+names {"shelf"}
+title "On the Shelf"
+descr
+"This is the northern most of the first row of shelves in the
+storage room.  This shelf is not that high but as you look down
+to the floor, you quickly decide you would not want to jump that
+far.  To the west and east the shelves continue around the wall
+with more than enough room for your shrunken form.  Above you is
+another row of shelves but there is no way to get up there from
+this location."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+west to shelf1 descr
+"To the west the shelves continue.";
+east to shelf9 descr
+"To the east the shelves continue.";
+end
+
+shelf6
+names {"shelf"}
+title "On the Shelf"
+descr
+"The northern-most part of the second shelf is somewhat
+dangerous looking.  The shelf sags in the middle and the
+wood appears to have rotted in spots.  It is clear by the
+amount of dust on the shelf that anything here has been
+neglected and forgotten for a long time.  To the east and
+west the shelf continues and looks a little more stable."
+extra {"dust"}
+"This is sawdust mostly.  It must have floated in from the workroom"
+extra {"wood"}
+"The wood here is rotten in parts.  It looks like it suffers from
+dry rot."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+west to shelf2 descr
+"To the west the shelves continue.";
+east to shelf10 descr
+"To the east the shelves continue.";
+end
+
+shelf7
+names {"shelf"}
+title "On the Shelf."
+descr
+"The plaster shelf continues to make its way around the room
+continuing to both the west and east.  From this height you
+get a good look at the floor of the storage room and see that
+it is covered in dust and has apparently not been cleaned in
+quite some time.  You can also see the braces for the shelf
+above and you wonder if the screws in the wall are going to
+hold much longer."
+extra {"floor"}
+"The floor of the storeroom is so covered in dust that you can see your
+own tiny foot prints."
+extra {"screws"}
+"It looks like they might come out at any moment."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+west to shelf3 descr
+"To the west the shelves continue.";
+east to shelf11 descr
+"To the east the shelves continue.";
+end
+
+shelf8
+names {"shelf"}
+title "On the Shelf"
+descr
+"The topmost shelf continues around the north wall.  At this
+point the shelf sags a bit due to the lack of support from below.
+Both the western and eastern shelves look a touch more stable and
+you find yourself wanting to move to them quickly to avoid falling
+from this great height."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+west to shelf4 descr
+"To the west the shelves continue.";
+east to shelf12 descr
+"To the east the shelves continue.";
+end
+
+
+shelf9
+names {"shelf"}
+title "On the Shelf"
+descr
+"The lowest of the eastern shelves appears to be the
+newest of all the shelves.  As you look at it however,
+you see that the age of the shelf is not the real factor
+in its appearance.  This shelf appears less bleached by the
+sun that all its counterparts.  As you look at the shelf
+above you see that it's shadow keeps the sun from ever directly
+hitting this shelf.  The only way off this shelf it seems, is
+to go back around the first shelf to the north."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to shelf5 descr
+"To the north the shelves continue.";
+end
+
+shelf10
+names {"shelf"}
+title "On the Shelf"
+descr
+"This shelf, along with the one above it crosses a large stained
+glass window on the east wall.  The window itself shows a scene
+of a unicorn on an island in the middle of a lake.  The flow
+of light through the window has caused this shelf to fade and
+take on an appearance of driftwood.  You find yourself hoping
+it is far stronger than it appears."
+extra {"window"}
+"The window is beautiful in its colors and somehow the artist
+has managed to capture the true innocence of the unicorn within
+the glass."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to shelf6 descr
+"To the north the shelves continue.";
+end
+
+shelf11
+names {"shelf"}
+title "On the Shelf"
+descr
+"As the plaster shelf continues its circle about the room
+it becomes the top frame for the window below.  The odd
+shadows cast by the window make this area look almost
+evil in a way.  You watch the shadows slowly flicker
+and wonder if perhaps they too do not have a life of their
+own.  The only way you see out of this place is to go
+around the shelf which continues to the north."
+extra {"shadow", "shadows"}
+"They are really creepy."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to shelf7 descr
+"To the north the shelves continue.";
+end
+
+shelf12
+names {"shelf"}
+title "On the Shelf"
+descr
+"The far eastern part of the top row of shelves is somehow
+remarkably dust free.  In fact it is the cleanest part of
+the room as far as you can tell.  The wood has been polished
+to a gleaming shine and you can almost see yourself in it.
+As clean as it is however it is not very exciting and when
+you look around you find that the only way off this part of
+the shelf is to go north."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to shelf8 descr
+"To the north the shelves continue.";
+end
+
+heating1
+names {"heating system"}
+title "Inside the Heating System"
+descr
+"This area behind the closet vent is a tunnel made of
+some type of hardened pottery.  You would guess from its
+design that it is used to conduct heat from one central
+point to the rest of the house.  From here the tunnel
+itself runs north and south while the vent to the closet
+is to the east."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"clay", "pipe", "tunnel"}
+"This tunnel is made of a ceramic pipe."
+extra {"vent"}
+"This is the heating vent that leads to the closet."
+north to heating2 descr
+"The heating pipe continues to the north.";
+south to heating15 descr
+"The heating pipe continues to the south.";
+east to house7 open {EX_OPEN_CLOSE, EX_CLOSED}
+descr "There is a vent on the east wall." keyword {"vent"};
+end
+
+heating2
+names {"heating system"}
+title "Inside the Heating System"
+descr
+"This is a section of north-south running heating pipe.  The
+pipe is made of a fired red clay and has clearly seen better
+days.  In the distance to the north you see that the pipe makes
+an east turn.  You can sense by the flow of air through the pipe
+that an outlet vent is nearby."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"clay", "pipe", "tunnel"}
+"This tunnel is made of a ceramic pipe."
+north to heating3 descr
+"The heating pipe continues to the north.";
+south to heating1 descr
+"The heating pipe continues to the south.";
+end
+
+heating3
+names {"heating system"}
+title "Inside the Heating System"
+descr
+"You are at a three way intersection of pipes.  One pipe runs
+straight down and while you think it might be dangerous, you feel
+you would be able to climb down it.  Another pipe runs due east
+for as far as you can see.  The third pipe that makes up this
+odd intersection runs to the south."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"clay", "pipe", "tunnel"}
+"This tunnel is made of a ceramic pipe."
+south to heating2 descr
+"The heating pipe continues to the south.";
+east to heating4 descr
+"The heating pipe continues to the east.";
+down to heating10 descr
+"The heating pipe goes down.";
+end
+
+heating4
+names {"heating system"}
+title "Inside the Heating System"
+descr
+"This section of pipe has been penetrated by the persistence
+of plants.  Roots have managed to pierce the pipe and hang down
+from the top of it.  It is unfortunate that there is no
+water running through the pipe and thus the roots have won
+their way through only to die.  The pipe continues to both the
+east and west."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"clay", "pipe", "tunnel"}
+"This tunnel is made of a ceramic pipe."
+extra {"root", "roots", "plants"}
+"Persistent though they were, it was in vain for they are dead now."
+east to heating5 descr
+"The heating pipe continues to the east.";
+west to heating3 descr
+"The heating pipe continues to the west.";
+end
+
+
+heating5
+names {"heating system"}
+title "Inside the Heating System"
+descr
+"This is the area of the heating system the provides an outlet
+to the study of the house.  From here you can see that
+heating pipes run both east and west, while the vent to the south
+provides an exit from the pipe system."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"clay", "pipe", "tunnel"}
+"This tunnel is made of a ceramic pipe."
+extra {"vent"}
+"This is the heating vent that leads to the study."
+west to heating4 descr
+"The heating pipe continues to the west.";
+east to heating6 descr
+"The heating pipe continues to the east.";
+south to house4 open {EX_OPEN_CLOSE, EX_CLOSED}
+descr "There is a vent on the south wall." keyword {"vent"};
+end
+
+heating6
+names {"heating system"}
+title "Inside the Heating System"
+descr
+"This is just a plain section of heating pipe.  The only
+real thing of note is the dust that seems to fill the entire
+pipe.  As you walk through it you wonder how anyone could have
+such a dusty heating system and still be healthy.  The pipe
+continues in an east west fashion."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"clay", "pipe", "tunnel"}
+"This tunnel is made of a ceramic pipe."
+extra {"dust"}
+"Dust is prevalent throughout the heating pipes."
+east to heating7 descr
+"The heating pipe continues to the east.";
+west to heating5 descr
+"The heating pipe continues to the west.";
+end
+
+heating7
+names {"heating system"}
+title "Inside the Heating System"
+descr
+"Three pipes merge here to make an intersection.  One of the
+pipes goes down at a slope that makes you feel you could
+travel it and still keep your feet.  The other two pipes run
+west and south at a more or less level incline.  As you consider
+which way to go you catch yourself wondering what would happen
+if you were to return to your normal size while still in these
+pipes."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"clay", "pipe", "tunnel"}
+"This tunnel is made of a ceramic pipe."
+south to heating8 descr
+"The heating pipe continues to the south.";
+west to heating6 descr
+"The heating pipe continues to the east.";
+down to heating11 descr
+"The heating pipe goes down.";
+end
+
+heating8
+names {"heating system"}
+title "Inside the Heating System"
+descr
+"You are in a north-south running section of heating pipe.
+As the pipe continues to the north you see an intersection
+while to the south the lighting betrays the existence of
+another vent."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"clay", "pipe", "tunnel"}
+"This tunnel is made of a ceramic pipe."
+extra {"dust"}
+"Dust is prevalent throughout the heating pipes."
+east to heating7 descr
+"The heating pipe continues to the east.";
+west to heating5 descr
+"The heating pipe continues to the west.";
+south to heating9 descr
+"The heating pipe continues to the south.";
+end
+
+
+
+heating9
+names {"heating system"}
+title "Inside the Heating System"
+descr
+"You have come to the part of the heating system that provides
+heat for the toy makers workroom.  The heating pipes run both
+north and south from here and you are also able to enter the
+main part of the house through the use of the vent to the west."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"clay", "pipe", "tunnel"}
+"This tunnel is made of a ceramic pipe."
+extra {"vent"}
+"This is the heating vent that leads to the closet."
+north to heating8 descr
+"The heating pipe continues to the north.";
+south to heating14 descr
+"The heating pipe continues to the south.";
+west to house6 open {EX_OPEN_CLOSE, EX_CLOSED}
+descr "There is a vent on the east wall." keyword {"vent"};
+end
+
+heating10
+names {"heating system"}
+title "Inside the Heating System"
+descr
+"This is a turning point in the vertical pipe. The
+movement of air is strong here, making the dust sting your
+eyes.  To the east you see an intersection of large pipes
+while above you smaller pipes come together to form yet
+another intersection."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"clay", "pipe", "tunnel"}
+"This tunnel is made of a ceramic pipe."
+extra {"dust"}
+"Dust is prevalent throughout the heating pipes."
+east to heating12 descr
+"There is an intersection of large pipes to the east.";
+up to heating3 descr
+"There is an intersection of small pipes above.";
+end
+
+heating11
+names {"heating system"}
+title "Inside the Heating System"
+descr
+"The pipe turns here as it makes its way to either of two
+waiting intersections.  The one to the west is composed of
+large pipes while the one above is smaller with this pipe
+being the largest."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"clay", "pipe", "tunnel"}
+"This tunnel is made of a ceramic pipe."
+extra {"dust"}
+"Dust is prevalent throughout the heating pipes."
+west to heating12 descr
+"There is an intersection of large pipes to the west.";
+up to heating7 descr
+"There is an intersection of small pipes above.";
+end
+
+heating12
+names {"heating system"}
+title "Inside the Heating System"
+descr
+"This is a massive intersection of heating pipes.  One
+exceptionally large pipe runs almost straight down and
+though you are certain you could travel that way you are
+not so certain it is a wise decision.  The large pipe
+splits off at this point into two smaller ones that run
+east and west at slight upward slopes."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"clay", "pipe", "tunnel"}
+"This tunnel is made of a ceramic pipe."
+extra {"dust"}
+"Dust is prevalent throughout the heating pipes."
+east to heating11 descr
+"The heating system continues to the east.";
+west to heating10 descr
+"The heating system continues to the west.";
+down to heating13 descr
+"The massive pipe leads down.";
+end
+
+heating13
+names {"heating system"}
+title "Inside the Heating System"
+descr
+"You are in a giant pipe that provides the main conduit for
+heat coming up from the furnace below.  Thankfully the main
+heater below you is not currently active or you would find
+yourself being baked alive.  Above you the pipe splits in
+order to distribute heat throughout the entire house.  Below
+you is an opening into the furnace itself."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"clay", "pipe", "tunnel"}
+"This tunnel is made of a ceramic pipe."
+extra {"dust"}
+"Dust is prevalent throughout the heating pipes."
+up to heating12 descr
+"There is an intersection of large pipes above you.";
+down to furnace descr
+"The main heating unit is below.";
+end
+
+heating14
+names {"heating system"}
+title "Inside the Heating System"
+descr
+"You are at a turning point in the heating system.  To the
+north the pipes continue in a level fashion.  The pipes also
+go up from this point in what would be a manageable climb. It
+appears that the pipes above are a little smaller than those to
+the north and you surmise that perhaps you near the end point
+for the heating system."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"clay", "pipe", "tunnel"}
+"This tunnel is made of a ceramic pipe."
+extra {"dust"}
+"Dust is prevalent throughout the heating pipes."
+north to heating9 descr
+"The heating pipes continue to the north.";
+up to heating17 descr
+"The heating pipes continue above.";
+end
+
+heating15
+names {"heating system"}
+title "Inside the Heating System"
+descr
+"You have reached the southwest corner of the heating system for
+the house.  At this point the pipes go only north to the western
+heating vent or up.  Above you the pipes narrow and you think that
+perhaps the heating system comes to an end somewhere up there."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"clay", "pipe", "tunnel"}
+"This tunnel is made of a ceramic pipe."
+extra {"dust"}
+"Dust is prevalent throughout the heating pipes."
+north to heating1 descr
+"The heating pipes continue to the north.";
+up to heating16 descr
+"The heating pipes continue above.";
+end
+
+heating16
+names {"heating system"}
+title "Inside the Heating System"
+descr
+"The pipe turns here and leads to an odd three way intersection
+to the east.  Below you the pipe continues then makes a northern
+turn.  The air does not move much here and there is a thick coating
+of dust all around."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"clay", "pipe", "tunnel"}
+"This tunnel is made of a ceramic pipe."
+extra {"dust"}
+"Dust is prevalent throughout the heating pipes."
+east to heating18 descr
+"There is an intersection to the east.";
+down to heating15 descr
+"The pipe makes a northern turn below you.";
+end
+
+heating17
+names {"heating system"}
+title "Inside the Heating System"
+descr
+"You are in a bend in the heating pipes.  The pipe itself
+has no real noticeable air flow and you wonder it this would
+make an effective heating system at all.  To the west the
+pipe enters an intersection while below you the tunnel
+continues and becomes a little larger."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"clay", "pipe", "tunnel"}
+"This tunnel is made of a ceramic pipe."
+extra {"dust"}
+"Dust is prevalent throughout the heating pipes."
+west to heating18 descr
+"There is an intersection to the west.";
+down to heating14 descr
+"The pipe makes a northern turn below you.";
+end
+
+heating18
+names {"heating system"}
+title "Inside the Heating System"
+descr
+"This intersection of heating pipes offers you three
+directions in which you can travel.  The pipe above you
+seems stable enough to climb without much danger. Both
+east and west offer steady downward slopes and the promise
+of easy travel."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"clay", "pipe", "tunnel"}
+"This tunnel is made of a ceramic pipe."
+extra {"dust"}
+"Dust is prevalent throughout the heating pipes."
+east to heating17 descr
+"There is an intersection to the east.";
+west to heating16 descr
+"The pipe makes a northern turn below you.";
+up to heating19 descr
+"The pipe continues above you.";
+end
+
+heating19
+names {"heating system"}
+title "Inside the Heating System"
+descr
+"This is the end point of the heating system.  To the
+north you see a vent opening out to the attic of the house
+and you notice that apparently the vent has been used
+by someone else as there is a round hole in it big
+enough for you to walk through.  Below you is an intersection
+of heating pipes that run through the house."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"clay", "pipe", "tunnel"}
+"This tunnel is made of a ceramic pipe."
+extra {"vent"}
+"This heating vent is broken and looks as though it might be used
+by a mouse or similar creature."
+north to attic1 descr
+"The attic is to the north.";
+down to heating18 descr
+"The heating pipes intersect below you.";
+end
+
+furnace
+names {"furnace"}
+title "Inside the Furnace"
+descr
+"You are inside a giant furnace.  There is a great deal of
+ash and dust here apparently left over from the fires of
+the past.  Above you is the main pipe for the heating
+system that runs through the house.  To the south is
+the furnace door."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"ash", "dust"}
+"The ash and dust is all that is left of the wood that once burned here."
+extra {"door"}
+"This door is made of iron and looks quite heavy."
+up to heating13 descr
+"The heating pipe is above you.";
+south to basement1 open {EX_OPEN_CLOSE, EX_CLOSED}
+descr "The door of the furnace is to the south." keyword {"door"};
+end
+
+basement1
+names {"basement"}
+title "In the Basement"
+descr
+"This is just a giant version of what you might find in any
+craftman's basement.  There are cans of paint against the west
+wall along with a variety of tools most of which you are not
+familiar with.  To the north is a furnace which provides heat
+to the house.  Along the east wall is stacked a giant pile
+of firewood placed just below a sloping set of stairs.  The
+giant basement continues to the south."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"paint", "cans"}
+"These are paints used in the painting of toys."
+extra {"furnace"}
+"This is the heating furnace for the house."
+extra {"wood", "firewood"}
+"Just firewood only really big"
+extra {"stairs"}
+"These stairs go up but they are too big for you to climb."
+south to basement2 descr
+"The basement continues to the south.";
+north to furnace open {EX_OPEN_CLOSE, EX_CLOSED}
+descr "The furnace door is to the north." keyword {"door"};
+end
+
+basement2
+names {"in the basement"}
+title "In the Basement"
+descr
+"This is the south end of the basement.  The basement itself
+appears to have earth walls covered in mortar.  The floor is
+bare earth.  On the south wall you see what looks like a mouse
+hole or  tunnel of some kind.  On the ground there are a variety
+of broken toy parts.  Apparently they are the results of
+some of the toy makers failed efforts.  The rest of the basement
+is to the north."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+extra {"wall", "walls", "mortar"}
+"The walls are made of dirt coated in plaster."
+extra {"parts", "toy parts"}
+"Broken bits of puppet bodies mostly."
+extra {"hole", "mouse hole"}
+"A tunnel made by a rodent"
+south to exit1 descr
+"There is a mouse hole to the south.";
+north to basement1 descr
+"The remainder of the basement is to the north.";
+end
+
+exit1
+names {"mouse hole"}
+title "Inside a Mouse Hole"
+descr
+"This is a tunnel into the basement dug by a mouse.  The
+tunnel runs south from here for quite a long distance
+however you can just see a point of light at the far end
+of it.  To the north you can see the basement of the house."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT, UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+north to basement2 descr
+"The basement is to the north.";
+south to exit2 descr
+"The mouse tunnel continues south.";
+end
+
+/*okay these next couple of rooms will need the force move setup */
+
+exit2
+names {"mouse hole"}
+title "Inside a Mouse Hole"
+descr
+"As you get closer to the end of the tunnel you find yourself
+beginning to grow.  It appears that the magic making you small
+is starting to run out.  You give only a moment's thought to
+being buried alive as you run for the end of the tunnel."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+south to exit3 descr
+"The mouse tunnel continues south.";
+dilcopy force_out("exit3@toy",5,
+"You feel yoursefelf getting larger and run for the end of the tunnel.",
+"$3n starts getting larger and begins to run for the exit.");
+end
+
+exit3
+names {"mouse hole"}
+title "Inside a Mouse Hole"
+descr
+"You panic as you think for a moment you might not make it to
+the end of the tunnel before you return to your full size.
+Just as you think you are doomed to be buried alive you see
+the sky through the opening in the tunnel ahead."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+south to yard8 descr
+"The mouse tunnel opens to the sky in the south.";
+dilcopy force_out("yard8@toy",5,
+"You just manage to escape the tunnel as you regain your full height.",
+"$3n just manages to escape before returning to full height.");
+end
+
+enter1
+names {"mouse hole"}
+title "Falling into a Mouse Hole"
+descr
+"You find yourself both shrinking and falling.  Below you the mouse
+hole that so recently appeared only as large as your toe is now a
+gaping abyss.  Unable to react to this shocking change you plummet
+towards the mouse hole."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+south to exit3 descr
+"The mouse tunnel continues south.";
+end
+
+/*okay that should do it with force moves for here */
+
+attic1
+names {"attic"}
+title "In the Attic"
+descr
+"This room is more or less what you would expect from an
+attic.  The only unusual part is the scale all of it is done
+on.  You can see old pieces of furniture covered in cloth and
+dust which covers every surface.  There are also a host of
+discarded toys here.  To the south you see the vent leading
+to the house heating system.  To the north is the remainder
+of the attic."
+extra {"furniture"}
+"You see a chair and maybe some pictures covered in cloth"
+extra {"cloth"}
+"Just a large white drape cloth"
+extra {"toy", "toys"}
+"Apparently these are simply not the latest models."
+extra {"vent"}
+"The vent has a hole in it from where a mouse or something else
+has used it to get into the heating system."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+south to heating19 descr
+"The vent to the heating system is south.";
+north to attic2 descr
+"the rest of the attic is to the north.";
+end
+
+attic2
+names {"attic"}
+title "In the Attic"
+descr
+"This part of the attic is still used to store furniture.
+There is an old sofa to one side and a table against the
+north wall.  Old toys still litter the floor and you find
+yourself feeling a little sorry for these discarded play
+things.  At least you do until you realize most of them
+are mime dolls."
+extra {"furniture"}
+"Unused furniture covered in cloth"
+extra {"cloth"}
+"Just a large white drape cloth"
+extra {"toy", "toys"}
+"Mimes. Ick."
+extra {"sofa"}
+"Just an unused sofa."
+extra {"table"}
+"A covered table rests against the north wall.  You find you want to
+climb it to get a better view but you can see no way to do so."
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+south to attic1 descr
+"the rest of the attic is to the south.";
+end
+
+river1
+names {"river"}
+title "On the River"
+descr
+"The river here is rather calm but still quick moving.
+To the south the river is bordered by a steep bank that
+makes an exit in that direction impossible.  To the west
+the river comes out of a group of low lying trees  but
+you think you could get your water craft through them.
+To the east the river continues while to the north you
+see the inviting bank of a forest clearing."
+movement SECT_WATER_SAIL
+north to yard7 descr
+"The forest clearing is to the north.";
+east to river2 descr
+"The river flows to the east.";
+west to lightriver@haon_dor descr
+"The river goes to the west.";
+end
+
+river2
+names {"river"}
+title "On the River"
+descr
+"The river here has a nice pace for sailing although
+you would not want to swim in it.  To the
+south you see the bank of the river is far too
+steep to climb.  The way upstream is a bit difficult
+to manage but still passable.  To the east the river
+continues on its course.  To the north the forest
+clearing invites you."
+movement SECT_WATER_SAIL
+north to yard8 descr
+"The forest clearing is to the north.";
+west to river1 descr
+"The river flows from the west.";
+east to river3 descr
+"The river flows to the east.";
+end
+
+river3
+names {"river"}
+title "On the River"
+descr
+"At this point the river picks up pace.  To the west
+the upstream part of the river is a bit more relaxed
+and leisurely.  To the east the river moves faster
+still.  To the south the embankment becomes all but
+a cliff and passage that way is not possible.  To the
+north the edge of a clearing in the forest can be
+seen."
+movement SECT_WATER_SAIL
+north to yard9 descr
+"The forest clearing is to the north.";
+west to river2 descr
+"The river flows from the west.";
+east to river4 descr
+"The river flows to the east.";
+end
+
+river4
+names {"river"}
+title "On the River"
+descr
+"The river here moves at lightning speed.  It is all
+you can do to keep your boat in the middle.  Upstream
+to the west you see calmer waters while to the east
+you see what can only be more of the same harrowing
+water.  South and north are both occupied by white
+water and are impassable."
+movement SECT_WATER_SAIL
+west to river3 descr
+"The river flows from the west.";
+east to river5 descr
+"The river flows to the east.";
+end
+
+river5
+names {"river"}
+title "On the River"
+descr
+"The river here is at its worst.  The water crashes onto
+rocks to the north and south of you, spraying mist into
+your face and water into your boat.  Just as you think
+that passage to the east is not possible you glimpse
+a sight that calms your heart.  Smooth water."
+movement SECT_WATER_SAIL
+west to river4 descr
+"The river flows from the west.";
+east to river6 descr
+"The river flows to the east.";
+end
+
+river6
+names {"river"}
+title "On the River"
+descr
+"The river here is calm and gentle flowing from the
+turbulent waters to the west into a clearing of some
+sort to the north.  The water is not navigable further
+north but you could most likely walk to the clearing.
+To the west the river rapids await daring souls
+brave enough to try and pass them.  To the south the
+water still looks a little too violent to pass.  While
+to the east it takes on a peaceful look."
+movement SECT_WATER_SAIL
+west to river5 descr
+"The river flows from the west.";
+north to sprite1 descr
+"There is some type of clearing to the east.";
+east to river@udgaard descr
+"The river looks more peaceful to the south.";
+end
+
+
+sprite1
+names{"hidden clearing"}
+title "Hidden Clearing"
+descr
+" You stand where the river enters the pixie clearing.
+The grass here is a bright green with brilliant red
+lines running the length of the blades.  To the north
+it appears that the entire setting takes on a blue tinge.
+west of here the river is navigable but the south is
+a collection of rapids that make it impossible to walk or
+sail.  East of here the clearing continues and it seems
+that the red from the grass becomes the dominant color."
+movement SECT_FIELD
+extra {"grass"}
+"The grass is green with a red stripe that looks painted on."
+extra {"river", "rapids"}
+"The river is calm to the west but boils violently south."
+west to river6 descr
+"To the west the river is sailable.";
+north to sprite2 descr
+"The clearing continues to the north";
+east to sprite3 descr
+"The clearing continues to the east";
+end
+
+sprite2
+names{"hidden clearing"}
+title "Hidden Clearing"
+descr
+" This part of the sprite clearing looks as if everything
+has been painted a different shade of blue.  The grass is
+blue, the trees are blue, and even the sunlight here appears
+blue.  To the south the clearing looks a bit more normal
+while to the east the color orange prevails.  North and
+west are unpassble due to the density of the bright blue
+forest."
+movement SECT_FIELD
+east to sprite4 descr
+"The clearing continues to the east.";
+south to sprite1 descr
+"The clearing continues to the south";
+end
+
+
+sprite3
+names{"hidden clearing"}
+title "Hidden Clearing"
+descr
+" Apparently this part of the clearing has not yet
+been completely painted.  Bits of red paint stick
+to your boots as you walk through.  What is not yet
+completely red looks to be a work in progress by the
+sprites in their fanatical desire to paint the world
+a brighter color.  To the north it seems they have
+chosen the color orange while to the west natural
+green prevails still.  South and East are both nicely
+blocked by huge red trees."
+movement SECT_FIELD
+north to sprite4 descr
+"The clearing continues to the north.";
+west to sprite1 descr
+"The clearing continues to the west";
+end
+
+
+sprite4
+names{"hidden clearing"}
+title "Hidden Clearing"
+descr
+" The orange color the sprites have chosen for
+this part of the clearing is much the same as you
+would expect to see during a beach sunset.  Every
+aspect of the clearing has been painted that brilliant
+color.  To the south it appears that the sprites have
+gone for a touch of red while to the west blue was their
+clear choice.  The remainder of the forest remains free
+of these winged artists only because the way is unpassable
+both north and east."
+movement SECT_FIELD
+west to sprite2 descr
+"The clearing continues to the west.";
+south to sprite3 descr
+"The clearing continues to the south";
+end
+
+
+%mobiles
+
+d_bunny
+names {"dust bunny", "dust", "bunny"}
+title "an animated dust bunny"
+descr "An animated dust bunny with glowing red eyes is here"
+extra {}
+"This is a ball of dust that has somehow become animated by
+the magic of the house.  Its eyes glow red deep within the
+dust and you know it has nothing good in mind for you."
+race RACE_GOLEM
+level 7
+height 50
+weight 50
+money 4 IRON_PIECE
+sex SEX_NEUTRAL
+NATURAL_DEF(WPN_CLAW, ARM_CLOTHES)
+exp 105
+/*aggressive, 105% exp */
+alignment 0
+/* MSET_ABILITY (str,dex,con,hp,bra,cha,mag,div) */
+MSET_ABILITY(17,28,10,10,10,5,10,10)
+/* MSET_WEAPON(axe_ham,sword,club_mace,polearm,unarmed,special) */
+MSET_WEAPON(5,5,5,5,20,5)
+/* (div,pro,det,sum,cre,min,hea,col,cel,int,ext) */
+MSET_SPELL(18,2,2,2,2,2,19,2,2,2,2)
+special SFUN_RANDOM_ZONE_MOVE time 250 bits SFB_RANTIME
+special SFUN_AGGRESSIVE "$1n attacks $3n!" time 200
+                                        bits SFB_RANTIME
+
+end
+
+mouse
+names {"large mouse", "mouse"}
+title "a mouse"
+descr "A very large mouse is here"
+extra {}
+"This is one of the largest mice you have ever seen.
+Other than that it looks fairly normal.  It has brown
+fur black eyes and everything else you would expect
+from a mouse."
+race RACE_MOUSE
+level 8
+height 70
+weight 70
+money 4 IRON_PIECE
+sex SEX_MALE
+NATURAL_DEF(WPN_CLAW, ARM_CLOTHES)
+exp 105
+/*aggressive, 105% exp */
+alignment 0
+/* MSET_ABILITY (str,dex,con,hp,bra,cha,mag,div) */
+MSET_ABILITY(17,28,10,10,10,5,10,10)
+/* MSET_WEAPON(axe_ham,sword,club_mace,polearm,unarmed,special) */
+MSET_WEAPON(5,5,5,5,20,5)
+/* (div,pro,det,sum,cre,min,hea,col,cel,int,ext) */
+MSET_SPELL(18,2,2,2,2,2,19,2,2,2,2)
+special SFUN_RANDOM_ZONE_MOVE time 250 bits SFB_RANTIME
+special SFUN_AGGRESSIVE "$1n attacks $3n!" time 200
+                                        bits SFB_RANTIME
+
+end
+
+hand_puppet
+names {"hand puppet", "puppet"}
+title "an animated hand puppet"
+descr "An animated hand puppet is here"
+extra {}
+"This is the most basic of the toy makers toys.
+It is a small puppet that a child puts their hand
+in to make it come alive.  It appears  that
+the child will not be necessary as the magic of this
+house seems to have done the job quite nicely."
+race RACE_GOLEM
+level 8
+height 50
+weight 50
+money 4 IRON_PIECE
+sex SEX_NEUTRAL
+NATURAL_DEF(WPN_CLAW, ARM_CLOTHES)
+exp 100
+alignment 0
+/* MSET_ABILITY (str,dex,con,hp,bra,cha,mag,div) */
+MSET_ABILITY(17,28,10,10,10,5,10,10)
+/* MSET_WEAPON(axe_ham,sword,club_mace,polearm,unarmed,special) */
+MSET_WEAPON(5,5,5,5,20,5)
+/* (div,pro,det,sum,cre,min,hea,col,cel,int,ext) */
+MSET_SPELL(18,2,2,2,2,2,19,2,2,2,2)
+
+end
+
+toy_mouse
+names {"toy mouse", "mouse"}
+title "a toy mouse"
+descr "A toy mouse spins around here."
+extra {}
+"This is a wind up toy mouse made alive by the
+magic of the toy makers house."
+race RACE_GOLEM
+level 9
+height 60
+weight 55
+money 4 IRON_PIECE
+sex SEX_NEUTRAL
+NATURAL_DEF(WPN_CLAW, ARM_CLOTHES)
+exp 100
+alignment 0
+/* MSET_ABILITY (str,dex,con,hp,bra,cha,mag,div) */
+MSET_ABILITY(17,28,10,10,10,5,10,10)
+/* MSET_WEAPON(axe_ham,sword,club_mace,polearm,unarmed,special) */
+MSET_WEAPON(5,5,5,5,20,5)
+/* (div,pro,det,sum,cre,min,hea,col,cel,int,ext) */
+MSET_SPELL(18,2,2,2,2,2,19,2,2,2,2)
+special SFUN_RANDOM_ZONE_MOVE time 250 bits SFB_RANTIME
+
+dilbegin mouse_toy();
+
+var
+ i : integer;
+pc : unitptr;
+
+code
+{
+heartbeat := PULSE_SEC * 4;
+interrupt(SFB_COM, self.position == POSITION_FIGHTING, combat);
+
+:start:
+wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and (self.position != POSITION_FIGHTING)));
+i := rnd(1,100);
+if (i<25)goto start;
+pc := activator;
+secure(pc, lost);
+if(pc.minv > 0) goto start;
+exec("emote scurries about.",self);
+pause;
+exec("emote spins around in a circle.",self);
+pause;
+exec("zig", self);
+pause;
+exec("emote runs up to you and sniffs.",self);
+pause;
+exec("lick"+pc.name, self);
+
+
+:twait:
+pause;
+goto twait;
+
+:lost:
+pause;
+unsecure(pc);
+goto start;
+
+:combat:
+heartbeat := PULSE_SEC*3;
+while (self.position == POSITION_FIGHTING) pause;
+heartbeat := PULSE_SEC*10;
+pause;
+pause;
+pause;
+goto start;
+
+}
+dilend
+end
+
+house_cat
+names {"house cat", "cat"}
+title "a house cat"
+descr "A giant house cat."
+extra {}
+"This is the toy makers house cat.  It is a real
+pity that in your shrunken state you must look a
+lot like a mouse to it."
+race RACE_CAT
+level 13
+height 170
+weight 175
+money 4 IRON_PIECE
+sex SEX_NEUTRAL
+NATURAL_DEF(WPN_CLAW, ARM_CLOTHES)
+exp 105
+/*aggressive in the dil code so I gave it an exp bonus */
+alignment 0
+/* MSET_ABILITY (str,dex,con,hp,bra,cha,mag,div) */
+MSET_ABILITY(17,28,10,10,10,5,10,10)
+/* MSET_WEAPON(axe_ham,sword,club_mace,polearm,unarmed,special) */
+MSET_WEAPON(5,5,5,5,20,5)
+/* (div,pro,det,sum,cre,min,hea,col,cel,int,ext) */
+MSET_SPELL(18,2,2,2,2,2,19,2,2,2,2)
+special SFUN_RANDOM_ZONE_MOVE time 250 bits SFB_RANTIME
+
+dilbegin cat_pounce();
+
+var
+ i : integer;
+pc : unitptr;
+
+code
+{
+heartbeat := PULSE_SEC * 4;
+interrupt(SFB_COM, self.position == POSITION_FIGHTING, combat);
+
+:start:
+wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and (self.position != POSITION_FIGHTING)));
+i := rnd(1,100);
+if (i<25)goto start;
+pc := activator;
+secure(pc, lost);
+if(pc.minv > 0) goto start;
+exec("emote meows.",self);
+pause;
+exec("emote licks its very sharp teeth.",self);
+pause;
+exec("emote looks at you with glowing eyes.", self);
+pause;
+exec("emote hisses and runs towards you.",self);
+pause;
+exec("kill"+pc.name, self);
+
+
+:twait:
+pause;
+goto twait;
+
+:lost:
+pause;
+unsecure(pc);
+goto start;
+
+:combat:
+heartbeat := PULSE_SEC*3;
+while (self.position == POSITION_FIGHTING) pause;
+heartbeat := PULSE_SEC*10;
+pause;
+pause;
+pause;
+goto start;
+
+}
+dilend
+end
+
+mime
+names {"mime doll", "doll", "mime"}
+title "a mime doll"
+descr "An animated mime doll moves around silently here."
+extra {}
+"This is a doll done up to look like a mime.  It has been
+animated by the magic of the toy makers house and is even
+more annoying than a real mime.  Perhaps you should kill
+it before some child sees it and grows up to be a mime."
+race RACE_GOLEM
+level 10
+height 60
+weight 550
+money 4 IRON_PIECE
+sex SEX_NEUTRAL
+NATURAL_DEF(WPN_CLAW, ARM_CLOTHES)
+exp 100
+alignment 0
+/* MSET_ABILITY (str,dex,con,hp,bra,cha,mag,div) */
+MSET_ABILITY(17,28,10,10,10,5,10,10)
+/* MSET_WEAPON(axe_ham,sword,club_mace,polearm,unarmed,special) */
+MSET_WEAPON(5,5,5,5,20,5)
+/* (div,pro,det,sum,cre,min,hea,col,cel,int,ext) */
+MSET_SPELL(18,2,2,2,2,2,19,2,2,2,2)
+
+dilbegin mime_play();
+
+var
+ i : integer;
+pc : unitptr;
+
+code
+{
+heartbeat := PULSE_SEC * 4;
+interrupt(SFB_COM, self.position == POSITION_FIGHTING, combat);
+
+:start:
+wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and (self.position != POSITION_FIGHTING)));
+i := rnd(1,100);
+if (i<25)goto start;
+pc := activator;
+secure(pc, lost);
+if(pc.minv > 0) goto start;
+exec("emote acts like there is a wall where none exists.",self);
+pause;
+exec("emote acts like he is walking against the wind.",self);
+pause;
+exec("emote looks at you like he expects you to give him money.", self);
+pause;
+exec("emote acts like he is walking a dog.",self);
+pause;
+exec("emote acts like he is in a box that keeps getting smaller.", self);
+
+
+:twait:
+pause;
+goto twait;
+
+:lost:
+pause;
+unsecure(pc);
+goto start;
+
+:combat:
+heartbeat := PULSE_SEC*3;
+while (self.position == POSITION_FIGHTING) pause;
+heartbeat := PULSE_SEC*10;
+pause;
+pause;
+pause;
+goto start;
+
+}
+dilend
+end
+
+marionette
+names {"marionette", "toy", "doll"}
+title "a marionette"
+descr "An animated marionette is here pulling his own strings."
+extra {}
+"This is a puppet that has a wooden cross bar and strings
+connected to it in order to move him around.  It looks as
+though it moves quite well on its own however."
+race RACE_GOLEM
+level 11
+height 60
+weight 55
+money 4 IRON_PIECE
+sex SEX_NEUTRAL
+NATURAL_DEF(WPN_CLAW, ARM_CLOTHES)
+exp 105
+/*special dil used in combat so I gave him 5 extra */
+alignment 0
+/* MSET_ABILITY (str,dex,con,hp,bra,cha,mag,div) */
+MSET_ABILITY(17,28,10,10,10,5,10,10)
+/* MSET_WEAPON(axe_ham,sword,club_mace,polearm,unarmed,special) */
+MSET_WEAPON(5,5,5,5,20,5)
+/* (div,pro,det,sum,cre,min,hea,col,cel,int,ext) */
+MSET_SPELL(18,2,2,2,2,2,19,2,2,2,2)
+dilcopy mario_fight();
+dilbegin marionette_toy();
+
+var
+ i : integer;
+pc : unitptr;
+
+code
+{
+heartbeat := PULSE_SEC * 4;
+interrupt(SFB_COM, self.position == POSITION_FIGHTING, combat);
+
+:start:
+wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and (self.position != POSITION_FIGHTING)));
+i := rnd(1,100);
+if (i<25)goto start;
+pc := activator;
+secure(pc, lost);
+if(pc.minv > 0) goto start;
+exec("emote pulls one of his strings and his jaw drops open.",self);
+pause;
+exec("emote moves himself around in a little kossac dance.",self);
+pause;
+exec("emote pulls one of his strings too hard and kicks himself", self);
+pause;
+exec("emote gets tangled up in his strings and falls.",self);
+pause;
+exec("wink"+pc.name, self);
+
+
+:twait:
+pause;
+goto twait;
+
+:lost:
+pause;
+unsecure(pc);
+goto start;
+
+:combat:
+heartbeat := PULSE_SEC*3;
+while (self.position == POSITION_FIGHTING) pause;
+heartbeat := PULSE_SEC*10;
+pause;
+pause;
+pause;
+goto start;
+
+}
+dilend
+end
+
+jester
+names {"jester doll", "jester", "doll", "toy"}
+title "a jester doll"
+descr "A brightly colored jester doll is here."
+extra {}
+"This is a doll done up to look like the jesters that
+perform for kings.  However unlike those laughable clowns
+there is something just a touch sinister about these fool
+dolls brought to life."
+race RACE_GOLEM
+level 13
+height 60
+weight 55
+money 4 IRON_PIECE
+sex SEX_NEUTRAL
+NATURAL_DEF(WPN_CLAW, ARM_CLOTHES)
+exp 105
+/*special combat dil */
+alignment 0
+/* MSET_ABILITY (str,dex,con,hp,bra,cha,mag,div) */
+MSET_ABILITY(17,28,10,10,10,5,10,10)
+/* MSET_WEAPON(axe_ham,sword,club_mace,polearm,unarmed,special) */
+MSET_WEAPON(5,5,5,5,20,5)
+/* (div,pro,det,sum,cre,min,hea,col,cel,int,ext) */
+MSET_SPELL(18,2,2,2,2,2,19,2,2,2,2)
+dilcopy jester_fight();
+dilbegin jester_doll();
+
+var
+ i : integer;
+pc : unitptr;
+
+code
+{
+heartbeat := PULSE_SEC * 4;
+interrupt(SFB_COM, self.position == POSITION_FIGHTING, combat);
+
+:start:
+wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and (self.position != POSITION_FIGHTING)));
+i := rnd(1,100);
+if (i<25)goto start;
+pc := activator;
+secure(pc, lost);
+if(pc.minv > 0) goto start;
+exec("flip",self);
+pause;
+exec("emote does a tumbling hand spring.",self);
+pause;
+exec("zig", self);
+pause;
+exec("emote starts to grin a sinister grin.",self);
+pause;
+exec("emote spins his head all the way around.", self);
+
+
+:twait:
+pause;
+goto twait;
+
+:lost:
+pause;
+unsecure(pc);
+goto start;
+
+:combat:
+heartbeat := PULSE_SEC*3;
+while (self.position == POSITION_FIGHTING) pause;
+heartbeat := PULSE_SEC*10;
+pause;
+pause;
+pause;
+goto start;
+
+}
+dilend
+end
+
+soldier
+names {"toy soldier", "soldier", "toy"}
+title "a toy soldier"
+descr "A toy soldier is on maneuvers here."
+extra {}
+"This is a wooden soldier brought to life by the magic
+of the toy makers house."
+race RACE_GOLEM
+level 14
+height 60
+weight 65
+money 4 IRON_PIECE
+sex SEX_NEUTRAL
+NATURAL_DEF(WPN_CLAW, ARM_CLOTHES)
+exp 110
+/*teamworkng and special combat dil */
+alignment 0
+/* MSET_ABILITY (str,dex,con,hp,bra,cha,mag,div) */
+MSET_ABILITY(17,28,10,10,10,5,10,10)
+/* MSET_WEAPON(axe_ham,sword,club_mace,polearm,unarmed,special) */
+MSET_WEAPON(5,5,5,5,20,5)
+/* (div,pro,det,sum,cre,min,hea,col,cel,int,ext) */
+MSET_SPELL(18,2,2,2,2,2,19,2,2,2,2)
+special SFUN_TEAMWORK "soldier"
+dilcopy soldier_fight();
+dilbegin soldier_boy();
+
+var
+ i : integer;
+pc : unitptr;
+
+code
+{
+heartbeat := PULSE_SEC * 4;
+interrupt(SFB_COM, self.position == POSITION_FIGHTING, combat);
+
+:start:
+wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and (self.position != POSITION_FIGHTING)));
+i := rnd(1,100);
+if (i<25)goto start;
+pc := activator;
+secure(pc, lost);
+if(pc.minv > 0) goto start;
+exec("salute"+pc.name, self);
+pause;
+exec("emote snaps to attention.", self);
+pause;
+exec("emote starts to clean his area", self);
+pause;
+exec("emote inspects his weapons.", self);
+pause;
+exec("emote practices close order drill.", self);
+
+
+:twait:
+pause;
+goto twait;
+
+:lost:
+pause;
+unsecure(pc);
+goto start;
+
+:combat:
+heartbeat := PULSE_SEC*3;
+while (self.position == POSITION_FIGHTING) pause;
+heartbeat := PULSE_SEC*10;
+pause;
+pause;
+pause;
+goto start;
+
+}
+dilend
+end
+
+jack
+names {"grinning jack", "jack", "marionette", "toy"}
+title "Grinning Jack"
+descr "Grinning Jack the marionette is here."
+extra {}
+"This living toy look like nothing but pure evil.
+His grin is enough to make you want to hide."
+race RACE_GOLEM
+level 16
+height 80
+weight 75
+money 4 IRON_PIECE
+sex SEX_NEUTRAL
+NATURAL_DEF(WPN_CLAW, ARM_CLOTHES)
+exp 110
+/* he is armed has special combat dil is aggressive and backstabs */
+/*all in all he is a bad puppet */
+alignment -800
+/* MSET_ABILITY (str,dex,con,hp,bra,cha,mag,div) */
+MSET_ABILITY(17,28,10,5,15,5,10,10)
+/* MSET_WEAPON(axe_ham,sword,club_mace,polearm,unarmed,special) */
+MSET_WEAPON(5,20,5,5,5,5)
+/* (div,pro,det,sum,cre,min,hea,col,cel,int,ext) */
+MSET_SPELL(18,2,2,2,2,2,19,2,2,2,2)
+dilcopy mario_fight();
+dilbegin jack_fun();
+
+var
+
+pc : unitptr;
+
+code
+{
+heartbeat := PULSE_SEC * 4;
+interrupt(SFB_COM, self.position == POSITION_FIGHTING, combat);
+
+:start:
+wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and (self.position != POSITION_FIGHTING) and
+(activator.level < 50)));
+pc := activator;
+secure(pc, lost);
+if(pc.minv > 0) goto start;
+exec("moo",self);
+pause;
+exec("emote slowly grins an evil grin.",self);
+pause;
+exec("say I know what you want and you can't have it.", self);
+pause;
+exec("emote opens his razor.",self);
+pause;
+exec("say my heart is mine and mine alone!", self);
+pause;
+exec("backstab "+pc.name, self);
+
+
+:twait:
+pause;
+goto twait;
+
+:lost:
+pause;
+unsecure(pc);
+goto start;
+
+:combat:
+heartbeat := PULSE_SEC*3;
+while (self.position == POSITION_FIGHTING) pause;
+heartbeat := PULSE_SEC*10;
+pause;
+pause;
+pause;
+goto start;
+
+}
+dilend
+end
+
+sprite
+names {"sprite"}
+title "a sprite"
+descr "A sprite flies about here."
+extra {}
+"This is a magical little winged ferrie."
+race RACE_BROWNIE
+level 13
+height 60
+weight 55
+money 4 IRON_PIECE
+sex SEX_FEMALE
+NATURAL_DEF(WPN_CLAW, ARM_CLOTHES)
+exp 100
+alignment 0
+/* MSET_ABILITY (str,dex,con,hp,bra,cha,mag,div) */
+MSET_ABILITY(17,28,10,10,10,5,10,10)
+/* MSET_WEAPON(axe_ham,sword,club_mace,polearm,unarmed,special) */
+MSET_WEAPON(5,5,5,5,20,5)
+/* (div,pro,det,sum,cre,min,hea,col,cel,int,ext) */
+MSET_SPELL(18,2,2,2,2,2,19,2,2,2,2)
+special SFUN_RANDOM_ZONE_MOVE time 250 bits SFB_RANTIME
+
+dilbegin sprite_fun();
+
+var
+ i : integer;
+pc : unitptr;
+
+code
+{
+heartbeat := PULSE_SEC * 4;
+interrupt(SFB_COM, self.position == POSITION_FIGHTING, combat);
+
+:start:
+wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and (self.position != POSITION_FIGHTING)));
+i := rnd(1,100);
+if (i<25)goto start;
+pc := activator;
+secure(pc, lost);
+if(pc.minv > 0) goto start;
+exec("emote flies about.",self);
+pause;
+exec("emote does an aerial flip.",self);
+pause;
+exec("giggle", self);
+pause;
+exec("emote flutters down and paints a blade of grass.",self);
+pause;
+exec("kiss"+pc.name, self);
+
+
+:twait:
+pause;
+goto twait;
+
+:lost:
+pause;
+unsecure(pc);
+goto start;
+
+:combat:
+heartbeat := PULSE_SEC*3;
+while (self.position == POSITION_FIGHTING) pause;
+heartbeat := PULSE_SEC*10;
+pause;
+pause;
+pause;
+goto start;
+
+}
+dilend
+end
+
+
+toymaker
+names {"toy maker", "man"}
+title "Toy Maker"
+descr "A giant of a man sits here making toys."
+extra {}
+"This gentle looking giant has the look of a man who
+could never harm a living soul."
+race RACE_HUMAN
+sex SEX_MALE
+height 1000
+weight 1250
+level 35
+/* MSET_ABILITY (str,dex,con,hp,bra,cha,mag,div) */
+MSET_ABILITY(17,18,10,10,10,5,10,20)
+/* MSET_WEAPON(axe_ham,sword,club_mace,polearm,unarmed,special) */
+MSET_WEAPON(5,20,5,5,5,5)
+/* (div,pro,det,sum,cre,min,hea,col,cel,int,ext) */
+MSET_SPELL(25,2,2,2,2,2,12,2,2,2,2)
+#define TOY_ONGOING  "Toy Quest Ongoing"
+#define TOY_COMPLETE "Toy Quest Complete"
+
+dilbegin toy_quest();
+var
+  pcname    :     string;
+  item      :     unitptr;
+  pc        :     unitptr;
+  i         :     integer;
+  exdp      :     extraptr;
+code
+{
+   on_activation((self.position <= POSITION_SLEEPING) or (self.position == POSITION_FIGHTING),skip);
+ :init:
+   heartbeat := PULSE_SEC*5;
+ :start:
+   wait(SFB_DONE, activator.type & UNIT_ST_PC);
+   pc := activator;
+   secure(pc,lost_pc);
+   if(TOY_COMPLETE in pc.quests)
+   {
+    unsecure(pc);
+    goto start;
+   }
+   if((TOY_ONGOING in pc.quests) and (command("give") and (target==self)))
+   {
+      if(medium.nameidx in
+{"paint3","stone","paint1","heart"})
+      {
+         exdp := TOY_ONGOING in pc.quests;
+         if(not(medium.nameidx in exdp.names))
+         {
+            if(medium.nameidx=="paint1")
+           {
+            exec("smile",self);
+             exec("say Very good, red sprite paint.  What a great base color.",self);
+            addstring(exdp.names, medium.nameidx);
+             destroy(medium);
+             goto start;
+            }
+        else if(medium.nameidx=="paint3")
+           {
+           exec("say This blue sprite paint will allow his heart to be sad for others.", self);
+             addstring(exdp.names, medium.nameidx);
+              destroy(medium);
+              goto start;
+            }
+        else if(medium.nameidx=="heart")
+            {
+            exec("sigh",self);
+             exec("say Poor Jack.  I had such high hopes for him.  I fear I did wrong by him.",self);
+            addstring(exdp.names, medium.nameidx);
+               destroy(medium);
+               goto start;
+             }
+         else  if(medium.nameidx=="stone")
+         {
+             exec("grin",self);
+             exec("say I spent hours playing with stones like this as a child.",self);
+             exec("say It should give my creation just the right child like spirit.",self);
+            addstring(exdp.names, medium.nameidx);
+               destroy(medium);
+         }
+         }
+         else
+         {
+            exec("say You all ready gave me a"+medium.name+","+pc.name+"!",self);
+            exec("give "+medium.name+" "+pc.name, self);
+            goto check_quest;
+         }
+      }
+      else
+      {
+         exec("say I appreciate the "+medium.name+", "+pc.name+" but I just do not need it.",self);
+         exec("give "+medium.name+" "+pc.name, self);
+         goto check_quest;
+      }
+   }
+
+
+ else if(TOY_ONGOING in pc.quests)
+    goto check_quest;
+   else
+   {
+      if(pc.level > 19) goto start;
+      if(pc.minv > 0) goto start;
+      pause;
+      exec("say Hello there little one.", self);
+      pause;
+      exec("say What brings you to my home?", self);
+      pause;
+      exec("say I bet it was the toys, that is what brings everyone here.", self);
+      pause;
+      exec("sigh", self);
+      pause;
+      exec("say No, even though you are small you are not a child, But perhaps you can help one.", self);
+      pause;
+      exec("say You see, I am making a special doll for a friends child.", self);
+      pause;
+      exec("say But I have run out of some of the things I need.", self);
+      pause;
+      exec("say To finish the doll I need....humm...well I need paint, yes sprite paint is best.", self);
+      pause;
+      exec("say And I am all out of that, so I guess I will need two colors.", self);
+      pause;
+      exec("say I think red and blue would do well.  Yes definitely red and blue.", self);
+      pause;
+      exec("say I will need a toy of some kind.  Something that shows a childs ability to play.", self);
+      pause;
+      exec("say Something that most adults would scoff at but a child might find wonder in.", self);
+      pause;
+      exec("say Lastly, well I hate to admit this but in my old age I can not carve proper hearts anymore.", self);
+      pause;
+     exec("say So I ask you to bring me a wooden heart.  It need not be perfect, just the general shape.",self);
+     pause;
+     exec("say Well you know what I need little one, and I tell you that if you help me I will give you a prize.",self);
+     pause;
+     exec("say It is not much, but I will give you the most valuable thing I own.  I hope you will help.",self);
+     pause;
+     exec("say please nod if you will, or shake your head to break a childs heart. ",self);
+
+      i := 0;
+      while (i<5)
+      {
+        wait (SFB_CMD, activator == pc);
+        if(command(CMD_NOD))
+         goto quest_accepted;
+        else if(command(CMD_SHAKE))
+         goto no_quest;
+        exec("say Nod if you wish to help, shake your head to decline.",self);
+        i := i+1;
+      }
+
+
+    :no_quest:
+      exec("say Jerk, I can see that your age has made you bitter and full of spite.",self);
+      exec("spit "+pc.name, self);
+      exec("say Be away from me, else I rend your heart as you have done that poor child.",self);
+      unsecure(pc);
+      goto check_quest;
+
+    :quest_accepted:
+      exec("smile",self);
+      pause;
+      exec("say Please hurry, I go to see the child soon!",self);
+      addextra(pc.quests, {TOY_ONGOING}, "");
+      unsecure(pc);
+      goto start;
+    }
+    unsecure(pc);
+    goto start;
+
+  :check_quest:
+    if(TOY_ONGOING in pc.quests)
+    {
+       exdp:=TOY_ONGOING in pc.quests;
+       if(("paint1" in exdp.names)     and
+          ("paint3" in exdp.names)   and
+          ("stone" in exdp.names) and
+          ("heart" in exdp.names))
+       {
+          exec("say thank you so very much.",self);
+          pause;
+          exec("smile "+pc.name, self);
+          pause;
+          exec("say And as I promised, your reward.",self);
+          pause;
+          exec("emote takes a chisel from his set of tools.",self);
+          pause;
+          exec("emote looks longingly at his chisel. ", self);
+          pause;
+          exec("sigh",self);
+          pause;
+          exec("say I really hate to give this away, but...",self);
+          pause;
+          exec("say ..I am too old to use it well anymore.",self);
+          subextra(pc.quests, TOY_ONGOING);
+          addextra(pc.quests, {TOY_COMPLETE}, "");
+          item := load("chisel@toy");
+          item.height := pc.height;
+          link(item,pc);
+          experience(2000, pc);
+          pause;
+          exec(", gives a magic chisel to "+pc.name, self);
+          pause;
+          exec("say I hope you find it useful.",self);
+          pause;
+          exec("thank "+pc.name, self);
+          pause;
+          exec("say Good luck little one.",self);
+          pause;
+          exec("wave "+pc.name, self);
+       }
+    }
+
+    unsecure(pc);
+    goto init;
+
+  :lost_pc:
+    unsecure(pc);
+    pause;
+    exec("shrug",self);
+    goto start;
+
+}
+dilend
+
+
+end
+
+%objects
+
+
+sign
+names {"sign"}
+title "a sign"
+descr "A small sign is stuck into the ground here
+waiting for you to look at it."
+extra {}
+"The area to the south is for those of you who find the
+deer a bit on the easy side.  Take care as help may be
+hard to find beyond this point."
+weight 1
+end
+
+
+
+
+toy_chest
+names {"toy chest", "chest"}
+title "a toy chest"
+descr "A large toy chest sits here."
+extra {}
+"This is a large chest to hold toys for children.  It looks unused."
+manipulate{MANIPULATE_TAKE , MANIPULATE_ENTER}
+CONTAINER_DEF(1000)
+open {EX_OPEN_CLOSE, EX_CLOSED, EX_INSIDE_OPEN}
+cost 1 PLATINUM_PIECE
+rent 1 SILVER_PIECE
+weight 70
+MATERIAL_WOOD("Old beaten pine")
+end
+
+
+
+toy_sword
+names {"toy sword", "sword"}
+title "a toy sword"
+descr "A large wooden sword lies here."
+flags {UNIT_FL_MAGIC}
+WEAPON_DEF(WPN_SHORT_SWORD,0,0)
+cost 5 IRON_PIECE
+MATERIAL_WOOD("A dull, brown wood")
+extra {}
+"This is a toy wooden sword."
+end
+
+
+chisel
+names {"magic chisel", "chisel", "dagger"}
+title "magic chisel"
+descr "A chisel lies here glowing slightly."
+flags {UNIT_FL_MAGIC}
+WEAPON_DEF(WPN_DAGGER,2,2)
+WEAPON_SLAYER(RACE_GOLEM)
+WEAPON_TRANSFER(WPN_DAGGER, +3)
+STR_TRANSFER(+1)
+cost 5 SILVER_PIECE
+rent 2 IRON_PIECE
+MATERIAL_METAL("very serviceable iron")
+extra {}
+"This well made chisel could easily cut through most materials."
+
+dilcopy quest_restrict@function ("Toy Quest Complete",10,50,"");
+end
+
+razor
+names {"streight razor","razor"}
+title "a straight razor"
+descr "A sharp looking straight razor lies on the ground here."
+WEAPON_DEF(WPN_SHORT_SWORD,2,0)
+cost 4 IRON_PIECE
+MATERIAL_METAL("soft iron")
+extra {}
+"This is a very large straight razor that a giant might shave with."
+end
+
+stone
+names {"skipping stone", "stone", "rock"}
+title "a skipping stone"
+descr "A small flat rock perfect for skipping is here."
+extra {}
+"This is just a small flat stone.  The kind of thing children love to skip."
+weight 1
+flags {UNIT_FL_NOSAVE}
+manipulate {MANIPULATE_TAKE}
+end
+
+paint1
+names {"paint", "sprite paint"}
+title "sprite paint"
+descr "a small pot of sprite paint sits here forgotten."
+extra {}
+"This is a small can of paint that the sprites use to paint the
+world a brighter color.  This jar happens to be red"
+weight 1
+flags {UNIT_FL_NOSAVE}
+manipulate {MANIPULATE_TAKE}
+end
+
+paint2
+names {"paint", "sprite paint"}
+title "sprite paint"
+descr "a small pot of sprite paint sits here forgotten."
+extra {}
+"This is a small can of paint that the sprites use to paint the
+world a brighter color.  This jar happens to be orange."
+weight 1
+flags {UNIT_FL_NOSAVE}
+manipulate {MANIPULATE_TAKE}
+end
+
+paint3
+names {"paint", "sprite paint"}
+title "sprite paint"
+descr "a small pot of sprite paint sits here forgotten."
+extra {}
+"This is a small can of paint that the sprites use to paint the
+world a brighter color.  This jar happens to be blue."
+weight 1
+flags {UNIT_FL_NOSAVE}
+manipulate {MANIPULATE_TAKE}
+end
+
+paint4
+names {"paint", "sprite paint"}
+title "sprite paint"
+descr "a small pot of sprite paint sits here forgotten."
+extra {}
+"This is a small can of paint that the sprites use to paint the
+world a brighter color.  This jar happens to be green."
+weight 1
+flags {UNIT_FL_NOSAVE}
+manipulate {MANIPULATE_TAKE}
+end
+
+
+
+heart
+names {"wooden heart", "broken heart", "heart"}
+title "a wooden heart"
+descr "a small wooden heart lies here, broken."
+extra {}
+"This is a small heart carved from wood.  It has a crack in it."
+extra {"crack"}
+"The crack is a jagged scar cutting through the heart."
+weight 1
+flags {UNIT_FL_NOSAVE}
+manipulate {MANIPULATE_TAKE}
+end
+
+
+
+fountain
+names {"fountain", "bird bath", "bath", "water"}
+title "Fountain"
+descr "A fountain sits here waiting for you to drink."
+MATERIAL_STONE("polished marble")
+LIQ_DEF (LIQ_WATER, 1000, 25, 25, 0)
+extra {}
+"The fountain is made of marble.  The water flows
+through the motion of clown-like sculptures spitting
+on one another.  There is a small bit of writing on
+the fountain."
+extra{"writing"}
+"Drink and your purity will be revealed."
+
+dilbegin drinking();
+var
+        room : unitptr;
+        vict : unitptr;
+code
+{
+        :init:
+        heartbeat := PULSE_SEC*1;
+
+        :start:
+wait (SFB_CMD,(command(CMD_DRINK))and
+(findunit(activator,argument,FIND_UNIT_SURRO,null)==self));
+
+block;
+vict := activator;
+secure(vict,damnleft);
+if (activator.level<=19)
+    {
+    act("You get a very strange feeling.",
+    A_ALWAYS,self,null,vict,TO_VICT);
+    act("$3n looks a little strange.",
+    A_ALWAYS,self,null,vict,TO_NOTVICT);
+    act("All of a sudden you feel yourself getting smaller!"+
+    "The world around you changes!",A_ALWAYS,self,null,vict,TO_VICT);
+    act("$3n screams wordlessly as $3s begins to shrink "+
+    "and disappears!",A_ALWAYS,self,null,vict,TO_NOTVICT);
+    room := findroom("mouse1@toy");
+    link(vict,room);
+    unsecure(vict);
+    pause;pause;
+    goto start;
+    }
+act("The water burns inside you.",
+    A_ALWAYS,self,null,vict,TO_VICT);
+act("$3n looks sick.",
+    A_ALWAYS,self,null,vict,TO_NOTVICT);
+act("A voice in the back of your mind souds saying "+
+    "AGE AND EXPERIANCE HAVE TAINTED YOUR PURITY.  BE GONE!",
+    A_ALWAYS,self,null,vict,TO_VICT);
+vict.hp := vict.hp - rnd(20,25);
+unsecure(vict);
+pause;pause;
+goto start;
+
+        :damnleft:
+unsecure(vict);
+goto start;
+}
+dilend
+
+end
+
+
+%reset
+
+load fountain into yard4
+
+load jack into basement2 zonemax 1
+{
+equip razor position WEAR_WIELD
+load heart
+}
+
+load stone into yard9
+
+load d_bunny into heating1 zonemax 10
+
+load d_bunny into heating3 zonemax 10
+
+load d_bunny into heating5 zonemax 10
+
+load d_bunny into heating7 zonemax 10
+
+load d_bunny into heating9 zonemax 10
+
+load d_bunny into heating11 zonemax 10
+
+load d_bunny into heating13 zonemax 10
+
+load d_bunny into heating15 zonemax 10
+
+load d_bunny into heating17 zonemax 10
+
+load d_bunny into heating19 zonemax 10
+
+load toy_chest into attic2
+
+load house_cat into house3 zonemax 1
+
+load toy_mouse into house3 zonemax 2
+
+load mouse into mouse3
+
+load mouse into exit1
+
+load hand_puppet into attic1 zonemax 6
+
+load hand_puppet into attic1 zonemax 6
+
+load hand_puppet into attic1 zonemax 6
+
+load hand_puppet into shelf1 zonemax 6
+
+load hand_puppet into shelf1 zonemax 6
+
+load hand_puppet into shelf5 zonemax 6
+
+load mime into attic2 zonemax 6
+
+load mime into attic2 zonemax 6
+
+load mime into attic2 zonemax 6
+
+load mime into shelf5 zonemax 6
+
+load mime into shelf9 zonemax 6
+
+load mime into shelf9 zonemax 6
+
+load marionette into shelf2 zonemax 8
+
+load marionette into shelf2 zonemax 8
+
+load marionette into shelf6 zonemax 8
+
+load marionette into shelf6 zonemax 8
+
+load marionette into shelf10 zonemax 8
+
+load marionette into shelf10 zonemax 8
+
+load marionette into shelf3 zonemax 8
+
+load marionette into shelf4 zonemax 8
+
+load jester into shelf10 zonemax 8
+
+load jester into shelf3 zonemax 8
+
+load jester into shelf3 zonemax 8
+
+load jester into shelf7 zonemax 8
+
+load jester into shelf7 zonemax 8
+
+load jester into shelf11 zonemax 8
+
+load jester into shelf8 zonemax 8
+
+load jester into shelf8 zonemax 8
+
+load soldier into shelf11 zonemax 7
+{
+equip toy_sword position WEAR_WIELD
+}
+
+load soldier into shelf12 zonemax 7
+{
+equip toy_sword position WEAR_WIELD
+}
+load soldier into shelf4 zonemax 7
+{
+equip toy_sword position WEAR_WIELD
+}
+load soldier into shelf4 zonemax 7
+{
+equip toy_sword position WEAR_WIELD
+}
+load soldier into shelf8 zonemax 7
+{
+equip toy_sword position WEAR_WIELD
+}
+load soldier into shelf12 zonemax 7
+{
+equip toy_sword position WEAR_WIELD
+}
+load soldier into shelf12 zonemax 7
+{
+equip toy_sword position WEAR_WIELD
+}
+load toymaker into house6
+
+load sprite into sprite1 zonemax 6
+{
+load paint1
+}
+
+load sprite into sprite1 zonemax 6
+{
+load paint2
+}
+
+load sprite into sprite2 zonemax 6
+{
+load paint3
+}
+
+load sprite into sprite3 zonemax 6
+{
+load paint4
+}
+
+load sprite into sprite4 zonemax 6
+{
+load paint2
+}
+
+load sprite into sprite4 zonemax 6
+{
+load paint4
+}
+
+load toy_chest into attic2
+
+load sign into rn_6017@haon_dor
+
+
+%end
+
+
+
+
+
+
+

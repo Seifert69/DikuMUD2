@@ -1,0 +1,3255 @@
+/*
+filename    hades6
+password    evil
+changedby   Eirinn
+EmailAdd     Jpc (Gypsy) <clarej@tcd.ie>
+request     compile
+version     31
+END HEADER*/
+
+#include <composed.h>
+#include <values.h>
+#include <wmacros.h>
+#define MORNICK_ONGOING "Mornick's Quest Ongoing"
+#define MORNICK_COMPLETE "Mornick's Quest Complete"
+
+%zone hades6
+title ""
+lifespan 20
+reset RESET_ANYHOW
+creators {"tyk", "joeboo"}
+
+notes
+"A complete history of the Nine Planes of Hades area can be found in the notes
+section of Hades1.  All maintenance, creation, and coding of this zone is
+currently coordinated by Tyk, Joeboo, and Kira.  Direct all questions and
+comments to Tyk (Dan Banick) at ddb2@po.cwru.edu.  Any information following
+this paragraph is original notes by the zones first creator, and may not be
+current.
+
+This zone was written as a collaborative effort by Tyk and Joeboo.  It
+is not huge, as it is merely a single plane of hell but we none-the-less
+included a major amount of DIL and a quest.  Its theme is the Abyss and it is
+dominated by a huge pit in which souls are being tossed by a greater demon.
+The entrance to the 7th plane is at the bottom of the pit and only accessible
+after the demons quest has been made.  Otherwise you can simply fight the
+multiple imps and devils forcing souls into the Abyss to be eaten by the soul
+munchers.  Direct questions and comments to Kyt/Tyk(Dan) at ddb2@po.cwru.edu.
+Special thanks to Kira for mucho help in DIL coding and Zandar for the use of
+his beloved Artic Wind.  This zone was sponsored by Palio and Whistler. &n
+-Nov 24 deshpande changed to fit the new dual wield category it falls under for 
++ability stats&n 
+-Changed load name on soul bracelet and pendant to prevent old ones from
+burning. Jan 1 1997&n 
+-May 17 - Eirinn changed mob levels and items to fit the new limits (properly). Also put deshpande back in as a single handed sword, but prevents use of another weapon. It is now also a quest item. Mornick's quest was made harder  but you also need to kill him to get the sword.
+"
+
+help
+"&lThe Nine Planes of Hades generally contain the following level mobiles:
+	Tiamat Temple  30-40          Hades5      80-90
+	Hades1         40-50          Hades6      90-100
+	Hades2         50-60          Hades7     100-110
+	Hades3         60-70          Hades8     110-120
+	Hades4         70-80          Hades9     120-130
+
+The entirety is a NO SUM/NO TELE area with the exception of Hades 5 and the
+occasional special item or room.  Once inside, you generally need to walk
+to either the first, fifth, or ninth plane to exit.
+
+The basic layout of this zone is the entrance hallway from the
+fifth plane, the edge of the Abyss, and several levels down into the
+Abyss from the edges.  From the platform in the center you can also
+be thrown into the center as part of a quest and eventually access to
+the 7th plane.  Several mobs in the Abyss are aggressive and spend
+time eating souls or players as hunger dictates.  The quest is fairly
+simple and serves to break an otherwise monotonous slaughter fest
+through Hell. "
+%dil
+
+dilbegin desh_aff(medi : unitptr, targ : unitptr, hm : integer);
+code
+{
+	act("Blood pours from $3n as $1n's Deshpande SLASHES $3n!",
+	A_SOMEONE, self, null, targ, TO_NOTVICT);
+	act("Blood pours from you as $1n's Deshpande SLASHES you!! ",
+	A_ALWAYS, self, null,null, TO_VICT);
+	act("Blood pours from $3n as your Deshpande SLASHES $3n!!",
+	A_ALWAYS, self, null, targ , TO_CHAR);
+	return;
+	}
+dilend
+
+dilbegin bani_aff(medi : unitptr, targ : unitptr, hm : integer);
+code
+{
+	act("The mirror crashes as $1n's inner energy boosts their spirit!",
+	A_SOMEONE, self, null,targ, TO_NOTVICT);
+	act("The mirror crashes as $1n's inner energy boosts their spirit!",
+	A_ALWAYS, self, null,null, TO_VICT);
+	act("The mirror crashes as your inner energy boosts your spirit!",
+	A_ALWAYS, self, null,targ , TO_CHAR);
+	return;
+	}
+dilend
+
+
+%rooms
+
+			  zex
+title "Joeboo's Room"
+descr
+"This is the room of Joeboo, otherwise known as the mortal Zex, King of the
+Ring, Godslayer, Asskicker extrordinaire.  As he is a strong believer in
+non-frivolous coding, welcome, and may you never have Langer for Calculus."
+
+/* flags  {ROOM_FL_SACRED} */
+movement SECT_INSIDE
+east to zex2;
+down to kyt;
+end
+
+				zex2
+title "The Kyt and Zex Club Room"
+descr
+"The only purpose of this room is to contain boards and the secret button.
+Don't spend too much time looking for that button, cause I don't think you
+will find it :) "
+
+flags {UNIT_FL_PRIVATE}
+movement SECT_INSIDE
+west to zex;
+end
+
+				kyt
+title "Tyk's Room"
+descr
+"This is Kyt's (or Tyk's) room.  Tyk believes that coding effort should be
+for zones, not your own god room, so deal with it."
+
+flags  {UNIT_FL_PRIVATE}
+movement SECT_INSIDE
+end
+
+
+
+			  entrance
+title "The Dark Windy Entrance"
+descr
+"     Wild winds gust through this corner of a darkened corridor.  Blasts
+of heat assail you from above while a bone chilling gust blows from the
+east.  The hall is unlit but a faint glow from the east lights your way."
+
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+east to corridor descr "A faint glow lights your way east.";
+end
+
+			  corridor
+title "The Dark Windy Corridor"
+descr
+"     Gale force winds strike your back with a biting cold.  You feel as if
+you are being forced into the room ahead.  To the east the corridor appears to open into a huge chamber.  As the wind drives you forward you realize
+a massive precipice looms ahead.  The air currents are too strong to return
+west."
+
+extra {"precipice", "chamber", "huge chamber"}
+"The huge chamber ahead is indistinct in the dim light and the distance to the
+far side of the chamber is indeterminable.  A chasm seems to stretch from the
+end of the corridor to the edge of sight.  The cold air is pushing you rapidly
+towards the edge."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+ALWAYS_LIGHT
+east to edge1 descr "The bone chilling wind forces you towards the edge of a chasm.";
+west to corridor descr "The wind pushes you back east.  There will be no returning this way.";
+end
+
+/* =================================================================== */
+/* The next section is the ledge that surrounds the edge of the Abyss.... */
+
+			  edge1
+title "On the Edge of the Abyss"
+descr "   An awesome sight assails your eyes.  Before you lies the Abyss.  Your
+senses swim as you look straight down into the infinite.  A blackness that
+chills your soul matches the wind that freezes your marrow.  Screams and
+wails of souls falling into the deepest depths of hell tear at your ears.
+The ledge under your feet is barely wide enough to pass but craggy enough
+to climb.  To the north and south the ledge skirts the edge of the Abyss.
+>From the west a gale force wind chills your bones and blocks your retreat.
+There are several scratches and claw marks along the edge."
+
+extra {"scratches", "marks", "claw marks", "edge"}
+"The marks seem to have been left by souls attempting escape from the Abyss.
+They read 'Salvation lies in our markings, we escaped as the clock turns'."
+
+extra {"abyss", "infinite"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  You quickly focus again upon your surroundings to avoid
+losing your balance."
+
+extra {"ledge"}
+"The ledge below your feet is quite sturdy and it looks as if you could climb
+over the edge into the Abyss."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+ALWAYS_LIGHT
+north to edge2 descr "A narrow but sturdy ledge trails off to the north.  The Abyss looms to the east.";
+south to edge16 descr "A narrow but sturdy ledge trails off to the south.  The Abyss looms to the east.";
+down to side1 descr "With much difficulty you could lower yourself over the edge into the Abyss.";
+west to edge1 descr "The wind is much to strong to return this way.";
+end
+
+			  edge2
+title "On the Edge of the Abyss"
+descr "     An awesome sight assails your eyes.  Before you lies the Abyss.  Your
+senses swim as you look straight down into the infinite.  A blackness that
+chills your soul matches the wind that freezes your marrow.  Screams and
+wails of souls falling into the deepest depths of hell tear at your ears..
+The ledge under your feet is barely wide enough to pass but craggy enough
+to climb.  To the north and south the ledge skirts the edge of the Abyss.
+There are several scratches and claw marks along the edge."
+
+extra {"scratches", "marks", "claw marks", "edge"}
+"The marks seem to have been left by souls attempting escape from the Abyss.
+They read 'Where'."
+
+extra {"abyss", "infinite"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  You quickly focus again upon your surroundings to avoid
+losing your balance."
+
+extra {"ledge"}
+"The ledge below your feet is quite sturdy and it looks as if you could climb
+over the edge into the Abyss."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+ALWAYS_LIGHT
+north to edge3 descr "A narrow but sturdy ledge trails off to the north.  The Abyss looms to the east.";
+south to edge1 descr "A narrow but sturdy ledge trails off to the south.  The Abyss looms to the east.";
+down to side2 descr "With much difficulty you could lower yourself over the edge into the Abyss.";
+end
+
+			  edge3
+title "On a Wide Ledge Near the Abyss"
+descr "     A slight widening of the ledge allows you a brief respite from the
+maddening sight of the Abyss, but the screams of the falling souls still
+assail your ears.  In the center of the Abyss appears to be a platform
+upon which a massive creature adds its howling voice to the fury.  The
+ledge under your feet is craggy enough to climb.  To the east and south
+the ledge skirts the edge of the Abyss."
+
+extra {"abyss", "infinite"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  You quickly focus again upon your surroundings to avoid
+losing your balance."
+
+extra {"ledge"}
+"The ledge below your feet is quite sturdy and it looks as if you could climb
+over the edge into the Abyss."
+
+extra {"creature", "platform"}
+"A platform seems to be hanging freely in the middle of the Abyss.  Upon it
+stands a demon of unbelievable size.  Fortunately for you, it seems unaware
+of your presence."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+ALWAYS_LIGHT
+east to edge4 descr "A narrow but sturdy ledge trails off to the east, closer to the edge of the Abyss.";
+south to edge2 descr "A narrow but sturdy ledge trails off to the south, closer to the edge of the Abyss.";
+down to side2 descr "With much difficulty you could lower yourself over the edge into the Abyss.";
+end
+
+			  edge4
+title "On the Edge of the Abyss"
+descr "     An awesome sight assails your eyes.  Before you lies the Abyss.  Your
+senses swim as you look straight down into the infinite.  A blackness that
+chills your soul matches the wind that freezes your marrow.  Screams and
+wails of souls falling into the deepest depths of hell tear at your ears.
+The ledge under your feet is barely wide enough to pass but craggy enough
+to climb.  To the east and west the ledge skirts the edge of the Abyss.
+There are several scratches and claw marks along the edge."
+
+extra {"scratches", "marks", "claw marks", "edge"}
+"The marks seem to have been left by souls attempting escape from the Abyss.
+They read 'winds'."
+
+extra {"abyss", "infinite"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  You quickly focus again upon your surroundings to avoid
+losing your balance."
+
+extra {"ledge"}
+"The ledge below your feet is quite sturdy and it looks as if you could climb
+over the edge into the Abyss."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+ALWAYS_LIGHT
+west to edge3 descr "A narrow but sturdy ledge trails off to the west.  The Abyss looms to the south.";
+east to edge5 descr "A narrow but sturdy ledge trails off to the east.  The Abyss looms to the south.";
+down to side2 descr "With much difficulty you could lower yourself over the edge into the Abyss.";
+end
+
+			  edge5
+title "On the Edge of the Abyss"
+descr "     An awesome sight assails your eyes.  Before you lies the Abyss.  Your
+senses swim as you look straight down into the infinite.  A blackness that
+chills your soul matches the wind that freezes your marrow.  Screams and
+wails of souls falling into the deepest depths of hell tear at your ears.
+The ledge under your feet is barely wide enough to pass but craggy enough
+to climb.  To the east and west the ledge skirts the edge of the Abyss.
+There are several scratches and claw marks along the edge."
+
+extra {"scratches", "marks", "claw marks", "edge"}
+"The marks seem to have been left by souls attempting escape from the Abyss.
+They read 'blow'."
+
+extra {"abyss", "infinite"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  You quickly focus again upon your surroundings to avoid
+losing your balance."
+
+extra {"ledge"}
+"The ledge below your feet is quite sturdy and it looks as if you could climb
+over the edge into the Abyss."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+ALWAYS_LIGHT
+west to edge4 descr "A narrow but sturdy ledge trails off to the west.  The Abyss looms to the south.";
+east to edge6 descr "A narrow but sturdy ledge trails off to the west.  The Abyss looms to the south.";
+down to side3 descr "With much difficulty you could lower yourself over the edge into the Abyss.";
+end
+
+			  edge6
+title "On the Edge of the Abyss"
+descr "     An awesome sight assails your eyes.  Before you lies the Abyss.  Your
+senses swim as you look straight down into the infinite.  A blackness that
+chills your soul matches the wind that freezes your marrow.  Screams and
+wails of souls falling into the deepest depths of hell tear at your ears.
+The ledge under your feet is barely wide enough to pass but craggy enough
+to climb.  To the east and west the ledge skirts the edge of the Abyss.
+There are several scratches and claw marks along the edge."
+
+extra {"scratches", "marks", "claw marks", "edge"}
+"The marks seem to have been left by souls attempting escape from the Abyss.
+They read 'less'."
+
+extra {"abyss", "infinite"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  You quickly focus again upon your surroundings to avoid
+losing your balance."
+
+extra {"ledge"}
+"The ledge below your feet is quite sturdy and it looks as if you could climb
+over the edge into the Abyss."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+ALWAYS_LIGHT
+west to edge5 descr "A narrow but sturdy ledge trails off to the west.  The Abyss looms to the south.";
+east to edge7 descr "A narrow but sturdy ledge trails off to the east.  The Abyss looms to the south.";
+down to side4 descr "With much difficulty you could lower yourself over the edge into the Abyss.";
+end
+
+			  edge7
+title "On a Wide Ledge Near the Abyss"
+descr "     A slight widening of the ledge allows you a brief respite from the
+maddening sight of the Abyss, but the screams of the falling souls still
+assail your ears.  In the center of the Abyss appears to be a platform
+upon which a massive creature adds its howling voice to the fury.  The
+ledge under your feet is craggy enough to climb.  To the west and south
+the ledge skirts the edge of the Abyss."
+
+extra {"abyss", "infinite"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  You quickly focus again upon your surroundings to avoid
+losing your balance."
+
+extra {"ledge"}
+"The ledge below your feet is quite sturdy and it looks as if you could climb
+over the edge into the Abyss."
+
+extra {"creature", "platform"}
+"A platform seems to be hanging freely in the middle of the Abyss.  Upon it
+stands a demon of unbelievable size.  Fortunately for you, it seems unaware
+of your presence."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+ALWAYS_LIGHT
+west to edge6 descr "A narrow but sturdy ledge trails off to the west, closer to the edge of the Abyss.";
+south to edge8 descr "A narrow but sturdy ledge trails off to the south, closer to the edge of the Abyss.";
+down to side4 descr "With much difficulty you could lower yourself over the edge into the Abyss.";
+end
+
+			  edge8
+title "On the Edge of the Abyss"
+descr "     An awesome sight assails your eyes.  Before you lies the Abyss.  Your
+senses swim as you look straight down into the infinite.  A blackness that
+chills your soul matches the wind that freezes your marrow.  Screams and
+wails of souls falling into the deepest depths of hell tear at your ears.
+The ledge under your feet is barely wide enough to pass but craggy enough
+to climb.  To the north and south the ledge skirts the edge of the Abyss.
+There are several scratches and claw marks along the edge."
+
+extra {"scratches", "marks", "claw marks", "edge"}
+"The marks seem to have been left by souls attempting escape from the Abyss.
+They read 'and'."
+
+extra {"abyss", "infinite"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  You quickly focus again upon your surroundings to avoid
+losing your balance."
+
+extra {"ledge"}
+"The ledge below your feet is quite sturdy and it looks as if you could climb
+over the edge into the Abyss."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+ALWAYS_LIGHT
+north to edge7 descr "A narrow but sturdy ledge trails off to the north.  The Abyss looms to your west.";
+south to edge9 descr "A narrow but sturdy ledge trails off to the south..  The Abyss looms to your west.";
+down to side4 descr "With much difficulty you could lower yourself over the edge into the Abyss.";
+end
+
+			  edge9
+title "On the Edge of the Abyss"
+descr "     An awesome sight assails your eyes.  Before you lies the Abyss.  Your
+senses swim as you look straight down into the infinite.  The blackness that
+chilled your soul seems more bearable as does the winds.  The screams and
+wails of souls falling into the deepest depths of hell are also fainter.
+The ledge under your feet is barely wide enough to pass but craggy enough
+to climb.  To the north and south the ledge skirts the edge of the Abyss.
+There are several scratches and claw marks along the edge."
+
+extra {"scratches", "marks", "claw marks", "edge"}
+"The marks seem to have been left by souls attempting escape from the Abyss.
+They read 'cries'."
+
+extra {"abyss", "infinite"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  You quickly focus again upon your surroundings to avoid
+losing your balance."
+
+extra {"ledge"}
+"The ledge below your feet is quite sturdy and it looks as if you could climb
+over the edge into the Abyss."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+ALWAYS_LIGHT
+north to edge8 descr "A narrow but sturdy ledge trails off to the north.  The Abyss looms to the west.";
+south to edge10 descr "A narrow but sturdy ledge trails off to the south.  The Abyss looms to the west.";
+down to side5 descr "With much difficulty you could lower yourself over the edge into the Abyss.";
+
+/*  Dil to gain entry onto Bridge of Faith */
+/*  Dil modified from that in link room, created by A. Cowan (Icculus) */
+dilbegin bridge1();
+var
+  pc : unitptr;
+code {
+  :init:
+    heartbeat := PULSE_SEC*5;
+  :start:
+    wait (SFB_CMD, (activator.type == UNIT_ST_PC) and
+	 (command(CMD_ENTER)));
+    if (("abyss" in argument) or ("pit" in argument)) {
+      pc := activator;
+      secure(pc, lostpc);
+      block;
+      act("You step out into the Abyss!", A_ALWAYS, pc, null,
+	   null, TO_CHAR);
+      act("$1n steps out into the Abyss!", A_ALWAYS, pc, null,
+	   null, TO_REST);
+      act("$1n disappears from sight!", A_ALWAYS, pc, null,
+	   null, TO_REST);
+      pause;
+      link(pc, findroom("hades6/bridge"));
+      exec("look", pc);
+      act(pc.name+" has arrived on the Bridge of Faith with you.", A_ALWAYS,
+	   pc, null, null, TO_REST);
+      unsecure(pc);
+      goto start;
+    }
+  :lostpc:
+    pause;
+    goto start;
+}
+dilend
+
+end
+
+			  edge10
+title "On the Edge of the Abyss"
+descr "     An awesome sight assails your eyes.  Before you lies the Abyss.  Your
+senses swim as you look straight down into the infinite.  A blackness that
+chills your soul matches the wind that freezes your marrow.  Screams and
+wails of souls falling into the deepest depths of hell tear at your ears.
+The ledge under your feet is barely wide enough to pass but craggy enough
+to climb.  To the north and south the ledge skirts the edge of the Abyss.
+There are several scratches and claw marks along the edge."
+
+extra {"scratches", "marks", "claw marks", "edge"}
+"The marks seem to have been left by souls attempting escape from the Abyss.
+They read 'wail'."
+
+extra {"abyss", "infinite"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  You quickly focus again upon your surroundings to avoid
+losing your balance."
+
+extra {"ledge"}
+"The ledge below your feet is quite sturdy and it looks as if you could climb
+over the edge into the Abyss."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+ALWAYS_LIGHT
+north to edge9 descr "A narrow but sturdy ledge trails off to the north.  The Abyss looms to the west.";
+south to edge11 descr "A narrow but sturdy ledge trails off to the south.  The Abyss looms to the west.";
+down to side6 descr "With much difficulty you could lower yourself over the edge into the Abyss.";
+end
+
+			  edge11
+title "On a Wide Ledge Near the Abyss"
+descr "     A slight widening of the ledge allows you a brief respite from the
+maddening sight of the Abyss, but the screams of the falling souls still
+assail your ears.  In the center of the Abyss appears to be a platform
+upon which a massive creature adds its howling voice to the fury.  The
+ledge under your feet is craggy enough to climb.  To the west and north
+the ledge skirts the edge of the Abyss."
+
+extra {"abyss", "infinite"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  You quickly focus again upon your surroundings to avoid
+losing your balance."
+
+extra {"ledge"}
+"The ledge below your feet is quite sturdy and it looks as if you could climb
+over the edge into the Abyss."
+
+extra {"creature", "platform"}
+"A platform seems to be hanging freely in the middle of the Abyss.  Upon it
+stands a demon of unbelievable size.  Fortunately for you, it seems unaware
+of your presence."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+ALWAYS_LIGHT
+north to edge10 descr "A narrow but sturdy ledge trails off to the north, closer to the edge of the Abyss.";
+west to edge12 descr "A narrow but sturdy ledge trails off to the west, closer to the edge of the Abyss.";
+down to side6 descr "With much difficulty you could lower yourself over the edge into the Abyss.";
+end
+
+			  edge12
+title "On the Edge of the Abyss"
+descr "     An awesome sight assails your eyes.  Before you lies the Abyss.  Your
+senses swim as you look straight down into the infinite.  A blackness that
+chills your soul matches the wind that freezes your marrow.  Screams and
+wails of souls falling into the deepest depths of hell tear at your ears.
+The ledge under your feet is barely wide enough to pass but craggy enough
+to climb.  To the north and south the ledge skirts the edge of the Abyss.
+There are several scratches and claw marks along the edge."
+
+extra {"scratches", "marks", "claw marks", "edge"}
+"The marks seem to have been left by souls attempting escape from the Abyss.
+They read 'faint'."
+
+extra {"abyss", "infinite"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  You quickly focus again upon your surroundings to avoid
+losing your balance."
+
+extra {"ledge"}
+"The ledge below your feet is quite sturdy and it looks as if you could climb
+over the edge into the Abyss."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+ALWAYS_LIGHT
+east to edge11 descr "A narrow but sturdy ledge trails off to the east.  The Abyss looms to the north.";
+west to edge13 descr "A narrow but sturdy ledge trails off to the west.  The Abyss looms to the north.";
+down to side6 descr "With much difficulty you could lower yourself over the edge into the Abyss.";
+end
+
+			  edge13
+title "On the Edge of the Abyss"
+descr "     An awesome sight assails your eyes.  Before you lies the Abyss.  Your
+senses swim as you look straight down into the infinite.  A blackness that
+chills your soul matches the wind that freezes your marrow.  Screams and
+wails of souls falling into the deepest depths of hell tear at your ears.
+The ledge under your feet is barely wide enough to pass but craggy enough
+to climb.  To the north and south the ledge skirts the edge of the Abyss.
+There are several scratches and claw marks along the edge."
+
+extra {"scratches", "marks", "claw marks", "edge"}
+"The marks seem to have been left by souls attempting escape from the Abyss.
+They read 'dare'."
+
+extra {"abyss", "infinite"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  You quickly focus again upon your surroundings to avoid
+losing your balance."
+
+extra {"ledge"}
+"The ledge below your feet is quite sturdy and it looks as if you could climb
+over the edge into the Abyss."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+ALWAYS_LIGHT
+east to edge12 descr "A narrow but sturdy ledge trails off to the east.  The Abyss looms to the north.";
+west to edge14 descr "A narrow but sturdy ledge trails off to the west.  The Abyss looms to the north.";
+down to side7 descr "With much difficulty you could lower yourself over the edge into the Abyss.";
+end
+
+			edge14
+title "On the Edge of the Abyss"
+descr "     An awesome sight assails your eyes.  Before you lies the Abyss.  Your
+senses swim as you look straight down into the infinite.  A blackness that
+chills your soul matches the wind that freezes your marrow.  Screams and
+wails of souls falling into the deepest depths of hell tear at your ears.
+The ledge under your feet is barely wide enough to pass but craggy enough
+to climb.  To the north and south the ledge skirts the edge of the Abyss.
+There are several scratches and claw marks along the edge."
+
+extra {"scratches", "marks", "claw marks"}
+"The marks seem to have been left by souls attempting escape from the Abyss.
+They read 'enter'."
+
+
+extra {"abyss", "infinite"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  You quickly focus again upon your surroundings to avoid
+losing your balance."
+
+extra {"ledge"}
+"The ledge below your feet is quite sturdy and it looks as if you could climb
+over the edge into the Abyss."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+ALWAYS_LIGHT
+east to edge13 descr "A narrow but sturdy ledge trails off to the east.  The Abyss looms to the north.";
+west to edge15 descr "A narrow but sturdy ledge trails off to the west.  The Abyss looms to the north.";
+down to side8 descr "With much difficulty you could lower yourself over the edge into the Abyss.";
+end
+
+			edge15
+title "On a Wide Ledge Near the Abyss"
+descr "     A slight widening of the ledge allows you a brief respite from the
+maddening sight of the Abyss, but the screams of the falling souls still
+assail your ears.  In the center of the Abyss appears to be a platform
+upon which a massive creature adds its howling voice to the fury.  The
+ledge under your feet is craggy enough to climb.  To the east and north
+the ledge skirts the edge of the Abyss."
+
+extra {"abyss", "infinite"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  You quickly focus again upon your surroundings to avoid
+losing your balance."
+
+extra {"ledge"}
+"The ledge below your feet is quite sturdy and it looks as if you could climb
+over the edge."
+
+extra {"creature", "platform"}
+"A platform seems to be hanging freely in the middle of the Abyss.  Upon it
+stands a demon of unbelievable size.  Fortunately for you, it seems unaware
+of your presence."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+ALWAYS_LIGHT
+north to edge16 descr "A narrow but sturdy ledge trails off to the north, closer to the edge of the Abyss.";
+east to edge14 descr "A narrow but sturdy ledge trails off to the east, closer to the edge of the Abyss.";
+down to side8 descr "With much difficulty you could lower yourself over the edge into the Abyss.";
+end
+
+			edge16
+title "On the Edge of the Abyss"
+descr "     An awesome sight assails your eyes.  Before you lies the Abyss.  Your
+senses swim as you look straight down into the infinite.  A blackness that
+chills your soul matches the wind that freezes your marrow.  Screams and
+wails of souls falling into the deepest depths of hell tear at your ears.
+The ledge under your feet is barely wide enough to pass but craggy enough
+to climb.  To the north and south the ledge skirts the edge of the Abyss.
+There are several scratches and claw marks along the edge."
+
+extra {"scratches", "marks", "claw marks", "edge"}
+"The marks seem to have been left by souls attempting escape from the Abyss.
+They read 'Abyss'."
+
+extra {"abyss", "infinite"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  You quickly focus again upon your surroundings to avoid
+losing your balance."
+
+extra {"ledge"}
+"The ledge below your feet is quite sturdy and it looks as if you could climb
+over the edge into the Abyss."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+ALWAYS_LIGHT
+north to edge1 descr "A narrow but sturdy ledge trails off to the north.  The Abyss looms to the east.";
+south to edge15 descr "A narrow but sturdy ledge trails off to the south.  The Abyss looms to the east.";
+down to side8 descr "With much difficulty you could lower yourself over the edge into the Abyss.";
+end
+
+			bridge
+title "The Bridge of Faith"
+descr
+"     Suspended over the Abyss, the invisible Bridge of Faith supports your
+weight by some ancient lost miracle of magic.  The Abyss seems to spiral
+away below you and you tear your eyes away before the sight causes you to
+lose your balance.  As your senses settle you realize that the vorpal winds
+and piercing wails are no longer present.  The magic of the bridge seems to
+be providing a magic shielding that uplifts your soul.  You believe this may
+be a good place to rest.  By touch you find the bridge runs east and west."
+
+extra {"bridge of faith", "faith bridge", "bridge"}
+"Completely invisible to mortal eyes, the bridge is still reassuringly
+present by touch.  It appears to run east and west."
+
+flags {UNIT_FL_NO_MOB, UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+east to edge9;
+west to platform;
+ALWAYS_LIGHT
+end
+
+			platform
+title "The Platform over the Center of the Abyss"
+descr
+"     From this viewpoint the sight of the Abyss is overwhelming.  Straight
+down stretches into an infinity of darkness and hell.  Piercing screams and
+shreaking wails draw your eyes to the edges of the hellish pit where the
+faint glimmer of forsaken souls dot the icy black stone.  Occasionally a
+glimmer dies as a soul is consumed by the netherworld creatures that feed
+within the Abyss.  You force your gaze back to the platform to retain what
+precious little is left of your sanity.  There does not appear to be any
+exits from this platform."
+
+extra {"platform"}
+"This icy black slab of stone seems to defy gravity as it hovers here,
+directly over the mouth of the Abyss."
+
+extra {"abyss", "infinite", "darkness", "hell"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  You quickly focus again upon your surroundings to avoid
+losing your balance."
+
+extra {"souls", "glimmer"}
+"The light of the hapless tormented souls clinging to the edges of the Abyss
+are visible below you.  Occasionally their screams are silenced as they are
+devoured by the hideous scavengers of this hellish pit."
+
+extra {"icy black stone", "black stone", "stone", "edges"}
+"The edges of the Abyss are an icy black stone that seems to grow more sheer
+as it descends further towards the depths of hell.  It seems as if it may be
+possible to climb a reasonable distance into the Abyss, perhaps to help the
+unfortunate souls trapped there."
+
+extra {"netherworld creatures", "creatures", "scavengers"}
+"Unimaginably hideous creatures roam the Abyss devouring the souls that have
+not yet fallen.  They seem impervious to the vorpal winds that scour the edges
+of the pit."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+east to bridge;
+ALWAYS_LIGHT
+end
+
+
+			abyss
+title "Falling Into the Abyss"
+descr
+"   Your mortal soul screams in terror as you plummet straight towards the
+depths of hell.  The glimmering of the souls clinging to the edge of the
+Abyss pass rapidly as you descend and the wails of the tormented are soon
+your own.  You rapidly slip past the edge of insanity as the blackness of
+the Abyss closes over your heart.  You pray to the gods of both darkness and
+light that Mornick the Soul Overlord has not tricked you, and your mortal
+soul will not be lost forever."
+
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+ALWAYS_LIGHT
+
+dilbegin enter_abyss();
+var
+  pc : unitptr ;
+code {
+  :init:
+    heartbeat := PULSE_SEC*5 ;
+  :start:
+    wait (SFB_CMD, TRUE);
+    pc := activator;
+    secure (pc, lostpc);
+    act("You are falling into the Abyss!!!", A_ALWAYS, self.inside, null,
+	null, TO_CHAR);
+    exec("scream", pc); pause;
+    act("The vorpal winds whip past you as you plummet deeper into the Abyss.",
+	A_ALWAYS, self.inside, null, null, TO_CHAR); pause;
+    pc.endurance := 100;
+    act("Your mortal flesh begins to give way as you descend.",
+	A_ALWAYS, self.inside, null, null, TO_CHAR); pause;
+    pc.endurance := 66;
+    act("You can feel your soul being stripped bare and your grip on reality loosen.",
+	A_ALWAYS, self.inside, null, null, TO_CHAR); pause;
+    pc.endurance := 38;
+    act("The darkness begins to envelope you as you continue to fall.",
+	A_ALWAYS, self.inside, null, null, TO_CHAR); pause;
+    pc.endurance := 13;
+    act("Your last thoughts are 'Dear god!  Is there a bottom?'",
+	A_ALWAYS, self.inside, null, null, TO_CHAR); pause;
+    pc.endurance := 0;
+    act("You slip into unconciousness........",
+	A_ALWAYS, self.inside, null, null, TO_CHAR); pause;
+    pc.hp :=  (pc.hp * 2)/9 ;
+    link(pc, findroom("hades6/floor3"));
+    act(pc.name+" plummets from above into the floor of the Abyss.",
+	A_ALWAYS, self.inside, null, null, TO_REST);
+    unsecure(pc);
+    goto start;
+  :lostpc:
+    goto init;
+}
+dilend
+
+end
+
+
+/* ==================================================== */
+/* This begins the rooms along the inside of the Abyss. */
+
+			side1
+title "Clinging to the Edge of the Abyss"
+descr
+"     Vorpal winds whip past and the wailing reaches a new cacophony.  The
+infinite darkness below you sucks at your sanity as the chill saps your
+strength.  Around you, hapless souls cling to the bare stone and lament
+their fate.  Only your continuing concentration on remaining attached to
+the edge of the Abyss keeps madness at bay.  An arms length above you is
+the rim of the Abyss while down leads deeper into infinity.  A lateral
+move may also be possible."
+
+extra {"abyss", "infinite", "stone", "bare stone"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  You quickly focus again upon your surroundings to avoid
+losing your grip on the bare stone and reality."
+
+extra {"souls"}
+"Casting a faint glow from their ethereal existence, the souls thrown into
+the Abyss await their fates in the form of the scavenging soul eaters."
+
+flags {UNIT_FL_NO_MOB, UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to edge1;
+north to side2;
+south to side8;
+down to abyss1;
+end
+
+			side2
+title "Clinging to the Edge of the Abyss"
+descr
+"     Vorpal winds whip past and the wailing reaches a new cacophony.  The
+infinite darkness below you sucks at your sanity as the chill saps your
+strength.  Around you, hapless souls cling to the bare stone and lament
+their fate.  Only your continuing concentration on remaining attached to
+the edge of the Abyss keeps madness at bay.  An arms length above you is
+the rim of the Abyss while down leads deeper into infinity.  A lateral move
+may also be possible."
+
+extra {"abyss", "infinite", "stone", "bare stone"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  You quickly focus again upon your surroundings to avoid
+losing your grip on the bare stone and reality.."
+
+extra {"souls"}
+"Casting a faint glow from their ethereal existence, the souls thrown into
+the Abyss await their fates in the form of the scavenging soul eaters."
+
+flags {UNIT_FL_NO_MOB, UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to edge3;
+south to side1;
+east to side3;
+down to abyss2;
+end
+
+
+			side3
+title "Clinging to the Edge of the Abyss"
+descr
+"     Vorpal winds whip past and the wailing reaches a new cacophony.  The
+infinite darkness below you sucks at your sanity as the chill saps your
+strength.  Around you, hapless souls cling to the bare stone and lament
+their fate.  Only your continuing concentration on remaining attached to
+the edge of the Abyss keeps madness at bay.  An arms length above you is
+the rim of the Abyss while down leads deeper into infinity.  A lateral move
+may also be possible."
+
+extra {"abyss", "infinite", "stone", "bare stone"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  You quickly focus again upon your surroundings to avoid
+losing your grip on the bare stone and reality."
+
+extra {"souls"}
+"Casting a faint glow from their ethereal existence, the souls thrown into
+the Abyss await their fates in the form of the scavenging soul eaters."
+
+flags {UNIT_FL_NO_MOB, UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to edge5;
+west to side2;
+east to side4;
+down to abyss3;
+end
+
+
+			side4
+title "Clinging to the Edge of the Abyss"
+descr
+"     Vorpal winds whip past and the wailing reaches a new cacophony.  The
+infinite darkness below you sucks at your sanity as the chill saps your
+strength.  Around you, hapless souls cling to the bare stone and lament
+their fate.  Only your continuing concentration on remaining attached to
+the edge of the Abyss keeps madness at bay.  An arms length above you is
+the rim of the Abyss while down leads deeper into infinity.  A lateral move
+may also be possible."
+
+extra {"abyss", "infinite", "stone", "bare stone"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  You quickly focus again upon your surroundings to avoid
+losing your grip on the bare stone and reality."
+
+extra {"souls"}
+"Casting a faint glow from their ethereal existence, the souls thrown into
+the Abyss await their fates in the form of the scavenging soul eaters."
+
+flags {UNIT_FL_NO_MOB, UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to edge7;
+west to side3;
+south to side5;
+down to abyss4;
+end
+
+			side5
+title "Clinging to the Edge of the Abyss"
+descr
+"     Vorpal winds whip past and the wailing reaches a new cacophony.  The
+infinite darkness below you sucks at your sanity as the chill saps your
+strength.  Around you, hapless souls cling to the bare stone and lament
+their fate.  Only your continuing concentration on remaining attached to
+the edge of the Abyss keeps madness at bay.  An arms length above you is
+the rim of the Abyss while down leads deeper into infinity.  A lateral move
+may also be possible."
+
+extra {"abyss", "infinite", "stone", "bare stone"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  You quickly focus again upon your surroundings to avoid
+losing your grip on the bare stone and reality."
+
+extra {"souls"}
+"Casting a faint glow from their ethereal existence, the souls thrown into
+the Abyss await their fates in the form of the scavenging soul eaters."
+
+flags {UNIT_FL_NO_MOB, UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to edge9;
+north to side4;
+south to side6;
+down to abyss5;
+end
+
+			side6
+title "Clinging to the Edge of the Abyss"
+descr
+"     Vorpal winds whip past and the wailing reaches a new cacophony.  The
+infinite darkness below you sucks at your sanity as the chill saps your
+strength.  Around you, hapless souls cling to the bare stone and lament
+their fate.  Only your continuing concentration on remaining attached to
+the edge of the Abyss keeps madness at bay.  An arms length above you is
+the rim of the Abyss while down leads deeper into infinity.  A lateral move
+may also be possible."
+
+extra {"abyss", "infinite", "stone", "bare stone"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  You quickly focus again upon your surroundings to avoid
+losing your grip on the bare stone and reality."
+
+extra {"souls"}
+"Casting a faint glow from their ethereal existence, the souls thrown into
+the Abyss await their fates in the form of the scavenging soul eaters."
+
+flags {UNIT_FL_NO_MOB, UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to edge11;
+north to side5;
+west to side7;
+down to abyss6;
+end
+
+			side7
+title "Clinging to the Edge of the Abyss"
+descr
+"     Vorpal winds whip past and the wailing reaches a new cacophony.  The
+infinite darkness below you sucks at your sanity as the chill saps your
+strength.  Around you, hapless souls cling to the bare stone and lament
+their fate.  Only your continuing concentration on remaining attached to
+the edge of the Abyss keeps madness at bay.  An arms length above you is
+the rim of the Abyss while down leads deeper into infinity.  A lateral move
+may also be possible."
+
+extra {"abyss", "infinite", "stone", "bare stone"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  You quickly focus again upon your surroundings to avoid
+losing your grip on the bare stone and reality."
+
+extra {"souls"}
+"Casting a faint glow from their ethereal existence, the souls thrown into
+the Abyss await their fates in the form of the scavenging soul eaters."
+
+flags {UNIT_FL_NO_MOB, UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to edge13;
+east to side6;
+west to side8;
+down to abyss7;
+end
+
+
+			side8
+title "Clinging to the Edge of the Abyss"
+descr
+"     Vorpal winds whip past and the wailing reaches a new cacophony.  The
+infinite darkness below you sucks at your sanity as the chill saps your
+strength.  Around you, hapless souls cling to the bare stone and lament
+their fate.  Only your continuing concentration on remaining attached to
+the edge of the Abyss keeps madness at bay.  An arms length above you is
+the rim of the Abyss while down leads deeper into infinity.  A lateral move
+may also be possible."
+
+extra {"abyss", "infinite", "stone", "bare stone"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  You quickly focus again upon your surroundings to avoid
+losing your grip on the bare stone and reality."
+
+extra {"souls"}
+"Casting a faint glow from their ethereal existence, the souls thrown into
+the Abyss await their fates in the form of the scavenging soul eaters."
+
+flags {UNIT_FL_NO_MOB, UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to edge15;
+north to side1;
+east to side7;
+down to abyss8;
+end
+
+			abyss1
+title "Deep In The Abyss"
+descr
+"     The downward descent has become nearly impossible.  The bare stone
+lining the Abyss has become icy cold and deadly sheer.  The wind abrades
+the rock with enough ferocity to whip a constant hail of debris into the
+air.  The only respite is that the deafening roar has deafened you to the
+continuous screaming of the dying souls.  Although your strength is lagging,
+lateral and vertical movement is still possible."
+
+extra {"abyss", "infinite", "stone", "bare stone", "debris"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  Bones, rock, and chunks of the netherworld whip past
+on the vorpal winds.  You quickly focus again upon your surroundings to avoid
+losing your grip on the bare stone and reality."
+
+extra {"souls"}
+"Casting a faint glow from their ethereal existence, the souls thrown into
+the Abyss await their fates in the form of the scavenging soul eaters."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to side1;
+north to abyss2;
+south to abyss8;
+down to infinity1;
+end
+
+			abyss2
+title "Deep In The Abyss"
+descr
+"     The downward descent has become nearly impossible.  The bare stone
+lining the Abyss has become icy cold and deadly sheer.  The wind abrades
+the rock with enough ferocity to whip a constant hail of debris into the
+air.  The only respite is that the deafening roar has deafened you to the
+continuous screaming of the dying souls.  Although your strength is lagging,
+lateral and vertical movement is still possible."
+
+extra {"abyss", "infinite", "stone", "bare stone", "debris"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  Bones, rock, and chunks of the netherworld whip past
+on the vorpal winds.  You quickly focus again upon your surroundings to avoid
+losing your grip on the bare stone and reality."
+
+extra {"souls"}
+"Casting a faint glow from their ethereal existence, the souls thrown into
+the Abyss await their fates in the form of the scavenging soul eaters."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to side2;
+east to abyss3;
+south to abyss1;
+down to infinity2;
+end
+
+			abyss3
+title "Deep In The Abyss"
+descr
+"     The downward descent has become nearly impossible.  The bare stone
+lining the Abyss has become icy cold and deadly sheer.  The wind abrades
+the rock with enough ferocity to whip a constant hail of debris into the
+air.  The only respite is that the deafening roar has deafened you to the
+continuous screaming of the dying souls.  Although your strength is lagging,
+lateral and vertical movement is still possible."
+
+extra {"abyss", "infinite", "stone", "bare stone", "debris"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  Bones, rock, and chunks of the netherworld whip past
+on the vorpal winds..  You quickly focus again upon your surroundings to avoid
+losing your grip on the bare stone and reality."
+
+extra {"souls"}
+"Casting a faint glow from their ethereal existence, the souls thrown into
+the Abyss await their fates in the form of the scavenging soul eaters."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to side3;
+east to abyss4;
+west to abyss2;
+down to infinity3;
+end
+
+			abyss4
+title "Deep In The Abyss"
+descr
+"     The downward descent has become nearly impossible.  The bare stone
+lining the Abyss has become icy cold and deadly sheer.  The wind abrades
+the rock with enough ferocity to whip a constant hail of debris into the
+air.  The only respite is that the deafening roar has deafened you to the
+continuous screaming of the dying souls.  Although your strength is lagging,
+lateral and vertical movement is still possible."
+
+extra {"abyss", "infinite", "stone", "bare stone", "debris"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  Bones, rock, and chunks of the netherworld whip past
+on the vorpal winds.  You quickly focus again upon your surroundings to avoid
+losing your grip on the bare stone and reality."
+
+extra {"souls"}
+"Casting a faint glow from their ethereal existence, the souls thrown into
+the Abyss await their fates in the form of the scavenging soul eaters."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to side4;
+west to abyss3;
+south to abyss5;
+down to infinity4;
+end
+
+
+			abyss5
+title "Deep In The Abyss"
+descr
+"     The downward descent has become nearly impossible.  The bare stone
+lining the Abyss has become icy cold and deadly sheer.  The wind abrades
+the rock with enough ferocity to whip a constant hail of debris into the
+air.  The only respite is that the deafening roar has deafened you to the
+continuous screaming of the dying souls.  Although your strength is lagging,
+lateral and vertical movement is still possible."
+
+extra {"abyss", "infinite", "stone", "bare stone", "debris"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  Bones, rock, and chunks of the netherworld whip past
+on the vorpal winds.  You quickly focus again upon your surroundings to avoid
+losing your grip on the bare stone and reality."
+
+extra {"souls"}
+"Casting a faint glow from their ethereal existence, the souls thrown into
+the Abyss await their fates in the form of the scavenging soul eaters."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to side5;
+north to abyss4;
+south to abyss6;
+down to infinity5;
+end
+
+
+			abyss6
+title "Deep In The Abyss"
+descr
+"     The downward descent has become nearly impossible.  The bare stone
+lining the Abyss has become icy cold and deadly sheer.  The wind abrades
+the rock with enough ferocity to whip a constant hail of debris into the
+air.  The only respite is that the deafening roar has deafened you to the
+continuous screaming of the dying souls.  Although your strength is lagging,
+lateral and vertical movement is still possible."
+
+extra {"abyss", "infinite", "stone", "bare stone", "debris"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  Bones, rock, and chunks of the netherworld whip past
+on the vorpal winds.  You quickly focus again upon your surroundings to avoid
+losing your grip on the bare stone and reality."
+
+extra {"souls"}
+"Casting a faint glow from their ethereal existence, the souls thrown into
+the Abyss await their fates in the form of the scavenging soul eaters."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to side6;
+north to abyss5;
+west to abyss7;
+down to infinity6;
+end
+
+
+			abyss7
+title "Deep In The Abyss"
+descr
+"     The downward descent has become nearly impossible.  The bare stone
+lining the Abyss has become icy cold and deadly sheer..  The wind abrades
+the rock with enough ferocity to whip a constant hail of debris into the
+air.  The only respite is that the deafening roar has deafened you to the
+continuous screaming of the dying souls.  Although your strength is lagging,
+lateral and vertical movement is still possible."
+
+extra {"abyss", "infinite", "stone", "bare stone", "debris"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  Bones, rock, and chunks of the netherworld whip past
+on the vorpal winds.  You quickly focus again upon your surroundings to avoid
+losing your grip on the bare stone and reality."
+
+extra {"souls"}
+"Casting a faint glow from their ethereal existence, the souls thrown into
+the Abyss await their fates in the form of the scavenging soul eaters."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to side7;
+east to abyss6;
+west to abyss8;
+down to infinity7;
+end
+
+			abyss8
+title "Deep In The Abyss"
+descr
+"     The downward descent has become nearly impossible.  The bare stone
+lining the Abyss has become icy cold and deadly sheer.  The wind abrades
+the rock with enough ferocity to whip a constant hail of debris into the
+air.  The only respite is that the deafening roar has deafened you to the
+continuous screaming of the dying souls.  Although your strength is lagging,
+lateral and vertical movement is still possible."
+
+extra {"abyss", "infinite", "stone", "bare stone", "debris"}
+"Dark, empty, and endless, the pit of all hell stretches before you causing
+your senses to reel.  Bones, rock, and chunks of the netherworld whip past
+on the vorpal winds.  You quickly focus again upon your surroundings to avoid
+losing your grip on the bare stone and reality."
+
+extra {"souls"}
+"Casting a faint glow from their ethereal existence, the souls thrown into
+the Abyss await there fates in the form of the scavenging soul eaters."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to side8;
+north to abyss1;
+east to abyss7;
+down to infinity8;
+end
+
+			infinity1
+title "On the Edge of Infinity"
+descr
+"     Deep, endless blackness and the pain of netherworld winds freezing
+your soul are all you know.  Your mind is pushed to the brink and your eyes
+shut to block out the madness.  At the very edges of your sanity you feel
+the sheer sides of the Abyss under your aching hands and the the vorpal
+winds still tearing at your flesh.  You have lost all sense of direction."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to abyss1;
+north to infinity2;
+south to infinity8;
+down to infinity11;
+end
+			infinity2
+title "On the Edge of Infinity"
+descr
+"     Deep, endless blackness, and the pain of netherworld winds freezing
+your soul are all you know.  Your mind is pushed to the brink and your eyes
+shut to block out the madness.  At the very edges of your sanity you feel
+the sheer sides of the Abyss under your aching hands and the the vorpal
+winds still tearing at your flesh.  You have lost all sense of direction."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to abyss2;
+east to infinity3;
+south to infinity1;
+down to infinity12;
+end
+
+			infinity3
+title "On the Edge of Infinity"
+descr
+"     Deep, endless blackness, and the pain of netherworld winds freezing
+your soul are all you know.  Your mind is pushed to the brink and your eyes
+shut to block out the madness.  At the very edges of your sanity you feel
+the sheer sides of the Abyss under your aching hands and the the vorpal
+winds still tearing at your flesh.  You have lost all sense of direction."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to abyss3;
+west to infinity2;
+east to infinity4;
+down to infinity13;
+end
+
+			infinity4
+title "On the Edge of Infinity"
+descr
+"     Deep, endless blackness, and the pain of netherworld winds freezing
+your soul are all you know.  Your mind is pushed to the brink and your eyes
+shut to block out the madness.  At the very edges of your sanity you feel
+the sheer sides of the Abyss under your aching hands and the the vorpal
+winds still tearing at your flesh.  You have lost all sense of direction."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to abyss4;
+west to infinity3;
+south to infinity5;
+down to infinity14;
+end
+
+			infinity5
+title "On the Edge of Infinity"
+descr
+"     Deep, endless blackness, and the pain of netherworld winds freezing
+your soul are all you know.  Your mind is pushed to the brink and your eyes
+shut to block out the madness.  At the very edges of your sanity you feel
+the sheer sides of the Abyss under your aching hands and the the vorpal
+winds still tearing at your flesh.  You have lost all sense of direction."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to abyss5;
+north to infinity4;
+south to infinity6;
+down to infinity15;
+end
+
+			infinity6
+title "On the Edge of Infinity"
+descr
+"     Deep, endless blackness, and the pain of netherworld winds freezing
+your soul are all you know.  Your mind is pushed to the brink and your eyes
+shut to block out the madness.  At the very edges of your sanity you feel
+the sheer sides of the Abyss under your aching hands and the the vorpal
+winds still tearing at your flesh.  You have lost all sense of direction."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to abyss6;
+north to infinity5;
+west to infinity7;
+down to infinity16;
+end
+
+			infinity7
+title "On the Edge of Infinity"
+descr
+"     Deep, endless blackness, and the pain of netherworld winds freezing
+your soul are all you know.  Your mind is pushed to the brink and your eyes
+shut to block out the madness.  At the very edges of your sanity you feel
+the sheer sides of the Abyss under your aching hands and the the vorpal
+winds still tearing at your flesh.  You have lost all sense of direction."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to abyss7;
+west to infinity8;
+east to infinity6;
+down to infinity17;
+end
+
+			infinity8
+title "On the Edge of Infinity"
+descr
+"     Deep, endless blackness, and the pain of netherworld winds freezing
+your soul are all you know.  Your mind is pushed to the brink and your eyes
+shut to block out the madness.  At the very edges of your sanity you feel
+the sheer sides of the Abyss under your aching hands and the the vorpal
+winds still tearing at your flesh.  You have lost all sense of direction."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to abyss8;
+north to infinity1;
+east to infinity7;
+down to infinity18;
+end
+
+			infinity11
+title "On the Edge of Infinity"
+descr
+"     Deep, endless blackness, and the pain of netherworld winds freezing
+your soul are all you know.  Your mind is pushed to the brink and your eyes
+shut to block out the madness.  At the very edges of your sanity you feel
+the sheer sides of the Abyss under your aching hands and the the vorpal
+winds still tearing at your flesh.  You have lost all sense of direction."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to infinity1;
+north to infinity12;
+south to infinity18;
+down to infinity1;
+end
+
+			infinity12
+title "On the Edge of Infinity"
+descr
+"     Deep, endless blackness, and the pain of netherworld winds freezing
+your soul are all you know.  Your mind is pushed to the brink and your eyes
+shut to block out the madness.  At the very edges of your sanity you feel
+the sheer sides of the Abyss under your aching hands and the the vorpal
+winds still tearing at your flesh.  You have lost all sense of direction."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to infinity2;
+east to infinity13;
+south to infinity11;
+down to infinity2;
+end
+
+			infinity13
+title "On the Edge of Infinity"
+descr
+"     Deep, endless blackness, and the pain of netherworld winds freezing
+your soul are all you know.  Your mind is pushed to the brink and your eyes
+shut to block out the madness.  At the very edges of your sanity you feel
+the sheer sides of the Abyss under your aching hands and the the vorpal
+winds still tearing at your flesh.  You have lost all sense of direction."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to infinity3;
+east to infinity14;
+west to infinity12;
+down to infinity3;
+end
+
+			infinity14
+title "On the Edge of Infinity"
+descr
+"     Deep, endless blackness, and the pain of netherworld winds freezing
+your soul are all you know.  Your mind is pushed to the brink and your eyes
+shut to block out the madness.  At the very edges of your sanity you feel
+the sheer sides of the Abyss under your aching hands and the the vorpal
+winds still tearing at your flesh.  You have lost all sense of direction."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to infinity4;
+west to infinity13;
+south to infinity15;
+down to infinity4;
+end
+
+			infinity15
+title "On the Edge of Infinity"
+descr
+"     Deep, endless blackness, and the pain of netherworld winds freezing
+your soul are all you know.  Your mind is pushed to the brink and your eyes
+shut to block out the madness.  At the very edges of your sanity you feel
+the sheer sides of the Abyss under your aching hands and the the vorpal
+winds still tearing at your flesh.  You have lost all sense of direction."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to infinity5;
+north to infinity14;
+south to infinity15;
+down to infinity5;
+end
+
+			infinity16
+title "On the Edge of Infinity"
+descr
+"     Deep, endless blackness, and the pain of netherworld winds freezing
+your soul are all you know.  Your mind is pushed to the brink and your eyes
+shut to block out the madness.  At the very edges of your sanity you feel
+the sheer sides of the Abyss under your aching hands and the the vorpal
+winds still tearing at your flesh.  You have lost all sense of direction."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to infinity6;
+north to infinity15;
+west to infinity17;
+down to infinity6;
+end
+
+			infinity17
+title "On the Edge of Infinity"
+descr
+"     Deep, endless blackness, and the pain of netherworld winds freezing
+your soul are all you know.  Your mind is pushed to the brink and your eyes
+shut to block out the madness.  At the very edges of your sanity you feel
+the sheer sides of the Abyss under your aching hands and the the vorpal
+winds still tearing at your flesh.  You have lost all sense of direction."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to infinity7;
+east to infinity16;
+west to infinity18;
+down to infinity7;
+end
+
+			infinity18
+title "On the Edge of Infinity"
+descr
+"     Deep, endless blackness, and the pain of netherworld winds freezing
+your soul are all you know.  Your mind is pushed to the brink and your eyes
+shut to block out the madness.  At the very edges of your sanity you feel
+the sheer sides of the Abyss under your aching hands and the the vorpal
+winds still tearing at your flesh.  You have lost all sense of direction."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_MOUNTAIN
+OUT_ALWAYS_DARK
+up to infinity8;
+north to infinity11;
+east to infinity17;
+down to infinity8;
+end
+
+/* ===================================================================== */
+/* This begins the rooms at the bottom of the Abyss and the hades7 exit. */
+
+				floor1
+title "The Bottom of the Abyss"
+descr
+"     A deep endless blackness pervades the air with a tangible weight.  The
+floor is the same icy cold black stone that lined the Abyss.  Footsteps are
+muffled as if sound itself dare not disturb the deathly quiet.  There is no
+sign of walls or barriers around you.  A gentle breeze blows to the east."
+
+extra {"icy black stone", "black stone", "stone", "floor"}
+"Deathly cold to the touch, the stone here is smooth to perfection."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_SWAMP
+OUT_ALWAYS_DARK
+west to floor5;
+north to floor2;
+east to floor;
+south to floor8;
+end
+
+
+				floor2
+title "The Bottom of the Abyss"
+descr
+"     A deep endless blackness pervades the air with a tangible weight.  The
+floor is the same icy cold black stone that lined the Abyss.  Footsteps are
+muffled as if sound itself dare not disturb the deathly quiet.  There is no
+sign of walls or barriers around you.  A gentle breeze blows to the southeast."
+
+extra {"icy black stone", "black stone", "stone", "floor"}
+"Deathly cold to the touch, the stone here is smooth to perfection."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_SWAMP
+OUT_ALWAYS_DARK
+west to floor4;
+north to floor8;
+east to floor3;
+south to floor1;
+end
+
+
+				floor3
+title "The Bottom of the Abyss"
+descr
+"     A deep endless blackness pervades the air with a tangible weight.  The
+floor is the same icy cold black stone that lined the Abyss.  Footsteps are
+muffled as if sound itself dare not disturb the deathly quiet.  There is no
+sign of walls or barriers around you.  A gentle breeze blows to the south."
+
+extra {"icy black stone", "black stone", "stone", "floor"}
+"Deathly cold to the touch, the stone here is smooth to perfection."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_SWAMP
+OUT_ALWAYS_DARK
+west to floor2;
+north to floor7;
+east to floor4;
+south to floor;
+end
+
+
+				floor4
+title "The Bottom of the Abyss"
+descr
+"     A deep endless blackness pervades the air with a tangible weight.  The
+floor is the same icy cold black stone that lined the Abyss.  Footsteps are
+muffled as if sound itself dare not disturb the deathly quiet.  There is no
+sign of walls or barriers around you.  A gentle breeze blows to the southwest."
+
+extra {"icy black stone", "black stone", "stone", "floor"}
+"Deathly cold to the touch, the stone here is smooth to perfection."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_SWAMP
+OUT_ALWAYS_DARK
+west to floor3;
+north to floor6;
+east to floor2;
+south to floor5;
+end
+
+
+				floor5
+title "The Bottom of the Abyss"
+descr
+"     A deep endless blackness pervades the air with a tangible weight.  The
+floor is the same icy cold black stone that lined the Abyss.  Footsteps are
+muffled as if sound itself dare not disturb the deathly quiet.  There is no
+sign of walls or barriers around you.  A gentle breeze blows to the west."
+
+extra {"icy black stone", "black stone", "stone", "floor"}
+"Deathly cold to the touch, the stone here is smooth to perfection."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_SWAMP
+OUT_ALWAYS_DARK
+west to floor;
+north to floor4;
+east to floor1;
+south to floor6;
+end
+
+
+				floor6
+title "The Bottom of the Abyss"
+descr
+"     A deep endless blackness pervades the air with a tangible weight.  The
+floor is the same icy cold black stone that lined the Abyss.  Footsteps are
+muffled as if sound itself dare not disturb the deathly quiet.  There is no
+sign of walls or barriers around you.  A gentle breeze blows to the northwest."
+
+extra {"icy black stone", "black stone", "stone", "floor"}
+"Deathly cold to the touch, the stone here is smooth to perfection."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_SWAMP
+OUT_ALWAYS_DARK
+west to floor7;
+north to floor5;
+east to floor8;
+south to floor4;
+end
+
+
+				floor7
+title "The Bottom of the Abyss"
+descr
+"     A deep endless blackness pervades the air with a tangible weight.  The
+floor is the same icy cold black stone that lined the Abyss.  Footsteps are
+muffled as if sound itself dare not disturb the deathly quiet.  There is no
+sign of walls or barriers around you.  A gentle breeze blows to the north."
+
+extra {"icy black stone", "black stone", "stone", "floor"}
+"Deathly cold to the touch, the stone here is smooth to perfection."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_SWAMP
+OUT_ALWAYS_DARK
+west to floor8;
+north to floor;
+east to floor6;
+south to floor3;
+end
+
+
+				floor8
+title "The Bottom of the Abyss"
+descr
+"     A deep endless blackness pervades the air with a tangible weight.  The
+floor is the same icy cold black stone that lined the Abyss.  Footsteps are
+muffled as if sound itself dare not disturb the deathly quiet.  There is no
+sign of walls or barriers around you.  A gentle breeze blows to the northeast."
+
+extra {"icy black stone", "black stone", "stone", "floor"}
+"Deathly cold to the touch, the stone here is smooth to perfection."
+
+flags {UNIT_FL_NO_WEATHER}
+OUT_ALWAYS_DARK
+movement SECT_SWAMP
+west to floor6;
+north to floor1;
+east to floor7;
+south to floor2;
+end
+
+
+				floor
+title "The Source of the Abyss"
+descr
+"     An awesome sight lies before you.  Spinning in infinity, the soul vortex
+pulls the souls of the Abyss into the deepest depths of hell.  The power
+surrounding the vortex crackles with lightning and glows hellishly as it
+consumes the souls of the dead.  The vortex continues upward into the infinity
+above you that is the Abyss."
+
+extra {"soul vortex", "vortex"}
+"Without a sound the vortex devours the souls of the dead as they fall from
+the infinite Abyss above you.  Hellish light glows from center as the souls
+pass through the bottom of the Abyss into the lower depths of hell."
+
+extra {"icy black stone", "black stone", "stone", "floor"}
+"Deathly cold to the touch, the stone here is smooth to perfection."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_SWAMP
+ALWAYS_LIGHT
+west to floor5;
+north to floor2;
+east to floor;
+south to floor8;
+
+/*  Dil to gain entry into hades7 */
+/*  Dil modified from that in link room, created by A. Cowan (Icculus) */
+dilbegin floor1();
+var
+  pc : unitptr;
+code {
+  :init:
+    heartbeat := PULSE_SEC*5;
+  :start:
+    wait (SFB_CMD, (activator.type == UNIT_ST_PC) and
+	 (command(CMD_ENTER)));
+    if (("vortex" in argument) or ("soul vortex" in argument) or
+	 ("kalyans ass" in argument)) {
+      pc := activator;
+      secure(pc, lostpc);
+      block;
+      act("You enter the Soul Vortex.", A_ALWAYS, pc, null,
+	   null, TO_CHAR);
+      act(pc.name+" enters the Soul Vortex.", A_HIDEINV, pc, null,
+	   null, TO_REST);
+      exec("scream", pc);
+      pause;
+      link(pc, findroom("hades6/done"));
+      exec("look", pc);
+      act(pc.name+" has arrived.", A_HIDEINV, pc,
+	   null, null, TO_REST);
+      unsecure(pc); }{
+      goto start; }
+
+  :lostpc:
+    pause;
+    goto start;
+}
+dilend
+end
+
+				done
+title "Beyond the Abyss"
+descr
+"     Swirling colors flit about the room.  Light and dark mix in endless
+patterns as the souls chosen for salvation pour into this room.  The clamour
+of rejoicing spirits fills your heart.  But yours is only a temporary visit.
+Below you a monstrous portal awaits to take you deeper into hell."
+
+extra {"swirling colors", "colors", "patterns", "souls", "spirits"}
+"Souls, spirits, and mystical entities swirl around you in a myriad of colors.
+They rejoice that they have been set free.  You on the other hand have only
+survived due to your deal with Mornick and your only escape lies through the
+lower planes of hell."
+
+extra {"monstrous portal", "portal"}
+"A gaping maw waits to take you down into the further depths of hell.  For
+you this is just a passing, unlike the souls that are being granted their
+salvation.  Their escape is now, but you have many paths to travel before you
+can leave hell."
+
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+down to center_room@hades7;
+ALWAYS_LIGHT
+end
+
+%mobiles
+				dead_soul
+names {"dead soul", "soul"}
+title "the dead soul"
+descr "A dead soul is here clinging to the wall."
+extra {}
+"One look at the soul and you pray to the gods that you will not end like
+ this once your day arrives.  A grimace filled with torture and lost hope
+ covers what appears to be the face of the soul.  The figure of the soul
+ glows and then fades right before your eyes.  This tormented soul seems
+ to know nothing but the torment and fear of climbing from the Abyss."
+
+level 90
+alignment -400
+sex SEX_NEUTRAL
+height 250
+weight 150
+money 10 IRON_PIECE
+race RACE_SPIRIT
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY (14, 20, 14, 22, 15, 5, 0, 10)
+MSET_WEAPON (15, 10, 0, 0, 15, 0)
+MSET_SPELL (10, 0, 0, 0, 0, 5, 10, 5, 10, 10, 10)
+special SFUN_COMBAT_MAGIC "cast plague"
+special SFUN_RANDOM_ZONE_MOVE time 300 bits SFB_RANTIME
+romflags {CHAR_HIDE}
+/*  Dil to bring souls to life */
+/*  Provided by Kira as used in Kithryn Tower */
+dilbegin soul1();
+code {
+  :init:
+    heartbeat := PULSE_SEC*5;
+    on_activation((self.position <= POSITION_SLEEPING) or
+	 (self.position == POSITION_FIGHTING), skip);
+  :start:
+    exec("emote gazes at you coldly.", self); pause; pause;
+    exec("say Flee mortal....", self); pause; pause;
+    exec("emote hisses.", self); pause; pause;
+    exec("say Or you shall soon learn the horror of the Abyss.", self); pause; pause;
+    exec("grin", self); pause; pause;
+    exec("say And then we shall meet again in Hell!", self); pause; pause;
+    exec("cackle", self); pause; pause; pause; pause; pause;
+    exec("emote mumbles something that sounds like 'Trent Reznor'.", self); pause;
+    exec("say They keep calling me.", self); pause;
+    exec("say Keep on calling me....", self); pause;
+    exec("em whistles a strangely haunting tune.", self); pause; pause;
+    goto init;
+}
+dilend
+end
+
+				black_soul
+names {"black soul", "soul"}
+title "the black soul"
+descr "A black soul is here clinging to the wall."
+extra {}
+"The glow from the Abyss allows you to barely make out the figure of this
+ soul by illuminating its shape in a ghastly light.  The body is covered
+ with the a swirling black mist.  For fear of more torment, this soul
+ appears to be looking for a way out of the Abyss."
+
+level 80
+alignment -400
+sex SEX_NEUTRAL
+height 250
+weight 150
+money 10 IRON_PIECE
+race RACE_SPIRIT
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY (14, 10, 0, 22, 15, 19, 10, 10)
+MSET_WEAPON (15, 10, 0, 0, 15, 0)
+MSET_SPELL (10, 0, 0, 0, 0, 5, 10, 5, 10, 10, 10)
+special SFUN_COMBAT_MAGIC "cast energy drain"
+special SFUN_RANDOM_ZONE_MOVE time 300 bits SFB_RANTIME
+/*  Dil to bring souls to life */
+/*  Provided by Kira as used in Kithryn Tower */
+dilbegin soul2();
+code {
+  :init:
+    heartbeat := PULSE_SEC*5;
+    on_activation((self.position <= POSITION_SLEEPING) or
+	 (self.position == POSITION_FIGHTING), skip);
+  :start:
+    exec("emote leers at your cruelly.", self); pause; pause;
+    exec("say Welcome mortal.", self); pause; pause;
+    exec("snicker", self); pause; pause;
+    exec("say You don't really expect to escape do you?", self); pause; pause;
+    exec("grin", self); pause; pause;
+    exec("say Perhaps I shall take you with me to the depths of Hell!", self); pause; pause;
+    exec("cackle", self); pause; pause;
+    goto init;
+}
+dilend
+end
+
+				pathetic_soul
+names {"pathetic soul", "soul"}
+title "the pathetic soul"
+descr "A pathetic soul is here clinging to the wall."
+extra {}
+"The crumbling eyes of this soul shows that it has given up on everything.
+ It is apparently too weak to climb any higher and is literally clinging on
+ to the wall.  One slip and it would fall straight into the Abyss.  From
+ its expression it looks like it may prefer that fate."
+
+level 90
+alignment -400
+sex SEX_NEUTRAL
+height 250
+weight 150
+money 10 IRON_PIECE
+race RACE_SPIRIT
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY (14, 10, 14, 22, 15, 5, 10, 10)
+MSET_WEAPON (15, 10, 0, 0, 15, 0)
+MSET_SPELL (10, 0, 0, 0, 0, 5, 10, 5, 10, 10, 10)
+special SFUN_COMBAT_MAGIC "cast plague"
+special SFUN_RANDOM_ZONE_MOVE time 300 bits SFB_RANTIME
+/*  Dil to bring souls to life */
+/*  Provided by Kira as used in Kithryn Tower */
+dilbegin soul3();
+code {
+  :init:
+    heartbeat := PULSE_SEC*5;
+    on_activation((self.position <= POSITION_SLEEPING) or
+	 (self.position == POSITION_FIGHTING), skip);
+  :start:
+    exec("emote looks at you pleadingly.", self); pause; pause;
+    exec("say Please.......", self); pause; pause;
+    exec("cough", self); pause; pause;
+    exec("say Kill me......", self); pause; pause;
+    exec("em begs you pleadingly.", self); pause; pause;
+    exec("say Don't let them take me!", self); pause; pause;
+    exec("cry", self); pause; pause;
+    goto init;
+}
+dilend
+end
+
+				tragic_soul
+names {"tragic soul", "soul"}
+title "the tragic soul"
+descr "A tragic soul is here clinging to the wall."
+extra {}
+"This poor soul has been brought here for unknown reasons.  Its death during
+ times of life was brought about through tragic means.  It shows some
+ desire to get out and back to the living world."
+
+level 80
+alignment -350
+sex SEX_NEUTRAL
+height 250
+weight 150
+money 10 IRON_PIECE
+race RACE_SPIRIT
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY (14, 10, 14, 22, 15, 5, 10, 10)
+MSET_WEAPON (15, 10, 0, 0, 15, 0)
+MSET_SPELL (10, 0, 0, 0, 0, 5, 10, 5, 10, 10, 10)
+special SFUN_COMBAT_MAGIC "cast fear"
+special SFUN_RANDOM_ZONE_MOVE time 300 bits SFB_RANTIME
+/*  Dil to bring souls to life */
+/*  Provided by Kira as used in Kithryn Tower */
+dilbegin soul4();
+code {
+  :init:
+    heartbeat := PULSE_SEC*5;
+    on_activation((self.position <= POSITION_SLEEPING) or
+	 (self.position == POSITION_FIGHTING), skip);
+  :start:
+    exec("emote wails in lament.", self); pause; pause;
+    exec("say No...", self); pause; pause;
+    exec("shake", self); pause; pause;
+    exec("say NO!", self); pause; pause;
+    exec("scream", self); pause; pause;
+    exec("say It was not my time!  Not yet!", self); pause; pause;
+    exec("em wails his tragedy.", self); pause; pause;
+    goto init;
+}
+dilend
+end
+
+				guardian_imp
+names {"guardian imp", "guardian", "imp"}
+title "the guardian imp"
+descr "A guardian imp is here pushing souls down into the Abyss."
+extra {}
+"The guardian imps has only one purpose here.  Sent straight from the lower
+ planes, the imp is here to force all of the souls back down into the Abyss,
+ and to make sure that none of them escape."
+
+level 84
+alignment -600
+money 6 SILVER_PIECE
+sex SEX_NEUTRAL
+height 250
+weight 200
+race RACE_GREATER_DEMON
+NATURAL_DEF(WPN_CLAW, ARM_LEATHER)
+MSET_ABILITY (14, 10, 30, 22, 15, 5, 2, 2)
+MSET_ABILITY (23, 17, 10, 10, 15, 10, 10, 5)
+MSET_WEAPON (10, 10, 10, 0, 10, 0)
+MSET_SPELL (5, 0, 0, 0, 0, 5, 15, 5, 10, 10, 10)
+special SFUN_COMBAT_MAGIC "cast firestorm"
+special SFUN_RANDOM_ZONE_MOVE time 300 bits SFB_RANTIME
+special SFUN_RESCUE "imp/devil"
+end
+
+				fiery_devil
+names {"fiery devil", "devil"}
+title "the fiery devil"
+descr "A fiery devil is here overlooking the imps and souls of the Abyss."
+extra {}
+"A solemn smile covers the face of this fiery devil.  The fire surrounding
+ its body casts most of the light present throughout the area.  The devil
+ apparently is not pleased with your presence near the Abyss."
+
+exp 110
+level 83
+alignment -700
+money 666 IRON_PIECE
+sex SEX_NEUTRAL
+height 250
+weight 250
+race RACE_LESSER_DEVIL
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+MSET_ABILITY (14, 10, 30, 22, 15, 5, 2, 2)
+MSET_WEAPON (10, 10, 0, 0, 10, 10)
+MSET_SPELL (5, 0, 0, 0, 0, 5, 15, 5, 10, 10, 10)
+special SFUN_COMBAT_MAGIC "cast firestorm"
+special SFUN_AGGRESSIVE time 12
+/*  Dil to bring souls to life */
+/*  Provided by Kira as used in Kithryn Tower */
+dilbegin devil1();
+code {
+  :init:
+    heartbeat := PULSE_SEC*10;
+    on_activation((self.position <= POSITION_SLEEPING) or
+	 (self.position == POSITION_FIGHTING), skip);
+  :start:
+    exec("cackle", self); pause; pause;
+    exec("say Look!  Little mortals!  How cute!", self); pause; pause;
+    exec("em sneers.", self); pause; pause;
+    exec("moohaha", self); pause;
+    goto init;
+}
+dilend
+end
+
+				soul_scavenger
+names {"soul scavenger", "scavenger"}
+title "the soul scavenger"
+descr "A soul scavenger is wandering the Abyss, looking for souls to eat."
+extra {}
+"Horrid and slimy, the soul scavenger is searching the Abyss for souls to
+ eat.  Accustomed to eating abandoned souls, the soul scavenger devours
+ everything in its path.  Its elastic like body is well suited for eating
+ mortal flesh also."
+
+exp 105
+level 80
+alignment -100
+money 10 IRON_PIECE
+sex SEX_NEUTRAL
+height 250
+weight 160
+race RACE_LEMURE
+NATURAL_DEF(WPN_BITE, ARM_CLOTHES)
+MSET_ABILITY (20, 20, 10, 35, 15, 0, 0, 0)
+MSET_WEAPON (15, 15, 0, 0, 15, 0)
+MSET_SPELL (5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5)
+
+special SFUN_AGGRESSIVE time 12
+special SFUN_RANDOM_ZONE_MOVE time 300 bits SFB_RANTIME
+end
+
+				kalyan
+names {"soul eater", "eater", "kalyan"}
+title "the soul eater named Kalyan"
+descr "Kalyan the soul eater is here devouring the souls that fall into the Abyss."
+extra {}
+"Scaled with horrendous claws, this soul eater is ravenously looking for
+ souls to devour.  Its body is massive and its strength enormous.  Its
+ etheral form is similar to a dragon."
+
+exp 110
+level 90
+alignment -400
+money 6 SILVER_PIECE
+sex SEX_FEMALE
+height 500
+weight 550
+race RACE_DRAGON_LAVA
+NATURAL_DEF(WPN_CLAW, ARM_CLOTHES)
+MSET_ABILITY (20, 30, 0, 15, 25, 0, 10, 0)
+MSET_WEAPON (15, 10, 0, 0, 15, 0)
+MSET_SPELL (10, 0, 0, 0, 0, 5, 10, 5, 10, 10, 10)
+special SFUN_TEAMWORK "baykur"
+special SFUN_COMBAT_MAGIC "cast gas breath"
+end
+
+				baykur
+names {"soul eater", "eater", "baykur"}
+title "Baykur the soul eater"
+descr "Baykur the soul eater is here devouring the souls that fall into the Abyss."
+extra {}
+"Scaled with horrendous claws, this soul eater is ravenously looking for
+ souls to devour.  Its body is massive and its strength enormous.  Its
+ etheral form is similar to a dragon."
+
+exp 110
+level 90
+alignment -400
+money 6 SILVER_PIECE
+sex SEX_FEMALE
+height 500
+weight 550
+race RACE_DRAGON_LAVA
+NATURAL_DEF(WPN_CLAW, ARM_CLOTHES)
+MSET_ABILITY (25, 10, 5, 20, 15, 10, 10, 5)
+MSET_WEAPON (15, 10, 0, 0, 15, 0)
+MSET_SPELL (10, 0, 0, 0, 0, 5, 10, 5, 10, 10, 10)
+special SFUN_TEAMWORK "kalyan"
+special SFUN_COMBAT_MAGIC "cast fire breath"
+end
+
+				mornick
+names {"mornick the soul overlord", "soul overlord", "mornick", "overlord"}
+title "Mornick the Soul Overlord"
+descr "Mornick the Soul Overlord watches over souls in the Abyss."
+extra {}
+"A strong and stern face, stretched with an evil and greedy smile, Mornick is
+ an evil of all evil.  Mornick possesses a strong and muscular figure which
+ is fit to destroy all of the souls that cross his path.  He, of course,
+ would not hesitate to hurt you."
+
+exp 105
+flags {CHAR_DETECT_INVISIBLE}
+level 199
+alignment -600
+money 6 GOLD_PIECE
+sex SEX_MALE
+height 250
+weight 300
+race RACE_GREATER_DEVIL
+NATURAL_DEF(WPN_FIST, ARM_HLEATHER)
+MSET_ABILITY (13, 13, 13, 13, 12, 12, 12, 12)
+MSET_WEAPON (6, 6, 6, 6, 6, 6)
+MSET_SPELL (6, 6, 6, 6, 6, 6, 6, 6, 6, 5, 5)
+special SFUN_COMBAT_MAGIC "cast lightning bolt"
+
+/*  Dil for Mornick's quest  */
+dilbegin  disarm_block();
+var
+tgt:unitptr;
+pc:unitptr;
+code
+{
+heartbeat:=PULSE_SEC*3;
+:start:
+unsecure (pc);
+wait (SFB_CMD, command (CMD_DISARM) );
+pc:=activator;
+secure (pc,start);
+tgt:=findunit (self,argument,FIND_UNIT_SURRO, null);
+if (tgt ==null)
+  goto start;
+if (tgt==self)
+  {
+  block;
+  pause;
+  act ("$2n dodges your thrust and sends you sprawling.",
+  A_ALWAYS,pc,self,null,TO_CHAR);
+  act ("$2n dodges $1n's thrust and sends $1m sprawling.",
+  A_ALWAYS,pc,self,null,TO_CHAR);
+	pc.position  := POSITION_SITTING;
+  exec ("kill "+pc.name,self);
+
+  goto start;
+  }
+goto start;
+}
+dilend
+
+dilbegin mornick1();
+var
+  pcname : string;
+  pc     : unitptr;
+  i      : integer;
+  expd   : extraptr;
+code {
+  :init:
+    heartbeat := PULSE_SEC*4;
+    on_activation((self.position <= POSITION_SLEEPING) or
+      (self.position == POSITION_FIGHTING), skip);
+  :start:
+    wait(SFB_CMD,(activator.type == UNIT_ST_PC) and (not command(CMD_GIVE)));
+    if ((MORNICK_COMPLETE in activator.quests))
+      goto waitawhile;
+    pc := activator;
+    secure(pc,lostpc);
+    if (not (MORNICK_ONGOING in pc.quests)) {
+      pause;
+      exec("emote howls with fury.", self); pause;
+      exec("say Mortals!  Here in my realm!  How dare you!", self); pause;
+      exec("growl", self); pause;
+      exec("say I shall cast your immortal soul into the very Abyss itself!", self); pause;
+      exec("emote prepares to destroy your immortal soul!", self);
+      exec("say Run for your life little mortal!", self);
+      pause;
+      exec("emote waits for you to run.", self); pause;
+      exec("emote looks puzzled.", self);
+      pause;
+      exec("say You do not seem afraid...", self); pause;
+      exec("emote seems duly impressed!", self);
+      pause;
+      exec("say But now that you have come, I wonder what it is that you might want?", self);
+      pause;
+      exec("ponder", self); pause;
+      exec("grin "+pc.name, self); pause;
+      exec("say Is it possible that you wish to find the bottom of "+
+	   "the Abyss?", self); pause;
+      exec("moo", self); pause;
+      exec("say Perhaps then we can assist each other mortal...", self); pause;
+      exec("say I suggest that you nod your agreement!", self);
+      exec("grin "+pc.name, self); pause;
+      i := 0;
+      while (i < 3) {
+	wait(SFB_CMD, activator #= pc);
+	if (command(CMD_NOD))
+	  goto quest_accept;
+	if (command(CMD_SAY)) {
+	  pause;
+	  exec("say Nod if you accept mortal.", self);
+	}
+	if (command(CMD_SHAKE))
+	  goto quest_refuse;
+	i := i+1;
+      }
+      :quest_refuse:
+	pause;
+	exec("emote howls with renewed fury!", self); pause;
+	exec("say You have closed your fate mortal!", self); pause;
+	exec("kill "+pc.name, self);
+	unsecure(pc);
+	goto waitawhile;
+      :quest_accept:
+	pause;
+	exec("moo", self); pause;
+	addextra(pc.quests, {MORNICK_ONGOING}, "");
+	exec("say Delightful!", self); pause;
+	exec("emote grins evilly at you.", self); pause;
+	exec("say Bring me a crown fit for a king and a robe fit for a goddess. Then, " +
+	"perhaps, I will help you discover the secret of the Abyss!", self); pause;
+	exec("cackle", self); pause;
+	exec("emote waits for you to begin your quest.", self); pause; pause;
+	exec("emote roars at you.", self); pause;
+	exec("say Go now mortal!  Before I decide to toss you in anyway!", self);
+	unsecure(pc);
+	goto start;
+    }
+    else {
+      expd := MORNICK_ONGOING in pc.quests;
+      if (("golden crown" in expd.names) and ("blue robe" in expd.names)) {
+	pause;
+	subextra(pc.quests, MORNICK_ONGOING);
+	addextra(pc.quests, {MORNICK_COMPLETE}, ""); pause;
+	exec("moo", self); pause;
+	exec("say I would bet the King thought he was safe from me too...", self); pause;
+	exec("say And that goddess de-robed! A pretty sight indeed I'll wager!", self); 
+	pause;
+	exec("grin "+pc.name, self); pause;
+	exec("say And now for you my little mortal, I must thank you.", self); pause;
+	exec("say You have sold your soul to Satan himself with this "+
+	     "crown and that robe.", self); pause;
+	exec("say And to the depths I shall send you!", self); pause;
+	exec("cackle", self); pause;
+	exec("say You now have my protection as you descend the Abyss.", self); pause;
+	exec("say Seek out my minion Vasslius to help you on your way.", self); pause;
+	exec("say And hope I don't forget to save your soul when you reach the bottom!", 	self); pause;
+	exec("moo", self); pause; pause;
+	experience(3000, pc);
+      }
+    }
+    unsecure(pc);
+    goto start;
+    :waitawhile:
+      heartbeat := PULSE_SEC*30;
+      pause;
+      goto init;
+    :lostpc:
+      exec("say Pitiful mortal!  Run for your life!!!", self); pause;
+      exec("moo", self);
+      goto start;
+}
+dilend
+
+dilbegin mornick2();
+var
+  pc   : unitptr;
+  item : unitptr;
+  expd : extraptr;
+code {
+  heartbeat := PULSE_SEC*4;
+  on_activation((self.position <= POSITION_SLEEPING) or
+    (self.position == POSITION_FIGHTING), skip);
+  :start:
+    nopriority;
+    wait(SFB_DONE,((activator.type == UNIT_ST_PC) and (command(CMD_GIVE)) and (target==self)));
+    priority;
+  :give:
+    if (not(MORNICK_ONGOING in activator.quests)) goto start;
+    pc := activator;
+    item := medium;
+    secure(pc, labsecure);
+    secure(item, labsecure);
+    if (not (item==null)) {
+      expd := MORNICK_ONGOING in pc.quests;
+      if ("golden crown" in item.names) {
+	addstring(expd.names, "golden crown"); pause;
+	exec("say Ah, a crown indeed fit for a King!", self);
+	destroy(item);
+	exec("emote laughs the EVIL laugh.  MOOOHAHAhahaha...", self); pause;
+	}
+      if ("blue robe" in item.names) {
+	addstring(expd.names, "blue robe"); pause;
+	exec("say A robe fit for a goddess!", self);
+	destroy(item);
+	exec("emote laughs the EVIL laugh.  MOOOHAHAhahaha...", self); pause;
+	}
+else {
+	exec("say How dare you attempt to decieve me mortal!", self); pause;
+	exec("say You shall die for your insolence!", self);
+	exec("kill "+pc.name, self);
+      }
+    }
+    unsecure(pc);
+goto start;
+
+:labsecure:
+    exec("say Pitiful mortal!  Run for your life!!!", self); pause;
+    exec("emote laughs the evil laugh.", self);
+    goto start;
+}
+dilend
+
+end
+
+				vasslius
+names {"soul slinger", "vasslius"}
+title "Vasslius the Soul Slinger"
+descr "Vasslius the Soul Slinger is here throwing souls into the Abyss."
+extra {}
+"An ugly and amorphic person, Vasslius is in charge of throwing the souls
+ into the Abyss..  A short creature with long, muscular arms for tossing
+ souls.  A hellish glow has been engraved on his body from the dissipating
+ souls as they fall.  He lives in solitude on this platform."
+
+exp 105
+level 199
+alignment -1000
+money 6 GOLD_PIECE
+sex SEX_MALE
+height 250
+weight 350
+race RACE_GREATER_DEVIL
+NATURAL_DEF(WPN_CLAW, ARM_HLEATHER)
+MSET_ABILITY (13, 13, 13, 13, 12, 12, 12, 12)
+MSET_WEAPON (6, 6, 6, 6, 6, 6)
+MSET_SPELL (6, 6, 6, 6, 6, 6, 6, 6, 6, 5, 5)
+special SFUN_COMBAT_MAGIC "cast firestorm"
+
+/*  Dil to throw mortals to seventh plane */
+dilbegin vasslius1();
+var
+  pc     : unitptr;
+  i      : integer;
+  expd   : extraptr;
+code {
+  :init:
+    heartbeat := PULSE_SEC*4;
+    on_activation((self.position <= POSITION_SLEEPING) or
+      (self.position == POSITION_FIGHTING), skip);
+  :start:
+    wait(SFB_CMD,(activator.type == UNIT_ST_PC));
+    if (MORNICK_COMPLETE in activator.quests) {
+      pc := activator;
+      secure(pc,lostpc);
+      exec("say So "+pc.name+"!  Do you wish to learn the secrets "+
+	   "of the Abyss?  Nod or shake.", self);
+  :wait_nod:
+      wait(SFB_CMD,(activator.type == UNIT_ST_PC));
+      if (command(CMD_NOD)) {
+	goto mornick_toss;
+      }
+      if (command(CMD_SAY)) {
+	exec("say Nod if you wish to know what lies at the bottom, "+
+	     "mortal.", self);
+      }
+      if (command(CMD_SHAKE)) {
+	goto no_toss;
+      }
+      i := i + 1;
+      if (i < 3) {
+	goto wait_nod;
+      }
+      else {
+	pause; pause;
+	goto start;
+      }
+  :mornick_toss:
+    pause;
+    exec("emote laughs the EVIL laugh.  MOOOHAHAhaha...", self); pause;
+    exec("say Prepare to see the depths of hell mortal!", self); pause;
+    act("Vasslius throws $1n into the Abyss.", A_SOMEONE, pc, null,
+	 null, TO_REST);
+    act("Vasslius reaches out his long arms and tosses you out into "+
+	 "the Abyss.", A_ALWAYS, pc, null, null, TO_CHAR); pause;
+    link(pc, findroom("hades6/abyss"));
+    exec("look", pc); pause;
+    act("$1n appears from above.", A_HIDEINV, self.inside, null, null,
+	 TO_REST);
+    exec("Vasslius peers over the edge in to the Abyss.", self); pause; pause;
+    exec("say Look like mortal in for a little trip!", self); pause; pause;
+    exec("moohaha", self); pause; pause;
+    exec("I love this job!!!", self); pause; pause;
+    exec("grin", self); pause; pause;
+    exec("Well!  Back to work I guess.", self); pause; pause;
+    unsecure(pc);
+    goto start;
+  :no_toss:
+    pause;
+    exec("say You do not wish to enter the Abyss?!?!", self); pause;
+    exec("emote looks furious!", self); pause;
+    exec("say Then leave my realm, mortal!", self); pause;
+    act("Vasslius throws $1n straight out of Hell!", A_SOMEONE, pc, null,
+	 null, TO_REST); pause;
+    act("Vasslius reaches out his long arms and throws you right out of "+
+	 "Hell!", A_ALWAYS, pc, null, null, TO_CHAR); pause;
+    exec("say So much for that puny mortal!", self);
+    link(pc, findroom("midgaard/market_sq"));
+    exec("look", pc);
+    act("$1n comes flying in like a bat out of hell!", A_HIDEINV, self.inside, null, null,
+	 TO_REST);
+    unsecure(pc);
+    pause; pause;
+    goto start;
+  :lostpc:
+    pause;
+    goto start;
+    }
+}
+dilend
+
+end
+
+				demon
+names {"transparent demon", "demon"}
+title "a transparent demon"
+descr "A transparent demon is here wandering about."
+extra {}
+"These demons are very hard to see, since they are transparent.  They are
+ here apparently to help in the task of keeping the souls from escaping.
+ The only way that you can see them is a small mist following their tail
+ end."
+
+level 80
+alignment -300
+sex SEX_NEUTRAL
+height 250
+weight 160
+race RACE_LESSER_DEMON
+NATURAL_DEF(WPN_CLAW, ARM_LEATHER)
+MSET_ABILITY (20, 25, 10, 25, 10, 10, 0, 0)
+MSET_WEAPON (10, 10, 0 , 15, 0, 10)
+MSET_SPELL (5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5)
+special SFUN_RANDOM_ZONE_MOVE time 300 bits SFB_RANTIME
+end
+
+				vorpal_wind
+names {"vorpal wind","air elemental","elemental","wind","air"}
+title "the vorpal wind"
+descr "A vorpal wind chills your soul as it passes."
+extra {}
+"A wind blowing straight from the depths of the Abyss."
+race RACE_ELEMENTAL_AIR
+sex SEX_NEUTRAL
+level 80
+height 300
+weight 40
+NATURAL_DEF(WPN_CRUSH, ARM_CLOTHES)
+alignment 0
+MSET_ABILITY(15,15,20,20,15,15,0,0)
+MSET_WEAPON(6,6,6,6,14,6)
+MSET_SPELL(5,5,5,5,5,5,3,8,5,5,5)
+flags {CHAR_SNEAK,CHAR_HIDE,UNIT_FL_INVISIBLE}
+special SFUN_RANDOM_ZONE_MOVE time 300 bits SFB_RANTIME
+special SFUN_HIDEAWAY time WAIT_SEC * 120
+
+dilbegin prg10();
+code
+{
+  heartbeat := PULSE_SEC*30;
+  on_activation(self.position != POSITION_STANDING, skip);
+
+  :start:
+  wait(SFB_CMD, activator.type == UNIT_ST_PC);
+  act("$1n sliced to the soul by a vicious vorpal wind.", A_SOMEONE, activator,
+      null, null, TO_REST);
+  act("The vorpal wind slices to your very soul.", A_ALWAYS, activator,
+      null, null, TO_CHAR);
+  if (activator.level < 200)
+  {
+     activator.hp := activator.hp - rnd(10,40);
+     position_update(activator);
+  }
+  pause;
+  goto start;
+}
+dilend
+
+end
+
+
+
+
+%objects
+
+				deshpande
+names {"Deshpande"}
+title "Slashing sword named Deshpande"
+descr "The Slashing sword named Deshpande lies here."
+extra {}
+"This sword appears to be glowing with fury.  It provides mystical bonuses
+ that are beyond your comprehension.  It appears to be the perfect match for
+ the legendary Banick Shield.  The Deshpande is more than a sword, it is
+ a DESHPANDE.  To activate the Deshpande, command it to SLASH DAT SUCKA."
+
+extra {"$identify"}
+"Deshpande increases your strength by 2 and your dexterity by 2.  It also
+ increases your long sword ability by 5%."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_LONG_SWORD, 7, 12)
+STR_TRANSFER (+2)
+DEX_TRANSFER (+2)
+WEAPON_TRANSFER (WPN_LONG_SWORD, +5)
+
+weight 20
+cost 15 PLATINUM_PIECE
+rent 10 SILVER_PIECE
+
+dilcopy level_restrict@function (50,0,25,"");
+dilcopy abi_restrict@function (ABIL_DEX,100,0,25,"");
+dilcopy abi_restrict@function (ABIL_STR,60,0,25,"");
+dilcopy ali_restrict@function (-350,-1000,0,25,"");
+
+spell 75
+
+
+dilbegin recall ignition();
+code
+{
+:start:
+heartbeat:=PULSE_SEC*SECS_PER_MUD_DAY/6;
+wait (SFB_TICK,(self.equip==WEAR_WIELD));
+heartbeat:=PULSE_SEC*5;
+act ("The ground rumbles.....",
+A_ALWAYS,self.outside,self,null,TO_CHAR);
+act ("The ground rumbles.... ",
+A_ALWAYS,self.outside,self,null,TO_REST);
+pause;
+act ("Flames erupt from the ground molting to your Deshpande.",
+A_ALWAYS,self.outside,self,null,TO_CHAR);
+act ("Flames erupt from the ground molting to $1n's Deshpande.",
+A_ALWAYS,self.outside,self,null,TO_REST);
+
+sendto ("add charge",self);
+goto start;
+}
+dilend
+
+
+dilbegin recall aware slash();
+var
+	i : integer;
+	enemy :unitptr;
+	n:integer;
+	charge:integer;
+	pwr:integer;
+code
+{
+pwr:=10;
+:init:
+	heartbeat := PULSE_SEC*5;
+charge:=interrupt (SFB_MSG, ((self==activator) and
+	(argument=="add charge")), charge);
+:start:
+wait (SFB_CMD,( (command ("slash")) and ("dat" in argument) and
+			("sucka" in argument) and
+			(self.equip==WEAR_WIELD) )  );
+block;
+enemy:=self.outside.fighting;
+if (enemy==null) goto no_person;
+secure (enemy,start);
+if (pwr<=0) goto fail;
+pwr:=pwr-1;
+i := rnd (35,110);
+if (i < self.outside.weapons[WPN_LONG_SWORD])
+	 {
+	n:= cast_spell (SPL_COLOURSPRAY_1,self.outside,self,enemy,"desh_aff@hades6");
+   }
+else
+	{
+	act ("You try to SLASH $2n but look really stupid when you miss! ",
+		A_SOMEONE,self.outside,enemy,self,TO_CHAR);
+	act ("$1n tries to SLASH $2n but looks really stupid when $1n misses!",
+		A_SOMEONE,self.outside,enemy,self,TO_VICT);
+	act ("$1n tries to SLASH $2n but looks really stupid when $1n misses!",
+			A_SOMEONE,self.outside,enemy,self,TO_NOTVICT);
+	}
+  goto start;
+
+	:fail:
+	act ("You try to SLASH $2n but the Deshpande has not regained enough power yet.",
+	A_SOMEONE,self.outside,enemy,self,TO_CHAR);
+	goto start;
+
+:charge:
+clear (charge);
+if (pwr<12)
+ pwr:=pwr+4;
+ goto init;
+  goto start;
+:no_person:
+act ("Nothing by that name here.",
+A_ALWAYS,self.outside,null,null,TO_CHAR);
+goto start;
+}
+dilend
+
+dilbegin q_only ();
+code 
+{
+        :start:
+wait (SFB_CMD, ((activator.type == UNIT_ST_PC) and 
+(self.outside==activator) and ((self.equip == WEAR_WIELD) or 
+(self.equip == WEAR_HOLD)) ));
+if (not (MORNICK_COMPLETE in activator.quests)) {
+        act("Mornick's fury forces you to drop the Deshpande.&nYou need to do the " +
+	"right quest.", 
+        A_ALWAYS, activator, null, null, TO_CHAR);
+        act("Mornick's fury forces $1n to drop the Deshpande.",
+        A_ALWAYS, activator, null, null, TO_REST);
+        link (self, self.outside.outside);
+}
+}
+dilend
+
+dilbegin weak ();
+	var
+		jnd : integer;
+		pc : unitptr;
+	code  {
+
+	     :init:
+	     wait(SFB_COM, (activator.type == UNIT_ST_PC) and 
+(activator == self.outside) and (self.equip == WEAR_WIELD));
+	     :start:
+	     jnd := self.outside.weapons[WPN_LONG_SWORD];
+	     pc := activator ;
+
+	if (jnd < 90 ) {
+
+		act("You fail to control the power of the Deshpande, and it SLASHES your wrists in fury!",
+		A_ALWAYS, self.outside, self, null, TO_CHAR);
+		act("$1 fails to control the power of the Despande, and it SLASHES $1n's wrists in fury!",
+		A_ALWAYS, self.outside, self, null, TO_NOTVICT);
+		pc.hp := (pc.hp) / 13 ;
+		link (self, self.outside.outside);  }
+	goto init;  }
+dilend
+
+dilbegin one_only1 ();
+
+var
+	pc : unitptr;
+code {
+	:init:
+	wait(SFB_CMD, (activator.type == UNIT_ST_PC) and (activator==self.outside) and ((self.equip == WEAR_WIELD) or (self.equip == WEAR_HOLD)));
+	:start:
+	pc := activator;
+	if  (command(CMD_HOLD)) {
+		block;               
+		act("The Deshpande's size overwhelms you and prevents you from " +
+"using your other hand.",
+		A_ALWAYS, self.outside, self, null, TO_CHAR);
+		act("The Deshpande's size overwhelms $1n and prevents $1m from using 
+$1s other hand.",
+		A_ALWAYS, self.outside, self, null, TO_NOTVICT);
+		pc.hp := pc.hp / 12;     
+		goto init;
+		}
+	if (command(CMD_WIELD)) {
+		block;               
+		act("The Deshpande's size overwhelms you and prevents you from " +
+"using your other hand.",
+		A_ALWAYS, self.outside, self, null, TO_CHAR);
+		act("The Deshpande's size overwhelms $1n and prevents $1m from using 
+$1s other hand.",
+		A_ALWAYS, self.outside, self, null, TO_NOTVICT);
+		pc.hp := pc.hp / 12;     
+		goto init;
+		}
+        if (command(CMD_WEAR) and self.equip==WEAR_HOLD) {
+                block;
+                act("The Deshpande's size overwhelms you and prevents you from "
+ +
+"using your other hand.",
+                A_ALWAYS, self.outside, self, null, TO_CHAR);
+                act("The Deshpande's size overwhelms $1n and prevents $1m from u
+sing
+$1s other hand.",
+                A_ALWAYS, self.outside, self, null, TO_NOTVICT);
+                pc.hp := pc.hp / 12;
+                goto init;
+                }
+
+
+	}
+dilend
+
+dilbegin one_only3 ();
+var
+	hol : unitptr;
+	wiel : unitptr;
+code {
+	:start:
+wait (SFB_CMD, ((activator == self.outside) and (activator.type==UNIT_ST_PC)) );
+
+hol := equipment (self.outside, WEAR_HOLD);
+wiel := equipment (self.outside, WEAR_WIELD);
+if ( (command(CMD_WIELD) or command(CMD_WEAR)) and ("deshpande" in argument) and
+	(not(hol==null)) ) {
+	block;
+	act("The Deshpande's size prevents you from using both hands.",
+		A_ALWAYS, self.outside, self, null, TO_CHAR);
+	goto start;
+}
+if ( (command(CMD_HOLD)) and ("deshpande" in argument) and
+	(not(wiel==null)) ) {
+	block;
+	act("The Deshpande's size prevents you from using both hands.",
+		A_ALWAYS, self.outside, self, null, TO_CHAR);
+	goto start;
+}
+goto start;
+}
+dilend
+
+end
+
+				banick
+names {"Banick"}
+title "the Banick Shield"
+descr "The legendary shield named Banick rests here."
+extra {}
+"This legendary shield is made from the strongest of metals.  Its matte black
+ surface is etched with mystic symbols.  It is a great match for the
+ sword named Deshpande.  Walking the streets of Midgaard with these two items
+ equipped, you will be the envy of all of your friends.  The Banick is
+ more than a shield, it is a BANICK.  To activate the banick, sing see me, 
+ feel me, touch me, heal me."
+
+extra {"$identify"}
+"The legendary Banick shield provides you with mystical strength and dexterity."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_SHIELD}
+SHIELD_DEF(SHIELD_LARGE, 8, 8)
+STR_TRANSFER (+3)
+DEX_TRANSFER (+3)
+SKILL_TRANSFER(SKI_SHIELD, +5)
+
+weight 15
+cost 15 PLATINUM_PIECE
+rent 20 SILVER_PIECE
+
+dilcopy level_restrict@function (35,0,25,"");
+dilcopy abi_restrict@function (ABIL_STR,100,0,25,"");
+dilcopy abi_restrict@function (ABIL_DEX,60,0,25,"");
+dilcopy ali_restrict@function (-350,-1000,0,25,"");
+spell 75
+
+dilbegin recall hug();
+code
+{
+   :start:
+   heartbeat := PULSE_SEC*SECS_PER_MUD_DAY/6;
+   wait (SFB_TICK,(self.equip==WEAR_SHIELD));
+   heartbeat := PULSE_SEC*5;
+   act ("A huge grin spreads across the Banick as it prepares for battle.",
+	A_ALWAYS,self.outside,self,null,TO_CHAR);
+   act ("A huge grin spreads across the Banick as it prepare for battle.",
+	A_ALWAYS,self.outside,self,null,TO_REST);
+   sendto ("add charge",self);
+   goto start;
+}
+dilend
+
+
+dilbegin recall aware love();
+var
+	i : integer;
+	enemy :unitptr;
+	n:integer;
+	charge:integer;
+	pwr:integer;
+code
+{
+   pwr := 10;
+   :init:
+   heartbeat := PULSE_SEC*5;
+  charge := interrupt (SFB_MSG,((self==activator) and
+				(argument=="add charge")), charge);
+   :start:
+   wait (SFB_CMD,( command(CMD_EMOTE) and ("see" in argument)
+		  and ("heal" in argument) and
+		  (self.equip==WEAR_SHIELD) ) );
+   block;
+   enemy := self.outside.fighting;
+
+   if (enemy==null)
+     goto no_person;
+
+   secure (enemy,start);
+   if (pwr<=0) goto fail;
+   pwr := pwr-1;
+   i := rnd (35,110);
+   if (i < self.outside.skills[SKI_SHIELD])
+   {
+     n:= cast_spell (SPL_CURE_WOUNDS_1,self.outside,self,self.outside,"bani_aff@hades6");
+   }
+   else
+   {
+      act ("You are just not cool enough. ",
+	   A_SOMEONE,self.outside,enemy,self,TO_CHAR);
+      act ("$1n is just not cool enough.",
+	   A_SOMEONE,self.outside,enemy,self,TO_VICT);
+      act ("The Banick spits in your face heckling loser loser loser.",
+	   A_SOMEONE,self.outside,enemy,self,TO_NOTVICT);
+   }
+   goto start;
+
+   :fail:
+   act ("The Banick doesn't quite have the power to help you yet.",
+	A_SOMEONE,self.outside,enemy,self,TO_CHAR);
+   goto start;
+
+   :charge:
+   clear (charge);
+   if (pwr<12)
+     pwr := pwr+4;
+   goto init;
+   goto start;
+   :no_person:
+   act ("Nothing by that name here.",
+	A_ALWAYS,self.outside,null,null,TO_CHAR);
+   goto start;
+}
+dilend
+
+dilbegin no_wear();
+var
+  u2   : unitptr;
+  u1   : unitptr;
+
+code {
+   :init:
+   heartbeat := PULSE_SEC*3;
+
+   :start:
+   wait(SFB_CMD, (activator.type == UNIT_ST_PC) and
+		 command(CMD_WEAR) and (activator == self.outside));
+
+   u1 := findunit(activator, "Deshpande",
+		  FIND_UNIT_EQUIP, null);
+
+   u2 := findunit(activator, "Deshpande",
+		  FIND_UNIT_INVEN, null);
+
+   if (("all" in argument) and (u1 == null))
+   {
+      if (u2 != null) {
+	 block;
+	 act("You are slapped by your sword Deshpande.  Your Deshpande wants to be wielded first!",
+	     A_ALWAYS, self.outside, null, null, TO_CHAR);
+	 goto start;
+      }
+      else
+      {
+	 block;
+	 act("Your Banick falls to the ground in depression.",
+	     A_ALWAYS, self.outside, null, null, TO_CHAR);
+	 link(self, self.outside.outside);
+	 goto start;
+      }
+   }
+
+   if (findunit(activator, argument, FIND_UNIT_INVEN, null) != self)
+     goto start;
+
+   if (u1 == null)
+   {
+      block;
+      act("$1n's Banick Shield longs for its soul mate and falls to the ground in depression.",
+	  A_HIDEINV, self.outside, null, null, TO_REST);
+      act("Your Banick Shield longs for its soul mate and falls to the ground in depression.",
+	  A_ALWAYS, self.outside, null, null, TO_CHAR);
+      link(self, self.outside.outside);
+      goto start;
+   }
+}
+dilend
+
+dilbegin no_remove();
+var
+  pc   : unitptr;
+  u1   : unitptr;
+
+code {
+   :init:
+   heartbeat := PULSE_SEC*3;
+
+   :start:
+   wait (SFB_CMD, (activator.type == UNIT_ST_PC) and
+	 command(CMD_REMOVE));
+
+    u1 := findunit(activator, "Deshpande",
+		   FIND_UNIT_EQUIP, null);
+
+    if (findunit(activator, argument, FIND_UNIT_EQUIP, null) != self)
+      goto start;
+
+   if (not (u1 #= null))
+   {
+      act("$1n's Banick Shield longs for its soul mate and falls to the ground in depression.",
+	  A_HIDEINV, self.outside, null, null, TO_REST);
+      act("Your Banick Shield longs for its soul mate and falls to the ground in depression.",
+	  A_ALWAYS, self.outside, null, null, TO_CHAR);
+      link(self, self.outside.outside);
+      goto start;
+   }
+}
+dilend
+end
+
+				spiked_club
+names {"spiked club", "club"}
+title "a spiked club"
+descr "A spiked club is resting here."
+extra {}
+"This is just an ordinary club.  Unless you are really pathetic, you don't
+ want to use it.  It is made of ordinary wood, and clearly requires battle
+ club skill."
+
+extra {"$identify"}
+"umm....if you didn't understand by just looking at it and felt like wasting
+ some mana, this club is made of wood and requires battle club skill, Ok.
+ If I were you, I wouldn't waste any more mana with an improved identify."
+
+extra {"$improved identify"}
+"You just don't get it do you."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_BATTLE_CLUB,0, -8)
+weight 15
+cost 60 GOLD_PIECE
+rent 80 COPPER_PIECE
+dilcopy level_restrict@function (6,0,25,"");
+end
+
+				soul_brace
+names {"soul bracelet", "bracelet"}
+title "a Soul Bracelet"
+descr "A Soul Bracelet is grooving here."
+extra {}
+"The Soul bracelets give more power from the PFUNK.  They are carved
+ carefully from the bestest of obsidian.  These ebony beauties are from
+ the heart of hell, and should be worn only by those that belong there."
+extra {"$identify"}
+"The Soul bracelets provide you with an extra punch of strength"
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_WRIST}
+weight 5
+STR_TRANSFER(+1)
+DEX_TRANSFER(+1)
+rent 14 SILVER_PIECE
+cost 10 PLATINUM_PIECE
+dilcopy ali_restrict@function (-350,-1000,0,25,"");
+dilcopy abi_restrict@function (ABIL_STR,20,0,25,"");
+dilcopy abi_restrict@function (ABIL_DEX,40,0,25,"");
+end
+
+				soul_pend
+names {"soul pendant", "pendant"}
+title "a Soul Pendant"
+descr "A Soul Pendant is here mutating the ground."
+extra {}
+"The Soul Pendant is is for those with malicious intentions.  Evil lurks all
+ about this object.  An intense red mist flows from the center of the
+ pendant.  This pendant is from hell and should be worn by those that belong
+ there."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_NECK}
+weight 5
+rent 14 SILVER_PIECE
+cost 10 PLATINUM_PIECE
+
+dilcopy ali_restrict@function (-350,-1000,0,25,"");
+dilcopy abi_restrict@function (ABIL_BRA,40,0,25,"");
+dilcopy abi_restrict@function (ABIL_DEX,20,0,25,"");
+end
+
+				morbid
+names {"morbid slayer", "morbid", "slayer"}
+title "the Morbid Slayer"
+descr "The Morbid Slayer is here looking to destroy evil."
+extra {}
+"The Morbid Slayer is made from the best of dragon bones.  It is specially
+ made for killing items in hell.  It clearly require trident fighting skill."
+
+extra {"$identify"}
+"The Morbid Slayer is specially designed to kill monsters from hell."
+
+extra {"$improved identify"}
+"The Morbid Slayer is specially designed to kill monsters from hell."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_TRIDENT, +0, +0)
+WEAPON_SLAYER(RACE_GREATER_DEVIL)
+
+weight 15
+cost 10 PLATINUM_PIECE
+rent 13 SILVER_PIECE
+
+dilcopy level_restrict@function (20,0,25,"");
+end
+
+				demon_helmet
+names {"demon helmet", "helmet", "demon"}
+title "a Demon Helmet"
+descr "A Demon Helmet is lying on the ground here."
+extra {}
+"The Demon Helmet is made from some sort of polymer in a gel state.  The
+ gel is quite cloudy, just enough to mask you hair.  There is something
+ about this helmet that makes it seem evil."
+
+extra {"$identify"}
+"Something prevents you from figuring out what is in this helmet."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+ARMOUR_PLATE(+0, +0)
+weight 5
+cost 10 PLATINUM_PIECE
+rent 10 SILVER_PIECE
+
+dilbegin gel();
+var
+   pc : unitptr;
+   enemy : unitptr;
+   joeboo : integer;
+code
+{
+   :init:
+
+
+   on_activation(self.outside.position != POSITION_FIGHTING, skip);
+
+   :start:
+
+	wait(SFB_COM,(activator.type == UNIT_ST_PC)and(self.equip == WEAR_HEAD));
+
+   pc := activator;
+   enemy := self.outside.fighting;
+
+   joeboo := rnd(1, 100);
+
+   if (joeboo < 50) {
+      enemy.hp := enemy.hp + joeboo ;
+      pc.hp := pc.hp - joeboo ;
+      act("Your Demon Helmet hardens and crushes your head, then heals $3n when $3n hits it!", /* wearer. */
+      A_ALWAYS,self.outside,self,enemy,TO_CHAR);
+      act("$1n's $2n hardens and crushes $1n's head, the heals $3n when $3n hits it!", /*Message to ANYONE watching.*/
+      A_ALWAYS,self.outside,self,enemy,TO_NOTVICT);
+
+   }
+   goto start;
+}
+dilend
+end
+				soul_skirt
+names {"soul skirt", "skirt"}
+title "a Soul Skirt"
+descr "A Soul Skirt is resting here."
+extra {}
+"The soul skirt appears to be made from some sort of spider web.  Its
+ protection must be great then. "
+extra {"$identify"}
+"Something prevents you from determining what is in this skirt."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+ARMOUR_PLATE(0,0)
+weight 10
+cost 10 PLATINUM_PIECE
+rent 10 SILVER_PIECE
+CURSED_OBJECT
+end
+
+				obsidian_gloves
+names {"obsidian gloves", "gloves"}
+title "a pair of obsidian gloves"
+descr "A pair of obsidian gloves are black here."
+extra {}
+"In a sharp black colour, these obsidian gloves are the fashion of today.
+ Specially designed to match anything and everything that you wear.  They
+ make you want to beg for more.  WARNING, for cool mudders only."
+
+extra {"$identify"}
+"The obsidian gloves give no bonuses."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HANDS}
+
+weight 5
+cost 100000 GOLD_PIECE
+rent 20 GOLD_PIECE
+end
+
+%reset
+load dead_soul into abyss1 max 2
+	{equip soul_pend position WEAR_NECK_1}
+load dead_soul into abyss5 max 2
+load black_soul into abyss3 max 2
+load black_soul into abyss7 max 2
+load soul_scavenger into infinity2 max 2
+	{load soul_skirt}
+load soul_scavenger into infinity6 max 2
+	{load soul_skirt}
+load vorpal_wind into infinity4 max 2
+load vorpal_wind into infinity8 max 2
+load tragic_soul into infinity11 max 2
+load tragic_soul into infinity15 max 2
+load pathetic_soul into infinity13 max 2
+	{equip soul_pend position WEAR_NECK_1}
+load pathetic_soul into infinity17 max 2
+load fiery_devil into edge3 zonemax 4
+	{equip obsidian_gloves position WEAR_HANDS}
+load fiery_devil into edge7 zonemax 4
+	{equip obsidian_gloves position WEAR_HANDS}
+load fiery_devil into edge11 zonemax 4
+	{equip obsidian_gloves position WEAR_HANDS}
+load fiery_devil into edge15 zonemax 4
+	{equip obsidian_gloves position WEAR_HANDS}
+load guardian_imp into edge2 max 8
+	{equip spiked_club position WEAR_WIELD}
+load guardian_imp into edge4 max 8
+	{equip spiked_club position WEAR_WIELD}
+load guardian_imp into edge6 max 8
+	{equip spiked_club position WEAR_WIELD}
+load guardian_imp into edge8 max 8
+	{equip spiked_club position WEAR_WIELD}
+load guardian_imp into edge10 max 8
+	 {equip spiked_club position WEAR_WIELD}
+load guardian_imp into edge12 max 8
+	 {equip spiked_club position WEAR_WIELD}
+load guardian_imp into edge14 max 8
+	 {equip spiked_club position WEAR_WIELD}
+load guardian_imp into edge16 max 8
+	 {equip spiked_club position WEAR_WIELD}
+load baykur into floor1 max 3
+	{equip soul_brace position WEAR_WRIST_L}
+load baykur into floor5 max 3
+	{equip soul_brace position WEAR_WRIST_L}
+load kalyan into floor7 max 3
+	{load morbid}
+load baykur into floor7 max 3
+	{equip soul_brace position WEAR_WRIST_L}
+load kalyan into floor1 max 3
+	{load morbid}
+load kalyan into floor5 max 3
+	{load morbid}
+load mornick into edge9 max 1
+	{equip deshpande position WEAR_WIELD}
+load vasslius into platform max 1
+	{equip banick position WEAR_SHIELD}
+load demon into edge1 max 4
+	{load demon_helmet}
+load demon into edge5 max 4
+	{load demon_helmet}
+load demon into edge9 max 4
+	{load demon_helmet}
+load demon into edge13 max 4
+	{load demon_helmet}
+load bull_board@midgaard into zex max 1
+load wiz_board@wiz into zex2 max 1
+load fountain@cloud into zex max 1
+%end
+
+
+

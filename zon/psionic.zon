@@ -1,0 +1,492 @@
+/*
+filename    psionic
+password    rebirth
+changedby   whistler
+EmailAdd     Ken Perry <whistler@blinksoft.com>
+request     compile
+version     3
+END HEADER*/
+
+#include "composed.h"
+
+#define RACE_DROW	  9978
+#define RACE_ILLYTHID     9979
+#define GUILD_PSIONIC "Nymgaard Psionicist"
+#define NO_KILL \
+dilbegin nokill(); \
+var \
+	pc : unitptr; \
+	x : integer;   \
+code			    \
+{ \
+	heartbeat := 3; \
+	 \
+	:start: \
+	 \
+	wait(SFB_COM,  self.position == POSITION_FIGHTING ); \
+	pc := self.fighting;	 \
+	 \
+	if (command("flee")) \
+		block; \
+	 \
+	if (not (self.max_hp == self.hp)) \
+	{ \
+	x := self.max_hp - self.hp; \
+	pc.hp := pc.hp - x; \
+	self.hp := self.max_hp; \
+	pc.position := POSITION_MORTALLYW; \
+	pc.hp := 0; \
+	pc.mana := 0; \
+	} \
+	goto start; \
+} \
+dilend
+
+#define GUILD_BASICS \
+	movement SECT_INSIDE \
+	flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS} \
+	ALWAYS_LIGHT
+#define FLAYER_BASICS \
+	race RACE_ILLYTHID \
+	sex SEX_NEUTRAL \
+	level 50 \
+	height 190 \
+	weight 140 \
+	NATURAL_DEF(WPN_FIST, ARM_CLOTHES) \
+	alignment 0 \
+	money 5 SILVER_PIECE \
+	MSET_ABILITY(15,15,15,15,15,15,5,5) \
+	MSET_WEAPON(5,5,10,5,15,10) \
+	MSET_SPELL(4,4,4,4,4,10,4,4,4,4,4) \
+	flags {UNIT_FL_NO_TELEPORT} \
+	special SFUN_COMBAT_MAGIC "cast lightning bolt"
+
+%zone psionic
+title "Psionic Guild"
+lifespan 50
+reset RESET_ANYHOW
+creators {"elminster"}
+notes
+"This is one of the new guilds for players who have reached 199 and then
+started over again. It is currently similar to the udgaard lvl 3+ guilds.
+Any suggestions, complaints, errors, bitches, bleeding, crying, or other
+problems should be reported to me via mud-mail or e-mail
+(jmg3128@tam2000.tamu.edu). Thanx again, and odin bless you. "
+
+%rooms
+
+guild_entrance
+title "Entrance to the Psionist Guild"
+names {"entrance"}
+descr
+"You have found the entrance to the fabled psionist guild! This powerful
+guild is know for its devotion to the powers of the mind. Illythids have
+traveled from the underdark to teach their ways to the people of the
+surface. The cave displays their like of the underdark, for its is damp,
+cool, and lit by phosphorent moss. You can travel north deeper into the
+guild, or back south to beneath the waterfall."
+movement SECT_INSIDE
+south to waterfall@trees;
+north to guild1;
+end
+
+guild1
+title "On a downward slope"
+names {"guild"}
+descr
+"You are in a sloping passage leading downward to what looks to be a large
+cave. The walls are covered with glowing runes and lit with phosphoresent
+moss. You sense a feeling of power emenating from the very walls of this
+passage."
+extra {"runes"} "The runes seem to be of a magical, protective nature."
+GUILD_BASICS
+south to guild_entrance;
+north to guild2;
+end
+
+guild2
+title "Cave of the Illythids"
+names {"cave"}
+descr
+"You have entered a huge cave revealing a wonderous site. Below you is the
+encampment of the illythids, dominated by a large, temple like structure
+rivaling the finest on the surface. Every square inch of the building
+is covered with fine runes, glowing in every color of the rainbow. This
+gives the building an aura type affect. Surrounding the temple are small
+hut type structures, made of rock that seems to have been drawn out of the
+earth itself. A small path leads up to the front of the illythid temple,
+but u can feel an invisible barrier surrounding the creatures homes. As you
+look about this cave you feel your mind becoming more focused and clear.
+You can exit this cave to the south."
+GUILD_BASICS
+north to temple1;
+south to guild1;
+end
+
+temple1
+title "Entry steps to the Temple of the Mind"
+names {"entry"}
+descr
+"You have arrived to the entrance of the Illythids training temple, known
+simply as the Temple of the Mind. The steps rise up to the huge, open
+entry doors. You get the sense of many powerful minds working together
+within this building. Huge gargoyle statues stand to either side of the
+temple entrance, seemingly guarding the entrance. As you turn away from them,
+you detect a slight movement from one of them...perhaps they are more than
+statues....You can head back to the exit of this cave to the south, or enter
+the temple to the north."
+GUILD_BASICS
+north to temple2;
+south to guild2;
+end
+
+temple2
+title "Main hall of the Temple of the Mind"
+names {"hall"}
+descr
+"The main hall of the temple is large and spacious, decorated with beautiful
+tapestries and a huge array of art objects. A large candle chandolier
+hangs from the ceiling seemingly hanging from nothing! Beautiful stone
+columns flank the hallway, and in the center of the room is a very strange
+site. Encased in a large stone bin, is a huge brain, approximately 20 feet in
+diameter! Slender, muscular drow gently message the Elder Brains pink flesh,
+and stout dwarves bring a warm, clear fluid from a back room to pour over
+the creature. You realize now that you have just met the Master of this
+guild."
+GUILD_BASICS
+north to temple3;
+west to temple4;
+east to temple5;
+south to temple1;
+end
+
+temple3
+title "Hallway in the temple of the Mind"
+names {"hallway"}
+descr
+"This large hallway branches from the main hall and heads both west and east.
+To the west is a large room, with a sign saying 'Weapon training'. To the
+east, there is a small study with a sign saying 'Spell/Psionic Research'."
+GUILD_BASICS
+west to temple7;
+east to temple6;
+south to temple2;
+end
+
+temple7
+title "Weapons training room"
+names {"weapons room"}
+descr
+"This large training room has a padded floor, and a wall rack of wooden
+practice weapons. A large mural on the wall reads:&l
+
+		Mastery of the mind comes first through mastery
+
+				ones body.
+
+						Illstidad 976
+"
+GUILD_BASICS
+east to temple3;
+end
+
+temple6
+title "Spell/Psionic research room"
+names {"spell room"}
+descr
+"What first appeared to be a small study has turned out to be a huge library.
+Stacks and stacks of books line the walls, floor, and tables. There is an
+orderliness to the room, however, as you notice like books are placed together.
+There are several places for study, and you realize this would be an ideal
+place to increase ones magical knowledge."
+GUILD_BASICS
+west to temple3;
+end
+
+temple4
+title "Abilities research room"
+names {"room"}
+descr
+"This medium sized room is dedicated to the study of humanoid natural abilites.
+There are severl books on the physical, as well as mental arts, and there are
+several strange devices in the room used in the increase of ones abilities."
+GUILD_BASICS
+east to temple2;
+end
+
+temple5
+title "Skill research room"
+names {"skill room"}
+descr
+"This room is dedicated to the study of worldly skills. You see several
+books and thesis's dedicated to skills. Several of them catch your attention:
+'Fleeing, an adventurers godsend', 'Proper Appraisal is a shopkeepers
+nightmare', 'Wand Use, when mana's low, you have a problem..unless..', and
+'Cant find that secret door? you need to learn how to Search!'."
+GUILD_BASICS
+west to temple2;
+end
+
+%mobiles
+
+elder_brain
+names {"elder brain","master"}
+title "the Elder Brain"
+descr "The Elder Brain is here, being bathed by its slaves."
+FLAYER_BASICS
+special SFUN_GUILD_BASIS GUILD_PSIONIC
+special SFUN_GUILD_MASTER
+"&lGuild		= ~"+GUILD_PSIONIC+"~
+Guild Enter Quest	= ~no quest~
+Guild Enter Cost	= 50000
+Guild Leave Quest	= ~no quest~
+Guild Leave Cost	= 200000
+Guild Exclude Quest	= ~quest~"
+special SFUN_GUILD_TITLES
+GUILD_PSIONIC+"&l
+the %s Apprentice of Thought
+the %s Apprentice of Thought
+the %s Thinker
+the %s Thinker
+the %s Lesser Mind Reader
+the %s Lesser Mind Reader
+the %s Mind Reader
+the %s Mind Reader
+the %s Greater Mind Reader
+the %s Greater Mind Reader
+the %s Intellect Devourer
+the %s Intellect Devourer
+the %s Tower of Thought
+the %s Tower of Thought
+the %s Psychic Messenger
+the %s Psychic Messenger
+the %s Dream Traveler
+the %s Dream Traveler
+the %s Mind Wiper
+the %s Mind Wiper
+the %s Fortress of Intellect
+the %s Fortress of Intellect
+the %s Mind Manipulator
+the %s Mind Manipulator
+the %s Apprentice Psionicist
+the %s Apprentice Psionicist
+the %s Lesser Psionicist
+the %s Lesser Psionicist
+the %s Psionicist
+the %s Psionicist
+the %s Greater Psionicist
+the %s Greater Psionicist
+the %s Master Psionicist
+the %s Master Psionicist
+the %s Grand Master Psionicist
+the %s Grand Master Psionicist
+the %s Grand Master of the Mind
+the %s Grand Master of the Mind"
+end
+
+irryth
+names {"irryth", "teacher"}
+title "Irryth the teacher of spells."
+descr "Irryth the teacher of spells is here researching."
+extra {}
+"This rather short, young Illythid sits at a desk reading a large tomb.
+Its tenicles hang from its head, and its milk white eyes study you
+carefully."
+FLAYER_BASICS
+special SFUN_GUILD_BASIS GUILD_PSIONIC
+special SFUN_MEMBERS_ONLY GUILD_PSIONIC+"#$1n says, 'I only teach psionists.'"
+special SFUN_TEACH_INIT
+"&lspells;
+$1n tells you, 'I have never heard of such psychic powers.';
+$1n tells you, 'I do not know how to teach that.';
+$1n tells you, 'You do not have enough %s.';
+$1n tells you, 'You have not the %d skill points.';
+$1n tells you, 'I have taught you all I know.';
+$1n tells you, 'You must remove all traces of magic first.';
+$1n tells you, 'Remove all equipment please.';
+
+1;199; protection sphere;	50; 10; 10; 10; 10; 10; 0;
+1;199; detection sphere;	50; 10; 10; 10; 10; 10; 0;
+1;199; summoning sphere;	50; 10; 10; 10; 10; 10; 0;
+1;199; creation sphere;		50; 10; 10; 10; 10; 10; 0;
+1;199; mind sphere;		50; 10; 10; 10; 10; 10; 0;
+1;199; fire sphere;		50; 10; 10; 10; 10; 10; 0;
+1;199; frost sphere;		50; 10; 10; 10; 10; 10; 0;
+1;199; electricity sphere;	50; 10; 10; 10; 10; 10; 0;
+1;199; poison sphere;		50; 10; 10; 10; 10; 10; 0;
+1;199; acid sphere;		50; 10; 10; 10; 10; 10; 0;
+
+3;199; raise mag;		50; 5; 10; 15; 20; 0;
+4;199; raise cha;		50; 5; 10; 15; 20; 0;
+5;199; raise bra;		50; 5; 10; 15; 20; 0;
+6;199; raise str;		50; 5; 10; 15; 20; 0;
+7;199; raise dex;		50; 5; 10; 15; 20; 0;
+8;199; raise con;		50; 5; 10; 15; 20; 0;
+9;199; raise tgh;		50; 5; 10; 15; 20; 0;
+10;199; raise protection;	50; 5; 10; 15; 20; 0;
+10;199; raise detection;	50; 5; 10; 15; 20; 0;
+10;199; raise summoning;	50; 5; 10; 15; 20; 0;
+10;199; raise creation;		50; 5; 10; 15; 20; 0;
+10;199; raise mind;		50; 5; 10; 15; 20; 0;
+10;199; raise heat;		50; 5; 10; 15; 20; 0;
+10;199; raise cold;		50; 5; 10; 15; 20; 0;
+10;199; raise cell;		50; 5; 10; 15; 20; 0;
+10;199; raise internal;		50; 5; 10; 15; 20; 0;
+10;199; raise external;		50; 5; 10; 15; 20; 0;
+10;199; dispel magic;		50; 5; 10; 15; 20; 0;
+15;199; lock;			50; 5; 10; 15; 20; 0;
+15;199; unlock;			50; 5; 10; 15; 20; 0;
+
+10;199; detect magic;		50; 5; 10; 15; 20; 0;
+10;199; detect invisible;	50; 5; 10; 15; 20; 0;
+20;199; identify;		50; 5; 10; 15; 20; 0;
+30;100; improved identify;	50; 5; 10; 15; 20; 0;
+
+20;199; random teleport;	50; 5; 10; 15; 20; 0;
+40;199; controlled teleport;	50; 5; 10; 15; 20; 0;
+25;199; lesser summoning;	50; 5; 10; 15; 20; 0;
+40;199; greater summoning;	50; 5; 10; 15; 20; 0;
+
+10;199; create food;		50; 5; 10; 15; 20; 0;
+10;199; create water;		50; 5; 10; 15; 20; 0;
+15;199; light;			50; 5; 10; 15; 20; 0;
+15;199; darkness;		50; 5; 10; 15; 20; 0;
+20;199; continual light;	50; 5; 10; 15; 20; 0;
+20;199; continual darkness;	50; 5; 10; 15; 20; 0;
+45;199; animate dead;		50; 5; 10; 15; 20; 0;
+50;199; control undead;		50; 5; 10; 15; 20; 0;
+
+25;199; invisiblity;		50; 5; 10; 15; 20; 0;
+30;199; wizard eye;		50; 5; 10; 15; 20; 0;
+35;199; fear;			50; 5; 10; 15; 20; 0;
+35;199; confusion;		50; 5; 10; 15; 20; 0;
+30;199; command;		50; 5; 10; 15; 20; 0;
+
+3;199; burn;			50; 5; 8; 12; 15; 20; 25; 0;
+25;199; fireball;		50; 5; 10; 15; 20; 25; 30; 0;
+40;199; firestorm;		50; 5; 10; 15; 20; 25; 0;
+
+3;199; snowball;		50; 5; 8; 12; 15; 20; 25; 0;
+25;199; frostball;		50; 5; 10; 15; 20; 25; 30; 0;
+40;199; icestorm;		50; 5; 10; 15; 20; 25; 0;
+
+3;199; electrical shock;	50; 5; 8; 12; 15; 20; 25; 0;
+25;199; jolt;			50; 5; 10; 15; 20; 25; 30; 0;
+40;199; lightining bolt;	50; 5; 10; 15; 20; 25; 0;
+
+3;199; fart;			50; 5; 8; 12; 15; 20; 25; 0;
+25;199; bad breath;		50; 5; 10; 15; 20; 25; 30; 0;
+35;199; stinking cloud;		50; 5; 10; 15; 20; 25; 0;
+25;199; toxicate;		50; 5; 10; 15; 20; 0;
+35;199; energy drain;		50; 5; 10; 15; 20; 0;
+30;199; madness;		50; 5; 10; 15; 20; 0;
+
+45;199; acid ball;		50; 5; 10; 15; 20; 25; 0;"
+end
+
+
+ssar_tarell
+names {"ssar tarell", "teacher"}
+title "Ssar Tarell"
+descr "Ssar Tarell, weapons teacher, stands here."
+extra {}
+"Ssar Tarell is a drow warrior employed by the illythid to teach weapons
+skills to their trainees. She is tall and sleek, well muscled and moves with
+a practice ease."
+FLAYER_BASICS
+race RACE_DROW
+special SFUN_GUILD_BASIS GUILD_PSIONIC
+special SFUN_MEMBERS_ONLY GUILD_PSIONIC+"#$1n says, 'I only teach psionists.'"
+special SFUN_TEACH_INIT
+"&lweapons;
+$1n tells you, 'I have never heard of such a weapon.';
+$1n tells you, 'I do not teach that weapon here.';
+$1n tells you, 'You havent got the %s for me.';
+$1n tells you, 'You havent got the %d skill pts to train.';
+$1n tells you, 'We are equals now.';
+$1n tells you, 'You must be unaffected by magic for me to teach you.';
+$1n tells you, 'Please remove your equipment.';
+
+1;199; category sword;		50; 10; 10; 10; 10; 10; 0;
+1;199; category polearm;	50; 10; 10; 10; 10; 10; 0;
+1;199; category unarmed;	50; 10; 10; 10; 10; 10; 0;
+
+3;199; short sword;		50; 5; 10; 15; 20; 0;
+3;199; dagger;			50; 5; 10; 15; 20; 25; 0;
+3;199; rapier;			50; 10; 15; 20; 0;
+
+3;199; quarterstaff;		50; 5; 10; 15; 20; 25; 0;
+
+3;199; fist;			50; 5; 10; 15; 20; 25; 0;"
+end
+
+
+lymuren
+names {"lymuren", "teacher"}
+title "Lymuren, teacher of skills."
+descr "Lymuren, teacher of skills stands here."
+extra {}
+"This older looking illythid still looks quite capable."
+FLAYER_BASICS
+special SFUN_GUILD_BASIS GUILD_PSIONIC
+special SFUN_MEMBERS_ONLY GUILD_PSIONIC+"#$1n says, 'I only teach psionists.'"
+special SFUN_TEACH_INIT
+"&lskills;
+$1n tells you, 'I have never heard of such a skill.';
+$1n tells you, 'I do not know how to teach this skill.';
+$1n tells you, 'You havent the %s for me.';
+$1n tells you, 'You havent got the %d skill points necessary for this skill.';
+$1n tells you, 'I can not teach you anymore.';
+$1n tells you, 'You must remove all magic before i can teach you.';
+$1n tells you, 'Remove all equipment please.';
+
+3;199; consider;	100; 5; 10; 15; 0;
+3;199; diagnostics;	100; 5; 10; 15; 0;
+3;199; first aid;	100; 5; 10; 15; 0;
+3;199; fleeing;		100; 5; 10; 15; 20; 25; 0;
+3;199; turn undead;	100; 15; 20; 30; 0;
+3;199; search;		100; 5; 10; 15; 20; 0;
+3;199; scroll use;	100; 5; 10; 15; 0;
+3;199; wand use; 	100; 5; 10; 15; 0;"
+end
+
+terani
+names {"terani", "teacher"}
+title "Terani"
+descr "Terani, teacher of abilities, stand here."
+extra {}
+"This illythid seems in perfect shape, both physically and mentally."
+FLAYER_BASICS
+special SFUN_GUILD_BASIS GUILD_PSIONIC
+special SFUN_MEMBERS_ONLY GUILD_PSIONIC+"#$1n says, 'I only teach psionists.'"
+special SFUN_TEACH_INIT
+"&labilities;
+$1n tells you, 'I have never heard of such an ability.';
+$1n tells you, 'I do not teach this ability.';
+$1n tells you, 'You havent the %s for me.';
+$1n tells you, 'You havent the %d ability points needed.';
+$1n tells you, 'We are equals in that.';
+$1n tells you, 'You must remove all magic before u can learn.';
+$1n tells you, 'Remove all equipment please.';
+
+1;199; strength;	45; 10; 15; 20; 0;
+1;199; dexterity;	45; 10; 15; 20; 0;
+1;199; constitution;	45; 10; 15; 20; 0;
+1;199; charisma;	45; 5; 10; 15; 20; 0;
+1;199; brain;		45; 5; 10; 15; 20; 0;
+1;199; magic;		45; 5; 10; 15; 20; 0;
+1;199; hitpoints;	45; 5; 10; 15; 0;"
+end
+
+/*
+%reset
+
+load terani into temple4 max 1
+load lymuren into temple5 max 1
+load ssar_tarell into temple7 max 1
+load irryth into temple6 max 1
+load elder_brain into temple2 max 1
+*/
+
+%end
+

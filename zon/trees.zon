@@ -1,0 +1,1506 @@
+/*
+filename    trees
+password    rebirth
+changedby   whistler
+EmailAdd     Palio <palio@blinksoft.com>
+request     compile
+version     6
+END HEADER*/
+
+#include "composed.h"
+
+#define GIB_START "Gibberling Quest Begun"
+#define GIB_END   "Gibberling Quest Complete"
+#define RACE_DROW	  9978
+#define RACE_ILLYTHID     9979
+#define RACE_MONGRELMAN   9980
+#define RACE_DRIDER	  9981
+#define NO_KILL \
+dilbegin nokill(); \
+var \
+	pc : unitptr; \
+	x : integer;   \
+code			    \
+{ \
+	heartbeat := 3; \
+	 \
+	:start: \
+	 \
+	wait(SFB_COM,  self.position == POSITION_FIGHTING ); \
+	pc := self.fighting;	 \
+	 \
+	if (command("flee")) \
+		block; \
+	 \
+	if (not (self.max_hp == self.hp)) \
+	{ \
+	x := self.max_hp - self.hp; \
+	pc.hp := pc.hp - x; \
+	self.hp := self.max_hp; \
+	pc.position := POSITION_MORTALLYW; \
+	pc.hp := 0; \
+	pc.mana := 0; \
+	} \
+	goto start; \
+} \
+dilend
+
+
+
+
+%zone  trees
+title "Mystic Forest"
+
+
+lifespan 50
+reset RESET_ANYHOW
+creators {"elminster","zandar"}
+
+notes
+"This is the forest surrounding the psionic guild. It is for lvl 3-30.
+Any suggestions, complaints, errors, bitches, bleeding, crying, or other
+problems should be reported to me via mud-mail or e-mail
+(jmg3128@tam2000.tamu.edu). Thanx again, and odin bless you.
+Zandar finished polishing up the zone (fordbc@nextwork.rose-hulman.edu)."
+
+
+%rooms
+
+forest1
+title "A path in the forest"
+names {"forest"}
+descr
+"You are on a small path leading north-south through a forest. Directly north,
+rising out of the trees, is a large hill from which a beautiful waterfall
+falls majestically downward to a small pool. To the south, the forest path
+leads to an intersection."
+movement SECT_FOREST
+north to pool;
+south to forest2;
+end
+
+pool
+title "On the edge of a clear pool"
+names {"pool"}
+descr
+"You are standing at the edge of a clear, cool pool made from the droppings of
+a beautiful, majestic waterfall. The waterspray from the falls creates
+a beautiful rainbow in the sunlight. Large, colourfull fish swim in the
+depths of the pool, and there is a well-worn path leading around the pool
+to the north, directly towards the falls. A forest path leads south into
+the woods."
+movement SECT_FOREST
+north to waterfall;
+south to forest1;
+end
+
+waterfall
+title "Under the falls"
+names {"falls"}
+descr
+"The path leads directly to under the falls. Beneath them, you notice a small
+cave leading into the hill. The cave is dark and damp, constantly fed by the
+waterfall. The rocks here are worn by many years of water erosion, providing
+a smooth looking rock face."
+movement SECT_FOREST
+south to pool;
+north to guild_entrance@psionic;
+end
+
+
+
+
+
+				forest2
+
+title "On a path in the forest"
+names {"forest"}
+descr
+"You are on a path leading in all directions in a small forest. The trees are
+gnarled old oaks, which cover much of the skyline. Ancient moss hangs from the
+trees at odd angles."
+
+movement SECT_FOREST
+
+north to forest1;
+south to forest3;
+west to forest4;
+east to forest7;
+end
+
+				forest3
+
+title "A path in an old forest"
+names {"forest"}
+descr
+"You are on a small path leading north-south in the forest of Hermdorn. Gnarled
+old oaks are all around you, with ancient moss hanging from their limbs. To the
+south is a clearing, and to the north an intersection."
+
+movement SECT_FOREST
+
+north to forest2;
+south to clearing1;
+end
+
+				clearing1
+
+title "A large clearing in the forest"
+names {"clearing"}
+descr
+"You have entered a large clearing in the forest of Hermdorn. All around you
+the forest stretches out as far as the eye can see, and there are path's
+leading north and east. To the west is a small house."
+
+movement SECT_FOREST
+
+north to forest3;
+east to forest14;
+west to hut1;
+end
+
+
+				hut1
+
+title "Outside a small house"
+names {"porch"}
+descr
+"You are standing on the porch of a small house. On the wall there is a small
+sign, and hanging from the ceiling is a swinging platform. The door stands open
+and there are delicious smells emenating from within."
+
+movement SECT_FOREST
+
+east to clearing1;
+west to inside_hut;
+end
+
+
+				inside_hut
+
+title "Inside a small house"
+names {"inside"}
+descr
+"You have entered the living room of the house of farmer Bill. There is a small
+couch in the corner, and a fireplace too one side. A fine bearskin rug sits
+in the center of the room, and a rockingchair sits next to the fireplace.
+Next to the rockingchair is a small box with spools of thread and needles
+and yarn within. Above the fireplace, mounted on a glowing stand, is a large
+two-handed sword. To the north a passageway leads too the kitchen, where
+a very delicious odor is emenating."
+
+movement SECT_INSIDE
+
+extra {"couch"}
+"The couch is small, yet comfortable looking."
+extra {"fireplace"}
+"The fireplace looks as if it has seen much use."
+extra {"rug"}
+"The rug is of a great brown bear."
+extra {"rockingchair"}
+"The rockingchair looks very comfortable, and well used."
+extra {"sword", "two-handed sword"}
+"The sword looks mighty indeed. It is a dark grey, almost black color, and is
+covered with redish runes."
+
+east to hut1;
+north to kitchen;
+end
+
+
+				kitchen
+
+title "Kitchen of the farmer"
+names {"kitchen"}
+descr
+"You have entered the kitchen of farmer Bill. His wife, Julie, spends much of
+with many pots and pans and cooking utensils. There is a large cupboard filled
+with jars of produce. There also is a large table in the center of the room
+where the farmer and his wife eat their meals. To the west a door opens
+out into the rear of the farm."
+
+movement SECT_INSIDE
+
+south to inside_hut;
+west to field1 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+end
+
+
+				field1
+
+title "Backyard of farmer Bill"
+names {"backyard"}
+descr
+"You have stepped  into farmer Bill's backyard. To the west, you can see the
+beginnings of a large field of cattle through a small gate in the fenceline
+To the north and south, large trees and thick vegetation block movement.
+You can enter the farmer's house through a door to the east."
+
+movement SECT_INSIDE
+
+east to kitchen;
+west to field2 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"gate"};
+end
+
+				field2
+
+title "Field of Cattle"
+names {"field"}
+descr
+"You are in a large field filled with cattle. The stand there looking at you
+dumbly. The field extends west, north and south, and you can enter the farmer's
+backyard through a gate to the east."
+
+movement SECT_INSIDE
+
+east to field1 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"gate"};
+north to field3;
+west to field4;
+south to field5;
+end
+
+				field3
+
+title "Field of Cattle"
+names {"field"}
+descr
+"You are in a large cattle field. A large fence blocks movement north and east.
+The field extends far south, and a little west."
+
+movement SECT_FOREST
+
+south to field2;
+west to field6;
+end
+
+				field6
+
+title "Cattle field"
+names {"field"}
+descr
+"You are in a large cattle field. A large fence blocks movement north and west.
+The field extends far south, and a little east."
+
+movement SECT_FOREST
+
+south to field4;
+east to field3;
+end
+
+				field4
+
+title "Cattle field"
+names {"field"}
+descr
+"You are in a large cattle field. A large fence blocks movement into the trees
+to the west, while the field extends in all other directions."
+
+movement SECT_FOREST
+
+north to field6;
+east to field2;
+south to field7;
+end
+
+				field7
+
+title "Cattle field"
+names {"field"}
+descr
+"You are standing in the south-western side of a large cattle field. A large
+fence blocks movement west and south, while the field extends north and east.
+"
+
+movement SECT_FOREST
+
+north to field4;
+east to field5;
+end
+
+field5
+title "Cattle field"
+names {"field"}
+descr
+"You are standing in the southern section of a large cattle field. A large
+fence blocks movement east and south, while the field extends far north
+and a little west."
+movement SECT_FOREST
+north to field2;
+west to field7;
+end
+
+
+				forest4
+
+title "On a path in the forest"
+names {"forest"}
+descr
+"You are on a small path in the forest. The path leads north and east
+from here."
+
+movement SECT_FOREST
+
+north to forest5;
+east to forest2;
+end
+
+
+				forest5
+
+title "On a path through the thick forest."
+names {"forest"}
+descr
+"The forest is rather thick through this area, making it slightly darker
+than the rest. The path you are on continues south and west."
+
+movement SECT_FOREST
+
+west to forest6;
+south to forest4;
+end
+
+forest6
+title "On a path in the forest."
+names {"forest"}
+descr
+"The path you are on turns north here, and leads up a small hill. To the
+west of the hill the forest ends in the city of Nymgaard. The path also
+leads east deeper into the forest."
+movement SECT_FOREST
+north to hill;
+east to forest5;
+end
+
+hill
+title "At the top of a hill"
+names {"hill"}
+descr
+"You are on top of a small hill. To the south, a small path leads into
+the forest. To the west, a road leads off to the city gates of Nymgaard."
+movement SECT_FOREST
+south to forest6;
+west to gate@nymgaard;
+end
+
+
+				forest7
+
+title "On a forest path"
+names {"forest"}
+descr
+"You are on a small path leading east-west through the forest."
+
+movement SECT_FOREST
+
+west to forest2;
+east to forest8;
+end
+
+
+				forest8
+
+title "On a forest path"
+names {"forest"}
+descr
+"You are on a small path leading north, west, and south through the forest."
+
+movement SECT_FOREST
+
+west to forest7;
+north to forest9;
+south to forest12;
+end
+
+				forest9
+
+title "On a forest path"
+names {"forest"}
+descr
+"You are on a small path leading north south through a dark forest. The
+forest begins to thin to the north."
+
+movement SECT_FOREST
+
+north to forest10;
+south to forest8;
+end
+
+
+				forest10
+
+title "A turn in the forest path"
+names {"forest"}
+descr
+"You are on a path that turns east and south through a dark forest. To the
+east, you can see a small cave entrance rising out of the ground. You
+can continue through the forest to the south."
+
+movement SECT_FOREST
+
+south to forest9;
+east to cave;
+end
+
+cave
+title "Inside a dark cave."
+names {"cave"}
+descr
+"You have entered a dark cave. The entire cave is bathed in an magical,
+unnatural light and energy that seems to push at you and attempts to
+eject you back out of the cave. A tunnel leads downward from here."
+movement SECT_INSIDE
+
+dilbegin cave_block();
+var
+  pc 	: unitptr;
+code
+{
+heartbeat:=PULSE_SEC*5;
+:start:
+wait(SFB_CMD,(activator.type == UNIT_ST_PC) and (command(CMD_DOWN)));
+pc := activator;
+secure(pc,start);
+if(not((GIB_START in activator.quests) or (GIB_END in pc.quests))) {
+  block;
+  act("Something prevents you from going further.", A_ALWAYS, null,
+      null, null, TO_CHAR);
+  act("An invisible wall prevents "+pc.name+" from going further.",
+      A_ALWAYS, null, null, null, TO_REST); }
+unsecure(pc);
+goto start;
+}
+dilend
+
+west to forest10;
+down to tunnel1;
+end
+
+				forest12
+
+title "On a path through the forest"
+names {"forest"}
+descr
+"You are on a path through a beautiful forest. The path  lead north to an
+intersection, or south to a westward turn."
+
+movement SECT_INSIDE
+
+north to forest8;
+south to forest13;
+end
+
+				forest13
+
+title "On a path through the forest"
+names {"forest"}
+descr
+"You are on a path through a beautiful forest. You can hear the sounds of a
+distant sea.  A smaller trail leads south and the path leads north and west
+from here."
+
+movement SECT_FOREST
+
+north to forest12 descr
+"You see more of the forest path.";
+west to forest14 descr
+"You see more of the forest path.";
+south to forest_trail@sandzone descr
+"You see more of the forest trail.";
+end
+
+				forest14
+
+title "Traveling through a beautiful forest."
+names {"forest"}
+descr
+"You are one a west-east path in a beautiful forest. To the east the path
+continues, to the west, it enters into a large clearing. On the far
+west side of the clearing you can make out a small house."
+
+movement SECT_FOREST
+
+west to clearing1;
+east to forest13;
+end
+
+				tunnel1
+
+title "Lair of the Mongrelmen"
+names {"lair"}
+descr
+"The tunnel opens into an irregular room that has been formed partly by
+a callapse into lower regions. A large slab of broken granite dominates the
+center of the room, with a packed pathway passing on either side. There is
+an exit to the south, and considerable loose dirt and rock on either side
+of the pathway. Dirt sifts lazily down over the exits."
+
+movement SECT_INSIDE
+
+up to cave;
+south to tunnel2;
+end
+
+				tunnel2
+
+title "Sloping passageway"
+names {"passageway"}
+descr
+"The passage slopes steadily downward. There is a foul smell here, and
+a breeze flows from the north as the tunnel widens yet farther, the ceiling
+stretching far into the distance. The ceiling is dark and appears to be
+swaying slightly. The floor is dark and the loose rocks across the floor is
+embedded in a dark, black clay."
+
+movement SECT_INSIDE
+
+north to tunnel1;
+south to cave1;
+end
+
+
+				cave1
+
+title "Large cave"
+names {"cave"}
+descr
+"You have entered a large cave made of limestone. Long stalagmites and
+stalagtites hang from the ceiling and rise toward the roof. There are two
+exits, one to the north and south."
+
+movement SECT_INSIDE
+
+north to tunnel2;
+south to tunnel4;
+end
+
+
+				tunnel4
+
+title "Dark tunnel"
+names {"tunnel"}
+descr
+"You have entered an extremely dark tunnel, with exits leading east and north.
+To the east you just make out the sound of rushing water. A light breeze
+flows in from the north, but all else is silent."
+
+movement SECT_INSIDE
+
+north to cave1;
+east to tunnel5;
+end
+
+				tunnel5
+
+title "Drider Lair"
+names {"lair"}
+descr
+"You have entered a moderately sized cavern, which is relatively unremarkable.
+The floor has been largely cleaned of loosed rock, and obviously leveled and
+filled in some places to make it more even. A few wisps of cobweb cling
+to the rocks, especially at the upper reaches. Ther are several unreachable
+openings in the cavern well above floor level, and exits both east and west."
+
+movement SECT_INSIDE
+
+west to tunnel4;
+east to lake1;
+end
+
+
+				lake1
+
+title "Underground lake"
+names {"lake"}
+descr
+"You have entered a large, low, oval cavern covered almost entirely by an
+underground lake. The near shore laps gently up against the dripping wet rock
+wall on the near side, except for a small, rockstrewn landing at the entrance
+to the tunnel from which you came. On the far side is a much more significant
+rocky 'beach', from which a sort of pier has been constructed from piled rocks.
+The pier juts out into the water approximately 20 feet and has two broad,
+flat-bottomed canoes tethered to it. An underground river flows slowly into
+the lake from a large gash in the north rock wall."
+
+movement SECT_INSIDE
+
+west to tunnel5;
+east to lake2;
+end
+
+
+				lake2
+
+title "On an underground lake"
+names {"lake"}
+descr
+"You are on a large underground lake that nearly completely engulfs a large
+cavernous chamber. Beneath the water you can see large, humanoid creatures
+swimming toward you."
+
+movement SECT_WATER_SWIM
+
+east to lake3;
+west to lake1;
+down to underlake;
+end
+
+
+				underlake
+
+title "Beneath the water in an underground lake"
+names {"underwater"}
+descr
+"You are beneath the water in a large underground lake. Deep beneath you
+you detect a large creature staring at you from its habitat."
+
+movement SECT_UNDER_WATER
+
+up to lake2;
+down to underlake2;
+end
+
+				underlake2
+
+title "Lair of the aboleth"
+names {"lair"}
+descr
+"You are in a small cavern beneath the water of an underground lake. This
+cavern serves as the home of the dreaded aboleth, a telepathic, underwater
+horror that can be very dangerous."
+
+movement SECT_UNDER_WATER
+
+up to underlake;
+end
+
+
+				lake3
+
+title "Far side of the lake cavern"
+names {"cavern"}
+descr
+"You have reached the far side of the lake and the constructed pier. You can
+exit your boat and leave this cavern to the east, or travel onto the lake
+to the west."
+
+movement SECT_INSIDE
+
+west to lake2;
+east to room1;
+end
+
+
+				room1
+
+title "Small cavern"
+names {"cavern"}
+descr
+"Leaving the lake cavern, you progress down a fairly broad natural passageway
+which has been cleared of loose rocks and other debris. The passage takes
+a sharp northerly turn and enters a 50-foot by 65-foot natural coavern, with
+a 30-foot-high ceiling. A small pile of dirt in one corner, a large, flat rock
+suitable for use as a table for cards or dining, and an exit to the east are
+the only significant features of the room."
+
+movement SECT_INSIDE
+
+east to room2;
+west to lake3;
+end
+
+room2
+title "Another small cavern"
+names {"cavern"}
+descr
+"After a relatively short passagway, you enter another fairly empty room.
+Aside from a few boulders and a small cobweb in one corner, the room has
+no significant features. The far east wall, however, is missing a slightly
+different color than the rest of the rooms walls."
+movement SECT_INSIDE
+west to room1;
+east to trap open {EX_OPEN_CLOSE,EX_CLOSED,EX_HIDDEN} keyword {"door",
+	"wall","secret door"};
+SECRET_DOOR_DIFFICULTY(EAST,10)
+end
+
+
+				trap
+
+title "Small Alcove"
+names {"alcove", "trap"}
+descr
+"The secret door opens into a small alcove, 5 feet across to the east-west
+walls, and 12 feet wide to the north south walls."
+
+movement SECT_INSIDE
+
+west to room2 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+east to bridge open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN} keyword {"door",
+	"wall", "secret door"};
+end
+
+				bridge
+
+title "Bridge across a deep chasm"
+names {"bridge"}
+descr
+"The sliding secret door opens up into a wide cavern split asunder by an
+immensly deep crevice in the floor, from which rises a dull red glow and a
+ghastly sulfuric smell. A large stone drawbridge lies across the chasm,
+allowing entrance to a wide exit tunnel."
+
+movement SECT_INSIDE
+
+west to trap open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"};
+east to cavern1;
+end
+
+
+				cavern1
+
+title "Cavern of the drow, north end"
+names {"cavern"}
+descr
+"You have entered a huge cavern, obviously expanded from its natural size
+by skilled dwarven craftsman and miners. The walls of the cavern of the drow
+carry strange drow runes, seen in the dim and uncertain light of a smoldering
+fire of coals. The cavern extends to the south, and you can exit this cavern
+across a bridge to the west."
+
+movement SECT_INSIDE
+
+west to bridge;
+south to cavern2;
+end
+
+
+				cavern2
+
+title "Cavern of the drow, south end"
+names {"cavern"}
+descr
+"You are standing at the south end of a huge drow cavern. The walls have
+been carved by skilled dwarven hands, and the walls are covered with strange
+drow runes. The cavern extends to the north, and there is an exit to the
+west."
+
+movement SECT_INSIDE
+
+north to cavern1;
+west to slave1;
+end
+
+slave1
+title "Cavern of the slaves"
+names {"cavern"}
+descr
+"A terrible sight greets you in this dismal place. The conditions the
+slaves are forced to wrk in are terrible.  In the far corner a red-hot
+forge fills the rooms with a sweltering heat.  Piles of steel ingots
+are stacked near the forge."
+movement SECT_INSIDE
+east to cavern2;
+west to barracks;
+end
+
+				barracks
+
+title "Drow barracks"
+names {"barracks"}
+descr
+"The drow barracks are empty of fighters and contain little but cots for
+sleeping and an assortment of spare, useless equipment. The far west wall
+opens into a small passage way."
+
+movement SECT_INSIDE
+
+east to slave1;
+west to summon;
+end
+
+
+				summon
+
+title "Summoning chamber of the Drow"
+names {"chamber"}
+descr
+"Upon following a narrow passageway you have entered a small, octagon
+shaped room, with a large pentagram enscribed across the surface. The center
+of the floor is marked with streaks of dried blood, and scratch marks.
+A large table dominates the north east corner of this room, upon which
+an assortment of strange chemicals, components, potions, and mysterious
+objects lay. An energy field surrounds this table, preventing further
+access. A small passageway leads south from this chamber. Also in this
+chamber is a large mirror set into the north wall. The mirror seems to be
+a magical traveling device, and from the looks of it, it leads to the tunnel
+just west of the underground lake."
+
+
+movement SECT_INSIDE
+
+
+south to throne_room;
+north to tunnel1;
+east to barracks;
+end
+
+				throne_room
+
+
+title "Drow throne room"
+names {"throne room"}
+descr
+"You have entere a large room, dominated by a large, stone throne. The
+throne is covered with drow runes, and encrusted with precious gems. A giant
+mural covers the three walls of the rooms, facing the throne. The mural
+shows drow capturing dwarves, then through some kind of magical process,
+transforming them into hideous gibberlings, which are shown attacking a
+small town. There is a small door in the south wall as well."
+
+movement SECT_INSIDE
+
+north to summon;
+south to treasure;
+end
+
+
+				treasure
+
+title "Drow treasure room"
+names {"treasure room"}
+descr
+"The small door in the throne rooms leads to this small treasure chamber.
+This small chamber holds all of this small contingent of drow's treasure."
+
+movement SECT_INSIDE
+
+north to throne_room;
+end
+
+%mobiles
+
+bull
+names {"bull"}
+title "a bull"
+descr "A rowdy bull scratches the ground with his foot here."
+extra {}
+"The bull looks strongly muscled and powerful, he eyes u wearily."
+M_COW(SEX_MALE)
+level 7
+exp 50
+end
+
+skum
+names {"skum"}
+title "the skum"
+descr "A horrible fish like abomination, a skum, swims here."
+extra {}
+"This creature is a breeding experiment of the aboleth, and is a fish like
+lizard creature."
+M_LIZARDMAN_WARRIOR_NATURAL(5, SEX_NEUTRAL)
+exp 40
+special SFUN_AGGRESSIVE
+end
+
+				aboleth
+
+names {"aboleth"}
+title "the aboleth"
+descr "A large tentacled creature, the aboleth, swims here."
+extra {}
+"This horrid squid like creature feeds on the minds, and bodies, of countless
+victims."
+
+M_OCTOPUS(SEX_MALE)
+level 8
+exp 40
+special SFUN_AGGRESSIVE
+end
+
+
+
+					cow
+
+names {"cow"}
+title "the cow"
+descr "A peaceful cow stands here grazing."
+extra {}
+"The cow looks very peaceful, she ignores you completely."
+
+M_COW(SEX_FEMALE)
+level 3
+exp 50
+end
+
+
+					rabbit
+
+names {"rabbit"}
+title "a rabbit"
+descr "A cute rabbit stands here, nibbling on some grass."
+extra {}
+"The rabbit looks harmless, and stares at you with big black eyes."
+
+M_RABBIT(SEX_MALE)
+special SFUN_RANDOM_ZONE_MOVE
+exp 50
+end
+
+					deer
+
+names {"deer"}
+title "the deer"
+descr "A beautiful deer stands here, grazing upon the grass."
+extra {}
+"The deer is a fine, white tailed specimen, with a powerful body and
+a five point set of antlers."
+
+M_DEER(SEX_MALE)
+special SFUN_RANDOM_ZONE_MOVE
+exp 50
+end
+
+
+					bill
+
+names {"bill", "farmer bill"}
+title "farmer Bill"
+descr
+"Farmer Bill stands ready with a large spade, he looks quite busy."
+extra {}
+"Bill the farmer is tall and muscular from many days working in the field.
+He is dressed in coveralls and carries a large spade for digging."
+
+M_HUMAN_WARRIOR_AXE(12, SEX_MALE)
+special SFUN_RANDOM_ZONE_MOVE
+exp 50
+end
+
+					julie
+
+names {"julie"}
+title "Julie"
+descr
+"Julie, farmer Bills lovely wife, is stands here cooking."
+extra {}
+"The farmer's wife is a lovely woman, with long brown hair and sparkling
+green eyes. From the medallion around her neck you see that she is an
+apprentice with the bards guild."
+
+flags{UNIT_FL_NO_TELEPORT}
+
+race RACE_HUMAN
+level 14
+height 160
+weight 200
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+alignment 500
+MSET_ABILITY(15,15,5,5,25,15,0,20)
+MSET_WEAPON(2,2,2,2,2,2)
+MSET_SPELL(40,5,10,5,5,5,5,5,5,2,1)
+
+special SFUN_COMBAT_MAGIC "cast cause light wounds"
+special SFUN_COMBAT_MAGIC_HEAL "cast cure light wounds"
+
+exp 75
+
+dilbegin hire();
+
+var
+ pcname		: string;
+ item		: unitptr;
+ pc 		: unitptr;
+ i		: integer;
+ exdp		: extraptr;
+
+code
+{
+:init:
+heartbeat:=PULSE_SEC*5;
+:start:
+wait(SFB_CMD,(activator.type==UNIT_ST_PC) and (not command(CMD_GIVE)));
+if(GIB_END in activator.quests) goto waitawhile;
+if((pc.level>15) | (pc.level<9)) goto waitawhile;
+pc:=activator;
+secure(pc,lostpc);
+if((not(GIB_START in pc.quests)) and (pc.level<16) and (pc.level>8)) {
+  pause;
+  exec("say Hello "+pc.name+", have you come for the job?", self);
+  pause;
+  exec("say We, the people of Nymgaard, are in urgent need of "+
+       "a champion of your caliber.", self);
+  pause;
+  exec("say Our fair city has been plagued by continous assaults of "+
+       "strange, dwarf-like beasts, or Gibberlings", self);
+  pause;
+  exec("say Our finest wizards have concluded that these poor creatures "+
+       "where once dwarves, but have been magically altered into horrid "+
+       "beasts by an unknown force", self);
+  pause;
+	exec("say We have found a cave in the forest east of the city, this "+
+	"seems too be where these beasts are coming from", self);
+	pause;
+	exec("say All current attempts too enter the cave have failed, due "+
+	"too powerful protective magic.", self);
+	pause;
+	exec("say However, our wizards have found a way past the barrier!",
+	self);
+	pause;
+	exec("say I have in my possession a wand which I can use too infuse "+
+	"your body with the ability too pass the barrier!", self);
+	pause;
+	exec("say we need your help too end this menace, "+pc.name+"", self);
+	pause;
+	exec("say if you help us, you will be rewarded greatly!", self);
+	pause;
+	exec("say will you help us in our time of need "+pc.name+"?", self);
+
+i := 0;
+while (i < 5)
+{
+	wait(SFB_CMD, activator #= pc);
+
+	if(command(CMD_NOD))
+	{
+		goto quest_accepted;
+	}
+	else if (command(CMD_SAY))
+	{
+		pause;
+		exec("say all i need is a nod "+pc.name+".", self);
+	}
+	else if(command(CMD_SHAKE))
+
+		goto no_quest;
+
+	i := i+1;
+}
+	:no_quest:
+	pause;
+	exec("sigh", self);
+	pause;
+	exec("say very well, i cannot force you too help us.", self);
+	pause;
+	exec("say i guess those dwarves will continue too suffer.", self);
+	unsecure(pc);
+	goto start;
+
+	:quest_accepted:
+	pause;
+	exec("say Finally! I have found a worthy adventurer too help us!",
+	self);
+	pause;
+	exec("emote takes out a wand and waves it in the air.", self);
+	pause;
+	act("You feel yourself filled with energy.", A_ALWAYS, self, null,
+	null, TO_CHAR);
+	pause;
+	act(""+pc.name+" glows with magic energy that soon fades.", A_ALWAYS,
+	self, null, null, TO_REST);
+	pause;
+	exec("say that will get you through the magical barrier.", self);
+	pause;
+	exec("say whoever is creating these gibberlings must have some kind "+
+	"of personal item, be it a ring or amulet.", self);
+	pause;
+	exec("say bring it too me as proof of their demise.", self);
+	pause;
+	exec("cast bless "+pc.name+"", self);
+	pause;
+	exec("say i wish you luck "+pc.name+"!", self);
+	addextra(pc.quests, {GIB_START}, "");
+	unsecure(pc);
+	goto start;
+
+}
+else
+{
+	exdp := GIB_START in pc.quests;
+
+	if(("drow crest" in exdp.names))
+
+	{
+		pause;
+		subextra(pc.quests, GIB_START);
+		addextra(pc.quests, {GIB_END}, "");
+		exec("say thank you "+pc.name+" for your help!", self);
+		pause;
+		exec("say take this sash of Nymgaard, prepared by our "+
+		"wizards, as reward for your services.", self);
+		pause;
+		exec("say take also this bag of gold, you've earned it!",
+		self);
+		item := load("sash@trees");
+		link(item, pc);
+
+		item := load("moneybag@trees");
+		link(item, pc);
+
+		experience(3000, pc);
+		pause;
+		exec("say till next we meet, hero of Nymgaard!", self);
+		pause;
+		exec("wave", self);
+	}
+}
+
+unsecure(pc);
+goto start;
+
+:waitawhile:
+heartbeat := PULSE_SEC*60;
+pause;
+goto init;
+
+:lostpc:
+pause;
+goto start;
+
+}
+
+dilend
+
+dilbegin hire2();
+var
+   pc	: unitptr;
+   item	: unitptr;
+   exdp : extraptr;
+
+code
+{
+	heartbeat := PULSE_SEC*5;
+
+:start:
+wait(SFB_CMD, command(CMD_GIVE) and (activator.type == UNIT_ST_PC));
+
+:give:
+if(not(GIB_START in activator.quests))
+ goto start;
+
+pc := activator;
+item := self.inside;
+secure(pc, labsecure);
+secure(item, labsecure);
+
+wait(SFB_CMD | SFB_TICK, TRUE);
+
+if(not(item #= self.inside))
+{
+  unsecure(item);
+  exdp := GIB_START in pc.quests;
+
+	if("drow crest" in self.inside.name)
+	{
+	  addstring(exdp.names, "drow crest");
+	  exec("say this is the crest of kurastan, an evil drow mage!", self);
+	  pause;
+	  exec("say this is what i need!", self);
+	  destroy(self.inside);
+	}
+else
+{
+	exec("say No, this isnt what i was looking for "+pc.name+"!", self);
+	pause;
+	exec("say here u go.", self);
+	link(self.inside, pc);
+}
+}
+unsecure(pc);
+
+if((command(CMD_GIVE)) and (activator.type == UNIT_ST_PC))
+{
+	goto give;
+}
+else
+  	goto start;
+
+:labsecure:
+pause;
+goto start;
+}
+dilend
+
+end
+
+
+					skunk
+
+names {"skunk"}
+title "the skunk"
+descr
+"A skunk stands here, roaming the woods."
+extra {}
+"P.U.! What an odor this small creature can conjure!"
+
+M_SKUNK(SEX_MALE)
+special SFUN_RANDOM_ZONE_MOVE
+exp 50
+
+end
+
+
+					mongrelman
+
+names {"mongrelman", "man"}
+title "an evil mongrelman"
+descr
+"An evil mongrelman stands here in the shadows."
+extra {}
+"The creature looks like the cross between a man and a mangy canine. His claws
+drip with a strange icor."
+
+race RACE_MONGRELMAN
+sex SEX_MALE
+height 200
+weight 180
+NATURAL_DEF(WPN_CLAW, ARM_HLEATHER)
+level 8
+MSET_ABILITY(30,20,20,30,0,0,0,0)
+MSET_WEAPON(20,20,10,10,20,20)
+alignment -500
+special SFUN_AGGRESSIVE
+end
+
+
+
+					drider
+
+names {"drider"}
+title "an evil drider"
+descr
+"A hideous drider stands before you."
+extra {}
+"This hideous monster has the body of a giant spider, but the torso and head
+of a drow! He stands with a large battle axe, ready to cleave you in two!"
+
+race RACE_DRIDER
+sex SEX_MALE
+height 350
+weight 600
+NATURAL_DEF(WPN_KICK, ARM_CHAIN)
+level 11
+MSET_ABILITY(30,20,20,30,0,0,0,0)
+MSET_WEAPON(25,15,15,15,15,15)
+alignment -1000
+end
+
+
+					drow
+
+names {"drow"}
+title "a drow warrior"
+descr
+"A sleek, male drow warrior stands here."
+extra {}
+"This warrior stands tall and proud, fingering his weapons with a practiced
+skill."
+
+M_HUMAN_WARRIOR_SWORD(10, SEX_MALE)
+exp 30
+race RACE_DROW
+special SFUN_AGGRESSIVE
+end
+
+slave
+names {"dwarf slave","dwarf","slave"}
+title "a dwarf slave"
+descr "A dwarf slave covers in the corner."
+extra {}
+"This dwarf has been worked to the bone.  He looks thin and owrn for a
+dwarf and his eyes are filled with sadness of a broken spirit."
+M_DWARF_WARRIOR_SWORD(8,SEX_MALE)
+end
+
+mage
+names {"drow","mage","kurastan"}
+title "Kurastan"
+descr "Kurastan the drow wizard stands here."
+extra {}
+"This mage is dressed in black robes and carries a wicked looking wand."
+M_HUMAN_MAGE_FIRE(15,SEX_MALE,"fireball")
+exp 50
+race RACE_DROW
+
+dilbegin mage_speech();
+var
+
+	pc	: unitptr;
+	pcname  : string;
+code
+{
+
+	:init:
+	heartbeat := PULSE_SEC*5;
+
+	:start:
+	wait(SFB_CMD,(activator.type == UNIT_ST_PC));
+
+	pc := activator;
+	secure(pc,start);
+
+	if(GIB_START in pc.quests)
+	{
+	pause;
+	exec("say ahh, "+pc.name+" has come to stop me in my conquest of " +
+	     "Nymgaard!", self);
+	pause;
+	exec("say did that pathetic fool mayor send you here?", self);
+	pause;
+	exec("say no matter, you must die for your insolence!", self);
+	pause;
+	exec("use wand "+pc.name+"", self);
+	pause;
+	goto wait_awhile;
+	}
+	else
+	goto wait_awhile;
+
+unsecure(pc);
+
+	:wait_awhile:
+	heartbeat := PULSE_SEC*60;
+	pause;
+	goto init;
+}
+dilend
+end
+
+				gibberlings
+
+
+names {"gibberling"}
+title "a gibberling"
+descr "A gibberling is standing here, snarling at you."
+M_DWARF_WARRIOR_NATURAL(2, SEX_NEUTRAL)
+exp 50
+special SFUN_AGGRESSIVE
+/*
+dilbegin gibber_wander();
+var
+	num	: integer;
+code
+{
+	heartbeat := PULSE_SEC*20;
+
+	:start:
+	walkto(findroom("forest7@forest"));
+	goto random_move;
+
+	:random_move:
+	num := rnd(0,3);
+
+	if (num == 0)
+	{
+	exec("west",self);
+	}
+	if (num == 1)
+	{
+	exec("east",self);
+	}
+	if (num == 2)
+	{
+	exec("north", self);
+	}
+	if (num == 3)
+	{
+	exec("south", self);
+	}
+	goto random_move;
+}
+dilend
+*/
+end
+
+%objects
+
+crest
+names {"drow crest","crest","amulet"}
+title "the Crest of Kurastan"
+descr "A small, admantium amulet lies here."
+manipulate{MANIPULATE_TAKE, MANIPULATE_WEAR_NECK}
+extra{}
+"This small amulet has an inscription of a spider surrounded with a magical
+aura."
+extra {"$identify"}
+"This is a darkelven crest, usually worn by priests and mages. It identify's
+the wearer and his house for all too see."
+MAG_TRANSFER(+1)
+end
+
+sash
+names {"sash of nymgaard","sash"}
+title "the Sash of Nymgaard"
+descr "A glowing sash lies on the ground here."
+manipulate{MANIPULATE_TAKE,MANIPULATE_WEAR_CHEST}
+extra {}
+"This beautiful sash is warn by people designated as hero's by the Nymgaard
+government."
+extra {"$identify"}
+"This magical sash provides the wearer with a +2 bonus to Str, and a +1
+bonus to Mag."
+MAG_TRANSFER(+1)
+STR_TRANSFER(+2)
+special SFUN_RESTRICT_QUEST "Gibberling Quest Complete"
+end
+
+moneybag
+MONEY(COPPER_PIECE,50)
+end
+
+drow_wand
+names {"drow wand","wand"}
+title "Drow Wand"
+descr "A dark, rune covered wand has been left here."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+WAND_DEF(50,30,SPL_FIREBALL_2,SPL_FIREBALL_2)
+weight 1
+cost 8 PLATINUM_PIECE
+extra {}
+"This is a dark wand, covered with red runes. It glows with a slight heat."
+extra {"$identify"}
+"This is a wand of Fireballs, starting out with 30 charges."
+end
+
+
+%reset
+
+load skunk into forest6 max 4
+load skunk into forest6 max 4
+load skunk into forest6 max 4
+load skunk into forest6 max 4
+
+load rabbit into forest4 max 5
+load rabbit into forest4 max 5
+load rabbit into forest4 max 5
+load rabbit into forest4 max 5
+load rabbit into forest4 max 5
+
+load deer into forest10 max 3
+load deer into forest12 max 3
+load deer into forest13 max 3
+
+load mage into summon max 1
+{
+	equip drow_wand position WEAR_HOLD
+}
+
+load drow into cavern1 max 4
+load drow into cavern2 max 4
+load drow into room2 max 4
+load drow into bridge max 4
+
+load slave into slave1 max 3
+load slave into slave1 max 3
+load slave into slave1 max 3
+
+load gibberlings into summon local 5
+load gibberlings into summon local 5
+load gibberlings into summon local 5
+load gibberlings into summon local 5
+load gibberlings into summon local 5
+
+load julie into kitchen max 1
+load bill into kitchen max 1
+
+%end
+

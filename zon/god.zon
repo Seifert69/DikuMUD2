@@ -1,0 +1,407 @@
+/*pwd:dog*/
+#include <composed.h>
+/*
+  Changes;
+     Mon Sep  8 12:09:07 PDT 1997     Initiated by god.
+*/
+
+/*
+   This jewel is meant as a gift from the gods to any
+   beloved. Perhaps as wedding gifts or otherwise 
+   The jewel is meant to give no advantage other\
+   than being a cool item to have, and very romantic 
+   at that.
+   
+   When first worn by a PC, it will wait for that
+   PC to 'wear <heartjewel>' then shortly after
+   'think <pcname>' The heartjewel is linked to
+   that PC.
+   
+   A PC can only link with a heartjewel once.
+   
+   Powers;
+   
+     When a person dies, the heartjewel goes
+     with them like poweritems. The linked jewel grows
+     dark, if the other person dies.
+     
+     When a person 'think <otherperson>' the other person
+     is informed something like 'you feel the precence
+     of <otherperson>' and the jewel glows softly.
+     
+     The powers only work, if both persons are linked to 
+     each other and wearing the jewels.  
+
+     Certain emotes gets picked up sometimes and the
+     general feeling gets transmitted.
+*/
+%zone god
+
+title "Gods Tiny Zone" 
+lifespan 20 
+reset RESET_ANYHOW 
+creators {"God"}
+notes "Gods playzone"
+
+%dil
+
+dilbegin recall heartjewel();
+var
+  other:unitptr;
+  otherjewel:unitptr;
+  i:integer;
+  ep:extraptr;
+  sl:stringlist;
+  ns:string;
+code {
+
+  if (i!=0) goto usage;
+  
+  /*
+    This piece of code is for
+    targeting the jewel on a person
+  */
+  :virgin:
+  heartbeat:=PULSE_SEC*5;
+  wait(SFB_DONE,(command("wear") and (medium==self)));
+  if (self.outside.type!=UNIT_ST_PC) goto virgin;
+  act("$2n starts to glow brightly. You get the feeling that this virgin "+
+      "$2N, and that it needs you to think of the person whith which it should "+
+      "form a soul link.",
+      A_ALWAYS, self.outside,self,null,TO_CHAR);
+  act("$2n starts to glow brightly.",
+      A_SOMEONE, self.outside,self,null,TO_REST);
+  heartbeat:= PULSE_SEC*25;
+  :thinking:
+  wait(SFB_CMD|SFB_TICK,(command("think") or command(CMD_AUTO_TICK)));
+
+  if (command("think")) {
+
+    block;
+    other:=findunit(self.outside, argument, FIND_UNIT_GLOBAL, null);
+    if (other.type==UNIT_ST_PC) {
+       if (other==self.outside) {
+         /* Selecting one self is too perverse! */
+         act("$2n starts pulse with an omnious pulsating purple light. As the pulses "+
+	     "grow stronger, you feel you have offended the gods, making a terrible "+
+	     "mistake!. You suddenly feel .... different.", 
+	     A_ALWAYS, self.outside,self,null,TO_CHAR);
+         act("$2n starts pulse with an omnious pulsating purple light. $1n looks scared, "+
+	     "then ... different.", 
+	     A_SOMEONE, self.outside,self,null,TO_REST);
+	 self.outside.sex:=SEX_NEUTRAL;
+         act("$2n bursts in a splash of purple light.",
+	     A_SOMEONE, self.outside,self,null,TO_ALL);
+	 destroy(self);
+	 quit;
+       }
+       /* else we have a partner. Ill not impose any 
+          limitations on sexual preference here :-) 
+	*/
+       ep:="$link" in self.extra;
+       if (ep) {
+/*
+          act("In your heart you feel there will never be another like "+
+              ep.names.[2]+".",
+	      A_ALWAYS,self.outside,other,null,TO_CHAR);
+          goto virgin;
+*/
+	  subextra(self.extra,"$link");
+       }
+
+       act("As you think of $2m, you feel a strong bond between you soul "+
+           "and $2s grow. $3n seem to sparkle, then assumes a soft glow.",
+           A_ALWAYS,self.outside,other,self,TO_CHAR);       
+       act("You feel $2ns soul reach out to you.",
+           A_ALWAYS,other,self.outside,null,TO_CHAR);       
+       act("As $1n absentmidedly stares into empty air, you feel a "+
+           "strong wave of emotion emenating from $1m, as if seeking "+
+           "another soul, at that moment $2n sparkles, then "+
+           "returns to glow softly.",
+           A_ALWAYS,self.outside,self,null,TO_NOTVICT);       
+       sl:={"$link"};
+       addstring(sl,other.name);
+       addextra(self.extra,sl,"");
+       addextra(self.outside.extra,sl,"");
+       goto usage;
+    } else {
+       if (other) {
+          act("$2n does not seem to be a fitting soul-mate",A_ALWAYS,self.outside,other,null,TO_CHAR);
+       } else {
+          act("You could not seem to find a fitting soul-mate by that name",A_ALWAYS,self.outside,other,null,TO_CHAR);
+       }
+       goto thinking;
+    }
+  }
+
+  act("$2n stops glowing. Choosing your soul-mate must wait.",A_ALWAYS, self.outside,self,null,TO_CHAR);
+  act("$2n stops glowing.",A_SOMEONE, self.outside,self,null,TO_REST);
+  goto virgin;
+  
+  :usage:
+  /* Now, we can try the powers */
+  
+  i:=interrupt(SFB_DEAD,((activator==self.outside) and (self.equip!=0)),diepower);
+
+  i:=interrupt(SFB_CMD,((activator==self.outside) and (self.equip!=0) and command("think")),thinkpower);
+
+  i:=interrupt(SFB_CMD,((activator==self.outside) and (self.equip!=0) and command("touch")),touchpower);
+
+  i:=interrupt(SFB_CMD,((activator==self.outside) and (self.equip!=0) and 
+     (command("laugh") or command("giggle") or command("embrace") or 
+      command("smile") or command("rofl") or command("cheer"))),merrypower);
+
+  i:=interrupt(SFB_CMD,((activator==self.outside) and (self.equip!=0) and 
+     (command("cry") or command("sniff") or command("btears") or 
+      command("pout") or command("hate") or command("frown"))),sadpower);
+
+  i:=interrupt(SFB_CMD,((activator==self.outside) and (self.equip!=0) and 
+     (command("fear") or command("flee") or command("scream"))),dangerpower); 
+
+  /* loop here forever, let the interrupts handle the activation */     
+  :loop:
+  log ("loop");
+  heartbeat:= PULSE_SEC*SECS_PER_REAL_YEAR; /* never */
+  wait(SFB_TICK,FALSE);
+  goto loop;
+  
+
+
+  /* dying will produce a reaction */
+  :diepower:
+
+  ep:="$link" in self.extra;
+  if (not ep) goto virgin; /* oops! */
+  ns:=ep.names.[1];
+  other:=findunit(self.outside, ns, FIND_UNIT_WORLD, null);
+  if (not other) goto loop;
+  otherjewel:=findunit(other, self.name, FIND_UNIT_EQUIP, null);
+  if (not otherjewel) goto loop;
+  ep:="$link" in otherjewel.extra;
+  if (not ep) goto loop;
+  if (self.outside.name != ep.names.[2]) goto loop;
+  
+  act("$1n looks sad, as $1s $2ns soft glow suddenly dims",
+      A_HIDEINV,other,otherjewel,null,TO_NOTVICT);
+  act("You feel your heart become heavy with sorrow, as $1ns soft glow "+
+      "suddenly dims. You believe that "+self.outside.name+" have suffered a terrible fate.",
+      A_ALWAYS, other,self,null,TO_CHAR);
+  goto loop;
+  
+
+
+  /* thinking of the other will establish a link */
+  :thinkpower:
+
+  ep:="$link" in self.extra;
+  if (not ep) goto virgin; /* oops! */
+  ns:=ep.names.[1];
+  other:=findunit(self.outside, ns, FIND_UNIT_WORLD, null);
+  if (not other) goto loop;
+  otherjewel:=findunit(other, self.name, FIND_UNIT_EQUIP, null);
+  if (not otherjewel) goto loop;
+  ep:="$link" in otherjewel.extra;
+  if (not ep) goto loop;
+  if (self.outside.name != ep.names.[2]) goto loop;
+
+  block;  
+  act("$1n looks distracted, as $1s $2n glows softly and a smile plays uppon $1s lips.",A_HIDEINV, other,otherjewel,null,TO_REST);
+  act("As you thoughts wander to your beloved, you feel $2s presence through $3n, "+
+      "and hope rise in your soul.",A_ALWAYS, self.outside,other,self,TO_CHAR);
+  act("As your lovers thoughts reach you through $3n, you feel $2s precence, "+
+      "and hope rise in your soul.",A_ALWAYS, other,self.outside,self,TO_CHAR);
+  act("$1n looks distracted, as $1s $2n glows softly.",A_HIDEINV, self.outside,self,null,TO_REST);
+    
+  goto loop;
+
+
+  /* touching the stone will establish a link */
+  :touchpower:
+
+  ep:="$link" in self.extra;
+  if (not ep) goto virgin; /* oops! */
+  ns:=ep.names.[1];
+  other:=findunit(self.outside, ns,FIND_UNIT_WORLD, null);
+  if (not other) goto loop;
+  otherjewel:=findunit(other, self.name, FIND_UNIT_EQUIP, null);
+  if (not otherjewel) goto loop;
+  ep:="$link" in otherjewel.extra;
+  if (not ep) goto loop;
+  if (self.outside.name != ep.names.[2]) goto loop;
+
+  block;  
+  act("$1n touches $1s $2N, and it glows softly.",A_HIDEINV, self.outside,self,null,TO_REST);
+  act("As you touch $3n, it feels as if you can touch the soul of your beloved $2n, "+
+      "and you can sense that $2e can feel you comforting $2m though $3n.",
+      A_ALWAYS, self.outside,other,self,TO_CHAR);
+  act("You feel you lovers gentle touch reach you through $3n, "+
+      "you feel $2s precence and is comforted by $2m.",
+      A_ALWAYS, other,self.outside,self,TO_CHAR);
+  act("$1n looks comforted, as $1s $2n glows softly.",A_HIDEINV, other,otherjewel,null,TO_REST);
+    
+  goto loop;
+
+
+
+
+  /* sometime you detect merry socials from the other */
+  :merrypower:
+
+  if (rnd(1,3)!=3) goto loop;
+
+  ep:="$link" in self.extra;
+  if (not ep) goto virgin; /* oops! */
+  ns:=ep.names.[1];
+  other:=findunit(self.outside, ns,FIND_UNIT_WORLD, null);
+  if (not other) goto loop;
+  otherjewel:=findunit(other, self.name, FIND_UNIT_EQUIP, null);
+  if (not otherjewel) goto loop;
+  ep:="$link" in otherjewel.extra;
+  if (not ep) goto loop;
+  if (self.outside.name != ep.names.[2]) goto loop;
+
+  act("You feel your beloved $2n is happy.",
+      A_ALWAYS, other,self.outside,self,TO_CHAR);
+  act("$1n smiles secretly, as $1s $2n glows softly.",A_HIDEINV, other,otherjewel,null,TO_REST);
+    
+  goto loop;
+
+
+
+
+  /* sometime you detect sad socials from the other */
+  :sadpower:
+
+  if (rnd(1,3)==1) goto loop;
+
+  ep:="$link" in self.extra;
+  if (not ep) goto virgin; /* oops! */
+  ns:=ep.names.[1];
+  other:=findunit(self.outside, ns,FIND_UNIT_WORLD, null);
+  if (not other) goto loop;
+  otherjewel:=findunit(other, self.name, FIND_UNIT_EQUIP, null);
+  if (not otherjewel) goto loop;
+  ep:="$link" in otherjewel.extra;
+  if (not ep) goto loop;
+  if (self.outside.name != ep.names.[2]) goto loop;
+
+  act("You sense that your beloved $2n is troubled.",
+      A_ALWAYS, other,self.outside,self,TO_CHAR);
+  act("$1n looks sad, as $1s $2n glows softly.",A_HIDEINV, other,otherjewel,null,TO_REST);
+    
+  goto loop;
+
+
+
+  /* sometime you detect dangerous situations from the other */
+  :dangerpower:
+
+  if (rnd(1,5)==5) goto loop;
+
+  ep:="$link" in self.extra;
+  if (not ep) goto virgin; /* oops! */
+  ns:=ep.names.[1];
+  other:=findunit(self.outside, ns,FIND_UNIT_WORLD, null);
+  if (not other) goto loop;
+  otherjewel:=findunit(other, self.name, FIND_UNIT_EQUIP, null);
+  if (not otherjewel) goto loop;
+  ep:="$link" in otherjewel.extra;
+  if (not ep) goto loop;
+  if (self.outside.name != ep.names.[2]) goto loop;
+
+  act("You fell an urgent sensation.. maybe $2n is in danger!",
+      A_ALWAYS,other,self.outside,self,TO_CHAR);
+  act("$1n looks worried, as $1s $2n glows softly.",A_HIDEINV, other,otherjewel,null,TO_REST);
+    
+  goto loop;
+
+}
+dilend
+
+%rooms
+
+
+                             gods_space
+names {"Gods room"}
+title "Gods private part of the world"
+
+descr
+" This is no earthly part of the world you have entered. This space 
+has no walls and no roof, but most frightingly, it doesnt even have 
+a floor! You seem to float to where ever in the room you wish to be ..
+or maybe the room and everything moves towards you, its hard to tell. 
+The worst thing is that the room seems to repeat itself toward infinity,
+wherever you look, you see yourself and everyone else repeated towards
+infinity, like mirrors, but not. The space is dominated by a large
+circular fireplace that seems to warm you nicely. Assorted furniture
+provide spartan but comfortable seatingspace for everyone."
+
+extra {"assorted furniture","furniture"}
+"The furniture seems quite spartan. You cant quite make out what material 
+theyre made of."
+
+extra {"circulat fireplace","fireplace"}
+"The circular fireplace seems the center of the space. It warms you with an
+interresting green flame."
+
+extra {"reflections","mirrors","repeats","copies"}
+"As you see everything repeated, you come to the conclusion that this is 
+definately not caused by mirrors. The space itself seems limited to this room,
+but extended into its own opposite side."
+
+extra {"up","down"}
+" You see the space repeated toward infinity. You cant climb nor descend. 
+Some invisible force stops you."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to gods_space descr "You see the space repeated toward infinity"; 
+east to gods_space descr "You see the space repeated toward infinity"; 
+south to gods_space descr "You see the space repeated toward infinity"; 
+west to gods_space descr "You see the space repeated toward infinity"; 
+ALWAYS_LIGHT 
+
+end
+
+
+%objects
+
+                             heartjewel
+
+names {"heartjewel","heart jewel","jewel","necklace"}
+title "the heartjewel"
+descr "A small necklace with a shiny jewel is parkling here."
+
+extra {}
+"This jewel must be made from the finest craftman. The jewel itself
+seems to glow with an inner light."
+
+extra {"$identify"}
+"When worn, this jewel will link the hearts and soul of two people.
+When a virgin hearjewel is worn, it enables the wearer to commit his
+soul and link it to another soul. The wearer must activate the link by 
+thinking of the person to link to. For the link to be complete, the
+other person must have a virgin heart jewel and do the same."
+
+extra {"$improved identify"}
+"When worn, this jewel will link the hearts and soul of two people.
+Once a link has been established, the wearer can subtly feel the soul
+of the other person. The main ways to use the heart jewel is simply to
+think about the other person. You can also touch the jewel and thus 
+comfort the other."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_NECK}
+flags {UNIT_FL_MAGIC}
+weight 1
+cost 1 COPPER_PIECE
+
+dilcopy heartjewel@god();
+
+end 
+
+%reset
+
+load heartjewel into gods_space zonemax 2
+load heartjewel into gods_space zonemax 2
+
+%end

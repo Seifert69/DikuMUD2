@@ -1,0 +1,3501 @@
+/*
+filename    cthulu
+password    tachyon
+changedby   mon
+EmailAdd     root <root@ceti-alpha.dyn.ml.org>
+request     compile
+version     9
+END HEADER*/
+
+
+
+
+
+
+/*
+         *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+         * COPYRIGHT 1996                            *
+         *           BOJAMES MOLAI,                  *
+         *           ANDREW KEENAN                   *
+         *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+*/
+
+
+
+
+/* BEGIN CTHULU.ZON */
+
+#include <composed.h>
+#include "values.h"
+#include "wmacros.h"
+
+%zone cthulu
+title "cThulu Jungle"
+
+lifespan 30
+reset RESET_ANYHOW
+creators {"Mon","Keenan"}
+
+
+notes
+ "This is our first attempt at a zone. Cthulu, is the first
+zone in the LHANTARA series, a group of zones 'clumped'
+together to create a large region. This zone is for 35 and
+50. Any constructive criticism should be mailed to:
+Mon       - mon@netcom.com
+Keenan    - keenan@netcom.com
+Also, appreciate any typo or bug reports, thanks again, and
+Happy Mudding - and remember: GET SOME LEVELS!!!"
+
+%dil
+
+dilbegin silence();
+var
+   i : integer;
+
+   code
+   {
+    heartbeat := PULSE_SEC*30;
+
+   :start:
+   wait(SFB_CMD, (activator.type == UNIT_ST_PC));
+   i := rnd(1,25);
+   if (i >25)
+      goto start;
+
+   act("$1n begins to look a bit paranoid",
+            A_ALWAYS, activator, null, null, TO_REST);
+   act("Whats that sound? Hey, get that shadow away!!",
+            A_ALWAYS, activator, null, null, TO_CHAR);
+   act("$1n screams with fright, unable to stand the
+terrible silence",
+            A_ALWAYS, activator, null, null, TO_REST);
+   act("You scream with fright, unable to stand the
+silence",
+            A_ALWAYS, activator, null, null, TO_CHAR);
+   pause;
+   goto start;
+ }
+dilend
+
+/* DIL FOR RIVER TRANSFERS */
+
+dilbegin water_transf();
+var
+          pc   :    unitptr;
+code
+{
+     heartbeat :=PULSE_SEC*10;
+
+     :start:
+     wait(SFB_TICK, TRUE);
+
+     act("You begin to lose your footing against the force
+     of the fast moving water. . . .}",
+     A_ALWAYS, self.outside, null, null, TO_CHAR);
+     act("The strong current of the river drags "+pc.name+"
+     splashing frantically down-stream.",
+     A_ALWAYS, self.outside, null, null, TO_REST);
+     link(pc,  findroom("cthulu/rn_4529"));
+     act("You are sucked under the water and dragged along
+     the river-bed for what seems like hours, finally the
+current slows and you are able to plant a foot on a rock,
+and get above water.",
+     A_ALWAYS, self.outside, null, null, TO_CHAR);
+     act("You see a small disturbance in the water, and
+     "+pc.name+" comes
+     flying out of the river, coughing water from their
+lungs.",
+     A_ALWAYS, self.outside, null, null, TO_REST);
+     exec("look", pc);
+
+     goto start;
+}
+dilend
+
+
+/* BEGIN:   ROOMS@CTHULU.ZON */
+
+
+%rooms
+
+
+
+
+          entry
+
+
+
+names {"entry"}
+title "The Jungle"
+descr
+"   You are in a deep jungle. The vegetation is thick and
+blocks most of the sunlight which makes it dark and
+difficult to follow the path that continues east and south
+through the jungle and west out on the road again. You also
+see a small sign covered with tropical brush."
+movement SECT_FOREST
+north to entry2;
+east to rn_4502;
+west to rn_4532;
+south to rn_4506;
+extra {"trees"}
+"The trees are huge and from above you hear the sounds of
+many birds and small creatures living their lives high up
+above the soil where mortal men mill around."
+extra {"sign"}
+" This is the Cthulu Jungle, enter at your own risk.  Please report any
+abnormalities to Mon or Keenan."
+end
+
+
+	entry2
+
+names {"entry","jungle"}
+title "The Jungle"
+descr
+"	You are in a deep jungle.  The vegetation is thick and
+blocks most of the sunlight which makes it dark and
+difficult to follow the path that continues south through the
+jungle, and west towards a large gate."
+movement SECT_FOREST
+south to entry;
+west to in_brnze_gate@lostlands;
+end
+
+
+                rn_4502
+
+names {"deep jungle"}
+title "Deep jungle"
+descr
+"   You are in a deep jungle. The vegetation is thick and
+blocks most of the sunlight which makes it dark and
+difficult to follow the path that continues east, west and
+south through the jungle. The trees tower above you making
+you feel small and insignificant, imagine that."
+movement SECT_FOREST
+east to rn_4503;
+south to rn_4507;
+west to entry;
+extra {"trees"}
+"The mighty trees rise to an enormous height, filling you
+with awe as you are reminded of how tiny you are compared to
+the world above and perhaps also... below."
+/* TEMPORARY DIL */
+dilcopy silence@cthulu();
+end
+
+
+                rn_4503
+
+names {"edge","jungle"}
+title "Edge of the Jungle"
+descr
+"   You are in a deep jungle. The trees thin out to the
+north and a little sunlight shines through, lighting up
+things somewhat. Also, to the north, you can catch a glimpse
+of the mountains. The vegetation is still thick, which makes
+navigating this area,like travelling through a maze. The
+path continues in all directions."
+romflags{UNIT_FL_NO_MOB}
+movement SECT_FOREST
+east to rn_4504;
+south to rn_4508;
+west to rn_4502;
+extra {"mountains"}
+"The mountains are difficult to see through the bushes
+and other vegetation but you can almost feel their presence
+even here where the jungle still lies quite thick. It is
+as if their sheer and enormous mass radiated an ancient and
+unknown aura of sinister secrets."
+end
+
+
+
+
+                rn_4504
+
+
+
+names {"dark jungle"}
+title "Dark jungle"
+descr
+"    You are within the deep jungle. The undergrowth here is
+extremely thick and there is almost no light at all, making
+it very difficult to see where the path continues. An
+ominous feeling hangs heavy over this part of the jungle as
+if the loss of light had brought something dark and sinister
+about. The forest grows, as far as you can see, equally
+thick in all directions."
+movement SECT_FOREST
+east to rn_4505;
+south to rn_4509;
+west to rn_4503;
+extra {"undergrowth"}
+"The undergrowth seems to reach up and touch your armor as
+you pass by, quite a spooky feeling indeed."
+end
+
+
+                rn_4505
+
+
+names {"dark jungle"}
+title "Dark jungle"
+descr
+" The undergrowth here is extremely thick and there is
+almost no light at all which makes it difficult to follow
+the path. The whole place feels somewhat uncomfortable but
+of what cause you cannot really tell.  You think the path
+continues north, south and west through the jungle."
+movement SECT_FOREST
+south to rn_4509;
+west to rn_4504;
+extra {"undergrowth"}
+"The undergrowth seems to reach up and touch your armor as
+you pass by, quite a spooky feeling indeed."
+end
+
+
+
+
+                rn_4506
+
+
+names {"deep jungle","jungle"}
+title "Deep jungle"
+descr
+"The vegetation is thick and blocks most of the sunlight
+which makes it dark and difficult to follow the path. The
+strange feeling you have been carrying with you is still
+there, and you begin to feel even more uneasy in this
+strange jungle. You can go north, south or east from
+here,following the paths further into the unknown jungle."
+movement SECT_FOREST
+north to entry;
+east to rn_4507;
+west to rn_4531;
+south to rn_4513;
+extra {"vegetation"}
+"The vines twist and twirl around each other, making looking
+at them even harder then just getting through them."
+end
+
+
+
+
+
+               rn_4507
+
+
+
+names {"deep jungle"}
+title "Deep jungle"
+descr
+"You are the a deep jungle. The heavy vegetation allows very
+little sunlight to pass and reach the ground whhich makes it
+a bit dark here. There is light enough to see but
+unfortunately there isn't much worth looking at if you
+aren't particularly interested in plants of which there are
+plenty. To the south, though, you hear the well-known, and
+characteristic sound of running water. The path continues in
+all directions."
+romflags{UNIT_FL_NO_MOB}
+movement SECT_FOREST
+north to rn_4502;
+east to rn_4508;
+south to rn_4514;
+west to rn_4506;
+extra {"vegetation"}
+"The bright green vegetation of this jungle seems to pulse
+to some unknown heartbeat, as you pass by, the area
+immediately around you falls into complete silence."
+end
+
+
+                rn_4508
+
+
+
+names {"jungle village","village"}
+title "Jungle village"
+descr
+"   You are in a very small jungle village consisting mainly
+of about a dozen huts made from clay and leaves. They are
+placed in a circle around a large campfire that burns
+enigmatically, illuminating the whole scene with a somewhat
+ghastly, flickering light. The place gives you an odd
+feeling, for the fire seems to be the only thing one could
+name as living here and its occasional sparks and cracklings
+are the single thing that breaks the sinister silence. You
+hear no birds singing and see no animals one normally would
+expect to find in a jungle with such an extensive fauna as
+this one has. It is even as if the very plants and bushes
+around you look a bit pale and lifeless.  Exits from the
+village lead in all directions." movement SECT_FOREST
+north to rn_4503;
+east to rn_4509;
+south to rn_4515;
+west to rn_4507;
+extra {"huts"}
+"The huts stand shakely on their clay foundations, the roofs
+are crudely thatched with huge, now brown leaves."
+extra {"campfire", "fire"}
+"The flickering firelight seems to draw you forward into its
+depth, with throbbing flashes of blue light, you realize you
+are moving and snap out of it, only to realize, that you had
+been seconds away from stepping into the flames."
+end
+
+
+
+
+                rn_4509
+
+
+
+
+names {"dark jungle"}
+title "Dark jungle"
+descr
+" The undergrowth here is hideously thick and shuts
+effectively out almost all sunlight so that you experience
+great difficulties in figuring out just where to put your
+feet. You shiver at the thought of getting lost in these
+woods where it seems to you no man has ever tread before,
+though vague trails lead off in all directions."
+movement SECT_FOREST
+north to rn_4504 descr
+"You see nothing but the darkness of the deep jungle. The
+undergrowth seems as thick to the north as it is here.";
+east to rn_4510 descr
+"The jungle seems to be even darker and the vegetation even
+thicker when you look to the east. It surely looks as a
+place where one could easily get lost.";
+south to rn_4516 descr
+"The jungle seems slightly less thick to the south. But only
+slightly.";
+west to rn_4508;
+extra {"undergrowth"}
+"The undergrowth seems to reach up and touch your armor as
+you pass by, quite a spooky feeling indeed."
+end
+
+
+
+               rn_4510
+
+names {"dark jungle", "jungle"}
+title "Dark jungle"
+descr
+ "    The jungle here is so extremely dense that the
+overgrown paths south and east are impossible to follow. The
+low vegetation and sturdy bushes blocks the way as
+effectively as would a solid stone wall. The paths north and
+west, however, are possible, though difficult, to follow.
+You feel somewhat uncomfortable here. Perhaps it is because
+of the mysterious and oppressive silence that seems highly
+unnatural in a place like this, or maybe it is the hint of
+malignant evil in the features of the hideously ancient and
+partly overgrown statue that stands before you, seemingly
+mocking what good powers ever may exist in the world."
+movement SECT_FOREST
+north to rn_4504 descr
+"The jungle is very dense to the north and you see very
+little.";
+south to rn_4549;
+west to rn_4509 descr
+"You see naught but plants, trees and bushes.";
+extra {"statue","ancient"}
+"The statue is of some sort of hideous monster that cannot
+possibly be of this world and you feel ill just by looking
+at its grotesque features that seem to laugh at the laws of
+nature. At its base something is written but the language is
+totally alien to you, and you get a feeling that whoever
+wrote it could not possibly have been human."
+extra {"undergrowth"}
+"The undergrowth seems to reach up and touch your armor as
+you pass by, quite a spooky feeling indeed."
+end
+
+
+
+               rn_4511
+
+
+names {"Desolate Clearing", "Clearing"}
+title "A Desolate Clearing"
+descr
+"     You are standing amidst a large empty field.  On the
+horizon you can see the border of the jungle. Out of the
+corner of your eye you notice a large, twisted, black tree.
+You are forced almost instantly to look away.  It looks
+strangely like the body of a human. There is a small rocky
+path leading to the north, and you can return to the jungle
+by heading east."
+movement SECT_FIELD
+south to rn_4512;
+north to rn_4531;
+east to rn_4513 descr
+"To the east you see lush jungle, dark and deep, the foliage
+is above your head, and brushes your feet and legs.";
+south to rn_4512 descr
+"To the south you see a Dark Hut behind to hulking figures
+of the spirit guards.";
+extra {"tree","black tree","black"}
+"As you study the tree more carefully, you force yourself to
+look directly at what looks like a face.  You feel an almost
+evil presnce eminating from within."
+extra {"jungle","border","horizon"}
+"As you strain your eyes on the horizon, you can see the
+wall of trees that make up the jungle."
+end
+
+
+
+
+
+                rn_4512
+names {"dark hut","hut"}
+title "The Dark Hut"
+descr
+" The hut is dark but its small dimensions make everything
+in it close to your scanning eye and you notice that the
+walls are almost completely covered with strange masks,
+dusty bags, old amulets with mysterious inscriptions and
+many other things you can't really identify. With horror you
+realize that, what you had thought to be a bunch of somewhat
+bulky, aged roots hung up on a string on the south wall, is
+in reality a bundle of miniaturized human heads bearing
+twisted expressions of immense fear and madness. There is a
+terrible odour of, you think, putrefying flesh and chemical
+substances."
+movement SECT_INSIDE
+north to rn_4511;
+down to rn_4534;
+extra {"walls"}
+"The walls are covered with strange things. Much of it is
+totally alien to you and you cannot hint at where it might
+have come from or for what dark purposes it has been made."
+extra {"masks"}
+"The masks all have frightful expressions and some of them
+seems almost alive as their hollow eyes appears to coldly
+watch you from their places on the walls of the hut."
+extra {"bags"}
+"The bags are all old or very old and most of them dusty as
+if seldom used."
+extra {"amulets"}
+"The amulets are of various kinds, some made of wood, some
+of rock and yet some of unidentifiable materials. Most of
+them carries inscriptions in different languages though it
+is hard to discern the text."
+extra {"inscriptions","inscription"}
+"As you study the inscriptions more closely, you find it
+hard to understand the strange symbols."
+ALWAYS_LIGHT
+end
+
+
+               rn_4513
+
+names {"Deep Jungle", "Jungle"}
+title "Deep jungle"
+descr
+"   You are in a deep jungle. The trees grow thick, and lush
+vegetation shuts out most of the sunlight from above, making
+the surroundings somewhat dim. You can continue north
+through the jungle or east from whence the sound of running
+water reaches you."
+movement SECT_FOREST
+north to rn_4506 descr
+"To the north you see nothing but the thickness of the dark
+jungle.";
+east to rn_4514 descr
+"To the east the vegetation thins out somewhat, giving way
+to more rocky ground and you can hear the sound of running
+water.";
+west to rn_4511 descr
+"To the west you see a large, desolate clearing minus the
+guard type figures.";
+extra {"tree","trees","vegetation","lush vegetation"}
+"The trees rise to an amazing highte, making you feel
+insignificant and unimportant in such a massive world."
+end
+
+
+                rn_4514
+
+
+names {"Jungle Waterfall", "Waterfall"}
+title "A Jungle Waterfall"
+descr
+"  You are standing by a not very big but fearfully rapid
+stream flowing from the south, hurling itself off a cliff and
+continuing downwards into a small pool of white water
+at a  raving speed. The water looks dark and forbidding as
+if spewn out from some dark, unknown place deep within
+earth's bowels where no one ever set their foot. North, and east,
+and west lies the deep jungle."
+movement SECT_FOREST
+north to rn_4507 descr
+"You see naught but green leaves.";
+east to rn_4515 descr
+"Eastwards you see but the darkness of the unknown jungle.";
+west to rn_4513 descr
+"The jungle is as thick to the west as it is here.";
+extra {"waterfall","stream"}
+"The dark water seems almost sentient as it rushes madly
+southwestwards in an insane fury. It also looks very
+cold.... You test the water with your toe: BRRRR!!!"
+end
+
+
+               rn_4515
+
+
+names {"Deep Jungle", "Jungle"}
+title "Deep jungle"
+descr
+"   You are in a deep jungle. The dense vegetation steals
+most of the sunlight, leaving you with but a small share and
+making the area dark and shadowy. You can push on north or
+east through the jungle or west whence the sound of running
+water emanates."
+romflags {UNIT_FL_NO_MOB}
+movement SECT_FOREST
+north to rn_4508 descr
+"You catch a glimpse of a ghostly, flickering campfire that
+casts occasional rays of faint light through holes in the
+vegetation.";
+east to rn_4516 descr
+"The jungle to the east looks dark and sinister.";
+south to rn_4544;
+west to rn_4514 descr
+"To the west you hear the sound of running water and notices
+the ground gets more rocky at the same time as the
+vegetation gets thinner.";
+extra {"vegetation","dense vegetation"}
+"The vegetation hangs from trees and bushes that tower above
+you, their green leaves and dark shiny surfaces seem to
+absorb the sunlight as it hits them."
+end
+
+
+
+                rn_4516
+
+
+
+names {"Deep Jungle", "Jungle"}
+title "Deep jungle"
+descr
+"   You are in a deep jungle. The vegetation blocks most of
+the sunlight which makes the surroundings dark and dim with
+shadows lurking among the bushes. You can go north, where
+the jungle gets thicker yet, or east into the jungle."
+movement SECT_FOREST
+north to rn_4509 descr
+"The jungle looks dark and dangerous to the north.";
+east to rn_4549;
+south to rn_4546;
+west to rn_4515 descr
+"You see only the jungle to the west.";
+extra {"shadows","shadow","bushes"}
+"Something about the nature here is disturbing you but you
+cannot make out exactly what. It seems wrong - almost alien
+to you."
+end
+
+
+               rn_4517
+
+
+names {"cavern","dark caverb"}
+title "Entrance to a Dark Cavern"
+descr
+"    You enter a dark cavern, the river continues all the
+way through.  The water flows through the cavern with a deep
+roaring echo all around you. You notice stalagtites all over
+the top of the cavern, purified to a white dusty substance,
+that is just out of reach as the cavern is about five feet
+over head.  As you sail on through you wonder about what
+could be coming up ahead of you..."
+movement SECT_WATER_SAIL
+north to rn_4530;
+extra {"stalagtites"}
+"They are long, with a pearly white dust covering them,
+which is barely visible in the dark, your torch glimmers on
+small crystalized specks on the stalagtites."
+end
+
+
+               rn_4518
+
+
+names {"Deep Jungle", "Jungle"}
+title "Deep jungle"
+descr
+"   You are in a deep jungle. The vegetation blocks most of
+the sunlight which makes the surroundings dark and dim with
+shadows lurking among the bushes. You can go north, where
+the jungle gets thicker yet, or east into the jungle."
+movement SECT_FOREST
+north to rn_4547 descr
+"The jungle looks dark and dangerous to the north.";
+east to rn_4523;
+south to rn_4519;
+west to rn_4522 descr
+"You see only the jungle to the west.";
+extra {"shadows","shadow","bushes"}
+"Something about the nature here is disturbing you but you
+cannot make out exactly what. It seems wrong - almost alien
+to you."
+end
+
+
+
+               rn_4519
+
+
+names {"Deep Jungle", "Jungle"}
+title "Deep jungle"
+descr
+"   You are in a deep jungle. The vegetation blocks most of
+the sunlight which makes the surroundings dark and dim with
+shadows lurking among the bushes. You can go north, where
+the jungle gets thicker yet, or east into the jungle."
+movement SECT_FOREST
+north to rn_4518 descr
+"The jungle looks dark and dangerous to the north.";
+west to rn_4520 descr
+"You see only the jungle to the west.";
+extra {"shadows","shadow","bushes"}
+"Something about the nature here is disturbing you but you
+cannot make out exactly what. It seems wrong - almost alien
+to you."
+end
+
+
+
+               rn_4520
+
+
+names {"Deep Jungle", "Jungle"}
+title "Deep jungle"
+descr
+"   You are in a deep jungle. The vegetation blocks most of
+the sunlight which makes the surroundings dark and dim with
+shadows lurking among the bushes. You can go north, where
+the jungle gets thicker yet, or east into the jungle."
+movement SECT_FOREST
+north to rn_4521 descr
+"The jungle looks dark and dangerous to the north.";
+east to rn_4519;
+south to rn_4522 descr
+"To the south you see an open clearing before a lake";
+extra {"shadows","shadow","bushes"}
+"Something about the nature here is disturbing you but you
+cannot make out exactly what. It seems wrong - almost alien
+to you."
+end
+
+
+
+               rn_4521
+
+
+names {"Deep Jungle", "Jungle"}
+title "Deep jungle"
+descr
+"   You are in a deep jungle. The vegetation blocks most of
+the sunlight which makes the surroundings dark and dim with
+shadows lurking among the bushes. You can go north, where
+the jungle gets thicker yet, or east into the jungle."
+movement SECT_FOREST
+north to rn_4545 descr
+"The jungle looks dark and dangerous to the north.";
+east to rn_4518;
+south to rn_4520;
+extra {"shadows","shadow","bushes"}
+"Something about the nature here is disturbing you but you
+cannot make out exactly what. It seems wrong - almost alien
+to you."
+end
+
+
+
+               rn_4522
+
+names {"before the lake","clearing before the lake"}
+title "A Clearing before the Lake"
+descr
+  " You stand before a large lake, the ground beneath your
+feet and a fresh dew drips from the trees behind you. A mist
+rises from the lake, showing you that the lake must be a bit
+warmer than the air around you. You toss a rock into the
+water, and ripples form and you watch them as they cross the
+surface of the lake, bringing you to the attention of just
+how special this lake is. You notice that it branches off
+into a river in two directions, one north and one south.
+The only exits lie north back into the jungle and west onto
+the lake."
+movement SECT_FIELD
+north to rn_4520;
+west to rn_4548 descr
+"To the west is a huge lake. As the rain falls it fills the
+lake even fuller, as those drenching rainfalls do.";
+extra {"dew","fresh dew","drips"}
+"It starts down the large leafs, falling over it's green
+chlorophyl filled veins, finally reaching the tip of the
+leaves and falls to the ground with a soundless splash."
+end
+
+
+               rn_4523
+
+
+names {"dark jungle","jungle"}
+title "The Dark Jungle"
+descr
+" The undergrowth here is extremely thick and there is
+almost no light at all which makes it difficult to follow
+the path. The whole place feels somewhat uncomfortable but
+of what cause you cannot really tell. "
+movement SECT_FOREST
+north to rn_4551;
+west to rn_4518;
+extra {"undergrowth"}
+"The undergrowth seems to reach up and touch your armor as
+you pass by, quite a spooky feeling indeed."
+end
+
+
+
+
+               rn_4524
+
+
+names {"river", "jungle river"}
+title "A Jungle River"
+descr
+"    You are sailing north through a rough and rapid white
+water river.  The water sprays in your face, as you nearly
+dodge a large boulder head.  Foliage surrounds the river on
+both sides and you notice that you are heading straight for
+the end of the r iver as it declines, and ends coming off
+into the biggest waterfall you have seen in quite some time.
+Making it for a daring escape, if you could only paddle fast
+enough the other way..."
+movement SECT_WATER_SAIL
+down to rn_4514 descr
+"To the north you see a faint mist rising.";
+south to rn_4525;
+extra {"river","jungle river"}
+"As you glance at the river you notice how fast it is
+moviing, and feel puny compared to it's overwheling size and
+strength. You can make out a few rocks just beneathe the
+surface of the moving water, but you can't seem to see the
+bottom."
+extra {"foliage"}
+"The foliage is of massive size, and their canopys join high
+above to form a shield against the sunlight."
+end
+
+
+               rn_4525
+
+names {"river", "jungle river"}
+title "A Jungle River"
+descr
+"    You are sailing north through a rough and rapid white
+water river.  The water sprays in your face, as you nearly
+dodge a large boulder head.  Foliage surrounds the river on
+both sides and you notice that you are heading straight for
+the end of the river as it declines, and ends coming off
+into the biggest waterfall you have seen in quite some time.
+Making it for a daring escape, if you could only paddle fast
+enough the other way..."
+movement SECT_WATER_SAIL
+north to rn_4524 descr
+"To the north you see a faint mist rising.";
+south to rn_4526;
+extra {"river","jungle river"}
+"As you glance at the river you notice how fast it is
+moving, and feel puny compared to it's overwheling size and
+strength. You can make out a few rocks just beneathe the
+surface of the moving water, but you can't seem to see the
+bottom."
+extra {"foliage"}
+"The foliag is of massive size, and their canopys join high
+above to form a shield against the sunlight."
+end
+
+               rn_4526
+
+
+names {"river", "jungle river"}
+title "A Jungle River"
+descr
+"    You are sailing north through a rough and rapid white
+water river.  The water sprays in your face, as you nearly
+dodge a large boulder head.  Foliage surrounds the river on
+both sides and you notice that you are heading straight for
+the end of the r iver as it declines, and ends coming off
+into the biggest waterfall you have seen in quite some time.
+Making it for a daring escape, if you could only paddle fast
+enough the other way..."
+movement SECT_WATER_SAIL
+north to rn_4525 descr
+"To the north you see a faint mist rising.";
+south to rn_4527;
+extra {"river","jungle river"}
+"As you glance at the river you notice how fast it is
+moviing, and feel puny compared to it's overwheling size and
+strength. You can make out a few rocks just beneathe the
+surface of the moving water, but you can't seem to see the
+bottom."
+extra {"foliage"}
+"The foliag is of massive size, and their canopys join high
+above to form a shield against the sunlight."
+end
+
+
+
+
+               rn_4527
+
+
+names {"river", "jungle river"}
+title "A Jungle River"
+descr
+"    You are sailing north through a rough and rapid white
+water river.  The water sprays in your face, as you nearly
+dodge a large boulder head.  Foliage surrounds the river on
+both sides and you notice that you are heading straight for
+the end of the r iver as it declines, and ends coming off
+into the biggest waterfall you have seen in quite some time.
+Making it for a daring escape, if you could only paddle fast
+enough the other way..."
+movement SECT_WATER_SAIL
+north to rn_4526 descr
+"To the north you see a faint mist rising.";
+south to rn_4548;
+extra {"river","jungle river"}
+"As you glance at the river you notice how fast it is
+moving, and feel puny compared to it's overwheling size and
+strength. You can make out a few rocks just beneathe the
+surface of the moving water, but you can't seem to see the
+bottom."
+extra {"foliage"}
+"The foliage is of massive size, and their canopys join high
+above to form a shield against the sunlight."
+end
+
+
+               rn_4528
+
+names {"river", "jungle river"}
+title "A Jungle River"
+descr
+"    You are sailing south through a rough and rapid white
+water river. The water sprays in your face, as you nearly
+dodge a large boulder head. Foliage surrounds the river on
+both sides and you notice that you are heading straight for
+the end of the r iver as it declines, and ends coming off
+into the biggest waterfall you have seen in quite some time.
+Making it for a daring escape, if you could only paddle fast
+enough the other way..."
+movement SECT_WATER_SAIL
+north to rn_4548 descr
+"To the north you see more  a faint mist rising.";
+south to rn_4529;
+extra {"river","jungle river"}
+"As you glance at the river you notice how fast it is
+moving, and feel puny compared to it's overwheling size and
+strength. You can make out a few rocks just beneathe the
+surface of the moving water, but you can't seem to see the
+bottom."
+extra {"foliage"}
+"The foliage is of massive size, and their canopys join high
+above to form a shield against the sunlight."
+dilcopy water_transf();
+end
+
+               rn_4529
+
+names {"river", "jungle river"}
+title "A Jungle River"
+descr
+"    You are sailing south through a rough and rapid white
+water river.  The water sprays in your face, as you nearly
+dodge a large boulder head.  Foliage surrounds the river on
+both sides and you notice that you are heading straight for
+the end of the r iver as it declines, and ends coming off
+into the biggest waterfall you have seen in quite some time.
+Making it for a daring escape, if you could only paddle fast
+enough the other way..."
+movement SECT_WATER_SAIL
+north to rn_4528 descr
+"To the north you see more  a faint mist rising.";
+south to rn_4530;
+extra {"river","jungle river"}
+"As you glance at the river you notice how fast it is
+moving, and feel puny compared to it's overwheling size and
+strength. You can make out a few rocks just beneathe the
+surface of the moving water, but you can't seem to see the
+bottom."
+extra {"foliage"}
+"The foliage is of massive size, and their canopys join high
+above to form a shield against the sunlight."
+end
+
+
+
+
+               rn_4530
+
+names {"river", "jungle river"}
+title "A Jungle River"
+descr
+"    You are sailing south through a rough and rapid white
+water river. The water sprays in your face, as you nearly
+dodge a large boulder head.  Foliage surrounds the river on
+both sides and you notice that you are heading straight for
+the end of the r iver as it declines, and ends coming off
+into the biggest waterfall you have seen in quite some time.
+Making it for a daring escape, if you could only paddle fast
+enough the other way..."
+movement SECT_WATER_SAIL
+north to rn_4529 descr
+"To the north you see more  a faint mist rising.";
+south to rn_4517 descr
+"To the south you see the faint outline of a large tunnel.";
+extra {"river","jungle river"}
+"As you glance at the river you notice how fast it is
+moving, and feel puny compared to it's overwheling size and
+strength. You can make out a few rocks just beneathe the
+surface of the moving water, but you can't seem to see the
+bottom."
+extra {"foliage"}
+"The foliage is of massive size, and their canopys join high
+above to form a shield against the sunlight."
+end
+
+
+               rn_4531
+
+names {"deep jungle","jungle"}
+title "The Deep Jungle"
+descr
+" You are standing deep within the lush jungle.  The air is
+moist, and a thick mist clings to your armor and reduces
+your visibility to almost nothing. The trees tower above
+you, blocking out most of the sunlight, leaving a rather
+'spooky' and extremely gloomy atmosphere. Strange noises
+come from all directions, some sound like bird calls and
+others, well you really don't want to think about it.
+The hidden path continues to the east and west, and you can make
+a
+small trail leading to a strange looking hut, a ways off to
+the south."
+movement SECT_FOREST
+south to rn_4511;
+north to rn_4532;
+extra {"mist"}
+"The mist wraps itself around you and almost blinds you with
+its thickness"
+extra {"tree","trees"}
+"The trees tower above your head, climbing several hundred
+feet into the air.  At the top level canopy the massive
+green leaves absorb almost all of the sunlight, leaving you
+in almost total darkness."
+extra {"hidden path","path"}
+"HEY! if you are looking at this, excellant work, you win
+the Observant Mortal of the Moment award, congratulations!!
+signed: Mon"
+end
+
+
+          rn_4532
+
+names {"deep jungle","jungle"}
+title "The Deep Jungle"
+descr
+"    You are standing deep within the lush jungle.  The are
+is moist, and a thick mist clings to your armor and reduces
+your visibility to almost nothing.  The trees tower above
+you, blocking out most of the sunlight, leaving a rather
+'spooky' and extremely gloomy atmosphere.  Strange noises
+come from all directions, some sound like bird calls and
+others, well you really don't want to think about it.  The
+hidden path continues to the east and west, and you can make
+a small trail leading to a strange looking hut, a small ways off
+to the south."
+movement SECT_FOREST
+south to rn_4531;
+east to entry;
+extra {"mist"}
+"The mist wraps itself around you and almost blinds you with
+its thickness"
+extra {"tree","trees"}
+"The trees tower above your head, climbing several hundred
+feet into the air.  At the top level canopy the massive
+green leaves absorb almost all of the sunlight, leaving you
+in almost total darkness."
+extra {"hidden path","path"}
+"HEY! if you are looking at this, excellant work, you win
+the 'Observant Mortal of the Year' award, congradulations!!
+Signed: MON"
+end
+
+
+/* BEGIN: FOR USE WITH LINKING LHANTARA.ZON */
+
+     rn_4533
+
+names {"laboratory","bright laboratory"}
+title "A Brightly Lit Laboratory"
+descr
+"    You are standing in a brightly lit room.  High rod-
+lights streak the walls, and strategicly placed mirrors
+magnify and spread the light, reducing the number of dark
+spots in this room to none.  The area is packed with
+scientific clutter, books, potions, flasks, small flame-
+burners, an incredible telescope in the corner, which is
+placed pointing upwards, through the hollowed out shaft of a
+tree.  Star charts and other such clutter scatters the room,
+making the are looking like a hurricane hit it. The
+stairwell leads back up from where you came, and a dark
+hallway leads to the south."
+movement SECT_INSIDE
+extra {"lights","rod-lights"}
+"They are long, illuminated tubes filled with an easily
+excitable, possitive ion charged gasseous matter."
+extra {"mirrors","mirror"}
+"The mirrors are arranged such that light is reflected from
+brighter areas in the room, the darker ones, and thus
+balancing out the light in the room.  You probably wouldn't
+even have noticed them, except the glint off one has caught
+your eye."
+extra {"books"}
+"The books are all heavy bound, and tattered with age.
+Almost all of them seem at least 5 inches thick, and worn
+down with use. You grab one and casually flip through it, it
+old, yellowing pages are filled with mathematical terms and
+phrases that you would need yet another book to even begin
+to understand."
+extra {"potions","potion"}
+"The potions are scattered on nearby desks.  They are in
+small glass tubes, and all are rather unusualy colored,
+from green, to purple, to orange."
+extra {"flasks","flask"}
+"The flasks clutter the large desks, many of them are
+suspended in mid air over glowing flames.  Several of them
+are boiling calmly and putting off a rather unusual odor."
+extra {"flame-burner","flame-burners","flame
+burner","burner","burners","flame burners"}
+"They are small metal tubes, each about 10cm long, placed in
+a smooth metal disk, vertically. A small rubber tube runs
+out the bottom, which leads to what you suspect to be a
+fairly primative gas tank."
+extra {"telescope","beautiful telescope"}
+"The telescope uses a floor mount and what appears to be a
+'Dobsonian' style, although with some slight modifications.
+It points upward, through the roots, up the shaft of a
+hollowed out tree. Sheer genious, this small observatory
+would be IMPOSSIBLE to spot from the surface."
+extra {"charts","star charts"}
+"The star charts are hanging carefully on the walls, placed
+so that one would barely to move their head from the
+eyepiece of the telescope to see them. They are very
+detailed, but you can still make some of the basic
+constellations."
+up to rn_4534;
+south to rn_4535;
+ALWAYS_LIGHT
+end
+
+               rn_4534
+
+names {"dark stairwell","stairwell"}
+title "A Dark Stairwell"
+descr
+"You enter a narrow stairwell leading downward into an
+extremely bright room.  The walls are damp with
+condensation, and bare roots hang calmly all around.  The
+stairs themselves are made of hardend mud, which makes an
+extremely smooth and rock hard clay type surface, it must
+have taken a lot of work and a lot of time to make this
+passage way.  The temperature is slightly warmer here, which
+you realize is probably because of the added insulation of
+the earth itself.  You can go upward, back towards the hut,
+or continue downward towards the light and noise."
+movement SECT_INSIDE
+up to rn_4512;
+down to rn_4533;
+extra {"roots","bare roots"}
+"They dangle lazily from the walls, which doesn't suprise
+you, considering you are sinking into the earth."
+end
+
+
+     rn_4535
+
+names {"dark hallway","hallway"}
+title "A Dark Hallway"
+descr
+"    You are standing in a dark, cramped hallway.  The air
+is dry and makes breathing fairly hard.  There is only one
+small torch lighting your way, and you begin to feel a bit
+cramped. Old abandoned spider webs hang down in your path
+and make gentle and elegant grabs at your face as you pass.
+The floor is one of hardly packed dirt, with the occastional
+protruding rock, one of which nearly causes you to fall flat
+on your face. You can continue down the hallway to the north
+and south."
+movement SECT_INSIDE
+south to rn_4536;
+north to rn_4533;
+extra {"torch","small torch"}
+"The torch clings to the rock wall by one small bolt, which
+looks like it could give way any time."
+extra {"spider webs","webs"}
+"The thread-like tentacles reach towards you as you pass,
+brushing against your face."
+extra {"floor","dirt","packed dirt"}
+"The floor is, well, simply just dirt!"
+extra {"rock"}
+"Wow, a rock, don't you feel observant?"
+end
+
+      rn_4536
+
+     names {"dark hallway","hallway"}
+title "A Dark Hallway"
+descr
+"    You are standing in a dark, cramped hallway.  The air
+is dry and makes breathing fairly hard.  There is only one
+small torch lighting your way, and you begin to feel a bit
+cramped. Old abandoned spider webs hang down in your path
+and make gentle and elegant grabs at your face as you pass.
+The floor is one of hardly packed dirt, with the occastional
+protruding rock, one of which nearly causes you to fall flat
+on your face. You can continue down the hallway to the north
+and south."
+movement SECT_INSIDE
+north to rn_4535;
+south to rn_4537;
+extra {"torch","small torch"}
+"The torch clings to the rock wall by one small bolt, which
+looks like it could give way any time."
+extra {"spider webs","webs"}
+"The thread-like tentacles reach towards you as you pass,
+brushing against your face."
+extra {"floor","dirt","packed dirt"}
+"The floor is, well, simply just dirt!"
+extra {"rock"}
+"Wow, a rock, don't you feel observant?"
+end
+
+
+
+
+     rn_4537
+
+names {"dark hallway","hallway"}
+title "A Dark Hallway"
+descr
+"    You are standing in a dark, cramped hallway.  The air
+is dry and makes breathing fairly hard.  There is only one
+small torch lighting your way, and you begin to feel a bit
+cramped. Old abandoned spider webs hang down in your path
+and make gentle and elegant grabs at your face as you pass.
+The floor is one of hardly packed dirt, with the occastional
+protruding rock, one of which nearly causes you to fall flat
+on your face. You can continue down the hallway to the north
+and south."
+movement SECT_INSIDE
+north to rn_4536;
+south to rn_4538;
+extra {"torch","small torch"}
+"The torch clings to the rock wall by one small bolt, which
+looks like it could give way any time."
+extra {"spider webs","webs"}
+"The thread-like tentacles reach towards you as you pass,
+brushing against your face."
+extra {"floor","dirt","packed dirt"}
+"The floor is, well, simply just dirt!"
+extra {"rock"}
+"Wow, a rock, don't you feel observant?"
+end
+
+
+
+
+          rn_4538
+
+names {"descending path","path"}
+title "A Descending Passage"
+descr
+"The passageway now arcs gently downwards, and the air
+around you begins to feel cooler and more moist.  You begin
+to feel a bit uneasy, as the torches lighting your way are
+now few and far between, in fact you can barely see
+anything.  You trip several times and tumble for several
+feet before regaining control.  You notice a small sign hovering
+with a deep fluorescent color, in front of you here."
+extra {"sign","small sign"}
+"This room will be used to link a zone still in construction, the
+caverns, one of the few up and coming zones in the LHANTARA
+series."
+romflags {UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+north to rn_4537;
+/*south to rn_4539;*/
+end
+
+
+
+/*        rn_4539
+
+names {"caverns","underground caverns"}
+title "The Entrance to the Underground Caverns"
+descr
+"    You are standing at the entrance to a massive natural
+ cavern. The walls are solid rock and towerabove you
+several hundred meters, you are obviously fartherunderground then
+you thought you were.  Massive stone pillars reach upwards from
+the fragmented earth, and meet the stalagtites that cling to the
+domed ceiling high above your head."
+north to rn_4538;
+end
+*/
+/* END: FOR USE WITH LINKING LHANTARA.ZON */
+
+
+          rn_4540
+
+names {"dark jungle","jungle"}
+title "The Dark Jungle"
+descr
+" The undergrowth here is extremely thick and there is
+almost no light at all which makes it difficult to follow
+the path. The whole place feels somewhat uncomfortable but
+of what cause you cannot really tell. "
+movement SECT_FOREST
+east to rn_4541;
+west to rn_4566;
+extra {"undergrowth"}
+"The undergrowth seems to reach up and touch your armor as
+you pass by, quite a spooky feeling indeed."
+end
+
+
+
+          rn_4541
+
+
+names {"dark jungle","jungle"}
+title "The Dark Jungle"
+descr
+" The undergrowth here is extremely thick and there is
+almost no light at all which makes it difficult to follow
+the path. The whole place feels somewhat uncomfortable but
+of what cause you cannot really tell. "
+movement SECT_FOREST
+west to rn_4540;
+south to rn_4542;
+extra {"undergrowth"}
+"The undergrowth seems to reach up and touch your armor as
+you pass by, quite a spooky feeling indeed."
+end
+
+
+
+          rn_4542
+
+
+names {"dark jungle","jungle"}
+title "The Dark Jungle"
+descr
+" The undergrowth here is extremely thick and there is
+almost no light at all which makes it difficult to follow
+the path. The whole place feels somewhat uncomfortable but
+of what cause you cannot really tell. "
+movement SECT_FOREST
+north to rn_4541;
+south to rn_4543;
+extra {"undergrowth"}
+"The undergrowth seems to reach up and touch your armor as
+you pass by, quite a spooky feeling indeed."
+end
+
+
+
+          rn_4543
+
+
+names {"dark jungle","jungle"}
+title "The Dark Jungle"
+descr
+" The undergrowth here is extremely thick and there is
+almost no light at all which makes it difficult to follow
+the path. The whole place feels somewhat uncomfortable but
+of what cause you cannot really tell. "
+movement SECT_FOREST
+north to rn_4542;
+south to rn_4567;
+extra {"undergrowth"}
+"The undergrowth seems to reach up and touch your armor as
+you pass by, quite a spooky feeling indeed."
+end
+
+
+
+          rn_4544
+
+names {"deep jungle","jungle"}
+title "The Deep Jungle"
+descr
+" You are standing deep within the lush jungle.  The air is
+moist, and a thick mist clings to your armor and reduces
+your visibility to almost nothing.  The trees tower above
+you, blocking out most of the sunlight, leaving a rather
+'spooky' and extremely gloomy atmosphere. Strange noises
+come from all directions, some sound like bird calls and
+others, well you really don't want to think about it."
+movement SECT_FOREST
+north to rn_4515;
+east to rn_4546;
+south to rn_4545;
+west to rn_4527;
+extra {"mist"}
+"The mist wraps itself around you and almost blinds you with
+its thickness"
+extra {"tree","trees"}
+"The trees tower above your head, climbing several hundred
+feet into the air.  At the top level canopy the massive
+green leaves absorb almost all of the sunlight, leaving you
+in almost total darkness."
+extra {"hidden path","path"}
+"HEY! if you are looking at this, excellant work, you win
+the Observant Mortal of the Year award, congradulations!!
+signed: Mon"
+end
+
+        rn_4545
+
+names {"deep jungle","jungle"}
+title "The Deep Jungle"
+descr
+" You are standing deep within the lush jungle.  The air is
+moist, and a thick mist clings to your armor and reduces
+your visibility to almost nothing. The trees tower above
+you, blocking out most of the sunlight, leaving a rather
+'spooky' and extremely gloomy atmosphere. Strange noises
+come from all directions, some sound like bird calls and
+others, well you really don't want to think about it."
+movement SECT_FOREST
+north to rn_4544;
+west to rn_4548;
+east to rn_4547;
+extra {"mist"}
+"The mist wraps itself around you and almost blinds you with
+its thickness"
+extra {"tree","trees"}
+"The trees tower above your head, climbing several hundred
+feet into the air. At the top level canopy the massive green
+leaves absorb almost all of the sunlight, leaving you in
+almost total darkness."
+extra {"hidden path","path"}
+"HEY! if you are looking at this, excellant work, you win
+the Observant Mortal of the Year award, congradulations!!
+signed: Mon"
+end
+
+        rn_4546
+
+names {"deep jungle","jungle"}
+title "The Deep Jungle"
+descr
+" You are standing deep within the lush jungle.  The air is
+moist, and a thick mist clings to your armor and reduces
+your visibility to almost nothing.  The trees tower above
+you, blocking out most of the sunlight, leaving a rather
+'spooky' and extremely gloomy atmosphere. Strange noises
+come from all directions, some sound like bird calls and
+others, well you really don't want to think about it."
+movement SECT_FOREST
+north to rn_4516;
+east to rn_4550;
+south to rn_4547;
+west to rn_4544;
+extra {"mist"}
+"The mist wraps itself around you and almost blinds you with
+its thickness"
+extra {"tree","trees"}
+"The trees tower above your head, climbing several hundred
+feet into the air. At the top level canopy the massive green
+leaves absorb almost all of the sunlight, leaving you in
+almost total darkness."
+extra {"hidden path","path"}
+"HEY! if you are looking at this, excellant work, you win
+the Observant Mortal of the Year award, congradulations!!
+signed: Mon"
+end
+
+        rn_4547
+
+names {"deep jungle","jungle"}
+title "The Deep Jungle"
+descr
+" You are standing deep within the lush jungle.  The air is
+moist, and a thick mist clings to your armor and reduces
+your visibility to almost nothing.  The trees tower above
+you, blocking out most of the sunlight, leaving a rather
+'spooky' and extremely gloomy atmosphere.  Strange noises
+come from all directions, some sound like bird calls and
+others, well you really don't want to think about it."
+movement SECT_FOREST
+north to rn_4546;
+east to rn_4551;
+west to rn_4545;
+extra {"mist"}
+"The mist wraps itself around you and almost blinds you with
+its thickness"
+extra {"tree","trees"}
+"The trees tower above your head, climbing several hundred
+feet into the air.  At the top level canopy the massive
+green leaves absorb almost all of the sunlight, leaving you
+in almost total darkness."
+extra {"hidden path","path"}
+"HEY! if you are looking at this, excellant work, you win
+the 'Observant Mortal of the Year award, congradulations!!
+signed: Mon"
+end
+
+        rn_4548
+
+names {"lake","jungle lake","huge lake","huge jungle lake"}
+title "A Huge Jungle Lake"
+descr
+"    You are floating on a huge jungle lake.  There is an
+erie silence that floats across the surface of the lake,
+like the fine mist that rolls by in small swirls.   You look
+over the side of your craft into the water, and immediatly
+get a sick feeling in your stomach, the water that you are
+gazing at is so black, that the depth could only be in the
+thousands of feet.  The water is strangely quiet against
+your ship, and you seem to have lost track of any movement
+you might have.  You can barely make out what appears to be
+a nice landing spot to the east, and you get the feeling
+that the lake narrow sharply, far to the north, and steep
+cliffs prevent any real ground movement west or south."
+movement SECT_WATER_SAIL
+east to rn_4522;
+south to rn_4528;
+north to rn_4527;
+extra {"mist","fine mist"}
+"The mist is a soft grey, swirling vapor that clings to the
+water and your face as you float through it."
+extra {"water"}
+"The water is so incredibly black that it seems to draw
+energy directly from your soul, you can't even begin to
+fathom how incredibly deep this lake must be."
+extra {"cliffs","cliff","steep cliff","steep cliffs"}
+"The cliffs are of almost shiny dark grey stone that loom
+over the water, their faces are totally and plunge deeply
+into the water, disappearing into the depths."
+extra  {"lake","huge lake"}
+"When you look into the lake you see yourself staring
+back... You hadn't realized that your face was so dirty.
+Maybe it would be a good idea to take a bath once in a
+while, you reek with a horrible stench as well.  You touch
+the water and ripples move across your image in the water,
+distorting it a bit. Who cares though, and you decide to
+move on."
+end
+
+        rn_4549
+
+names {"dark jungle","jungle"}
+title "The Dark Jungle"
+descr
+" The undergrowth here is hideously thick and shuts
+effectively out almost all sunlight so that you experience
+great difficulties in figuring out just where to put your
+feet. You shiver at the thought of getting lost in these
+woods where it seems to you n o man has ever tread before,
+though vague trails lead off in all directions."
+movement SECT_FOREST
+north to rn_4510;
+east to rn_4552;
+south to rn_4550;
+west to rn_4516;
+extra {"undergrowth"}
+"The undergrowth seems to reach up and touch your armor as
+you pass by, quite a spooky feeling indeed."
+
+end
+
+        rn_4550
+
+names {"dark jungle","jungle"}
+title "The Dark Jungle"
+descr
+" The undergrowth here is hideously thick and shuts
+effectively out almost all sunlight so that you experience
+great difficulties in figuring out just where to put your
+feet. You shiver at the thought of getting lost in these
+woods where it seems to you n o man has ever tread before,
+though vague trails lead off in all directions."
+movement SECT_FOREST
+north to rn_4549;
+east to rn_4553;
+south to rn_4551;
+west to rn_4546;
+extra {"undergrowth"}
+"The undergrowth seems to reach up and touch your armor as
+you pass by, quite a spooky feeling indeed."
+end
+
+        rn_4551
+
+names {"dark jungle","jungle"}
+title "The Dark Jungle"
+descr
+" The undergrowth here is hideously thick and shuts
+effectively out almost all sunlight so that you experience
+great difficulties in figuring out just where to put your
+feet. You shiver at the thought of getting lost in these
+woods where it seems to you no man has ever tread before,
+though vague trails lead off to the north, east, and west."
+movement SECT_FOREST
+north to rn_4550;
+east to rn_4554;
+south to rn_4523;
+west to rn_4547;
+extra {"undergrowth"}
+"The undergrowth seems to reach up and touch your armor as
+you pass by, quite a spooky feeling indeed."
+end
+
+        rn_4552
+
+names {"dark jungle","jungle"}
+title "The Dark Jungle"
+descr
+" The undergrowth here is hideously thick and shuts
+effectively out almost all sunlight so that you experience
+great difficulties in figuring out just where to put your
+feet. You shiver at the thought of getting lost in these
+woods where it seems to you n o man has ever tread before,
+though vague trails lead off to the south and west."
+movement SECT_FOREST
+south to rn_4553;
+west to rn_4549;
+extra {"undergrowth"}
+"The undergrowth seems to reach up and touch your armor as
+you pass by, quite a spooky feeling indeed."
+end
+
+
+     rn_4553
+
+names {"dark jungle","jungle"}
+title "The Dark Jungle"
+descr
+" The undergrowth here is hideously thick and shuts
+effectively out almost all sunlight so that you experience
+great difficulties in figuring out just where to put your
+feet. You shiver at the thought of getting lost in these
+woods where it seems to you n o man has ever tread before,
+though vague trails lead off to the north, east, and west. "
+movement SECT_FOREST
+north to rn_4552;
+east to rn_4565;
+west to rn_4550;
+extra {"undergrowth"}
+"The undergrowth seems to reach up and touch your armor as
+you pass by, quite a spooky feeling indeed."
+end
+
+        rn_4554
+
+names {"dead end","jungle"}
+title "A Dead End"
+descr
+"    The vegetation here is intensely thick.  Walls of green
+surround you on three sides and block all exits except the
+one to the west.  There is a strange silence around you
+giving you the sensation that someone, or something is
+watching you, and perhap s its not just a simple sensation.
+You glance over your shoulder, feeling a bit paranoid."
+movement SECT_FOREST
+west to rn_4557;
+end
+
+        rn_4555
+
+names {"village firepit","firepit"}
+title "The Village Firepit"
+descr
+"You are at the village's fire pit.  There are dozens of
+logs piled into a large heap and set ablaze, projection
+large amounts heat.  There are huts easily accessable to the
+east and west, and four more, to the northeast, southeast,
+northwest, and southwe st.  You notice the warm feeling you
+get as you watch the smiling faces of the villagers nod at
+you.  You warm yourself by the fire, not too close now,
+burning your bum is a pain in the, well, in the bum."
+extra {"fire pit","fire"}
+"You gaze into the fire, first into the lower middle, where
+a dark blue blaze eminates from the fire... You move your
+stare up to see the white part od the flame, and even
+further up to see a dancing amber color. Bright orange
+sparks escape the pit, ever so often floating out towards
+the sky."
+movement SECT_CITY
+north to rn_4556;
+east to rn_4560;
+south to rn_4561;
+west to rn_4559;
+end
+
+        rn_4556
+
+names {"village path","path"}
+title "A Village Path"
+descr
+"   You are on a rough dirt path just north of the Village's
+firepit.  There are huts to the east and west, the leaves of
+huge palm trees, and various vines have grown over the
+thatched roofs of the surrounding huts. Little foot prints
+have scattered about in the dirt, and off in the distance
+you swear you can hear the laughter of little children."
+movement SECT_CITY
+north to rn_4566;
+east to rn_4557;
+south to rn_4555;
+west to rn_4558;
+end
+
+               rn_4557
+
+
+names {"small hut","hut"}
+title "A Small Hut"
+descr
+"    These are the living quarters of a native family.  It
+is a fairly large place, but not as big as some you have
+seen before. Towards the rear of the hut are two small
+hammocks, one hangs on top of the other, and a rope hangs
+down from the ceiling, suppor ted by one of the bamboo logs
+used to hold the ceiling up.  Torches hang on each side of
+the rear hammocks. Hanging near the right wall, is a fairly
+large hammock, also with a torch by it's side on the wall.
+The larger hammock has drapes, seemingly made from animal
+skins of some kind, the purpose of the drapes could be
+privacy.  Near the center of the room is a large bamboo
+table, with dirty dishes left on all  four sides,
+correspondng with four matching bamboo chairs on each side.
+There is a window to the left side of the hut, maybe  used
+to get rid of waste. The only exit lies to the west."
+movement SECT_INSIDE
+west to rn_4556;
+extra {"torches","torch"}
+"The torches burn brightly in the small hut, making an
+illuminescent glow bounce happily throughout."
+extra {"rear hammocks","small hammocks","hammocks"}
+"The hammocks are rather small, and could not support more
+than a small child. They are woven from vines, small
+branches, and some ropes holding them to the ceiling."
+extra {"large hammock","hammock"}
+"This is a hammock, large enough to support two fully grown
+adults, the architechture in this hut is amazing, being able
+to support all of that weight pulling down on it at night
+time."
+extra {"table","bamboo table","large bamboo table"}
+"It is a large bamboo table, woven together from leg to base
+by vines, small, but strong.  A set of four matching chairs
+sits an each side of the table, and a large mess of dishes
+waits to be cleaned by someone.  Perhaps that someone had
+their hands full with some little rascals."
+extra {"dishes","dirty dishes"}
+"The dishes are dirty with the last meal, and food crumbs
+are sticking to the plates, like toilet water to a dogs
+tongue."
+extra {"chairs","matching bamboo chairs","bamboo chairs"}
+"The four chairs are matching, but they each have their own
+uniqueness, for example. One of them wobbles a bit on the
+dirt floor as you sit in it.  Each is made from bamboo
+sticks, and woven into a sitting tool with a strong vine of
+some kind."
+extra {"window"}
+"It is a small thatched window, with hinges on the top, able
+to be opened and closed.  It is held open at the moment by a
+small bamboo stick, edged in-between it and the window
+ledge.  You notice that little specks of left overs have
+been splattered near here."
+end
+
+
+
+                 rn_4558
+
+names {"small hut","hut"}
+title "A Small Hut"
+descr
+" These are the living quarters of a native family.  It is a
+fairly large place, but not as big as some you have seen
+before. Towards the rear of the hut are two small hammocks,
+one hangs on top of the other, and a rope hangs down from
+the ceiling, supported by one of the bamboologs used to hold
+the ceiling up.  Torches hang on each side of the rear
+hammocks.  Hanging near the right wall, is a fairly large
+hammock, also with a torch by it's side on the wall. The
+larger hammock has drapes, seemingly made from animal skins
+of some kind, the purpose of the drapes could be privacy.
+Near the center of the room is a large bamboo table, with
+dirty dishes left on all four sides, correspondng with four
+matching bamboo chairs on each side. There is a window to
+the left side of the hut, maybe  used to get rid of waste.
+The only exit lies to the east."
+movement SECT_INSIDE
+east to rn_4556;
+extra {"torches","torch"}
+"The torches burn brightly in the small hut, making an
+illuminescent glow bounce happily throughout."
+extra {"rear hammocks","small hammocks","hammocks"}
+"The hammocks are rather small, and could not support more
+than a small child. They are woven from vines, small
+branches, and some ropes holding them to the ceiling."
+extra {"large hammock","hammock"}
+"This is a hammock, large enough to support two fully grown
+adults, the architechture in this hut is amazing, being able
+to support all of that weight pulling down on it at night
+time."
+extra {"table","bamboo table","large bamboo table"}
+"It is a large bamboo table, woven together from leg to base
+by vines, small, but strong.  A set of four matching chairs
+sits an each side of the table, and a large mess of dishes
+waits to be cleaned by someone.  Perhaps that someone had
+their hands full with some little rascals."
+extra {"dishes","dirty dishes"}
+"The dishes are dirty with the last meal, and food crumbs
+are sticking to the plates, like toilet water to a dogs
+tongue."
+extra {"chairs","matching bamboo chairs","bamboo chairs"}
+"The four chairs are matching, but they each have their own
+uniqueness, for example. One of them wobbles a bit on the
+dirt floor as you sit in it.  Each is made from bamboo
+sticks, and woven into a sitting tool with a strong vine of
+some kind."
+extra {"window"}
+"It is a small thatched window, with hinges on the top, able
+to be opened and closed.  It is held open at the moment by a
+small bamboo stick, edged in-between it and the window
+ledge.  You notice that little specks of left overs have
+been splattered near here."
+end
+
+        rn_4559
+
+names {"small hut","hut"}
+title "A Small Hut"
+descr
+" These are the living quarters of a native family.  It is a
+fairly large place, but not as big as some you have seen
+before. Towards the rear of the hut are two small hammocks,
+one hangs on top of the other, and a rope hangs down from
+the ceiling, supported by one of the bamboo logs used to
+hold the ceiling up.  Torches hang on each side of the rear
+hammocks.  Hanging near the right wall, is a fairly large
+hammock, also with a torch by it's side on the wall. The
+larger hammock has drapes, seemingly made from animal skins
+of some kind, the purpose of the drapes cold be privacy.
+Near the center of the room is a large bamboo table, with
+dirty dishes left on all four sides, correspondng with four
+matching bamboo chairs on each side. There is a window to
+the left side of the hut, maybe  used to get rid of waste.
+The only exit lies to the east."
+movement SECT_INSIDE
+east to rn_4555;
+extra {"torches","torch"}
+"The torches burn brightly in the small hut, making an
+illuminescent
+glow bounce happily throughout."
+extra {"rear hammocks","small hammocks","hammocks"}
+ "The hammocks are rather small, and could not support more
+than a small child. They are woven from vines, small
+branches, and some ropes holding them to the ceiling."
+extra {"large hammock","hammock"}
+"This is a hammock, large enough to support two fully grown
+adults, the architechture in this hut is amazing, being able
+to support all of that weight pulling down on it at night
+time."
+extra {"table","bamboo table","large bamboo table"}
+"It is a large bamboo table, woven together from leg to base
+by vines, small, but strong.  A set of four matching chairs
+sits an each side of the table, and a large mess of dishes
+waits to be cleaned by someone.  Perhaps that someone had
+their hands full with some little rascals."
+extra {"dishes","dirty dishes"}
+"The dishes are dirty with the last meal, and food crumbs
+are sticking to the plates, like toilet water to a dogs
+tongue."
+extra {"chairs","matching bamboo chairs","bamboo chairs"}
+"The four chairs are matching, but they each have their own
+uniqueness, for example. One of them wobbles a bit on the
+dirt floor as you sit in it.  Each is made from bamboo
+sticks, and woven into a sitting tool with a strong vine of
+some kind."
+extra {"window"}
+"It is a small thatched window, with hinges on the top, able
+to be opened and closed.  It is held open at the moment by a
+small bamboo stick, edged in-between it and the window
+ledge.  You notice that little specks of left overs have
+been splattered near here."
+end
+
+        rn_4560
+
+names {"large hut","hut"}
+title "A Large Hut"
+descr
+"    You enter the large hut, and you are immediately
+awestruck by what you see inside this massive home. A large
+bookshelf lines the walls of the hut, starting from the left
+side of the entrance and going three-fourths of the way
+around the room. To the left of the entrance in front of
+part of the bookshelf is a large oak desk, where someone
+does much work, and behind the desk is a matching oak chair
+with wheels, and you notice behind the desk some wheel
+tracks and footprints around the chair. You take a few steps
+to your right and examine the wall after the bookshelf and
+notice some ancient tapestries with a faint and dusty smell
+of marijuana. You sure wouldn't want to smell like that in
+public. In the center of the room you see a fire burning
+around a large black cauldron, and smell a soup of some
+kind. The aroma makes you rather hungry. Gathering your
+thoughts on what you see here makes you think that whoever
+must live here, is a wise person."
+movement SECT_INSIDE
+west to rn_4555;
+ALWAYS_LIGHT
+extra {"bookshelf","large bookshelf"}
+"The bookshelf is lined with many old books, and journals.
+Perhaps containing information on the history of cthulu and
+other lands."
+extra {"tapestries","ancient tapestries"}
+"The tapestries which decorate the walls of this
+extravegant hut contain a time-line of cthulu and listed are
+major events and sketches of many diverse things."
+extra {"desk","oak desk","large oak desk"}
+"The desk is of fine craftsmanship, and a shiny dark
+varnishing colors your image of this masterpiece. There are
+three droors on each side of the desk, and in the middle is
+a place for someone to sit in a chair and work. On top of
+the desk is a small candle, some blank paper, and a small
+feather quill."
+extra {"chair","oak chair"}
+"The oak chair has the same great dark varnishing and
+craftsmanship. It seems to be padded on the back rest, and
+the bum rest... It even has arm rests, which are also
+padded."
+extra {"cauldron","black cauldron","large cauldron"}
+"It is a large black cauldron, with a bubbling soup inside,
+just about ready for eating. Such a succulant odor eminates
+from it's depths."
+end
+
+        rn_4561
+
+names {"village path","path"}
+title "A Village Path"
+descr
+" You are on a rough dirt path just south of the Village's
+fire pit. There are huts to the east and west, the leaves of
+huge palm trees, and various vines have grown over the
+thatched roofs of the surrounding huts. Little foot prints
+have scattered about in the dirt, and off in the distance
+you swear you can hear the laughter of little children."
+movement SECT_CITY
+north to rn_4555;
+east to rn_4562;
+south to rn_4564;
+west to rn_4563;
+end
+
+        rn_4562
+
+names {"small hut","hut"}
+title "A Small Hut"
+descr
+" These are the living quarters of a native family.  It is a
+fairly large place, but not as big as some you have seen
+before. Towards the rear of the hut are two small hammocks,
+one hangs on top of the other, and a rope hangs down from
+the ceiling, supported by one of the bamboo logs used to
+hold the ceiling up.  Torches hang on each side of the rear
+hammocks. Hanging near the right wall, is a fairly large
+hammock, also with a torch by it's side on the wall. The
+larger hammock has drapes, seemingly made from animal skins
+of some kind, the purpose of the drapes could be privacy.
+Near the center of the room is a large bamboo table, with
+dirty dishes left on all four sides, correspondng with four
+matching bamboo chairs on each side. There is a window to
+the left side of the hut, maybe used to get rid of waste.
+The only exit lies to the east."
+movement SECT_INSIDE
+west to rn_4561;
+extra {"torches","torch"}
+"The torches burn brightly in the small hut, making an
+illuminescent glow bounce happily throughout."
+extra {"rear hammocks","small hammocks","hammocks"}
+"The hammocks are rather small, and could not support more
+than a small child. They are woven from vines, small
+branches, and some ropes holding them to the ceiling."
+extra {"large hammock","hammock"}
+"This is a hammock, large enough to support two fully grown
+adults, the architechture in this hut is amazing, being able
+to support all of that weight pulling down on it at night
+time."
+extra {"table","bamboo table","large bamboo table"}
+"It is a large bamboo table, woven together from leg to base
+by vines, small, but strong.  A set of four matching chairs
+sits an each side of the table, and a large mess of dishes
+waits to be cleaned by someone.  Perhaps that someone had
+their hands full with some little rascals."
+extra {"dishes","dirty dishes"}
+"The dishes are dirty with the last meal, and food crumbs
+are sticking to the plates, like toilet water to a dogs
+tongue."
+extra {"chairs","matching bamboo chairs","bamboo chairs"}
+"The four chairs are matching, but they each have their own
+uniqueness, for example. One of them wobbles a bit on the
+dirt floor as you sit in it.  Each is made from bamboo
+sticks, and woven into a sitting tool with a strong vine of
+some kind."
+extra {"window"}
+"It is a small thatched window, with hinges on the top, able
+to be opened and closed.  It is held open at the moment by a
+small bamboo stick, edged in-between it and the window
+ledge.  You notice that little specks of left overs have
+been splattered near here."
+end
+
+        rn_4563
+
+names {"small hut","hut"}
+title "A Small Hut"
+descr
+" These are the living quarters of a native family.  It is a
+fairly large place, but not as big as some you have seen
+before. Towards the rear of the hut are two small hammocks,
+one hangs on top of the other, and a rope hangs down from
+the ceiling, suppor ted by one of the bamboo logs used to
+hold the ceiling up.  Torches hang on each side of the rear
+hammocks. Hanging near the right wall, is a fairly large
+hammock, also with a torch by it's side on the wall. The
+larger hammock has drapes, seemingly made from animal skins
+of some kind, the purpose of the drapes could be for
+privacy.  Near the center of the room is a large bamboo
+table, with dirty dishes left on all four sides,
+correspondng with four matching bamboo chairs on each side.
+There is a window to the left side of the hut, may be used
+to get rid of waste. The only exit lies to the east."
+movement SECT_INSIDE
+east to rn_4561;
+extra {"torches","torch"}
+"The torches burn brightly in the small hut, making an
+illuminescent glow bounce happily throughout."
+extra {"rear hammocks","small hammocks","hammocks"}
+"The hammocks are rather small, and could not support more
+than a small child. They are woven from vines, small
+branches, and some ropes holding them to the ceiling."
+extra {"large hammock","hammock"}
+"This is a hammock, large enough to support two fully grown
+adults, the architechture in this hut is amazing, being able
+to support all of that weight pulling down on it at night
+time."
+extra {"table","bamboo table","large bamboo table"}
+ "It is a large bamboo table, woven together from leg to
+base by vines, small, but strong.  A set of four matching
+chairs sits an each side of the table, and a large mess of
+dishes waits to be cleaned by someone.  Perhaps that someone
+had their hands full with some little rascals."
+extra {"dishes","dirty dishes"}
+"The dishes are dirty with the last meal, and food crumbs
+are sticking to the plates, like toilet water to a dogs
+tongue."
+extra {"chairs","matching bamboo chairs","bamboo chairs"}
+"The four chairs are matching, but they each have their own
+uniqueness, for example. One of them wobbles a bit on the
+dirt floor as you sit in it.  Each is made from bamboo
+sticks, and woven into a sitting tool with a strong vine of
+some kind."
+extra {"window"}
+"It is a small thatched window, with hinges on the top, able
+to be opened and closed.  It is held open at the moment by a
+small bamboo stick, edged in-between it and the window
+ledge.  You notice that little specks of left overs have
+been splattered near here."
+end
+
+        rn_4564
+
+names {"dark jungle","jungle"}
+title "The Dark Jungle"
+descr
+" The undergrowth here is extremely thick and there is
+almost no light at all which makes it difficult to follow
+the path. The whole place feels somewhat uncomfortable but
+of what cause you cannot really tell. "
+movement SECT_FOREST
+north to rn_4561;
+east to rn_4569;
+west to rn_4570;
+extra {"undergrowth"}
+"The undergrowth seems to reach up and touch your armor as
+you pass by, quite a spooky feeling indeed."
+end
+
+        rn_4565
+
+names {"dark jungle","jungle"}
+title "The Dark Jungle"
+descr
+"The undergrowth here is extremely thick and there is almost
+no light at all which makes it difficult to follow the path.
+The whole place feels somewhat uncomfortable but of what
+cause you cannot really tell."
+movement SECT_FOREST
+east to rn_4566;
+west to rn_4553;
+extra {"undergrowth"}
+"The undergrowth seems to reach up and touch your armor as
+you pass by, quite a spooky feeling indeed."
+end
+
+
+        rn_4566
+
+names {"dark jungle","jungle"}
+title "The Dark Jungle"
+descr
+" The undergrowth here is extremely thick and there is
+almost no light at all which makes it difficult to follow
+the path. The whole place feels somewhat uncomfortable but
+of what cause you cannot really tell."
+movement SECT_FOREST
+east to rn_4540;
+west to rn_4565;
+south to rn_4556;
+extra {"undergrowth"}
+"The undergrowth seems to reach up and touch your armor as
+you pass by, quite a spooky feeling indeed."
+end
+
+
+
+          rn_4567
+
+names {"dark jungle","jungle"}
+title "The Dark Jungle"
+descr
+" The undergrowth here is extremely thick and there is
+almost no light at all which makes it difficult to follow
+the path. The whole place feels somewhat uncomfortable but
+of what cause you cannot really tell. "
+movement SECT_FOREST
+north to rn_4543;
+south to rn_4568;
+extra {"undergrowth"}
+"The undergrowth seems to reach up and touch your armor as
+you pass by, quite a spooky feeling indeed."
+end
+
+
+
+          rn_4568
+
+
+names {"dark jungle","jungle"}
+title "The Dark Jungle"
+descr
+" The undergrowth here is extremely thick and there is
+almost no light at all which makes it difficult to follow
+the path. The whole place feels somewhat uncomfortable but
+of what cause you cannot really tell. "
+movement SECT_FOREST
+north to rn_4567;
+west to rn_4569;
+extra {"undergrowth"}
+"The undergrowth seems to reach up and touch your armor as
+you pass by, quite a spooky feeling indeed."
+end
+
+
+          rn_4569
+
+
+names {"dark jungle","jungle"}
+title "The Dark Jungle"
+descr
+" The undergrowth here is extremely thick and there is
+almost no light at all which makes it difficult to follow
+the path. The whole place feels somewhat uncomfortable but
+of what cause you cannot really tell. "
+movement SECT_FOREST
+east to rn_4568;
+west to rn_4564;
+extra {"undergrowth"}
+"The undergrowth seems to reach up and touch your armor as
+you pass by, quite a spooky feeling indeed."
+end
+
+
+
+          rn_4570
+
+
+names {"dark jungle","jungle"}
+title "The Dark Jungle"
+descr
+" The undergrowth here is extremely thick and there is
+almost no light at all which makes it difficult to follow
+the path. The whole place feels somewhat uncomfortable but
+of what cause you cannot really tell. "
+movement SECT_FOREST
+east to rn_4564;
+extra {"undergrowth"}
+"The undergrowth seems to reach up and touch your armor as
+you pass by, quite a spooky feeling indeed."
+end
+
+
+
+
+         conference_room
+
+names {"conference room", "conference","gamma"}
+title "Mon and Keenan's Conference Room."
+descr
+"You are standing in a large room with a vaulted
+ceiling. This is where Mon and Keenan conduct their
+business. A large fountain stands in the corner. A
+large animal hide couch is against one wall. There
+is a long wooden confernce table here with two
+matching chairs around it. You can make out no
+exits.  Cept for south east and west, of course."
+movement SECT_INSIDE
+flags {UNIT_FL_NOSAVE}
+end
+
+/* END:   ROOMS@CTHULU.ZON */
+
+
+
+/* BEGIN: MOBS@CTHULU.ZON  */
+
+%mobiles
+
+#define RACE_SLOTH 5600
+
+
+
+
+               witch_doctor
+
+title "Ikuzus the Twisted Witch Doctor"
+names {"witch","doctor","Ikuzus","man","old man","dark man"}
+descr "Ikuzus is a short, rather old looking, dark man."
+extra {}
+"    Ikuzus is an old sorceror, an evil sorceror. You see the
+terror in his charcoal eyes, and a wave of fear passes straight
+to your stomach."
+level 50
+alignment -666
+race RACE_OTHER_HUMANOID
+sex SEX_MALE
+height 120
+weight 130
+money 7 SILVER_PIECE
+exp 105
+NATURAL_DEF (WPN_FIST,ARM_CLOTHES)
+MSET_ABILITY(15,10,10,19,9,6,21,10)
+MSET_WEAPON(4,20,3,4,3,4)
+MSET_SPELL(6,10,6,4,3,17,3,3,3,3,4)
+special SFUN_COMBAT_MAGIC "cast 'colourspray'"
+special SFUN_COMBAT_MAGIC_HEAL "cast 'heal'"
+romflags {CHAR_DETECT_INVISIBLE}
+end
+
+
+
+
+
+               spirit_guard
+
+
+
+
+names {"spirit guard", "guard", "spirit"}
+title "an evil spirit guard"
+descr "an evil spirit guard is here mumbling little nothings
+as he stands in your way."
+extra {}
+"The spirit guard is a vicious looking junglesman, he has
+the look of the dead in his eyes as if he is in some kind of
+a trance.  You want to scream as you look closer into his
+those eyes of nothing like you yourself  would end up in a
+trance. The guard takes one look at YOU and
+prepares for battle!"
+level 46
+alignment -500
+race RACE_OTHER_UNDEAD
+sex SEX_MALE
+height 150
+weight 165
+money 7 SILVER_PIECE
+exp 105
+special SFUN_GUARD_WAY "2@rn_4511@$1n prevents you from
+going in that direction.@$1n stands in $3n's way and flashes
+his mace in an orderly fashion, $3n seems to back up."
+NATURAL_DEF (WPN_BITE,ARM_CLOTHES)
+MSET_ABILITY(20,15,10,18,12,10,10,5)
+MSET_WEAPON(3,2,21,4,2,2)
+MSET_SPELL(4,9,3,4,3,23,3,5,3,4,5)
+special SFUN_COMBAT_MAGIC  "cast 'fear'"
+romflags {CHAR_DETECT_INVISIBLE}
+end
+
+
+
+
+
+
+
+          jungle_vines
+
+
+names {"vines", "jungle vines"}
+title "a monsterous plant of jungle vines."
+descr
+"A huge plant of vines is here slithering about."
+extra {}
+"The plant like creature is big and vicious. It is getting
+hungry and it looks over towards you. You can hear its
+stomach growling. You also notice these tiny thorns prickled
+all over the body of the vine creature."
+extra {"thorns", "prickled thorns"}
+"You examine the thorns closely around the body of this
+extraordinary beast. You can see the thorns are sharp and
+have what looks like poison dripping off of it. You also
+notice a place where a few thorns have been taken and you
+see a ring on one of its arms.. It is made of thorns."
+extra {"ring", "thorn ring"}
+"It looks like some thorns have been molded closely together
+to form this ring. It doesn't look like this creature could
+have made it by itself."
+level 37
+alignment -260
+race RACE_VINE
+sex SEX_NEUTRAL
+height 180
+weight 250
+money 5 COPPER_PIECE, 5 SILVER_PIECE
+exp 100
+NATURAL_DEF (WPN_BITE, ARM_CLOTHES)
+MSET_ABILITY(19,18,17,20,16,5,0,5)
+MSET_WEAPON(5,10,10,3,3,5)
+MSET_SPELL(10,2,2,2,0,10,10,10,2,8,8)
+end
+
+
+
+          jungle_native
+
+
+names {"native","jungle native"}
+title "a jungle native"
+descr
+"The jungle native walks about and eyes you cautiously."
+extra {}
+"The native is a trim man, with a muscular build. He looks
+intellegent enough to skin a carrot and he has no shoes."
+level 36
+race RACE_OTHER_HUMANOID
+sex SEX_MALE
+height 115
+weight 200
+alignment 20
+money 5 SILVER_PIECE
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY(18,25,20,22,5,5,5,0)
+MSET_WEAPON(6,12,16,25,11,5)
+MSET_SPELL(4,3,2,5,3,3,1,1,1,1,1)
+special SFUN_RANDOM_ZONE_MOVE
+end
+
+
+
+
+
+
+
+          jungle_chief
+names {"chief","jungle chief"}
+title "the Jungle Chief"
+descr "The Jungle Chief is here giving orders to himself."
+extra {}
+"The chief has a mole under his left eye, and he is covered
+with tatoos on his face, he is wearing a collage of beads
+around his neck and he has many ear rings in all places of
+the ear."
+level 38
+alignment 200
+race RACE_OTHER_HUMANOID
+sex SEX_MALE
+height 150
+weight 145
+money 6 SILVER_PIECE, 5 COPPER_PIECE
+exp 100
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY(18,25,20,22,5,5,5,0)
+MSET_WEAPON(6,12,13,27,10,5)
+MSET_SPELL(4,3,2,5,3,3,2,2,1,1,1)
+end
+
+
+
+               scorpion
+
+
+
+names{"scorpion","red scorpion","bright red scorpion"}
+title "a bright red scorpion"
+descr "A bright red scorpion sits here wailing"
+extra {}
+"The scorpion is much larger than normal for its species,
+this could be the result of magic or just some bored gods
+trying to make an interesting mob. It's tail is long and
+thick, and the body is covered with an exo-skeleton. That
+could make a nice set of armour if you could only kill the
+beast, and perhaps combined with some other ingredients."
+level 49
+alignment -300
+race RACE_SCORPION
+sex SEX_NEUTRAL
+height 40
+weight 250
+money 7 SILVER_PIECE, 7 COPPER_PIECE
+exp 100
+NATURAL_DEF(WPN_BITE,ARM_PLATE)
+MSET_ABILITY(20,23,15,22,5,5,5,5)
+MSET_WEAPON(6,5,5,3,3,8)
+MSET_SPELL(10,8,6,5,4,3,6,5,7,6,10)
+end
+
+
+               trop_parrot
+
+
+names {"parrot","lush parrot","tropical parrot","lush
+tropical parrot"}
+title "a lush tropical parrot"
+descr "A lush tropical parrot is here pecking the ground for
+food."
+extra {}
+"The parrot is an assortment of different colors, blue
+green, red and yellow, with a black beak. It's wingspan is
+very long and graceful, and when it spreads open you just
+about get a faceful of feathers."
+level 35
+alignment 200
+sex SEX_FEMALE
+race RACE_BIRD
+money 4 SILVER_PIECE
+exp 100
+height 30
+weight 50
+special SFUN_RANDOM_ZONE_MOVE
+NATURAL_DEF(WPN_BITE,ARM_CLOTHES)
+MSET_ABILITY(20,15,10,18,12,10,10,5)
+MSET_SPELL(4,9,3,4,3,23,3,5,3,4,5)
+MSET_WEAPON(3,2,21,4,2,2)
+end
+
+
+
+               monkey
+names{"monkey","furry monkey","small furry monkey"}
+title "a furry monkey"
+descr "A small furry monkey plays in the trees here."
+extra {}
+"The monkey is small and dirty, kind of smelly as well. He
+has a long tail attached to his rear, and he makes funny
+squealing sounds as he dances around you, examining every
+inch of your body, being very cautious at the same time.
+Hey, does he have fleas????"
+level 35
+alignment 400
+race RACE_MONKEY
+sex SEX_MALE
+height 80
+weight 110
+money 5 COPPER_PIECE
+exp 100
+special SFUN_RANDOM_ZONE_MOVE
+NATURAL_DEF(WPN_BITE,ARM_LEATHER)
+MSET_ABILITY(15,20,15,23,10,10,0,7)
+MSET_WEAPON(5,5,12,4,4,4)
+MSET_SPELL(5,9,5,5,5,12,5,5,5,5,5)
+end
+
+
+
+
+
+               gorilla
+
+
+names {"gorilla","lunky gorilla"}
+title "a lunky Gorilla"
+descr "A big lunky Gorilla is here marauding around."
+extra {}
+"He is big! He is muscular! He is also smart! The big furry
+lunkhead charges you, but you do not move, and he backs away
+and goes along with his business as if you weren't there.
+The primate seems to be well groomed, except for a few fleas
+here and there... He walks around on his legs with a little
+help from his extended, long arms, and makes a sort of
+grunting sound as well."
+level 36
+alignment 400
+race RACE_MONKEY
+sex SEX_MALE
+height 80
+weight 110
+money 5 COPPER_PIECE
+exp 100
+special SFUN_RANDOM_ZONE_MOVE
+NATURAL_DEF(WPN_BITE,ARM_LEATHER)
+MSET_ABILITY(20,17,20,23,10,10,0,0)
+MSET_WEAPON(5,5,12,4,4,4)
+MSET_SPELL(5,9,5,5,5,12,5,5,5,5,5)
+end
+
+
+
+
+
+               boa
+names{"boa", "large boa", "snake"}
+title "a large, thick boa snake"
+descr "A large boa snake is wrappep up on a tree here."
+extra {"boa", "large boa", "snake"}
+"The boa is long and black with leathery skin spotted brown
+all across it's body. The skin is leathery and very smooth.
+The boa seems to notice your presence and moves towards you
+occasionally smelling you with it's forked and pink tongue."
+extra {"tongue","forked tongue"}
+"It is pink and sticky, and moves very fast in and out of
+the snakes mouth."
+level 36
+alignment 0
+race RACE_SNAKE
+sex SEX_MALE
+height 200
+weight 220
+exp 100
+special SFUN_RANDOM_ZONE_MOVE
+NATURAL_DEF(WPN_BITE,ARM_LEATHER)
+MSET_ABILITY(20,18,20,15,17,10,0,0)
+MSET_WEAPON(10,8,12,11,2,2)
+MSET_SPELL(4,9,4,4,4,8,4,5,4,4,5)
+end
+
+
+
+               snake_moccasin
+
+
+
+names{"moccasin","water moccasin"}
+title "a poisonous water moccasin"
+descr "A small poisonous water moccasin slithers in the
+water."
+extra {}
+"The snake is of a light brown color with  very thick darker
+brown stripes outlined by a very thin white stripe
+surrounding the dark brown stripe, and there seems to be
+little green spots on the dark brown stripes. You take a
+deep breath, and hope there is nothing more to see on this
+little poisonous creature."
+level 35
+alignment -400
+sex SEX_MALE
+race RACE_SNAKE
+exp 105
+NATURAL_DEF(WPN_BITE, ARM_LEATHER)
+MSET_ABILITY(20,18,20,15,17,10,0,0)
+MSET_WEAPON(10,8,12,11,2,2)
+MSET_SPELL(4,9,4,4,4,8,4,5,4,4,5)
+special SFUN_COMBAT_POISON
+end
+
+
+
+               boring_boar
+
+
+names {"boar","boring boar"}
+title "a boring boar"
+descr "A boring boar is here, wow what a boar."
+extra {}
+"The boar is big and ugly, and has long sharp tusks
+protruding from the sides of his mouth. He is rather ruggid
+looking, capable of taking a beating, more so than any
+normal boar. Other than being able to hold his own in a
+fight, this boaring boar also seems quite intelligent, and
+looks at you puzzlingly. He is wearing glasses and reading
+a philosophical looking book."
+level 36
+alignment 300
+race RACE_BOAR
+sex SEX_MALE
+height 80
+weight 200
+exp 100
+money 4 SILVER_PIECE
+special SFUN_RANDOM_ZONE_MOVE
+NATURAL_DEF(WPN_KICK, ARM_LEATHER)
+MSET_ABILITY(18,20,15,20,17,10,0,0)
+MSET_WEAPON(10,8,10,9,4,4)
+MSET_SPELL(5,8,5,4,4,6,4,6,4,4,5)
+end
+
+
+
+
+               bengal_tiger
+
+
+
+names {"tiger","bengal tiger"}
+title "a bengal tiger"
+descr "A big orange, black-striped bengal tiger is here."
+extra {}
+"He is big, and furocious, and has one nasty set of
+choppers, with 6 inch long teeth. His white beard makes him
+look very noble and proud of himself.. His eyes are
+hypnotizingly beautiful, like green emeralds. Don't get
+caught in a stare with this guy, you are bound to lose."
+level 37
+alignment 300
+race RACE_TIGER
+sex SEX_MALE
+height 85
+weight 185
+exp 100
+special SFUN_RANDOM_ZONE_MOVE
+money 4 SILVER_PIECE
+NATURAL_DEF(WPN_CLAW, ARM_LEATHER)
+MSET_ABILITY(19,19,17,18,17,10,0,0)
+MSET_WEAPON(10,8,10,9,4,4)
+MSET_SPELL(5,8,5,4,4,6,4,6,4,4,5)
+end
+
+
+
+               king_jungle
+
+
+names {"lion","king of the jungle","huge lion"}
+title "the king of the jungle"
+descr "A huge lion is here, licking one of it's big paws."
+extra {}
+"The lion has huge teeth like a tiger, and a long brown mane
+surrounding it's head and neck. It has light tan fur and
+some really big paws, and the claws to go along with them."
+level 38
+alignment 300
+race RACE_LION
+sex SEX_MALE
+height 85
+weight 185
+exp 100
+money 4 SILVER_PIECE
+special SFUN_RANDOM_ZONE_MOVE
+NATURAL_DEF(WPN_CLAW, ARM_LEATHER)
+MSET_ABILITY(19,19,17,18,17,10,0,0)
+MSET_WEAPON(10,8,10,9,4,4)
+MSET_SPELL(5,8,5,4,4,6,4,6,4,4,5)
+end
+
+
+
+
+
+               sloth_fiesty
+
+
+
+names {"sloth","fiesty sloth"}
+title "a fiesty sloth"
+descr "A fiesty sloth is maticuously grooming himself here."
+extra {}
+"He is a small furry guy, with really long arms and short
+legs, sort of monkey like... The fur is a very light brown,
+soft, very shaggy and greasy looking. He has claws that seem
+to you, about 4-6 inches in length, and very sharp. He also
+has a little pudgy nose."
+level 37
+alignment 500
+race RACE_SLOTH
+sex SEX_MALE
+height 60
+weight 130
+money 3 SILVER_PIECE
+special SFUN_RANDOM_ZONE_MOVE
+NATURAL_DEF(WPN_CLAW, ARM_CLOTHES)
+MSET_ABILITY(17,15,15,13,14,12,7,7)
+MSET_WEAPON(6,7,8,7,7,6)
+MSET_SPELL(7,5,6,5,5,6,5,5,5,5,5)
+end
+
+
+          old_prophet
+
+
+names {"prophet","old prophet","village prophet"}
+title "the old prophet"
+descr "The old village prophet is here."
+extra {}
+"The man seems old, with a dusty white and brown beard, he
+does seeem a bit younger than he really is, and he is in
+exceptional condition for his age. He is the leader of the
+village, and the pillar of their community. It is because of
+his abilities that this communtiy has been around so long.
+He also seems to have a magical aura about him."
+level 50
+alignment 500
+race RACE_OTHER_HUMANOID
+sex SEX_MALE
+height 100
+weight 150
+exp 100
+money 7 SILVER_PIECE
+special SFUN_COMBAT_MAGIC "cast 'blind'"
+NATURAL_DEF(WPN_FIST,ARM_CLOTHES)
+MSET_ABILITY(16,10,14,17,14,12,17,0)
+MSET_WEAPON(6,8,7,7,7,6)
+MSET_SPELL(7,5,6,5,5,6,5,5,5,5,5)
+end
+
+
+
+
+               vil_wife
+
+
+names {"wife","village wife","petite village wife"}
+title "the village wife"
+descr "A petite village wife is here waiting for her
+husband."
+extra {}
+"She is a homely woman, wearing bamboo earings and a palm
+tree dress, she has long flowing black hair, brown eyes, and
+dark earthy toned skin. She has a nervous, jittery look
+about her face, and taps her fingers rhythimically on her
+leg, as if she is waiting for someone, you think she could
+be concerned for someones life."
+level 37
+race RACE_OTHER_HUMANOID
+sex SEX_FEMALE
+alignment 400
+money 6 SILVER_PIECE
+NATURAL_DEF(WPN_FIST,ARM_CLOTHES)
+MSET_ABILITY(16,10,14,17,14,12,17,0)
+MSET_WEAPON(6,8,7,7,7,6)
+MSET_SPELL(7,5,6,5,5,6,5,5,5,5,5)
+end
+
+
+
+
+               vil_boy
+
+
+
+names {"boy","village boy","small village boy"}
+title "the village boy"
+descr "A small village boy plays here."
+extra {}
+"This is one dirty little boy, in need of a bath because he
+has been outside all day doing everything his mother told
+him not to do. His hair is sticking up in all directions,
+and he has little smudges of dirt all about his face. And
+his jungle pants (made of leaves) are ripped."
+level 35
+alignment 500
+race RACE_OTHER_HUMANOID
+sex SEX_MALE
+height 100
+weight 150
+exp 100
+money 3 COPPER_PIECE
+NATURAL_DEF(WPN_FIST,ARM_CLOTHES)
+MSET_ABILITY(16,10,14,17,14,12,17,0)
+MSET_WEAPON(6,8,7,7,7,6)
+MSET_SPELL(7,5,6,5,5,6,5,5,5,5,5)
+end
+
+
+               vil_girl
+
+
+names {"girl","village girl","little village girl"}
+title "the village girl"
+descr "A little village girl plays here."
+extra {}
+"She is petite, and has dark short hair and dark brown skin.
+She wears little clothing because of the heat in the jungle
+rainforest. Her mother seems to have done many cute things
+to her little black curls, as any mother would do for their
+daughter. She acts more elegant than the boy because she
+needs to keep herself clean, or so her mother tells her."
+level 35
+alignment 500
+race RACE_OTHER_HUMANOID
+sex SEX_FEMALE
+height 80
+weight 100
+exp 100
+money 3 COPPER_PIECE
+NATURAL_DEF(WPN_FIST,ARM_CLOTHES)
+MSET_ABILITY(16,10,14,17,14,12,17,0)
+MSET_WEAPON(6,8,7,7,7,6)
+MSET_SPELL(7,5,6,5,5,6,5,5,5,5,5)
+end
+
+
+
+               crocodile
+
+
+names {"green crocodile","crocodile","reptilian green
+crocodile"}
+title "a big crocodile"
+descr "A reptilian green crocodile is here, observing."
+extra {}
+"It's a giant croc, 17 feet long, and about 5 of those feet
+are it's tail. It has teeth like razors and claws like meat
+hooks in the butcher parlor, like the kind that hold those
+big slabs of cow beef in the fridge. But those are some
+claws it's got there. This croc is a dark shade of green
+and has small arched bumps all across it's back, they trail
+up from the very back of the crocodiles tail, all the way to
+his long thick snout."
+level 38
+alignment -255
+race RACE_OTHER_REPTILE
+sex SEX_NEUTRAL
+height 10
+weight 200
+money 2 SILVER_PIECE
+NATURAL_DEF(WPN_BITE,ARM_LEATHER)
+MSET_ABILITY(18,12,13,15,14,11,10,7)
+MSET_WEAPON(8,8,7,7,7,7)
+MSET_SPELL(6,7,7,5,5,6,5,5,5,5,0)
+end
+
+
+
+               tarantula
+
+
+names {"tarantula","black tarantula"}
+title "an overgrown tarantula"
+descr "A large black tarantula is here."
+extra {}
+"It's a large tarantula spider, with furry black and light
+brown legs, the whole deal. It's a bit overgrown for a
+tarantula, so don't get too close to it... It's a vicious
+looking creature, and that big slop of drool was kind of a tip
+off I guess, and not only that, it's the big vice-gripping
+claw-like teeth protruding from it's mouth."
+level 40
+alignment -240
+race RACE_SPIDER
+sex SEX_NEUTRAL
+height 60
+weight 200
+money 5 SILVER_PIECE
+NATURAL_DEF(WPN_BITE,ARM_PLATE)
+MSET_ABILITY(18,12,13,15,14,11,10,7)
+MSET_WEAPON(8,8,7,7,7,7)
+MSET_SPELL(6,7,7,5,5,6,5,5,5,5,0)
+end
+
+
+/*END:MOBS@CTHULU*/
+
+
+/*BEGIN: OBJS@CTHULU.ZON*/
+
+%objects
+
+
+
+
+               thorn_ring
+
+
+names {"thorn ring","ring"}
+title "a sharp thorn ring"
+descr "A prickly thorn ring lies here."
+extra {}
+"As you study the ring more closely you can see the numerous
+thorns protruding from the eye of the ring. It seems to
+sparkle when the sun hits it."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FINGER}
+MAG_TRANSFER(-1)
+STR_TRANSFER(+2)
+weight 2
+cost 1 GOLD_PIECE
+rent 1 GOLD_PIECE, 2 SILVER_PIECE
+special SFUN_RESTRICT_OBJ "Level = 30, Str = 20"
+extra {"$identify"}
+"You have a feeling when you identify this ring that it is
+made from the pure life energy of whatever it came from."
+ extra {"$improved identify"}
+"This ring was  created by the evil Witch Doctor Ikuzus, he
+used his magic to drain the energy from the body of the
+previous owner of these thorns, but it had to be redirected
+into the same matter in which it was taken from, and that is
+why it is made from the thorns. "
+end
+
+
+
+                        vine_bracelet
+
+
+names {"vine bracelet","bracelet"}
+title "a twisted vine bracelet"
+descr "A twisted, knarled vine bracelet lies here."
+extra {}
+"As you examine the bracelet you see how finely crafted it
+is.  It is woven of thin, slightly brown twigs
+and small vines with tiny leaves on them."
+MAG_TRANSFER(+1)
+STR_TRANSFER(-1)
+weight 3
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_WRIST}
+cost 1 GOLD_PIECE, 2 SILVER_PIECE
+rent 1 GOLD_PIECE, 6 SILVER_PIECE
+special SFUN_RESTRICT_OBJ "Level = 30, Str = 30"
+extra {"$identify"}
+"This object will add to your magic, divine, and charismatic
+abilities, as well as lessen your strength
+and dexterity. Obviously this object is for the magic user."
+extra {"$improved identify"}
+"This bracelet adds 3 to your magic, 2 to your divine, and 1
+to your charisma, and it will penalize you by -2
+in your strength by -2, and by -1 in your dexterity."
+end
+
+
+
+               mag_pouch
+
+
+names {"pouch","magic pouch"}
+title "a magic pouch"
+descr "A magic pouch of the spirits lies here."
+extra {}
+"As you examine the magical pouch closer you see some odd
+markings. You also notice that it cannot contain anything
+and that it is used specifically for its magical power."
+extra {"markings", "odd markings"}
+"The markings you see, resemble a large, dark tree that seem
+to look familiar. The figure is roughly stitched into the
+cloth and looks strangely like a man."
+weight 3
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_WAIST}
+cost 5 GOLD_PIECE
+rent 1 GOLD_PIECE, 3 SILVER_PIECE
+special SFUN_RESTRICT_OBJ "Level = 30, Str = 30, Mag = 50"
+extra {"$identify"}
+"The object you obtained contains some kinds of herbs or
+plants, and when worn they improve the owners attributes"
+extra {"$improved identify"}
+"The object you have identified will make your magic more
+powerful by only 2,and your divine less by 1, however it
+makes you stronger by 3 points and more dexterous by 2."
+end
+
+
+
+                    dag_bone
+
+
+
+names {"dagger", "bone handled dagger", "a bone handled
+dagger"}
+title  "a bone handled dagger"
+descr "a bone handled dagger of the evil witch doctor Ikuzus
+is lying here."
+rent 10 GOLD_PIECE
+cost 30 GOLD_PIECE
+extra {}
+"You notice the dagger has a handle made of bone and the
+blade is sharp as a dragons tooth, with stains of blood on
+the edges."
+extra {"$identify"}
+"This weapon is clearly made for someone with the magical
+forces behind their fighting style."
+extra {"$imrpoved identify"}
+"This weapon increases your magic by 2 and your divine by 1
+but decreases your strength by 1 as well as your
+constitution by 1."
+special SFUN_RESTRICT_OBJ "Level = 45, Mag = 35"
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_DAGGER, 0,0)
+CON_TRANSFER(-1)
+end
+
+
+
+               jungle_mace
+
+
+
+
+names {"mace","jungle mace","a mace of the undead spirits"}
+title "a mace of the undead spirits"
+descr "A mystical mace of spiritual undead is lying here
+before you."
+rent 6 SILVER_PIECE
+cost 15 GOLD_PIECE
+extra {}
+"The mace looks as if it has been created from pure magic, a
+fiery aura surrounds it you get an electric feeling just by
+looking at it. You can also notice it has zero marks as if
+it has been in this wet jungle so long and not been rusted
+or even the slightest bit of moss growing on it, but you
+can't find anything of the sort"
+extra {"aura"}
+"You look directly into the aura of the mace, it has a blue-
+green tint to it, and when you look further into it you can
+see the face of an old twisted man, possibly a tribal doctor
+of sorts, however there is something odd he's moving about
+in a hut."
+extra {"$identify"}
+"This object will raise your strength and dexterity. Also
+lower your magic, as obvious as it may
+seem the object is made for someone who needs this sort of
+power to fight."
+extra {"$improved identify"}
+"This object will rase your strength by 3, your dexterity by
+3, and lower your magic by 1."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_BATTLE_MACE,3,0)
+special SFUN_RESTRICT_OBJ "Level = 40, Str = 50"
+end
+
+
+
+
+          chief_spear
+
+
+
+names {"jungle spear","spear","a bloody jungle spear"}
+title "a bloody jungle spear"
+descr "A bloody jungle spear is lying here below your feet."
+cost 10 GOLD_PIECE
+weight 10
+extra {}
+"The large spear towers over you.  It has several
+decorations on it including something
+that looks like a bloody head."
+extra {"decorations"}
+"    You notice several unusual feathers dangling from the
+top of the spear, directly
+below them is a small string of beads wrapped tightly around
+the shaft."
+extra {"head", "bloody head"}
+"    GROSS!!  You are forced to look away!"
+extra{"feathers"}
+"    Definately unusual!  The feathers are swirled with
+colorful patterns, one
+of wich resmbles a human-like tree."
+extra {"string of beads", "beads"}
+"    Just several multi-colored beads strung together and
+wrapped tightly around the shaft of the spear."
+extra {"$identify"}
+"The spear has no special qualities whatsoever."
+extra {"$improved identify"}
+"If you did the Identify on this weapon. WHAT THE HELL ARE
+YOU DOING THIS FOR? Besides that you notice the spear was
+made by a hunter of somekind."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_SPEAR,0,0)
+end
+
+
+
+
+
+          native_spear
+
+
+
+names {"spear","native spear"}
+title "a moderately sized jungle spear"
+descr "the spear of a jungle native lies here leaving blood
+on the floor."
+extra {}
+"The spear is dressed with feathers dangling by small
+leather straps by the spearhead, as well as more feathers
+are on the shaft like on an arrow. Small skull heads also
+dangle from the bottom of the spearhead as if they were
+indicating a number of something."
+extra {"skulls","heads"}
+"You notice small notches in the top of the cranium, they
+also look like they came from a small bird or possibly a
+lizard."
+extra {"$identify"}
+"The weapon is no special item, it was crafted from the
+hands of an experienced hunter and is good for
+piercing.*smile*"
+extra {"$improved identify"}
+"You decide maybe the little pointy thing at the end is very
+sharp."
+cost 2 GOLD_PIECE
+weight 8
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_SPEAR,0,0)
+end
+
+
+
+
+                spirit_plate
+
+
+names {"breast plate","plate","spirit plate"}
+title "a spirit breast plate"
+descr "a spirit breast plate lies here screaming."
+extra {}
+"You stare deeply into the plate, and the light reflects
+from a deep shine in the metallic substance."
+extra {"$identify"}
+"The plate was made from the dead and tortured souls of
+cthulu."
+extra {"$improved identify"}
+"The power and craftiness of that old witch doctor made
+possible the creation of this powerful armour, he took the
+poor souls and molded them into what you wear about you."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_PLATE (0,3)
+weight 11
+cost 10 GOLD_PIECE
+rent 1 SILVER_PIECE, 2 IRON_PIECE
+end
+
+
+
+
+
+
+          spirit_sleeves
+
+
+
+
+
+names {"sleeves","spirit sleeves"}
+title "a pair of spirit sleeves"
+descr "a pair of spirit sleeves lies here screaming."
+extra {} "The sleeves bare no visible battle scarring, one
+of the magical advantages to this armour... It re-builds
+itself."
+extra {"$identify"}
+"You can see little white figures in the glare of the
+sleeves, they scream and moan. LET US OUT, FREE US."
+extra {"$improved identify"}
+"The souls in this armour are there, and are the source of
+it's strength, if they were freed the armour may as well
+just dissappear. The spirits grow tired hoping for the day
+when they will escape, that day may never come."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_ARMS}
+ARMOUR_PLATE (0,0)
+weight 6
+cost 10 GOLD_PIECE
+rent 1 SILVER_PIECE
+end
+
+
+
+
+
+
+
+               spirit_legs
+
+
+
+names {"leggings","spirit leggings","legs"}
+title  "a pair of spirit leggings"
+descr "a pair of spirit leggings is lying here screaming."
+extra {}
+"You stare deeply into the shimmering glare of the leggings,
+the sun seems to be heating up and the inside of those
+leggings gets even hotter."
+extra {"$identify"}
+"Maybe you should identify the sleeves instead. hehe."
+extra {"$improved identify"}
+"Wasting mana again I see, you need to learn restriction of
+your powers my friend."
+weight 7
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_LEGS}
+ARMOUR_PLATE (0,0)
+cost 10 GOLD_PIECE
+rent 1 SILVER_PIECE
+end
+
+
+
+                spirit_boots
+
+
+
+names {"boots","spirit boots"}
+title "a pair of spirit boots"
+descr "a pair of spirit boots are lying here screaming."
+extra {}
+"The boots are so shiny they make you want to grab a hanky
+and polish them before they get a stain."
+extra {"$identify"}
+"This item is part of a set of armour which contains the
+essence of entire souls."
+extra {"$improved identify"}
+"The souls contained by this vicious defensive object were
+put there by a powerful witch doctor."
+weight 4
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_FEET}
+ARMOUR_PLATE (0,0)
+cost 10 GOLD_PIECE
+rent 1 SILVER_PIECE
+end
+
+
+
+                      spirit_gauntlet
+
+
+names {"gauntlets","spirit gauntlets"}
+title "a pair of spirit gauntlets"
+descr "a pair of spirit gauntlets are lying here screaming."
+extra {}
+"The Gauntlets feel tight around the hands, however you are
+very mobile in them. And they feel strong around the
+fingers, and they are a shiny grey color."
+extra {"$identufy"}
+"This item was crafted with the most brilliant work of
+magic, forged with the spirits of men and women."
+extra {"$improved identify"}
+"The Gauntlets were created by the wicked old man known as
+Ikuzus."
+weight 4
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_HANDS}
+ARMOUR_PLATE (0,0)
+cost 10 GOLD_PIECE
+rent 1 SILVER_PIECE
+end
+
+
+
+                spirit_helm
+
+
+names {"helmet","spirit helmet"}
+title "a spirit helmet"
+descr "a spirit helmet lies here screaming."
+extra {}
+"The helmet is smooth and hard, you notice no visible
+scratches or dents, as if the helmet were still in perfect
+condition after all this time."
+extra {"$identify"}
+"The helmet is radiating pure magical energy."
+extra {"$improved identify"}
+"Through further identification you can see some lettering.
+It reads,
+Ikuzus THE Witch Doctor."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_HEAD}
+weight 6
+ARMOUR_PLATE (0,0)
+cost 10 GOLD_PIECE
+rent 1 SILVER_PIECE
+end
+
+
+
+
+
+               vial
+
+
+
+names {"vial","poison","blood"}
+title "a vial of red poison"
+descr "a small vial of red, scorpion posion sits here."
+extra {}
+"The vial is full of a red liquid. Extracted from the tail
+of a scorpion, it bubbles occasionally, but only a little
+bit. You obviously don't want to drink this."
+extra {"$identify"}
+"No way you're finding out anything special about this baby
+with that weak spell."
+extra {"$improved identify"}
+"Ahhh, improved identify.. That's a little better.. Maybe
+this could be a quest item... Don't drink from it though, it
+is more useful when someone knows what to do with it, to
+maybe make it into something cool."
+LIQ_DEF(LIQ_BLOOD, 4,20,20,3)
+/*ITEM_DRINKCON*/
+manipulate {MANIPULATE_TAKE}
+end
+
+
+
+
+               scorp_tail
+
+
+names {"tail", "scorpions tail"}
+title "a large scorpions tail"
+descr "a large red scorpions tail lies here."
+extra {}
+"The tail is long, maybe about 5 feet. At the end is a
+curved point, with a red liquid dripping from it. For its
+size it is extremely light, but it is very tough. If this
+material were to be crafted into some sort of weapon, it
+could be very powerful."
+extra {"$identify"}
+"Where did this thing come from?!?!?? Possibly the rear of a
+gigantic scorpion????"
+extra {"$improved identify"}
+"Maybe you could give this to someone and they'll make
+something out of it... For a price..."
+manipulate {MANIPULATE_TAKE}
+weight 5
+rent 2 SILVER_PIECE
+cost 10 GOLD_PIECE
+end
+
+
+
+/* END:   OBJS@CTHULU.ZON   */
+
+
+/* BEGIN: RESETS@CTHULU.ZON */
+
+%reset
+
+
+
+
+load witch_doctor into rn_4512 zonemax 1
+{
+equip dag_bone position WEAR_WIELD
+
+equip vine_bracelet position WEAR_WRIST_R
+
+}
+
+load spirit_guard into rn_4511 zonemax 2
+
+{
+equip jungle_mace position WEAR_WIELD
+
+equip spirit_plate position WEAR_BODY
+
+equip spirit_legs position WEAR_LEGS
+
+equip spirit_sleeves position WEAR_ARMS
+
+equip spirit_helm position WEAR_HEAD
+
+equip spirit_gauntlet position WEAR_HANDS
+
+equip spirit_boots position WEAR_FEET
+
+equip mag_pouch position WEAR_WAIST
+}
+
+load spirit_guard into rn_4511 zonemax 2
+
+{
+equip jungle_mace position WEAR_WIELD
+
+equip spirit_plate position WEAR_BODY
+
+equip spirit_legs position WEAR_LEGS
+
+equip spirit_sleeves position WEAR_ARMS
+
+equip spirit_helm position WEAR_HEAD
+
+equip spirit_gauntlet position WEAR_HANDS
+
+equip spirit_boots position WEAR_FEET
+
+equip mag_pouch position WEAR_WAIST
+}
+
+
+load jungle_vines into rn_4516 max 1
+{
+equip thorn_ring position WEAR_FINGER_R
+}
+
+load jungle_native into rn_4568 zonemax 5
+{
+equip native_spear position WEAR_WIELD
+}
+
+load jungle_native into rn_4565
+{
+equip native_spear position WEAR_WIELD
+}
+
+load jungle_native into rn_4541
+{
+equip native_spear position WEAR_WIELD
+}
+
+load jungle_native into rn_4570
+{
+equip native_spear position WEAR_WIELD
+}
+
+load jungle_native into rn_4540
+{
+equip native_spear position WEAR_WIELD
+}
+
+load jungle_chief into rn_4566 zonemax 1
+{
+equip chief_spear position WEAR_WIELD
+
+equip torch@midgaard position WEAR_HOLD
+}
+
+load scorpion into rn_4519 zonemax 2
+
+load scorpion into rn_4519 max 1
+
+load trop_parrot into rn_4522 zonemax 2
+
+load trop_parrot into rn_4522
+
+load monkey into rn_4503 zonemax 6
+
+load monkey into rn_4503
+
+load monkey into rn_4503
+
+load monkey into rn_4503
+
+load gorilla into rn_4504 zonemax 3
+
+load gorilla into rn_4504
+
+load gorilla into rn_4504
+
+load boa into rn_4513 zonemax 4
+
+load boa into rn_4513
+
+load snake_moccasin into rn_4548 zonemax 7
+
+load snake_moccasin into rn_4548
+
+load snake_moccasin into rn_4548
+
+load snake_moccasin into rn_4528
+
+load snake_moccasin into rn_4529
+
+load snake_moccasin into rn_4530
+
+load boring_boar into entry zonemax 5
+
+load boring_boar into entry
+
+load bengal_tiger into rn_4507 zonemax 5
+
+load bengal_tiger into rn_4507
+
+load king_jungle into rn_4503 zonemax 1
+
+load sloth_fiesty into rn_4508 zonemax 7
+
+load sloth_fiesty into rn_4508
+
+
+
+load old_prophet into rn_4560 zonemax 1
+
+load vil_wife into rn_4557 local 1 zonemax 5
+
+load vil_boy into rn_4557 local 1 zonemax 5
+
+load vil_girl into rn_4557 local 1 zonemax 5
+
+load vil_wife into rn_4558 local 1 zonemax 5
+
+load vil_boy into rn_4558 local 1 zonemax 5
+
+load vil_girl into rn_4558 local 1 zonemax 5
+
+load vil_wife into rn_4559 local 1 zonemax 5
+
+load vil_boy into rn_4559 local 1 zonemax 5
+
+load vil_girl into rn_4559 local 1 zonemax 5
+
+load vil_wife into rn_4562 local 1 zonemax 5
+
+load vil_boy into rn_4562 local 1 zonemax 5
+
+load vil_girl into rn_4562 local 1 zonemax 5
+
+load vil_wife into rn_4563 local 1 zonemax 5
+
+load vil_boy into rn_4563 local 1 zonemax 5
+
+load vil_girl into rn_4563 local 1 zonemax 5
+
+load tarantula into rn_4523 zonemax 2
+
+load tarantula into rn_4523
+
+load crocodile into rn_4548 zonemax 2
+
+load crocodile into rn_4548
+
+/* END: RESETS@CTHULU.ZON */
+
+/* END: THE END OF CTHULU.ZON :) */
+
+%end
+
+

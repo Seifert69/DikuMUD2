@@ -1,0 +1,837 @@
+/*
+filename    offices
+password    thetimes
+changedby   Palio
+EmailAdd     Whistler <whistler@blinksoft.com>
+request     compile
+version     5
+END HEADER*/
+
+#include <composed.h>
+
+%zone offices
+title "Offices"
+lifespan 20
+reset RESET_ANYHOW
+creators {"icculus","saor"}
+
+%dil
+
+dilbegin noburyme();
+code
+{
+   heartbeat := PULSE_SEC*5;
+   wait (SFB_TICK, (self.flags & UNIT_FL_BURIED));
+   destroy (self);
+}
+dilend
+
+%rooms
+
+                                hallway
+names {"hallway"}
+title "A Hallway"
+descr
+"You are above the Chicken's Rest inn in what seems to be an ordinary
+hallway. The walls are covered in a fine mahogany panelling which gives
+you the feeling this level may contain some offices. There are doorways
+leading East, West and North and there is a set of stairs leading down
+to
+the inn. You notice a small sign above each of the doors."
+extra {"walls", "wall"}
+"They are covered in a very new looking mahogany panel. Even at closer
+inspection they seem flawless, looks like someone paid a fortune to
+build
+this hallway."
+extra {"signs", "sign"}
+"There is one above each door. The one to the north reads 'Helper
+Network', the one to the east reads 'Valhalla Times', and the sign to
+the
+west reads 'Games Development'."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+north to helper_room open {EX_CLOSED, EX_OPEN_CLOSE}
+                     keyword {"door"};
+east to vt_o open {EX_CLOSED, EX_OPEN_CLOSE}
+             keyword {"door"};
+west to conference_room open {EX_CLOSED, EX_OPEN_CLOSE}
+                        keyword {"door"};
+down to inn@udgaard descr "Go back down to the Chicken's Rest.";
+ALWAYS_LIGHT
+end
+
+                               helper_room
+
+names {"designer helper room", "designer room", "helper room"}
+title "The Designer Helper's Network"
+descr
+"As you enter the room you are quite taken aback by the sheer amount of
+stuff lying around here and there. This room defies the very definition
+of 'cluttered'! There is a Very large desk in the corner and you notice
+several blueprints scattered about its surface. There is one chair
+stationed at the desk but I sincerely doubt anyone uses it!"
+extra {"desk"}
+"It is a fine oak desk and looks pretty large, although it could be
+twice
+the size and still not have room enough for eveything on it!"
+extra {"chair"}
+"This is a fine oak chair with a comfortable looking cushion, but it
+really looks like it never has been sat in!"
+extra {"blueprints", "blueprint"}
+"This is very interesting! You see the actual blueprints for the towns
+of
+Udgaard, Midgaard and Urland! These documents must be ancient indeed!
+One
+such blueprint says 'The Guild of Rangers'. It is dated at least two
+years
+back, so how come this guild still has yet to be started!"
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+south to hallway open {EX_CLOSED, EX_OPEN_CLOSE}
+                 keyword {"door"};
+ALWAYS_LIGHT
+end
+
+                            conference_room
+
+title "Conference Room"
+descr
+"You are in a large conference room. In the center of the room is a
+large rectangular table made of solid cheery tree. Around the table are
+twelve nice leather chairs. In one corner is a drawing board with many
+sketches. On the east and west walls are paintings. There is a plaque on
+the north wall right behind the podium. You get the feeling that this
+room is used to discuss game and newspaper ideas."
+extra {"podium"}
+"A very large wood podium is behind the dictator's chair."
+extra {"plaque","north"}
+"The plaque says: This room was made especially for the Valhalla Times
+Newspaper staff."
+extra {"table"}
+"The table is about two inches thick and looks very sturdy. You believe
+a
+traveling side show could perform on this table without hurting it."
+extra {"chairs","chair","leather"}
+"The chairs are made of very fine leather. The texture looks very
+familiar. Could they be from Tassel Grove?"
+extra {"board","drawing board","sketches"}
+"The board looks alot like slate...there is some white stuff under the
+board itself. Circled many time are the letters: CTF!!"
+extra {"east","west","paintings","walls"}
+"On the east wall is a painting of Market Square in Midgaard, on the
+west wall is a painting of Village Square in Udgaard. You notice that
+the Newsstand sticks out in both pictures."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+east to hallway open {EX_OPEN_CLOSE, EX_CLOSED}
+                keyword {"door"};
+end
+
+                                   vt_o
+
+title "Valhalla Times Main Office"
+descr
+"This is a very spacious room that looks like it could hold many people
+going through it at once. More the better for a newspaper office. The
+walls are dark oak and there is a desk near the west wall. Behind the
+desk
+are big gold letters. The carpet is black and it makes you wonder why."
+extra {"walls","wall","oak","dark oak"}
+"The walls are very dark and as you get closer you notice they are very
+solid also."
+extra {"desk"}
+"This is a pretty plain desk, unlike the rest of the office, it has
+silver
+sides. It just doesn't seem to match."
+extra {"letters","gold letters","big letters","gold","big"}
+"Thease letters are HUGE!!! They say:&l
+
+        \        /    -------
+          \    /         |         &c+wValhalla Times Newspaper&cw
+            \/           |"
+
+extra {"carpet","floor","black carpet"}
+"You notice how dark it is and you can't help from thinking how well it
+would hide blood stains."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+west to hallway open {EX_OPEN_CLOSE, EX_CLOSED}
+                keyword {"door"};
+end
+
+%objects
+
+/* ****** Necessary Boards ****** */
+
+                           designer_board
+
+names {"designer board", "board"}
+title "the Designer's Network board"
+descr "The Designer's Network bulletin board is mounted on the wall."
+type ITEM_OTHER
+special SFUN_BULLETIN_BOARD "designer"
+end
+
+                           paper_board
+
+names {"newspaper board", "board"}
+title "the Valhalla Times board"
+descr "The Valhalla Times bulletin board is mounted on the wall."
+type ITEM_OTHER
+special SFUN_BULLETIN_BOARD "paper"
+end
+
+/* ****** End of board defs ****** */
+
+                            newspaper1
+
+names {"newspaper", "paper", "valhalla times", "times"}
+title "the &c+wV&cwalhalla &c+wT&cwimes newspaper&c+b: &cwsection &c+wA&cw"
+descr "&c+wT&cwhis newspaper is titled &c+b'&c+wT&cwhe &c+wV&cwalhalla
+&c+wT&cwimes&c+b' &cwsection &c+wA&c+b.&cw"
+manipulate {MANIPULATE_TAKE}
+type ITEM_NOTE
+weight 1
+
+extra {}
+"&l
+&c+y-=-=-=-=-=-=-=-=-=-=-=-=-&cw
+   &c+wT&cwhe &c+wV&cwalhalla &c+wT&cwimes
+    &c+wV&cwolume &c+w2
+     &c+wI&cwssue &c+w1
+      &c+wM&cway &c+w3&c+b, &c+w1997
+&c+y-=-=-=-=-=-=-=-=-=-=-=-=-&cw
+
+To read a specific article, type 'look article #', 'read article #', 'examine
+article #', or simply type 'look #', 'read #', 'examine #.' :)
+
+                             &c+wTABLE OF CONTENTS
+
+&c+wS&cwection &c+wA&c+b:
+&c+y----------
+&c+wA&cwrticle &c+b1  : &c+wT&cwhe &c+wF&cwront &c+wP&cwage
+&c+wA&cwrticle &c+b2  : &c+wA N&cwote from the &c+wE&cwditor
+&c+wA&cwrticle &c+b3  : &c+wT&cwhe &c+wM&cwill of &c+wR&cwumors
+&c+wA&cwrticle &c+b4  : &c+wA&cwn &c+wI&cwnterview &c+wW&cwith &c+wP&cwapi
+
+&c+wS&cwection &c+wB&c+b:
+&c+y----------
+
+&c+wNOT IN THIS SECTION &c+b- &c+wP&cwlease read section B&c+b.&cw"
+
+extra {"article 1", "1"}
+"&l
+&cyoooo&c+yO&cyoooo&c+yO&cyoooo&c+yO&cyoooo&c+yO&cyoooo
+     &c+wT&cwhe &c+wF&cwront &c+wP&cwage
+&cyoooo&c+yO&cyoooo&c+yO&cyoooo&c+yO&cyoooo&c+yO&cyoooo&cw
+
+&c+wE&cwxtra&c+b! &c+wE&cwxtra&c+b! &c+wR&cwead all about it&c+b!
+
+&c+wH&cwear ye! Hear ye! The Valhalla Times is back! (really!) If you wish to
+contribute to the Times, either as a full-time writer, guest writer, etc,
+please send mudmail to Batlin (or you can email him at 'risksan@travelin.com'
+with the subject as 'Valhalla Times'). Even though we're just getting back
+on our feet, I know that we can make this a GREAT paper :)
+
+&c+wC&cwongratulations Cinnamon! After four months of intense stone crunching,
+she has finally completed the elusive 'Birth Stone Quest.' She thanks
+the many who have given her stones, and tells those who still have the
+quest ongoing (just about everyone else but her) to never give up, as
+'it's a complete joy when you know you've done it.'
+
+&c+wT&cwhe Valhalla Times is also holding an ongoing contest! If you are a
+writer and submit any 'newsworthy' material, such as poems, journal entries,
+short stories, serial-type stories, recipes, etc, you're automatically
+eligible!"
+
+
+extra {"article 2", "2"}
+"&l
+&cyoooo&c+yO&cyoooo&c+yO&cyoooo&c+yO&cyoooo&c+yO&cyoooo
+ &c+wA N&cwote &c+wF&cwrom &c+wT&cwhe &c+wE&cwditor
+&cyoooo&c+yO&cyoooo&c+yO&cyoooo&c+yO&cyoooo&c+yO&cyoooo&cw
+
+&c+wG&cwreetings, good reader! As you may know, this is the first issue of the
+Times in quite a long while. Many of you may have been eagerly awaiting
+this issue, and I hope this does not disappoint you. It's here at last!
+
+&c+wB&cwatlin &c+wA&cwldaron&c+b, &c+wS&cwcribe of the &c+wT&cwimes"
+
+extra {"article 3", "3"}
+"&l
+&cyoooo&c+yO&cyoooo&c+yO&cyoooo&c+yO&cyoooo&c+yO&cyoooo
+   &c+wT&cwhe &c+wM&cwill &c+wO&cwf &c+wR&cwumors
+&cyoooo&c+yO&cyoooo&c+yO&cyoooo&c+yO&cyoooo&c+yO&cyoooo&cw
+
+&c+b*&cw There has been much talk surrounding Khorsabad and its surrounding
+areas, as great rifts in the desert are beginning to open. Will we be
+seeing Arabian Newbies? Caravans and Nomads? Giant trapdoor spiders
+that will drag you into their homes to gorge on your struggling body?
+Only time will tell.
+
+&c+b*&cw Urgggg... Ugkkkk... Gruuuug... that's the news being focused on the
+new goblin area. With a human king, the goblins have much to be proud
+of.. their own castle, town, labyrith, and even a cemetary! There is
+much for the eager traveller to learn, so freshen up your Goblinese.
+
+&c+b*&cw According to the Gods, there has been a great disturbance in the
+world. Slowly, magic is leaving the mortal plane. How this will affect
+oldbies and newbies is yet to be seen, but this may be the first of
+many great changes in Valhalla.
+
+&c+b*&cw Obituaries:
+
+  Naksamh, Valhalla's favorite eviscerator, died last month from the
+result of an &c+rIntimidation&cw accident. According to eye-witnesses, he
+said 'Intimidation' one too many times, while he smacked his head on
+a tree branch, causing his hammer to blast his foot clean off. He was
+then rushed to the Midgaard ER, where he was treated for multiple cuts
+and burns. Alas, he died of a result of his injuries. He will be dearly
+missed by his mistress, Maude.
+
+&c+b*&cw Trendar the Mighty, who carried the 'Must-Have' ring, passed away
+last month as well. According to a mage, who met with Trendar in his
+final moments, Trendar was mauled by a gang of griffons, known only
+as 'The Claw.' Midgaard Cityguards are baffled, as they are piecing
+together this mystery.
+
+
+&c+b-&c+wB&cwatlin"
+
+extra {"article 4", "4"}
+"&l
+&cgoooo&c+gO&cgoooo&c+gO&cgoooo&c+gO&cgoooo&c+gO&cgoooo
+ &c+mA&cmn &c+mI&cmnterview &c+mW&cmith &c+mP&cmapi
+&cgoooo&c+gO&cgoooo&c+gO&cgoooo&c+gO&cgoooo&c+gO&cgoooo&cw
+
+The Valhalla Times had the exclusive chance to talk to the great god,
+Papi. As an implementor of Valhalla, Papi has helped to create a world
+that is wonderous, amazing, and above all, interactive. We truly hope
+you enjoy this interview.
+
+&c+bValhalla Times&c+m:&cw 'So what was development on the client like?'
+
+&c+gPapi&c+m:&cw 'Which client?'
+
+&c+bValhalla Times&c+m:&cw 'The Java client :)'
+
+&c+gPapi&c+m:&cw 'Oh, easy! I got it somewhere... Icculus gave me the URL for a
+       place having a Java telnet client. It's not perfect, but I'm
+       changing the multiplexors with options, so it slowly gets better.
+       It's pretty useful now, and a lot better than the default Windows
+       telnet program, as it has colours. But the really exciting client
+       is the one that Atle is working on now.'
+
+&c+bValhalla Times&cm:&cw 'What type of client is that going to be?'
+
+&c+gPapi&c+m:&cw 'Its for Windows 95. Basically, it's a 'telnet' client, but
+       we're adding graphics to it. The first step will be [like] this: There
+       will be maps of the world and all the zones. The maps can be hand-
+       drawn, not computer generated. So, when you walk around Midgaard,
+       you can see on the map where you are in the city. You can zoom out
+       and see where you are in relation to Udgaard, etc. It's really
+       going to be very easy. But, there are two things which trouble me.
+       First of all, someone has to make maps :-) I hope that once we
+       make 2 or 3 maps, then players go wild and create the rest for us,
+       as there are 106 maps to create :-/'
+
+&c+bValhalla Times&c+m:&cw 'There certainly are a lot of zones in Valhalla.
+                 What's your favorite type of zone? Dungeon, forest, etc.'
+
+&c+gPapi&c+m:&cw 'Good question. The first zone that pops to mind is Haon-Dor.
+       I really like that zone for several reasons. It's very detailed.
+       Maze put attention to little details, like it has many mushrooms,
+       in the Light Forest. You can, of course, eat them. In the Dark
+       Forest, [there are] toadstools. But, there you must take care,
+       eat the wrong one, and it's poisoned. If you look at it, though,
+       you'll know. So, it's a fair danger. The Queen Spider also does
+       require a bit of cunning. Walk through the web and you're almost
+       doomed. The spider all [get about] three free poison attacks on
+       you. [If you] crawl on top of the web, you've got a chace. But,
+       probably what I like most about this part of the world is the
+       way that it is interconnected. The river binds it all together.
+       It starts in the mountains of Elfdom, rushes down through the
+       mountains, through the dark part of Haon-Dor, past Udgaard,
+       Cypress Forest, Midgaard, and all the way down to Torsbay. [At]
+       around Ratswharf it splits, so you can [exit] the Wightwarren
+       Zone from there. The river is like a super-highway to Torsbay.
+       I always love when zones get interconnected by more than a room.
+       When they flow seamlessly into each other, it's the best.'
+
+&c+bValhalla Times&c+m:&cw 'So, for the record, how long have you been MUDding?'
+
+&c+gPapi&c+m:&cw 'Since 1989, but that really depends on what you mean with MUD-
+       ding :-)'
+
+&c+bValhalla Times&c+m:&cw 'Ahh... pen and paper RPGer? :)'
+
+&c+gPapi&c+m:&cw 'That too, since 1989. But still, I wouldn't say that I have
+       been MUDding for the past five years. The joy of playing disappears
+       when you have to deal with all the little programming and admin-
+       istrative details. '
+
+&c+bValhalla Times&c+m:&cw 'You're very devoted to Valhalla, obviously :) What
+                 do you think it is that makes Valhalla so popular?'
+
+&c+gPapi&c+m:&cw 'Interactivity. The monsters talk, walk, and do funny things.
+       Eliza maeks nine of ten newbies believe that she is a player (al-
+       beit a stupid one). All the converstions with her are logged.
+       Sometimes, the conversations are so funny, it's unbelievable!
+       Unfortunately, I have not looked at them lately :)'
+
+&c+bValhalla Times&c+m:&cw 'So how did you go about writing Valhalla?'
+
+&c+gPapi&c+m:&cw 'Well, lets see, this is a long story... it was [back] in the
+       days of 1989. I had been playing LP MUD for a month or so, and was all
+       excited. It was at about the same time [that] I had been intro-
+       duced to AD&&D. Obviously, LP MUD lacked lots and lots of things,
+       and it was clear to me that LP was not for players. [Rather] it
+       was for programmers that wanted to be wizards and to program the
+       LP language. The disadvantage was that the world was completely
+       inconsistant. So, as a player, you would be exposed to 50 diff-
+       erent point systems in 50 different zones. [At] about that time,
+       I met Hans-Henrik and Sebastian and Tom. I think it was Tom that
+       told me that the three of them had started 'DikuMud.' I was all
+       excited and joined immediately. '
+
+&c+bValhalla Times&c+m:&cw 'And all of us in the MUDding community are damn glad
+                 that you did! :)'
+
+&c+gPapi&c+m:&cw  ::throws back his head and cackles with insane glee!::
+
+&c+gPapi&c+m:&cw 'I had to go on vacation the next week, but took a printout of
+       the source code, and looked it over during my vacation. At the time I
+       joined, Legoland was nearly running. There was a mini interpreter
+       and database. Well, then we wrote and wrote the code, but we had
+       to constantly struggle with the Computer Department at DIKU. They
+       did not like our project, neither did any of the professors. So,
+       we could [only] run DikuMud from 6PM to 7AM. And even then, if the
+       load on 'Freya' went about four, it had to automatically shutdown.
+       Then, we fortunately got some accounts on some Swedish Club, which
+       I cannot remember the name to, and we could run 24 hours. Anyway,
+       we released the first piece of Diku code in 1989 sometime and it
+       became amazingly popular. [By the way] none of use had programmed
+       in C before. It was our C learning experience (I had done a little
+       on the Amiga, but not much). I think that's why it became so pop-
+       ular. The code was written by dummies and easy to understand. No
+       disgusting C tricks.'
+
+&c+bValhalla Times&c+m:&cw ::grins evilly::
+
+&c+gPapi&c+m:&cw 'Anyway, time went on, the game improved and sometime in 1991
+       Sebastian and I started the design of Diku II. Tom was busy, and
+       so was Hans-Henrik. We completely redesigned the database system
+       into what you know today as 'DMC' or DikuMud Compiler. And that
+       was the start of Diku II. For [about] a year, none of us worked
+       on it, and then Hans-Henrik and I decided to go ahead and give it
+       a last try. Then we setup Valhalla Denmark, and now there's Val-
+       halla Denmark, Singapore, Canada and USA :)'
+
+&c+bValhalla Times&c+m:&cw 'So how is development on DIKU II nowadays?'
+
+&c+gPapi&c+m:&cw 'Diku II turned into Valhalla. Somewhere along the road we
+       decided that the name Diku wasn't that nice. So, it's the same.'
+
+&c+bValhalla Times&c+m:&cw 'Any current plans for Valhalla? Besides the new
+                 clients, that is :)'
+
+&c+gPapi&c+m:&cw 'The plan is to make graphics as maps, then maybe add still
+       pictures for items, monsters and rooms. But, we want to make it so that
+       you can play with or without the graphics. The graphics will just be a
+       nice touch to make it look great, and give it a nice user interface.
+       But, unfortunately, time is money. I have to make a living... (Val-
+       halla donations are used only to run Valhalla) I would wish, that I
+       could use all my time on it... but I'm the first to say that if my
+       other business makes me a millionaire, then I'll hire people to do
+       it for me. I am considering upgrading to a T1 (very seriously.. got
+       three offers here on my desk.) Valhalla can't afford it, but I'll
+       probably pay for the installation myself.'
+
+&c+bValhalla Times&c+m:&cw ::hugs Papi::
+
+&c+bValhalla Times&c+m:&cw 'Just one last question comes to mind. Then you're
+                 free :)'
+
+&c+bValhalla Times&c+m:&cw ::winks suggestively::
+
+&c+gPapi&c+m:&cw ::throws back his head and cackles with insane glee!::
+
+&c+bValhalla Times&c+m:&cw 'How do you think Valhalla and the DIKU MUD system
+                 have changed MUDding?'
+
+&c+gPapi&c+m:&cw 'Well, obviously, when you look at MUD lists, DikuMud and
+       derivatives are the most popular out there, competing only with LP MUD.
+       So, the answer is back with my original statement, that LP is for
+       programmers, Valhalla is for players. Which means... Valhalla has
+       changed MUDding in that... IT'S MORE FUN TO PLAY!'
+
+It certainly is, Papi, it certainly is.
+
+&c+b-&c+wB&cwatlin"
+
+dilcopy noburyme@offices ();
+ dilcopy blowaway (60,"$1n is eatten by some large nasty termites.");
+
+end
+
+                              newspaper2
+
+names {"newspaper", "paper", "valhalla times", "times"}
+title "the &c+wV&cwalhalla &c+wT&cwimes newspaper&c+b: &cwsection &c+wB&cw"
+descr "&c+wT&cwhis newspaper is titled &c+b'&c+wT&cwhe &c+wV&cwalhalla
+&c+wT&cwimes&c+b' &cwsection &c+wB&c+b.&cw"
+manipulate {MANIPULATE_TAKE}
+type ITEM_NOTE
+weight 1
+
+extra {}
+"&l
+&c+y-=-=-=-=-=-=-=-=-=-=-=-=-&cw
+   &c+wT&cwhe &c+wV&cwalhalla &c+wT&cwimes
+    &c+wV&cwolume &c+w2
+     &c+wI&cwssue &c+w1
+      &c+wM&cway &c+w3&c+b, &c+w1997
+&c+y-=-=-=-=-=-=-=-=-=-=-=-=-&cw
+
+To read a specific article, type 'look article #', 'read article #', 'examine
+article #', or simply type 'look #', 'read #', 'examine #.' :)
+
+                             &c+wTABLE OF CONTENTS
+
+&c+wS&cwection &c+wA&c+b:&cw
+
+&c+wNOT IN THIS SECTION &c+b- &c+wP&cwlease read section &c+wA&c+b.
+
+&c+wS&cwection &c+wB&c+b:
+&c+y----------&cw
+&c+wA&cwrticle &c+b5  : &c+wA M&cwob&c+b(&cwile&c+b) &c+wW&cword &c+wS&cwearch
+&c+wA&cwrticle &c+b6  : &c+wA R&cwecipe for &c+wS&cwtuffed &c+wO&cwwlbear
+&c+wA&cwrticle &c+b7  : &c+wH&cwansel and &c+wG&cwretel&c+b: &c+wP&cwart &c+wII
+&c+wA&cwrticle &c+b8  : &c+wH&cwints and &c+wT&cwips for &c+wN&cwewbies
+&c+wA&cwrticle &c+b9  : &c+wO&cwn &c+wC&cwhivalry by &c+wC&cwhivalry"
+
+extra {"article 5", "5"}
+"&l
+&cyoooo&c+yO&cyoooo&c+yO&cyoooo&c+yO&cyoooo&c+yO&cyoooo
+  &c+wM&cwob&c+b(&cwile&c+b) &c+wW&cword &c+wS&cwearch
+&cyoooo&c+yO&cyoooo&c+yO&cyoooo&c+yO&cyoooo&c+yO&cyoooo&cw
+
+.--------------------------------------------.
+| &c+wS P I R I T O F V A L H A L L A B F A M I&cw  |
+|                                            |
+| &c+wA E Q P H O E N I X T A M A I T T P X A Y&cw  |
+|                                            |
+| &c+wE N D A T C O G H U G I N X N S Y G P S R&cw  |
+|                                            |
+| &c+wR N J H A N O O K U O U M A Z K H I R H A&cw  |
+
+|                                            |
+| &c+wI Y B O N E Y Y B O B N N B E C Y O O K M&cw  |
+|                                            |
+| &c+wM W K D G Z O L A N F E I T N I D O L E E&cw  |
+|                                            |
+| &c+wN I N S A N E J A N I T O R A N C B H E R&cw  |
+|                                            |
+| &c+wE S Z A D H G J W Z D H E I D R U N S E A&cw  |
+|                                            |
+| &c+wR E E M H B E A S T L Y F I D O L U I O P&cw  |
+|                                            |
+| &c+wZ O O B E R Y I B B I S B A W M A M T H S&cw  |
+`--------------------------------------------'
+
+&c+wF&cwind the following words&c+b!
+
+&c+wB&cweastly &c+wF&cwido      &c+wH&cwugin              &c+wP&cwhoenix
+&c+wB&cwob               &c+wH&cwikas              &c+wS&cwaerimner
+&c+wB&cwoney             &c+wI&cwnsane &c+wJ&cwanitor     &c+wS&cwam
+&c+wD&cwagnath           &c+wI&cwshlor             &c+wS&cwholee
+&c+wD&cwatcog            &c+wM&cwashkee            &c+wS&cwpare &c+wM&cwary
+&c+wG&cwunthar           &c+wM&cwornick            &c+wS&cwpirit of
+                                     &c+wV&cwalhalla
+&c+wH&cwanook            &c+wO&cwdif &c+wY&cwltsaeb       &c+wT&cwiamat
+&c+wH&cweidruns          &c+wO&cwdin               &c+wZ&cwolan
+&c+wH&cwel               &c+wP&cwennywise          &c+wZ&cwoober &c+wY&cwibbish"
+
+extra {"article 6", "6"}
+"&l
+&cyoooo&c+yO&cyoooo&c+yO&cyoooo&c+yO&cyoooo&c+yO&cyoooo
+ &c+wH&cwow &c+wT&cwo &c+wM&cwake &c+wS&cwtuffed &c+wO&cwwlbear
+&cyoooo&c+yO&cyoooo&c+yO&cyoooo&c+yO&cyoooo&c+yO&cyoooo&cw
+
+&c+wT&cwhis was a little recipe passed from my mother to me, and from her
+mother to my mother, and from her mother's mother to my mother's mother...
+well, you get the idea.
+
+&c+wI&cwngredients&c+b:
+
+&c+wO&cwne &c+wO&cwwlbear &c+n(dead)
+&c+wT&cwen &c+wC&cwhickens &c+n(dead)
+&c+wF&cwourty &c+wF&cwish &c+n(dead)
+&c+wA H&cwundred &c+wE&cwggs
+
+&c+wS&cwteps&c+b:
+
+&c+b1. &c+wK&cwill the owlbear, using a hammer or any other blunt object. The
+key point to remember is NOT to mutilate the owlbear beyond all recognition!
+&c+yP&cyresentation is &c+yEVERYTHING!&cw
+
+&c+b2. &c+wS&cwhave the corpse using a razor or a knife. Some folks like their
+food furry... I personally don't. Then gut and clean the owlbear. Be sure to
+wash your hands!
+
+&c+b3. &c+wD&cwepending on how you and your guests like your eggs (hard-boiled,
+raw, etc.) cook them to your preference, then stuff the eggs into pre-gutted
+and cleaned fish.
+
+&c+b4. &c+wG&cwut 'n clean the chickens, then stuff the fish into the chickens.
+
+&c+b5. &c+wN&cwext, you guessed it, gently place the chickens in the owlbear.
+
+&c+b6. &c+wO&cwver a medium heat, or a bonfire, cook the owlbear for two days,
+or until a golden brown.
+
+&c+b7. &c+wD&cwress the owlbear with parsley, vegetables, etc. Add Tuborg or
+Vodka or Gin to the owlbear for that extra kick.
+
+&c+wS&cwerves &c+b30
+
+-&c+wC&cwhef &c+wB&cwatlin"
+
+extra {"article 7", "7"}
+"&l
+&c+w              HANSEL AND GRETEL: THE LATER YEARS - PART 2
+&c+y========================================================================&cw
+     Gretel blushed slightly at the sight of this little man. 'Why, I am
+Gretel,' she said with a smile.
+     Mitlav peered keenly at Gretel, whose face was turning redder by the
+second. After at least a few minutes of this 'sizing up,' Mitlav grinned
+thoughtfully.
+     'And why have you returned to the scene of the crime, Gretel?' Mitlav
+asked with a sadistic grin plastered on his face.
+     Gretel pondered this question slowly. She could, of course, say for
+the cheese. On the other hand, she could say she came to repent for her
+childish behavior those many years ago.
+     'Why, I came for the cheese,' Gretel said at last.
+     Mitlav looked quite astonished at the answer. Twisting his brow into
+a tiny furl, he turned around, gazing off into the distance. After some
+time, he faced Gretel again.
+     'The CHEESE!?! Is that all you have to say for yourself? It's people
+like you that make my job SO disgusting.'
+     'Your job?' Gretel asked curiously.
+     'I'm a private investigor,' said Mitlav with grin. 'If there are any
+crimes, I'm the one who investigates and sends the criminals to jail.'
+     Gretel suddenly felt very warm. Not only had she just insulted a man
+of the law, she put herself into a very sticky situation. She felt like
+running, running away from this gingerbread house. But, alas, she knew
+that she could not run from the law. Mitlav would again catch her... and
+it would not be a pretty sight.
+     Tossing her hair aside, Gretel winked seductively at Mitlav. If she
+couldn't fight the law, maybe she could do something else...
+
+&c+w                  TO BE CONTINUED&cw.......
+
+&c+wD&cwisclaimer&c+b:  &c+wT&cwhis is purely a work of fictional fiction.  Any
+resemblance to any one or place in Valhalla is a figment of your
+imagination.  In other words, don't go looking for the gingerbread
+house!
+
+&c+b-&c+wB&cwatlin"
+
+extra {"article 8", "8"}
+"&l
+&cyoooo&c+yO&cyoooo&c+yO&cyoooo&c+yO&cyoooo&c+yO&cyoooo
+   &c+wH&cwints &c+wf&cwor &c+wN&cwewbies
+&cyoooo&c+yO&cyoooo&c+yO&cyoooo&c+yO&cyoooo&c+yO&cyoooo&cw
+
+&c+wA&cws a newbie, one probably will need all the help he/she can get. Here
+are a few hints, suggestions and tidbits of advice that can help you
+through the first few levels.
+
+&c+b1) &c+wS&cwtick to the Haon-Dor and Cypress Forests for your first couple
+levels. The experience here is perfect for those just getting started.
+Also, be sure to pay attention to descriptions as you wander the two
+forests. 'A clearing in the forest' would be much safer than 'In the
+heart of a deep, dark forest' :)
+
+&c+b2) &c+wT&cwake the Newbie Tour! This will greatly familiarize you with the
+world of Valhalla, and even earn you a level and a new weapon.
+
+&c+b3) &c+wU&cwse the Newbie Guide. Just say 'help me newbie guide' whenever
+you need some help getting back to Udgaard, if you find yourself lost, or
+to retrieve your corpse. Remember, the Newbie Guide can only help you
+if you are a newbie, though.
+
+&c+b4) &c+wA&cwsk high-level players for suggestions or advice, maybe even some
+equipment. Remember when you ask, always be polite. A simple 'Hi, I'm
+a newbie. Can you help me out please?', or even 'Hi. Are you busy?'
+will suffice. Do unto others as they would do unto you.
+
+&c+b5) &c+wU&cwse the 'Newbie' Channel. Type 'comm add newbie' to access this
+very useful channel. Here, you can talk to Valhalla's Immortal Newbie
+Guide, Zig, as well as some high-level players.
+
+&c+b6) &c+wA&cwlways 'consider' your foes, before attacking. This can sometimes
+be the difference between life and death. If you recieve the message
+of 'Plenty of time to flee' you'll most likely have no trouble with
+the mob, or if you get the message 'You ARE Mad!' you're basically
+committing suicide if you attack it. ;)
+
+&c+b7) &c+wE&cwxperience is the best teacher.
+
+&c+b-&c+wB&cwatlin"
+
+extra {"article 9", "9"}
+"&l
+&cyoooo&c+yO&cyoooo&c+yO&cyoooo&c+yO&cyoooo&c+yO&cyoooo
+      &c+wO&cwn &c+wC&cwhivalry
+&cyoooo&c+yO&cyoooo&c+yO&cyoooo&c+yO&cyoooo&c+yO&cyoooo&cw
+
+&c+wI&cwn the wake of much debate on the nature of honor and chivalry, I have
+chosen to write regarding these topics.  As I see honor as part of chivalry,
+I will not treat them as separate topics, but rather address the whole.
+
+&c+wM&cwany claim that chivalry is dead.  I claim that rather it is, as with
+so many other things, not well taught.  For how can a concept be dead when we
+so mourn its death.  Chivalry is a way of life, a code if you will, by which
+one may choose to live.  It is, as with all concepts, something that exceeds
+the most basic concepts of living, and ideally sets man apart from beast.  It
+is, in its most pure form, a code for how people should act towards one ano-
+ther.  I will go into the specifics of this code, though I think you shall find
+most of it is what every child learns early on.  The code of chivalry follows,
+with comments.
+
+&c+b1) &c+wT&cwo live one's life so that it is worthy of respect and honor by
+        all. This does not mean all must respect you, for there will always be
+        those who show poor judgment.
+
+&c+b2) &c+wF&cwair Play&c+b:
+        &c+wN&cwever attack an unarmed foe.
+        &c+wN&cwever attack from behind
+        &c+wD&cwo not cheat in game or bargain
+        &c+wH&cwarm not the innocent, torture not your captives
+
+&c+b3) &c+wN&cwobility&c+b:
+        &c+wE&cwxhibit self discipline
+        &c+wS&cwhow respect to authority
+        &c+wO&cwbey the law
+        &c+wA&cwdminister justice
+        &c+wG&cwive mercy
+        &c+wP&cwrotect the innocent
+        &c+wR&cwespect others
+
+&c+b4) &c+wV&cwalor&c+b:
+        &c+wE&cwxhibit courage in word and deed
+        &c+wA&cwvenge the wronged
+        &c+wD&cwefend the weak and innocent
+        &c+wF&cwight with honor
+        &c+wN&cwever abandon a friend, ally, or noble cause
+
+&c+b5) &c+wH&cwonor&c+b:
+        &c+wA&cwlways keep one's word of honor
+        &c+wA&cwlways maintain one's principles
+        &c+wN&cwever betray confidence or comrade
+        &c+wA&cwvoid deception and treachery
+        &c+wR&cwespect life
+        &c+wO&cwffer challenge and quarter
+
+&c+b6) &c+wC&cwourtesy&c+b:
+        &c+wE&cwxhibit manners
+        &c+wB&cwe polite and attentive
+        &c+wR&cwespectful of host, authority, and each other
+
+&c+b7) &c+wL&cwoyalty&c+b:
+        &c+wT&cwo your charges, allies, self, and the code.
+
+&c+wY&cwou will note that nowhere does it spell out 'do not attack four on
+one', yet I would venture to say that 'Fight with honor' and 'Always
+maintain one's principles' surely come into play.  In short, the code is not
+an all encompassing set of laws.  Instead, it is a guideline, meant to help
+those who wish to stand for more than simply themselves.  I hope that
+by sharing it with you, perhaps I can move you to live by the ideals it
+stands for.
+
+&c+yC&cyhivalry &c+b- &cybeliever in the code&cw"
+
+dilcopy noburyme@offices ();
+ dilcopy blowaway (60,"$1n is eatten by some large nasty termites.");
+
+end
+
+
+                              news_stand
+
+names {"newsstand", "stand"}
+title "the Newsstand"
+descr "The Newsstand is here."
+CONTAINER_DEF(10)
+extra {}
+"This is the Newsstand. This edition is free and can be yours by saying
+say 'newspaper please'."
+
+dilbegin gpaper();
+var
+  item1 : unitptr;
+  item2 : unitptr;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*4;
+
+   :start:
+   wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and (command(CMD_SAY))
+                   and ("newspaper please" in argument)));
+
+   block;
+   item1 := restore("offices","newspaper2");
+   if (item1 == null)
+     item1 := load("newspaper2@offices");
+
+   item2 := restore("offices", "newspaper1");
+   if (item2 == null)
+     item2 := load("newspaper1@offices");
+
+   if ((item1.loadcount > 50) or (item2.loadcount > 50))
+   {
+      act("The machine grinds loudly, but produces no newspaper. "+
+          "Obviously, the machine is out of ink because too many copies
+"+
+          "have been produced... Try again later.",
+          A_ALWAYS, activator, null, null, TO_CHAR);
+      destroy(item1);
+      destroy(item2);
+   }
+   else
+   {
+      act("The machine spits out a newspaper which floats "+
+          "to your inventory.",
+          A_ALWAYS, activator, null, null, TO_CHAR);
+      act("The machine puts a newspaper in "+activator.name+"'s inventory.",
+          A_ALWAYS, activator, null, null, TO_REST);
+      link(item1, activator);
+      link(item2, activator);
+   }
+   goto start;
+}
+dilend
+end
+
+/* ****** End of Paper Defs ****** */
+
+%mobiles
+%reset
+
+load designer_board into helper_room local 1
+load paper_board into vt_o local 1
+
+load news_stand into postoffice@udgaard local 1
+load news_stand into market_sq@midgaard local 1
+
+door hallway NORTH {EX_CLOSED, EX_OPEN_CLOSE}
+door hallway EAST {EX_CLOSED, EX_OPEN_CLOSE}
+door hallway WEST {EX_CLOSED, EX_OPEN_CLOSE}
+door helper_room SOUTH {EX_CLOSED, EX_OPEN_CLOSE}
+door vt_o WEST {EX_CLOSED, EX_OPEN_CLOSE}
+door conference_room EAST {EX_CLOSED, EX_OPEN_CLOSE}
+
+%end
+

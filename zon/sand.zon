@@ -1,0 +1,4460 @@
+/*
+filename    sand
+password    getcrabs
+changedby   Eirinn
+EmailAdd     Jpc (Gypsy) <clarej@tcd.ie>
+request     compile
+version     15
+END HEADER*/
+
+/* Zone:    Baardek Beach                                         */
+/* Author:  Sand                                                  */
+/*                                                                */
+                                             
+
+/* Version Notes:
+
+ 5/17/96
+  v15 - Eirinn changed crabs so that they don't continue to affect
+	people after death.
+
+ 9/10/96
+   v12 -- Changed my home, so that it has a less obnoxious name
+          and loads a chat board.
+
+
+ 7/31/96
+   v10 -- Fixed the immortal protection for crabs so that the dil
+          destroys itself, also made the shrinking potion unquittable
+          for both the courier and the shrunk person.
+
+ 7/25/96
+   v9  -- Fixed the shrinking potion to use baseweight instead of 
+          because people were getting really fat. :P
+          Remove spl_open_gate() because it was put into basis.zon
+
+
+ 7/23/96
+   v8  -- Changed the shrinking potion to set MANIPULATE_TAKE on the 
+          character instead of blocking the get command and worrying 
+          about all the linking problems, added the weight loss feature
+          to make this more realistic and plausable.
+
+ 6/30/96
+   v7  -- Changed SFUN_*'s to new restrict dils.
+
+
+Previous versions undocumented..
+*/
+
+#include<composed.h>
+
+#define VOMOULK_ONGOING           "Helping the Cheleho.."
+#define VOMOULK_COMPLETE          "Friend of the Cheleho tribe."
+#define SNERT_ONGOING             "Fetching things for Snert."
+#define SNERT_COMPLETE            "Snert's Quest, Complete."
+#define SNERT_PISSED              "Snert's Enemy."
+#define GET_NOTES_FOR_SILK        "Getting Mahrnak's Notes.."
+#define BRING_SHIT_TO_GRISHALMUS  "Getting a sword for Grishalmus.."
+#define SILK_DONE                 "Silk's Dirty Work, Done."
+#define TUNISK_ONGOING            "Searching for a Dragon's Wants.."
+#define TUNISK_COMPLETE           "A Dragon Befriended."
+
+%zone sandzone
+title "Baardek Beach"
+
+lifespan 20
+reset RESET_ANYHOW
+
+creators {"javelin"}
+notes
+"This Zone is by, Philip Burch&n
+&c+g javelin@eskimo.com &cw or.. &n
+&c+g javelin@nsccux.sccd.ctc.edu &cw &n
+Feel free to mail me feedback this way as well as mudmail&n &n
+The Beach area of this zone was created for level 20-40 characters.&n
+The Cliff top area is the dwelling of Native American type peoples who are
+traders of fur that they hunt. Under the cruel oppression of Baardekans,
+who's superior advancement keeps them exploiting the Cheleho."
+
+help
+"&c+wThe beach zone is a long east west strip of beach, you can climb into
+the cliffs and sail on the ocean, there are even a few quests here.
+Remeber to consider mobs and you'll be fine.&n
+&cwThis zone is for level 25 - 35's soloing. Look around for hidden stuff
+there is some here, I haven't made it too tough as long as you read the
+descriptions.. If you need help with something else, Yell for Sand or
+Javelin, and I will help you as much as is allowed!&n"
+
+/***********************************************************************/
+/*------------------------------ DIL ----------------------------------*/
+/***********************************************************************/
+%dil
+/*--- SMALL ----*/
+dilbegin small();
+var
+  rest        :integer;
+  picker      :unitptr;
+  inter       :integer;
+  old_title   :string;
+  Irnd        :integer;
+  old_weight  :integer;
+code
+{
+  heartbeat := PULSE_SEC * 3;
+  Irnd := rnd( 1, ((self.abilities[ABIL_MAG])/2));
+  pause;
+  act("&c+yYour body begins to feel twisted and bent.&cw", A_SOMEONE, self, null, null, TO_CHAR);
+  act("$1n's body bubbles and twists dramatically.", A_SOMEONE, self, null, null, TO_REST);
+  pause;
+  old_title := self.title;
+  self.title := "(shrunk)";
+  self.hp := 10;
+  position_update(self);
+
+  act("&c+yYou look around and notice that you are tiny.&cw", A_SOMEONE, self, self, null, TO_CHAR);
+  act("$1n seems to have disappeared, you then notice $1e is simply tiny.", A_SOMEONE, self, null, null, TO_REST);
+  set(self.manipulate, MANIPULATE_TAKE);
+  old_weight := self.baseweight;
+  setweight(self, 5);
+  rest := 0;
+ :resting:
+  inter := interrupt(SFB_TICK, TRUE, tik);
+  if(rest > 50 + Irnd) goto done;
+  if(rest == 30+ Irnd){
+    act("&c+yYour body begins to twist and bend.&cw", A_SOMEONE, self, null, null, TO_CHAR);
+    act("$1n's body bubbles and twists dramatically.", A_SOMEONE, self, null, null, TO_REST);
+  }
+  wait(SFB_CMD, TRUE);
+  if((command("quit")) and (activator == self)){
+    block;
+    self.title := old_title;
+    unset(self.manipulate, MANIPULATE_TAKE);
+    setweight(self, old_weight);
+    exec("quit", self);
+  }
+  else if((command("quit")) and (activator == self.outside)){
+    block;
+    act("You cannot quit while carrying a shrunk person.", A_ALWAYS, self.outside, null, null, TO_CHAR);
+    goto resting;
+  }
+  else if(command(CMD_EXIT)){
+    if(self.outside.type == UNIT_ST_PC){
+      block;
+      link(self, self.outside.outside);
+      act("$2n crawls out of $1n.", A_SOMEONE, picker, self, null, TO_REST);
+      act("$2n leaves your arms reluctantly.", A_SOMEONE, picker, self, null, TO_CHAR);
+      act("&c+gYou plop to the floor.&cw", A_SOMEONE, self, null, null, TO_CHAR);
+      exec("look", self);
+      position_update(self);
+    }
+    goto resting;
+  }
+  else if((command(CMD_DROP)) and (activator == self.outside) and (argument in self.names)){
+    block;
+    act("&c+g$2n drops you to the ground. WHUMP!&cw", A_SOMEONE, self, self.outside, null, TO_CHAR);
+    act("&c+g$1n drops $2n to the ground. WHUMP!&cw", A_SOMEONE, self.outside, self, null, TO_REST);
+    act("&c+gYou drop $2n to the ground. WHUMP!&cw", A_SOMEONE, self.outside, self, null, TO_CHAR);
+    link(self, self.outside.outside);
+    exec("look", self);
+    self.position := POSITION_SITTING;
+    position_update(self);
+    goto resting;
+  }
+  else{
+    pause;
+    rest := rest + 1;
+    goto resting;
+  }
+  :done:
+  clear(inter);
+  act("&c+gYour body returns to its original size!&cw", A_SOMEONE, self, null, null, TO_CHAR);
+  self.title := old_title;
+  unset(self.manipulate, MANIPULATE_TAKE);
+  setweight(self, old_weight);
+  if(self.outside.type == UNIT_ST_PC){
+    link(self, self.outside.outside);
+    act("$1n's body quickly returns to a normal size.", A_SOMEONE, self, null, null, TO_REST);
+    act("&c+w$1n falls to the floor.&cw", A_SOMEONE, self, null, null, TO_REST);
+    act("&c+wYou plop to the floor.&cw", A_SOMEONE, self, null, null, TO_CHAR);
+    exec("look", self);
+  }
+  else act("$1n's body suddenly returns to a normal size.", A_SOMEONE, self, null, null, TO_REST);
+  quit;
+ :tik:
+  clear(inter);
+  if(self.outside.type == UNIT_ST_NPC){
+    act("&c+yYou cannot be in $2n.&cw", A_ALWAYS, self, self.outside, null, TO_CHAR);
+    link(self, self.outside.outside);
+  }
+  rest := rest +1;
+  if(self.hp > 10)
+  {
+    self.hp := 10;
+    position_update(self);
+  }
+  goto resting;
+}
+dilend
+/*------ BEACH NOISE ------*/
+dilbegin beach_noise();
+var
+  i  :integer ;
+code
+{
+  heartbeat:=PULSE_SEC*60;
+:start:
+  i := rnd (1,20);
+  if(i == 1) act("You hear the waves rolling over each other.",A_SOMEONE,self,null,null,TO_ALL);
+  if(i == 2) act("A seagull flies over.",A_SOMEONE,self,null,null,TO_ALL);
+  if(i == 3) act("A nice summer breeze goes through your hair.",A_SOMEONE,self,null,null,TO_ALL);
+  if(i == 4) act("You hear the waves rolling over each other",A_SOMEONE,self,null,null,TO_ALL);
+  if(i == 5) act("You think you should sit down here and watch the sun set.",A_SOMEONE,self,null,null,TO_ALL);
+  if(i == 6) act("Wow, the beach is beautiful this time of the year.",A_SOMEONE,self,null,null,TO_ALL);
+  if(i == 7) act("What a romantic place this is.*sigh*",A_SOMEONE,self,null,null,TO_ALL);
+  if(i == 8) act("You wonder how many people have fallen in love here.",A_SOMEONE,self,null,null,TO_ALL);
+  pause;
+  goto start;
+}
+dilend
+/*------ FALLING ROCKS  ------*/
+dilbegin falling_rocks();
+var
+  u :unitptr;
+code
+{
+  heartbeat:= PULSE_SEC * 5;
+:start:
+  foreach(UNIT_ST_PC, u)
+  {
+    if(rnd(1,20)==1)
+    {
+      act("&c+yA rock tumbles down the cliff and lands on your head, knocking you to the ground, OUCH!!&cw",A_SOMEONE,u,null,null,TO_CHAR);
+      act("A rock falls from above and lands on $1n's head, knocking $1m to the ground, OUCH!!",A_SOMEONE,u,null,null,TO_REST);
+      u.hp := (u.hp / 2) ;
+      u.position:=POSITION_SITTING;
+      position_update(u);
+    }
+  }
+  pause; pause;
+  goto start;
+}
+dilend
+/*------ GET CRABS  ------*/
+dilbegin get_crabs();
+var
+  x       :integer;
+  current :unitptr;
+  u       :unitptr;
+code
+{
+  heartbeat:= PULSE_SEC * 3;
+:start:
+  foreach(UNIT_ST_PC, u)
+  {
+    if(((u.position < POSITION_FIGHTING) and (not dilfind("crabs@sandzone",u)) and (rnd(1,9)==1)))
+    {
+      dilcopy("crabs@sandzone",u);
+      current := equipment(u, WEAR_LEGS);
+      if(current.name != null)
+      {
+        act("You feel something crawl up your $2n!",A_SOMEONE,u,current,null,TO_CHAR);
+        act("$1n looks uncomfortable and shakes $1s $2n!",A_SOMEONE,u,current,null,TO_REST);
+      }
+      else
+      {
+        act("You feel something crawl up your bare leg!",A_SOMEONE,u,current,null,TO_CHAR);
+        act("$1n looks uncomfortable and shakes $1s naked leg!",A_SOMEONE,u,current,null,TO_REST);
+      }
+    }
+  }
+  pause; pause;
+  goto start;
+}
+dilend
+/*------ CRABS ------*/
+dilbegin aware recall crabs();
+var
+  arg         :string;
+  acti        :unitptr;
+  tar         :unitptr;
+  i           :integer;
+  icmd_give   :integer;
+  icmd_pat    :integer;
+  icmd_fond   :integer;
+  icmd_high   :integer;
+  icmd_lick   :integer;
+  icmd_hug    :integer;
+  icmd_kiss   :integer;
+  icmd_french :integer;
+  icmd_ruffle :integer;
+  icmd_kill   :integer;
+  icmd_poke   :integer;
+  icmd_punch  :integer;
+  pcdead : integer;
+code
+{
+  heartbeat:= PULSE_SEC * 5;
+:start:
+  icmd_give   :=  interrupt(SFB_DONE, command(CMD_GIVE), infect);
+  icmd_pat    :=  interrupt(SFB_DONE, command("pat"), infect);
+  icmd_fond   :=  interrupt(SFB_DONE, command("fondle"), infect);
+  icmd_high   :=  interrupt(SFB_DONE, command("highfive"), infect);
+  icmd_lick   :=  interrupt(SFB_DONE, command("lick"), infect);
+  icmd_hug    :=  interrupt(SFB_DONE, command("hug"), infect);
+  icmd_kiss   :=  interrupt(SFB_DONE, command("kiss"), infect);
+  icmd_french :=  interrupt(SFB_DONE, command("french"), infect);
+  icmd_ruffle :=  interrupt(SFB_DONE, command("ruffle"), infect);
+  icmd_kill   :=  interrupt(SFB_DONE, command("kill"), infect);
+  icmd_poke   :=  interrupt(SFB_DONE, command("poke"), infect);
+  icmd_punch  :=  interrupt(SFB_DONE, command("punch"), infect);
+  pcdead := interrupt(SFB_DEAD, (activator==self), pcisdead);
+  if(rnd(1,15)==1)
+  {
+    i := rnd(1,5);
+    if(i == 1)
+    {
+      act("&c+yA sand crab nibbles at your flesh!&cw",A_SOMEONE,self,null,null,TO_CHAR);
+      act("A sand crab nibbles at $1n's flesh!",A_SOMEONE,self,null,null,TO_REST);
+      if(self.hp > 2)
+      {
+        self.hp := self.hp - 2;
+        position_update(self);
+      }
+    }
+    else if(i == 2)
+    {
+      act("&c+yA chorous of small giggles eminate from your body!&cw",A_SOMEONE,self,null,null,TO_CHAR);
+      act("A chorus of small giggles come from $1n's body!",A_SOMEONE,self,null,null,TO_REST);
+    }
+    else if(i == 3)
+    {
+      act("&c+yYou are forced to scratch an itch!&cw",A_SOMEONE,self,null,null,TO_CHAR);
+      act("$1n hops around scratching $1mself.. Foolish really.",A_SOMEONE,self,null,null,TO_REST);
+      if(self.hp > 2)
+      {
+        self.hp := self.hp - 1;
+        position_update(self);
+      }
+    }
+    else if(i == 4)
+    {
+      act("&c+yYou try to scratch yourself without others noticing.&cw",A_SOMEONE,self,null,null,TO_CHAR);
+      act("$1n tries to scratch $1mself without you noticing.",A_SOMEONE,self,null,null,TO_REST);
+    }
+  }
+  if(self.type == UNIT_ST_NPC) quit;
+  if(self.level > 200)
+  {
+    act("&c+yYou are too godly to be crab infested.&cw",A_SOMEONE,self,null,null,TO_CHAR);
+    act("&c+w$1n is too godly to be crab infested.&cw",A_SOMEONE,self,null,null,TO_REST);
+    quit;
+  }
+  pause;pause;pause;pause;
+  goto start;
+ :infect:
+  acti := activator;
+  tar  := target;
+  arg  := argument;
+  secure(acti, start);
+  secure(tar, start);
+  clear(icmd_give);
+  clear(icmd_pat);
+  clear(icmd_give);
+  clear(icmd_pat);
+  clear(icmd_fond);
+  clear(icmd_high);
+  clear(icmd_lick);
+  clear(icmd_hug);
+  clear(icmd_kiss);
+  clear(icmd_french);
+  clear(icmd_ruffle);
+  clear(icmd_kill);
+  clear(icmd_poke);
+  clear(icmd_punch);
+  if(((acti == self) and (not dilfind("crabs@sandzone", tar))))
+  {
+    if(rnd(1,3) == 1)
+    {
+         dilcopy("crabs@sandzone", tar);
+         act("Your contact with $2n makes you itch.",A_SOMEONE,tar,acti,null,TO_CHAR);
+         act("Your contact with $2n makes $2m itch.",A_SOMEONE,acti,tar,null,TO_CHAR);
+    }
+  }
+  if(((tar == self) or (arg == self.name)))
+  {
+    if(rnd(1,3) == 1)
+    {
+      if(not dilfind("crabs@sandzone", acti))
+      {
+        dilcopy("crabs@sandzone", acti);
+        act("Touching $2n makes you itch.",A_SOMEONE,acti,tar,null,TO_CHAR);
+        act("$2n's touching you made $2m itch.",A_SOMEONE,tar,acti,null,TO_CHAR);
+      }
+    }
+  }
+  unsecure(acti);
+  unsecure(tar);
+  goto start;
+
+:pcisdead:
+quit;
+}
+dilend
+/***********************************************************************/
+/*----------------------------- ROOMS ---------------------------------*/
+/***********************************************************************/
+%rooms
+/*    Forest Trail    */
+forest_trail
+  title "A narrowing part of the forest path"
+  names {"forest trail", "forest"}
+  descr
+  "The beautiful forest continues far to the north but here the trees grow
+  smaller and closer together. The path appears to be traffiked more often
+  by wandering trader then men on horseback. There is also a subtle salty tang to the air
+  here."
+  movement SECT_FOREST
+  extra {"trees", "branches"}
+  "The trees look shorter as you travel south but are otherwise very nice looking."
+  extra {"path", "trail", "ground"}
+  "The trail continues south to where you don't know."
+  north to forest13@trees descr "Into thicker forest.";
+  south to path1 descr "On a woodsy trail.";
+end
+/*--- Forest Trail ---*/
+path1
+  title "The thin forest path"
+  names {"forest trail", "forest"}
+  descr
+  "The path weaves lazilly to the north and south, thinning the farther south it gets
+  where sunlight and the cries of gulls break through the woodsy ceiling."
+  movement SECT_FOREST
+  extra {"trees", "branches"}
+  "The trees look shorter as you travel south but are otherwise very nice looking."
+  extra {"path", "trail", "ground"}
+  "The trail continues south to where you don't know."
+  north to forest_trail descr "Towards the thicker forest.";
+  south to path2 descr "On a woodsy trail.";
+end
+/*    Forest Trail    */
+path2
+  title "A break in the forest path"
+  names {"forest trail", "forest"}
+  descr
+  "Trees give way to smaller brush which fade off to the west as you enter
+  a large ocean beach. Cliffs rise off to the south west and washed up logs
+  line the beaches north egde far to the east."
+  movement SECT_FOREST
+  extra {"trees", "branches"}
+  "The trees look shorter as you travel south but are otherwise very nice looking."
+  extra {"path", "trail", "ground"}
+  "The trail continues south to where you don't know."
+  north to path1 descr "Towards the thicker forest.";
+  south to beach1_1 descr "The start of the beach.";
+end
+/*---- Home ----*/
+home
+  title " &c+yJavelin's Home&cw"
+  names {"sandhome", "javelinhome", "home"}
+  descr
+  "&c+w##&c+c##&c+b##&cb####&c+b##&c+c##&c+w####&c+c##&c+b##&cb####&c+b##&c+c##&c+w##&cw&n
+  You are standing on the deck of the Enterprise, hovering somewhere
+  above the Mud of Valhalla. Various viewscreens switch over images of
+  mudders as they wander aimlessly around like sheep.
+  A plaque on the wall reads &c+r'THANK YOU'&cw the names; &c+yPapi&cw, &c+yBoh&cw,
+  &c+yZag&cw, &c+ySaor&cw, &c+yDartanian&cw, &c+yJem&cw, &c+yCinnamon&cw,
+  &c+yFinalfin&cw, &c+yEti&cw, &c+yWhistler&cw, &c+yElminster&cw, 
+  &c+yReu&cw, &c+yPalio&cw, and &c+yBrenda&cw are etched into it."
+  flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+  ALWAYS_LIGHT
+end
+/*------- Beachhouse -------*/
+beachhouse
+  title "A Huge Beach House"
+  names {"beachhouse"}
+  descr
+  "You are standing in the main room of Bob the Banker's beach house.
+  Many expensive trinkets and doowhats are laying around, you can't help
+  but hear 'I'll take 5% interest' over and over in your mind. A
+  comfortable chair sits in a comfortable corner by the fire, a place
+  where Bob can read or catch up on his banking paperwork. A couch is
+  against the far wall and it looks like  it was built more for endurance
+  then looks, the portrait of Bob and Bernice above it does little to
+  enhance its looks. There is a small stairwell that you can ascend
+  in the corner of the room."
+  movement SECT_DESERT
+  flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+  ALWAYS_LIGHT
+  extra {"door"}
+  "The door is small and wooden."
+  extra {"couch"}
+  "'This is definatley Bernice's couch', you think. Arny and Slade must have spent weeks reinforcing it at their hearth."
+  extra {"comfey chair", "chair", "comfey corner", "corner"}
+  "In the coziest corner of any home in the world is positioned to expose its user to full fireplace warm fuzzyness while pointing their view out a large bay window where one can watch the sun set over the ocean."
+  extra {"fireplace", "fire"}
+  "The fire in its place crackles with delight."
+  extra {"expensive trinkets", "trinkets", "doowhats"}
+  "There is a wodgegopt that catches your eye, all those parties you've had and you never had a wodgegopt to entertain the guests!"
+  extra {"picture"}
+  "The artist tried to capture Bob and his wife together, the problem was there was just too much wife and too little Bob available. The picture actually shows the large woman with a pair of husband eyes looking over her shoulder"
+  east to beach3_2 descr "Alright, back to the beach!"
+  keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+  up to beachhouse1 descr "Up the stairs.";
+end
+/*------- Beachhouse1 -------*/
+beachhouse1
+  title "Bernice and Bob's bedroom"
+  names {"beachhouse1"}
+  descr
+  "This is the veritable love nest of Bob and Bernice. There are no windows
+  here so that their privacy is garunteed, you feel like you are trespassing
+  in this holy ground for loving. The only place you can go is back down the
+  stairs."
+  movement SECT_DESERT
+  flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+  ALWAYS_LIGHT
+  down to beachhouse descr "Down the stairs.";
+end
+/*==================== ISLAND ROOMS ==========================*/
+/*------- Island Port -----*/
+island_port
+  title "The northern end of a small island"
+  names {"island_port", "island"}
+  descr "The island spreads before you to the south, Its size does little
+  to impress you and its remoteness strikes you as maddening. Around the
+  centre of the island a solitary tree and small hut are the only things
+  on a rather bleak background. Your feet sift quietly through pure white
+  sand as gulls circle above carelessly. To the north the shallows of the
+  ocean lap against the shore."
+  flags {UNIT_FL_NO_TELEPORT}
+  dilcopy get_crabs@sandzone();
+  movement SECT_DESERT
+  extra{"sand", "ground"}
+  "The sand at your feet is a pale white, small shell fragments and pieces
+  of sun baked kelp are scattered all over."
+  extra{"tree"}
+  "A tree of a tropical blend stands slightly bent and pitifully alone in
+  the centre of the island."
+  extra{"hut", "house"}
+  "The hut is small and simple, only the most solitary individual could live
+  there comfortably, all alone on this tiny island."
+  extra{"ocean", "water"}
+  "Surrounding the tiny island is a big blue ocean, and its' waves pound
+  the beach with fury."
+  south to island1 descr "Continuing toward the centre of the island";
+  north to sea_7 descr "On the ocean";
+end
+/*------- Island 0 -----*/
+island0
+  title "The northwestern corner of the tiny island"
+  names {"is0", "island"}
+  descr "Pure white sand squishes under your feet as you observe the
+  surrounding island. Off to the north and east waves pound the island's
+  end as well as directly to the west. Farther to the east
+  the sands continue for a bit. And to the south the white beach is
+  interrupted by a sole tree and a hut that rests in its shade."
+  flags {UNIT_FL_NO_TELEPORT}
+  dilcopy get_crabs@sandzone();
+  movement SECT_DESERT
+  extra{"sand", "ground"}
+  "The sand at your feet is a pale white, small shell fragments and pieces
+  of sun baked kelp are scattered all over."
+  extra{"tree"}
+  "A tree of a tropical blend stands slightly bent and pitifully alone in
+  the centre of the island."
+  extra{"hut", "house"}
+  "The hut is small and simple, only the most solitary individual could live
+  there comfortably, all alone on this tiny island."
+  extra{"ocean", "water"}
+  "Surrounding the tiny island is a big blue ocean, and its' waves pound
+  the beach with fury."
+  south to island4 descr "More ebony white beach.";
+  east to island1 descr "More ebony white beach.";
+end
+/*------- Island 1 -----*/
+island1
+  title "Near the northern end of a tiny island"
+  names {"is1", "island"}
+  descr "The island sands stretch off in all directions ending very close to
+  the north and not too far off to the west and east. A small hut relaxes
+  lazilly under a small tree to the south."
+  flags {UNIT_FL_NO_TELEPORT}
+  dilcopy get_crabs@sandzone();
+  movement SECT_DESERT
+  extra{"sand", "ground"}
+  "The sand at your feet is a pale white, small shell fragments and pieces
+  of sun baked kelp are scattered all over."
+  extra{"tree"}
+  "A tree of a tropical blend stands slightly bent and pitifully alone in
+  the centre of the island."
+  extra{"hut", "house"}
+  "The hut is small and simple, only the most solitary individual could live
+  there comfortably, all alone on this tiny island."
+  extra{"ocean", "water"}
+  "Surrounding the tiny island is a big blue ocean, and its' waves pound
+  the beach with fury."
+  north to island_port descr "The northern end of the tiny white beach.";
+  south to island5 descr "Continuing on the white sandy beach.";
+  east to island2 descr "Toward the northeastern corner of the small island.";
+  west to island0 descr "toeards the northwestern corner of the tiny island.";
+end
+/*------- Island 2 -----*/
+island2
+  title "The northeastern corner of the small white island"
+  names {"is2", "island"}
+  descr "You are standing at the shore of the great blue ocean, to the south
+  the beach continues for a little while interrupted only by a hut and a small
+  tree. Not far to the northwest the tip of the island stretches out onto the
+  sea."
+  flags {UNIT_FL_NO_TELEPORT}
+  dilcopy get_crabs@sandzone();
+  movement SECT_DESERT
+  extra{"sand", "ground"}
+  "The sand at your feet is a pale white, small shell fragments and pieces
+  of sun baked kelp are scattered all over."
+  extra{"tree"}
+  "A tree of a tropical blend stands slightly bent and pitifully alone in
+  the centre of the island."
+  extra{"hut", "house"}
+  "The hut is small and simple, only the most solitary individual could live
+  there comfortably, all alone on this tiny island."
+  extra{"ocean", "water"}
+  "Surrounding the tiny island is a big blue ocean, and its' waves pound
+  the beach with fury."
+  west to island1 descr "Closing in on the northern end of the beach.";
+  south to island6 descr "Nearing the small hut and tree in the centre of the island.";
+end
+/*------- Island 3 -----*/
+island3
+  title "The western shore of a tiny island"
+  names {"is3", "island"}
+  descr "The sea taunts you as it sprawls out far to the west, only low grey
+  clouds appear on the horizon. The shore continues south for a little while
+  longer before curving back into another end. A little south and directly to
+  the east of here a small hut, with a solitary tree for a companion, sits
+  comfortably in the sand."
+  flags {UNIT_FL_NO_TELEPORT}
+  dilcopy get_crabs@sandzone();
+  movement SECT_DESERT
+  extra{"sand", "ground"}
+  "The sand at your feet is a pale white, small shell fragments and pieces
+  of sun baked kelp are scattered all over."
+  extra{"tree"}
+  "A tree of a tropical blend stands slightly bent and pitifully alone in
+  the centre of the island."
+  extra{"hut", "house"}
+  "The hut is small and simple, only the most solitary individual could live
+  there comfortably, all alone on this tiny island."
+  extra{"ocean", "water"}
+  "Surrounding the tiny island is a big blue ocean, and its' waves pound
+  the beach with fury."
+  east to island4 descr "Closing in on the northern end of the beach.";
+  south to island8 descr ".Approaching the centre of the western shore.";
+end
+/*------- Island 4 -----*/
+island4
+  title "On the white sandy island."
+  names {"is4", "island"}
+  descr "The island continues in all directions but never far because of
+  its size, a little to the south and east you can see a small hut and neigboring
+  tree symbolizing the lonelyness of such a desolate place."
+  flags {UNIT_FL_NO_TELEPORT}
+  dilcopy get_crabs@sandzone();
+  movement SECT_DESERT
+  extra{"sand", "ground"}
+  "The sand at your feet is a pale white, small shell fragments and pieces
+  of sun baked kelp are scattered all over."
+  extra{"tree"}
+  "A tree of a tropical blend stands slightly bent and pitifully alone in
+  the centre of the island."
+  extra{"hut", "house"}
+  "The hut is small and simple, only the most solitary individual could live
+  there comfortably, all alone on this tiny island."
+  extra{"ocean", "water"}
+  "Surrounding the tiny island is a big blue ocean, and its' waves pound
+  the beach with fury."
+  west to island3 descr "Closing in on the northern end of the beach.";
+  east to island5 descr "On the white sandy beach.";
+  north to island0 descr "Approaching the northern end of the island.";
+  south to island9 descr ".Approaching the centre of the western shore.";
+end
+/*------- Island 5 -----*/
+island5
+  title "The white sandy island, north of a small hut"
+  names {"is5", "island"}
+  descr "The edge of the island is not far from here in any direction but
+  south where a small hut and a tropical tree sit contentedly in the sand.
+  The poorly crafted bamboo wall of this hut is staring back at you but no
+  entrances are visible on this side."
+  flags {UNIT_FL_NO_TELEPORT}
+  dilcopy get_crabs@sandzone();
+  movement SECT_DESERT
+  extra{"sand", "ground"}
+  "The sand at your feet is a pale white, small shell fragments and pieces
+  of sun baked kelp are scattered all over."
+  extra{"tree"}
+  "A tree of a tropical blend stands slightly bent and pitifully alone in
+  the centre of the island."
+  extra{"hut", "house"}
+  "The hut is small and simple, only the most solitary individual could live
+  there comfortably, all alone on this tiny island."
+  extra{"ocean", "water"}
+  "Surrounding the tiny island is a big blue ocean, and its' waves pound
+  the beach with fury."
+  west to island4 descr "Closing in on the northern end of the beach.";
+  east to island6 descr "The white sandy beach.";
+  north to island1 descr "Approaching the northern end of the island.";
+end
+/*------- Island 6 -----*/
+island6
+  title "On the white sandy island"
+  names {"is6", "island"}
+  descr "Only a few paces to the east the water and island meet with small
+  ripples and tidal flows. To the north the narrowing shore closes over the
+  tip of the island isolating it from the outside world. A tiny hut and tree
+  to the southwest are the only landmarks on the beach's desolate sprawl."
+  flags {UNIT_FL_NO_TELEPORT}
+  dilcopy get_crabs@sandzone();
+  movement SECT_DESERT
+  extra{"sand", "ground"}
+  "The sand at your feet is a pale white, small shell fragments and pieces
+  of sun baked kelp are scattered all over."
+  extra{"tree"}
+  "A tree of a tropical blend stands slightly bent and pitifully alone in
+  the centre of the island."
+  extra{"hut", "house"}
+  "The hut is small and simple, only the most solitary individual could live
+  there comfortably, all alone on this tiny island."
+  extra{"ocean", "water"}
+  "Surrounding the tiny island is a big blue ocean, and its' waves pound
+  the beach with fury."
+  west to island5 descr "Closing in on the northern end of the beach.";
+  east to island7 descr "On the white sandy beach.";
+  north to island3 descr "Approaching the northern end of the island.";
+  south to island11 descr ".Approaching the centre of the western shore.";
+end
+/*------- Island 7 -----*/
+island7
+  title "The eastern shore of the tiny white island"
+  names {"is7", "island"}
+  descr "Gulls circle and cry high above, occasionally delving into the
+  deep blue ocean that caresses the beach at you feet. The island continues
+  west, narrowing out at its northern end, and to the southwest where a small
+  hut and tree reside."
+  flags {UNIT_FL_NO_TELEPORT}
+  dilcopy get_crabs@sandzone();
+  movement SECT_DESERT
+  extra{"sand", "ground"}
+  "The sand at your feet is a pale white, small shell fragments and pieces
+  of sun baked kelp are scattered all over."
+  extra{"tree"}
+  "A tree of a tropical blend stands slightly bent and pitifully alone in
+  the centre of the island."
+  extra{"hut", "house"}
+  "The hut is small and simple, only the most solitary individual could live
+  there comfortably, all alone on this tiny island."
+  extra{"ocean", "water"}
+  "Surrounding the tiny island is a big blue ocean, and its' waves pound
+  the beach with fury."
+  west to island6 descr "Closing in on the northern end of the beach.";
+  south to island12 descr ".Approaching the centre of the western shore.";
+end
+/*------- Island 8 -----*/
+island8
+  title "The western shore of a tiny island"
+  names {"is8", "island"}
+  descr "You are standing on the small shore of a tiny little island. White
+  sand is around you, beside that there is very little. to the east a small hut
+  and tree are all that is visible on the islands surface."
+  flags {UNIT_FL_NO_TELEPORT}
+  dilcopy get_crabs@sandzone();
+  movement SECT_DESERT
+  extra{"sand", "ground"}
+  "The sand at your feet is a pale white, small shell fragments and pieces
+  of sun baked kelp are scattered all over."
+  extra{"tree"}
+  "A tree of a tropical blend stands slightly bent and pitifully alone in
+  the centre of the island."
+  extra{"hut", "house"}
+  "The hut is small and simple, only the most solitary individual could live
+  there comfortably, all alone on this tiny island."
+  extra{"ocean", "water"}
+  "Surrounding the tiny island is a big blue ocean, and its' waves pound
+  the beach with fury."
+  east to island9 descr "Closing in on the northern end of the beach.";
+  north to island3 descr "Further up the western shore.";
+  south to island12 descr ".Approaching the centre of the western shore.";
+end
+/*------- Island 9 -----*/
+island9
+  title "On the white sandy island, west of the hut"
+  names {"is9", "island"}
+  descr "Amidst only white sand a small hut is standing next to you to the
+  east, there are no visible entrances on this side, but the small tree is
+  sitting right here."
+  flags {UNIT_FL_NO_TELEPORT}
+  dilcopy get_crabs@sandzone();
+  movement SECT_DESERT
+  extra{"sand", "ground"}
+  "The sand at your feet is a pale white, small shell fragments and pieces
+  of sun baked kelp are scattered all over."
+  extra{"tree"}
+  "A tree of a tropical blend stands slightly bent and pitifully alone in
+  the centre of the island."
+  extra{"hut", "house"}
+  "The hut is small and simple, only the most solitary individual could live
+  there comfortably, all alone on this tiny island."
+  extra{"ocean", "water"}
+  "Surrounding the tiny island is a big blue ocean, and its' waves pound
+  the beach with fury."
+  west to island8 descr "Closing in on the western end of the beach.";
+  north to island4 descr "Towards the northern end of the island.";
+  south to island14 descr "More of the tiny island.";
+end
+/*------- Island Hut -----*/
+island_hut
+  title "In a small bamboo hut"
+  names {"hut", "island"}
+  descr "You are in the middle of a tiny hut of bamboo. A few random
+  pieces of very small hand-crafted furniture and many empty cocoanut shells are
+  all that decorate its interior. Even the ground here is the white sand
+  of the beach."
+  flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_SACRED}
+  dilcopy get_crabs@sandzone();
+  movement SECT_DESERT
+  extra{"furnature"}
+  "There is a rikity table made of driftwood in the eastern corner of the
+  hut, and a small bed made of dried palm leaves on the floor by the western wall."
+  extra{"sand", "ground"}
+  "The sand at your feet is a pale white."
+  south to island15 descr "Before the opening into the hut.";
+end
+/*------- Island 11 -----*/
+island11
+  title "The white sandy island, east of the hut"
+  names {"is11", "island"}
+  descr "You are standing on fine white sand that is covered in shells and
+  sun-dried kelp, directly to the west a small bamboo hut is planted firmly
+  into the ground. The hut's top is made of dried palm leaves and looks
+  highly unstable."
+  flags {UNIT_FL_NO_TELEPORT}
+  dilcopy get_crabs@sandzone();
+  movement SECT_DESERT
+  extra{"sand", "ground"}
+  "The sand at your feet is a pale white, small shell fragments and pieces
+  of sun baked kelp are scattered all over."
+  extra{"tree"}
+  "A tree of a tropical blend stands slightly bent and pitifully alone in
+  the centre of the island."
+  extra{"hut", "house"}
+  "The hut is small and simple, only the most solitary individual could live
+  there comfortably, all alone on this tiny island."
+  extra{"ocean", "water"}
+  "Surrounding the tiny island is a big blue ocean, and its' waves pound
+  the beach with fury."
+  east to island12 descr "The white sandy beach.";
+  north to island6 descr "More of the sandy island.";
+  south to island16 descr "Moving towards the southern shore.";
+end
+/*------- Island 12 -----*/
+island12
+  title "The eastern shore of the tiny white island"
+  names {"is12", "island"}
+  descr "The ocean is licking your feet as it comes ashore this tiny island,
+  You can see the eastern wall of a small hut when you look to the west, but
+  it certainly looks small and uninhabitated."
+  flags {UNIT_FL_NO_TELEPORT}
+  dilcopy get_crabs@sandzone();
+  movement SECT_DESERT
+  extra{"sand", "ground"}
+  "The sand at your feet is a pale white, small shell fragments and pieces
+  of sun baked kelp are scattered all over."
+  extra{"tree"}
+  "A tree of a tropical blend stands slightly bent and pitifully alone in
+  the centre of the island."
+  extra{"hut", "house"}
+  "The hut is small and simple, only the most solitary individual could live
+  there comfortably, all alone on this tiny island."
+  extra{"ocean", "water"}
+  "Surrounding the tiny island is a big blue ocean, and its' waves pound
+  the beach with fury."
+  west to island11 descr "By the wall of the small hut.";
+  south to island17 descr "Nearing the south end of the small island";
+end
+/*------- Island 13 -----*/
+island13
+  title "The southwestern corner of a tiny island"
+  names {"is13", "island"}
+  descr "This part of the island juts out into the ocean, there is no way to go
+  other then north or east because the sea is surrounding you. To the east
+  and north you can see a tiny bamboo hut, the door to which appears to be
+  on its southern wall."
+  flags {UNIT_FL_NO_TELEPORT}
+  dilcopy get_crabs@sandzone();
+  movement SECT_DESERT
+  extra{"sand", "ground"}
+  "The sand at your feet is a pale white, small shell fragments and pieces
+  of sun baked kelp are scattered all over."
+  extra{"tree"}
+  "A tree of a tropical blend stands slightly bent and pitifully alone in
+  the centre of the island."
+  extra{"hut", "house"}
+  "The hut is small and simple, only the most solitary individual could live
+  there comfortably, all alone on this tiny island."
+  extra{"ocean", "water"}
+  "Surrounding the tiny island is a big blue ocean, and its' waves pound
+  the beach with fury."
+  east to island14 descr "Nearing the tiny hut.";
+  north to island8 descr "Further up the western shore.";
+end
+/*------- Island 14 -----*/
+island14
+  title "The white sandy island, southwest of the hut"
+  names {"is14", "island"}
+  descr "The small hut's entrance is in its southern wall, which lets out
+  due east of here. You can't believe it would be inhabited with it;s shoddy
+  bamboo walls and its thin roof of palm leaves. To the west the island juts a
+  into the ocean who's shore is directly south of you."
+  flags {UNIT_FL_NO_TELEPORT}
+  dilcopy get_crabs@sandzone();
+  movement SECT_DESERT
+  extra{"sand", "ground"}
+  "The sand at your feet is a pale white, small shell fragments and pieces
+  of sun baked kelp are scattered all over."
+  extra{"tree"}
+  "A tree of a tropical blend stands slightly bent and pitifully alone in
+  the centre of the island."
+  extra{"hut", "house"}
+  "The hut is small and simple, only the most solitary individual could live
+  there comfortably, all alone on this tiny island."
+  extra{"ocean", "water"}
+  "Surrounding the tiny island is a big blue ocean, and its' waves pound
+  the beach with fury."
+  west to island13 descr "Closing in on the western end of the beach.";
+  east to island15 descr "The entrance to the small hut.";
+  north to island9 descr "Towards the northern end of the island.";
+  south to island19 descr "More of the tiny island.";
+end
+/*------- Island 15 -----*/
+island15
+  title "South of the small hut"
+  names {"is15", "island"}
+  descr "A small hole in the southern wall of the hut opens before you, this
+  must serve as an entrance to whomever lives, or lived, here. To the south
+  the ocean overruns the beach and ends the island."
+  flags {UNIT_FL_NO_TELEPORT}
+  dilcopy get_crabs@sandzone();
+  movement SECT_DESERT
+  extra{"furnature"}
+  "There is a rickity table made of driftwood in the eastern corner of the
+  hut, and a small bed made of dried palm leaves on the floor by the western wall."
+  extra{"bed"}
+  "It is a simple bed, sleeping here would not be much mroe refreshing then elsewhere you think."
+  extra{"sand", "ground"}
+  "The sand at your feet is a pale white."
+  extra{"tree"}
+  "A tree of a tropical blend stands slightly bent and pitifully alone in
+  the centre of the island."
+  extra{"entrance", "opening"}
+  "The opening in the wall is not really a door, just a place where no wall
+  exists, and probably never did."
+  extra{"hut", "house"}
+  "The hut is small and simple, only the most solitary individual could live
+  there comfortably, all alone on this tiny island."
+  extra{"ocean", "water"}
+  "Surrounding the tiny island is a big blue ocean, and its' waves pound
+  the beach with fury."
+  north to island_hut descr "Within the hut.";
+  south to island20 descr "The south shore of the small island.";
+  west to island14 descr "The south shore of the small island.";
+  east to island16 descr "Near the eastern shore of the island.";
+end
+/*------- Island 16 -----*/
+island16
+  title "The white sandy island, southeast of the hut"
+  names {"is16", "island"}
+  descr "The little bamboo hut is sloce by  to the north and west of here, next
+  to it is a small solitary palm tree. Close by to the east and to the
+  south the island ends and the ocean begins.."
+  flags {UNIT_FL_NO_TELEPORT}
+  dilcopy get_crabs@sandzone();
+  movement SECT_DESERT
+  extra{"sand", "ground"}
+  "The sand at your feet is a pale white, small shell fragments and pieces
+  of sun baked kelp are scattered all over."
+  extra{"tree"}
+  "A tree of a tropical blend stands slightly bent and pitifully alone in
+  the centre of the island."
+  extra{"hut", "house"}
+  "The hut is small and simple, only the most solitary individual could live
+  there comfortably, all alone on this tiny island."
+  extra{"ocean", "water"}
+  "Surrounding the tiny island is a big blue ocean, and its' waves pound
+  the beach with fury."
+  west to island15 descr "South of the small hut.";
+  east to island17 descr "On the white sandy beach.";
+  north to island11 descr "More of the sandy island.";
+  south to island21 descr "The southern shore.";
+end
+/*------- Island 17 -----*/
+island17
+  title "The Southeastern shore of the tiny white island"
+  names {"is17", "island"}
+  descr "The sea surrounds you from both the south and east, a small hut
+  seems to be the only thing of interest on this bland little island
+  with white sand, and it is sitting towards the west."
+  flags {UNIT_FL_NO_TELEPORT}
+  dilcopy get_crabs@sandzone();
+  movement SECT_DESERT
+  extra{"sand", "ground"}
+  "The sand at your feet is a pale white, small shell fragments and pieces
+  of sun baked kelp are scattered all over."
+  extra{"tree"}
+  "A tree of a tropical blend stands slightly bent and pitifully alone in
+  the centre of the island."
+  extra{"hut", "house"}
+  "The hut is small and simple, only the most solitary individual could live
+  there comfortably, all alone on this tiny island."
+  extra{"ocean", "water"}
+  "Surrounding the tiny island is a big blue ocean, and its' waves pound
+  the beach with fury."
+  north to island12 descr "The eastern shore of the island.";
+  west to island16 descr "Nearing the tiny hut's entrance.";
+end
+/*------- Island 19 -----*/
+island19
+  title "The southern shore of the tiny white island"
+  names {"is19", "island"}
+  descr "The size of this island never impressed you, and so it is no
+  surprise that it comes to a halt here where the ocean continues in rolling
+  blue waves into the horizon to the south."
+  flags {UNIT_FL_NO_TELEPORT}
+  dilcopy get_crabs@sandzone();
+  movement SECT_DESERT
+  extra{"sand", "ground"}
+  "The sand at your feet is a pale white, small shell fragments and pieces
+  of sun baked kelp are scattered all over."
+  extra{"tree"}
+  "A tree of a tropical blend stands slightly bent and pitifully alone in
+  the centre of the island."
+  extra{"hut", "house"}
+  "The hut is small and simple, only the most solitary individual could live
+  there comfortably, all alone on this tiny island."
+  extra{"ocean", "water"}
+  "Surrounding the tiny island is a big blue ocean, and its' waves pound
+  the beach with fury."
+  east to island20 descr "Along the south shore of the island.";
+  north to island14 descr "Towards the small  hut.";
+end
+/*------- Island 20 -----*/
+island20
+  title "South shore of the white sanded island"
+  names {"is20", "island"}
+  descr "And so ends an under par island, the ocean takes over the horizon and
+  runs ever southward, as you turn you see that the hut is not too far off
+  directly to the north, looking as shanty as ever."
+  flags {UNIT_FL_NO_TELEPORT}
+  dilcopy get_crabs@sandzone();
+  movement SECT_DESERT
+  extra{"sand", "ground"}
+  "The sand at your feet is a pale white."
+  extra{"tree"}
+  "A tree of a tropical blend stands slightly bent and pitifully alone in
+  the centre of the island."
+  extra{"hut", "house"}
+  "The hut is small and simple, only the most solitary individual could live
+  there comfortably, all alone on this tiny island."
+  extra{"ocean", "water"}
+  "Surrounding the tiny island is a big blue ocean, and its' waves pound
+  the beach with fury."
+  north to island15 descr "Within the hut.";
+  west to island19 descr "The south shore of the small island.";
+  east to island21 descr "Near the eastern shore of the island.";
+end
+/*------- Island 21 -----*/
+island21
+  title "The southeastern corner of the little white island"
+  names {"is21", "island"}
+  descr "The island comes to an abrupt end,  proving its small size once
+  again. The south shore continues west a ways before curving northward. To the
+  north and west of here you can  see a tiny opening in the bamboo hut and
+  a little green and brown tree on its right."
+  flags {UNIT_FL_NO_TELEPORT}
+  dilcopy get_crabs@sandzone();
+  movement SECT_DESERT
+  extra{"sand", "ground"}
+  "The sand at your feet is a pale white, small shell fragments and pieces
+  of sun baked kelp are scattered all over."
+  extra{"tree"}
+  "A tree of a tropical blend stands slightly bent and pitifully alone in
+  the centre of the island."
+  extra{"hut", "house"}
+  "The hut is small and simple, only the most solitary individual could live
+  there comfortably, all alone on this tiny island."
+  extra{"ocean", "water"}
+  "Surrounding the tiny island is a big blue ocean, and its' waves pound
+  the beach with fury."
+  west to island20 descr "Southern shore of the island.";
+  north to island16 descr "More of the sandy island.";
+end
+/*===================== CLIFF TOP ROOMS =============================*/
+/*------- Trailhead -------*/
+trailhead
+  title "A secret trail at the bottom of the cliff"
+  names {"trailhead", "trail"}
+  descr
+  "You are at the beginning of the trail that heads up the cliff. The cries
+  of eagles fill your ears - often silenced by the raging surf you cannot
+  see from here. To the east the bushes cover up the last of the trail back
+  to the beach, you may have to search to find it."
+  movement SECT_MOUNTAIN
+  extra {"ground", "trail"}
+  "The trail is less than defined, you can see it will be a tough climb.."
+  extra {"cliffs", "cliff"}
+  "The cliff is towerning above you, Wow!"
+  extra {"eagles", "eagle"}
+  "Oh, how SAD!! One of them is going pre-maturely bald!"
+  east to beach1_1 descr  "Crash over the brush again and you will hit the beach.."
+  keyword {"overgrown trail", "bushes", "bush", "shrubs", "shrub", "trail"} open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN};
+  west to trail1 descr "On the trail";
+end
+/*------- Trail 1 -------*/
+trail1
+  title "A rocky cliff face"
+  names {"trail"}
+  descr "You are on what looked like a trail but has turned into a vertical climb up the cliff. To
+  the east the trail ends at the beach, you can also go up the trail and
+  the cliffs."
+  movement SECT_MOUNTAIN
+  extra {"ground", "trail"}
+  "The trail is less than defined, you can see it will be a tough climb.."
+  extra {"cliffs", "cliff"}
+  "The cliff is towerning above you, Wow!"
+  extra {"eagles", "eagle"}
+  "Oh, how SAD!! One of them is going pre-maturely bald!"
+  up to trail2 descr "Higher up the steep cliff side..";
+  east to trailhead descr "The start of the trail..";
+end
+/*------- Trail 2 -------*/
+trail2
+  title "A rocky cliff face"
+  names {"trail"}
+  descr "The bottom of the trail is not too far below you and the tops
+  of the cliffs are not far above, you can continue in either direction
+  and hope that you don't fall down the cliff to your death."
+  movement SECT_MOUNTAIN
+  extra {"ground", "trail"}
+  "The trail is less than defined, you can see it will be a tough climb.."
+  extra {"cliffs", "cliff"}
+  "The cliff is towerning above you, Wow!"
+  up to trail3 descr "Higher up the steep cliff side..";
+  down to trail1 descr "Lower on the steep cliff side..";
+end
+/*------- Trail 3 -------*/
+trail3
+  title "A rocky cliff face"
+  names {"trail"}
+  descr "As you continue on the trail the terrain remains much the same,
+  rocky and unsure. The tops of the cliffs are not too far above you
+  and seem immesuarabally high from your perspective."
+  movement SECT_MOUNTAIN
+  extra {"ground", "trail"}
+  "The trail is less than defined, you can see it will be a tough climb.."
+  extra {"cliffs", "cliff"}
+  "The cliff is towerning above you, Wow!"
+  up to trail4 descr "Higher up the steep cliff side..";
+  down to trail2 descr "Lower on the steep cliff side..";
+end
+/*------- Trail 4 -------*/
+trail4
+  title "A rocky cliff face"
+  names {"trail"}
+  descr "You are barely clinging to the steep trail just below the cliff top, the
+  trail continues down towards the beach far below you, as well as up onto the cliff top."
+  movement SECT_MOUNTAIN
+  extra {"ground", "trail"}
+  "The trail is less than defined, you can see it will be a tough climb.."
+  extra {"cliffs", "cliff"}
+  "The cliff is towerning above you, Wow!"
+  up to cliff_top_8 descr "Atop the cliff.";
+  down to trail3 descr "Lower on the steep cliff side..";
+end
+/*------- Cliff Top 1 -------*/
+cliff_top_1
+  title "An edge of the cliff top"
+  names {"cliff_top", "c1"}
+  descr "To the north and west the cliff ends in a long drop down, although
+  the edge curves west not far to the south and continues to the east.
+  Looking to the east you can make out a dark tower peeking out of a dense
+  forest next to the beach's eastern edge."
+  movement SECT_MOUNTAIN
+  extra{"fire"}
+  "The fire seems to be the centre of the slightly random scattering of huts, around
+  it people are working or resting."
+  extra{"dark tower", "tower"}
+  "The tower climbs far into the sky, it is narrow at the point where it clears the forest
+  but widens out into what is obviously a chamber at its top."
+  extra{"beach"}
+  "The beach is long and straight, bordered on its northern edge by piled
+  high driftwood and fallen trees."
+  extra{"dense forest", "forest"}
+  "The forest looks like it is creeping slowly onto the land the beach currently
+  has a hold on, it reaches all the way south to the sea."
+  extra{"long drop", "drop", "edge"}
+  "Jumping off would probably be an idea frowned upon by the sane."
+  extra {"ground", "cliff"}
+  "Scruffy grass tries in vain to push through the rocky ground under
+  your feet."
+  extra {"village", "huts", "people"}
+  "Several dark skinned people wander from hut to hut or sit by fires
+  working on something."
+  east to cliff_top_2 descr "Along the northern-most part of the cliff.";
+  south to cliff_top_6 descr "Towards the southern part of the cliff top.";
+end
+/*------- Cliff Top 2 -------*/
+cliff_top_2
+  title "The northern-most edge of the cliff"
+  names {"cliff_top", "c2"}
+  descr "This edge of the cliff top continues a small distance to the west
+  and east where, once again, it ends with a long drop down. On the northern
+  horizon you can make out most of Valhalla seemingly miniaturized. Far to
+  the east you can see a tower rising high into the sky out of a dark forest
+  beyond the beach."
+  movement SECT_MOUNTAIN
+  extra{"beach"}
+  "The beach is long and straight, bordered on its northern edge by piled
+  high driftwood and fallen trees."
+  extra{"dark tower", "tower"}
+  "The tower climbs far into the sky, it is narrow at the point where it clears the forest
+  but widens out into what is obviously a chamber at its top."
+  extra{"dense forest", "forest"}
+  "The forest looks like it is creeping slowly onto the land the beach currently
+  has a hold on, it reaches all the way south to the sea."
+  extra{"long drop", "drop", "edge"}
+  "Jumping off would probably be an idea frowned upon by the sane."
+  extra {"ground", "cliff"}
+  "Scruffy grass tries in vain to push through the rocky ground under
+  your feet."
+  extra {"village", "huts", "people"}
+  "Several dark skinned people wander from hut to hut or sit by fires
+  working on something."
+  extra{"fire"}
+  "The fire seems to be the centre of the slightly random scattering of huts, around
+  it people are working or resting."
+  east to cliff_top_3 descr "Along the northern-most part of the cliff.";
+  west to cliff_top_1 descr "Along the northern-most part of the cliff.";
+  south to cliff_top_7 descr "Towards the southern part of the cliff top.";
+end
+/*------- Cliff Top 3 -------*/
+cliff_top_3
+  title "The northeast edge of the cliff"
+  names {"cliff_top", "c3"}
+  descr "From this vantage point you can look down to the east and see the
+  entire stretch of the beach and the forest on its eastern edge. The cliff
+  top continues off to both the south and west."
+  movement SECT_MOUNTAIN
+  extra{"beach"}
+  "The beach is long and straight, bordered on its northern edge by piled
+  high driftwood and fallen trees and to the south by the deep sea."
+  extra{"dark tower", "tower"}
+  "The tower climbs far into the sky, it is narrow at the point where it clears the forest
+  but widens out into what is obviously a chamber at its top."
+  extra{"dense forest", "forest"}
+  "The forest looks like it is creeping slowly onto the land the beach currently
+  has a hold on, it reaches all the way south to the sea."
+  extra{"long drop", "drop", "edge"}
+  "Jumping off would probably be an idea frowned upon by the sane."
+  extra {"ground", "cliff"}
+  "Scruffy grass tries in vain to push through the rocky ground under
+  your feet."
+  extra{"fire"}
+  "The fire seems to be the centre of the slightly random scattering of huts, around
+  it people are working or resting."
+  extra {"village", "huts", "people"}
+  "Several dark skinned people wander from hut to hut or sit by fires
+  working on something."
+  west to cliff_top_2 descr "Along the northern-most part of the cliff.";
+  south to cliff_top_8 descr "Towards the southern part of the cliff top.";
+end
+/*------- Cliff Top 4 -------*/
+cliff_top_4
+  title "A corner of the cliff top"
+  names {"cliff_top", "c4"}
+  descr "Here the cliff is edged by a long drop to both the north and the west,
+  because it is not round or square it begins again a bit off to the southwest and
+  the northest. Directly to the south a large fire pit is surrounded by several
+  small huts."
+  movement SECT_MOUNTAIN
+  extra{"beach"}
+  "The beach is long and straight, bordered on its northern edge by piled
+  high driftwood and fallen trees and to the south by the deep sea."
+  extra{"long drop", "drop", "edge"}
+  "Jumping off would probably be an idea frowned upon by the sane."
+  extra{"fire"}
+  "The fire seems to be the centre of the slightly random scattering of huts, around
+  it people are working or resting."
+  extra {"ground", "cliff"}
+  "Scruffy grass tries in vain to push through the rocky ground under
+  your feet."
+  extra {"village", "huts", "people"}
+  "Several dark skinned people wander from hut to hut or sit by fires
+  working on something."
+  east to cliff_top_5 descr "Along the cliff edge.";
+  south to cliff_top_11 descr "Towards the small village.";
+end
+/*------- Cliff Top 5 -------*/
+cliff_top_5
+  title "Along an edge of the cliff"
+  names {"cliff_top", "c5"}
+  descr "The cliff continues a short distance in all directions but north
+  where the sharp edge spills off into a long drop downwards. Not far to the south
+  and west a small village of wood huts surrounds a fire where women and
+  children are working dilligently."
+  movement SECT_MOUNTAIN
+  extra{"fire"}
+  "The fire seems to be the centre of the slightly random scattering of huts, around
+  it people are working or resting."
+  extra{"long drop", "drop", "edge"}
+  "Jumping off would probably be an idea frowned upon by the sane."
+  extra {"ground", "cliff"}
+  "Scruffy grass tries in vain to push through the rocky ground under
+  your feet."
+  extra {"village", "huts", "people"}
+  "Several dark skinned people wander from hut to hut or sit by fires
+  working on somethi6g."
+  west to cliff_top_4 descr "Along the cliff's edge.";
+  east to cliff_top_6 descr "Along the cliff's edge.";
+  south to cliff_top_12 descr "On the cliff.";
+end
+/*------- Cliff Top 6 -------*/
+cliff_top_6
+  title "A curve in the edge of the cliff"
+  names {"cliff_top", "c6"}
+  descr "The cliff edge curves from the north to the west here. To the north
+  it curves again to the east forming an edge, you can follow
+  the edges in both directions or go south towards the centre of the cliff's top.
+  Not far to the east from here another edge of the cliff hovers above the long
+  beach. Near the centre of the cliff's top several wood huts are scattered around a large
+  fire."
+  movement SECT_MOUNTAIN
+  extra{"fire"}
+  "The fire seems to be the centre of the slightly random scattering of huts, around
+  it people are working or resting."
+  extra{"long drop", "drop", "edge"}
+  "Jumping off would probably be an idea frowned upon by the sane."
+  extra {"ground", "cliff"}
+  "Scruffy grass tries in vain to push through the rocky ground under
+  your feet."
+  extra {"village", "huts", "people"}
+  "Several dark skinned people wander from hut to hut or sit by fires
+  working on something."
+  west to cliff_top_5 descr "Along the cliff edge.";
+  east to cliff_top_7 descr "On the cliff.";
+  north to cliff_top_1 descr "Along the cliff edge.";
+  south to cliff_top_13 descr "On the cliff.";
+end
+/*------- Cliff Top 7 -------*/
+cliff_top_7
+  title "On the cliff top"
+  names {"cliff_top", "c7"}
+  descr "You are standing in the centre of a small jut of cliff pointing
+  to the northeast. A small scattering of huts is concentrated around a
+  large fire to the south west of here."
+  movement SECT_MOUNTAIN
+  extra{"long drop", "drop", "edge"}
+  "Jumping off would probably be an idea frowned upon by the sane."
+  extra {"ground", "cliff"}
+  "Scruffy grass tries in vain to push through the rocky ground under
+  your feet."
+  extra{"fire"}
+  "The fire seems to be the centre of the slightly random scattering of huts, around
+  it people are working or resting."
+  extra {"village", "huts", "people"}
+  "Several dark skinned people wander from hut to hut or sit by fires
+  working on something."
+  west to cliff_top_6 descr "By two edges of the cliff.";
+  east to cliff_top_8 descr "Along the cliff edge.";
+  north to cliff_top_2 descr "Along the cliff edge.";
+  south to cliff_top_14 descr "On the cliff.";
+end
+/*------- Cliff Top -------*/
+cliff_top_8
+  title "On top of the cliff"
+  names {"cliff_top", "c8"}
+  descr "You are on the edge of the cliff looking precariously over the
+  long drop. A small path leads from here back down to the beach. The
+  grassy area before you that makes up the top of the cliff stretches
+  off mostly to the south and west bordered only by air and a long fall.
+  To the west, a large fire is surrounded by small huts and people hard
+  at work."
+  movement SECT_MOUNTAIN
+  extra{"fire"}
+  "The fire seems to be the centre of the slightly random scattering of huts, around
+  it people are working or resting."
+  extra{"trail", "path"}
+  "The trail looks very uneven and steep, but it does lead back down to the beach and apears
+  to be the only way there."
+  extra{"long drop", "drop", "edge"}
+  "Jumping off would probably be an idea frowned upon by the sane."
+  extra {"ground", "cliff"}
+  "Scruffy grass tries in vain to push through the rocky ground under
+  your feet."
+  extra {"village", "huts", "people"}
+  "Several dark skinned people wander from hut to hut or sit by fires
+  working on something."
+  north to cliff_top_3 descr "Towards the northern edge of the cliff.";
+  west to cliff_top_7 descr "Towards the centre of the cliff top.";
+  south to cliff_top_15 descr "Towards the southern part of the cliff top.";
+  down to trail4 descr "The beginning of the trail.";
+end
+/*------- Cliff Top 9 -------*/
+cliff_top_9
+  title "The western edge of the cliff"
+  names {"cliff_top", "c9"}
+  descr "The cliff ends here at its farthest edge to the west and an
+  edge to the north. Looking onto the horizon you can see the Canyon Road
+  with a large complex and annex at its southern end. The back of a wooden
+  hut is directly to the east with a small window looking out at you."
+  movement SECT_MOUNTAIN
+  extra {"window", "in window"}
+  "You can just make out the interior of the small hut, a little grey man
+  is hunched near the ground unmoving."
+  extra{"long drop", "drop", "edge"}
+  "Jumping off would probably be an idea frowned upon by the sane."
+  extra {"ground", "cliff"}
+  "Scruffy grass tries in vain to push through the rocky ground under
+  your feet."
+  extra {"hut", "huts", "people"}
+  "The hut here apears to be made of wood and mud, not very advanced
+  but seems to suit its purpose."
+  extra {"building", "annex", "complex", "research lab", "lab"}
+  "You think that must be the famous John Patrick Research lab!"
+  extra {"Canyon Road", "road"}
+  "The Canyon Road stretches from the southern gate of Midgaard to the
+  Research Lab."
+  south to cliff_top_16 descr "On the cliff's eastern edge.";
+end
+/*----- Chief Vomoulk's Hut -----*/
+cliff_top_10
+  title "Inside the largest Cheleho hut"
+  names {"vomoulk's hut", "c10"}
+  descr "Although nothing too fancy, this is the largest hut on the Cheleho
+  cliff top. A small window even looks out of the west wall and over the
+  edge of the cliff. Only a small straw bed  and a tiny fire pit occupies
+  this hut. Obviously the chief of the Cheleho is treated to much the
+  same comfort as the rest of the tribespeople."
+  flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_SACRED}
+  ALWAYS_LIGHT
+  movement SECT_INSIDE
+  extra{"tiny fire", "fire pit", "fire", "pit"}
+  "A little bit of light is cast around the room from this fire, it is
+  also somewhat warm, just enough to be comfortable."
+  extra {"ground", "floor"}
+  "The floor here is made up of dried grass, nothing too fancy."
+  extra {"hut", "walls"}
+  "The hut here apears to be made of wood and mud, not very advanced
+  but seems to suit its purpose."
+  extra {"glass window", "window", "glass"}
+  "The window and the size of the hut seem to be the only bonuses the chief
+  of the Cheleho gets."
+  east to cliff_top_11 descr "Near the central fire.";
+end
+/*----- Cliff Top 11 -----*/
+cliff_top_11
+  title "On the cliff top, in the Cheleho Village"
+  names {"cliff_top", "cheleho_vil", "c11"}
+  descr "Directly to the south is the centre of the Cheleho village where
+  tribeswomen sit cross-legged and skin the day's hunt by a large fire pit.
+  There is an especially large hut directly to the west which belongs to
+  the chief of the Cheleho people."
+  movement SECT_MOUNTAIN
+  extra{"fire pit", "fire", "pit"}
+  "The fire appears to be the central focus for the random scattering of huts
+  the Cheleho tribespeople live in."
+  extra {"ground", "cliff"}
+  "The ground here is all trampled grass that had little chance of growing
+  out of the rocky terrain in the first place."
+  extra {"hut", "walls"}
+  "The hut here apears to be made of wood and mud, not very advanced
+  but it seems to suit its purpose."
+  extra {"tribespeople", "people"}
+  "Perhaps you could approach and look at them individually?"
+  west to cliff_top_10 descr "In the chief's hut.";
+  east to cliff_top_12 descr "On the cliff top.";
+  south to cliff_top_18 descr "At the fire.";
+  north to cliff_top_4 descr "A northern edge of the cliff.";
+end
+/*----- Cliff Top 12 -----*/
+cliff_top_12
+  title "On the cliff top, in the Cheleho Village"
+  names {"cliff_top", "cheleho_vil", "c12"}
+  descr "You are standing on the northeastern corner of the Cheleho
+  village. The cliff edges are not far off to the east and north, and
+  the huts and fires of the village are off to the south and west."
+  movement SECT_MOUNTAIN
+  extra{"fire pit", "fire", "pit"}
+  "The fire appears to be the central focus for the random scattering of huts
+  the Cheleho tribespeople live in."
+  extra {"ground", "cliff"}
+  "The ground here is all trampled grass that had little chance of growing
+  out of the rocky terrain in the first place."
+  extra {"hut", "huts"}
+  "The huts are made of wood and mud, they look primitive but functional."
+  extra {"tribespeople", "people"}
+  "Perhaps you could approach and look at them individually?"
+  west to cliff_top_11 descr "In the chief's hut.";
+  east to cliff_top_13 descr "On the cliff top.";
+  south to cliff_top_19 descr "Near the fire.";
+  north to cliff_top_5 descr "A northern edge of the cliff.";
+end
+/*----- Cliff Top 13 -----*/
+cliff_top_13
+  title "On the cliff top"
+  names {"cliff_top", "c13"}
+  descr "The village of the Cheleho tribe seems to begin just a bit
+  to the west although it has no definate borders. Near by to the east
+  and north the cliff's edges open out into vast skies."
+  movement SECT_MOUNTAIN
+  extra{"fire pit", "fire", "pit"}
+  "The fire appears to be the central focus for the random scattering of huts
+  the Cheleho tribespeople live in."
+  extra {"ground", "cliff"}
+  "The ground here is all trampled grass that had little chance of growing
+  out of the rocky terrain in the first place."
+  extra {"hut", "huts"}
+  "The huts are made of wood and mud, they look primitive but functional."
+  extra {"tribespeople", "people"}
+  "Perhaps you could approach and look at them individually?"
+  west to cliff_top_12 descr "At the village.";
+  east to cliff_top_14 descr "On the cliff top.";
+  south to cliff_top_20 descr "On the cliff.";
+  north to cliff_top_6 descr "On the cliff.";
+end
+/*----- Cliff Top 14 -----*/
+cliff_top_14
+  title "On the cliff top"
+  names {"cliff_top", "c14"}
+  descr "The cliff continues a short distance in all directions. To the
+  west a small collection of huts surrounds a large fire pit where dark
+  skinned people sit and work. To the east and south the cliff quickly
+  ends in tufts of grass looking down at the ground far below."
+  movement SECT_MOUNTAIN
+  extra{"fire pit", "fire", "pit"}
+  "The fire appears to be the central focus for the random scattering of huts
+  the Cheleho tribespeople live in."
+  extra {"ground", "cliff"}
+  "The ground here is all trampled grass that had little chance of growing
+  out of the rocky terrain in the first place."
+  extra {"hut", "huts"}
+  "The huts are made of wood and mud, they look primitive but functional."
+  extra {"tribespeople", "people"}
+  "Perhaps you could approach and look at them individually?"
+  west to cliff_top_13 descr "At the village.";
+  east to cliff_top_15 descr "On the cliff top.";
+  south to cliff_top_21 descr "On the cliff.";
+  north to cliff_top_7 descr "On the cliff.";
+end
+/*----- Cliff Top 15 -----*/
+cliff_top_15
+  title "A curve in the edge of the cliff"
+  names {"cliff_top", "c15"}
+  descr "The edges of the cliff are directly to the east and south of here,
+  forming a large jut of rock that stretches out to the northeast. A short
+  distance to the west several small huts form a crude circle around a large
+  fire pit. To the east you can see the entire expanse of the beach and forest
+  below you."
+  movement SECT_MOUNTAIN
+  extra{"fire pit", "fire", "pit"}
+  "The fire appears to be the central focus for the random scattering of huts
+  the Cheleho tribespeople live in."
+  extra{"beach"}
+  "The beach is long and straight, bordered on its northern edge by piled
+  high driftwood and fallen trees and to the south by the deep sea."
+  extra{"dark tower", "tower"}
+  "The tower climbs far into the sky, it is narrow at the point where it clears the forest
+  but widens out into what is obviously a chamber at its top."
+  extra{"dense forest", "forest"}
+  "The forest looks like it is creeping slowly onto the land the beach currently
+  has a hold on, it reaches all the way south to the sea."
+  extra{"long drop", "drop", "edge"}
+  "Jumping off would probably be an idea frowned upon by the sane."
+  extra {"ground", "cliff"}
+  "The ground here is all trampled grass that had little chance of growing
+  out of the rocky terrain in the first place."
+  extra {"hut", "huts"}
+  "The huts are made of wood and mud, they look primitive but functional."
+  extra {"tribespeople", "people"}
+  "Perhaps you could approach and look at them individually?"
+  west to cliff_top_14 descr "At the village.";
+  north to cliff_top_8 descr "On the cliff's eastern edge.";
+end
+/*----- Cliff Top 16 -----*/
+cliff_top_16
+  title "The western edge of the cliff"
+  names {"cliff_top", "c16"}
+  descr "The cliff's western edge looks over a vast view. To the east you
+  can see the centre of the Cheleho village with its fire and people. To the
+  north and the south the cliff edges curve back to the east making where you
+  stand stick out over nothing but air."
+  movement SECT_MOUNTAIN
+  extra{"fire pit", "fire", "pit"}
+  "The fire appears to be the central focus for the random scattering of huts
+  the Cheleho tribespeople live in."
+  extra{"beach"}
+  "The beach is long and straight, bordered on its northern edge by piled
+  high driftwood and fallen trees and to the south by the deep sea."
+  extra{"dark tower", "tower"}
+  "The tower climbs far into the sky, it is narrow at the point where it clears the forest
+  but widens out into what is obviously a chamber at its top."
+  extra{"dense forest", "forest"}
+  "The forest looks like it is creeping slowly onto the land the beach currently
+  has a hold on, it reaches all the way south to the sea."
+  extra {"building", "annex", "complex", "research lab", "lab"}
+  "You think that must be the famous John Patrick Research lab!"
+  extra {"view", "Canyon Road", "road"}
+  "To the west Canyon Road stretches from the southern gate of Midgaard to the
+  Research Lab."
+  extra{"long drop", "drop", "edge"}
+  "Jumping off would probably be an idea frowned upon by the sane."
+  extra {"ground", "cliff"}
+  "The ground here is all trampled grass that had little chance of growing
+  out of the rocky terrain in the first place."
+  extra {"hut", "huts"}
+  "The huts are made of wood and mud, they look primitive but functional."
+  extra {"tribespeople", "people"}
+  "Perhaps you could approach and look at them individually?"
+  east to cliff_top_17 descr "At the village.";
+  north to cliff_top_9 descr "On the cliff's western edge.";
+  south to cliff_top_22 descr "On the cliff's western edge.";
+end
+/*----- Cliff Top 17 -----*/
+cliff_top_17
+  title "On the cliff, in the Cheleho Village"
+  names {"cliff_top", "cheleho_vil", "c17"}
+  descr "You are standing very near the cliff's western edge, directly
+  to the east the fire that is the centre of the village sparks and smoulders.
+  To both the north and south of you are the walls of Cheleho huts."
+  movement SECT_MOUNTAIN
+  extra{"fire pit", "fire", "pit"}
+  "The fire appears to be the central focus for the random scattering of huts
+  the Cheleho tribespeople live in."
+  extra {"ground", "cliff"}
+  "The ground here is all trampled grass that had little chance of growing
+  out of the rocky terrain in the first place."
+  extra {"hut", "huts"}
+  "The huts are made of wood and mud, they look primitive but functional."
+  extra {"tribespeople", "people"}
+  "Perhaps you could approach and look at them individually?"
+  west to cliff_top_16 descr "At the cliff's western edge.";
+  east to cliff_top_18 descr "At the fire.";
+end
+/*----- Cliff Top 18 -----*/
+cliff_top_18
+  title "By the fire pit"
+  names {"cliff_top", "cheleho_vil", "c18"}
+  descr "The fire pit, which all the huts crudely centre on, sparks and crackles
+  in a large stone ringed pit here. Most of the mud huts are to the south and
+  west with open doors facing the fire."
+  movement SECT_MOUNTAIN
+  extra{"fire pit", "fire", "pit"}
+  "The fire appears to be the central focus for the random scattering of huts
+  the Cheleho tribespeople live in."
+  extra {"ground", "cliff"}
+  "The ground here is all trampled grass that had little chance of growing
+  out of the rocky terrain in the first place."
+  extra {"hut", "huts"}
+  "The huts are made of wood and mud, they look primitive but functional."
+  extra {"tribespeople", "people"}
+  "Perhaps you could look at them individually?"
+  west to cliff_top_17 descr "At the fire.";
+  east to cliff_top_19 descr "At the cliff's western edge.";
+  south to cliff_top_24 descr "Between two huts.";
+  north to cliff_top_11 descr "Before the largest hut.";
+end
+/*----- Cliff Top 19 -----*/
+cliff_top_19
+  title "On the cliff, in the Cheleho Village"
+  names {"cliff_top", "cheleho_vil", "c19"}
+  descr "The village of the Cheleho people spreads out to the south and
+  west of here. Directly to the south the door into a hut stands open
+  to the elements. The large fire where the women of the village work
+  with animal skins is to the west of here."
+  movement SECT_MOUNTAIN
+  extra{"fire pit", "fire", "pit"}
+  "The fire appears to be the central focus for the random scattering of huts
+  the Cheleho tribespeople live in."
+  extra {"ground", "cliff"}
+  "The ground here is all trampled grass that had little chance of growing
+  out of the rocky terrain in the first place."
+  extra {"hut", "huts"}
+  "The huts are made of wood and mud, they look primitive but functional."
+  extra {"tribespeople", "people"}
+  "Perhaps you could approach and look at them individually?"
+  west to cliff_top_18 descr "At the fire.";
+  east to cliff_top_20 descr "Heading east.";
+  south to cliff_top_25 descr "Inside a hut.";
+  north to cliff_top_12 descr "More of the village.";
+end
+/*----- Cliff Top 20 -----*/
+cliff_top_20
+  title "On the cliff, in the Cheleho Village"
+  names {"cliff_top", "cheleho_vil", "c20"}
+  descr "You are standing at what might be considered the eastern border
+  of the Cheleho village, a small hut is directly to the southwest of you
+  and several more lay farther to the west around a large fire pit. The
+  eastern edge of the cliff is near by to the east."
+  movement SECT_MOUNTAIN
+  extra{"fire pit", "fire", "pit"}
+  "The fire appears to be the central focus for the random scattering of huts
+  the Cheleho tribespeople live in."
+  extra {"ground", "cliff"}
+  "The ground here is all trampled grass that had little chance of growing
+  out of the rocky terrain in the first place."
+  extra {"hut", "huts"}
+  "The huts are made of wood and mud, they look primitive but functional."
+  extra{"long drop", "drop", "edge"}
+  "Jumping off would probably be an idea frowned upon by the sane."
+  extra {"tribespeople", "people"}
+  "Perhaps you could approach and look at them individually?"
+  west to cliff_top_19 descr "Nearing the fire.";
+  east to cliff_top_21 descr "The eastern edge of the cliff.";
+  south to cliff_top_26 descr "Heading south.";
+  north to cliff_top_13 descr "More of the village..";
+end
+/*----- Cliff Top 21 -----*/
+cliff_top_21
+  title "The eastern edge of the cliff"
+  names {"cliff_top", "c21"}
+  descr "The cliff ends here although it sticks farther out to the east
+  as you go north, to the west the village surrounds a large fire with
+  many dark skinned people wandering or relaxing around it. Looking to
+  the east provides you with a grand view of the beach and its neighboring
+  forest, as well as the dark tower poking out of the forest's top."
+  movement SECT_MOUNTAIN
+  extra{"beach"}
+  "The beach is long and straight, bordered on its northern edge by piled
+  high driftwood and fallen trees and to the south by the deep sea."
+  extra{"dark tower", "tower"}
+  "The tower climbs far into the sky, it is narrow at the point where it clears the forest
+  but widens out into what is obviously a chamber at its top."
+  extra{"dense forest", "forest"}
+  "The forest looks like it is creeping slowly onto the land the beach currently has a hold on, it reaches all the way south to the sea."
+  extra{"fire pit", "fire", "pit"}
+  "The fire appears to be the central focus for the random scattering of huts
+  the Cheleho tribespeople live in."
+  extra {"ground", "cliff"}
+  "The ground here is all trampled grass that had little chance of growing
+  out of the rocky terrain in the first place."
+  extra {"hut", "huts"}
+  "The huts are made of wood and mud, they look primitive but functional."
+  extra{"long drop", "drop", "edge"}
+  "Jumping off would probably be an idea frowned upon by the sane."
+  extra {"tribespeople", "people"}
+  "Perhaps you could approach and look at them individually?"
+  west to cliff_top_20 descr "Nearing the fire.";
+  south to cliff_top_27 descr "Heading south along the edge.";
+  north to cliff_top_14 descr "On the cliff.";
+end
+/*----- Cliff Top 22 -----*/
+cliff_top_22
+  title "The southwestern corner of the cliff"
+  names {"cliff_top", "c22"}
+  descr "You are standing at the southernmost corner of the western edge
+  of the cliff. Directly to the east the back of a little wood and mud hut
+  faces you, blocking travel in that direction. Another small point of the
+  cliff juts out a bit to the southeast, but it is unreachable."
+  movement SECT_MOUNTAIN
+  extra {"ground", "cliff"}
+  "The ground here is all trampled grass that had little chance of growing
+  out of the rocky terrain in the first place."
+  extra {"hut", "huts"}
+  "The hut is made of wood and mud, there are no windows on this side of
+  it, but it looks comfortable if small."
+  extra{"long drop", "drop", "edge"}
+  "Jumping off would probably be an idea frowned upon by the sane."
+  extra {"tribespeople", "people"}
+  "Perhaps you could approach and look at them individually?"
+  north to cliff_top_16 descr "Further north on the edge of the cliff.";
+end
+/*----- Cliff Top 23 -----*/
+cliff_top_23
+  title "Within a tiny Cheleho hut"
+  names {"cliff_top", "c23"}
+  descr "The walls of the hut close in tightly around you, giveing you a feel of cramped
+  comfort and warmth, even with the missing part of the north wall which
+  serves as an always open entry. Outside the entrance you can see a fire
+  pit that the tribespeople gather around."
+  movement SECT_MOUNTAIN
+  extra {"ground", "cliff"}
+  "The ground here straw and sticks, not too comfortable, but more suitable then
+  the cliff top."
+  extra {"hut", "huts"}
+  "The hut is made of wood and mud. What part of it do you want to look at?"
+  extra{"walls", "wall"}
+  "The walls are not too tightly woven, but the mud prevents the elements and light
+  from getting through in most places."
+  extra {"tribespeople", "people"}
+  "Perhaps you could approach and look at them individually?"
+  north to cliff_top_17 descr "Outside the hut.";
+end
+/*----- Cliff Top 24 -----*/
+cliff_top_24
+  title "Near the centre of the Cheleho Village"
+  names {"cliff_top", "c24"}
+  descr "Several small huts cling to the rough cliff top here, the
+  largest of which to the north and west. Their walls block all passage
+  but north towards the large firepit with tribespeople working or relaxing
+  around it."
+  movement SECT_MOUNTAIN
+  extra {"ground", "cliff"}
+  "The ground here is all trampled grass that had little chance of growing
+  out of the rocky terrain in the first place."
+  extra{"fire pit", "fire", "pit"}
+  "The fire appears to be the central focus for the random scattering of huts
+  the Cheleho tribespeople live in."
+  extra {"hut", "huts"}
+  "The huts are made of wood and mud, they look primitive but functional."
+  extra {"tribespeople", "people"}
+  "Perhaps you could approach and look at them individually?"
+  north to cliff_top_18 descr "Next to the fire pit.";
+end
+/*----- Cliff Top 25 -----*/
+cliff_top_25
+  title "Within a tiny Cheleho hut"
+  names {"cliff_top", "c25"}
+  descr "The walls of the hut close in tightly around you, giveing you a feel of cramped
+  comfort and warmth, even with the missing part of the north wall which
+  serves as an always open entry. Outside the entrance you can see a fire
+  pit that the tribespeople gather around."
+  movement SECT_MOUNTAIN
+  extra {"ground", "cliff"}
+  "The ground here straw and sticks, not too comfortable, but more suitable then
+  the cliff top."
+  extra {"hut", "huts"}
+  "The hut is made of wood and mud. What part of it do you want to look at?"
+  extra{"walls", "wall"}
+  "The walls are not too tightly woven, but the mud prevents the elements and light
+  from getting through in most places."
+  extra {"tribespeople", "people"}
+  "Perhaps you could approach and look at them individually?"
+  north to cliff_top_19 descr "Outside the hut.";
+end
+/*----- Cliff Top 26 -----*/
+cliff_top_26
+  title "On the cliff, in the Cheleho Village"
+  names {"cliff_top", "c26"}
+  descr "As you near the edge of the village you approcah several of the small huts.
+  One of the huts lies a bit to the south and west, another is near by to the
+  south. The eastern edge of the cliff is not far off either, ending in
+  a long drop to the beach."
+  movement SECT_MOUNTAIN
+  extra {"ground", "cliff"}
+  "The ground here is all trampled grass that had little chance of growing
+  out of the rocky terrain in the first place."
+  extra{"fire pit", "fire", "pit"}
+  "The fire appears to be the central focus for the random scattering of huts
+  the Cheleho tribespeople live in."
+  extra {"hut", "huts"}
+  "The huts are made of wood and mud, they look primitive but functional."
+  extra {"tribespeople", "people"}
+  "Perhaps you could approach and look at them individually?"
+  north to cliff_top_20 descr "Further north on the cliff, duh!";
+  east to cliff_top_27 descr "Along the southern cliff's edge.";
+end
+/*----- Cliff Top 27 -----*/
+cliff_top_27
+  title "On the south eastern corner of the Cliff"
+  names {"cliff_top", "c27"}
+  descr "You are standing on the eastern edge of the Cheleho cliffs. The
+  southern edge is here as well, ending in a sharp drop over the sea.
+  To the south and west a small hut hangs very close to the edge of the
+  cliff on the outskirts of the Cheleho village."
+  movement SECT_MOUNTAIN
+  extra{"beach"}
+  "The beach is long and straight, bordered on its northern edge by piled
+  high driftwood and fallen trees and to the south by the deep sea."
+  extra{"dark tower", "tower"}
+  "The tower climbs far into the sky, it is narrow at the point where it clears the forest
+  but widens out into what is obviously a chamber at its top."
+  extra{"dense forest", "forest"}
+  "The forest looks like it is creeping slowly onto the land the beach currently
+  has a hold on, it reaches all the way south to the sea."
+  extra{"fire pit", "fire", "pit"}
+  "The fire appears to be the central focus for the random scattering of huts
+  the Cheleho tribespeople live in."
+  extra {"ground", "cliff"}
+  "The ground here is all trampled grass that had little chance of growing
+  out of the rocky terrain in the first place."
+  extra {"hut", "huts"}
+  "The huts are made of wood and mud, they look primitive but functional."
+  extra{"long drop", "drop", "edge"}
+  "Jumping off would probably be an idea frowned upon by the sane."
+  extra {"tribespeople", "people"}
+  "Perhaps you could approach and look at them individually?"
+  west to cliff_top_26 descr "Closer to the village.";
+  south to cliff_top_31 descr "Inside a cheleho hut.";
+  north to cliff_top_21 descr "Farther north on the cliff's edge.";
+end
+/*----- Cliff Top 31 -----*/
+cliff_top_31
+  title "Within a tiny Cheleho hut"
+  names {"cliff_top", "c31"}
+  descr "The walls of the hut close in tightly around you, giveing you a feel of cramped
+  comfort and warmth, even with the missing part of the north wall which
+  serves as an always open entry."
+  movement SECT_MOUNTAIN
+  extra {"ground", "cliff"}
+  "The ground here straw and sticks, not too comfortable, but more suitable then
+  the cliff top."
+  extra {"hut", "huts"}
+  "The hut is made of wood and mud. What part of it do you want to look at?"
+  extra{"walls", "wall"}
+  "The walls are not too tightly woven, but the mud prevents the elements and light
+  from getting through in most places."
+  extra {"tribespeople", "people"}
+  "Perhaps you could approach and look at them individually?"
+  north to cliff_top_27 descr "Outside the hut.";
+end
+/*============================ Forest Rooms ==============================*/
+/*------- fA_5 -----*/
+forestA_5
+  title "The end of a trail in the forest"
+  names {"forest", "fA_5"}
+  descr
+  "Darkness surrounds you like an unwanted cloak in summer, crushing you
+  with thoughts of suicide and pain. You think you may go mad if you don't
+  leave here soon and you may be right! The end of the trail lies to the east
+  , only darkness lies to the south."
+  flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_MOB}
+  movement SECT_FOREST
+  extra {"trees", "branches"}
+  "The trees look like pain contorted figures frozen in wood, the un-howled howl sends shivers down your spine."
+  extra {"path", "trail", "ground"}
+  "The trail continues south to where you don't know, to the east it ends."
+  east to gate@sands2 descr  "The front gate to Baardek Keep.";
+  south to forest0_5 descr "A Baardek Forest trail, too dark to see much ahead.";
+  IN_ALWAYS_DARK
+end
+
+/*------- f0_3 -----*/
+forest0_3
+  title "At a dead end in the Baardek Dark Forest"
+  names {"forest", "f0_3"}
+  descr
+  "You are overwhelmed with darkness, despair, and madness is not far off.
+  The trail has ended here by no fault of its own; fallen trees block
+  passage in any direction but south yet still manage to look more
+  satisfied then trees you have noticed in the forest so far."
+  flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+  movement SECT_FOREST
+  extra {"trees", "branches"}
+  "The trees look like pain contorted figures frozen in wood, the un-howled howl sends shivers down your spine."
+  extra {"path", "trail", "ground"}
+  "The trail comes to a grinding halt where the trees have collapsed, finally winning against the path."
+  extra {"earth"}
+  "You look about three floating rocks away from the sun and see a blue and green sphere."
+  south to forest1_3 descr
+  "A Baardek Forest trail, too dark to see much ahead..";
+  IN_ALWAYS_DARK
+end
+/*------- f0_5 -----*/
+forest0_5
+  title "A dark path north of the clearing"
+  names {"forest", "f1_5"}
+  descr
+  "Even the closeness of a clearing to the south does little to
+  brighten the path, it's as if the atmosphere of the forest swallows
+  the light before it can touch you with its warm fingers."
+  flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+  movement SECT_FOREST
+  extra {"trees", "branches"}
+  "The trees look like pain contorted figures frozen in wood, the un-howled howl sends shivers down your spine."
+  extra {"path", "trail", "ground"}
+  "The trail continues south to a clearing and north into darkness."
+  south to forest1_5 descr "A Baardek Forest trail, too dark to see much ahead.";
+  north to forestA_5 descr "A Baardek Forest trail, too dark to see much ahead.";
+  IN_ALWAYS_DARK
+end
+/*------- f1_1 -----*/
+forest1_1
+  title "The start of a dark trail"
+  names {"forest", "f1_1"}
+  descr
+  "You stand at the beginning of a trail cut through the Baardek forest.
+  The branches close like archways overhead, held back by forces unknown.
+  Passage east into the forest is the only route the trees allow.
+  One tree near here looks to have strange scratches in it's bark."
+  flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_MOB}
+  movement SECT_FOREST
+  extra {"scratches", "words", "scratch", "bark"}
+  "The carving is surrounded by dried blood, you read:&n&cyUnder level 50, run away..&cnOver level 50, bring a friend.&cw"
+  extra {"trees", "branches", "archways"}
+  "The branches of the trees interlock like boney fingers blocking light and sound from the outside world, it is very possible that summoning would not even penetrate this tree made tunnel."
+  extra {"beach"}
+  "The beach looks distant even though it's only a little way off, it is as if you have entered a whole new world with just one step."
+  extra {"path", "trail", "ground"}
+  "There are very few places to setp on this trail even though the earth is hard packed, the brush is relatively oppressive, coming in from both sides."
+  extra {"earth"}
+  "You look about three floating rocks away from the sun and see a blue and green sphere."
+  east to forest1_2 descr "Deep into the heart of Baardek Dark Forest.";
+  west to beach3_6 descr "Back to the beach.";
+  IN_ALWAYS_DARK
+end
+/*------- f1_2 -----*/
+forest1_2
+  title "A dark path in the Baardek Forest"
+  names {"forest", "f1_2"}
+  descr
+  "The darkness encloses you completely, melancholy trees brush your face
+  with probing branches, desperatly trying to grab you; or so it seems.
+  A small speck of light is all you can see to the west, only darkness
+  to the east and north."
+  flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+  movement SECT_FOREST
+  extra {"trees", "branches"}
+  "The trees look like pain contorted figures frozen in wood, the un-howled howl sends shivers down your spine."
+  extra {"beach", "light"}
+  "The beach you hope, is the light spot to the west."
+  extra {"path", "trail", "ground"}
+  "The trail is hard packed but very crowding, too much time in this forest would be madness."
+  extra {"earth"}
+  "You look about three floating rocks away from the sun and see a blue and green sphere."
+  south to forest2_2 descr
+  "A Baardek Forest trail, too dark to see much ahead.";
+  east to forest1_3 descr
+  "A Baardek Forest trail, too dark to see much ahead.";
+  west to forest1_1 descr
+  "A Baardek Forest trail, opening onto a long bright beach.";
+  IN_ALWAYS_DARK
+end
+/*------- f1_3 -----*/
+forest1_3
+  title "A gloomy path in the forest"
+  names {"forest", "f1_3"}
+  descr
+  "The trail is dark and shadowy, it seems the mood of the forest has
+  tainted even the ground you walk on and, as time passes, the misery
+  becomes more and more unbearable. The tree relent enough to allow
+  travel to the north, west, and east."
+  flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+  movement SECT_FOREST
+  extra {"trees", "branches"}
+  "The trees really make the forest. The sorrow and lunacy seems to eminate from them as well."
+  extra {"path", "trail", "ground"}
+  "The path is heartless like its surroundings."
+  north to forest0_3 descr
+  "A Baardek Forest trail, too dark to see much ahead.";
+  east to forest1_4 descr
+  "A Baardek Forest trail, too dark to see much ahead.";
+  west to forest1_2 descr
+  "A Baardek Forest trail, too dark to see much ahead.";
+  IN_ALWAYS_DARK
+end
+/*------- f1_4 -----*/
+forest1_4
+  title "A heartlessly depressing path in the forest"
+  names {"forest", "f1_4"}
+  descr
+  "Only the light you carry can show you the way. Time is meaningless here,
+  the childish chase between sun and moon are insignifficant, only death
+  and pain play with these trees."
+  flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+  movement SECT_FOREST
+  extra {"trees", "branches"}
+  "Sorrow and lunacy seems to eminate from the trees as well as the ground."
+  extra {"path", "trail", "ground"}
+  "The path is heartless like its surroundings."
+  east to forest1_5 descr
+  "A Baardek Forest trail, too dark to see much ahead.";
+  west to forest1_3 descr
+  "A Baardek Forest trail, too dark to see much ahead.";
+  IN_ALWAYS_DARK
+end
+/*------- f1_5 -----*/
+forest1_5
+  title "A clearing in the Baardek forest"
+  names {"forest", "f1_5"}
+  descr
+  "The trees have let go of the path just enough to form a clearing
+  amidst the forest's misery, comprable to an oasis in the burning desert.
+  The path to the west begins or ends here where a north-south path intersects.
+  All directions require re-entering the sullen madness of the Baardek
+  Dark Forest."
+  movement SECT_FOREST
+  extra {"trees", "branches"}
+  "The trees are surrounding the clearing."
+  extra {"path", "trail", "ground"}
+  "The path is still lifeless but the relief of the clearing makes it much better."
+  north to forest0_5 descr
+  "A Baardek Forest trail, too dark to see much ahead.";
+  south to forest2_5 descr
+  "A Baardek Forest trail, too dark to see much ahead.";
+  west to forest1_4 descr
+  "A Baardek Forest trail, too dark to see much ahead.";
+end
+/*------- f2_2 -----*/
+forest2_2
+  title "A gloomy path in the forest"
+  names {"forest", "f2_2"}
+  descr
+  "A vaccuum of lightless and soundless misery overcomes you, the trees
+  look sad yet crazed, too much time here would certainly mean complete
+  insanity. The trail continues, under arched branches, to both the north
+  and east."
+  flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+  movement SECT_FOREST
+  extra {"vaccuum"}
+  "That is something you can not see, but the feeling curls your heart like the cry of a banshee.."
+  extra {"trees", "branches"}
+  "The trees really make the forest. The sorrow and lunacy seems to eminate from them as well."
+  extra {"path", "trail", "ground"}
+  "The trail is extremely poor for any crops you intend to plant."
+  extra {"earth"}
+  "You look about three floating rocks away from the sun and see a blue and green sphere."
+  north to forest1_2 descr
+  "A Baardek Forest trail, too dark to see much ahead.";
+  east to forest2_3 descr
+  "A Baardek Forest trail, too dark to see much ahead.";
+  IN_ALWAYS_DARK
+end
+/*------- f2_3 -----*/
+forest2_3
+  title "A shadowed path in the Baardek Forest"
+  names {"forest", "f2_3"}
+  descr
+  "The Baardek forest contains little light and even less sound, no amount
+  of companions could cheer you in here, your only hope is to get out
+  before it drives you mad.. If it hasn't already."
+  flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+  movement SECT_FOREST
+  extra {"trees", "branches"}
+  "The trees really make the forest. The sorrow and lunacy seems to eminate from them as well."
+  extra {"path", "trail", "ground"}
+  "The trail is extremely poor for any crops you intend to plant."
+  south to forest3_3 descr
+  "A Baardek Forest trail, too dark to see much ahead.";
+  west to forest2_2 descr
+  "A Baardek Forest trail, too dark to see much ahead.";
+  IN_ALWAYS_DARK
+end
+/*------- f2_5 -----*/
+forest2_5
+  title "A blackened path in the forest"
+  names {"forest", "f2_5"}
+  descr
+  "Trees press down on you and close off the light from the north, waves of
+  depression, hurt, and loss hit you like nausea. Sanity is a prize, it seems,
+  that few may take with them out of Baardek Forest."
+  flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+  movement SECT_FOREST
+  extra {"trees", "branches"}
+  "The trees really make the forest. The sorrow and lunacy seems to eminate from them as well."
+  extra {"path", "trail", "ground"}
+  "The trail is extremely poor for any crops you intend to plant."
+  north to forest1_5 descr
+  "A Baardek Forest trail, too dark to see much ahead.";
+  south to forest3_5 descr
+  "A Baardek Forest trail, too dark to see much ahead.";
+  IN_ALWAYS_DARK
+end
+/*------- f3_2 -----*/
+forest3_2
+  title "A dark dead end in the Baardek Forest"
+  names {"forest", "f3_2"}
+  descr
+  "There is no light here save that which you've brought with you,
+  you begin to feel like madness is not far away if it hasn't hit already...
+  There is no place to go here, a fitting dead end in a forest of death."
+  flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+  movement SECT_FOREST
+  extra {"trees", "branches", "piece of sky"}
+  "The trees enveleop even the hole in their mesh with darkness."
+  extra {"path", "trail", "ground"}
+  "The trail is extremely poor for any crops you intend to plant."
+  east to forest3_3 descr
+  "A Baardek Forest trail, too dark to see much ahead.";
+  OUT_ALWAYS_DARK
+end
+/*------- f3_3 -----*/
+forest3_3
+  title "A corner in the morbid path"
+  names {"forest", "f3_3"}
+  descr
+  "You are at another turn in the arch ceilinged path, a small piece of
+  sky is visible in the trees above. You bask in the small view it
+  provides wondering if it represents an end to the maddening forest
+  or a small break in an endless cycle."
+  flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+  movement SECT_FOREST
+  extra {"trees", "branches", "piece of sky"}
+  "The trees envelop even the hole in their mesh with darkness."
+  extra {"path", "trail", "ground"}
+  "The trail is extremely poor for any crops you intend to plant."
+  north to forest2_3 descr
+  "A Baardek Forest trail, too dark to see much ahead.";
+  west to forest3_2 descr
+  "A Baardek Forest trail, too dark to see much ahead.";
+  IN_ALWAYS_DARK
+end
+/*------- f3_4 -----*/
+forest3_4
+  title "A dead end in the Baardek Dark Forest"
+  names {"forest", "f3_4"}
+  descr
+  "The trail ends abruptly where trees of unimaginable size block the way,
+  the darkness here is beyond death as is the weight on your heart.
+  You try very hard to clench the sanity that you are no longer
+  sure that you have."
+  flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+  movement SECT_FOREST
+  extra {"trees", "branches", "piece of sky"}
+  "The trees envelop more then sound and light, they catch anything sprited and try to share with it their sorrow."
+  extra {"path", "trail", "ground"}
+  "The trail is extremely poor for any crops you intend to plant."
+  east to forest3_5 descr
+  "A Baardek Forest trail, too dark to see much ahead.";
+  OUT_ALWAYS_DARK
+end
+/*------- f3_5 -----*/
+forest3_5
+  title "A curve in the tree arch trail"
+  names {"forest", "f3_5"}
+  descr
+  "The trees continue to grip together above you, blocking all light.
+  The silence of the forest seems as unnatural as the voices you begin
+  to hear in your head. You see that the not so hospitable forest path
+  curves gently from west to north here."
+  flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+  movement SECT_FOREST
+  extra {"trees", "branches", "piece of sky"}
+  "The trees envelop more then sound and light, they catch anything sprited and try to share with it their sorrow."
+  extra {"path", "trail", "ground"}
+  "The trail is extremely poor for any crops you intend to plant."
+  north to forest2_5 descr
+  "A Baardek Forest trail, too dark to see much ahead.";
+  west to forest3_4 descr
+  "A Baardek Forest trail, too dark to see much ahead.";
+  OUT_ALWAYS_DARK
+end
+/*=========================== Beach Rooms ===============================*/
+/*------- 1_1 -----*/
+beach1_1
+  title "The beginning of a long and sandy ocean beach"
+  names {"beach", "beginnning", "1_1"}
+  descr
+  "&n&l   &fThe beach begins, or perhaps ends here. Ocean waves crash ashore
+  far to the south just past a quaint beach house. Cliffs to the west rise
+  so high you must crane your neck to peek at their tops where a wisp of
+  smoke is distinctly drifting. This sandy playground continues far to the
+  east, directly to the west bushes and shrubs cover most of the land,
+  possibly hiding a trail."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  extra {"smoke"}
+  "No thanks, I am trying to quit.."
+  extra {"sand", "beach", "ground"}
+  "The ground around your feet is very sandy, this does not strike you to heavilly a blow due to the fact that you are on a beach. There is a good chance that if you heat the sand a whole lot, it will turn to glass.."
+  extra {"water", "ocean", "sea"}
+  "It looks rather salty, you might guess that there are fish there too.."
+  extra {"cliff", "cliffs", "wall"}
+  "The menacing rock walls climb high above, yet there seems to be a path hidden behind a small shrub!"
+  extra {"bushes", "bush", "shrub", "trail"}
+  "Funny the bushes here are much thinner than elsewhere, you may find a trail in there.."
+  SECRET_DOOR_DIFFICULTY(WEST, 25)
+  west to trailhead open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+  keyword {"overgrown trail", "bushes", "bush", "shrubs", "shrub", "trail"};
+  north to path2 descr  "Onto the trail through the woods.";
+  south to beach2_1 descr "More beach then you can shake a stick at";
+  east to beach1_2 descr "The beach stretches far to the east..";
+end
+/*------- 1_2 -----*/
+beach1_2
+  title "Northern edge of the beach"
+  names {"beach", "1_2"}
+  descr
+  "The beach ends in cliffs off to the west and spans far to the east,
+  to the north logs washed ashore are piled too high to climb. The sound
+  of the surf is rythmic and soothing emanating from the south."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  extra {"sand", "beach", "ground"}
+  "The ground around your feet is very sandy, this does not strike you to heavilly a blow due to the fact that you are on a beach. There is a good chance that if you heat the sand a whole lot, it will turn to glass.."
+  extra {"water", "ocean", "sea"}
+  "It looks rather salty, you might guess that there are fish there too.."
+  extra {"logs", "log", "pile", "trees", "tree"}
+  "They sure are logs, it is fairly clear they are derived from trees. What kind of trees you wonder? They are definately your standard sea-faring trees.."
+  extra {"cliff", "cliffs", "wall"}
+  "From this angle you can make out the smoke from a small fire up there. Unless there is a trail climbing them will be tricky."
+  west to beach1_1 descr
+  "The sand is the same, but the beach tapers off abrublty at some unusually menacing cliffs..";
+  east to beach1_3 descr
+  "The beach continues to the east, followed by the logs..";
+  south to beach2_2 descr
+  "The surf is far to the south, more sandy beach stretches before it..";
+end
+/*------- 1_3 -----*/
+beach1_3
+  title "Northern edge of the beach"
+  names {"beach", "1_3"}
+  descr
+  "The beach stretches off west, east, and south. To the north logs are
+  piled high; blocking both view and access. The thunder of the tide from
+  the south beats against your ears like tribal drummers preparing for
+  war."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  extra {"sand", "beach", "ground"}
+  "The ground around your feet is very sandy, this does not strike you to heavilly a blow due to the fact that you are on a beach. There is a good chance that if you heat the sand a whole lot, it will turn to glass.."
+  extra {"water", "ocean", "sea"}
+  "It looks rather salty, you might guess that there are fish there too..."
+  extra {"logs", "log", "pile", "trees", "tree"}
+  "They sure are logs, it is fairly clear they are derived from trees. What kind of trees you wonder? They are definately your standard sea-faring trees.."
+  west to beach1_2 descr
+  "Ah yes, more beach to the west, but thats not all there are more logs as well.";
+  south to beach2_3 descr
+  "The beach stretches southward toward the untamed ocean. there would appear to be sand on the beach there as well..";
+  east to beach1_4 descr
+  "The sandy beach and logs continue to the east..";
+end
+/*------- 1_4 -----*/
+beach1_4
+  title "Northern edge of the beach"
+  names {"beach", "1_4"}
+  descr
+  "The endless ebb and flow of the waves lull you as you approach the centre of the beach, You are closer to your destination then you were before and this would be an ideal place to rest!"
+
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+
+  extra {"sand", "beach", "ground"}
+  "The sand here could easilly be sold to hour glass makers!"
+  extra {"water", "ocean", "sea"}
+  "Its far to the south, but you can just make out that it is wet.."
+  extra {"logs", "log", "pile", "trees", "tree"}
+  "Mostly made of wood, these do little more than lay around.."
+  west to beach1_3 descr
+  "Ah yes, more beach to the west, but that's not all there are more logs as well.";
+  south to beach2_4 descr
+  "The beach stretches southward toward the untamed ocean. there would appear to be sand on the beach there as well..";
+   east to beach1_5 descr
+  "The sandy beach and logs continue to the east..";
+end
+/*------- 1_5 -----*/
+beach1_5
+  title "Northern edge of the beach"
+  names {"beach", "1_5"}
+  descr
+  "The cliff walls look small on the western horizon, far to the east a forest edge is trying to conquer the beach. Nothern travel continues to be blocked by high piled drift wood."
+
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+
+  extra {"sand", "beach", "ground"}
+  "The sand here could easilly be sold to hour glass makers!"
+  extra {"water", "ocean", "sea"}
+  "It's far to the south, but you can just make out that it is wet.."
+  extra {"logs", "log", "pile", "trees", "tree"}
+  "Mostly made of wood, these do little more than lay around.."
+  west to beach1_4 descr
+  "The beach continues a long way to the west..";
+  south to beach2_5 descr
+  "The beach stretches southward toward the untamed ocean. there would appear to be sand on the beach there as well..";
+  east to beach1_6 descr
+  "The sandy beach and logs continue to the east..";
+end
+/*------- 1_6 -----*/
+beach1_6
+  title "Northern edge of the beach"
+  names {"beach", "1_6"}
+  descr
+  "Sand and oceanic debris cover the land from here to far on the western
+  horizon, to the east you notice a forest growing thick on the beach's
+  edge. Piled logs to the north block your passage to the north, left
+  there by the forceful tides of the ocean to the south."
+
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+
+  extra {"sand", "beach", "ground"}
+  "The sand here could easilly be sold to hour glass makers!"
+  extra {"forest", "woods"}
+  "It's off to the east but you can make out very little."
+  extra {"water", "ocean", "sea"}
+  "It's far to the south, but you can just make out that it is wet.."
+  extra {"logs", "log", "pile", "trees", "tree"}
+  "Mostly made of wood, these do little more than lay around.."
+  west to beach1_5 descr
+  "The beach continues a long way to the west..";
+  south to beach2_6 descr
+  "The beach stretches southward toward the untamed ocean. there would appear to be sand on the beach there as well..";
+  east to beach1_7 descr
+  "The sandy beach and logs continue to the east..";
+end
+/*------- 1_7 -----*/
+beach1_7
+  title "Northern edge of the beach"
+  names {"beach", "1_7"}
+  descr
+  "You stand on yet another part of the long beach that stretches endlessly
+  to the west. You are also not too far from a forest to the east. Logs
+  washed ashore and left by the tide are in an unpassable pile to the
+  north."
+
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+
+  extra {"sand", "beach", "ground"}
+  "The sand here could easilly be sold to hour glass makers!"
+  extra {"water", "ocean", "sea", "forest"}
+  "It's far to the south, but you can just make out that it is wet.."
+  extra {"forest", "woods"}
+  "It's off to the east but you can make out that it is very dense."
+  extra {"logs", "log", "pile", "trees", "tree"}
+  "Mostly made of wood, these do little more than lay around.."
+  west to beach1_6 descr
+  "The beach continues a long way to the west..";
+  south to beach2_7 descr
+  "The beach stretches southward toward the untamed ocean. there would appear to be sand on the beach there as well..";
+  east to beach1_8 descr
+  "The sandy beach and logs continue to the east..";
+end
+/*------- 1_8 -----*/
+beach1_8
+  title "The northeastern beach edge"
+  names {"beach", "1_8"}
+  descr
+  "You are standing next to a dense forest's edge. The forest is both east and south of you, working its way onto the beach. You would make no headway in the massive undergrowth and cramped trees."
+
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+
+  extra {"sand", "beach", "ground"}
+  "The sand here could easilly be sold to hour glass makers!"
+  extra {"forest edge", "forest", "edge"}
+  "The amount of undergrowth and closeness of the trees make entering impossible!"
+  extra {"water", "ocean", "sea"}
+  "It's far to the south, but you can just make out that it is wet.."
+  extra {"logs", "log", "pile", "trees", "tree"}
+  "Mostly made of wood, these do little more than lay around.."
+  west to beach1_7 descr
+  "The beach continues a long way to the west..";
+end
+/*------- 2_1 -----*/
+beach2_1
+  title "A shady place on the beach"
+  names {"beach", "shadyplace", "2_1"}
+  descr
+  "This part of the beach lies in the shadows of the cliffs where, to the
+  south, a large beach house sits next to them. There is no visible door
+  but many windows on this side of the house."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  extra {"beach house", "home", "house", "windows"}
+  "From this side of the house you can see little but the windows, and they are stylishly furnished with curtains! Maybe if you walk around the house you will find a door.."
+  extra {"sand", "beach", "ground"}
+  "The sand would probably smooth wood if glued to paper.."
+  extra {"water", "ocean", "sea"}
+  "You can hear it from around the house."
+  extra {"cliff", "cliffs", "wall"}
+  "The walls shoot stright up and are also cluttered with thorned bushes.."
+  extra {"bushes", "bush", "shrub", "trail"}
+  "These bushes are so wild and out of control not even you could get thorough!"
+  north to beach1_1 descr
+  "The beach really begins there.";
+  east to beach2_2 descr
+  "The beach stretches far to the east..";
+end
+/*------- 2_2 -----*/
+beach2_2
+  title "A sandy beach"
+  names {"beach", "2_2"}
+  descr
+  "You are not too far from the ocean now, gulls circle and cry above
+  you, speaking of seafaring heroes and mermaids. To the south and west
+  a beach house of impressive size rests on the sand."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  extra {"sand", "beach", "ground"}
+  "The beach is very sandy, this is relatively normal in places like this."
+  extra {"water", "ocean", "sea"}
+  "The ocean is not far to the south now, sounds of the sea make your heart sing chantys
+   while a gentle sea breeze cools your face."
+  extra {"cliff", "cliffs", "wall"}
+  "From this angle you can make out the smoke from a small fire up there.
+  Unless there is a trail climbing them will be tricky."
+  extra {"beach house", "house", "home"}
+  "It is big, but perhaps you should get closer."
+  north to beach1_2 descr
+  "The northernmost part of the beach.";
+  west to beach2_1 descr
+  "It looks like a nice shady area, lost in the shadow of looming cliffs and the house.";
+  east to beach2_3 descr
+  "The beach continues to the east for quite a way.";
+  south to beach3_2 descr
+  "Before the beach house";
+end
+/*------- 2_3 -----*/
+beach2_3
+  title "Nearing the centre of a sandy beach"
+  names {"beach", "2_3"}
+  descr
+  "In all directions the long sandy beach stretches seemingly without end.
+  The ocean eventually meets the sand to the south of here and a forest
+  to the east."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  extra {"sand", "beach", "ground"}
+  "The ground is very sandy, be carful not to step on a shell.."
+  extra {"water", "ocean", "sea"}
+  "It looks rather salty, you might guess that there are fish there too.."
+  north to beach1_3 descr
+  "It looks like more beach..";
+  south to beach3_3 descr
+  "The beach stretches southward toward the untamed ocean. There would appear to be sand on the beach there as well..";
+  east to beach2_4 descr
+  "The sandy beach continues to the east..";
+  west to beach2_2 descr
+  "Definately closer to the cliffs, you can even make out smoke coming from their top.";
+end
+/*------- 2_4 -----*/
+beach2_4
+  title "The centre of a sandy beach"
+  names {"centre", "beach", "2_4"}
+  descr
+  "Distant cliffs rise in the west and a forest sits small on the eastern
+  horizon. You are at the centre of a beach that continues in all directions."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  extra {"sand", "beach", "ground"}
+  "The ground is very sandy, be carful not to step on a shell.."
+  extra {"small forest", "forest"}
+  "The forest is too far off to see clearly, perhaps you should get closer."
+  extra {"water", "ocean", "sea"}
+  "It looks calm and clear as glass from this distance."
+  north to beach1_3 descr
+  "It would appear to be the northernmost beach.";
+  south to beach3_4 descr
+  "The beach stretches southward toward the untamed ocean. There would appear to be sand on the beach there as well..";
+  east to beach2_5 descr
+  "The sandy beach continues to the east..";
+  west to beach2_3 descr
+  "Your eyes can follow the length of the beach to cliff riddled horizons.";
+end
+/*------- 2_5 -----*/
+beach2_5
+  title "Nearing the centre of a sandy beach"
+  names {"beach", "2_5"}
+  descr
+  "The beach stretches off west, east, north, and south. You can clearly
+  make out a small forest to the east which seems to border the edge of
+  the beach all the way south to the sea."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  extra {"small forest", "forest"}
+  "The forest is too far off to see clearly, perhaps you should get closer."
+  extra {"sand", "beach", "ground"}
+  "The ground is very sandy, perhaps you are on a beach."
+  extra {"water", "ocean", "sea"}
+  "You look towards the water remembering tales of mermaids and drunken sailors."
+  north to beach1_5 descr
+  "That is the northern part of the beach.";
+  south to beach3_5 descr
+  "The beach stretches southward toward the untamed ocean. There would appear to be sand on the beach there as well..";
+  east to beach2_6 descr
+  "The sandy beach continues to the east..";
+  west to beach2_4 descr
+  "Oh the beach seems to go on forever.";
+end
+/*------- 2_6 -----*/
+beach2_6
+  title "A sandy beach"
+  names {"beach", "2_6"}
+  descr
+  "The beach continues far to the west, north, and towards the ocean to
+  the south. Nearby to the east you see a forest, dense and dark.
+  Many small shells crunch beneath your feet in the sand as you idle about."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  extra {"sand", "beach", "ground"}
+  "The ground is very sandy, perhaps you are on a beach."
+  extra {"shells", "shell"}
+  "They are the homes of dearly departed shell wearing creatures."
+  extra {"water", "ocean", "sea"}
+  "You look towards the water remembering tales of mermaids and drunken sailors."
+  extra {"small forest", "forest"}
+  "The forest is definatly not inviting, very dark and scary looking."
+  north to beach1_6 descr
+  "That is the northern part of the beach.";
+  south to beach3_6 descr
+  "The beach stretches southward toward the untamed ocean. There would appear to be sand on the beach there as well..";
+  east to beach2_7 descr
+  "The sandy beach continues to the east..";
+  west to beach2_5 descr
+  "Oh the beach seems to go on forever.";
+end
+/*------- 2_7 -----*/
+beach2_7
+  title "A part of the beach bordering the woods"
+  names {"beach", "2_7"}
+  descr
+  "The beach continues far to the west and north, but the forest is directly to the south and east and is so overgrown it is completely inaccessable."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  extra {"sand", "beach", "ground"}
+  "The ground is very sandy, perhaps you are on a beach."
+  extra {"water", "ocean", "sea"}
+  "You look towards the water remembering tales of mermaids and drunken sailors."
+  extra {"small forest", "forest"}
+  "The forest is definatly not inviting, very dark and scary looking."
+  north to beach1_7 descr
+  "The northern part of the beach as it approaches the forest..";
+  west to beach2_6 descr
+  "Oh the beach seems to go on forever in that direction.";
+end
+/*------- 3_2 -----*/
+beach3_2
+  title "The beach before a beach house"
+  names {"3_2", "beach"}
+  descr
+  "Looming before you is a large beach house, its owners seem to have the
+   money to keep  things nice. You can't tell if anyone is home because all the curtains are shut tight, you may just have to go in to see all there is to see. The beach continues in all other directions fading off towards the sea to the south."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  extra {"sand", "beach", "ground"}
+  "The sand is very sandy, this is relatively normal in places like this."
+  extra {"water", "ocean", "sea"}
+  "The ocean is very close to the south now. You watch as relentless waves
+  pound the shore, fighting a neverending battle with the beach."
+  extra {"door"}
+  "The door is small and wooden, the words &cc'Bob and Bernice'&cw are on its front."
+  extra {"cliff", "cliffs"}
+  "You strain to see the cliff, but there is no way to get the house out
+  of your view."
+  extra {"beach house", "house", "home"}
+  "It is big, there is no doubt about it. You are facing its eastern wall
+  which has only two windows and a door on the first floor, there is one
+  other floor as far as you can tell, the second having no windows at all.
+  The whole house has been left a natural wood colour and seems to sit on
+  the sand on small legs."
+  north to beach2_2 descr
+  "The beach continues to the north.";
+  west to beachhouse descr "The house."
+  keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+  east to beach3_3 descr
+  "The beach continues to the east for quite a way.";
+  south to beach4_2 descr
+  "The surf is far to the south, more sandy beach stretches before it..";
+end
+/*------- 3_3 -----*/
+beach3_3
+  title "A sandy beach"
+  names {"3_3", "beach"}
+  descr
+  "Sandy beach continues in all directions, although you are mighty close to the sea shore right now. There is some sort of gigantic beach house to the east of here, you aren't quite sure what to make of it."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  extra {"sand", "beach", "ground"}
+  "The sand is very sandy, this is relatively normal in places like this."
+  extra {"water", "ocean", "sea"}
+  "The ancient ocean is almost directly to the south now. You can feel the spray and smell the sea in the waves as they crest near by."
+  extra {"beach house", "house", "home"}
+  "It is big, there is no doubt about it. Get a little closer and look."
+  extra {"cliffs", "cliff"}
+  "The cliffs sit behind and above the house."
+  north to beach2_3 descr "The beach continues to the north.";
+  west to beach3_2 descr "It looks like a house! Let's go see.";
+  east to beach3_4 descr "Towards the centre of the beach.";
+  south to beach4_3 descr "The surf is far to the south, more sandy beach stretches before it..";
+end
+/*------- 3_4 -----*/
+beach3_4
+  title "A sandy beach"
+  names {"3_4", "beach"}
+  descr
+  "The beach lays itself before you in all directions, the sky atop the ocean to the south is all around you. To the east you can make out a dark forest encroaching onto the beach, far to the west cliffs rise above the ground like gods..
+  Before the cliffs you can make out what appears to be a house on the sand."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  extra {"sand", "beach", "ground"}
+  "The sand is very sandy, this is relatively normal in places like this."
+  extra {"beach house", "house", "home"}
+  "It is big, there is no doubt about it. But it is too far off to know for sure."
+  extra {"water", "ocean", "sea"}
+  "The ancient ocean is almost directly to the south now. You can feel the spray and smell the sea in the waves as they crest near by."
+  extra {"thick forest", "forest"}
+  "The forest is too far off to see."
+  extra {"cliffs", "cliff"}
+  "The cliffs are way too far off to see."
+  north to beach2_4 descr
+  "The beach continues to the north.";
+  west to beach3_3 descr
+  "Endless sand for great lengths.";
+   east to beach3_5 descr
+  "Getting closer to the forest's edge.";
+  south to beach4_4 descr
+  "The sea is very close now..";
+end
+/*------- 3_5 -----*/
+beach3_5
+  title "A sandy beach"
+  names {"3_5", "beach"}
+  descr
+  "You are standing on a beach that stretches far to the west and north. Close to the south an ancient ocean beats the sandy shore. To the east a forest, so thick it seems to swallow light and sound,
+  edges the beach."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  extra {"sand", "beach", "ground"}
+  "The sand is very sandy, this is relatively normal in places like this."
+  extra {"water", "ocean", "sea"}
+  "The ancient ocean is almost directly to the south now. You can feel the spray and smell the sea in the waves as they crest near by."
+  extra {"thick forest", "forest"}
+  "The forest is definatly not inviting, very dark and scary."
+  north to beach2_5 descr "The beach continues to the north.";
+  west to beach3_4 descr "Endless sand and gull litter goes on for great lengths.";
+  east to beach3_6 descr  "Right next to the forest.";
+  south to beach4_5 descr  "The surf is far to the south, more sandy beach stretches before it..";
+end
+/*------- 3_6 -----*/
+beach3_6
+  title "A sandy beach bordering the forest"
+  names {"3_6", "beach"}
+  descr
+  "The beach continues west and north and the sea is not too far to the
+  south. To the east is the beginning of a well traveled trail, cut like a
+  tunnel through thick forest. You get the feeling you are being watched!"
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  extra {"sand", "beach", "ground"}
+  "The sand is very sandy, this is relatively normal in places like this."
+  extra {"water", "ocean", "sea"}
+  "The ocean is very close to the south west. You watch as relentless waves
+  pound the shore, fighting a never-ending battle with the beach."
+  extra {"trail", "path", "tunnel"}
+  "This trail must be used and maintained often for the forest looks
+  untamable yet the path tunnels through tall enough for men on horseback."
+  extra {"thick forest", "forest", "woods"}
+  "The forest is definatly not inviting, very dark and scary looking as is
+  the path."
+  north to beach2_6 descr "The beach continues to the north.";
+  west to beach3_5 descr "Endless sand and gull litter goes on for great lengths.";
+  east to forest1_1 descr "The beginning of a tunnel-like path through the forest.";
+end
+/*------- 4_0 -----*/
+beach4_0
+  title "A corner of beach"
+  names {"4_0", "beach"}
+  descr
+  "The cliffs loom above you like giants from both the north and west. To the northeast you can see a beach house resting on the sand. The sounds of the ocean resound in your ears for the shore is directly to the south of here."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  dilcopy beach_noise@sandzone();
+  extra {"sand", "beach", "ground"}
+  "The sand is very sandy, this is relatively normal in places like this."
+  extra {"water", "ocean", "sea"}
+  "The ocean is very close to the south now. You watch as relentless waves
+  pound the shore, fighting a neverending battle with the beach."
+  extra {"cliff", "cliffs"}
+  "You strain to see the cliffs but they tower so high you can make out little."
+  extra {"beach house", "house", "home"}
+  "It's big, there is no doubt about it. You are near its southern wall
+  which has only one window on the first floor."
+  east to beach4_1 descr
+  "The beach continues to the east for as far as you can see.";
+  south to beach5_0 descr
+  "The surf is far to the south, more sandy beach stretches before it..";
+end
+/*------- 4_1 -----*/
+beach4_1
+  title "A sandy beach"
+  names {"4_1", "beach"}
+  descr
+  "The cliffs, only a bit to the west, appear to have smoke wisping from
+  their tops. The beach sprawls out before you to the east as
+  far as you can see and you are standing directly south of a large house
+  with a giant bay window facing the ocean."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  dilcopy beach_noise@sandzone();
+  extra {"sand", "beach", "ground"}
+  "The sand is very sandy, this is relatively normal in places like this."
+  extra {"water", "ocean", "sea"}
+  "The ocean is very close to the south now. You watch as relentless waves
+  pound the shore, fighting a neverending battle with the beach."
+  extra {"cliff", "cliffs"}
+  "There they are!."
+  extra {"smoke"}
+  "It appears to be that of small campfires."
+  extra {"beach house", "house", "home"}
+  "It is very large for what must be a summer home, made of wood the home sits on small legs which hold it above the sand."
+  extra{"bay window", "window"}
+  "The window of the beach house is large and appears to have been designed for the purpose
+  of viewing the scenic beach and ocean."
+  west to beach4_0 descr
+  "The beach ends abruptly to the west as it butts against the cliffs.";
+  east to beach4_2 descr
+  "The beach continues to the east for as far as you can see.";
+  south to beach5_1 descr
+  "The surf is far to the south, more sandy beach stretches before it..";
+end
+/*------- 4_2 -----*/
+beach4_2
+  title "A sandy beach"
+  names {"4_2", "beach"}
+  descr
+  "Sand covers the ground in all directions, just to the north you see the entrance to a large beach house. Smoke wafts from the top of cliffs to the west and the waves pound the shore directly to the south."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  dilcopy beach_noise@sandzone();
+  extra {"sand", "beach", "ground"}
+  "The sand is very sandy, this is relatively normal in places like this."
+  extra {"smoke"}
+  "It appears to be that of small campfires."
+  extra {"shore", "water", "ocean", "sea"}
+  "The ocean is very close to the south now. You watch as relentless waves
+  pound the shore, fighting a neverending battle with the beach."
+  extra {"cliff", "cliffs"}
+  "There they are!."
+  extra {"beach house", "house", "home"}
+  "It is very large for what must be a summer home, made of wood the home sits on small legs which hold it above the sand."
+  west to beach4_1 descr "The beach ends abruptly to the west as it butts against the cliffs.";
+  north to beach3_2 descr "Right in front of the beach house.";
+  east to beach4_3 descr "The beach continues to the east for as far as you can see.";
+  south to beach5_2 descr "The surf is near to the south, only a bit of sand is between you and it..";
+end
+/*------- 4_3 -----*/
+beach4_3
+  title "A sandy beach"
+  names {"4_3", "beach"}
+  descr
+  "With cliffs looming not too far on the western horizon and what looks like a forest on the easten, you assume you must be close to the middle of the beach and very near the south shore."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  dilcopy beach_noise@sandzone();
+  extra {"sand", "beach", "ground"}
+  "The sand is very sandy, this is relatively normal in places like this."
+  extra {"shore", "water", "ocean", "sea"}
+  "The ocean is very close to the south now. You watch as relentless waves
+  pound the shore, fighting a neverending battle with the beach."
+  extra {"cliff", "cliffs"}
+  "They are getting a bit far a way to see clearly."
+  extra {"thick forest", "forest"}
+  "The forest looks a little dark, but you can make little out from here."
+  west to beach4_2 descr  "The beach ends abruptly to the west as it butts against the cliffs.";
+  north to beach3_3 descr  "Right in front of the beach house.";
+  east to beach4_4 descr   "The beach continues to the east for as far as you can see.";
+  south to beach5_3 descr  "The surf is near to the south, only a bit of sand is between you and it..";
+end
+/*------- 4_4 -----*/
+beach4_4
+  title "A sandy beach"
+  names {"4_4", "beach"}
+  descr
+  "The ocean crashes ashore so close to the south it fills then floods your
+  sences, there is a small wooden dock stretching out into it as well.
+  The western cliffs look like walls of smooth granite from this
+  distance, the forest to the east appears to be only a little dark."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  dilcopy beach_noise@sandzone();
+  extra {"sand", "beach", "ground"}
+  "The sand is very sandy, this is relatively normal in places like this."
+  extra {"shore", "water", "ocean", "sea"}
+  "The ocean is very close to the south now. You watch as relentless waves
+  pound the shore, fighting a neverending battle with the beach."
+  extra {"cliff", "cliffs"}
+  "They are getting a bit far a way to see clearly."
+  extra {"thick forest", "forest"}
+  "The forest looks a little dark, but you can make little out from here."
+  west to beach4_3 descr   "The beach ends abruptly to the west as it butts against the cliffs.";
+  north to beach3_4 descr  "Nearing the middle point of all the beach.";
+  east to beach4_5 descr   "The beach lays east for a while before the forest schokes it off.";
+  south to beach5_4 descr  "The surf is near to the south, only a bit of sand is between you and it..";
+end
+/*------- 4_5 -----*/
+beach4_5
+  title "A sandy beach"
+  names {"4_5", "beach"}
+  descr
+  "You can see around the forest to the south and make out a small dock
+  in the ocean a bit off to the west. To the east the forest has crawled
+  out of its bounds and taken over, blocking all passage in that direction,
+  dark and frightening it watches you with unseen eyes. To the north
+  and west the sandy paradise stretches as far as you can see."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  dilcopy beach_noise@sandzone();
+  extra {"sand", "beach", "ground"}
+  "The sand is very sandy, this is relatively normal in places like this."
+  extra {"shore", "water", "ocean", "sea"}
+  "The ocean is very close to the south now. You watch as relentless waves
+  pound the shore, fighting a neverending battle with the beach."
+  extra {"thick forest", "dark forest", "forest"}
+  "The forest looks dark, but you can make vey little out from this distance."
+  extra {"unseen eyes", "eyes"}
+  "They, being unseen, are not visible to you.."
+  extra {"dock"}
+  "The short dock appears to have a small hut at its end."
+  west to beach4_4 descr   "The beach ends abruptly to the west as it butts against the cliffs.";
+  north to beach3_5 descr  "Nearing the middle point of all the beach.";
+end
+/*------- 5_0 -----*/
+beach5_0
+  title "Along the shore of the beach"
+  names {"5_0", "beach"}
+  descr
+  "With cliffs looming to the north and west, you stand on the shore of
+  the beach. A small house appears a bit to the north and to the east
+  the shore continues. To the west, the cliffs force the shore into a
+  narrow strip between rock and sea."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  dilcopy beach_noise@sandzone();
+  extra {"sand", "beach", "ground"}
+  "The sand is very sandy, this is relatively normal in places like this."
+  extra {"water", "ocean", "sea"}
+  "The ocean is directly to the south, it looks impassable but you can make
+  out a small dock entering the sea to the east."
+  extra {"cliff", "cliffs"}
+  "You strain to see the cliffs but they tower so high you can make out little."
+  extra {"beach house", "house", "home"}
+  "The house is relatively large, it sits on the sand on small wooden legs
+  and overlooks the ocean."
+  east to beach5_1 descr
+  "The beach continues to the east for as far as you can see.";
+  west to shore1_3 descr
+  "The beach narrows out when squished between the cliff and sea.";
+  north to beach4_0 descr
+  "The surf is far to the south, more sandy beach stretches before it..";
+end
+/*------- 5_1 -----*/
+beach5_1
+  title "Along the shore of the beach"
+  names {"5_1", "beach"}
+  descr
+  "The dark blue ocean stretches out limitlessly to the south, in all
+  other directions only sand and rocky cliffs are visible. A small wisp
+  of smoke trails into the sky directly above the western cliffs."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  dilcopy beach_noise@sandzone();
+  extra {"sand", "beach", "ground"}
+  "The sand is very sandy, this is relatively normal in places like this."
+  extra {"water", "ocean", "sea"}
+  "The ocean is very close to the south now. You watch as relentless waves
+  pound the shore, fighting a neverending battle with the beach."
+  extra {"cliff", "cliffs"}
+  "There they are!."
+  extra {"smoke"}
+  "It appears to be that of small campfires."
+  west to beach5_0 descr
+  "The beach ends abruptly to the west as it butts against the cliffs.";
+  east to beach5_2 descr
+  "The beach continues to the east for as far as you can see.";
+  north to beach4_1 descr
+  "The surf is far to the south, more sandy beach stretches before it..";
+end
+/*------- 5_2 -----*/
+beach5_2
+  title "Along the shore of the beach"
+  names {"5_2", "beach"}
+  descr
+  "Your feet slip through milky white sand, to the south blue ocean with
+  only s single speck of land on the horizon is all you can see. In all other
+  directions the beach rolls on."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  dilcopy beach_noise@sandzone();
+  extra {"sand", "beach", "ground"}
+  "The sand is very sandy, this is relatively normal in places like this."
+  extra {"smoke"}
+  "It appears to be that of small campfires."
+  extra {"shore", "water", "ocean", "sea"}
+  "The ocean is very close to the south now. You watch as relentless waves
+  pound the shore, fighting a neverending battle with the beach.."
+  extra {"cliff", "cliffs"}
+  "There they are!."
+  west to beach5_1 descr
+  "The beach ends abruptly to the west as it butts against the cliffs.";
+  north to beach4_2 descr
+  "Towards a house in the sand.";
+  east to beach5_3 descr
+  "The beach continues to the east for as far as you can see.";
+end
+/*------- 5_3 -----*/
+beach5_3
+  title "The shore of the beach"
+  names {"5_3", "beach"}
+  descr
+  "You are standing on the expansive shore of the beach, the ocean is
+  directly to the south and the shore you are on continues both to the
+  east and the west. Even farther to the west cliffs rise high into the
+  skyline. To the north you can make out the entrance to a beach house."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  dilcopy beach_noise@sandzone();
+  extra {"sand", "beach", "ground"}
+  "The sand is very sandy, this is relatively normal in places like this."
+  extra {"shore", "water", "ocean", "sea"}
+  "The ocean is very close to the south now. You watch as relentless waves
+  pound the shore, fighting a neverending battle with the beach."
+  extra {"thick forest", "forest"}
+  "The forest looks a little dark, but you can make little out from here."
+  extra {"cliff", "cliffs"}
+  "They are getting a bit far a way to see clearly."
+  west to beach5_2 descr "The beach ends abruptly to the west as it butts against the cliffs.";
+  north to beach4_3 descr "Nearing a beach house's entrance.";
+  east to beach5_4 descr  "The beach continues to the east for as far as you can see.";
+end
+/*------- 5_4 -----*/
+beach5_4
+  title "Eastern end of the shore"
+  names {"5_4", "beach"}
+  descr
+  "You are standing in a narrow corner between sea and forest. The dark forest has
+  crawled out of its normal bounds and blocks your progress to the east. To
+  the south the endless ocean stretches as far as the eye can see and a small
+  wooden dock stretches into it."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  dilcopy beach_noise@sandzone();
+  extra {"sand", "beach", "ground"}
+  "The sand is very sandy, this is relatively normal in places like this."
+  extra {"shore", "water", "ocean", "sea"}
+  "The ocean is very close to the south now. You watch as relentless waves
+  pound the shore, fighting a neverending battle with the beach."
+  extra {"cliff", "cliffs"}
+  "They are getting a bit far a way to see clearly."
+  extra {"thick forest", "forest"}
+  "The forest looks a little dark, but you can make little out from here."
+  west to beach5_3 descr
+  "The beach ends abruptly to the west as it butts against the cliffs.";
+  north to beach4_4 descr
+  "Nearing the middle point of all the beach.";
+  south to the_dock descr "On the dock.";
+end
+/*------ The Dock ------*/
+the_dock
+  title "On a small wooden dock"
+  names{"the dock", "dock"}
+  descr
+  "The tiny little dock, made of rickety drift wood, stretches out into the ocean for a few
+  metres. From here you can look out onto the ocean and see a small speck of
+  land dangerously far out among the torrential waves. Gulls circle and cry
+  in the air above you, making you wary of incoming treats."
+  movement SECT_CITY
+  extra{"dock", "ground", "wood"}
+  "The rickety wood is not too stable looking, but it is managing to hold you."
+  extra{"gulls", "gull"}
+  "They are white and birdlike."
+  extra{"speck of land", "speck", "land", "island"}
+  "Far off on the southern horizon what appears to be a small island is in the sea."
+  extra{"treats", "shit"}
+  "Treats from the birds' bottoms you dolt!"
+  north to beach5_4 descr "Back on the beach.";
+  south to at_sea_1 descr "The shallows of the ocean.";
+end
+/*-------------------- OCEAN ROOMS ------------------------------*/
+/*------ At Sea 1 ------*/
+at_sea_1
+  title "The shallows of the ocean"
+  names{"at_sea_1", "sea"}
+  descr
+  "You are floating around in the shallows of the ocean, to tavel any further into
+  its vast blue wonder you must have a boat. The dock is directly to the north and
+  as you peer off into the southern horizon you can see a small speck of
+  land in the midst of the sea."
+  movement SECT_WATER_SWIM
+  extra{"dock", "ground", "wood"}
+  "The rickety wood is not too stable looking."
+  extra{"speck of land", "speck", "land", "island"}
+  "Far off on the southern horizon what appears to be a small island is in the sea."
+  north to the_dock descr "Onto the dock.";
+  south to sea_1 descr "On the ocean.";
+end
+/*------ Sea 1 ------*/
+sea_1
+  title "On the blue ocean"
+  names{"sea_1", "sea"}
+  descr
+  "The sea is a dark blue and begins to churn more violently as you leave the safety of the
+  shore. Far off to the south you can see a small island all alone in
+  the ocean."
+  movement SECT_WATER_SAIL
+  extra{"mainland", "shore"}
+  "It's not too far off, but you are starting to feel less comfortable about your ocean
+  adventure."
+  extra{"island", "speck", "land"}
+  "Far off on the southern horizon what appears to be a small island is in the sea."
+  north to at_sea_1 descr "Returning to the shallows.";
+  south to sea_2 descr "On the ocean.";
+  east to sea_4 descr "On the ocean.";
+  west to sea_1 descr "On the ocean.";
+end
+/*------ Sea 2 ------*/
+sea_2
+  title "On the blue ocean"
+  names{"sea_2", "sea"}
+  descr
+  "The deep ocean begins to toss you around as you get farther and farther from the
+  shore, the only land in sight besides the shore is a distant island to the south."
+  movement SECT_WATER_SAIL
+  extra{"mainland", "shore"}
+  "It's far off, you are starting to feel less comfortable about your ocean
+  adventure."
+  extra{"island", "speck", "land"}
+  "Far off on the southern horizon what appears to be a small island is in the sea."
+  north to sea_1 descr "Returning to the shallows.";
+  south to sea_3 descr "On the ocean.";
+  west to sea_5 descr "On the ocean.";
+  east to sea_3 descr "On the ocean.";
+end
+/*------ Sea 3 ------*/
+sea_3
+  title "On the blue ocean"
+  names{"sea_3", "sea"}
+  descr
+  "Small waves crest and spill over the sides of your boat, turning back
+  now seems futile because the island is as far away as the mainland."
+  movement SECT_WATER_SAIL
+  extra{"mainland", "shore"}
+  "It's far off, you are starting to feel less comfortable about your ocean
+  adventure."
+  extra{"island", "speck", "land"}
+  "Off to the south a small island is in the sea."
+  north to sea_2 descr "On the ocean.";
+  south to sea_4 descr "On the ocean.";
+  west to sea_3 descr "On the ocean.";
+  east to sea_off_4 descr "On the ocean.";
+end
+/*------ Sea 4 ------*/
+sea_4
+  title "On the blue ocean"
+  names{"sea_4", "sea"}
+  descr
+  "You are really getting tossed about in the turbulent ocean waves, the island is
+  relatively close while the mainland is far to the north."
+  movement SECT_WATER_SAIL
+  extra{"mainland", "shore"}
+  "It's far off, you are starting to feel less comfortable about your ocean
+  adventure."
+  extra{"island", "speck", "land"}
+  "Off to the south a small island is in the sea."
+  north to sea_3 descr "On the ocean.";
+  south to sea_5 descr "On the ocean.";
+  west to sea_6 descr "On the ocean.";
+  east to sea_off_2 descr "On the ocean.";
+end
+/*------ Sea 5 ------*/
+sea_5
+  title "On the blue ocean"
+  names{"sea_5", "sea"}
+  descr
+  "A small inlet in the island is not too far to the south, to the north
+  the shore of the ocean is tiny but visible. From this distance you can see
+  that on its western side mighty cliffs rise up towards the sky, to its
+  east you can see a stone keep buried in a dark forest."
+  movement SECT_WATER_SAIL
+  extra{"mainland", "shore", "land"}
+  "It's far off, too far to see anything clearly."
+  extra{"island", "speck", "inlet"}
+  "The inlet of the island is near to the south, perhaps you could land a boat there."
+  north to sea_4 descr "On the ocean.";
+  east to sea_off_1 descr "Sailing sailing..";
+  south to sea_6 descr "Near the inlet.";
+  west to sea_4 descr "On the ocean.";
+  east to sea_off_3 descr "On the ocean.";
+end
+/*------ Sea 6 ------*/
+sea_6
+  title "On the blue ocean"
+  names {"sea_6", "sea"}
+  descr
+  "Directly to the south a small inlet into the island provides a place to
+  land a boat. You can see a small hut with a tiny tree next to it in the
+  island's centre. Far off to the north you can just make out the misty
+  shore of Valhalla."
+  movement SECT_WATER_SAIL
+  extra{"mainland", "shore", "land"}
+  "It's far off, too far to see anything clearly."
+  extra{"hut and tree", "tree", "hut"}
+  "The hut and tree look small, scaled perfectly to the tiny island. From this
+  distance you can just make out its state of disrepair."
+  extra{"inlet", "island", "speck"}
+  "The inlet of the island is directly to the south, perhaps you could land a boat there."
+  north to sea_5 descr "On the ocean.";
+  south to sea_7 descr "The inlet.";
+  west to sea_off_4 descr "Further out into the ocean.";
+  east to sea_off_1 descr "On the ocean.";
+end
+/*------ Sea 7 ------*/
+sea_7
+  title "A small inlet in the island"
+  names {"sea_7", "sea", "inlet"}
+  descr
+  "You are floating about in the small inlet of the island, to the south
+  its sandy self stretches a short distance in all directions. Way off
+  on the northern horizon you can make out the shore of the mainland."
+  movement SECT_WATER_SWIM
+  extra{"mainland", "shore", "land"}
+  "It's far off, too far to see anything clearly."
+  extra{"inlet", "island", "speck"}
+  "The inlet of the island is directly to the south, perhaps you could land a boat there."
+  north to sea_6 descr "On the ocean.";
+  south to island_port descr "Onto the island.";
+  west to sea_7 descr "On the ocean.";
+  east to sea_off_3 descr "On the ocean.";
+end
+/*------ Sea Off 1 ------*/
+sea_off_1
+  title "Somewhere on the blue ocean"
+  names {"sea_off_1", "sea"}
+  descr
+  "The ocean is starting to get rough but you are still somewhat near the
+  shore and so, not too concerned."
+  movement SECT_WATER_SAIL
+  extra{"mainland", "shore", "land"}
+  "It's far off, too far to see anything clearly."
+  north to sea_off_2 descr "On the ocean.";
+  south to sea_off_2 descr "On the ocean.";
+  west to sea_5 descr "On the ocean";
+  east to sea_off_2 descr "On the ocean.";
+end
+/*------ Sea Off 2 ------*/
+sea_off_2
+  title "Somewhere on the blue ocean"
+  names {"sea_off_2", "sea"}
+  descr
+  "The ocean is starting to get rougher and you begin to worry. Small white caps
+  begin to lap over the edge of your craft and you have trouble keeping
+  it afloat."
+  movement SECT_WATER_SAIL
+  extra{"mainland", "shore", "land"}
+  "It's far off."
+  south to sea_off_1 descr "On the ocean.";
+  east to sea_off_3 descr "On the ocean";
+  north to sea_off_2 descr "On the ocean.";
+  west to sea_3 descr "On the ocean.";
+end
+/*------ Sea Off 3 ------*/
+sea_off_3
+  title "Somewhere on the blue ocean"
+  names {"sea_off_3", "sea"}
+  descr
+  "The ocean is starting to get rougher and you begin to worry. Small white caps
+  begin to lap over the edge of your craft and you have trouble keeping
+  it afloat."
+  movement SECT_WATER_SAIL
+  extra{"mainland", "shore", "land"}
+  "It's far off."
+  south to sea_trouble descr "On the ocean.";
+  west to sea_off_2 descr "On the ocean";
+  north to sea_trouble descr "On the ocean.";
+  east to sea_off_2 descr "On the ocean";
+end
+/*------ Sea Off 4 ------*/
+sea_off_4
+  title "Somewhere on the blue ocean"
+  names {"sea_off_3", "sea"}
+  descr
+  "The ocean is starting to get rougher and you begin to worry. Small white caps
+  begin to lap over the edge of your craft and you have trouble keeping
+  it afloat."
+  movement SECT_WATER_SAIL
+  extra{"mainland", "shore", "land"}
+  "It's far off."
+  west to sea_trouble descr "On the ocean.";
+  east to sea_6 descr "On the ocean";
+  south to sea_trouble descr "On the ocean.";
+  north to sea_6 descr "On the ocean";
+end
+/*------ Sea Trouble ------*/
+sea_trouble
+  title "On the blue ocean"
+  names{"sea_trouble", "sea"}
+  descr
+  "You are really getting tossed about in the turbulent ocean waves.
+  Your stomache may feel this but you are more concerned about your
+  whereabouts."
+  movement SECT_WATER_SAIL
+  extra{"mainland", "shore"}
+  "It's far off, you are starting to feel less comfortable about your ocean
+  adventure."
+  north to sea_trouble descr "On the ocean.";
+  south to sea_trouble descr "On the ocean.";
+  east to sea_trouble descr "On the ocean.";
+  west to sea_trouble descr "On the ocean.";
+dilbegin sea_trouble();
+var
+  iRnd  :integer;
+code
+{
+  heartbeat:=PULSE_SEC*3;
+  :start:
+  wait(SFB_CMD, ((command(CMD_NORTH)) or (command(CMD_SOUTH))or (command(CMD_EAST)) or (command(CMD_WEST))));
+  {
+    act("You row $2n about madly.", A_SOMEONE, activator, activator.outside, null, TO_CHAR);
+    act("$1n rows $2n madly.", A_SOMEONE, activator, activator.outside, null, TO_REST);
+    block;
+    iRnd:= rnd(1,10);
+    if(iRnd == 2) link(activator.outside, findroom("ocean_void@basis"));
+    else if(iRnd == 3) link(activator.outside, findroom("sea_3@sandzone"));
+    exec("look", activator);
+  }
+  goto start;
+}
+dilend
+end
+/*=========================== Shore Rooms ================================*/
+/*------- s1_0 -----*/
+shore1_0
+  title "Bottom of the cliff"
+  names {"s1_0", "shore"}
+  descr
+  "You are on the narrow shore between cliff and sea, Waves of foamy ocean
+  lick your feet from the south while the ever-present danger of falling
+  rocks looms above you to the north. A rockslide spills into the sea to
+  the west blocking passage."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  dilcopy falling_rocks@sandzone();
+  dilcopy beach_noise@sandzone();
+  extra {"sand", "beach", "ground"}
+  "The sand is covered with small rocks from the cliff and shells from the sea."
+  extra {"water", "ocean", "sea"}
+  "The ocean is directly to the south, there will be no swimming here, even if the water was calm what if there were Sea Monsters there."
+  extra {"cliff", "cliffs"}
+  "You strain to see the cliffs but they tower so high you can make out little."
+  extra {"rocks", "shells"}
+  "The rocks and shells seem to be relativly inactive."
+  east to shore1_1 descr
+  "The shorech continues to the east sqeezed between cliff and ocean.";
+end
+/*------- s1_1 -----*/
+shore1_1
+  title "Bottom of the cliff"
+  names {"s1_1", "shore"}
+  descr
+  "The sea to the south and the cliff walls to the north weigh down on you.
+  The only directions you can travel are west and east."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  dilcopy falling_rocks@sandzone();
+  dilcopy beach_noise@sandzone();
+  extra {"sand", "beach", "ground"}
+  "The sand is covered with small rocks from the cliff and shells from the sea."
+  extra {"water", "ocean", "sea"}
+  "The ocean is directly to the south, there will be no swimming here, even if the water was calm what if there were Sea Monsters there."
+  extra {"cliff", "cliffs"}
+  "You strain to see the cliffs but they tower so high you can make out little."
+  extra {"rocks", "shells"}
+  "The rocks and shells seem to be relativly inactive."
+  west to shore1_0 descr
+  "The shore continues to the east sqeezed between cliff and ocean.";
+  east to shore1_2 descr
+  "The shore continues to the east sqeezed between cliff and ocean.";
+end
+/*------- s1_2 -----*/
+shore1_2
+  title "Bottom of the cliff"
+  names {"s1_2", "shore"}
+  descr
+  "Trapped between rock and sea you continue down the shore, there is little
+  room to move, and tumbling boulders from the cliffs give you little time
+  to concentrate."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  dilcopy falling_rocks@sandzone();
+  dilcopy beach_noise@sandzone();
+  extra {"sand", "beach", "ground"}
+  "The sand is covered with small rocks from the cliff and shells from the sea."
+  extra {"water", "ocean", "sea"}
+  "The ocean is directly to the south, there will be no swimming here, even if the water was calm what if there were Sea Monsters there."
+  extra {"cliff", "cliffs"}
+  "You strain to see the cliffs but they tower so high you can make out little."
+  extra {"rocks", "shells"}
+  "The rocks and shells seem to be relativly inactive."
+  west to shore1_1 descr
+  "The shore continues to the east sqeezed between cliff and ocean.";
+  east to shore1_3 descr
+  "The shore becomes beach after the cliffs relent.";
+end
+/*------- s1_3 -----*/
+shore1_3
+  title "Where the beach becomes a narrow shoreline"
+  names {"s1_3", "shore"}
+  descr
+  "To the west the cliffs provide only enough room for a few people to edge
+  by, little can be seen off to the west because of a slight outward curve
+  the cliffs make. Ocean and sand stretch as far as you can see to the east."
+  movement SECT_DESERT
+  dilcopy get_crabs@sandzone();
+  dilcopy falling_rocks@sandzone();
+  dilcopy beach_noise@sandzone();
+  extra {"sand", "beach", "ground"}
+  "The sand is covered with small rocks from the cliff and shells from the sea."
+  extra {"water", "ocean", "sea"}
+  "The ocean is directly to the south, there will be no swimming here, even if the water was calm what if there were Sea Monsters there."
+  extra {"cliff", "cliffs"}
+  "You strain to see the cliffs but they tower so high you can make out little."
+  extra {"rocks", "shells"}
+  "The rocks and shells seem to be relativly inactive."
+  west to shore1_2 descr
+  "The shore continues to the east sqeezed between cliff and ocean.";
+  east to beach5_0 descr
+  "The shore continues to the east sqeezed between cliff and ocean.";
+end
+/***********************************************************************/
+/*------------------------------ MOBS ---------------------------------*/
+/***********************************************************************/
+%mobiles
+/*------ SNERT ------*/
+snert
+  names {"snert", "fuzzball", "creature"}
+  title "Snert"
+  descr "Snert, a small fuzzball with eyes is here."
+  extra{}
+  "Snert is a tiny green ball of fur who speaks using chrips and whistles,
+  its eyes are large and burried in the topmost wisps of its hairy self."
+  level 39
+  race RACE_OTHER_CREATURE
+  sex SEX_NEUTRAL
+  height 10
+  weight 30
+  NATURAL_DEF(WPN_BITE, ARM_LEATHER)
+  exp 45
+  /*(str,dex,con,hpp,bra,cha,mag,div)*/
+  MSET_ABILITY(6, 22, 5, 22, 25, 0, 20, 0)
+  /*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+  MSET_WEAPON(0, 0, 35, 0, 10, 5)
+  /*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+  MSET_SPELL(0,0,0,0,0,50,0,0,0,0,0)
+dilbegin snert();
+var
+  pc      :unitptr;
+  i_got   :extraptr;
+  potio   :unitptr;
+  ifight  :integer;
+code
+{
+  heartbeat := PULSE_SEC *3;
+  addextra(self.quests, {SNERT_COMPLETE}, "");
+ :start:
+  ifight := interrupt(SFB_COM, self.position == POSITION_FIGHTING, in_a_fight);
+  wait(SFB_DONE, activator.type == UNIT_ST_PC);
+  pc := activator;
+  secure(pc, lost);
+  if((command(CMD_GIVE)) and (target == self))
+  {
+    exec("say I do not accept gifts "+pc.name+".", self);
+    exec("give "+medium.name+" "+pc.name, self);
+    exec("drop "+medium.name, self); pause;
+    exec("say Anyway..", self);
+  }
+  if(SNERT_ONGOING in pc.quests) goto ongoing;
+  if(SNERT_COMPLETE in pc.quests) goto done;
+  if(SNERT_PISSED in pc.quests) goto no_deal;
+  pause;
+  exec("say Welcome to my hut, "+pc.name+".", self); pause;
+  exec("say You are welcome to rest here at any time.", self); pause;
+  exec("say While you are here, may I beg a favour of you?", self);
+ :waiting:
+  wait(SFB_DONE, activator == pc);
+  if(command(CMD_SHAKE)) goto nope;
+  else if(command(CMD_NOD))
+  {
+    pause;
+    exec("say Great!", self); pause;
+    exec("say I am working on a potion that will revolutionize the mud as we know it.", self); pause;
+    exec("say All I need to complete it is a bottle and a pork chop.", self);pause;
+    exec("say Nod your head if you will bring me these things.", self);
+   :waiting2:
+    wait(SFB_DONE, activator == pc);
+    if(command(CMD_SHAKE)) goto nope;
+    else if(command(CMD_NOD))
+    {
+      addextra(pc.quests, {SNERT_ONGOING}, "");
+      pause;
+      exec("say Good! Return when you have them and we will brew together.", self); pause;
+      exec("wave", self);pause;
+      pause;pause;pause;pause;
+      goto lost;
+    }
+    else
+    {
+      exec("say "+pc.name+", answer with a nod or shake of your head!", self);
+      goto waiting2;
+    }
+  }
+  else
+  {
+    exec("say "+pc.name+", answer with a nod or shake of your head!", self);
+    goto waiting;
+  }
+  pause;pause;pause;pause;
+ :lost:
+  unsecure(pc);
+  goto start;
+ :nope:
+  exec("say Well, as I say, feel free to rest, I will ask you again later, "+pc.name+".", self);
+  pause;pause;pause;pause;
+  goto lost;
+ :ongoing:
+  exec("say Welcome back, "+pc.name+"!", self);pause;
+  exec("say Give me what you have gathered for me.", self);
+  secure(pc, lost);
+ :asking:
+  wait(SFB_DONE, activator == pc);
+  if((command(CMD_GIVE)) and (target == self))
+  {
+    if("bottle" in medium.names)
+    {
+      destroy(medium);
+      exec("say Thank you!", self); pause;
+      i_got := SNERT_ONGOING in pc.quests;
+      if("the bottle" in i_got.names)
+      {
+        pause;
+        exec("say I already have a bottle from you.", self);pause;
+        exec("say Give me what we agreed you would gather for me.", self);
+        goto asking;
+      }
+      else addstring(i_got.names, "the bottle");
+      if("the pig meat" in i_got.names) goto doneish;
+      exec("say Give me the pork chop now, if you have it. Or come back when you do.", self);
+      goto asking;
+    }
+    else if("pork chop" in medium.names)
+    {
+      destroy(medium);
+      exec("say Thank you!", self); pause;
+      i_got := SNERT_ONGOING in pc.quests;
+      if("the pig meat" in i_got.names)
+      {
+        pause;
+        exec("say I already have a pork chop from you.", self);pause;
+        exec("say Give me what we've agreed you would gather for me.", self);
+        goto asking;
+      }
+      addstring(i_got.names, "the pig meat");
+      if("the bottle" in i_got.names) goto doneish;
+      exec("say Give me the bottle now, if you have it. Or come back when you do.", self);
+      goto asking;
+    }
+    else
+    {
+      exec("say This is very nice, but it is not for me.", self);
+      exec("give "+medium.name+" "+pc.name, self);
+      exec("drop "+medium.name, self);pause;
+      exec("say Give me what we agreed you would gather for me.", self);
+      goto asking;
+    }
+  }
+  goto asking;
+
+ :doneish:
+  addextra(pc.quests, {SNERT_COMPLETE}, "");
+  subextra(pc.quests, SNERT_ONGOING);
+  exec("say Well, let us brew.", self); pause;
+  exec("emote puts a glass bottle on the ground.", self); pause;
+  exec("emote sits back and nibbles at the pork chop.",self);pause;
+  exec("emote mubles the words, 'Microbrew ministew.'", self);pause;
+  act("&c+bThere is a bright flash of light!&cw", A_SOMEONE, self, null, null, TO_REST);pause;
+
+ :done:
+  exec("say A silver coin "+pc.name+", and my potion is yours, I can make more.", self); pause;
+
+ :waiting3:
+  wait(SFB_DONE, activator == pc);
+  if((command(CMD_GIVE)) and (target == self))
+  {
+    if("silver" in medium.names)
+    {
+      destroy(medium);
+      exec("say That will do, here you are.", self); pause;
+      potio := load("shrink_potion@sandzone");
+      link(potio, pc);
+      act("$2n gives you a small grey potion.", A_SOMEONE, pc, self, null, TO_CHAR);
+      act("$2n gives $1n a small grey potion.", A_SOMEONE, pc, self, null, TO_REST);
+      exec("wave", self);
+      pause;pause;pause;pause;
+      goto lost;
+    }
+    else
+    {
+      exec("say Thank you, now a silver coin!", self); pause;
+      goto waiting3;
+    }
+  }
+  else goto waiting3;
+  goto start;
+
+ :in_a_fight:
+  if(SNERT_COMPLETE in self.fighting.quests)
+  {
+    exec("say Fine, we will no longer trade in potions "+self.fighting.name+"!", self);
+    subextra(self.fighting.quests, SNERT_COMPLETE);
+    addextra(self.fighting.quests, {SNERT_PISSED}, "");
+  }
+  if(SNERT_ONGOING in self.fighting.quests)
+  {
+    exec("say Fine, we will no longer work together "+self.fighting.name+"!", self);
+    subextra(self.fighting.quests, SNERT_ONGOING);
+    addextra(self.fighting.quests, {SNERT_PISSED}, "");
+  }
+  while(self.position == POSITION_FIGHTING) pause;
+
+ :no_deal:
+  pause;
+  exec("Out of my home! You attacked me "+pc.name+"!", self);
+  pause;pause;pause;pause;
+  pause;pause;pause;pause;
+  goto start;
+}
+dilend
+end
+/*------ BAARDEK TREE ------*/
+old_tree
+  names {"an old tree", "tree"}
+  title "a large tree"
+  descr "&cwA large and ancient tree is looming over the path.&cw"
+  extra{}
+  "The tree is mighty large and strangely dark and twisted looking."
+  level 162
+  alignment -1000
+  race RACE_TREE
+  sex SEX_NEUTRAL
+  height 1400
+  weight 750
+  special SFUN_HIDEAWAY
+  NATURAL_DEF(WPN_CRUSH, ARM_HLEATHER)
+  /*(str,dex,con,hpp,bra,cha,mag,div)*/
+  MSET_ABILITY(20, 12, 14, 22, 10, 12, 10, 0)
+  /*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+  MSET_WEAPON(13, 12, 10, 10, 10, 15)
+  /*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+  MSET_SPELL(0,0,0,0,10,10,10,0,0,0,0)
+dilbegin old_tree();
+var
+  pc :unitptr;
+  i  :integer;
+code
+{
+  heartbeat := PULSE_SEC*6;
+:start:
+  wait(SFB_CMD, (activator.type == UNIT_ST_PC));
+  pc := activator;
+  secure(pc,lost);
+:ishere:
+  i := rnd (1,80);
+  if(i >= 75)
+  {
+    cast_spell(SPL_CONFUSION, self, self, pc );
+    exec("whisper "+pc.name+" Join us in misery and insanity!", self);
+    pause;pause;pause;pause;pause;pause;pause;pause;
+  }
+  if(i < 10)
+  {
+    cast_spell(SPL_FEAR, self, self, pc );
+    exec("whisper "+pc.name+" Join us in heartache and pain!", self);
+    pause;pause;pause;pause;pause;
+  }
+  goto start;
+:lost:
+  unsecure(pc);
+  goto start;
+}
+dilend
+end
+/*------ BAARDEK TREE ------*/
+gnarled_tree
+  names {"a gnarled tree", "tree"}
+  title "a big tree"
+  descr "&cwA knotted and gnarled tree is hovering above you.&cw"
+  level 160
+  alignment -1000
+  race RACE_TREE
+  sex SEX_NEUTRAL
+  height 1500
+  weight 850
+  special SFUN_HIDEAWAY
+  NATURAL_DEF(WPN_CRUSH, ARM_HLEATHER)
+  dilcopy old_tree@sandzone();
+  /*(str,dex,con,hpp,bra,cha,mag,div)*/
+  MSET_ABILITY(20, 12, 14, 22, 10, 12, 10, 0)
+  /*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+  MSET_WEAPON(13, 12, 10, 10, 10, 15)
+  /*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+  MSET_SPELL(0,0,0,0,10,10,10,0,0,0,0)
+end
+/*------ CRAB ------*/
+sandcrab
+  names {"a sand crab","sand crab", "crab"}
+  title "a Sand Crab"
+  descr "An extremely large crab is here throwing sand around."
+  extra{}
+  "This Sand Crab is larger then your average crab, monsterous in fact!"
+  level 32
+  alignment 0
+  race RACE_CRAB
+  sex SEX_FEMALE
+  height 120
+  weight 200
+  NATURAL_DEF(WPN_CLAW, ARM_HLEATHER)
+  exp 65
+  /*(str,dex,con,hpp,bra,cha,mag,div)*/
+  MSET_ABILITY(20, 12, 12, 12, 12, 12, 20, 0)
+  /*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+  MSET_WEAPON(10, 10, 10, 10, 15, 15)
+  /*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+  MSET_SPELL(0,0,0,0,0,0,30,0,0,0,0)
+  dilcopy combat_mag@function("fireball", "", 25, 2);
+  special SFUN_RANDOM_ZONE_MOVE
+end
+/*------ SEAWEED ------*/
+seaweed
+  names {"some seaweed","seaweed","kelp", "creature"}
+  title "a Seaweed creature"
+  descr "Some killer kelp is slurping about on the beach."
+  extra{}
+  "This seaweed seems to have skills far more cognative then your average kelp! You imagine two of its disfiguartions are eyes, and they are glaring at YOU!"
+  level 33
+  alignment -400
+  race RACE_SEAWEED
+  sex SEX_MALE
+  height 100
+  weight 20
+  NATURAL_DEF(WPN_STING, ARM_CLOTHES)
+  /*(str,dex,con,hpp,bra,cha,mag,div)*/
+  MSET_ABILITY(10, 22, 12, 20, 20, 12, 4, 0)
+  /*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+  MSET_WEAPON(10, 0, 0, 10, 35, 15)
+  /*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+  MSET_SPELL(0,0,0,0,0,0,30,0,0,0,0)
+  special SFUN_RANDOM_ZONE_MOVE
+end
+/*------ BERNICE ------*/
+bernice
+  names {"bernice", "wife", "woman"}
+  title "Bernice"
+  descr "Bernice the banker's wife is sitting here."
+  extra{}
+  "Bernice is by far the largest creature ever to walk on two legs although you are forced to guess the amount of legs because they are buried under her incredible size! She does have a bright look in her eye though."
+  level 38
+  alignment 800
+  race RACE_HUMAN
+  sex SEX_FEMALE
+  height 150
+  weight 350
+  NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+  money 2 SILVER_PIECE
+  /*(str,dex,con,hpp,bra,cha,mag,div)*/
+  MSET_ABILITY(5, 7, 22, 34, 25, 7, 0, 0)
+  /*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+  MSET_WEAPON(10, 0, 40, 0, 15, 5)
+  /*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+  MSET_SPELL(0,0,0,0,0,0,30,0,0,0,0)
+dilbegin bernice();
+var
+  iRand  :integer;
+  iFight :integer;
+code
+{
+  heartbeat:=PULSE_SEC *4;
+  on_activation(self.position == POSITION_FIGHTING, ina_fight);
+
+:start:
+  iFight:=interrupt(SFB_COM, self.position==POSITION_FIGHTING, ina_fight);
+  if(self.outside!=findroom("beachhouse@sandzone")) walkto(findroom("beachhouse@sandzone"));
+  iRand:=rnd(1,15);
+  if(iRand==1) exec("emote grabs a pair of Bob's pants and looks for loose change.", self);
+  else if(iRand==2)
+  {
+    exec("emote shifts her weight.",self);
+    act("The house groans along with $1n's couch.",A_SOMEONE,self,null,null,TO_ALL);
+  }
+  else if(iRand==3) exec("emote eats something very large, she can be quick when she needs to.", self);
+  else if(iRand==4) exec("say Where does Bob leave his wallet!", self);
+  else if(iRand==5) exec("fart", self);
+  else if(iRand==6) exec("sigh", self);
+  else if(iRand==7) exec("emote moves a chubby hand into the couch to look for money.", self);
+  pause;pause;pause;pause;
+  goto start;
+
+:ina_fight:
+  clear(iFight);
+  exec("say You dare attack me!", self);
+  act("The floor trembles as $1n begins to do battle!",A_SOMEONE,self,null,null,TO_ALL);
+  while(self.position==POSITION_FIGHTING) pause;
+  goto start;
+}
+dilend
+end
+/*----- Chief Vomoulk -----*/
+vomoulk
+  names {"vomoulk","tribesman","man","chief"}
+  title "Vomoulk"
+  descr "Vomoulk, the Chief of the Cheleho is here."
+  extra{}
+  "Vomoulk is a hardened and determined look man. `There is nothing he can't handle'
+  , you think. Perhaps the hardships of his people have driven him to this
+  stubborn way."
+  level 40
+  alignment 800
+  race RACE_HUMAN
+  sex SEX_MALE
+  height 178
+  weight 160
+  NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+  exp 55
+  money 4 COPPER_PIECE
+  /*(str,dex,con,hpp,bra,cha,mag,div)*/
+  MSET_ABILITY(20, 22, 22, 34, 0, 2, 0, 0)
+  /*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+  MSET_WEAPON(10, 0, 0, 40, 5, 15)
+  /*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+  MSET_SPELL(0,0,0,0,0,0,30,0,0,0,0)
+dilbegin vomoulk();
+var
+  newfud  :unitptr;
+  uPc     :unitptr;
+  iFight  :integer;
+  given   :unitptr;
+  id      :integer;
+code
+{
+  heartbeat:= PULSE_SEC *3;
+ :start:
+  iFight := interrupt(SFB_COM, self.position == POSITION_FIGHTING, in_a_fight);
+  exec("stand", self);
+  wait(SFB_DONE, (activator.type == UNIT_ST_PC));
+  uPc := activator;
+  secure(uPc, outta_here);
+  if((command(CMD_GIVE)) and (target == self))
+  {
+    exec("give "+medium.name+" "+uPc.name, self);
+    exec("drop "+medium.name, self);
+    exec("say There is a time for everything "+uPc.name+".", self);
+  }
+  else exec("emote looks up.", self); pause;
+  if(uPc.position != POSITION_STANDING)
+  {
+    exec("say You can't just sit in my home!", self);
+    exec("stand", uPc);
+  }
+  if(VOMOULK_ONGOING in uPc.quests) goto ongoing;
+  if(VOMOULK_COMPLETE in uPc.quests) goto friend;
+  if(SILK_DONE in uPc.quests) goto silk_friend;
+  exec("say "+uPc.name+", you are in my home.", self); pause;
+  if(uPc.sex == SEX_MALE) exec("say You have the look of an honest man, stay a while.", self);
+  if(uPc.sex == SEX_FEMALE) exec("say You have the look of an honest woman, stay a while.", self);
+  if(uPc.sex == SEX_NEUTRAL) exec("say You have the look of an honest thing, stay a while.", self);
+  pause;
+  exec("say Please, sit and we can talk.", self); pause;
+  exec("rest", self); pause;
+  while(((uPc.position !=5) and (uPc.position !=6))) pause;
+  pause;
+  exec("say Kind adventurer, are you interested in our plight?", self);
+ :waiting:
+  wait(SFB_CMD, activator == uPc);
+  if(command(CMD_SHAKE)) goto no_takers;
+  else if(command(CMD_NOD))
+  {
+    pause;
+    exec("say We are the Cheleho tribespeople and we have lived on these cliffs for countless seasons.", self); pause;
+    exec("say Not long ago the Baardekans discovered us using their spying ways.", self); pause;
+    exec("say Many of our people have been taken as slaves and only a few of the animals we kill are ours.", self); pause;
+    exec("say The Baardekans come here regularly to take our furs and people.", self); pause;
+    exec("say We are a simple people, perhaps you could help us?", self); pause;
+   :waiting2:
+    wait(SFB_CMD, activator == uPc);
+    if(command(CMD_SHAKE)) goto no_takers;
+    else if(command(CMD_NOD))
+    {
+      pause;
+      exec("say "+uPc.name+", I am grateful.", self); pause;
+      exec("say I could never ask you to destroy the Baardekans.", self); pause;
+      exec("sigh", self); pause;
+      exec("say Instead, bring me a bloodied map from one of their guards and you will be our friend forever.", self); pause;
+      exec("say Will you do this for me?", self); pause;
+     :waiting3:
+      wait(SFB_CMD, activator == uPc);
+      if(command(CMD_SHAKE)) goto no_takers;
+      if(command(CMD_NOD))
+      {
+          pause;
+          exec("say "+uPc.name+", You are a hero.", self); pause;
+          exec("say Myself and my people await your return.", self); pause;
+          addextra(uPc.quests, {VOMOULK_ONGOING}, "");
+          exec("stand", self);pause;
+          exec("wave", self);
+      }
+      else
+      {
+        exec("say Please, "+uPc.name+", answer with a nod or shake of your head.", self);
+        goto waiting3;
+      }
+    }
+    else
+    {
+      exec("say Please, "+uPc.name+", answer with a nod or shake of your head.", self);
+      goto waiting2;
+    }
+  }
+  else
+  {
+    exec("say Please, "+uPc.name+", answer with a nod or shake of your head.", self);
+    goto waiting;
+  }
+  pause;pause;pause;pause;
+  goto start;
+ :ongoing:
+    exec("say Welcome questmaster "+uPc.name+".", self);pause;
+    exec("say Give me the map if you have it.", self);
+    wait(SFB_DONE, ((activator == uPc) and (target ==  self)));
+    given:=medium;
+    if((command(CMD_GIVE)) and (target == self))
+    {
+      if("quest_map" in medium.names)
+      {
+        exec("say Shabeesh "+uPc.name+", you have got it!", self); pause;
+        exec("say If ever you are hungry, come here and I will feed you.", self); pause;
+        exec("say If ever you are crab infested, come here and I will treat you.", self); pause;
+        addextra(uPc.quests, {VOMOULK_COMPLETE}, "");
+        subextra(uPc.quests, VOMOULK_ONGOING);
+        pause; pause; pause; pause;
+        goto start;
+      }
+      else if("the_map" in medium.names)
+      {
+        exec("say "+uPc.name+", there is no blood on this map.", self); pause;
+        exec("say We want a hero, not a pick-pocket.", self); pause;
+        exec("give map "+uPc.name, self);
+        exec("drop map "+uPc.name, self);
+        pause; pause; pause;
+        goto start;
+      }
+      else
+      {
+        pause;
+        exec("say No, this is not for me..", self);
+        pause;
+        exec("give " +given.name + " " + uPc.name, self);
+        exec("drop " +given.name, self);
+        pause;
+        goto ongoing;
+      }
+    }
+    else
+    {
+      pause;
+      exec("say Don't waste my time! Return later.", self);
+      pause; pause; pause;
+      goto start;
+    }
+ :friend:
+    pause;
+    exec("say Well hello old buddy.", self); pause;
+    exec("say Can I get you some food?", self); pause;
+    wait(SFB_CMD, activator == uPc);
+    if(command(CMD_NOD))
+    {
+      pause;exec("emote claps his hands.", self); pause;
+      exec("say Shafrooshal", self);pause;
+      newfud := load("pastry@midgaard");
+      exec("give danish " + uPc.name, self);
+      exec("drop danish", self);pause;
+    }
+    exec("say Well, my hut is yours to rest in friend.", self);pause;
+    if(dilfind("crabs@sandzone", uPc))
+    {
+      exec("say You have crabs my friend, can I help you lose those?", self); pause;
+      wait(SFB_CMD, activator == uPc);
+      if(command(CMD_NOD))
+      {
+        id := dildestroy("crabs@sandzone", uPc);pause;
+        act("$2n lays his hands on you and whistles loudly.", A_SOMEONE, Upc, self, null, TO_CHAR);
+        act("$2n lays his hands on $1n and whistles loudly.", A_SOMEONE, Upc, self, null, TO_REST);
+        pause;
+        act("Crabs fall off of $1n's body!",A_SOMEONE,Upc,self,null,TO_REST);
+        act("Crabs fall off of your body!",A_SOMEONE,Upc,self,null,TO_CHAR);pause;
+        exec("smile", self);
+      }
+    }
+    pause;pause;pause;pause;
+    pause;pause;pause;pause;
+    goto start;
+ :no_takers:
+    pause;
+    exec("say Your hesitance is understood, perhaps another time.", self);pause;
+    exec("stand", self); pause;
+    exec("wave", self);
+    pause;pause;pause;pause;pause;pause;
+    goto start;
+ :silk_friend:
+    exec("Cringe", self);pause;
+    exec("say Oh fearless friend of Silk, please do not hurt us.", self); pause;
+    pause;pause;pause;pause;pause;pause;pause;pause;
+    goto start;
+ :outta_here:
+    unsecure(uPc);
+    uPc := null;
+    pause;pause;pause;pause;pause;pause;pause;pause;pause;
+    goto start;
+ :in_a_fight:
+    exec("say What have we done to you?", self);
+    while(self.position == POSITION_FIGHTING) pause;
+    goto start;
+  pause;pause;pause;pause;
+  goto start;
+}
+dilend
+end
+/*------ TRIBESMAN ------*/
+cheleho_man
+  names {"a tribesman","tribesman","man","cheleho"}
+  title "a Cheleho Tribesman"
+  descr "A Cheleho man is here, looking lost and defeated."
+  extra{}
+  "This Cheleho looks very sad, but a sort of grim determination is in his eyes."
+  level 40
+  alignment 800
+  race RACE_HUMAN
+  sex SEX_MALE
+  height 178
+  weight 158
+  NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+  special SFUN_RANDOM_ZONE_MOVE
+  money 2 COPPER_PIECE
+  /*(str,dex,con,hpp,bra,cha,mag,div)*/
+  MSET_ABILITY(20, 22, 22, 34, 0, 2, 0, 0)
+  /*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+  MSET_WEAPON(10, 0, 0, 40, 5, 15)
+  /*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+  MSET_SPELL(0,0,0,0,0,0,30,0,0,0,0)
+end
+/*------ TRIBESWOMAN ------*/
+cheleho_woman
+  names {"a tribeswoman","tribeswoman","woman","cheleho"}
+  title "a Cheleho Tribeswoman"
+  descr "A Cheleho woman is here, carrying pelts."
+  extra{}
+  "Much like the other tribes people, this Cheleho looks worn and hungry.
+  She appears to have been crying and sleeping little for some time."
+  level 39
+  alignment 800
+  race RACE_HUMAN
+  sex SEX_FEMALE
+  height 170
+  weight 98
+  NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+  money 1 COPPER_PIECE
+  special SFUN_RANDOM_ZONE_MOVE
+  /*(str,dex,con,hpp,bra,cha,mag,div)*/
+  MSET_ABILITY(10, 22, 32, 24, 0, 12, 0, 0)
+  /*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+  MSET_WEAPON(10, 0, 0, 20, 25, 15)
+  /*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+  MSET_SPELL(0,0,0,0,0,0,30,0,0,0,0)
+end
+/*------ TRIBESWOMAN SKINNER ------*/
+cheleho_skinner
+  names {"a tribeswoman","tribeswoman","woman","cheleho"}
+  title "Cheleho Tribeswoman"
+  descr "A Cheleho woman is here skinning animals."
+  extra{}
+  "Much like the other tribes people, this Cheleho looks worn and hungry.
+  She appears to have been crying and sleeping little for some time."
+  level 38
+  alignment 800
+  race RACE_HUMAN
+  sex SEX_FEMALE
+  height 175
+  weight 98
+  NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+  money 1 COPPER_PIECE
+  /*(str,dex,con,hpp,bra,cha,mag,div)*/
+  MSET_ABILITY(10, 22, 32, 24, 0, 12, 0, 0)
+  /*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+  MSET_WEAPON(10, 0, 0, 20, 25, 15)
+  /*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+  MSET_SPELL(0,0,0,0,0,0,30,0,0,0,0)
+end
+/***********************************************************************/
+/*---------------------------- OBJECTS --------------------------------*/
+/***********************************************************************/
+%objects
+/*----- Sea water -----*/
+sea_water
+  names {"bottle of sea water", "quest_water", "bottle", "sea water", "water"}
+  title "a glass bottle of sea water"
+  descr "A glass bottle of sea water is laying on the ground."
+  extra{}
+  "It's glass and bottle-like, filled with salty sea water.."
+  manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+  MATERIAL_GLASS("Clear glass")
+  LIQ_DEF (LIQ_WATER, 1, 1, 1, 1)
+  type ITEM_DRINKCON
+  weight 1
+end
+/*----- Empty Potion -----*/
+mt_potion
+  names {"bottle", "water"}
+  title "a glass bottle"
+  descr "A glass bottle is laying on the ground."
+  extra{}
+  "It's glass and bottle-like."
+  manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+  MATERIAL_GLASS("Clear glass")
+  LIQ_DEF ( LIQ_WATER, 1, 1, 0, 0)
+  type ITEM_DRINKCON
+  weight 1
+end
+/*----- Shrink Potion -----*/
+shrink_potion
+  names {"misty potion", "potion", "bottle"}
+  title "a misty grey potion"
+  descr "A grey bottle is laying on the ground."
+  extra{}
+  "A clear bottle with a grey and misty potion within it."
+  extra{"$identify"}
+  "This potion will shrink you for a time (Depending on MAG) and make you carryable by other players."
+  manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+  flags{UNIT_FL_MAGIC}
+  dilcopy quest_restrict@function (SNERT_COMPLETE,0,15,"");
+  MATERIAL_GLASS("Clear glass")
+  weight 1
+dilbegin shrink_potion();
+var
+  pc          :unitptr;
+  emptybottle :unitptr;
+code
+{
+  heartbeat := PULSE_SEC * 2;
+ :start:
+  wait(SFB_CMD, ((activator == self.outside) and (argument in self.names)));
+  if(((command(CMD_DRINK)) or (command(CMD_QUAFF))))
+  {
+    pc := activator;
+    block;
+    if(dilfind("small@sandzone", self))
+    {
+      act("You've had enough!", A_SOMEONE, pc, self, null, TO_CHAR);
+      goto start;
+    }
+    act("You drink $2n.", A_SOMEONE, pc, self, null, TO_CHAR);
+    act("$1n drinks $2n.", A_SOMEONE, pc, self, null, TO_REST);
+    if(rnd(1,10) > 2) dilcopy("small@sandzone", pc);
+    else
+    {
+      act("Nothing happens.", A_SOMEONE, pc, null, null, TO_CHAR);
+    }
+    emptybottle := load("mt_potion@sandzone");
+    link(emptybottle, pc);
+    destroy(self);
+    quit;
+  }
+  goto start;
+}
+dilend
+end
+/*------ WELL ------*/
+stone_well
+  names {"stone well", "well", "water"}
+  title "the Stone Well"
+  descr "A large and wide based stone well is planted in the sand."
+  extra{}
+  "Deep in the well, underneath much water, you can see a small door, now that
+  is a strange place for one of those!"
+  MATERIAL_STONE("Simple grey stone.")
+  LIQ_DEF (LIQ_WATER, 20000, 2000, 20000, 0)
+  weight 500
+dilbegin stone_well();
+var
+  enterer :unitptr;
+code
+{
+  heartbeat := PULSE_SEC * 3;
+ :start:
+  wait(SFB_CMD, TRUE);
+  if((command(CMD_ENTER)) and (argument == "well"))
+  {
+    enterer := activator;
+    act("You enter the stone well.", A_SOMEONE, activator, null, null, TO_CHAR);
+    act("$1N grunts as $1e crawls into the stone well.", A_SOMEONE, activator, null, null, TO_REST);
+    link(activator, findroom("well_rm@sands2"));
+    block;
+    exec("look", enterer);
+   }
+   if(command("look in well"))
+   {
+    block;
+    act("You look in the well, &nDeep in the well, underneath much water, you can see a small door, now that
+    is a strange place for one of those!", A_SOMEONE, activator, null,null, TO_CHAR);
+   }
+   goto start;
+}
+dilend
+end
+/*------ BEACH SIGN ------*/
+beach_sign
+  names {"a sign", "sign"}
+  title "a small sign"
+  descr "&crThere is a small weather beaten sign planted in the sand.&cw"
+extra{}
+"&cr&l
+          __
+ ____,___|__|________      &n
+ /                    \    &n
+;                    |   &n
+| &cb<= Cheleho Cliffs&cr  |  &n
+|                    ; &n
+;    &cbBaardek Keep =>&cr |  &n
+|                    |   &n
+ \__.___________,_____/
+         |  |
+         |  |
+         |  |
+         |  |
+&cy,......,.&cr|&cy._&cr|&cy..,..,....
+&f&cw"
+  extra{"$identify"}
+  "It's just a freaking sign, leave it alone!"
+  MATERIAL_WOOD("Deeply grained oak wood.")
+  weight 5000
+end
+/*------ MOCASSINS ------*/
+mocassins
+  names {"mocassins", "shoes"}
+  title "Leather mocassins"
+  descr "A pair of leather mocassins are discarded here."
+  extra{}
+  "They are quite dirty and tattered."
+  manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+  ARMOUR_CLOTHES(1, 0)
+  weight 1
+  MATERIAL_LEATHER("A brown leather")
+end
+/*------ CRAB KELP ------*/
+crab_kelp
+  names {"murky grey kelp", "grey kelp", "kelp"}
+  title "some grey kelp"
+  descr "Some murky grey kelp is laying here."
+  extra{}
+  "This kelp, when eaten, will remove the nasty sand crabs from your body."
+  extra{"$identify"}
+  "This is the kelp that removes crabs."
+  manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+  flags {UNIT_FL_MAGIC}
+  weight 1
+dilbegin crab_kelp();
+var
+  mypc :unitptr;
+  id   :integer;
+code
+{
+  heartbeat:= PULSE_SEC * 3;
+:start:
+  wait(SFB_CMD, command(CMD_EAT) and ((activator == self.outside) and (argument in self.names)));
+  mypc := activator;
+  secure(mypc, lostmypc);
+
+  if(dilfind("crabs@sandzone", mypc))
+  {
+    block;
+    id := dildestroy("crabs@sandzone", mypc);
+    act("You eat $2n, It is rather disgusting tasting.",A_SOMEONE,mypc,self,null,TO_CHAR);
+    act("$1n eats $2n, Yuck!",A_SOMEONE,mypc,self,null,TO_REST);
+    pause;
+    act("Crabs fall off of $1n's body!",A_SOMEONE,mypc,self,null,TO_REST);
+    act("Crabs fall off of your body!",A_SOMEONE,mypc,self,null,TO_CHAR);
+    destroy(self);
+  }
+  else
+  {
+    block;
+    act("Tastes horrible!",A_SOMEONE,mypc,null,null,TO_CHAR);
+    act("$1n eats $2n, Yuck!",A_SOMEONE,mypc,self,null,TO_REST);
+    destroy(self);
+  }
+  goto start;
+:lostmypc:
+  pause;
+  unsecure(mypc);
+  goto start;
+}
+dilend
+end
+/*------ SPEAR ------*/
+cheleho_spear
+  names {"cheleho spear", "spear"}
+  title "a Cheleho spear"
+  descr "A sleek long spear, of a tribal nature lays here."
+  extra{}
+  "This spear is sleek yet primitive, crafted by Cheleho women."
+  extra{"$identify"}
+  "The Cheleno spear aids in your divinity and constitution because of its
+  spiritual roots."
+  manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD,MANIPULATE_HOLD}
+  WEAPON_DEF(WPN_SPEAR,2,0)
+  CON_TRANSFER(+1)
+  DIV_TRANSFER(+1)
+  weight 5
+  cost 4 GOLD_PIECE
+  rent 4 SILVER_PIECE, 1 COPPER_PIECE
+end
+/*------ KNIFE ------*/
+skinning_knife
+  names {"cheleho knife", "skinning knife", "knife", "dagger"}
+  title "a skinning knife"
+  descr "A well used skinning knife is here."
+  extra{}
+  "This dagger is old and worn, crafted by Cheleho women for skinning animals."
+  extra{"$identify"}
+  "The Cheleho Skinning Knife does nothing."
+  manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD,MANIPULATE_HOLD}
+  WEAPON_DEF(WPN_DAGGER,1,0)
+  weight 2
+  cost 1 SILVER_PIECE
+end
+/***********************************************************************/
+/*--------------------------- RESET -----------------------------------*/
+/***********************************************************************/
+%reset
+/*---------- DOORS ------------*/
+door beach1_1 WEST {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door trailhead EAST {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door beachhouse EAST {EX_OPEN_CLOSE, EX_CLOSED}
+door beach3_2 WEST {EX_OPEN_CLOSE, EX_CLOSED}
+/*--------- LOADS ----------*/
+load raft@midgaard into the_dock zonemax 1
+load stone_well into beach1_8 local 1
+load beach_sign into beach3_3 local 1
+load bed@sands2 into beachhouse1 local 1
+load sea_water into shore1_3 local 1
+load sea_water into shore1_1 local 1
+
+/*------- People -------*/
+load crab_kelp into beach1_4
+load crab_kelp into beach2_3
+load crab_kelp into beach1_1
+load crab_kelp into beach2_5
+load crab_kelp into beach5_1
+load crab_kelp into shore1_1
+load sandcrab into beach4_2 zonemax 6
+load sandcrab into beach4_3 zonemax 6
+load seaweed into beach4_3 zonemax 7
+{
+  load crab_kelp
+}
+load sandcrab into beach1_2 zonemax 6
+load sandcrab into beach1_3 zonemax 6
+load seaweed into beach2_3 zonemax 7
+{
+  load crab_kelp
+}
+load seaweed into beach3_3 zonemax 7
+{
+  load crab_kelp
+}
+load snert into island_hut max 1
+load bernice into beachhouse max 1
+{
+  equip turkey_dstick@midgaard position WEAR_WIELD
+  load turkey_dstick@midgaard
+  load turkey_dstick@midgaard
+  load turkey_dstick@midgaard
+  load turkey_dstick@midgaard
+}
+load vomoulk into cliff_top_10 max 1
+{
+  equip mocassins position WEAR_FEET
+  equip loin_cloth@sands2 position WEAR_LEGS
+  equip cheleho_spear position WEAR_WIELD
+  equip fur@sands2 position WEAR_HEAD
+  equip pelt@sands2 position WEAR_CHEST
+}
+load cheleho_man into trailhead max 4
+{
+  equip mocassins position WEAR_FEET
+  equip loin_cloth@sands2 position WEAR_LEGS
+  equip cheleho_spear position WEAR_WIELD
+}
+load cheleho_man into cliff_top_11 max 4
+{
+  equip mocassins position WEAR_FEET
+  equip loin_cloth@sands2 position WEAR_LEGS
+  equip cheleho_spear position WEAR_WIELD
+}
+load cheleho_man into cliff_top_9 max 4
+{
+  equip mocassins position WEAR_FEET
+  equip loin_cloth@sands2 position WEAR_LEGS
+  equip cheleho_spear position WEAR_WIELD
+}
+load cheleho_woman into trailhead max 4
+{
+  equip mocassins position WEAR_FEET
+  equip cheleho_spear position WEAR_WIELD
+  load skinning_knife
+  equip cloth_halter@sands2 position WEAR_CHEST
+  equip loin_cloth@sands2 position WEAR_LEGS
+}
+load cheleho_woman into cliff_top_12 max 4
+{
+  equip mocassins position WEAR_FEET
+  equip cheleho_spear position WEAR_WIELD
+  load skinning_knife
+  equip cloth_halter@sands2 position WEAR_CHEST
+  equip loin_cloth@sands2 position WEAR_LEGS
+}
+load cheleho_skinner into cliff_top_18 local 4
+{
+  equip cheleho_spear position WEAR_WIELD
+  equip mocassins position WEAR_FEET
+  load skinning_knife
+  equip cloth_halter@sands2 position WEAR_CHEST
+  load fur@sands2
+  equip loin_cloth@sands2 position WEAR_LEGS
+}
+load cheleho_skinner into cliff_top_18 local 4
+{
+  equip cheleho_spear position WEAR_WIELD
+  equip mocassins position WEAR_FEET
+  load skinning_knife
+  equip cloth_halter@sands2 position WEAR_CHEST
+  load fur@sands2
+  equip loin_cloth@sands2 position WEAR_LEGS
+}
+load cheleho_skinner into cliff_top_18 local 4
+{
+  equip cheleho_spear position WEAR_WIELD
+  load skinning_knife
+  equip cloth_halter@sands2 position WEAR_CHEST
+  equip mocassins position WEAR_FEET
+  load fur@sands2
+  load fur@sands2
+  equip loin_cloth@sands2 position WEAR_LEGS
+}
+/*------- Trees --------*/
+load gnarled_tree into forest1_2 local 1
+load old_tree into forest1_2 local 1
+load old_tree into forest1_3 local 1
+load old_tree into forest1_3 local 1
+load gnarled_tree into forest1_4 local 1
+load old_tree into forest1_4 local 1
+load gnarled_tree into forestA_5 local 1
+load gnarled_tree into forest2_2 local 1
+load old_tree into forest0_3 local 1
+load old_tree into forest0_5 local 1
+load gnarled_tree into forest2_3 local 1
+load gnarled_tree into forest2_5 local 1
+load gnarled_tree into forest3_2 local 1
+load old_tree into forest3_2 local 1
+load old_tree into forest3_3 local 1
+load gnarled_tree into forest3_4 local 1
+load gnarled_tree into forest3_5 local 1
+load old_tree into forest3_5 local 1
+/*************************** END ***************************************/
+%end
+

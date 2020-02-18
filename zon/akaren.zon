@@ -1,0 +1,3570 @@
+/*
+filename    akaren
+password    twisted
+changedby   zandar
+EmailAdd     Palio <palio@blinksoft.com>
+request     compile
+version     25
+END HEADER*/
+
+#include <composed.h>
+#define DRACONIAN_ONGOING  "Draconian Quest Ongoing"
+#define DRACONIAN_COMPLETE "Draconian Quest Complete"
+#define RACE_DRACONIAN 51
+#define RACE_LLAMA 1123
+#define RACE_GRIFFON 5037
+#define BASE_DRACONIAN(MLVL,GENDER,DEATH) \
+   race RACE_DRACONIAN  sex GENDER \
+   alignment -1000      level MLVL \
+   height 210           weight 250 \
+   NATURAL_DEF(WPN_CLAW,ARM_PLATE) \
+   flags {UNIT_FL_NO_TELEPORT} \
+   dilcopy DEATH;
+#define DRACONIAN_BAAZ(MLVL,GENDER)                 \
+   BASE_DRACONIAN(MLVL,GENDER,die_stone@akaren())   \
+   MSET_ABILITY(20,20,20,20,15,5,0,0)               \
+   MSET_SPELL(0,0,0,15,0,15,0,0,0,0,0)              \
+   MSET_WEAPON(20,20,0,0,30,0)
+#define DRACONIAN_BOZAK(MLVL, GENDER)               \
+   BASE_DRACONIAN(MLVL,GENDER,die_explode@akaren()) \
+   MSET_ABILITY(20,20,17,17,15,11,0,0)              \
+   MSET_SPELL(0,0,0,0,0,15,15,0,0,0,0)              \
+   MSET_WEAPON(20,20,0,0,30,0)
+#define DRACONIAN_KAPAK(MLVL,GENDER)                \
+   BASE_DRACONIAN(MLVL,GENDER,die_acid@akaren())    \
+   MSET_ABILITY(21,21,15,17,15,11,0,0)              \
+   MSET_SPELL(0,0,0,0,0,15,0,0,0,0,15)              \
+   MSET_WEAPON(20,20,0,0,30,0)                      \
+   romflags {CHAR_DETECT_INVISIBLE}
+#define DRACONIAN_SIVAK(MLVL,GENDER)                \
+   BASE_DRACONIAN(MLVL,GENDER,die_morph@akaren())   \
+   MSET_ABILITY(21,21,18,20,15,5,0,0)               \
+   MSET_SPELL(0,0,0,0,0,30,0,0,0,0,0)               \
+   MSET_WEAPON(20,20,0,0,30,0)                      \
+   romflags {CHAR_DETECT_INVISIBLE}
+#define DRACONIAN_AURAK(MLVL,GENDER)                \
+   BASE_DRACONIAN(MLVL,GENDER,die_energy@akaren())  \
+   MSET_ABILITY(10,10,10,15,20,15,20, 0)            \
+   MSET_SPELL(0,0,0,35,0,0,10,0,0,15,0)             \
+   MSET_WEAPON(0,15,0,0,25,0)                       \
+   romflags {CHAR_DETECT_INVISIBLE}                 \
+   dilcopy combat_mag@function("cone of shards","",25,2);
+#define ROOM_BASICS \
+   movement SECT_INSIDE \
+   flags {UNIT_FL_NO_WEATHER,UNIT_FL_INDOORS} \
+   ALWAYS_LIGHT
+#define EXTRA_SPHERE \
+   extra {"hemisphere","globe"} "The hemisphere is the shape of a globe cut \
+         in two.  The material is some sort of glass-like substance and \
+         glows with some inner light."
+#define EXTRA_GROUNDS \
+   extra {"grounds","groud"} "The ground has a trampled look to it from \
+         many troops that train on it." \
+   extra {"equipment","pieces"} "Most of the stuff strewn about appear to \
+         mostly be broken.  A few pieces of training gear lie whole."
+#define EXTRA_PARAPET \
+   extra {"courtyard","keep"} "The courtyard is a central square area of \
+         the keep. The keep surrounds it on 3 sides with the eastern side \
+         just covered by a thick wall."
+#define ALL_MOB "draconian/priestess"
+
+%zone akaren
+title "Akaren Keep"
+creators {"Zandar"}
+notes 
+"Up in the mountain northeast of Urland, a force of great evil is massing.
+Draconians are preparing for war within their keep. If given time to finish
+their preparations, they may pose a serious threat to the kingdom of
+Midgaard. Only groups of the most seasoned adventurers will be able to force
+their way in and disrupt the plans. While the draconians are seasoned
+warriors, their more troublesome nature is the various things that occur when
+they die.&n
+Zandar - fordbc@nextwork.rose-hulman.edu"
+lifespan 32
+reset RESET_ANYHOW
+help
+"You stand upon the grounds of Akaren Keep. Draconians defend this stronghold
+of theirs to the death. Any attacks lauched against them would be very
+dangerous and should only be tried by the most seasoned of adventures."
+
+%dil
+
+dilbegin die_stone();
+var
+  item: unitptr;
+code 
+{
+wait(SFB_DEAD,command(CMD_AUTO_DEATH) and (activator==self));
+item:=load("statue@akaren");
+link(item,self.outside);
+while(self.inside) link(self.inside,item);
+act("The $1N freezes into a pillar of stone.",A_SOMEONE,self,null,self,TO_REST);
+destroy(self);
+}
+dilend
+
+dilbegin die_explode();
+var
+  u: unitptr;
+code
+{
+wait(SFB_DEAD,command(CMD_AUTO_DEATH) and (activator==self));
+foreach (UNIT_ST_PC|UNIT_ST_NPC,u) {
+  if ((u!=self) and (u.level<IMMORTAL_LEVEL) and (u.race!=RACE_DRACONIAN)) {
+    u.hp:=u.hp-rnd(5,25);
+    act("A ball of fire bursts from the dying $3N into you.",A_ALWAYS,u,null,self,TO_CHAR);
+    act("A ball of fire bursts from the dying $3N into $1N.",A_SOMEONE,u,null,self,TO_REST);
+    position_update(u); } }
+}
+dilend
+
+dilbegin die_acid();
+var
+  u: unitptr;
+code
+{
+wait(SFB_DEAD,command(CMD_AUTO_DEATH) and (activator==self));
+foreach (UNIT_ST_PC|UNIT_ST_NPC,u) {
+  if ((u!=self) and (u.level<IMMORTAL_LEVEL) and (u.race!=RACE_DRACONIAN)) {
+    u.hp:=u.hp-rnd(12,36);
+    act("A blob of acid splashes across you from the dying $3N.",A_ALWAYS,u,null,self,TO_CHAR);
+    act("A blob of acid splashes across $1N from the dying $3N.",A_SOMEONE,u,null,self,TO_REST);
+    position_update(u); } }
+}
+dilend
+
+dilbegin die_morph();
+code
+{
+wait(SFB_DEAD,command(CMD_AUTO_DEATH) and (activator==self));
+if (self.fighting!=null) {
+  act("As the $1N dies, it undergoes a strange transformation.",
+      A_SOMEONE,self,null,self,TO_REST);
+  self.names:=self.fighting.names;
+  self.title:=self.fighting.names.[0]; }
+}
+dilend
+
+dilbegin die_energy();
+var
+  u: unitptr;
+code
+{
+wait(SFB_DEAD,command(CMD_AUTO_DEATH) and (activator==self));
+foreach (UNIT_ST_PC|UNIT_ST_NPC,u) {
+  if ((u!=self) and (u.level<IMMORTAL_LEVEL) and (u.race!=RACE_DRACONIAN)) {
+    u.hp:=u.hp-rnd(20,50);
+    act("A wave of energy tears across you from the dying $3N.",A_ALWAYS,u,null,self,TO_CHAR);
+    act("A wave of energy tears across $1N from the dying $3N.",A_SOMEONE,u,null,self,TO_REST);
+    position_update(u); } }
+}
+dilend
+
+dilbegin die_ariakas();
+var
+  u: unitptr;
+  n: integer;
+code
+{
+wait(SFB_DEAD,command(CMD_AUTO_DEATH) and (activator==self));
+sendtoalldil("ariakas is dead "+self.outside.nameidx,"kill_ariakas@akaren");
+}
+dilend
+
+dilbegin die_lightning();
+var
+  item: unitptr;
+code 
+{
+wait(SFB_DEAD,command(CMD_AUTO_DEATH) and (activator==self));
+if(rnd(0,99)<10) {
+  item:=load("lightning_plate@akaren");
+  item.height:=self.height;
+  link(item,self.outside);
+  while(self.inside) link(self.inside,self.outside);
+  act("The ball of lightning spins about wildly, lightning sparking outwards.",
+      A_SOMEONE,self,null,self,TO_REST);
+  pause;
+  act("It slows down, leaving behind a hollow plate-like husk of lightning.",
+      A_SOMEONE,self,null,self,TO_REST); }
+}
+dilend
+
+dilbegin die_gargoyle();
+var
+  item: unitptr;
+code 
+{
+wait(SFB_DEAD,command(CMD_AUTO_DEATH) and (activator==self));
+if(rnd(0,99)<20) {
+  item:=load("gargoyle_claws@akaren");
+  item.height:=self.height;
+  link(item,self.outside);
+  act("$1N screams in agony as its claws are ripped from its dying body.",
+      A_SOMEONE,self,null,self,TO_REST); }
+}
+dilend
+
+dilbegin decay();
+code
+{
+heartbeat:=PULSE_SEC*60;
+wait(SFB_TICK,TRUE); wait(SFB_TICK,TRUE);
+wait(SFB_TICK,TRUE); wait(SFB_TICK,TRUE);
+act("The $1N decays into a pile of dust.",A_SOMEONE,self,null,self,TO_REST);
+while(self.inside) link(self.inside,self.outside);
+destroy(self);
+}
+dilend
+
+dilbegin hunt_sanc();
+var
+  prey :unitptr;
+  spot :unitptr;
+code
+{
+heartbeat:=PULSE_SEC*5;
+:start:
+pause;
+wait(SFB_TICK,self.position!=POSITION_FIGHTING);
+interrupt(SFB_COM,TRUE,start);
+prey:=findrndunit(self,FIND_UNIT_ZONE,UNIT_ST_PC);
+if(prey==null) goto start;
+secure(prey,start);
+if(isaff(prey,ID_SANCTUARY)) {
+  exec("say Sanctuary has been invoked in our domain!",self); pause;
+  exec("say I must go teach that fool a lesson!",self);
+  spot:=prey;
+  while(spot.type!=UNIT_ST_ROOM) spot:=spot.outside;
+  walkto(spot);
+  exec("say Ahhh, the invoker! Prepare to die!",self);
+  set_fighting(self,prey); }
+unsecure(prey);
+goto start;
+}
+dilend
+
+dilbegin ball_blast();
+var
+      n :integer;
+  enemy :unitptr;
+code
+{
+heartbeat:=PULSE_SEC*5;
+:start:
+pause;
+wait(SFB_CMD,(activator==self.outside) and 
+             (command(CMD_SAY)) and
+             ("Energy Blast!" in argument) and
+             (self.equip==WEAR_HOLD));
+enemy:=self.outside.fighting;
+if(not(enemy)) {
+  act("Your $2N lets off some random sparks, unable to home in on a target",
+      A_SOMEONE,self.outside,self,null,TO_CHAR);
+  act("$1n's $2N lets off some random sparks, unable to home in on a target",
+      A_SOMEONE,self.outside,self,null,TO_ROOM);
+  self.value[0]:=self.value[0]-1;
+  goto empty_check; }
+if(enemy.level>IMMORTAL_LEVEL) goto empty_check;
+change_speed(self.outside,1);
+act("Your ball of energy lances out at $3n.",A_ALWAYS,self.outside,null,enemy,TO_CHAR);
+act("$1n's ball of energy lances out at $3n.",A_SOMEONE,self.outside,null,enemy,TO_NOTVICT);
+act("$1n's ball of energy lances out at you!",A_SOMEONE,self.outside,null,enemy,TO_VICT);
+n:=cast_spell(SPL_LIGHTNING_2,self.outside,self,enemy,"ball_aff@akaren");
+self.value[0]:=self.value[0]-n;
+:empty_check:
+if(self.value[0]>0) goto start;
+act("Your $2N blinks and goes out.",A_SOMEONE,self.outside,self,null,TO_CHAR);
+act("$1n's $2N blinks and goes out.",A_SOMEONE,self.outside,self,null,TO_ROOM);
+destroy(self);
+}
+dilend
+
+dilbegin ball_aff(medi: unitptr, targ: unitptr, hm: integer);
+code
+{
+act("Your $2N blasts out at $3n.",A_SOMEONE,self,medi,targ,TO_CHAR);
+act("$1n's $2N blasts out at $3n.",A_SOMEONE,self,medi,targ,TO_NOTVICT);
+act("$1n's $2N blasts out at you!",A_SOMEONE,self,medi,targ,TO_VICT);
+return;
+}
+dilend
+
+dilbegin mace_aff(medi: unitptr, targ: unitptr, hm: integer);
+var
+  str: string;
+code
+{
+           str:="insignificantly"; if (hm>5) str:="slightly";
+if (hm>10) str:="lightly";         if (hm>15) str:="fairly";
+if (hm>20) str:="seriously";       if (hm>30) str:="severely";
+if (hm>40) str:="gravely";         if (hm>50) str:="critically";
+if (hm>60) str:="fatally";
+act("Your black fluted mace drains $3n $2t.",A_SOMEONE,self,str,targ,TO_CHAR);
+act("$1n's black fluted mace drains $3n $2t.",A_SOMEONE,self,str,targ,TO_NOTVICT);
+act("$1n's black fluted mace drains you $2t.",A_SOMEONE,self,str,targ,TO_VICT);
+return;
+}
+dilend
+
+dilbegin raven_aff(medi: unitptr, targ: unitptr, hm: integer);
+var
+  str :string;
+code
+{
+str:="insignificantly";
+if (hm>5) str:="slightly";    if (hm>10) str:="lightly";
+if (hm>15) str:="fairly";     if (hm>20) str:="seriously";
+if (hm>30) str:="severely";   if (hm>40) str:="gravely";
+if (hm>50) str:="critically"; if (hm>60) str:="fatally";
+act("Your Raven Spear glows with blue flames chilling $3n $2t.",A_SOMEONE,self,str,targ,TO_CHAR);
+act("$1n's Raven Spear glows with blue flames chilling $3n $2t.",A_SOMEONE,self,str,targ,TO_NOTVICT);
+act("$1n's Raven Spear glows with blue flames chilling you $2t.",A_SOMEONE,self,str,targ,TO_VICT);
+return;
+}
+dilend
+
+dilbegin axe_aff(medi: unitptr, targ: unitptr, hm: integer);
+var
+  str :string;
+code
+{
+if (targ==null) return;
+           str:="SINGE"; if (hm>5) str:="SEAR";
+if (hm>10) str:="BURN";  if (hm>15) str:="FRY";
+if (hm>20) str:="TORCH"; if (hm>30) str:="CAUTERIZE";
+if (hm>50) str:="TOAST";
+act("You chop and $2t $3n with a ruby handaxe.",A_SOMEONE,self,str,targ,TO_CHAR);
+act("$1n chops and $2tS $3n with a ruby handaxe.",A_SOMEONE,self,str,targ,TO_NOTVICT);
+act("$1n chops and $2tS you with a ruby handaxe.",A_SOMEONE,self,str,targ,TO_VICT);
+return;
+}
+dilend
+
+dilbegin claw_aff(medi:unitptr,targ:unitptr,hm:integer);
+var
+  str :string;
+code
+{
+if (targ==null) return;
+           str:="SCRATCH"; if (hm> 5) str:="CUT";
+if (hm>10) str:="RIP";     if (hm>15) str:="CLAW";
+if (hm>20) str:="TEAR";    if (hm>30) str:="SLASH";
+if (hm>50) str:="REND";
+act("Your gargoyle claws $2t into $3n.",A_SOMEONE,self,str,targ,TO_CHAR);
+act("$1n's gargoyle claws $2tS into $3n.",A_SOMEONE,self,str,targ,TO_NOTVICT);
+act("$1n's gargoyle claws $2tS into you.",A_SOMEONE,self,str,targ,TO_VICT);
+return;
+}
+dilend
+
+dilbegin rend_aff(medi:unitptr,targ:unitptr,hm:integer);
+code
+{
+if (targ==null) return;
+act("Your eyes glow red as you arch your claws back.",A_SOMEONE,self,self,targ,TO_CHAR);
+act("$1n's eyes glow red as $1n archs $1s claws back.",A_SOMEONE,self,self,targ,TO_NOTVICT);
+act("$1n's eyes glow red as $1n archs $1s claws back.",A_SOMEONE,self,self,targ,TO_VICT);
+act("You lunge forword, slashing your claws at $3n.",A_SOMEONE,self,self,targ,TO_CHAR);
+act("$1n lunges forword, slashing $1s claws at $3n.",A_SOMEONE,self,self,targ,TO_NOTVICT);
+act("$1n lunges forword, slashing $1s claws at $3n.",A_SOMEONE,self,self,targ,TO_VICT);
+act("Your gargoyle claws TEAR into $3n, RENDING flesh everywhere!",A_SOMEONE,self,self,targ,TO_CHAR);
+act("$1n's gargoyle claws TEARS into $3n, RENDING flesh everywhere!",A_SOMEONE,self,self,targ,TO_NOTVICT);
+act("$1n's gargoyle claws TEARS into you, RENDING your flesh!",A_SOMEONE,self,self,targ,TO_VICT);
+return;
+}
+dilend
+
+dilbegin gargoyle_claw();
+var
+   i   :integer;
+   pwr :string;
+code
+{
+heartbeat:=PULSE_SEC*5;
+:start:
+wait(SFB_COM,command(CMD_AUTO_COMBAT));
+if (self.fighting.level>IMMORTAL_LEVEL) goto start;
+if (rnd(1,20)>10) goto start;
+i:=meleeattack(self,self.fighting,0,WPN_CLAW);
+pwr:="scratches";
+if(i> 1) pwr:="cuts";    if(i> 5) pwr:="rips";
+if(i>10) pwr:="claws";   if(i>20) pwr:="tears";
+if(i>35) pwr:="slashes"; if(i>50) pwr:="rends";
+act("$1n $2t $3n with $1s claws.",A_SOMEONE,self,pwr,self.fighting,TO_NOTVICT);
+act("$1n $2t you with $1s claws.",A_SOMEONE,self,pwr,self.fighting,TO_VICT);
+wait(SFB_COM,command(CMD_AUTO_COMBAT));
+goto start;
+}
+dilend
+
+dilbegin disarm_block();
+var
+tgt:unitptr;
+pc:unitptr;
+code
+{
+heartbeat:=PULSE_SEC*3;
+:start:
+unsecure (pc);
+wait(SFB_CMD,command(CMD_DISARM));
+pc:=activator;
+secure (pc,start);
+tgt:=findunit(self,argument,FIND_UNIT_SURRO,null);
+if(tgt==null) goto start;
+if(tgt==self) {
+  block;
+  pause;
+  act ("$2n dodges your thrust and sends you sprawling.",A_ALWAYS,pc,self,null,TO_CHAR);
+  act ("$2n dodges $1n's thrust and sends $1m sprawling.",A_ALWAYS,pc,self,null,TO_CHAR);
+  pc.position:=POSITION_SITTING;
+  exec ("kill "+pc.name,self);
+  goto start; }
+goto start;
+}
+dilend
+
+dilbegin last_gasp();
+var
+  item :unitptr;
+  pc   :unitptr;
+  i    :integer;
+  exdp :extraptr;
+code
+{
+heartbeat:=PULSE_SEC*3;
+
+:start:
+wait(SFB_CMD,(activator.type==UNIT_ST_PC) and (command("listen")));
+pc:=activator;
+secure(pc,lostpc);
+block;
+
+if (DRACONIAN_COMPLETE in pc.quests) {
+         exec("say Thank you for completeing the quest where I could not, "+pc.name+".",self);
+  pause; exec("say You have struck a mighty blow against the draconian armies.",self);
+  pause; exec("say A piece of advice...",self);
+  pause; exec("emote coughs.",self);
+  pause; exec("whisper "+pc.name+" if you don't want to end up dying like myself,",self);
+  pause; exec("whisper "+pc.name+" don't be going around poking statues...",self);
+  pause; exec("emote has made his last gasp.",self);
+  goto dies; }
+
+if (DRACONIAN_ONGOING in pc.quests) {
+         exec("say "+pc.name+", I hope the Quest is going well for you.",self);
+  pause; exec("emote coughs.",self);
+  pause; exec("say May you succeed where I have failed!",self);
+  pause; exec("emote has made his last gasp.",self);
+  goto dies; }
+
+       exec("emote looks at "+pc.name+" carefully.",self);
+pause; exec("say Hmmm... you may be able to help me...",self);
+pause; exec("emote coughs.",self);
+pause; exec("say I was on a quest but now am dying.",self);
+pause; exec("say It is very important for the sake of Midgaard for it to be completed.",self);
+pause; exec("emote coughs.",self);
+pause; exec("say Would you take if up for me "+pc.name+".",self);
+pause; exec("say Nod if so, shake your head otherwise.",self);
+
+:accept_loop:
+wait(SFB_CMD,activator==pc);
+if (command(CMD_NOD)) goto quest_accepted;
+else if (command(CMD_SHAKE)) goto no_quest;
+else {
+  exec("say Nod if so, shake your head otherwise.", self);
+  goto accept_loop; }
+
+:no_quest:
+exec("sigh",self); pause;
+exec("say I hope your declining is not the fall of Midgaard...",self);
+pause; exec("emote has made his last gasp.",self);
+unsecure(pc);
+goto dies;
+
+:quest_accepted:
+addextra(pc.quests,{DRACONIAN_ONGOING},"");
+exec("say Thank you, take this crescent, it is the key to the quest.",self);
+pause; exec("emote hands over the crescent.",self);
+item:=load("crescent@akaren");
+item.height:=pc.height;
+link(item,pc);
+pause; exec("whisper "+pc.name+" GAZE into the CRESENT while wearing it to find what you must do.",self); 
+pause; exec("say I am about to die, but I can collect the chaos as a soul for you...",self); 
+unsecure(pc);
+goto dies;
+
+:lostpc:
+exec("say oh why did "+pc.name+" have to leave, I don't have much time left.", self);
+pause; exec("emote coughs.",self);
+pause; exec("emote has made his last gasp.",self);
+
+:dies:
+item:=findunit(self,"chaos seeker",FIND_UNIT_WORLD,null);
+if(item==null) {
+  item:=load("soul_man@akaren");
+  link(item,findroom("side1@hades6")); }
+exec("emote shudders for a moment then goes still.",self);
+self.hp:=-100;
+position_update(self);
+quit;
+}
+dilend
+
+dilbegin crescent_gaze();
+code
+{
+wait(SFB_CMD,command("gaze") and
+             (argument=="crescent") and
+             ((self.equip==WEAR_NECK_1) or (self.equip==WEAR_NECK_2)) and
+             (activator==self.outside) and
+             (DRACONIAN_ONGOING in activator.quests));
+block;
+act("Gazing into the crescent, you see some words form upon it.",A_ALWAYS,self.outside,null,null,TO_CHAR);
+act("'This crescent is the key to defeating the draconians.'",A_ALWAYS,self.outside,null,null,TO_CHAR);
+act("'By seeking out specific objects and putting them in'",A_ALWAYS,self.outside,null,null,TO_CHAR);
+act("'the crescent, it will gain power and become the weapon'",A_ALWAYS,self.outside,null,null,TO_CHAR);
+act("'necessary for their destruction.  The objects required'",A_ALWAYS,self.outside,null,null,TO_CHAR);
+act("'for this quest are: energy in its purest form, a mark of'",A_ALWAYS,self.outside,null,null,TO_CHAR);
+act("'freedom, a weapon to destroy those which from the draconians'",A_ALWAYS,self.outside,null,null,TO_CHAR);
+act("'were spawned, a piece of pure chaos, an object imbued with'",A_ALWAYS,self.outside,null,null,TO_CHAR);
+act("'the essence of speed, and a heart of Tiamat's power'",A_ALWAYS,self.outside,null,null,TO_CHAR);
+}
+dilend
+
+dilbegin crescent_put();
+var
+  pc: unitptr;
+  item: unitptr;
+  exdp: extraptr;
+code
+{
+heartbeat:=PULSE_SEC*3;
+
+:start:
+wait(SFB_DONE, command(CMD_PUT) and 
+              ((self.equip==WEAR_NECK_1) or (self.equip==WEAR_NECK_2)) and
+              (target==self) and 
+              (activator==self.outside) and
+              (DRACONIAN_ONGOING in activator.quests));
+pc:=activator;
+item:=medium;
+secure(pc,start);
+secure(item,start);
+exdp:=DRACONIAN_ONGOING in pc.quests;
+
+if (((item.nameidx+"@"+item.zoneidx)=="ball_energy@akaren") or
+    ((item.nameidx+"@"+item.zoneidx)=="mark_freedom@akaren") or
+    ((item.nameidx+"@"+item.zoneidx)=="swirl_chaos@akaren") or
+    ((item.nameidx+"@"+item.zoneidx)=="dragon_slayer@asgaard") or
+    ((item.nameidx+"@"+item.zoneidx)=="speed_gauntlets@tiamat") or
+    ((item.nameidx+"@"+item.zoneidx)=="altar_heart@akaren")) {
+  if (not(item.nameidx in exdp.names)) addstring(exdp.names,item.nameidx);
+  act("Your crescent glows as it absorbs your $2N.",A_ALWAYS,pc,item,null,TO_CHAR);
+  act("$1N's crescent glows briefly.",A_SOMEONE,pc,item,null,TO_REST);
+  unsecure(item);
+  destroy(item);
+  goto check_done; }
+else {
+  act("Your crescent consumes your $2N.",A_ALWAYS,pc,item,null,TO_CHAR);
+  link(item,findroom("void@basis")); };
+
+:check_done:
+exdp:=DRACONIAN_ONGOING in pc.quests;
+if (("ball_energy" in exdp.names) and 
+    ("mark_freedom" in exdp.names) and 
+    ("swirl_chaos" in exdp.names) and 
+    ("dragon_slayer" in exdp.names) and
+    ("speed_gauntlets" in exdp.names) and
+    ("altar_heart" in exdp.names) and
+    (not ("made_sword" in exdp.names))) {
+  addstring(exdp.names,"made_sword");
+  act("Your crescent glows and transforms into a sword.",A_ALWAYS,pc,null,null,TO_CHAR);
+  act("$1N's crescent glows and transforms into a sword.",A_SOMEONE,pc,null,null,TO_REST);
+  act(".oOo. Use this sword to kill the Highlord Ariakis to complete the Quest .oOo.",A_ALWAYS,pc,null,null,TO_CHAR);
+  item:=load("ariakas_sword@akaren");
+      item.height:=pc.height;
+  link(item,pc);
+  destroy(self); }
+unsecure(pc);
+goto start;
+}
+dilend
+
+dilbegin free_prisoner();
+var
+  item: unitptr;
+  pc:   unitptr;
+code
+{
+:start:
+wait(SFB_CMD,command("release") and
+             (argument=="prisoner") and
+             (activator.type==UNIT_ST_PC));
+pc:=activator;
+secure(pc,start);
+block;
+if(findunit(self,"scrik",FIND_UNIT_SURRO,null)) {
+  exec("say No, I can't escape, Scrik would kill me!",self);
+  goto start; }
+exec("say You are my savior, thank you for freeing me!",self);
+experience(10,pc);
+if (DRACONIAN_ONGOING in pc.quests) {
+  pause; exec("say take this mark as a token of my gratitute",self);
+  item:=load("mark_freedom@akaren");
+      item.height:=pc.height;
+  link(item,self);
+  exec("give mark "+pc.name,self); }
+  link(item,pc);
+pause; exec("emote hurriedly surries out of the room and presumedly the entire keep.",self);
+destroy(self);
+goto start;
+}
+dilend
+
+dilbegin break_altar();
+var
+  item:   unitptr;
+  tamait: unitptr;
+  pc:     unitptr;
+code
+{
+:start:
+wait(SFB_CMD,command("break") and
+             (argument=="altar") and
+             (activator.type==UNIT_ST_PC));
+pc:=activator;
+secure(pc,start);
+block;
+tamait:=findunit(self,"tamait",FIND_UNIT_SURRO,null);
+if (not(tamait==null)) {
+  act("Tamait stops you from destroying the altar.",A_ALWAYS,pc,null,null,TO_CHAR);
+  goto start; }
+act("You destroy the altar!",A_ALWAYS,pc,null,null,TO_CHAR);
+act("$1n destroys the altar!",A_SOMEONE,pc,null,null,TO_REST);
+if (pc.alignment>350) experience(50,pc);
+item:=load("altar_heart@akaren");
+link(item,self.outside);
+destroy(self);
+goto start;
+}
+dilend
+
+dilbegin kill_ariakas();
+var
+  item: unitptr;
+  exdp: extraptr;
+code 
+{
+:start:
+wait(SFB_MSG,(self.equip==WEAR_WIELD) and
+             (DRACONIAN_ONGOING in self.outside.quests));
+if (not(argument=="ariakas is dead "+self.outside.outside.nameidx)) goto start;
+exdp:=DRACONIAN_ONGOING in self.outside.quests;
+if (not("made_sword" in exdp.names)) {
+  act("You feel that you were not meant to kill Ariakas with this sword yet.",A_ALWAYS,self.outside,null,null,TO_CHAR);
+  act("Your sword wavers and disappears.",A_ALWAYS,self.outside,null,null,TO_CHAR);
+  act("$1n's sword wavers and disappears.",A_SOMEONE,self.outside,null,null,TO_REST);
+  destroy(self);
+  goto start; }
+act("As Ariakas dies, your sword guides itself into his dying body.",A_ALWAYS,self.outside,null,null,TO_CHAR);
+act("$1n plunges $1s sword into Ariakas' dying body",A_SOMEONE,self.outside,null,null,TO_REST);
+act("Your sword undergoes a tranformation!",A_ALWAYS,self.outside,null,null,TO_CHAR);
+act("A voice echos in your head 'You have stopped the draconians for now.'",A_ALWAYS,self.outside,null,null,TO_CHAR);
+act("'Keep this amulet for your efforts.'",A_ALWAYS,self.outside,null,null,TO_CHAR);
+subextra(self.outside.quests,DRACONIAN_ONGOING);
+addextra(self.outside.quests,{DRACONIAN_COMPLETE},"");
+experience(5000,self.outside);
+item:=load("vortex@akaren");
+link(item,self.outside);
+destroy(self);
+}
+dilend
+
+dilbegin chaos_seeker();
+var
+  item: unitptr;
+code
+{
+heartbeat:=PULSE_SEC*10;
+item:=load("swirl_chaos@akaren");
+link(item,self);
+:start:
+pause; exec("say woah is me!",self);
+pause; exec("say I have collected this swirl of chaos but....",self);
+pause; exec("say cannot deliver it to those who need it",self);
+pause; exec("say I cannot even leave this cursed pit!",self);
+pause; exec("say please kill me to end my misery!",self);
+goto start;
+}
+dilend
+
+dilbegin one_vortex();
+var
+  this_one: unitptr;
+code
+{
+heartbeat:=PULSE_SEC*2;
+
+:start:
+wait(SFB_CMD,command(CMD_WEAR) and (activator==self.outside));
+pause;
+if (self.equip==WEAR_NECK_1) {
+  this_one:=findunit(self.outside,"vortex",FIND_UNIT_EQUIP,null);
+  if (this_one==self) 
+    this_one:=findunit(self.outside,"2.vortex",FIND_UNIT_EQUIP,null);
+  if (not(this_one==null)) {
+    act("A voice resounds in your head 'This is not right, this item should "+
+        "be awarded to someone once.' With these words one necklace swirls "+
+        "into a void.",A_ALWAYS,self.outside,null,null,TO_CHAR);
+    act("One of $1n's $2N swirls into a ground.",A_HIDEINV,self.outside,self,null,TO_REST);
+    link(self,findroom("void@basis")); } }
+goto start;
+}
+dilend
+
+dilbegin recall charger();
+code
+{
+:start:
+heartbeat:=PULSE_SEC*SECS_PER_MUD_DAY/24;
+wait(SFB_TICK,(self.equip==WEAR_WIELD));
+heartbeat:=PULSE_SEC*5;
+act("Your $2N glows softly.",A_ALWAYS,self.outside,self,null,TO_CHAR);
+act("$1n's $2N glows softly.",A_ALWAYS,self.outside,self,null,TO_REST);
+sendto("add charge",self);
+goto start;
+}
+dilend
+
+dilbegin recall charge_claws();
+code
+{
+:start:
+heartbeat:=PULSE_SEC*SECS_PER_MUD_DAY/24;
+wait(SFB_TICK,(self.equip==WEAR_WIELD));
+heartbeat:=PULSE_SEC*5;
+sendto("add charge",self);
+goto start;
+}
+dilend
+
+%rooms
+
+trail_1
+title "A Path around the Mountain"
+descr
+"The path winds around the side of the mountain. It runs east to west between
+thinning trees. The trees grow darker, more scragily, and lend a sense of
+ominence eastward. Your instincts tell you that this trail leads to a danger
+that only the most seasoned of adventurers would dare approach."
+east to trail_2	descr "The path grows more ominous.";
+west to moun_tr1@mount descr "The path joins up with the main mountain trail.";
+end
+
+trail_2
+title "A Path around the Mountain"
+descr
+"The path takes a turn to the north here. Trees have greatly thinned out and
+the few to either side barely cling to life, their shapes bent and twisted.
+The almost scoured quality of the ground makes you wonder if some evil is
+draining the life from the region. The path wraps around the side of the
+mountain, surely the source of the evil is just out of view around the next
+bend."
+north to trail_3 descr "The path leads around the mountain.";
+west to trail_1 descr "The path winds its way back to safety.";
+end
+
+trail_3
+title "End of a Path around the Mountain"
+descr
+"The path almost comes to an end here. It is possible to follow the scoured
+path to the south. The mountain walls rise up to the north and west. Looking
+closer, what seems to be a natural staircase climbs up the north wall. From
+down on the ground its impossible to tell if the staircase leads anywhere."
+movement SECT_CITY
+up to trail_4 descr "The natural staircase leads up the mountain face.";
+south to trail_2 descr "The path runs around the mountain.";
+end
+
+trail_4
+title "End of a Ledge"
+descr
+"It is neccessary to keep careful footing along this ledge. Even with enough
+room for two to walk side by side, a misstep would send you tumbling down the
+side to your death. From here, you can follow the ledge to the east or head
+down a natural stairway to a mountain path."
+movement SECT_CITY
+down to trail_3 descr "The natural stiarcase leads down to a mountain path.";
+east to trail_5 descr "The ledge creeps around the mountain face.";
+end
+
+trail_5
+title "Along a Ledge"
+descr
+"It is neccessary to keep careful footing along this ledge. Even with enough
+room for two to walk side by side, a misstep would send you tumbling down the
+side to your death. From here, the ledge runs to the east and west."
+movement SECT_CITY
+east to trail_6 descr "The ledge creeps around the mountain face.";
+west to trail_4 descr "The ledge creeps around the mountain face.";
+end
+
+trail_6
+title "Along a Ledge"
+descr
+"It is neccessary to keep careful footing along this ledge. Even with enough
+room for two to walk side by side, a misstep would send you tumbling down the
+side to your death. From here, the ledge runs to the north and west."
+movement SECT_CITY
+north to trail_7 descr "The ledge creeps around the mountain face.";
+west to trail_5 descr "The ledge creeps around the mountain face.";
+end
+
+trail_7
+title "Along a Ledge"
+descr
+"It is neccessary to keep careful footing along this ledge. Even with enough
+room for two to walk side by side, a misstep would send you tumbling down the
+side to your death. From here, the ledge runs to the north and south."
+movement SECT_CITY
+north to trail_8 descr "The ledge creeps around the mountain face.";
+south to trail_6 descr "The ledge creeps around the mountain face.";
+end
+
+trail_8
+title "Along a Ledge"
+descr
+"It is neccessary to keep careful footing along this ledge. Even with enough
+room for two to walk side by side, a misstep would send you tumbling down the
+side to your death. From here, the ledge runs to the east and south."
+movement SECT_CITY
+south to trail_7 descr "The ledge creeps around the mountain face.";
+east to trail_9 descr "The ledge creeps around the mountain face.";
+end
+
+trail_9
+title "End of a Ledge"
+descr
+"It is neccessary to keep careful footing along this ledge. Even with enough
+room for two to walk side by side, a misstep would send you tumbling down the
+side to your death. From here, you can follow the ledge to the west or walk
+onto a wider outcropping to the north. What really catches yur eye, however,
+is the looming fortress a distance to the north."
+movement SECT_CITY
+north to trail_10 descr "The ledge extends to a wider outcropping.";
+west to trail_8 descr "The ledge creeps around the mountain face.";
+end
+
+trail_10
+title "A Mountain Outcropping"
+descr
+"This outcropping juts out quite a distance from the mountain face. A gorge
+separates the outcropping from the looming fortress to the north. A natural
+staircase decends down the west edge of the outcropping. The outcropping
+itself countinues to the east and narrows to a ledge along the mountain face
+to the south."
+movement SECT_CITY
+south to trail_9 descr "The outcropping narrows to a ledge.";
+east to trail_11 descr "The outcropping continues.";
+down to trail_12 descr "A natural staircase leads down to the gorge.";
+end
+
+trail_11
+title "A Mountain Outcropping"
+descr
+"The outcropping is quite a distance from the mountain face. Looking across
+the gorge, a mighty fortress stands with an entrance almost directly across
+from you. Two posts stand along that north edge, former bridge supports. You
+can only head back to the west."
+movement SECT_CITY
+west to trail_10 descr "The outcropping continues.";
+end
+
+trail_12
+title "In a Mountain Gorge"
+descr
+"Strangely enough, this gorge is filled with lust plants and wildlife while
+the surrounding mountain area has been scoured of nearly all life. A vague
+path runs from east to west. Here, the east end of the path climbs up 
+a natural staircase up to an outcropping."
+west to trail_13 descr "The forested gorge path continues.";
+up to trail_11 descr "A natural staircase climbs up to an outcropping.";
+end
+
+trail_13
+title "In a Mountain Gorge"
+descr
+"Strangely enough, this gorge is filled with lust plants and wildlife while
+the surrounding mountain area has been scoured of nearly all life. A vague
+path runs from east to west. Here, the east end of the path climbs up 
+a natural staircase up to an outcropping."
+east to trail_12 descr "The forested gorge path continues.";
+west to trail_14 descr "The forested gorge path continues.";
+end
+
+trail_14
+title "In a Mountain Gorge"
+descr
+"Strangely enough, this gorge is filled with lust plants and wildlife while
+the surrounding mountain area has been scoured of nearly all life. A vague
+path runs from east to west. Here, the west end of the path climbs up 
+a natural staircase up to a ledge."
+east to trail_13 descr "The forested gorge path continues.";
+up to trail_15 descr "A natural staircase climbs up to a ledge.";
+end
+
+trail_15
+title "Along a Ledge"
+descr
+"It is neccessary to keep careful footing along this ledge. Even with enough
+room for two to walk side by side, a misstep would send you tumbling down the
+side to your death. Looking down, the lush gorge can be seen. From here, the
+ledge runs to the north and a natural stairwell leads down to the gorge."
+movement SECT_CITY
+north to trail_16 descr "The ledge creeps around the mountain face.";
+down to trail_14 descr "The natural staircase leads down to a gorge.";
+end
+
+trail_16
+title "Along a Ledge"
+descr
+"It is neccessary to keep careful footing along this ledge. Even with enough
+room for two to walk side by side, a misstep would send you tumbling down the
+side to your death. From here, the ledge runs to the north and south."
+movement SECT_CITY
+north to trail_17 descr "The ledge creeps around the mountain face.";
+south to trail_15 descr "The ledge creeps around the mountain face.";
+end
+
+trail_17
+title "Along a Ledge"
+descr
+"It is neccessary to keep careful footing along this ledge. Even with enough
+room for two to walk side by side, a misstep would send you tumbling down the
+side to your death. From here, the ledge runs to the south and opens up
+to a wider path to the east where the fortress looms."
+movement SECT_CITY
+south to trail_16 descr "The ledge creeps around the mountain face.";
+east to trail_18 descr "The ledge widens to a path as it approaches the fortress.";
+end
+
+trail_18
+title "The Approaching Path"
+descr
+"The path runs right by a part of the fortress that juts out from the rest
+of the building.  It has an ancient look to it, and the makrs from repeling
+many an invader. The path has a gentle upward slope to it as it approaches
+the entrence of the fortress still a while off to the east.  To the west, a
+ledge runs across the face of the mountain."
+movement SECT_CITY
+east to trail_19 descr "The path slopes gently upwards.";
+west to trail_17 descr "The path narrows to a ledge along the mountain face.";
+end
+
+trail_19
+title "The Approaching Path"
+descr
+"The path runs gently upwards are is runs parralel to the fortress walls. It
+runs quite a bit below the level the fortress is at, forcing you to actually
+follow the path.  The fortress has the dreadful, omnious look to it.  The
+path runs east and west."
+movement SECT_CITY
+east to trail_20 descr "The path slopes gently upwards.";
+west to trail_18 descr "The path slopes gently downwards.";
+end
+
+trail_20
+title "A Path around the Mountain"
+descr
+"The trail has ended its long snaking along high up in the mountains. Despite
+the distance from civilization, it is amazingly well-kept. You realize why
+once you take a look northward. A sinister fortress has been built along the
+mountain face. A huge sense of dread washes over you, nearly making you turn
+back.."
+movement SECT_CITY
+west to trail_19 descr "The path runs off to the west.";
+north to wall_gate descr "The path runs right up to the fortress.";
+end
+
+wall_gate
+names {"akaren gate"}
+title "Before Akaren Keep"
+descr
+"Akaren Keep looms before you. The sturdy walls show the marks from 
+repelling many attacks over the years. Apparently, there is but one way to
+enter, a runed archway topped with a bust of Tiamat. A portcullis lies in
+the arch to block unwanted visitors. The keep walls run to the east and west,
+and a mountain trail leaves this dangerous place."
+ROOM_BASICS
+flags {UNIT_FL_NO_MOB}
+extra {"portcullis","gate"} "The portcullis is a gate made from metal bars
+that moves up and down through holes in the ceiling."
+north to guard_post descr "The archway leads into the fortress."
+         open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"portcullis","gate"};
+south to trail_20 descr "You can leave by following the trail south.";
+east to wall_east descr "The fortress walls continue to the east.";
+west to wall_west descr "The fortress walls continue to the west.";
+
+dilbegin door_close();
+code
+{
+  heartbeat:=PULSE_SEC*120;
+  :start:
+  wait(SFB_TICK,not isset(self.exit_info[NORTH],EX_CLOSED));
+  set(self.exit_info[NORTH],EX_CLOSED);
+  act("A grinding sound is heard as the portcullis lowers.",
+      A_ALWAYS,self.inside,null,null,TO_ALL);
+  set(self.exit_to[NORTH].exit_info[SOUTH],EX_CLOSED);
+  act("A grinding sound is heard as the portcullis lowers.",
+      A_ALWAYS,self.exit_to[NORTH].inside,null,null,TO_ALL);
+  goto start;
+}
+dilend
+
+dilbegin anim_garg();
+var
+  item:   unitptr;
+  mob:    unitptr;
+  player: unitptr;
+code
+{
+:start:
+wait (SFB_CMD, command("poke") and 
+               (activator.type==UNIT_ST_PC) and
+               (argument=="gargoyle statue"));
+item:=findunit(activator,"gargoyle statue",FIND_UNIT_SURRO,null);
+if (item==null) goto start;
+if (item.type!=UNIT_ST_OBJ) goto start;
+block;
+destroy(item);
+act("The gargoyle statue suddenly jumps to life!",A_ALWAYS,activator,null,null,TO_ALL);
+mob:=load("gargoyle@akaren");
+secure(mob,start);
+link(mob,self);
+if(activator.level<IMMORTAL_LEVEL) set_fighting(mob,activator);
+goto start;
+}
+dilend
+end
+
+wall_east
+title "Outside the Walls of Akaren Keep"
+descr
+"The walls of the keep stand strong to the north.  The ledge you are on drops
+away to the south and east, preventing movement in those directions.  You
+can head back to the gates to the west."
+movement SECT_CITY
+west to wall_gate descr "The gates to the keep lie to the west.";
+end
+
+wall_west
+title "Outside the Walls of Akaren Keep"
+descr
+"The walls of the keep stand strong to the north.  The ledge you are on drops
+away to the south and west, preventing movement in those directions.  You
+can head back to the gates to the east."
+movement SECT_CITY
+east to wall_gate descr "The gates to the keep lie to the east.";
+end
+
+guard_post
+title "The Guard Post"
+descr
+"This is a short arched passageway leading to the north.  The design of the
+area allows guards to keep a careful watch on all who enter and defend the
+keep if need be.  The portcullis gate lies to the south and another passage
+lies to the north."
+ROOM_BASICS
+extra {"portcullis","gate"} "The portcullis is a gate made from metal bars
+that moves up and down through holes in the ceiling."
+north to corridor_3 descr "A east-west corridor runs to the north.";
+south to wall_gate descr "You can exit the keep to the south."
+         open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"portcullis","gate"};
+end
+
+corridor_1
+title "A Long Corridor"
+descr
+"This is the end of a long corridor that leads westward.  A glowing 
+hemisphere on the ceiling provides the area with light.  A wooden door
+lies to the north."
+ROOM_BASICS
+EXTRA_SPHERE
+extra {"wooden door","door"} "This is a sturdy wooden door."
+north to courtyard_1 open {EX_OPEN_CLOSE, EX_CLOSED}
+                     keyword {"wooden door","door"};
+west to corridor_2 descr "The corridor continues to the west.";
+end
+
+corridor_2
+title "A Long Corridor"
+descr
+"This corridor leads east and west.  A glowing hemisphere on the ceiling
+provides the area with light."
+ROOM_BASICS
+EXTRA_SPHERE
+east to corridor_1 descr "The corridor continues to the east.";
+west to corridor_3 descr "The corridor continues to the west.";
+end
+
+corridor_3
+title "A Long Corridor"
+descr
+"Glowing hemispheres on the ceiling light the corridor as it leads off
+to the east and west.  An archway escapes the keep southward."
+ROOM_BASICS
+EXTRA_SPHERE
+extra {"archway"} "The archway leads out of the keep."
+south to guard_post descr "The archway leads out of the keep.";
+east to corridor_2 descr "The corridor continues to the east.";
+west to corridor_4 descr "The corridor continues to the west.";
+end
+
+corridor_4
+title "A Long Corridor"
+descr
+"This corridor leads east and west.  A glowing hemisphere on the ceiling
+provides the area with light."
+ROOM_BASICS
+EXTRA_SPHERE
+east to corridor_3 descr "The corridor continues to the east.";
+west to corridor_5 descr "The corridor continues to the west.";
+end
+
+corridor_5
+title "Bend in the Corridor"
+descr
+"The corridor takes a sharp turn here, heading off east one way and north
+the other.  A glowing hemisphere sheds its light on a door in the west
+wall."
+ROOM_BASICS
+EXTRA_SPHERE
+extra {"steel door","door"} "This is a sturdy steel door."
+north to corridor_6 descr "The corridor continues to the north.";
+east to corridor_4 descr "The corridor continues to the east.";
+west to stairway_s1 open {EX_OPEN_CLOSE, EX_CLOSED}
+                    keyword {"steel door","door"};
+end
+
+corridor_6
+title "A Long Corridor"
+descr
+"The corridor continues to proceed to the north and south here lighted by
+a glowing hemisphere attached to the ceiling.  The expert stonework frames
+a swinging door to the east from which rich aromas waft in."
+ROOM_BASICS
+EXTRA_SPHERE
+extra {"steel door","door"} "This is a sturdy steel door."
+north to corridor_7 descr "The corridor continues to the north.";
+south to corridor_5 descr "A turn on the corridor lies south.";
+east to kitchen open {EX_OPEN_CLOSE, EX_CLOSED}
+                keyword {"steel door","door"};
+end
+
+corridor_7
+title "A Long Corridor"
+descr
+"The corridor continues to proceed to the north and south here lighted by
+a glowing hemisphere attached to the ceiling.  A study steel door fills an
+archway to the east."
+ROOM_BASICS
+EXTRA_SPHERE
+extra {"steel door","door"} "This is a sturdy steel door."
+north to corridor_8 descr "The corridor continues to the north.";
+south to corridor_6 descr "The corridor continues to the south.";
+east to barracks open {EX_OPEN_CLOSE, EX_CLOSED}
+                 keyword {"steel door","door"};
+end
+
+corridor_8
+title "A Long Corridor"
+descr
+"The corridor continues to proceed to the north and south here.  A glowing
+hemisphere on the ceiling lights the area.  A sturdy steel door opens to the
+east."
+ROOM_BASICS
+EXTRA_SPHERE
+extra {"steel door","door"} "This is a sturdy steel door."
+north to corridor_9 descr "The corridor comes to a turn northward.";
+south to corridor_7 descr "The corridor continues to the south.";
+east to forge open {EX_OPEN_CLOSE, EX_CLOSED}
+              keyword {"steel door","door"};
+end
+
+corridor_9
+title "Bend in the Corridor"
+descr
+"The corridor take a turn here, going off south one way and east the other.
+The glowing hemisphere overhead provides the area with light.  A sturdy
+steel door lies to the west."
+ROOM_BASICS
+EXTRA_SPHERE
+extra {"steel door","door"} "This is a sturdy steel door."
+south to corridor_8 descr "The corridor continues to the south.";
+east to corridor_10 descr "The corridor continues to the east.";
+west to stairway_n1 open {EX_OPEN_CLOSE, EX_CLOSED}
+                    keyword {"steel door","door"};
+end
+
+corridor_10
+title "A Long Corridor"
+descr
+"The corridor continues to the east and west here.  A glowing hemisphere on
+the  ceiling lights the corridor."
+ROOM_BASICS
+EXTRA_SPHERE
+east to corridor_11 descr "The corridor continues to the east.";
+west to	corridor_9 descr "The corridor comes to a turn westward.";
+end
+
+corridor_11
+title "A Long Corridor"
+descr
+"The corridor continues to the east and west here. A glowing hemisphere on
+the ceiling lights the corridor. A tapestry hangs from the northern wall."
+ROOM_BASICS
+EXTRA_SPHERE
+extra {"tapestry"} "The tapestry is woven from rich dark colors.  The scene
+depicted is that of a troop of draconians aided by a gargoyle, a dragon, and
+a giant raven ravaging a  burning human village."
+east to corridor_12 descr "The corridor continues to the east.";
+west to	corridor_10 descr "The corridor continues to the west.";
+end
+
+corridor_12
+title "A Long Corridor"
+descr
+"The corridor continues to the east and west here.  A glowing hemisphere on
+the  ceiling lights the corridor. A tapestry hangs from the northern wall."
+ROOM_BASICS
+EXTRA_SPHERE
+extra {"tapestry"} "The tapestry is woven from rich dark colors.  The scene
+depicted is that of a swirling vortex."
+east to corridor_13 descr "The corridor comes to a end to the east.";
+west to corridor_11 descr "The corridor continues to the west.";
+end
+
+corridor_13
+title "A Long Corridor"
+descr
+"The corridor continues to the east and west here.  A glowing hemisphere on
+the  ceiling lights the corridor.  A wooden door lies to the south."
+ROOM_BASICS
+EXTRA_SPHERE
+extra {"wooden door","door"} "This is a sturdy wooden door."
+south to courtyard_7 open {EX_OPEN_CLOSE, EX_CLOSED}
+                     keyword {"wooden door","door"};
+west to	corridor_12 descr "The corridor continues to the west.";
+end
+
+courtyard_1
+title "The Training Grounds"
+descr
+"The courtyard is surrounded on all sides by the walls of the keep.  You
+stand in the southeast corner of the yard with a wooden door to the south.
+By the looks of the ground and various pieces of equipment strewn about,
+you guess that this area is used to train troops."
+ROOM_BASICS
+EXTRA_GROUNDS
+extra {"wooden door","door"} "This is a sturdy wooden door."
+north to courtyard_4 descr "The yard continues to the north.";
+south to corridor_1 open {EX_OPEN_CLOSE, EX_CLOSED}
+                    keyword {"wooden door","door"};
+west to courtyard_2 descr "The yard continues to the west.";
+end
+
+courtyard_2
+title "The Training Grounds"
+descr
+"The courtyard is surrounded on all sides by the walls of the keep.  You
+stand along the middle of the south wall.  By the looks of the ground and
+various pieces of equipment strewn about, you guess that this area is used
+to train troops."
+ROOM_BASICS
+EXTRA_GROUNDS
+north to courtyard_5 descr "The yard continues to the north.";
+east to courtyard_1 descr "The yard continues to the east.";
+west to courtyard_3 descr "The yard continues to the west.";
+end
+
+courtyard_3
+title "The Training Grounds"
+descr
+"The courtyard is surrounded on all sides by the walls of the keep.  You
+stand in the southwest corner of the yard.  By the looks  of the ground
+and various pieces of equipment strewn about,  you guess that this area
+is used to train troops."
+ROOM_BASICS
+EXTRA_GROUNDS
+north to courtyard_6 descr "The yard continues to the north.";
+east to courtyard_2 descr "The yard continues to the east.";
+end
+
+courtyard_4
+title "The Training Grounds"
+descr
+"The courtyard is surrounded on all sides by the walls of the keep.  You
+stand along the middle of the east wall. By the looks of the ground and
+various pieces of equipment strewn about, you guess that this area is used
+to train troops. An archway in the east wall leads off to what appears to be
+stables."
+ROOM_BASICS
+EXTRA_GROUNDS
+north to courtyard_7 descr "The yard continues to the north.";
+south to courtyard_1 descr "The yard continues to the south.";
+east to stable_1 descr "The archway leads off to the stables.";
+west to courtyard_5 descr "The yard continues to the west.";
+end
+
+courtyard_5
+title "The Training Grounds"
+descr
+"The courtyard is surrounded on all sides by the walls of the keep.  You
+stand in the center of the courtyard.  By the looks of the ground and
+various pieces of equipment strewn about, you guess that this area is used
+to train troops."
+ROOM_BASICS
+EXTRA_GROUNDS
+north to courtyard_8 descr "The yard continues to the north.";
+south to courtyard_2 descr "The yard continues to the south.";
+east to courtyard_4 descr "The yard continues to the east.";
+west to courtyard_6 descr "The yard continues to the west.";
+end
+
+courtyard_6
+title "The Training Grounds"
+descr
+"The courtyard is surrounded on all sides by the walls of the keep.  You
+stand along the middle of the west wall.  By the looks of the ground and
+various pieces of equipment strewn about, you guess that this area is used
+to train troops."
+ROOM_BASICS
+EXTRA_GROUNDS
+north to courtyard_9 descr "The yard continues to the north.";
+south to courtyard_3 descr "The yard continues to the south.";
+east to courtyard_5 descr "The yard continues to the east.";
+end
+
+courtyard_7
+title "The Training Grounds"
+descr
+"The courtyard is surrounded on all sides by the walls of the keep.  You
+stand in the northeast corner of the yard with a wooden door to the north.
+By the looks of the ground and various pieces of equipment strewn about,
+you guess that this area is used to train troops."
+ROOM_BASICS
+EXTRA_GROUNDS
+extra {"wooden door","door"} "This is a sturdy wooden door."
+north to corridor_13 open {EX_OPEN_CLOSE, EX_CLOSED}
+                     keyword {"wooden door","door"};
+south to courtyard_4 descr "The yard continues to the south.";
+west to courtyard_8 descr "The yard continues to the west.";
+end
+
+courtyard_8
+title "The Training Grounds"
+descr
+"The courtyard is surrounded on all sides by the walls of the keep.  You
+stand along the middle of the north wall.  By the looks of the ground and
+various pieces of equipment strewn about, you guess that this area is used
+to train troops."
+ROOM_BASICS
+EXTRA_GROUNDS
+south to courtyard_5 descr "The yard continues to the south.";
+east to courtyard_7 descr "The yard continues to the east.";
+west to courtyard_9 descr "The yard continues to the west.";
+end
+
+courtyard_9
+title  "The Training Grounds"
+descr
+"The courtyard is surrounded on all sides by the walls of the keep.  You
+stand in the northwest corner of the yard.  By the looks of the ground and
+various pieces of equipment strewn about, you guess that this area is used
+to train troops."
+ROOM_BASICS
+EXTRA_GROUNDS
+south to courtyard_6 descr "The yard continues to the south.";
+east to courtyard_8 descr "The yard continues to the east.";
+end
+
+stairway_s1
+title "Bottom of the Southern Stairs"
+descr
+"You are standing at the bottom of a stairway.  The hemisphere globes
+illuminate a door at the top of the stairs.  There is a steel door to
+the east at your current level."
+ROOM_BASICS
+EXTRA_SPHERE
+extra {"steel door","door"} "This is a sturdy steel door."
+extra {"stairs","stair"} "The stairs consists of two flights with doors at the top and bottom."
+up to stairway_s2 descr "The stairs lead up.";
+east to corridor_5 open {EX_OPEN_CLOSE, EX_CLOSED}
+                   keyword {"steel door","door"};
+end
+
+stairway_s2
+title "Top of the Southern Stairs"
+descr
+"You are standing at the bottom of a stairway.  The hemisphere globes
+illuminate a door at the bottom of the stairs.  There is a steel door
+to the east at your current level."
+ROOM_BASICS
+EXTRA_SPHERE
+extra {"steel door","door"} "This is a sturdy steel door."
+extra {"stairs","stair"} "The stairs consists of two flights with doors at the top and bottom."
+down to stairway_s1 descr "The stairs lead down.";
+east to hallway_1 open {EX_OPEN_CLOSE, EX_CLOSED}
+                  keyword {"steel door","door"};
+end
+
+stairway_n1
+title "Bottom of the Northern Stairs"
+descr
+"You are standing at the bottom of a stairway.  The hemisphere globes
+illuminate a door at the top of the stairs.  There is a steel door to
+the east at your current level."
+ROOM_BASICS
+EXTRA_SPHERE
+extra {"steel door","door"} "This is a sturdy steel door."
+extra {"stairs","stair"} "The stairs consists of two flights with doors at the top and bottom."
+up to stairway_n2 descr "The stairs lead up.";
+east to corridor_9 open {EX_OPEN_CLOSE, EX_CLOSED}
+                   keyword {"steel door","door"};
+end
+
+stairway_n2
+title "Top of the Northern Stairs"
+descr
+"You are standing at the bottom of a stairway.  The hemisphere globes
+illuminate a door at the bottom of the stairs.  There is a steel door
+to the east at your current level."
+ROOM_BASICS
+EXTRA_SPHERE
+extra {"steel door","door"} "This is a sturdy steel door."
+extra {"stairs","stair"} "The stairs consists of two flights with doors at the top and bottom."
+down to stairway_n1 descr "The stairs lead down.";
+east to hallway_5 open {EX_OPEN_CLOSE, EX_CLOSED}
+                  keyword {"steel door","door"};
+end
+
+hallway_1
+title "The Upper Hallway"
+descr
+"This is the south end of the hallway that runs to the north.  The glowing
+hemisphere provides the hallway with light.  A steel door lies to the west
+and an open archway leads east."
+ROOM_BASICS
+EXTRA_SPHERE
+extra {"steel door","door"} "This is a sturdy steel door."
+north to hallway_2 descr "The hallway continues to the north.";
+east to parapet_s1 descr "The parapet lies beyond the archway.";
+west to stairway_s2 open {EX_OPEN_CLOSE, EX_CLOSED}
+                    keyword {"steel door","door"};
+end
+
+hallway_2
+title "The Upper Hallway"
+descr
+"The hallway continues to both the north and south here.  The glowing
+hemisphere on the ceiling lights the sturdy door the east."
+ROOM_BASICS
+EXTRA_SPHERE
+extra {"steel door","door"} "This is a sturdy steel door."
+north to hallway_3 descr "The hallway continues to the north.";
+south to hallway_1 descr "The hallway continues to the south.";
+east to torture open {EX_OPEN_CLOSE, EX_CLOSED}
+                keyword {"steel door","door"};
+end
+
+hallway_3
+title "The Upper Hallway"
+descr
+"The hallway continues to both the north and south here.  The glowing
+hemisphere on the ceiling lights the sturdy door the east."
+ROOM_BASICS
+EXTRA_SPHERE
+extra {"steel door","door"} "This is a sturdy steel door."
+north to hallway_4 descr "The hallway continues to the north.";
+south to hallway_2 descr "The hallway continues to the south.";
+east to temple open {EX_OPEN_CLOSE, EX_CLOSED}
+               keyword {"steel door","door"};
+end
+
+hallway_4
+title "The Upper Hallway"
+descr
+"The hallway continues to both the north and south here.  The glowing
+hemisphere on the ceiling lights the sturdy door the east."
+ROOM_BASICS
+EXTRA_SPHERE
+extra {"steel door","door"} "This is a sturdy steel door."
+north to hallway_5 descr "The hallway continues to the north.";
+south to hallway_3 descr "The hallway continues to the south.";
+east to brief open {EX_OPEN_CLOSE, EX_CLOSED}
+              keyword {"steel door","door"};
+end
+
+hallway_5
+title "The Upper Hallway"
+descr
+"This is the north end of the hallway that runs to the south.  The glowing
+hemisphere provides the hallway with light.  A steel door lies to the west
+and an open archway leads east."
+ROOM_BASICS
+EXTRA_SPHERE
+extra {"steel door","door"} "This is a sturdy steel door."
+south to hallway_4 descr "The hallway continues to the south.";
+east to parapet_n1 descr "The parapet lies beyond the archway.";
+west to stairway_n2 open {EX_OPEN_CLOSE, EX_CLOSED}
+                    keyword {"steel door","door"};
+end
+
+parapet_s1
+title "The Southern Parapet"
+descr
+"The parapet runs along the south wall of the keep.  There is an archway
+to the west and the parapet continues to the east.  Looking south, you
+see the trail you took up here.  Looking north, you see the keep and the
+courtyard inside."
+ROOM_BASICS
+EXTRA_PARAPET
+east to parapet_s2 descr "The parapet continues to the east.";
+west to hallway_1 descr "The archway leads back into the keep halls.";
+end
+
+parapet_s2
+title "The Southern Parapet"
+descr
+"The parapet runs along the south wall of the keep.  You are about in the
+middle of the wall as it runs from west to east.  Looking south, you see
+the trail leading up to the keep.  Looking north, you see the keep and the
+courtyard inside."
+ROOM_BASICS
+EXTRA_PARAPET
+east to parapet_s3 descr "The parapet continues to the east.";
+west to parapet_s1 descr "The parapet continues to the west.";
+end
+
+parapet_s3
+title "The Southern Parapet"
+descr
+"This is the east end of the parapet on the southern wall of the keep.
+The parapet leads back west and a steel door lies to the east.  You can 
+see the trail leading up to the keep to the south.  To the north is the
+keep and the courtyard inside."
+ROOM_BASICS
+EXTRA_PARAPET
+extra {"steel door","door"} "This is a sturdy steel door."
+east to library open {EX_OPEN_CLOSE, EX_CLOSED}
+                keyword {"steel door","door"};
+west to parapet_s2 descr "The parapet continues to the west.";
+end
+
+parapet_n1
+title "The Northern Parapet"
+descr
+"The parapet runs along the north wall of the keep.  There is an archway
+to the west and the parapet continues to the east.  Looking south, you see
+the keep and the courtyard inside.  Looking north, you see the surrounding
+mountains."
+ROOM_BASICS
+EXTRA_PARAPET
+east to parapet_n2 descr "The parapet continues to the east.";
+west to hallway_5 descr "The archway leads back into the keep halls.";
+end
+
+parapet_n2
+title "The Northern Parapet"
+descr
+"The parapet runs along the north wall of the keep.  You are about in the
+middle of the wall as it runs from west to east.  Looking south, you see
+the keep and the courtyard inside.  Looking north, you see the surrounding
+mountains."
+ROOM_BASICS
+EXTRA_PARAPET
+east to parapet_n3 descr "The parapet continues to the east.";
+west to parapet_n1 descr "The parapet continues to the west.";
+end
+
+parapet_n3
+title "The Northern Parapet"
+descr
+"This is the east end of the parapet on the northern wall of the keep.
+The parapet leads back west and a steel door lies to the east.  To the 
+south is the keep and the courtyard inside.  To the north you see the
+surrounding mountains."
+ROOM_BASICS
+EXTRA_PARAPET
+extra {"steel door","door"} "This is a sturdy steel door."
+east to study open {EX_OPEN_CLOSE, EX_CLOSED}
+              keyword {"steel door","door"};
+west to parapet_n2 descr "The parapet continues to the west.";
+end
+
+kitchen
+title "The Kitchens"
+descr
+"Strange aromas waft all about the kitchen.  Many standard foodstuffs
+lie about but you cannot recognize one vat of meat.  Counters and
+cupboards line the walls.  A big pot stews in the center of the room.
+A steel door lies to the west."
+ROOM_BASICS
+extra {"steel door","door"} "This is a sturdy steel door."
+extra {"foodstuffs","foodstuff","foods","food"}
+"The food is normal fare for humans but many of the items must be of local
+origin as you cannot recognize them.  The majority of the foods are types
+of meats and spices."
+extra {"vat of meat","vat","meat"}
+"Looking more closely at the vat, you shudder as what the meat could be.
+It almost looks like human flesh, you sure hope that it isn't."
+extra {"pot","stew"}
+"Some sort of stew is currently cooking in the pot."
+west to corridor_6 open {EX_OPEN_CLOSE, EX_CLOSED}
+                   keyword {"steel door","door"};
+end
+
+barracks
+title "Barracks Room"
+descr
+"This area could be no place but the barracks.  Bunk beds are spaced
+in rows running west to east.  A small chest for personal items lies
+at the foot of each bed.  The floor is covered with some rugs and some
+assorted junk that has been kicked around.  The only exit is the steel
+door to the west."
+ROOM_BASICS
+extra {"steel door","door"} "This is a sturdy steel door."
+extra {"bunk beds","bunk bed","beds","bed"}
+"These are standard bunk beds with one bed raised above another.  The sheets
+are neatly folded on the bed."
+extra {"small chest","chest"}
+"The chest contains just useless personal items that have no value except to their owner."
+extra {"rugs","rug"}
+"A plain rug with the same red and black patterns found on the armor."
+extra {"junk"}
+"Its nothing special, just junk and personal items."
+west to corridor_7 open {EX_OPEN_CLOSE, EX_CLOSED}
+        keyword {"steel door","door"};
+end
+
+forge
+title "The Forge"
+descr
+"The heat emanating from the room is almost unbearable.  A large forge
+dominates the eastern wall, filled with bright red coals.  An anvil
+and a bucket of water also catch your attention.  Tools are neatly hung
+up on racks.  While there are a few other metals works lying about,
+most of the objects here are being formed into weapons and armor.  A
+steel door lies to the west."
+ROOM_BASICS
+extra {"steel door","door"} "This is a sturdy steel door."
+extra {"forge"}
+"The forge is a big piece of equipment.  It is several feet deep and fills
+the entire eastern wall.  Bellows point into it to help feed it with oxygen
+that a device this size can eat up quickly.  Several strips of metal in
+various shapes lie glowing red in the coals."
+extra {"coals"} "The coals glow a bright red in the forge."
+extra {"anvil"} "The anvil is a big hunk of iron that would hurt to have dropped on your head."
+extra {"bucket"} "The bucket is here  to quickly cool objects are heating them in the forge."
+extra {"metals","metal","weapons","weapon","armor"}
+"These pieces of metal are in various stages of development.  None of the
+pieces of armor or weapons are currently in good enough shape to be used."
+west to corridor_8 open {EX_OPEN_CLOSE, EX_CLOSED}
+                   keyword {"steel door","door"};
+end
+
+torture
+title "The Torture Chamber"
+descr
+"The chamber is a combination of a torture chamber and a jail.  The
+hemisphere lighting is dim here, creating a more frightening picture.
+Man-sized cages hang from the ceiling, some filled with mutilated
+corpses.  Nasty implements of torture hang from hooks along all of the
+walls, any one of them capable of causing agonizing pain.  The center
+of the room is dominated by the classic torture room fare, the rack
+table.  A steel door leads back out to the west."
+ROOM_BASICS
+extra {"steel door","door"} "This is a sturdy steel door."
+extra {"cages","corpses"} 
+"Six cages hang from the ceiling, two of them with corpses dangling in them.
+The cages are similar to a bird cage but a big enough to fit a human."
+extra {"impliments","impliment"}
+"These are various torture devices.  The poke, pinch, peel, etc their way
+into the pain centers of the unfortunate victims mind."
+extra {"rack table","rack","table"}
+"The rack is at a slightly inclined angle.  Manacles are at each of the
+corners to entrap hands and feet.  A wince an pull the chains connected
+to the manacles in order to stretch the victim out."
+west to hallway_2 open {EX_OPEN_CLOSE, EX_CLOSED}
+                  keyword {"steel door","door"};
+end
+
+temple
+title "Temple to Tiamat"
+descr
+"A wave of evil permeates the room.  Inscribed columns line the north
+and south walls, between which magical flames dimly dance on the end of
+torches.  Draconic statues tower at either end of the altar.  A steel 
+door leaves out to the west."
+ROOM_BASICS
+extra {"steel door","door"} "This is a sturdy steel door."
+extra {"evil"} "The evil almost feels alive in this unholy sanctum to Tiamat."
+extra {"columns","column","inscription"}
+"The columns are made from fluted black marble.  Runes are written on
+flat areas of the columns.  Just trying to read them scrambles your
+mortal mind."
+west to hallway_3 open {EX_OPEN_CLOSE, EX_CLOSED}
+                  keyword {"steel door","door"};
+end
+
+brief
+title "Briefing Room"
+descr
+"The briefing room is arranged in a very organized manner.  The hemisphere
+globe on the ceiling provides enough light to clearly see everything in
+the room.  A large map dominates the eastern wall and several other maps
+and charts line the north and south walls.  Chairs evenly circle the
+table in the center of the room.  A steel door lies to the west."
+ROOM_BASICS
+extra {"steel door","door"} "This is a sturdy steel door."
+extra {"map"}
+"The large map shows the entire land.  Some spots are marked with flags,
+notably this keep and Midgaard.  The smaller maps are close ups other
+several areas."
+west to hallway_4 open {EX_OPEN_CLOSE, EX_CLOSED}
+                  keyword {"steel door","door"};
+end
+
+alcove_1
+title "Hunter's Alcove"
+names {"hunter alcove","alcove"}
+descr
+"This alcove can comfertably hold a few people, being bigger than it appears
+from the outside. The tools and equipment neatly positioned about mark this
+as the room of a hunter. Many objects are adorned with stylized raven marks."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_INDOORS,UNIT_FL_NO_TELEPORT,UNIT_FL_PRIVATE}
+ALWAYS_LIGHT
+in hallway_3
+end
+
+library
+title "Krissak's Room"
+descr
+"The room is a strange combination of a laboratory, library, and living
+quarters. Two big shelves contain experiments and books. The table along the
+west end wall is in a disarray of notes. The bed is kept carefully on the
+side of the room opposite of where the main experiments take place. By the
+bed is a nightstand with a glowing sphere on it, providing light. A steel
+door is the only exit to the west."
+ROOM_BASICS
+extra {"steel door","door"} "This is a sturdy steel door."
+extra {"shelves","books"}
+"The books are the shelf are impossible to understand.  Krissak must
+have developed his own notation for writing the material and made it
+incomprehensible to anyone else.  An array of jars fill up a rack of one
+of the shelves."
+extra {"jars","jar"}
+"Most jars have standard mage experimental things in them.  However, one
+that catches your eye is filled with a glowing light."
+extra {"table","notes"}
+"The polished wooded table is covered in a clutter of notes.  Like the
+books on the shelves, they are unreadable."
+extra {"bed"} "The bed is clean with the sheets nicely folded."
+extra {"nightstand","light","sphere"}
+"The small wooden one-legged nightstand sits next to the bed.  A glowing
+sphere rests on top of an ornate dragon claw."
+west to parapet_s3 open {EX_OPEN_CLOSE, EX_CLOSED}
+                   keyword {"steel door","door"};
+end
+
+study
+title "Highlord Ariakas' Room"
+descr
+"While most of this place has been made solely with efficiency in mind,
+this room is opulently decorated.  Everything is of the highest 
+quality.  Tapestries line the walls, depicting gruesome scenes in their
+elegance.  Art objects sit on the tops of short pedestals.  The bed
+lies nearly flat with the ground but provides the sleeper with
+plenty of comfort.  A magical flame towers up from a pit in the center
+of the room, casting everything in a dim light."
+ROOM_BASICS
+extra {"steel door","door"} "This is a sturdy steel door."
+extra {"tapestries","tapestry"}
+"The tapestries show a variety of scenes.  Themes between them are draconians
+ripping various beings to pieces in battle."
+extra {"art objects","art","objects"}
+"You wonder how these objects could possibly be called art.  It must be
+some strange taste that only draconians have."
+extra {"bed"} "The bed is a soft silken spot of comfort and pillows."
+extra {"flame","pit"}
+"A magical flame floats just above a 2 foot circular pit.  The flame
+tower over half the height of the ceiling but still fills the room with
+an ambiance of dim light despite its size."
+west to parapet_n3 open {EX_OPEN_CLOSE, EX_CLOSED}
+                   keyword {"steel door","door"};
+end
+
+tapestry_1
+title "The Tapestry Battlefield"
+names {"tapestry"}
+descr
+"This is in the scene depicted in the tapestry. The houses on either side of
+the street are up in flames. A few villagers continue to flee the scene,
+escaping the buildings with shreads of their belongings. The invading troops
+notice you and advance. The magic of the tapestry prevents your movement
+either down the street or into the houses. A tapestry hangs in mid air."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_INDOORS,UNIT_FL_NO_TELEPORT}
+ALWAYS_LIGHT
+extra {"tapestry"} "The tapestry depicts the hallway you came from."
+in corridor_11
+end
+
+tapestry_2
+title "The Tapestry Vortex"
+names {"tapestry","vortex"}
+descr "The vortex depicted in the tapestry swirls around you. Blue lines of
+froce ebb and grow as they converge far in the distance. The occasional bolt
+of lightning flashes across the landscape. A tapestry hangs in mid air."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_INDOORS,UNIT_FL_NO_TELEPORT}
+ALWAYS_LIGHT
+extra {"tapestry"} "The tapestry depicts the hallway you came from."
+in corridor_12
+end
+
+jar_light
+title "Inside the Jar"
+names {"jar"}
+descr
+"You wonder how you ever fit inside this small jar. However big you were
+before, the glass sides tower above you, tapering to a narrow opening. You
+hope that going back through the hole will return you to your normal size.
+The light in here is nearly blinding, not being help any by the semi-
+reflective sides of the jar. Despite that, you can still make out details
+of the library outside."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_INDOORS,UNIT_FL_NO_TELEPORT}
+ALWAYS_LIGHT
+in library
+end
+
+stable_1
+title "The Stables"
+descr
+"Not too surprisingly, these stables are much cleaner than others you have
+been in. The almost complete stonework greatly contrasts the wooden
+structures of most stables. A glowing hemisphere mounted on the ceiling
+provides the room with light. There are stalls to the north, east, and south
+as well as a stairway leading up. An archway leads out of the stables to the
+west."
+ROOM_BASICS
+EXTRA_SPHERE
+north to stable_2 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"gate"};
+south to stable_4 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"gate"};
+east to stable_3 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"gate"};
+west to courtyard_4 descr "The archway leads back to the training grounds.";
+end
+
+stable_2
+title "The Llama Stall"
+descr
+"While a lot cleaner than most stalls you have been in, this place is by no
+means immaculate. A crate full of hay sits in one corner while pieces of
+equipment necessary for dealing with llamas hang on hooks around the room.
+A gate leads back to the main stable area to the south."
+ROOM_BASICS
+extra {"gate"} "A steel gate that allows passage through the stables."
+extra {"hay","crate"} "The crate is filled with hay for llamas to eat."
+extra {"floor","groud"} "Surprisingly, the ground is nearly spotless."
+extra {"equipment"} "Its various pieces of equipment such as saddles, bits, etc."
+south to stable_1 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"gate"};
+end
+
+stable_3
+title "The Horse Stall"
+descr
+"While a lot cleaner than most stalls you have been in, this place is by no
+means immaculate. A crate full of hay sits in one corner while pieces of
+equipment necessary for dealing with horses hang on hooks around the room.
+A gate leads back to the main stable area to the west, and the stall
+continues to the north and south."
+ROOM_BASICS
+extra {"gate"} "A steel gate that allows passage through the stables."
+extra {"hay","crate"} "The crate is filled with hay for horses to eat."
+extra {"floor","groud"} "Surprisingly, the ground is nearly spotless."
+extra {"equipment"} "Its various pieces of equipment such as saddles, bits, etc."
+north to stable_5 descr "The stall continues to the north.";
+south to stable_6 descr "The stall continues to the south.";
+west to stable_1 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"gate"};
+end
+
+stable_5
+title "The Horse Stall"
+descr
+"While a lot cleaner than most stalls you have been in, this place is by no
+means immaculate. A crate full of hay sits in one corner while pieces of
+equipment necessary for dealing with horses hang on hooks around the room.
+A gate leads back to the main stable area to the west."
+ROOM_BASICS
+extra {"gate"} "A steel gate that allows passage through the stables."
+extra {"hay","crate"} "The crate is filled with hay for horses to eat."
+extra {"floor","groud"} "Surprisingly, the ground is nearly spotless."
+extra {"equipment"} "Its various pieces of equipment such as saddles, bits, etc."
+south to stable_3 descr "The stall continues to the north.";
+end
+
+stable_6
+title "The Horse Stall"
+descr
+"While a lot cleaner than most stalls you have been in, this place is by no
+means immaculate. A crate full of hay sits in one corner while pieces of
+equipment necessary for dealing with horses hang on hooks around the room.
+The stall continues to the north."
+ROOM_BASICS
+extra {"gate"} "A steel gate that allows passage through the stables."
+extra {"hay","crate"} "The crate is filled with hay for horses to eat."
+extra {"floor","groud"} "Surprisingly, the ground is nearly spotless."
+extra {"equipment"} "Its various pieces of equipment such as saddles, bits, etc."
+north to stable_3 descr "The stall continues to the north.";
+end
+
+stable_4
+title "The Lizard Stall"
+descr
+"While a lot cleaner than most stalls you have been in, this place is by no
+means immaculate. A crate full of hay sits in one corner while pieces of
+equipment necessary for dealing with lizards hang on hooks around the room.
+A gate leads back to the main stable area to the north."
+ROOM_BASICS
+extra {"gate"} "A steel gate that allows passage through the stables."
+extra {"hay","crate"} "The crate is filled with lizards for horses to eat."
+extra {"floor","groud"} "Surprisingly, the ground is nearly spotless."
+extra {"equipment"} "Its various pieces of equipment such as saddles, bits, etc."
+north to stable_1 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"gate"};
+end
+
+zandar_room
+title "Zandar's Room"
+names {"zandar room"}
+descr
+"This room is hidden deep within the confines of Akaren Keep by powerful
+magics. That doesn't stop it from being a cozy room however. At first
+glance, it looks like the room of a slighty messy but powerful college
+student. A deck sits in one corner covered by books and sheets of paper.
+A not so comfy chair sits in front of the desk. A plain looking bed sits
+in the other corner of the room. A closed dresser, which you somehow do not
+have the strength to open, is filled with clothes you believe. Oh yeah, there
+is a glowing gateway here too."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_INDOORS,UNIT_FL_NO_TELEPORT,UNIT_FL_PRIVATE}
+flags {UNIT_FL_SACRED}
+ALWAYS_LIGHT
+south to wall_east descr "A glowing gateway pulses to the south."
+         open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"gateway"};
+end
+
+%mobiles
+
+baaz_guard
+names {"draconian guard","draconian","guard"}
+title "a draconian guard"
+descr "A draconian guard scans the area for intruders."
+extra {}
+"This draconian has a bronze tint to its skin.  A snarl seems to be frozen
+on its face."
+DRACONIAN_BAAZ(65,SEX_MALE)
+exp 105
+special SFUN_AGGRESSIVE time PULSE_SEC*30 bits SFB_RANTIME
+money 6 SILVER_PIECE
+end
+
+baaz_sentry
+names {"draconian sentry","draconian","sentry"}
+title "a draconian sentry"
+descr "A draconian sentry patrols the area for intruders."
+extra {}
+"This draconian has a bronze tint to its skin.  A snarl seems to be frozen
+on its face."
+DRACONIAN_BAAZ(66,SEX_MALE)
+exp 105
+special SFUN_AGGRESSIVE time PULSE_SEC*30 bits SFB_RANTIME
+special SFUN_RANDOM_ZONE_MOVE time PULSE_SEC*45 bits SFB_RANTIME
+money 6 SILVER_PIECE
+end
+
+baaz_sleeper
+names {"draconain guard","draconain","guard"}
+title "a draconian guard"
+descr "A draconian guard looks very drowsy."
+extra {}
+"This draconian has a bronze tint to its scales. He has a tired lazy look to
+him and looks for another chance to get to sleep."
+DRACONIAN_BAAZ(65,SEX_MALE)
+position POSITION_SLEEPING
+exp 90
+money 3 SILVER_PIECE
+end
+
+bozak_mercenary
+names {"draconian mercenary","draconian","mercenary"}
+title "a draconian mercenary"
+descr "A draconian mercenary wanders the halls."
+extra {}
+"This draconian has a brass tint to its scales.  His weapon skills has
+earned him a position in the keep.  He glares about comtempously."
+DRACONIAN_BOZAK(67,SEX_MALE)
+exp 110
+special SFUN_TEAMWORK ALL_MOB
+special SFUN_RANDOM_ZONE_MOVE time PULSE_SEC*45 bits SFB_RANTIME
+money 1 GOLD_PIECE
+end
+
+bozak_sentry
+names {"draconian sentry","draconian","sentry"}
+title "a draconian sentry"
+descr "A draconian sentry patrols the area for intruders."
+extra {}
+"This draconian has a brass tint to its skin.  A snarl seems to be frozen
+on its face."
+DRACONIAN_BOZAK(67,SEX_MALE)
+exp 110
+special SFUN_TEAMWORK ALL_MOB
+special SFUN_RANDOM_ZONE_MOVE time PULSE_SEC*45 bits SFB_RANTIME
+money 6 SILVER_PIECE
+end
+
+kapak_lieut
+names {"draconian lieutenant","draconian","lieutenant"}
+title "a draconian lieutenant"
+descr "A draconian walks about, checking on the troops."
+extra {}
+"This draconian has a copper tint to its scales.  He has some air of
+command about him but that is overshadowed by fear of his superiors.
+He keeps all of his troops in line to prevent punishment from those
+higher up."
+DRACONIAN_KAPAK(68,SEX_MALE)
+exp 105
+special SFUN_AGGRESSIVE time PULSE_SEC*30 bits SFB_RANTIME
+special SFUN_RANDOM_ZONE_MOVE time PULSE_SEC*30 bits SFB_RANTIME
+money 6 SILVER_PIECE
+end
+
+sivak_elite
+names {"elite draconian guard","elite guard","guard","draconian"}
+title "an elite draconian guard"
+descr "A elite draconian guard watches for intruders."
+extra {}
+"This draconian has a silver tint to its scales.  He is confident in
+his combat abilities.  Ass you look at him, he snarls."
+DRACONIAN_SIVAK(70,SEX_MALE)
+exp 105
+special SFUN_AGGRESSIVE time PULSE_SEC*30 bits SFB_RANTIME
+special SFUN_RANDOM_ZONE_MOVE time PULSE_SEC*60 bits SFB_RANTIME
+money 1 GOLD_PIECE
+end
+
+sivak_commander
+names {"draconian commander","commander","draconian"}
+title "a draconian commander"
+descr "A draconian commander works on the developing battle plans."
+extra {}
+"This draconian has a silver tint to its scales.  As an officer, his
+combat skills must be finely honed.  He glares back at you once he
+notices you looking at him."
+DRACONIAN_SIVAK(72,SEX_MALE)
+exp 110
+special SFUN_TEAMWORK ALL_MOB
+money 1 GOLD_PIECE
+end
+
+sivak_ravager
+names {"draconian ravager","ravager","draconian"}
+title "a draconian ravager"
+descr "A draconain ravager searches for things to destroy."
+extra {}
+"This draconian has a silver tint to its scales. The look in his eyes and
+snarl in his mouth shows that he is just bent on total destruction.  By the
+looks of the surrounding area, he has been at least partly successful."
+DRACONIAN_SIVAK(71,SEX_MALE)
+exp 105
+special SFUN_AGGRESSIVE time PULSE_SEC*30 bits SFB_RANTIME
+special SFUN_RANDOM_ZONE_MOVE time PULSE_SEC*60 bits SFB_RANTIME
+end
+
+sivak_bodyguard
+names {"draconian bodyguard","bodyguard","draconian"}
+title "a draconian bodyguard"
+descr "A draconian bodyguard carefully guards his master."
+extra {}
+"This silver scaled draconian will not oppose you unless you endanger
+his master"
+BASE_DRACONIAN(73,SEX_MALE,die_morph@akaren())
+MSET_ABILITY(17,17,16,30,10,10,0,0)
+MSET_SPELL(0,0,0,0,0,30,0,0,0,0,0)
+MSET_WEAPON(20,20,0,0,30,0)
+exp 105
+special SFUN_TEAMWORK ALL_MOB
+special SFUN_RESCUE "krissak/ariakas/tamait"
+end
+
+aurak
+names {"aurak draconian","aurak","draconian"}
+title "a aurak draconian"
+descr "An aurak draconian stands here."
+extra {}
+"This golden-skin draconian radiates power and confidence."
+DRACONIAN_AURAK(75,SEX_MALE)
+exp 110
+special SFUN_TEAMWORK ALL_MOB
+money 6 SILVER_PIECE
+end
+
+aurak_hunter
+names {"draconian hunter","hunter","draconian"}
+title "a draconian hunter"
+descr "A draconian hunter searches for suitable prey."
+extra {}
+"The golden scaled draconian moves with the grace of a hunter. It seems she
+is searching for suitable prey and will ignore others."
+DRACONIAN_AURAK(77,SEX_FEMALE)
+exp 100
+dilcopy hunt_sanc@akaren();
+end
+
+priestess
+names {"priestess","human"}
+title "a priestess"
+descr "A priestess intones chants to Tiamat."
+extra {}
+"This raven haired beauty is a priestess to the dragon Tiamat.  Religious
+tatoos have been carved along her arms and face.  Her eyes are those of a 
+fanatic."
+M_HUMAN_CLERIC_CLUB(70,SEX_FEMALE,"cast cause serious wounds","cast heal")
+exp 110
+romflags {CHAR_DETECT_INVISIBLE}
+money 4 SILVER_PIECE
+special SFUN_RANDOM_ZONE_MOVE time PULSE_SEC*90 bits SFB_RANTIME
+special SFUN_TEAMWORK ALL_MOB
+end
+
+cook
+names {"draconian cook","cook","draconian"}
+title "the draconian cook"
+descr "The draconian cook busily works on the next meal."
+extra {}
+"The cook is by far the fattest draconian you have seen.  His apron
+barely covers his pot belly.  His skin has a coppery tinge to it."
+DRACONIAN_KAPAK(80,SEX_MALE)
+exp 105
+special SFUN_AGGRESSIVE time PULSE_SEC*45 bits SFB_RANTIME
+money 6 SILVER_PIECE
+end
+
+trakok
+names {"trakok","smith","draconian"}
+title "Trakok the Smith"
+descr "Trakok the Smith pounds away at the forge."
+extra {}
+"Trakok the Smith is a big silver skinned draconian. Long hours at
+the forge has given him big muscles. Judging by the quality of his goods,
+you hope that he cannot wield his hammer as well as he crafts with it."
+DRACONIAN_SIVAK(80,SEX_MALE)
+exp 105
+special SFUN_AGGRESSIVE time PULSE_SEC*45 bits SFB_RANTIME
+money 6 SILVER_PIECE
+end
+
+scrik
+names {"scrik","torturer","draconian"}
+title "Scrik the Torturer"
+descr "Scrik the Torturer eyes his tools, wondering how to best cause pain."
+extra {}
+"Scrik the Torturer has many scars on his copper skin.  He must almost
+enjoy receiving torture himself as he does inflicting it upon others.  The
+eyes beneath his hood reveal infinite pools of evil."
+DRACONIAN_KAPAK(80,SEX_MALE)
+exp 105
+special SFUN_AGGRESSIVE time PULSE_SEC*45 bits SFB_RANTIME
+money 6 SILVER_PIECE
+end
+
+tamait
+names {"tamait","high priestess","priestess","human"}
+title "Tamait the High Priestess"
+descr "Tamait the High Priestess intones chants to Tiamat."
+extra {}
+"Tamait is one of the few free humans in the keep if you could call
+worship of Tiamat freedom.  Her pale skin contrasts her raven black
+hair and dark eyes.  Religious tatoos flow around her arms and face
+almost as if alive.  Her twisted smile and eyes almost cry out in
+delight as they notice you, a new sacrifice to Tiamat."
+M_HUMAN_CLERIC_CLUB(82,SEX_FEMALE,"cast harm","cast heal")
+exp 105
+romflags {CHAR_DETECT_INVISIBLE}
+money 7 SILVER_PIECE
+alignment -1000
+special SFUN_AGGRESSIVE time PULSE_SEC*45 bits SFB_RANTIME
+end
+
+krissak
+names {"krissak","archmage","mage","draconian"}
+title "Krissak the Archmage"
+descr "Krissak the Archmage ponders your inferior mind."
+extra{}
+"Krissak appears old for a draconian.  His golden skin is beginning to 
+pale.  His eyes, however, shows a great intellect.  He is confident that 
+his mental abilities can overcome any physical weakness he may have."
+BASE_DRACONIAN(85,SEX_MALE,die_energy@akaren())
+MSET_ABILITY(10,10,10,15,20,15,20, 0)
+MSET_SPELL(5,7,7,7,7,7,5,5,5,5,25)
+MSET_WEAPON(4,4,1,4,2,0)
+exp 115
+romflags {CHAR_DETECT_INVISIBLE}
+special SFUN_AGGRESSIVE time PULSE_SEC*45 bits SFB_RANTIME
+dilcopy combat_mag@function("cone of shards","",25,2);
+money 1 GOLD_PIECE, 1 SILVER_PIECE
+end
+
+ariakas
+names {"ariakas","highlord","draconian"}
+title "Ariakas the Dragonarmy Highlord"
+descr "Ariakas the Dragonarmy Highlord muses over your insignificant life."
+extra {}
+"Ariakas is perhaps the biggest draconian ever.  He stands a head above
+any of the other draconians you have seen.  His scaled skin is the color
+of polished platinum.  The deep red eyes show a mixture of intelligence
+and evil."
+BASE_DRACONIAN(90,SEX_MALE,die_energy@akaren())
+MSET_ABILITY(15,20,10,15,15,10,15,0)
+MSET_SPELL(5,1,0,15,1,5,1,1,1,5,0)
+MSET_WEAPON(20,10,5,20,5,5)
+exp 115
+romflags {CHAR_DETECT_INVISIBLE}
+special SFUN_AGGRESSIVE time PULSE_SEC*45 bits SFB_RANTIME
+dilcopy combat_mag@function("cone of shards","",25,4);
+dilcopy die_ariakas@akaren();
+money 1 GOLD_PIECE, 2 SILVER_PIECE
+end
+
+black_horse
+names {"black stallion","stallion","horse"}
+title "the black stallion"
+descr "A black stallion is here."
+extra {}
+"This magnificient steed could be consider a perfect example of horse flesh
+if its wasn't for the evil taints to its body. The most noticable tainting is
+the blood red eyes. You wonder how the draconians ever got such a fine breed
+and why they had to nearly ruin it with their evil ways."
+race RACE_HORSE
+level 67
+sex SEX_MALE
+alignment -500
+height   210
+weight   1000
+NATURAL_DEF(WPN_KICK, ARM_PLATE)
+MSET_ABILITY(20,20,15,10,5,30,0,0)
+MSET_WEAPON(6,6,6,6,15,6)
+MSET_SPELL(4,4,4,5,5,5,5,5,6,6,6)
+special SFUN_AGGRESSIVE time PULSE_SEC*60 bits SFB_RANTIME
+special SFUN_RANDOM_ZONE_MOVE time PULSE_SEC*60 bits SFB_RANTIME
+flags {UNIT_FL_NO_TELEPORT}
+end
+
+night_mare
+names {"night mare","mare","horse"}
+title "the Night Mare"
+descr "The Night Mare paws about trying to contain its evil emotions."
+extra {}
+"This creature is such a fine specimen of horse that it must have non-natural
+origins. Judging by the flames around its hooves and just flames where the
+mane and tail should be, you suspect it to have been taken from the depths
+of hell. Its sleek body is almost too perfect for the evil it must contain."
+race RACE_HORSE
+level 69
+sex SEX_FEMALE
+alignment -666
+height 220
+weight 950
+NATURAL_DEF(WPN_KICK, ARM_PLATE)
+MSET_ABILITY(20,20,15,10,5,30,0,0)
+MSET_WEAPON(6,6,6,6,15,6)
+MSET_SPELL(4,4,4,5,5,5,5,5,6,6,6)
+special SFUN_AGGRESSIVE time PULSE_SEC*60 bits SFB_RANTIME
+special SFUN_RANDOM_ZONE_MOVE time PULSE_SEC*90 bits SFB_RANTIME
+flags {UNIT_FL_NO_TELEPORT}
+end
+
+black_llama
+names {"black llama","death llama","llama"}
+title "the Black Llama of Death"
+descr "The Black Llama of Death stands here."
+extra {}
+"How dare you look upon this mighty llama.  You mean that the name Black
+Llama of Death isn't good enough for you to tell what it is? Geez.  Well,
+its a hairy four legged animal.  Of course, now that you have looked at it,
+it just might have to kill you."
+race RACE_LLAMA
+level 70
+sex SEX_MALE
+alignment -900
+height 250
+weight 1200
+NATURAL_DEF(WPN_KICK, ARM_PLATE)
+MSET_ABILITY(20,20,15,10,5,30,0,0)
+MSET_WEAPON(6,6,6,6,15,6)
+MSET_SPELL(4,4,4,5,5,5,5,5,6,6,6)
+flags {UNIT_FL_NO_TELEPORT}
+special SFUN_AGGRESSIVE time PULSE_SEC*30 bits SFB_RANTIME
+special SFUN_RANDOM_ZONE_MOVE time PULSE_SEC*60 bits SFB_RANTIME
+end
+
+black_lizard
+names {"giant black lizard","black lizard","giant lizard","lizard"}
+title "a giant black lizard"
+descr "A giant black lizard stands very still."
+extra {}
+"This lizard is big enough to ride. Shiny black scales cover its entire body.
+Like the other animals in this stable, it has been twisted by the evil of the
+draconians. A snarl plays across its lips, its eyes glow red, and spines jut
+out at seemingly random spots along its body."
+race RACE_LIZARD
+level 68
+sex SEX_FEMALE
+alignment -450
+height 150
+weight 900
+NATURAL_DEF(WPN_BITE,ARM_PLATE)
+MSET_ABILITY(30,30,20,15,5,0,0,0)
+MSET_WEAPON(20,20,20,20,10,10)
+MSET_SPELL(0,0,0,0,0,0,0,0,0,0,0)
+special SFUN_AGGRESSIVE time PULSE_SEC*60 bits SFB_RANTIME
+flags {UNIT_FL_NO_TELEPORT}
+end
+
+gargoyle
+names {"gargoyle"}
+title "gargoyle"
+descr "The gargoyle has been awakened and now searches for victims."
+extra {}
+"The gargoyle's skin gives an appearance of stone. Fluid movements by the
+gargoyle go to prove that it is not stone and must be an incredibly strong
+skin. The great wings give it an even greater mobility. Spikes seemingly
+random around the body make it a dangerous foe in close combat. The eyes
+are unnerving due the pure blank gray stare."
+race RACE_GARGOYLE
+level 125
+exp 100
+sex SEX_NEUTRAL
+alignment 0
+height   150
+weight   600
+MSET_ABILITY(15,15,15,15,15,10,0,15)
+MSET_SPELL(13,2,2,2,2,2,3,3,3,2,6)
+MSET_WEAPON(13,13,7,7,13,7)
+NATURAL_DEF(WPN_CLAW,ARM_PLATE)
+flags {UNIT_FL_NO_TELEPORT}
+special SFUN_AGGRESSIVE time PULSE_SEC*10 bits SFB_RANTIME
+dilcopy gargoyle_claw@akaren();
+dilcopy die_gargoyle@akaren();
+dilcopy disarm_block@akaren();
+end
+
+ball_lightning
+names {"ball lightning","ball","lightning","elemental"}
+title "a ball of lightning"
+descr "A ball of lightning crackles with energy."
+extra {}
+"This creature is nothing but pure elemental lightning energy. Sparks
+crackle around it. You feel your hair stand on end from the proximity."
+race RACE_ELEMENTAL_LIGHT
+level 125
+exp 100
+sex SEX_NEUTRAL
+alignment 0
+height 250
+weight 600
+MSET_ABILITY(13,13,10,25,13,13,13,0)
+MSET_SPELL(0,0,0,0,0,0,0,0,25,0,0)
+MSET_WEAPON(25,25,0,0,25,0)
+NATURAL_DEF(WPN_STING,ARM_PLATE)
+flags {UNIT_FL_NO_TELEPORT}
+special SFUN_AGGRESSIVE time PULSE_SEC*8 bits SFB_RANTIME
+dilcopy combat_mag@function("lightning bolt","",25,2);
+dilcopy die_lightning@akaren();
+end
+
+dying_man
+names {"dying man","man"}
+title "a dying man"
+descr "A dying man lies here gasping for breath."
+extra {}
+"This man looks like he is on his last legs.  His belongings seem to 
+indicate that he is an adventurer like yourself.  He almost seems to be
+trying to say something with his dying gasps.  You can't understand what
+he is saying however, maybe you should try to listen to him more closely."
+M_HUMAN_WARRIOR_SWORD(40,SEX_MALE)
+alignment 1000
+dilcopy last_gasp@akaren();
+end
+
+prisoner
+names {"prisoner"}
+title "a prisoner"
+descr "A prisoner is chained to the rack."
+extra {}
+"This man looks like he has been chained up a long time.  You see the 
+outline of bones underneath his gaunt skin.  Scars line his body where 
+implements of torture have done their damage. He looks at you with hope
+that you will release him."
+M_HUMAN_MAGE_ACID(40,SEX_MALE,"cast acid ball")
+alignment 1000
+flags {UNIT_FL_NO_TELEPORT}
+dilcopy free_prisoner@akaren();
+end
+
+soul_man
+names {"soul seeking chaos","soul","chaos seeker"}
+title "a soul seeking chaos"
+descr "A soul hurriedly searches for chaos."
+extra {}
+"This soul seems obsessed with find some chaos. Strangely, he looks like a
+honorable type of person. Perhaps he made a promise to find chaos during
+his life but now cannot deliver...."
+M_HUMAN_WARRIOR_SWORD(60,SEX_MALE)
+flags {UNIT_FL_NO_TELEPORT}
+alignment 1000
+dilcopy chaos_seeker@akaren();
+end
+
+%objects
+
+wood_sign
+names {"wooden sign","sign"}
+title "a wooden sign"
+descr "A wooden sign has been staked next to the trail here."
+extra {}
+"&l
+[------------]
+|  -AKAREN-  |
+|  KEEP OUT  |
+| DRACS ONLY |
+[------------]
+      ||
+,.-o./||o-.oO"
+cost 1 IRON_PIECE
+weight 5
+end
+
+fountain
+names {"fountain","water"}
+title "a fountain"
+descr "A ugly fountain is here."
+LIQ_DEF(LIQ_WATER,4000,20000,20000,30)
+cost 8 GOLD_PIECE
+spell 200
+extra {}
+"It doesn't look like something you would want to drink out of.  Five dragon
+heads spurt out the water into the fountain."
+end
+
+statue
+names {"statue"}
+title "a statue"
+descr "A statue of a draconian is here."
+extra {}
+"The statue captures a perfect life-like pose of a draconian.  The detail
+covers everything down to the equipment it carried and battle wounds."
+weight 500
+dilcopy decay@akaren();
+end
+
+gargoyle_statue
+names {"gargoyle statue","statue","gargoyle"}
+title "gargoyle statue"
+descr "A statue of a gargoyle holds an immortal vigil here."
+extra {}
+"The statue is a very realistic carving of a gargoyle.  Its features
+almost make it seem alive but for the fact it is completely immobile.
+A pair of wings cover its back while spikes cover the entire body."
+weight 600
+end
+
+altar
+names {"altar"}
+title "a altar"
+descr "A blood stained altar stands near the east wall."
+extra {}
+"The altar is used for offerings and sacrifices to Tiamat.  The amount
+of bloodstains upon the altar suggest that many of the rituals cause
+blood to be spilled.  Frescos around the base of the altar show varying
+designs but the five headed dragon comes up a lot.  A smallest spark of
+goodness within you urges you to break this vile thing."
+weight 1000
+flags {UNIT_FL_NO_TELEPORT}
+dilcopy break_altar@akaren();
+end
+
+red_orb
+names {"red orb","orb"}
+title "a Red Orb"
+descr "A glowing red orb swirls in the air."
+extra {}
+"This smooth orb has a polished surface. Bands of different shades of red
+swirl within the orb. The orb glows with its own power."
+extra {"$identify"}
+"This orb stores mana within its depths.  Its owner can later draw the mana
+from the orb to replenish his own supply.  You may also gaze into the orb
+to see how much power it holds."
+extra {"$improved identify"}
+"To store mana in the orb: pump #&n
+To draw mana from the orb: draw #
+To see about how much stored: gaze orb"
+rent 1 GOLD_PIECE
+cost 1 PLATINUM_PIECE
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+flags {UNIT_FL_MAGIC}
+dilcopy abi_restrict@function(ABIL_BRA,80,0,25,"");
+weight 1
+
+dilbegin recall red_orb();
+var
+  pc:     unitptr;
+  trans:  integer;
+  charge: integer;
+code
+{
+charge:=0;
+:start:
+wait(SFB_CMD,(self.equip==WEAR_HOLD) and (activator==self.outside));
+pc:=self.outside;
+secure(pc,start);
+if (command("gaze") and (argument in self.names)) goto gaze;
+trans:=atoi(argument);
+if (command("pump")) goto pump;
+if (command("draw")) goto draw;
+:end:
+unsecure(pc);
+goto start;
+
+:pump:
+block;
+act("A spark coalesces within your Red Orb.",A_ALWAYS,pc,null,pc,TO_CHAR);
+act("A spark coalesces within $1N's Red Orb.",A_SOMEONE,pc,null,pc,TO_REST);
+if (pc.mana<trans) trans:=pc.mana;
+pc.mana:=pc.mana-trans;
+trans:=trans/5;
+if (trans<0) {
+  act("You try to pump antimana into your orb... it cannot take it!",A_ALWAYS,pc,null,pc,TO_CHAR);
+  act("Your Red Orb sparks and explodes!",A_ALWAYS,pc,null,pc,TO_CHAR);
+  act("$1N's Red Orb explodes!",A_SOMEONE,pc,null,pc,TO_REST);
+  pc.hp:=pc.hp+trans;
+  position_update(pc);
+  destroy(self);
+  goto end; }
+charge:=charge+trans;
+if (charge>100) {
+  if (rnd(101,1100)<charge) {
+    act("Your Red Orb overloads and explodes!",A_ALWAYS,pc,null,pc,TO_CHAR);
+    act("$1N's Red Orb explodes!",A_SOMEONE,pc,null,pc,TO_REST);
+    pc.hp:=pc.hp-(charge-100)*4;
+    position_update(pc);
+    destroy(self); }
+  charge:=100; }
+if (charge<0) charge:=0;
+goto end;
+
+:draw:
+block;
+act("Your Red Orb flashes with a red light.",A_ALWAYS,pc,null,pc,TO_CHAR);
+act("$1N's Red Orb flashes with a red light.",A_SOMEONE,pc,null,pc,TO_REST);
+if (trans<0) {
+  act("You try to draw antimana from your orb... it cannot take it!",A_ALWAYS,pc,null,pc,TO_CHAR);
+  act("Your Red Orb sparks and explodes!",A_ALWAYS,pc,null,pc,TO_CHAR);
+  act("$1N's Red Orb explodes!",A_SOMEONE,pc,null,pc,TO_REST);
+  pc.hp:=pc.hp+trans/5;
+  position_update(pc);
+  destroy(self);
+  goto end; }
+if (trans>charge) {
+  if (rnd(1,1000)<trans-charge) {
+    act("Your Red Orb overloads and explodes!",A_ALWAYS,pc,null,pc,TO_CHAR);
+    act("$1N's Red Orb explodes!",A_SOMEONE,pc,null,pc,TO_REST);
+    pc.hp:=pc.hp-(trans-charge);
+    position_update(pc);
+    destroy(self); }
+  trans:=charge; }
+charge:=charge-trans;
+pc.mana:=pc.mana+trans;
+if (pc.mana>pc.max_mana) {
+  act("More mana flows from the orb than you can handle!",A_ALWAYS,pc,null,pc,TO_CHAR);
+  act("The excess causes a burning sensation as it quickly discharges.",A_ALWAYS,pc,null,pc,TO_CHAR);
+  pc.hp:=pc.hp-(pc.mana-pc.max_mana);
+  pc.mana:=pc.max_mana;
+  position_update(pc); }
+goto end;
+
+:gaze:
+block;
+act("You gaze into your Red Orb.",A_ALWAYS,pc,null,pc,TO_CHAR);
+act("$1N gazes into $1s Red Orb.",A_SOMEONE,pc,null,pc,TO_REST);
+trans:=charge;
+if (trans==0) act("The Red Orb has no spark to it.",A_ALWAYS,pc,null,pc,TO_CHAR);
+if ((trans>0) and (trans<=30)) act("The Red Orb has a faint spark to it.",A_ALWAYS,pc,null,pc,TO_CHAR);
+if ((trans>30) and (trans<=60)) act("The Red Orb has a few sparks to it.",A_ALWAYS,pc,null,pc,TO_CHAR);
+if ((trans>60) and (trans<=85)) act("The Red Orb has a several sparks to it.",A_ALWAYS,pc,null,pc,TO_CHAR);
+if ((trans>85) and (trans<=95)) act("The Red Orb has many sparks to it.",A_ALWAYS,pc,null,pc,TO_CHAR);
+if ((trans>95) and (trans<=100)) act("The Red Orb sparkles greatly.",A_ALWAYS,pc,null,pc,TO_CHAR);
+goto end;
+}
+dilend
+end
+
+drac_sword
+names {"draconian longsword","longsword","sword"}
+title "a draconian longsword"
+descr "A longsword lies on the ground here."
+extra {} "This is a standard issue longsword for the dragonarmies."
+WEAPON_DEF(WPN_LONG_SWORD,0,0)
+cost 2 GOLD_PIECE
+rent 2 SILVER_PIECE
+weight 5
+dilcopy abi_restrict@function(ABIL_STR,50,0,25,"");
+end
+
+drac_hammer
+names {"draconian hammer","hammer"}
+title "a draconian hammer"
+descr "A hammer lies on the ground here."
+extra {} "This is a standard issue hammer for the dragonarmies."
+WEAPON_DEF(WPN_WAR_HAMMER,0,0)
+cost 2 GOLD_PIECE
+rent 2 SILVER_PIECE
+weight 6
+dilcopy abi_restrict@function(ABIL_STR,50,0,25,"");
+end
+
+sivak_mattock
+names {"sivak mattock","mattock"}
+title "a sivak mattock"
+descr "A mattock lies on the ground here."
+extra {} "This mattock is for the elite sivak draconian troops."
+WEAPON_DEF(WPN_WAR_MATTOCK,0,0)
+cost 2 GOLD_PIECE
+rent 2 SILVER_PIECE
+weight 20
+dilcopy abi_restrict@function(ABIL_STR,60,0,25,"");
+end
+
+drac_flail
+names {"draconian flail","flail"}
+title "a draconian flail"
+descr "A flail has been left on the ground."
+extra {} "This heavy cast iron flail is built for draconian use."
+WEAPON_DEF(WPN_FLAIL,0,0)
+cost 2 GOLD_PIECE
+rent 2 SILVER_PIECE
+weight 20
+dilcopy abi_restrict@function(ABIL_STR,60,0,25,"");
+end
+
+tiamat_mace
+names {"tiamat mace","mace"}
+title "a tiamat mace"
+descr "A mace with a dragon at the end lies here."
+extra {}
+"This is your standard type of mace with a black handle.  At the hitting
+end however is five intertwined dragon heads, the symbol of Tiamat."
+WEAPON_DEF(WPN_MACE,0,0)
+cost 2 GOLD_PIECE
+rent 2 SILVER_PIECE
+weight 5
+dilcopy abi_restrict@function(ABIL_STR,50,0,25,"");
+end
+
+sivak_sword
+names {"jagged sivak sword","jagged sword","sivak sword","sword"}
+title "a jagged sivak sword"
+descr "A jagged sword has carelessly been left on the ground."
+extra {} "The sword has a katana blade but has been made jagged to cause even nastier wounds."
+WEAPON_DEF(WPN_KATANA,0,0)
+cost 2 GOLD_PIECE
+rent 2 SILVER_PIECE
+weight 5
+dilcopy abi_restrict@function(ABIL_STR,50,0,25,"");
+end
+
+fluted_mace
+names {"black fluted mace","fluted mace","black mace","mace"}
+title "black fluted mace"
+descr "You can barely make out the shape of a mace among a blob of darkness."
+extra {}
+"Waves of darkness eminate from the head of the mace, making it very
+difficult to make out clearly. You almost feel as if those waves of
+darkness are draining your energy."
+extra {"$identify"}
+"This evil weapon increases the weilder's connection to the unholy gods and
+their intellect. It can inflict horrible soul ripping wounds in addition to
+the normal melee hits with the command 'drain <target>'."
+extra {"$improved identify"}
+"This weapon can only be wielded by evil people. It increases divine by 2
+and brain by 2. It can drain life energy with the command 'drain <target>."
+WEAPON_DEF(WPN_MACE,0,0)
+flags {UNIT_FL_MAGIC}
+DIV_TRANSFER(+1)
+BRA_TRANSFER(+1)
+cost 6 SILVER_PIECE
+rent 4 SILVER_PIECE
+weight 5
+dilcopy abi_restrict@function(ABIL_DIV,75,0,25,"");
+dilcopy ali_restrict@function(-350,-1000,0,25,"");
+alignment -1000
+spell 50
+dilcopy charger();
+
+dilbegin recall aware mace_drain();
+var
+       n :integer;
+   enemy :unitptr;
+  charge :integer;
+     pwr :integer;
+code 
+{
+pwr:=10;
+:init:
+heartbeat := PULSE_SEC*5;
+charge:=interrupt(SFB_MSG,((self==activator) and (argument=="add charge")),charge);
+:start:
+wait(SFB_CMD,command("drain") and (self.equip==WEAR_WIELD));
+block;
+enemy:=findunit(self.outside,argument,FIND_UNIT_SURRO,null);
+if (self.outside.fighting and not(enemy)) enemy:=self.outside.fighting;
+if (not(enemy)) goto no_person;
+secure(enemy,start);
+if (pwr<=0) goto fail;
+pwr:=pwr-1;
+if (rnd(45,110)<self.outside.weapons[WPN_MACE]) {
+  n:=cast_spell(SPL_CAUSE_WOUNDS_1,self.outside,self,enemy,"mace_aff@akaren"); }
+else {
+  act("Your $3N glows black as you swing at mid air.",
+      A_SOMEONE,self.outside,enemy,self,TO_CHAR);
+  act("$1n's $3N glows black as $1e swings at mid air.",
+      A_SOMEONE,self.outside,enemy,self,TO_REST); }
+pause;
+goto start;
+:fail:
+act("You try to drain $2n but your $3N is too low on energy to respond.",
+    A_SOMEONE,self.outside,enemy,self,TO_CHAR);
+goto start;
+:no_person:
+act("Nothing by that name here.",A_ALWAYS,self.outside,null,null,TO_CHAR);
+goto start;
+:charge:
+clear(charge);
+if (pwr<12) pwr:=pwr+1;
+goto init;
+}
+dilend
+
+dilbegin mace_death();
+code
+{
+heartbeat:=PULSE_SEC*3;
+:start:
+wait(SFB_COM, command(CMD_AUTO_COMBAT) and
+              (self.equip == WEAR_WIELD) and
+              (self.outside.fighting.hp < 10));
+act("$1n engulfs $3n in a dark shroud!",A_SOMEONE, self.outside, self, self.outside.fighting, TO_NOTVICT);
+act("$3n tries to dodge your blow, $3s head is low!",A_ALWAYS, self.outside, self, self.outside.fighting, TO_CHAR);
+act("Your $2N crushes $3n's head engulfing $3n in a black shroud!",A_ALWAYS, self.outside, self, self.outside.fighting, TO_CHAR);
+act("As you dodge to avoid $1n's blow - your soul goes cold.",A_ALWAYS, self.outside, self, self.outside.fighting, TO_VICT);
+act("You feel no pain, it goes dark and very quiet. It's time to die!",A_ALWAYS, self.outside, self, self.outside.fighting, TO_VICT);
+self.outside.hp:=self.outside.hp+self.outside.fighting.hp;
+position_update(self.outside);
+self.outside.fighting.hp := -7;
+position_update(self.outside.fighting);
+pause;
+goto start;
+}
+dilend
+end
+
+raven
+names {"raven spear","raven","spear"}
+title "the Raven Spear"
+descr "A black spear has been stuck into the ground here."
+extra {}
+"The Raven Spear is an equisite piece of work.  The mithril point is
+engraved with opal raven heads.  The shaft is of the finest ebony with
+undecipherable runes running down its length."
+extra {"$identify"}
+"This weapon increases the weilder's strength and dexterity. It can deliver
+a cold flame attack upon the proper command words."
+extra {"$improved identify"}
+"This weapons increases strength by 2 and dexterity by 2. With the command
+'spear <target>' a chilling flame will surround the spear for one attack."
+WEAPON_DEF(WPN_SPEAR,0,0)
+flags {UNIT_FL_MAGIC}
+STR_TRANSFER(+1)
+cost 7 GOLD_PIECE
+rent 4 SILVER_PIECE
+weight 5
+dilcopy abi_restrict@function(ABIL_DEX,85,0,25,"");
+spell 60
+dilcopy charger();
+
+dilbegin recall aware ice_flame();
+var
+       n :integer;
+   enemy :unitptr;
+  charge :integer;
+     pwr :integer;
+code
+{
+pwr:=10;
+:init:
+heartbeat:=PULSE_SEC*5;
+charge:=interrupt(SFB_MSG,((self==activator) and (argument=="add charge")),charge);
+:start:
+wait(SFB_CMD,command("spear") and (self.equip==WEAR_WIELD));
+block;
+enemy:=findunit(self.outside,argument,FIND_UNIT_SURRO,null);
+if (self.outside.fighting and not(enemy)) enemy:=self.outside.fighting;
+if (not(enemy)) goto no_person;
+secure(enemy,start);
+if (pwr<=0) goto fail;
+pwr:=pwr-1;
+if (rnd(45,110)<self.outside.weapons[WPN_SPEAR]) {
+  n:=cast_spell(SPL_FROSTBALL_1,self.outside,self,enemy,"raven_aff@akaren"); }
+else {
+  act("Your $3N emits a chilling blue flame as you stab at thin air.",
+      A_SOMEONE,self.outside,enemy,self,TO_CHAR);
+  act("$1n's $3N emits a chilling blue flame as $1e stabs at thin air.",
+      A_SOMEONE,self.outside,enemy,self,TO_REST); }
+pause;
+goto start;
+:fail:
+act("You try to spear $2n but your $3N is too low on energy to respond.",
+    A_SOMEONE,self.outside,enemy,self,TO_CHAR);
+goto start;
+:no_person:
+act("Nothing by that name here.",A_ALWAYS,self.outside,null,null,TO_CHAR);
+goto start;
+:charge:
+clear(charge);
+if (pwr<12) pwr:=pwr+1;
+goto init;
+}
+dilend
+
+dilbegin raven_death();
+code
+{
+heartbeat:=PULSE_SEC*3;
+:start:
+wait(SFB_COM,command(CMD_AUTO_COMBAT) and
+             (self.equip==WEAR_WIELD) and
+             (self.outside.fighting.hp<10));
+act("$1n engulfs $3n in a blue flame!",A_SOMEONE,self.outside,self,self.outside.fighting,TO_NOTVICT);
+act("$3n tries to dodge your blow, $3s heart is open!",A_ALWAYS,self.outside,self,self.outside.fighting,TO_CHAR);
+act("Your $2N pieces $3n's heart engulfing him with a blue flame!",A_ALWAYS,self.outside,self,self.outside.fighting,TO_CHAR);
+act("As you dodge to avoid $1n's blow - your heart goes cold.",A_ALWAYS,self.outside,self,self.outside.fighting,TO_VICT);
+act("You feel no pain, it goes dark and very quiet. It's time to die!",A_ALWAYS,self.outside,self,self.outside.fighting,TO_VICT);
+self.outside.fighting.hp:=-7;
+position_update(self.outside.fighting);
+pause;
+goto start;
+}
+dilend
+end
+
+ruby_handaxe
+names {"ruby handaxe","ruby axe","handaxe","axe"}
+title "a ruby handaxe"
+descr "A red handaxe lies here."
+extra {}
+"The blade of this hand axe forms a triangular shape when you include the
+small spike on the other side. The blade itself is forged from some dull
+rosey silver metal except the cutting edge which has been tempered to a
+bright red. Adding to the red effect is the line of ruby studs along the
+cutting edge. The handle has been carved from eightteen inches of the finest
+rosewood which ends with a smooth ruby for the pommel. The remarkable balance
+lends itself to hurling the handaxe at your opponents during combat if you so
+desire."
+MATERIAL_WOOD("An eightteen inch rosewood handle.")
+MATERIAL_METAL("The blade is mainly composed of a dull rosey silver metal.")
+MATERIAL_STONE("Ruby gemstones are imbedded in the blade and serves as a pommel.")
+extra {"$identify"}
+"The ruby handaxe is so finely crafted that it naturally improves your skill
+with the weapon. The magics imbued in it help to protect you from firery
+attacks. "
+extra {"$improved identify"}
+"When the dwarven warrior Tyrus forged this weapon, he made the weapon so
+well that it increases the wielder's skill in hand axes by five percent. The
+fire magics his placed upon the blade had the side affect of increasing the
+weilder's resistances to fire by one percent. The fire magics placed upon the
+wepaon causes it to unleash magical fire upon being hurled at the opponent
+during combat. So strong was Tyrus that he neglected to consider how the
+balance of the handaxe would affect those of less than 60 strength."
+WEAPON_DEF(WPN_HAND_AXE,0,0)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD,MANIPULATE_HOLD}
+flags {UNIT_FL_MAGIC}
+WEAPON_TRANSFER(WPN_HAND_AXE,5)
+SPELL_TRANSFER(SPL_HEAT,1)
+cost 7 GOLD_PIECE
+rent 4 SILVER_PIECE
+weight 5
+dilcopy abi_restrict@function(ABIL_STR,60,0,25,"");
+spell 70
+
+dilbegin axe_hurl();
+var
+  n :integer;
+code
+{
+heartbeat:=PULSE_SEC*5;
+:start:
+wait(SFB_CMD,(not(self.outside.fighting==null)) and 
+             (command("hurl")) and
+             (argument in self.names) and
+             (self.outside.fighting.level<IMMORTAL_LEVEL) and
+             ((self.equip==WEAR_WIELD) or (self.equip==WEAR_HOLD)));
+block;
+act("You send your $2n across the room FLAMING toward $3n's chest.",
+    A_SOMEONE,self.outside,self,self.outside.fighting,TO_CHAR);
+act("$1n sends $1s $2n across the room FLAMING toward $3n's chest.",
+    A_SOMEONE,self.outside,self,self.outside.fighting,TO_NOTVICT);
+act("$1n sends $1s $2n across the room FLAMING toward your chest.",
+    A_SOMEONE,self.outside,self,self.outside.fighting,TO_VICT);
+n:=cast_spell(SPL_FIREBALL_1,self.outside,self,self.outside.fighting,"axe_aff@akaren");
+if (self.outside.fighting==null) { link(self,self.outside.outside); }
+else { link(self,self.outside.fighting); };
+goto start;
+}
+dilend
+
+dilbegin handaxe_death();
+code
+{
+heartbeat:=PULSE_SEC*3;
+:start:
+wait(SFB_COM,command(CMD_AUTO_COMBAT) and
+             (self.equip==WEAR_WIELD) and
+             (self.outside.fighting.level<IMMORTAL_LEVEL) and
+             (self.outside.fighting.hp<9));
+act("$1N chops and INCINERATES $3N with $1s $2N!",A_SOMEONE,self.outside,self,self.outside.fighting,TO_NOTVICT);
+act("Weakened, $3N does not have the energy to dodge your blow.",A_ALWAYS,self.outside,self,self.outside.fighting,TO_CHAR);
+act("Your $2N bursts into FLAMES as it cleaves $3N, INCINERATING $3m!",A_ALWAYS,self.outside,self,self.outside.fighting,TO_CHAR);
+act("You lack the strength to block the last blow from $1N's $2N.",A_ALWAYS,self.outside,self,self.outside.fighting,TO_VICT);
+act("Your body bursts into flames, it goes dark and very quiet. It's time to die!",A_ALWAYS,self.outside,self,self.outside.fighting,TO_VICT);
+self.outside.fighting.hp:=-7;
+position_update(self.outside.fighting);
+pause;
+goto start;
+}
+dilend
+end
+
+drac_shield
+names {"draconian shield","shield"}
+title "draconian shield"
+descr "A black and red shield lies on the ground here."
+extra {} "This is a standard issue shield for the dragonarmies.&l&cr
+   __________   
+  /    /XXXX/\  
+ /    /XXXX/  \ 
+/ () /XXXX/ () \
+|   /XXXXX\    |
+|  /XXX/\XX\   |
+| /XXX/  \XX\  |
+|/XXX/    \XX\ |
+|XXX/      \XX\|
+\XX/   ()   \XX/
+ \/          \/ 
+  \__________/  &cw"
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_SHIELD}
+SHIELD_DEF(SHIELD_LARGE,0,0)
+weight 10
+cost 2 GOLD_PIECE
+rent 2 SILVER_PIECE
+dilcopy abi_restrict@function(ABIL_CON,60,0,25,"");
+end
+
+drac_plate
+names {"draconian plate","plate"}
+title "draconian plate"
+descr "A black and red plate lies on the ground here."
+extra {} "This is standard issue plate for the dragonarmies."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+ARMOUR_PLATE(0,0)
+weight 25
+cost 2 GOLD_PIECE
+rent 2 SILVER_PIECE
+dilcopy abi_restrict@function(ABIL_CON,60,0,25,"");
+end
+
+lightning_plate
+names {"lightning plate","plate"}
+title "Lightning Plate"
+descr "A sheet of lightning sparks and crackles on the ground."
+extra {}
+"This plate has been made purely from lightning. It most be the result
+of impressive magics to bind the lightning and hold it in the proper
+shape. While it undoubtedly offers good protection, you wonder how safe
+it could be as a large spark bursts from its surface."
+extra {"$identify"}
+"The lighting plate imbuses the wearer with lightning-quick reflexes and a
+greater resistance to lightning. It also grants the viewing of magical auras.
+Only those of great endurance can bear to wear the plate."
+extra {"$improved identify"}
+"The lightning plate increases Dexterity by 5 and Brain by 1. Resistance
+against lighting is improved by 10%. While worn, it grants the ability to
+detect magic.  Only those individuals of 80 or more constitution can
+withstand the electrical shocks from the plate to bear wearing it."
+flags {UNIT_FL_MAGIC}
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+ARMOUR_PLATE(12,9)
+DEX_TRANSFER(5)
+BRA_TRANSFER(1)
+SPELL_TRANSFER(SPL_CELL,13)
+CHAR_FLAG_TRANSFER(CHAR_DETECT_MAGIC)
+weight 15
+cost 15 GOLD_PIECE
+rent  5 GOLD_PIECE
+dilcopy abi_restrict@function(ABIL_CON,80,0,25,"");
+spell 75
+dilbegin zap_plate();
+code
+{
+heartbeat:=PULSE_SEC*5;
+:start:
+wait(SFB_COM,(activator==self.outside) and (command(CMD_AUTO_COMBAT)) and
+             (self.equip==WEAR_BODY) and (self.outside.level<IMMORTAL_LEVEL));
+if (rnd(0,250)<self.outside.spells[SPL_CELL]) goto start;
+self.outside.hp:=self.outside.hp-rnd(2,10);
+wait(SFB_COM,command(CMD_AUTO_COMBAT));
+goto start;
+}
+dilend
+end
+
+smith_gauntlets
+names {"blacksmith gauntlets","gauntlets"}
+title "a pair of blacksmith gauntlets"
+descr "A pair of gauntlets have been left here."
+extra {} "These gauntlets are heavy steel plates. It must be grueling indeed
+for whatever blacksmith can endure the heat of the forge in these. An almost
+magical feel seems to come from them, perhaps some enchantment makes his job
+easier."
+extra {"$identify"} "These heavy gauntlets belonged to the draconian
+blacksmith Trakok. He was know for his unusual flail style of smithy,
+pouunding the metal into shape with massive, strong blows."
+extra {"$improved identify"} "These gauntlets increase skill with flail by 5.
+It also raises strength by 3 and constitution by 1."
+flags {UNIT_FL_MAGIC}
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_HANDS}
+ARMOUR_PLATE(0,0)
+STR_TRANSFER(3)
+CON_TRANSFER(1)
+WEAPON_TRANSFER(WPN_FLAIL,2)
+weight 8
+cost 2 GOLD_PIECE
+rent 2 SILVER_PIECE
+dilcopy abi_restrict@function(ABIL_STR,80,10,0,"");
+end
+
+gargoyle_claws
+names {"gargoyle claws","pair","claws"}
+title "&ccpair of Gargoyle Claws&cw"
+descr "A pair of severed stone claws lies on the ground."
+extra {} "This pair of claws are the remains of a powerful stone gargoyle.
+Whatever methods caused them to be in this state allow them to weilded in
+both hands almost as if they were a flail."
+extra {"$identify"} "These claws are normally used to flail out at the enemy.
+They are capable of delivering powerful clawing attacks or even more deadly
+rending blows. While wielded, it is almost as if the wielder is infused with
+the spirit of the gargoyle and its powerful physical traits. However this
+infusing spirit will only allow strong, pure souls to wield it."
+extra {"$improved identify"} "These claws can only be worn by those of 100 or
+greater strength and alignment of 750 or higher. They increase strength by 3,
+dexterity by 3, and flail skill by 7.  By use of the command 'claw <targ>'
+the claws release a special attack but only a limited number of times per
+day. The command 'rend <targ>' an even more powerful attack is released but
+will drain the power of the claws more quickly. The claws are of craftmanship
+of 17 and magic strength of 11."
+extra {"$wear_s"} "You slip the $2N onto your hands, feeling a rush of power."
+extra {"$wear_o"} "$1n slips the $2N onto $1s hands."
+extra {"$rem_s"} "You slip the $2N off your hands, feeling power slip away."
+extra {"$rem_o"} "$1n slips the $2N off $1s hands."
+alignment 1000
+flags {UNIT_FL_MAGIC}
+WEAPON_DEF(WPN_FLAIL,0,0)
+STR_TRANSFER(4)
+DEX_TRANSFER(3)
+WEAPON_TRANSFER(WPN_FLAIL,1)
+weight 10
+cost 1 PLATINUM_PIECE
+rent 4 GOLD_PIECE
+dilcopy abi_restrict@function(ABIL_STR,100,0,25,"");
+dilcopy ali_restrict@function(1000,750,0,25,"");
+spell 75
+dilcopy charge_claws();
+dilbegin recall aware claw_rend();
+var
+       n :integer;
+   enemy :unitptr;
+  charge :integer;
+     pwr :integer;
+code
+{
+pwr:=10;
+:init:
+heartbeat:=PULSE_SEC*5;
+charge:=interrupt(SFB_MSG,((self==activator) and (argument=="add charge")),charge);
+:start:
+wait(SFB_CMD,(command("claw") or command("rend")) and (self.equip==WEAR_WIELD));
+enemy:=findunit(self.outside,argument,FIND_UNIT_SURRO,null);
+block;
+if (self.outside.fighting and not(enemy)) enemy:=self.outside.fighting;
+if (not(enemy)) goto no_person;
+secure(enemy,start);
+if(command("rend")) {
+  if(pwr<12) goto fail2;
+  pwr:=-24;
+  if(rnd(50,110)<self.outside.weapons[WPN_FLAIL]) {
+    n:=cast_spell(SPL_CAUSE_WOUNDS_1,self.outside,self,enemy,"rend_aff@akaren"); }
+  else {
+    act("You slash at thin air with your $3N.",A_SOMEONE,self.outside,enemy,self,TO_CHAR);
+    act("$1n slashes at thin air with $1m $3N.",A_SOMEONE,self.outside,enemy,self,TO_REST); }
+  pause;
+  goto start; }
+if(pwr<=0) goto fail;
+pwr:=pwr-1;
+if(rnd(50,110)<self.outside.weapons[WPN_FLAIL]) {
+  n:=cast_spell(SPL_CAUSE_WOUNDS_1,self.outside,self,enemy,"claw_aff@akaren"); }
+else {
+  act("You slash at thin air with your $3N.",A_SOMEONE,self.outside,enemy,self,TO_CHAR);
+  act("$1n slashes at thin air with $1m $3N.",A_SOMEONE,self.outside,enemy,self,TO_REST); }
+pause;
+goto start;
+:fail:
+act("You try to claw $2n but your $3N are too low on energy to respond.",
+    A_SOMEONE,self.outside,enemy,self,TO_CHAR);
+goto start;
+:fail2:
+act("You try to rend $2n but your $3N are too low on energy to respond.",
+    A_SOMEONE,self.outside,enemy,self,TO_CHAR);
+goto start;
+:no_person:
+act("Nothing by that name here.",A_ALWAYS,self.outside,null,null,TO_CHAR);
+goto start;
+:charge:
+clear(charge);
+if(pwr<12) {
+  pwr:=pwr+1;
+  if(pwr<1) {
+    act("The spirit of your $2n strengthens but is still too weak to do anything.",
+        A_ALWAYS,self.outside,self,null,TO_CHAR); }
+  else if(pwr<12) {
+    act("The spirit of your $2N infuses with energy.",
+        A_ALWAYS,self.outside,self,null,TO_CHAR); }
+  else {
+  act("You feel your eyes glow red as the spirit in your $2N has reached its
+       limit of energy.",A_ALWAYS,self.outside,self,null,TO_CHAR);
+  act("$1n's eyes glow red.",A_ALWAYS,self.outside,self,null,TO_REST); } }
+goto init;
+}
+dilend
+end
+
+toga
+names {"toga"}
+title "a toga"
+descr "A crumpled piece of cloth lies on the ground."
+extra {} 
+"This is a very nice toga. It is woven from a fine white cloth. A golden pin
+holds it together on the shoulder. Whoever wears this excellent clothing
+appears to be so much more authoriative. It could easily be worn over other
+clothes or just covering the buff."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_ABOUT,MANIPULATE_WEAR_BODY}
+type ITEM_WORN
+weight 3
+cost 1 GOLD_PIECE
+rent 2 GOLD_PIECE
+CHA_TRANSFER(1)
+dilcopy abi_restrict@function(ABIL_CHA,65,0,25,"");
+end
+
+crescent
+names {"crescent"}
+title "crescent"
+descr "A crescent on the end of a chain lies here."
+extra {}
+"A prefect golden crescent hangs from a fine gold chain. A tingling of energy
+comes from between the two ends of the crescent.  You wonder what would
+happen if you put something between the two ends."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_NECK,MANIPULATE_ENTER}
+CONTAINER_DEF(100)
+weight 5
+dilcopy crescent_put@akaren();
+dilcopy crescent_gaze@akaren();
+end
+
+ball_energy
+names {"ball of energy","energy ball","bright ball","energy","ball"}
+title "a ball of energy"
+descr "A bright ball of energy glows on the ground."
+extra {} "This ball is a perfect sphere of pure energy. A soft yellow glow
+eminates from  the surface. It almost feels like you can direct the energy
+contained within."
+extra {"$identify"} "This ball is more than your average light source. The
+glows it gives off allow the holder to see that which is invisible and
+magical. There is also the sense that if the right phrase is uttered in
+combat, it could have additional affects."
+extra {"$improved identify"} "This ball grants the ability to detect magic
+and detect invisible. If the phrase 'Energy Blast!' is said in combat, it
+will lash out at the enemy, partly drawing from youe mana in the process.
+Only those with exception Brain (75+) are able to grasp how to grasp it."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+LIGHT_DEF(50,3)
+weight 1
+cost 1 GOLD_PIECE
+rent 1 SILVER_PIECE
+CHAR_FLAG_TRANSFER(CHAR_DETECT_INVISIBLE)
+CHAR_FLAG_TRANSFER(CHAR_DETECT_MAGIC)
+dilcopy abi_restrict@function(ABIL_BRA,75,5,0,"");
+spell 60
+dilcopy ball_blast@akaren();
+end
+
+mark_freedom
+names {"mark of freedom","freedom mark","mark","freedom"}
+title "a mark of freedom"
+descr "A small mark has been thrown on the ground."
+extra {} "This simple mark has 'FREEDOM'engraved on one side."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+flags {UNIT_FL_NO_TELEPORT}
+weight 1
+end
+
+swirl_chaos
+names {"swirl of chaos","chaos swirl","chaos","swirl"}
+title "a swirl of chaos"
+descr "A small swirl of chaos has been left here..."
+extra {}
+"It just a small swirl of chaos. That fact makes it hard to describe, due
+to the ever changing nature of chaos.  Just pretend that is keeps on changing
+shape, color, size, etc."
+WEAPON_DEF(WPN_WHIP,0,0)
+flags {UNIT_FL_NO_TELEPORT}
+weight 1
+end
+
+altar_heart
+names {"altar heart","heart","rubble"}
+title "the altar heart"
+descr "A smooth piece of black rubble lies here."
+extra {}
+"This is a smooth piece of the blackest stone. Evil seems to pulse from its
+depths. Staring into the polish of the surface, you tihnk you see the image
+of Tiamat to appear for a second."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+flags {UNIT_FL_NO_TELEPORT}
+weight 10
+cost 3 GOLD_PIECE
+end
+
+ariakas_sword
+names {"longsword","sword"}
+title "a longsword"
+descr "A longsword lies on the ground here."
+extra {} "The word 'ARIAKAS' has been etched on the blade of this otherwise normal sword."
+WEAPON_DEF(WPN_LONG_SWORD,0,0)
+cost 1 GOLD_PIECE
+rent 1 GOLD_PIECE
+weight 5
+dilcopy kill_ariakas@akaren();
+end
+
+vortex
+names {"vortex amulet","vortex","amulet"}
+title "the Vortex Amulet"
+descr "Lightning surrounds a finely wrought amulet on the ground."
+extra {}
+"This amulet has been formed from pure black and silver metals. It hangs from
+a chain of intertwined black and silver threads. The crescent shape of a moon
+is the part connected to the chain. A sapphire dominates the center of the
+amulet, the centerpiece of the image of the thunder hammer. The rest of the
+amulet is covered in chaotic swirls which when you look at them closely,
+appear to be moving slowly."
+extra {"$identify"}
+"Vortex imparts part of the speed and strength of lightning upon those who
+wear it around their neck. The power of lightning strengthens the wearer's
+power in both lightning and mattock attacks."
+extra {"$improved identify"}
+"Vortex increases strength by 3, dexterity by 3, war mattock skill by 4, and
+lightning sphere by 4."
+ARMOUR_PLATE(15,10)
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_NECK}
+flags {UNIT_FL_MAGIC}
+STR_TRANSFER(3)
+DEX_TRANSFER(3)
+WEAPON_TRANSFER(WPN_WAR_MATTOCK,4)
+SPELL_TRANSFER(SPL_CELL,4)
+weight 5
+dilcopy quest_restrict@function(DRACONIAN_COMPLETE,0,25,"");
+dilcopy abi_restrict@function(ABIL_STR,80,0,25,"");
+dilcopy abi_restrict@function(ABIL_DEX,80,0,25,"");
+spell 75
+dilcopy one_vortex@akaren();
+end
+
+%reset
+
+door wall_gate NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+door guard_post SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door corridor_1 NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+door courtyard_1 SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door corridor_13 SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door courtyard_7 NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+door corridor_5 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+door stairway_s1 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door corridor_6 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door kitchen WEST {EX_OPEN_CLOSE,EX_CLOSED}
+door corridor_7 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door barracks WEST {EX_OPEN_CLOSE,EX_CLOSED}
+door corridor_8 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door forge WEST {EX_OPEN_CLOSE,EX_CLOSED}
+door corridor_9 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+door stairway_n1 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door stairway_s2 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door hallway_1 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+door hallway_2 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door torture WEST {EX_OPEN_CLOSE,EX_CLOSED}
+door hallway_3 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door temple WEST {EX_OPEN_CLOSE,EX_CLOSED}
+door hallway_4 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door brief WEST {EX_OPEN_CLOSE,EX_CLOSED}
+door stairway_n2 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door hallway_5 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+door parapet_s3 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door library WEST {EX_OPEN_CLOSE,EX_CLOSED}
+door parapet_n3 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door study WEST {EX_OPEN_CLOSE,EX_CLOSED}
+door stable_1 NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+door stable_2 SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door stable_1 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door stable_3 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+door stable_1 SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door stable_4 NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+
+load wood_sign into trail_1 max 1
+load fountain into courtyard_6 max 1
+load gargoyle_statue into wall_gate max 1
+load altar into temple max 1
+
+load baaz_guard into guard_post local 3
+{equip drac_sword position WEAR_WIELD
+ equip drac_shield position WEAR_SHIELD
+ equip drac_plate position WEAR_BODY}
+load baaz_guard into guard_post local 3
+{equip drac_sword position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+load baaz_guard into corridor_5 local 2
+{equip drac_hammer position WEAR_WIELD
+ equip drac_plate position WEAR_BODY}
+load baaz_guard into corridor_9 local 2
+{equip drac_sword position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+load baaz_guard into courtyard_6 local 3
+{equip drac_sword position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+
+load baaz_sleeper into barracks local 3
+load baaz_sleeper into barracks local 3
+
+load baaz_sentry into parapet_s3 max 7
+{equip drac_hammer position WEAR_WIELD
+ equip drac_plate position WEAR_BODY}
+load baaz_sentry into parapet_n3 max 7
+{equip drac_hammer position WEAR_WIELD
+ equip drac_plate position WEAR_BODY}
+load baaz_sentry into hallway_3 max 5
+{equip drac_sword position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+load baaz_sentry into corridor_3 max 5
+{equip drac_sword position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+load baaz_sentry into corridor_11 max 5
+{equip drac_sword position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+
+load bozak_mercenary into courtyard_1 max 6
+{equip drac_sword position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+load bozak_mercenary into courtyard_3 max 6
+{equip drac_sword position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+load bozak_mercenary into courtyard_5 max 7
+{equip drac_sword position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+load bozak_mercenary into courtyard_7 max 6
+{equip drac_hammer position WEAR_WIELD
+ equip drac_plate position WEAR_BODY}
+load bozak_mercenary into courtyard_9 max 6
+{equip drac_sword position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+load bozak_mercenary into brief local 1
+{equip drac_sword position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+
+load bozak_sentry into corridor_1 max 8
+{equip drac_sword position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+load bozak_sentry into corridor_5 max 8
+{equip drac_sword position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+load bozak_sentry into corridor_9 max 8
+{equip drac_sword position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+load bozak_sentry into corridor_13 max 8
+{equip drac_sword position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+
+load kapak_lieut into courtyard_6 max 4
+{equip drac_hammer position WEAR_WIELD
+ equip drac_plate position WEAR_BODY}
+load kapak_lieut into corridor_7 max 5
+{equip drac_sword position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+
+load sivak_elite into hallway_1 max 4
+{equip sivak_sword position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+load sivak_elite into hallway_5 max 4
+{equip sivak_sword position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+
+load sivak_commander into brief local 2
+{equip sivak_sword position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+load sivak_commander into courtyard_6 local 1
+{equip sivak_sword position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+
+load sivak_ravager into tapestry_1 local 3
+{equip sivak_sword position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+load sivak_ravager into tapestry_1 local 3
+{equip sivak_sword position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+
+load sivak_bodyguard into library local 2
+{equip sivak_mattock position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+load sivak_bodyguard into library local 2
+{equip sivak_mattock position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+load sivak_bodyguard into study local 2
+{equip sivak_sword position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+load sivak_bodyguard into temple local 2
+{equip sivak_mattock position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+
+load aurak into study local 1
+{equip drac_sword position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+load aurak into library local 1
+{equip drac_sword position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+
+load aurak_hunter into temple max 1
+{equip sivak_sword position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+
+load priestess into temple local 2
+{equip tiamat_mace position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+load priestess into corridor_6 max 4
+{equip tiamat_mace position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+
+load cook into kitchen max 1
+load trakok into forge max 1 
+{equip drac_flail position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip smith_gauntlets position WEAR_HANDS}
+load scrik into torture max 1 
+{equip sivak_sword position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD
+ load smknife@arabian}
+load tamait into temple max 1
+{equip fluted_mace position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+load krissak into library max 1
+{equip drac_sword position WEAR_WIELD
+ equip drac_plate position WEAR_BODY
+ equip toga position WEAR_ABOUT
+ equip red_orb position WEAR_HOLD}
+load ariakas into study max 1
+{equip raven position WEAR_WIELD
+ equip ruby_handaxe position WEAR_HOLD
+ equip drac_plate position WEAR_BODY
+ equip drac_shield position WEAR_SHIELD}
+
+load black_horse into stable_3 max 2
+load night_mare into stable_5 max 1
+load black_horse into stable_6 local 1
+load black_llama into stable_2 max 1
+load black_lizard into stable_4 max 1
+
+load ball_lightning into jar_light max 1
+{equip ball_energy position WEAR_HOLD}
+
+load dying_man into wall_west max 1
+load prisoner into torture max 1
+
+%end
+
+
+
+
+
+
+
+

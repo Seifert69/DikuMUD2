@@ -1,0 +1,3805 @@
+/*
+filename    dwarves
+password    crunchy
+changedby   palio
+EmailAdd     Palio <palio@blinksoft.com>
+request     compile
+version     13
+END HEADER*/
+
+#include <wmacros.h>
+#include <values.h>
+#include <composed.h>
+
+#define DWARF_TREASURE_QUEST "Dwarf Tresure Quest Ongoing"
+#define DIV_ARMOR_QUEST "Divine Armor Quest Complete"
+#define BUTTON4_ONGOING "EThereal Ring Ongoing"
+#define BUTTON4_COMPLETE "Divine:  Button 4 = 5"
+#define BUTTON2_ONGOING "Acorn Search Ongoing"
+#define BUTTON2_COMPLETE "Divine:  Button 2 = 6"
+#define BUTTON5_ONGOING "Lead Nugget Search Ongoing"
+#define BUTTON5_COMPLETE "Divine:  Button 5 = 4"
+#define BUTTON1_ONGOING "King's Request Ongoing"
+#define BUTTON1_COMPLETE "Divine:  Button 1 = 3"
+#define BUTTON3_COMPLETE "Divine:  Button 3 = 1"
+
+
+%zone dwarves
+title "Fortress Farginok"
+lifespan 25
+reset RESET_ANYHOW
+
+creators {"whistler"}
+
+notes
+"This is Juniper's first zone and he has sence left the mud Bakka and
+Whistler have taken the zone and fixed all bugs and are now updating the zone.  It
+is a dwarven castle with the Divine quest inside.  Many things are still
+planned like quests for weapons and shields.  all bugs and comments can
+be emailed to :
+whistler@guild.bc.ca"
+
+%rooms
+
+/*================================ FOREST ================================*/
+
+			path1
+
+names {"trail"}
+title "A Dusty Trail"
+descr
+"   You are on a dusty trail running north and south.  To the south lies
+more hills.  The path to the north leads into the Darkwood forest.
+There is a sign here."
+extra {"sign"}
+"Darkwood Forest - Levels 3 and up"
+spell 200
+movement SECT_HILLS
+north to path2;
+south to hil_l7@hills;
+end
+
+			path2
+
+title "A Dusty Path in Darkwood Forest"
+descr
+"  You are on a dusty path in Darkwood Forest.  You can see a small side
+path leading to the east.  The main path runs north and south."
+movement SECT_FOREST
+north to path3;
+south to path1;
+end
+
+			path3
+
+title "A Fork in the Path"
+descr
+"   You are at a fork in the path.  The forest here is very thick making you
+rely more on your sense of hearing rather than sight.  The path runs west and
+south, while a clearing lies to the east."
+movement SECT_FOREST
+west to path4;
+south to path2;
+east to clear1;
+end
+
+			clear1
+
+title "A Clearing in Darkwood Forest"
+descr
+"   You are in a clearing in Darkwood Forest.  There are exits west to a path
+and east is the door of a small house."
+movement SECT_FOREST
+extra {"door"}
+"The door looks pretty lightweight."
+west to path3;
+east to hut1
+	 open {EX_OPEN_CLOSE, EX_CLOSED}
+	 keyword {"door"};
+end
+
+			hut1
+
+title "A Small Hut in Darkwood Forest"
+descr
+"   You are standing in a small hut.  The walls here are bare except for a few
+necesscities of life in the woods.  The only exit is west."
+extra{"wall","walls"}
+"There is only cheap stuff here."
+movement SECT_INSIDE
+west to clear1
+	 open {EX_OPEN_CLOSE, EX_CLOSED}
+	 keyword {"door"};
+end
+
+			path4
+
+title "A Path in Darkwood Forest"
+descr
+"   You are at a junction on this path through Darkwood Forest.  The trail
+continues north, south, and east."
+movement SECT_FOREST
+north to path5;
+south to dead_end1;
+east to path3;
+end
+
+			dead_end1
+
+title "A Dead End in Darkwood Forest"
+descr
+"   Here the trail ends suddenly.  Your only choice is to head back north."
+movement SECT_FOREST
+north to path4;
+end
+
+			path5
+
+title "Deep in Darkwood Forest"
+descr
+"   You feel you are near the heart of Darkwood Forest.  The huge trees here
+must have been growing for many hundreds of years.  The small path you are on
+leads south and east."
+movement SECT_FOREST
+south to path4;
+east to path6;
+end
+
+			path6
+
+title "Deep in Darkwood Forest"
+descr
+"   You come to another junction in the path you are on.  The more heavily
+travelled path leads west and north, while a little travelled trail leads
+east."
+movement SECT_FOREST
+north to path7;
+east to clear2;
+west to path5;
+end
+
+			clear2
+
+title "A Clearing in Darkwood Forest"
+descr
+"  You are in a clearing in Darkwood Forest.  You can go west to the main
+path, or north to the door of a small house."
+extra {"door"}
+"The door looks solid."
+movement SECT_FOREST
+north to hut2
+	 open {EX_OPEN_CLOSE, EX_CLOSED}
+	 keyword {"door"};
+west to path6;
+end
+
+			hut2
+
+title "A Small House in Darkwood Forest"
+descr
+"   You are standing in a small house in Darkwood Forest.  The house seems
+very comfortable and is furnished quite nicely.  The only exit is to the
+south."
+movement SECT_INSIDE
+south to clear2
+	 open {EX_OPEN_CLOSE, EX_CLOSED}
+	 keyword {"door"};
+end
+
+			path7
+
+title "A Small Clearing in Darkwood Forest"
+descr
+"   The path you are traveling on opens out into a small clearing.  This
+seems like a good place to rest if you are tired.  The path continues north
+and south."
+flags {UNIT_FL_SACRED}
+movement SECT_FOREST
+north to path8;
+south to path6;
+end
+
+			path8
+title "Deep in Darkwood Forest"
+descr
+"   You are on a trail deep in Darkwood Forest.  To the east through the
+trees you can see Lost Mountain.  The path continues west and south."
+extra {"mountain"}
+"The forest prevents you from seeing the mountain clearly."
+movement SECT_FOREST
+south to path7;
+west to path9;
+end
+
+			path9
+title "The Edge of Darkwood Forest"
+descr
+"   You are at the edge of Darkwood Forest.  The trail continues east into
+the forest, south to a clearing, and north."
+movement SECT_FOREST
+north to path10;
+south to clear3;
+east to path8;
+end
+
+			clear3
+title "A Clearing in Darkwood Forest"
+descr
+"   You are in a clearing in Darkwood Forest.  The only exit is north to the
+main path.  There is a big tree here."
+extra{"tree"}
+"The tree is noticibly larger than the others.  As you look at it closely,
+you notice some words carved into the bark."
+extra{"words","bark"}
+"There are five buttons in the combination."
+movement SECT_FOREST
+north to path9;
+south to path_1@rotten;
+end
+
+			path10
+title "A Path Up Lost Mountain"
+descr
+"   You are on a path leading up Lost Mountain.  The path becomes more steep
+to the east, while it leads towards Darkwood Forest to the south."
+movement SECT_HILLS
+south to path9;
+east to path11;
+end
+
+			path11
+title "Halfway Up Lost Mountain"
+descr
+"   You are nearly halfway up Lost Mountain.  The path continues up the
+mountain to the east, and heads down the mountain to the west."
+movement SECT_MOUNTAIN
+east to path12;
+west to path10;
+end
+
+			path12
+title "Near the Top of Lost Mountain"
+descr
+"   You are near the top of Lost Mountain.  You can see the entrance to the
+Dwarven fortress Farginok to the east.  The fortress itself seems cut from
+the mountain, not built onto it.  You see many dwarves patrolling the
+parapets.
+There is a sign here."
+extra {"sign"}
+"Fortress Forginok - Levels 35 and up"
+extra {"dwarves"}
+"The dwarves look ready to defend Farginok from any enemy."
+extra {"parapets"}
+"The battlements of the fortress provide shielding to the dwarven defenders."
+flags{UNIT_FL_NO_MOB}
+movement SECT_MOUNTAIN
+east to entrance1;
+west to path11;
+end
+
+/*================================= FORTRESS ==============================*/
+
+			entrance1
+title "Entrace to Farginok"
+descr
+"   You are standing in the entryway to the fortress Farginok.  A huge iron
+portcullis bars the way into the entrance.  Looking through the bars you can
+see a small courtyard and the entrance to the underground portion of
+Farginok.
+There is a plaque set into the wall."
+extra {"portcullis","gate"}
+"This set of bars looks heavy and immovable."
+extra {"plaque"}
+"The plaque reads:
+
+			Fortress Farginok
+
+	 In the year 32, the great King Thorigorn did construct
+	 this mighty fortress.
+
+	 It shall forever protect us from our enemies.
+"
+movement SECT_CITY
+east to court2
+	 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_PICKPROOF}
+	 key dwarf_key
+	 keyword {"portcullis","gate"};
+west to path12;
+ALWAYS_LIGHT
+end
+
+			court2
+title "Main Courtyard of Farginok"
+descr
+"   You are in the main courtyard of Farginok.  You can see dwarven patrols
+moving to and fro.  The courtyard extends north and south, while the main
+entrance to the underground portion of Farginok is to the east.  The fortress
+gate lies to the west."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+north to court1;
+south to court3;
+east to entrance2
+	 open {EX_OPEN_CLOSE, EX_CLOSED}
+	 keyword {"door"};
+west to entrance1
+	 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_PICKPROOF}
+	 key dwarf_key
+	 keyword {"portcullis","gate"};
+ALWAYS_LIGHT
+end
+
+			entrance2
+title "Entrance to Farginok"
+descr
+"   You are in the entryway to the underground portion of Farginok.  A main
+hall continues east, while smaller halls lead north and south.  The courtyard
+lies to the west."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to small_hall1;
+south to small_hall2;
+east to main_hall1;
+west to court2
+	 open {EX_OPEN_CLOSE, EX_CLOSED}
+	 keyword {"door"};
+ALWAYS_LIGHT
+end
+
+			main_hall1
+title "Main Hall"
+descr
+"   You are standing in the main hall of Farginok.  The main hall leads
+further east.  Towards the west lies the entrance of Farginok.  There
+are exits on the north and south sides of the hallway."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to side_hall1;
+south to side_hall2;
+east to main_hall2;
+west to entrance2;
+ALWAYS_LIGHT
+end
+
+			main_hall2
+title "Main Hall"
+descr
+"   You are in the main hallway of Farginok.  The hall continues east and
+west towards the entrance.  There are two small alcoves to the north and
+south.  A large archway leads east."
+extra {"doors","door"}
+"The doors are very ornate."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to alcove1;
+south to alcove2;
+east to throne_room1;
+west to main_hall1;
+ALWAYS_LIGHT
+end
+
+			throne_room1
+title "King Baldin's Throne Room"
+descr
+"   You are standing in a huge circular room that houses the throne of King
+Baldin.  Looking up you see carvings of past Dwarven kings lining the walls of
+the room.  The carvings are very intricate and were made with the same amount
+of attention to detail as the rest of the fortress.  You can see the throne of
+King Baldin to the east, while the main hall lies to the west."
+extra {"carvings"}
+"The busts depict all the Dwarven kings all the way back to Thorgan."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+east to throne;
+west to main_hall2;
+ALWAYS_LIGHT
+end
+
+			throne
+title "Before King Baldin's Throne"
+descr
+"   You are standing before the throne of King Baldin, leader of this Dwarven
+community.  The throne itself is made from deep mohagany imported from across
+the great ocean.  The craftsmanship of the throne is magnificent.  You can
+leave here in any of the cardinal directions, north, south, east, or west."
+extra {"throne"}
+"A mighty throne fit for a king."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to throne_room2;
+south to throne_room3;
+east to throne_room4;
+west to throne_room1;
+ALWAYS_LIGHT
+end
+
+			throne_room4
+title "King Baldin's Throne Room"
+descr
+"   You are standing in a huge circular room that houses the throne of King
+Baldin.  Looking up you see carvings of past Dwarven kings lining the walls of
+the room.  The carvings are very intricate and were made with the same amount
+of attention to detail as the rest of the fortress.  You can see the throne of
+King Baldin to the west, while the main hall lies to the east."
+extra {"carvings"}
+"The busts depict all the Dwarven kings all the way back to Thorigan."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+east to main_hall3;
+west to throne;
+ALWAYS_LIGHT
+end
+
+			throne_room2
+title "King Baldin's Throne Room"
+descr
+"   You are standing in a huge circular room that houses the throne of King
+Baldin.  Looking up you see carvings of past Dwarven kings lining the walls of
+the room.  The carvings are very intricate and were made with the same amount
+of attention to detail as the rest of the fortress.  You can see the throne of
+King Baldin to the south, while a fountain lies to the north."
+extra {"carvings"}
+"The busts depict all the Dwarven kings all the way back to Thorigan."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to fountain;
+south to throne;
+ALWAYS_LIGHT
+end
+
+			throne_room3
+title "King Baldin's Throne Room"
+descr
+"   You are standing in a huge circular room that houses the throne of King
+Baldin.  Looking up you see carvings of past Dwarven kings lining the walls of
+the room.  The carvings are very intricate and were made with the same amount
+of attention to detail as the rest of the fortress.  You can see the throne of
+King Baldin to the north, while a stairway lies to the south."
+extra {"carvings"}
+"The busts depict all the Dwarven kings all the way back to Thorigan."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to throne;
+south to stair2;
+ALWAYS_LIGHT
+end
+
+			alcove1
+title "Nothern Alcove"
+descr
+"   You are in the northern alcove of the fortress Farginok.  In this room
+there are many paintings depicting Dwarven battles from long ago.  There are
+several chairs and benches available to rest upon.  You can exit south to the
+main hall or east to the main banquet room."
+extra {"paintings"}
+"The paintings are great works of art featuring Dwarven heros."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+south to main_hall2;
+east to banquet;
+ALWAYS_LIGHT
+end
+
+			alcove2
+title "Southern Alcove"
+descr
+"   You are standing in the southern alcove of Fortress Farginok.  There are
+paintings here depicting the Dwarven gods of war, justice, earth, metalwork,
+and strength.  You can exit north to the main hall.  You also see an ornate
+oak door set into the east wall."
+extra {"paintings"}
+"The paintings depict various Dwarven gods."
+extra {"door"}
+"The oak door looks heavy and unbreakable."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to main_hall2;
+east to king_room1
+	 open {EX_OPEN_CLOSE, EX_CLOSED}
+	 keyword {"door"};
+ALWAYS_LIGHT
+end
+
+			king_room1
+title "King Baldin's Reception Room"
+descr
+"   You are standing in the reception room of King Baldin.  There are several
+chairs and couches here.  This is where King Baldin holds informal talks with
+visiting emisaries.  You can exit west to the southern alcove.  You also see
+an oak door in the southern wall."
+extra {"door"}
+"The oak door is very sturdy."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+south to king_room2
+	 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+	 key king_key2
+	 keyword {"door"};
+west to alcove2
+	 open {EX_OPEN_CLOSE, EX_CLOSED}
+	 keyword {"door"};
+ALWAYS_LIGHT
+end
+
+			king_room2
+title "King Baldin's Bedroom"
+descr
+"   You are in King Baldin's bedroom.  An ornate canopy bed occupies the
+southern half of this room.  A writing desk sits against the eastern wall
+while several chairs are scatered about the room.  The western walls seems
+to be a lighter shade than the other walls, although this could be due to
+the lighting.  The only exit is north to the reception room."
+extra {"west wall","wall"}
+"The west wall is definately not like the others."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to king_room1
+	 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+	 key king_key2
+	 keyword {"door"};
+west to king_safe
+	 open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN, EX_LOCKED, EX_PICKPROOF}
+	 key king_key3
+	 keyword {"wall","door"}
+	 descr "You find a hidden door to the West.";
+ALWAYS_LIGHT
+SECRET_DOOR_DIFFICULTY(WEST, 50)
+end
+
+			king_safe
+title "King Baldin's Personal Safe"
+descr
+"   You have entered the personal safe of the king.  It is here that the king
+keeps his personal equipment.  The only exit is back to the east.  There is
+a small table with some notes on it here.."
+extra {"notes","note"}
+"One in particular reads 'Change the third button to number 1'."
+extra {"table"}
+"There are several personal notes on the table.  One in particular cathes your
+eye.  Maybe you should look at it."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_MOB}
+flags {UNIT_FL_NOSAVE}
+movement SECT_INSIDE
+east to king_room2
+	 open {EX_OPEN_CLOSE, EX_CLOSED}
+	 key king_key3
+	 keyword {"wall","door"};
+
+dilbegin prg1();
+var
+pc:unitptr;
+code
+{
+	:init:
+	wait(SFB_CMD, activator.type == UNIT_ST_PC);
+	if (((command(CMD_LOOK) or command ("read"))) and (("note" in argument) or ("notes" in
+	  argument)))
+	{
+if (BUTTON3_COMPLETE in activator.quests or
+    	DIV_ARMOR_QUEST in activator.quests) goto init;
+    	pc:=activator;
+    	secure (pc,init);
+
+	    addextra(pc.quests, {BUTTON3_COMPLETE}, "");
+	    unsecure (pc);
+	    goto init;
+	}
+	else
+	{
+	  act("You have a strong urge to look at the table.", A_ALWAYS, activator,
+	    null, null, TO_ALL);
+	}
+	goto init;
+}
+dilend
+end
+
+			banquet
+title "Main Banquet Room"
+descr
+"   You are in the main banquet room of Fortress Farginok.  The huge circular
+table is used only on formal occasions.  You can exit north to the kitchen, or
+west to the northern alcove."
+extra {"table"}
+"The table looks like it is a cross-section of a huge tree."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to kitchen;
+west to alcove1;
+ALWAYS_LIGHT
+end
+
+			kitchen
+title "The Kitchen"
+descr
+"   You are standing in the fortress kitchen.  Many tables covered with food
+preparation equipment are here.  In one corner is a great hearth used for
+baking various breads.  You can exit south to the banquet room, east to a
+fountain, or west to the food storage room."
+extra {"hearth"}
+"The hearth looks very hot."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+south to banquet;
+east to fountain;
+west to foodstore;
+ALWAYS_LIGHT
+end
+
+			foodstore
+title "Food Storage"
+descr
+"   You are standing in the main food storage room of the fortress.  Many
+foodstuffs line the shelves of the room.  The only exit is back to the east
+leading to the kitchen."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+east to kitchen;
+ALWAYS_LIGHT
+end
+
+			fountain
+title "The Fountain"
+descr
+"   You are standing in the fountain room which is the fortress main source of
+fresh water.  This is a very important room during times of seige.  You can
+exit west to the kitchen, south to the throne room, or east to a small
+coridor."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+south to throne_room2;
+east to small_corridor1;
+west to kitchen;
+ALWAYS_LIGHT
+end
+
+			small_corridor1
+title "A Small Corridor"
+descr
+"   You are in a small corridor leading from the fountain to the west to a
+small door set in the east wall.  A sign is on the door."
+extra {"sign"}
+"Greylock's Quarters -- Do Not Disturb"
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+east to wizard_room1
+	 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+	 key wiz_key
+	 keyword {"door"};
+west to fountain;
+ALWAYS_LIGHT
+end
+
+			wizard_room1
+title "GreyLock's Quarters"
+descr
+"  You are in the room of GreyLock the Sorcerer.  The room is sparsely
+furnished with just a bed and small desk.  There is some writing on the desk.
+You can exit west to a small corridor or south to a library."
+extra {"desk","writing"}
+"The writing says: Pass=karnoff."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+south to library
+	 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+	 key wiz_key
+	 keyword {"door"};
+west to small_corridor1
+	 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+	 key wiz_key
+	 keyword {"door"};
+ALWAYS_LIGHT
+end
+
+			library
+title "The Library"
+descr
+"   You are in the library of Fortress Farginok.  There are many books here
+including ones on the history of the Hill Dwarves, heros, magic, and
+metallurgy.  There is a noticable blank spot on the west wall.  You can exit
+north through a small door, or south to the main hall. "
+extra {"blank spot","spot"}
+"The wall about the blank spot seems unnatural, even though it feels real."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+west to wizard_room2
+	 open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+	 keyword {"ddd"}
+	 descr "You find a secret door to the west.";
+north to wizard_room1
+	 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+	 key wiz_key
+	 keyword {"door"};
+south to main_hall3;
+ALWAYS_LIGHT
+SECRET_DOOR_DIFFICULTY(WEST, 200)
+
+dilbegin prg2();
+code
+{
+  wait(SFB_CMD, command(CMD_SAY));
+
+  if ("karnoff" in argument)
+  {
+	if (isset(self.exit_info[WEST], EX_CLOSED))
+	{
+	  act("*vvzzt*  The blank spot disolves revealing a secret passage.",
+	A_ALWAYS, self.inside, null, null, TO_ALL);
+	  unset(self.exit_info[WEST], EX_CLOSED);
+
+	  act("*vvzzt*  The blank spot disolves.",
+	A_ALWAYS, self.exit_to[WEST].inside, null, null, TO_ALL);
+	}
+	else
+	  act("*vvzzt*", A_ALWAYS, self.inside, null, null, TO_ALL);
+  }
+}
+dilend
+
+dilbegin prg3();
+code
+{
+  heartbeat:=PULSE_SEC*60;
+  wait(SFB_TICK, TRUE);
+  if (isset(self.exit_info[WEST], EX_CLOSED))
+	goto end;
+
+  act("The portal closes.", A_ALWAYS, self.inside, null, null, TO_ALL);
+  set(self.exit_info[WEST], EX_CLOSED);
+  act("The portal closes.", A_ALWAYS, self.exit_to[WEST].inside,null,null,
+	TO_ALL);
+
+  :end:
+  pause;
+}
+dilend
+end
+
+		wizard_room2
+title "A Secret Room"
+descr
+"   You are in a small secret room which looks like Greylock's laboratory.
+Books are strewn everywhere along with flasks, chemicals, and ingredients.  A
+large, heavy looking pedestal sits in the middle of the room."
+extra {"pedestal"}
+"The pedestal looks heavy and is immovable."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+east to library;
+end
+
+
+			main_hall3
+title "Main Hall"
+descr
+"   You are at the eastern end of the main hall.  To the west is the throne
+room.  To the north is the library.  To the south is a small room."
+extra {"pedestal"}
+"The pedestal is heavy an immovable."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to library;
+south to small_room;
+west to throne_room4;
+ALWAYS_LIGHT
+end
+
+			small_room
+title "A Small Room"
+descr
+"   This is a small room off of the main hall.  Set into the western wall is a
+huge door made of iron.  You can exit north to the main hall or west through
+the door.  You see a row of ten buttons numbered one to ten to the right of
+the door.  There is a small sign above the buttons."
+extra {"sign"}
+"To open the treasure room, press the buttons in the same sequence as the
+combination says to.  Don't take more than 1 minute and don't type any other
+command while pushing the buttons.
+
+For example:
+
+push button 1
+push button 2
+...
+push button 10
+
+Sometimes the door is a little sticky so you may need to enter the
+combination two or three times to get it to open."
+extra {"door"}
+"Clearly this door protects something important."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to main_hall3;
+west to treasure_room
+	 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_PICKPROOF}
+	 keyword {"door"};
+ALWAYS_LIGHT
+
+dilbegin prg4();
+var
+  item : unitptr;
+code
+{
+	:init:
+	heartbeat := WAIT_SEC*60;
+
+	:start:
+	wait(SFB_CMD, command(CMD_PUSH));
+	block;
+	act("*click*", A_ALWAYS, self.inside, null, null, TO_ALL);
+	if ("button 3" in argument)
+	{
+	  wait(SFB_CMD | SFB_TICK, TRUE);
+	  block;
+	  if (command(CMD_AUTO_TICK)) goto init;
+	  act("*click*", A_ALWAYS, self.inside, null, null, TO_ALL);
+	  if (("button 6" in argument))
+	  {
+		wait(SFB_CMD | SFB_TICK, TRUE);
+		block;
+		if (command(CMD_AUTO_TICK)) goto init;
+		act("*click*", A_ALWAYS, self.inside, null, null, TO_ALL);
+		if (("button 1" in argument))
+		{
+		  wait(SFB_CMD | SFB_TICK, TRUE);
+		  block;
+		  if (command(CMD_AUTO_TICK)) goto init;
+		  act("*click*", A_ALWAYS, self.inside, null, null, TO_ALL);
+		  if (("button 5" in argument))
+		  {
+			wait(SFB_CMD | SFB_TICK, TRUE);
+			block;
+			if (command(CMD_AUTO_TICK)) goto init;
+			act("*click*", A_ALWAYS, self.inside, null, null, TO_ALL);
+			if (("button 4" in argument))
+			goto unlock;
+		  }
+		}
+	  }
+	}
+
+goto init;
+:unlock:
+	  act("*wrrr* *clunk* *rattle* The massive door opens.", A_ALWAYS,
+		self.inside, null, null, TO_ALL);
+	  unset(self.exit_info[WEST], EX_CLOSED);
+	  act("The door opens.", A_ALWAYS, self.exit_to[WEST].inside, null,
+		null, TO_ALL);
+	  unset(self.exit_to[WEST].exit_info[EAST], EX_CLOSED);
+	goto init;
+}
+dilend
+
+dilbegin prg5();
+code
+{
+	:init:
+	heartbeat := PULSE_SEC*10;
+	wait(SFB_CMD, command(CMD_CAST));
+	block;
+	act("Magic does not work in this room.",A_ALWAYS,self.inside,null,
+	  null,TO_CHAR);
+	goto init;
+}
+dilend
+end
+
+			treasure_room
+title "The Treasure Room"
+descr
+"   This is a fabled treasure room of the dwarves.  Most of the treasure is
+securely locked behind magical locks.  There are a few things that have not
+been locked up yet.  The only exit is back to the east."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_MOB}
+flags {UNIT_FL_NOSAVE}
+movement SECT_INSIDE
+east to small_room
+	 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+	 key treas_key
+	 keyword {"door"};
+ALWAYS_LIGHT
+end
+
+			side_hall1
+title "A Side Hall"
+descr
+"   You are in a short side hall running north and south.  To the north lies a
+small chapel.  To the south lies the main hall."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to chapel;
+south to main_hall1;
+ALWAYS_LIGHT
+end
+
+			chapel
+title "The Chapel"
+descr
+"   You are standing in a small chapel where the dwarves come to worship their
+many gods.  Small statues of the gods line the walls.  A main altar sits in
+the northern half of the room.  The only exit is south to a small hallway."
+extra {"statues"}
+"The statues depict the many dwarven gods."
+extra {"alter"}
+"The alter is fashioned from pure granite."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+flags {UNIT_FL_SACRED}
+movement SECT_INSIDE
+south to side_hall1;
+ALWAYS_LIGHT
+end
+
+			side_hall2
+title "A Side Hallway"
+descr
+"   You are in a small side hallway running north and south.  You can exit
+north through a door to the main hall or south to a broad stairway."
+extra {"door"}
+"It is a regular door."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to main_hall1;
+south to stair1;
+ALWAYS_LIGHT
+end
+
+			stair1
+title "A Broad Stairway"
+descr
+"  You are at the top of a broad stairway leading down into the darkness.
+>From the darkness, you can hear mechanical sounds like those of a mining
+operation.  You can go down the stairs or north to a side hallway."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to side_hall2;
+down to mine1;
+ALWAYS_LIGHT
+end
+
+			stair2
+title "A Narrow Stairway"
+descr
+"   You are at the top of a narrow stairway leading down into darkness.
+>From the darkness you can hear the sounds of mining.  You can exit down into
+the darkness or north to the throne room."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to throne_room3;
+down to mine2;
+ALWAYS_LIGHT
+end
+
+			small_hall1
+title "A Small Hallway"
+descr
+"   You are in a small hallway running north and south.  To the north is the
+Armorer.  To the south lies the entrance to the fortress."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to armorer;
+south to entrance2;
+ALWAYS_LIGHT
+end
+
+			small_hall2
+title "A Small Hallway"
+descr
+"   You are in a small hallway running north and south.  To the south is the
+Weaponsmith.  To the north lies the entrance to the fortress."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to entrance2;
+south to weaponsmith;
+ALWAYS_LIGHT
+end
+
+			armorer
+title "The Armorer"
+descr
+"   You are in the workshop of the fortress armorer.  Piles of old, worn-out
+armor lie around.  The are several sets of repaired armor piled near the west
+wall.  You can exit south to a small hallway."
+extra {"armor"}
+"You notice what may be a doorway behind the armor."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+south to small_hall1;
+west to bend1
+	 open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+	 keyword {"door"}
+	 descr "You find a hidden door to the West.";
+ALWAYS_LIGHT
+SECRET_DOOR_DIFFICULTY(WEST, 50)
+end
+
+			weaponsmith
+title "The Weaponsmith"
+descr
+"   You are standing in the workplace of the fortress weaponsmith.  Broken
+weapons lie scatterd on the floor.  You see several repaired axes leaning
+against the western wall.  You can exit north to a small hallway."
+extra {"axes"}
+"You see what appears to be a door behind the axes."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to small_hall2;
+west to bend2
+	 open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+	 keyword {"door"}
+	 descr "You find a hidden door to the West.";
+ALWAYS_LIGHT
+SECRET_DOOR_DIFFICULTY(WEST, 50)
+end
+
+			bend1
+title "North Courtyard"
+descr
+"   You are standing in the northernmost end of the courtyard.  To the west
+you can enter the north tower of the fortress.  To the south lies the rest of
+the courtyard."
+movement SECT_CITY
+south to court1;
+west to tower1;
+end
+
+			bend2
+
+title "South Courtyard"
+descr
+"   You are at the southern end of the courtyard.  To the west you see an
+entrance to the south tower.  To the north lies the rest of the courtyard."
+movement SECT_CITY
+north to court2;
+west to tower2;
+end
+
+			tower1
+
+title "North Tower"
+descr
+"   You are on the ground floor of the north tower.  You can go up to the
+second floor, south to a weapons storage area, or east to the courtyard."
+movement SECT_INSIDE
+south to weapon1;
+east to bend1;
+up to tower1_up;
+end
+
+			tower2
+
+title "South Tower"
+descr
+"   You are on the ground floor of the south tower.  You can go up to the
+second floor, north to a weapons storage area, or east to the courtyard."
+movement SECT_INSIDE
+north to weapon2;
+east to bend2;
+up to tower2_up;
+end
+
+			court1
+
+title "Courtyard"
+descr
+"   You are in the northern part of the courtyard which continues north and
+south."
+movement SECT_CITY
+north to bend1;
+south to court2;
+end
+
+			court3
+
+title "Courtyard"
+descr
+"   You are in the southern part of the courtyard which continues south and
+north."
+movement SECT_CITY
+north to court2;
+south to bend2;
+end
+
+			weapon1
+title "Weapon Storage"
+descr
+"   You are in a weapons storage room.  This is where the dwarves keep weapons
+for easy access in case of attack.  The only exit is north to the north tower."
+movement SECT_INSIDE
+north to tower1;
+end
+
+			weapon2
+title "Weapons Storage"
+descr
+"   You are in a weapons storage room.  This where the dwarves keep weapons
+for easy access in case of attack.  The only exit is south to the south tower."
+movement SECT_INSIDE
+south to tower2;
+end
+
+			tower1_up
+title "Top of North Tower"
+descr
+"   You are at the top of the north tower.  You can look out across the
+countryside and see for miles.  You can exit down to the ground floor or south
+along the parapets."
+movement SECT_CITY
+south to parapets1;
+down to tower1;
+end
+
+			tower2_up
+title "Top of South Tower"
+descr
+"   You are at the top of the south tower.  You can look out across the
+countryside and see for miles.  You can exit down to the ground floor or north
+along the parapets."
+movement SECT_CITY
+north to parapets3;
+down to tower2;
+end
+
+			parapets1
+title "Along the Parapets"
+descr
+"   You are on the northern parapets.  The battlements provide cover for the
+dwarves in case of attack.  You can exit north to the top of the north tower
+or continue along the Parapets to the south."
+movement SECT_CITY
+north to tower1_up;
+south to parapets2;
+end
+
+			parapets2
+title "Along the Parapets"
+descr
+"   You are on the center parapets.  The battlements provide cover for the
+dwarves in case of attack.  You can exit north to the northern parapets or
+south to the southern parapets."
+movement SECT_CITY
+north to parapets1;
+south to parapets3;
+end
+
+			parapets3
+title "Along the Parapets"
+descr
+"   You are on the southern parapets.  The battlements provide cover for the
+dwarves in case of attack.  You can exit south to the top of the south tower
+or continue along the Parapets to the north."
+movement SECT_CITY
+north to parapets2;
+south to tower2_up;
+end
+
+/*============================== MINE =====================================*/
+
+		mine1
+title "Entrance to the Farginok Mine"
+descr
+"   You are in the entrance to the Faginok mine.  A large stairway leads up
+to the Fortress and a passage leads east.  From the passage, you hear the
+sound of machinery."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+up to stair1;
+east to smelter;
+end
+
+		mine2
+title "Entrance to the Farginok Mine"
+descr
+"   You are in the entrance to the Faginok mine.  A large stairway leads up
+to the Fortress and a passage leads west.  From the passage, you hear the
+sound of machinery."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+up to stair2;
+west to smelter;
+end
+
+		smelter
+title "The Smelter"
+descr
+"   You are standing near the smelter for the Farginok mine.  The dwarven
+miners bring the ore that they dig here to have it smelted into metal for use
+by other dwarven craftsmen.  You can exit south to the mine, east to the
+eastern entrance, or west to the western entrance."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_MOB}
+east to mine2;
+west to mine1;
+south to mine6;
+end
+
+		mine3
+title "A Turn in the Shaft"
+descr
+"   You come to a turn in the mine shaft.  The shaft runs east and south from
+here."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+east to mine4;
+south to mine9;
+end
+
+		mine4
+title "A Narrow Mine Shaft"
+descr
+"    You are walking along a narrow mine shaft.  The walls here are smooth to
+the touch and look very sturdy.  You can head west to a bend in the shaft or
+east along the shaft."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+east to mine5;
+west to mine3;
+end
+
+		mine5
+title "A Narrow Mine Shaft"
+descr
+"    You are walking along a narrow mine shaft.  The walls here are smooth to
+the touch and look very sturdy.  You can head west or east along the shaft."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+east to mine6;
+west to mine4;
+end
+
+		mine6
+title "A Junction in a Narrow Mine Shaft"
+descr
+"    You are walking along a narrow mine shaft.  The walls here are smooth to
+the touch and look very sturdy.  You can head west or east along the shaft,
+south along another shaft, or you can go north to the smelter."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+south to mine11;
+east to mine7;
+west to mine5;
+north to smelter;
+end
+
+		mine7
+title "A Narrow Mine Shaft"
+descr
+"    You are walking along a narrow mine shaft.  The walls here are smooth to
+the touch and look very sturdy.  You can head west or east along the shaft."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+east to mine8;
+west to mine6;
+end
+
+		mine8
+title "A Turn in the Shaft"
+descr
+"   You come to a turn in the mine shaft.  The shaft runs west and south from
+here."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+west to mine7;
+south to mine12;
+end
+
+		mine9
+title "A Turn in the Shaft"
+descr
+"   You come to a turn in the mine shaft.  The shaft runs east and north from
+here."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+east to mine10;
+north to mine3;
+end
+
+		mine10
+title "A Turn in the Shaft"
+descr
+"   You come to a turn in the mine shaft.  The shaft runs west and south from
+here."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+west to mine9;
+south to mine15;
+end
+
+		mine11
+title "A Narrow Mine Shaft"
+descr
+"    You are walking along a narrow mine shaft.  The walls here are smooth to
+the touch and look very sturdy.  You can head north or south along the shaft."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+north to mine6;
+south to mine16;
+end
+
+		mine12
+title "A Turn in the Shaft"
+descr
+"   You come to a turn in the mine shaft.  The shaft runs east and north from
+here."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+east to mine13;
+north to mine8;
+end
+
+		mine13
+title "A Narrow Mine Shaft"
+descr
+"    You are walking along a narrow mine shaft.  The walls here are smooth to
+the touch and look very sturdy.  You can head west or east along the shaft."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+east to mine14;
+west to mine12;
+end
+
+		mine14
+title "A Junction in a Narrow Mine Shaft"
+descr
+"   You have come to a T-junction in the mine.  You can go west, south, or
+north from here."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+north to ore3;
+west to mine13;
+south to ore4;
+end
+
+		mine15
+title "A Junction in a Narrow Mine Shaft"
+descr
+"   You have come to a T-junction in the mine.  You can go west, east, or
+north from here."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+east to ore2;
+west to ore1;
+north to mine10;
+end
+
+		mine16
+title "A Narrow Mine Shaft"
+descr
+"    You are walking along a narrow mine shaft.  The walls here are smooth to
+the touch and look very sturdy.  You can head north or south along the shaft."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+north to mine11;
+south to mine17;
+end
+		mine17
+title "A Narrow Mine Shaft"
+descr
+"    You are walking along a narrow mine shaft.  The walls here are smooth to
+the touch and look very sturdy.  You can head north or south along the shaft.
+You also see a small passage east."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+north to mine16;
+south to mine18;
+east to ore5;
+end
+		mine18
+title "A Narrow Mine Shaft"
+descr
+"    You are walking along a narrow mine shaft.  The walls here are smooth to
+the touch and look very sturdy.  You can head north or south along the shaft.
+You also see a small passage west."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+north to mine17;
+south to mine19;
+west to ore6;
+end
+		mine19
+title "A Narrow Mine Shaft"
+descr
+"    You are walking along a narrow mine shaft.  The walls here are smooth to
+the touch and look very sturdy.  You can head north or south along the shaft."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+north to mine18;
+south to mine20;
+end
+
+		mine20
+title "A Turn in the Shaft"
+descr
+"   You come to a turn in the mine shaft.  The shaft runs east and north from
+here."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+east to by_lake1;
+north to mine19;
+end
+
+		by_lake1
+title "By a Small Underground Lake"
+descr
+"   You are near a small underground lake.  You assume this used to be a
+part of the mines themselves but has since filled up with water.  The only
+apparent exit is back to the west."
+extra{"lake","water"}
+"Although swimming is not recommended, you may be able to here."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+west to mine20;
+east to on_lake1;
+end
+
+		on_lake1
+title "On a Small Underground Lake"
+descr
+"   You are swimming in a small underground lake.  You can head back to the
+shore by going west, or if you think you can hold your breath, you can go
+down under the water."
+movement SECT_WATER_SWIM
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+west to by_lake1;
+down to under_lake1;
+end
+
+		under_lake1
+title "Underwater in a Small Underground Lake"
+descr
+"   You can't really see a thing here.  You think there may be able to go
+some other direction than up, but you don't know which way to go.  You can
+always go up for air."
+movement SECT_UNDER_WATER
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+east to under_lake2;
+west to under_lake1;
+south to under_lake1;
+north to under_lake1;
+up to on_lake1;
+end
+
+		under_lake2
+title "Underwater in a Small Underground Lake"
+descr
+"   You can't really see a thing here.  You think there may be able to go
+some other direction than up, but you don't know which way to go.  You can
+always go up for air."
+movement SECT_UNDER_WATER
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+east to under_lake2;
+west to under_lake1;
+south to under_lake2;
+north to under_lake2;
+up to on_lake2;
+end
+
+		on_lake2
+title "On a Small Underground Lake"
+descr
+"   You are swimming in a small underground lake.  You can head back to the
+shore by going east, or if you think you can hold your breath, you can go
+down under the water."
+movement SECT_WATER_SWIM
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+east to by_lake2;
+down to under_lake2;
+end
+
+		by_lake2
+title "By a Small Underground Lake"
+descr
+"   You are near a small underground lake.  You assume this used to be a
+part of the mines themselves but has since filled up with water.  A dwarven
+corpse lies here.  It looks like it has been ravenged by some monster.
+There is some writing scribbled onto the wall."
+extra{"wall","writing"}
+"To whomever finds my body:
+
+I guess that the water has subsided enough for you to find my body.  I came
+into the mines seeking my fortune.  Instead I found my death.  The water has
+risen too far for me to make it back to the main mine shaft.  Please tell my
+family that I love them.
+
+Gildin, son of Thorigan"
+extra{"lake","water"}
+"Although swimming is not recommended, you may be able to here."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+west to on_lake2;
+end
+
+
+ore1
+title "A Newly Dug Portion"
+descr
+"   You are in a newly dug portion of the mine.  The walls here are rough and
+don't look very sturdy.  You have the feeling that is you did any digging
+here, you may find something valuable, or you may cause a collapse.  You can
+exit to the main shaft by going east."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+east to mine15;
+
+dilbegin dig_dil();
+var
+  i : integer;
+  item : unitptr;
+  pc : unitptr;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*10;
+
+   :start:
+   wait(SFB_CMD, activator.type == UNIT_ST_PC);
+   if (command(CMD_DIG)) goto digging;
+   else goto init;
+
+   :digging:
+   act("$1n starts digging.",
+       A_ALWAYS, activator, null, null, TO_ROOM);
+   pc := activator;
+   secure(pc, init);
+
+   block;
+   i := rnd(1,100);
+   if (i < 75)
+   {
+      act("You don't find anything.",A_ALWAYS,pc,null,null,TO_CHAR);
+      goto init;
+   }
+   if (i < 90)
+   {
+      act("You find something.",A_ALWAYS,pc,null,null,TO_CHAR);
+      if (i < 79)
+      {
+	 item := load("ore@dwarves");
+	 link(item,self);
+	 goto init;
+      }
+      if (i == 79)
+      {
+	 item := load("gem@hobgob");
+	 link(item,self);
+	 goto init;
+      }
+      if (i == 80)
+      {
+	 item := load("diamond@dwarves");
+	 link(item,self);
+	 goto init;
+      }
+      if (i == 81)
+      {
+	 item := load("ruby@dwarves");
+	 link(item,self);
+	 goto init;
+      }
+      if (i == 82)
+      {
+	 item := load("emerald@dwarves");
+	 link(item,self);
+	 goto init;
+      }
+      if (i == 83)
+      {
+	 item := load("gold_nugget@dwarves");
+	 link(item,self);
+	 goto init;
+      }
+      if (i == 84)
+      {
+	 item := load("silver_nugget@dwarves");
+	 link(item,self);
+	 goto init;
+      }
+      item := load("lead_nugget@dwarves");
+      link(item,self);
+      goto init;
+   }
+   if (i < 100)
+   {
+      act("You cause a collapse!  You are hurt by falling rock.",A_ALWAYS,
+	  pc,null,null,TO_CHAR);
+      if (i < 92)
+      {
+	 pc.hp := pc.hp - 30;
+	 goto init;
+      }
+      if (i < 94)
+      {
+	 pc.hp := pc.hp - 75;
+	 goto init;
+      }
+      if (i < 96)
+      {
+	 pc.hp := pc.hp - 100;
+	 goto init;
+      }
+      if (i < 98)
+      {
+	 pc.hp := pc.hp/2;
+	 goto init;
+      }
+      if (i < 100)
+      {
+	 pc.hp := 1;
+	 goto init;
+      }
+   }
+   goto init;
+}
+dilend
+end
+
+		ore2
+title "A Newly Dug Portion"
+descr
+"   You are in a newly dug portion of the mine.  The walls here are rough and
+don't look very sturdy.  You have the feeling that is you did any digging
+here, you may find something valuable, or you may cause a collapse.  You can
+exit to the main shaft by going west."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+west to mine15;
+
+dilcopy dig_dil@dwarves();
+end
+
+		ore3
+title "A Newly Dug Portion"
+descr
+"   You are in a newly dug portion of the mine.  The walls here are rough and
+don't look very sturdy.  You have the feeling that is you did any digging
+here, you may find something valuable, or you may cause a collapse.  You can
+exit to the main shaft by going south."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+south to mine14;
+dilcopy dig_dil@dwarves();
+end
+
+		ore4
+title "A Newly Dug Portion"
+descr
+"   You are in a newly dug portion of the mine.  The walls here are rough and
+don't look very sturdy.  You have the feeling that is you did any digging
+here, you may find something valuable, or you may cause a collapse.  You can
+exit to the main shaft by going north."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+north to mine14;
+dilcopy dig_dil@dwarves();
+end
+
+		ore5
+title "A Newly Dug Portion"
+descr
+"   You are in a newly dug portion of the mine.  The walls here are rough and
+don't look very sturdy.  You have the feeling that is you did any digging
+here, you may find something valuable, or you may cause a collapse.  You can
+exit to the main shaft by going west."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+west to mine17;
+dilcopy dig_dil@dwarves();
+end
+
+		ore6
+title "A Newly Dug Portion"
+descr
+"   You are in a newly dug portion of the mine.  The walls here are rough and
+don't look very sturdy.  You have the feeling that is you did any digging
+here, you may find something valuable, or you may cause a collapse.  You can
+exit to the main shaft by going east."
+movement SECT_INSIDE
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+east to mine18;
+dilcopy dig_dil@dwarves();
+end
+
+/* ----------------------------------------------------------------------- */
+/* ----------------------------------------------------------------------- */
+/* ----------------------------------------------------------------------- */
+
+%mobiles
+
+		thorigorn_ghost
+
+names {"thorigorn","spirit","ghost"}
+title "King Thorigorn's Spirit"
+descr "The ghost of King Thorigorn is here."
+extra{}
+"The spectral image in front of you bears a striking resemblence to the
+portrait of King Thorigorn which you saw earlier."
+race RACE_SPIRIT
+sex SEX_NEUTRAL
+level 41
+height 120
+weight 1
+exp 120
+alignment 0
+MSET_ABILITY(20,20,20,10,10,10,10,0)
+MSET_WEAPON(20,10,10,10,10,10)
+MSET_SPELL(3,3,3,3,3,3,3,3,2,2,2)
+special SFUN_COMBAT_MAGIC "cast energy drain"
+
+dilbegin prg12();
+var
+  pc : unitptr;
+  item : unitptr;
+  coolnum : integer;
+code
+{
+	:init:
+	heartbeat := PULSE_SEC*5;
+	self.minv :=220;
+	on_activation((self.position <= POSITION_SLEEPING) or
+		 (self.position == POSITION_FIGHTING), skip);
+
+	:start:
+	wait(SFB_CMD, activator.type == UNIT_ST_PC);
+
+	pc := activator;
+	secure(pc, losthim);
+
+	exec("emote appears from the air.", self);
+	self.minv := 0;
+	pause;
+
+	if (DIV_ARMOR_QUEST in pc.quests)
+	{
+	  exec("say You have already visited this place "+pc.name+".", self);
+	  pause;
+	  exec("say I told you before not to return.  Now begone!", self);
+	  pause;
+	  exec("emote disappears into the air.", self);
+          self.minv :=220;
+	  goto waitforleave;
+	}
+	else
+	{
+	  coolnum := 0;
+	  if (BUTTON1_COMPLETE in pc.quests) coolnum := coolnum + 1;
+	  if (BUTTON2_COMPLETE in pc.quests) coolnum := coolnum + 1;
+	  if (BUTTON3_COMPLETE in pc.quests) coolnum := coolnum + 1;
+	  if (BUTTON4_COMPLETE in pc.quests) coolnum := coolnum + 1;
+	  if (BUTTON5_COMPLETE in pc.quests) coolnum := coolnum + 1;
+	  if (coolnum < 4)
+	  {
+	    exec("say Someone must have given you the combination.", self);
+	    pause;
+	    if (coolnum == 0) exec("say You have not found any of the numbers by yourself.", self);
+	    if (coolnum == 1) exec("say You have only found one of the numbers by yourself.", self);
+	    if (coolnum == 2) exec("say You have only found two of the numbers by yourself.", self);
+	    if (coolnum == 3) exec("say You have only found three of the numbers by yourself.", self);
+	    pause;
+	    exec("say You need to find 4 of the 5 buttons on your own.", self);
+	    pause;
+	    exec("say Come back then.", self);
+	    pause;
+	    exec("emote disappears into the air.", self);
+	    self.minv :=220;
+	  goto waitforleave;
+	  }
+	  else
+	  {
+	    subextra(pc.quests, BUTTON1_ONGOING);
+	    subextra(pc.quests, BUTTON2_ONGOING);
+	    subextra(pc.quests, BUTTON4_ONGOING);
+	    subextra(pc.quests, BUTTON5_ONGOING);
+	    subextra(pc.quests, BUTTON1_COMPLETE);
+	    subextra(pc.quests, BUTTON2_COMPLETE);
+	    subextra(pc.quests, BUTTON3_COMPLETE);
+	    subextra(pc.quests, BUTTON4_COMPLETE);
+	    subextra(pc.quests, BUTTON5_COMPLETE);
+
+	    addextra(pc.quests, {DIV_ARMOR_QUEST}, "");
+	  experience(1500, pc);
+		if (pc.alignment<= 900)
+		pc.alignment:=pc.alignment +100;
+		else
+		  pc.alignment:=1000;
+
+	    exec("say You have proven yourself worthy mighty one.", self);
+	    pause;
+	    exec("say Receive this armor as your reward.", self);
+	    item := load("dwarves/div_helmet");
+            item.height := pc.height;
+	    link(item, pc);
+	    item := load("dwarves/div_plate");
+            item.height := pc.height;
+	    link(item, pc);
+	    item := load("dwarves/div_gauntlets");
+            item.height := pc.height;
+	    link(item, pc);
+	    item := load("dwarves/div_sleeves");
+            item.height := pc.height;
+	    link(item, pc);
+	    item := load("dwarves/div_skirt");
+            item.height := pc.height;
+	    link(item, pc);
+	    item := load("dwarves/div_boots");
+            item.height := pc.height;
+	    link(item, pc);
+	    pause;
+	    exec("emote finishes giving you the divine armor.", self);
+	    pause;
+	    exec("say Go now and never return to this place!", self);
+	    pause;
+	    exec("emote disappears into the air.", self);
+	    self.minv :=220;
+	  }
+	}
+	:waitforleave:
+	heartbeat := PULSE_SEC*6;
+	pause;
+	goto init;
+:losthim:
+pause;
+unsecure (pc);
+goto init;
+}
+dilend
+
+
+end
+
+		baldin
+
+names {"king baldin","king","baldin"}
+title "King Baldin"
+descr
+"The wise King Baldin is here."
+extra{}
+"Baldin is a proud dwarf from a long line of kingly dwarves."
+M_DWARF_MAGE_FIRE (40,SEX_MALE,"cast firestorm")
+alignment 500
+money 4 SILVER_PIECE
+special SFUN_TEAMWORK "farak/ovo/greylock"
+
+dilbegin king_give();
+var
+  pcname : string;
+  item: unitptr;
+  pc: unitptr;
+  i: integer;
+
+code
+{
+
+:init:
+heartbeat := PULSE_SEC*3;
+	on_activation((self.position <= POSITION_SLEEPING) or
+	  (self.position == POSITION_FIGHTING), skip);
+
+:start:
+wait(SFB_CMD,(activator.type == UNIT_ST_PC) and (not command(CMD_GIVE)));
+
+if ((BUTTON1_COMPLETE in activator.quests) or
+   (DIV_ARMOR_QUEST in activator.quests)or
+   (BUTTON1_ONGOING in activator.quests))
+	 goto start;
+pc := activator;
+secure(pc, lostpc);
+
+if (not (BUTTON1_ONGOING in pc.quests))
+{
+pause;
+	  exec("say "+pc.name+", you look like one who could help me.", self);
+	  pause;
+	  exec("say My brother, Gildin, is missing.  I'm afraid he may"+
+	       " have perished.", self);
+	  pause;
+	  exec("say If you can give me proof of his whereabouts, I will"+
+	       " reward you greatly.", self);
+	  pause;
+	  exec("say Will you be able to help me "+pc.name+"?", self);
+
+i := 0;
+while (i < 5)
+{
+wait(SFB_CMD, activator #= pc);
+
+if (command(CMD_NOD))
+{
+goto quest_accepted; /* Goto the label if accepted */
+}
+else if (command(CMD_SAY))
+{
+/*  This specifies what happens if the pc says something */
+pause;
+exec("say Nod if you agree to help, shake your head" +
+"otherwise.", self);
+}
+else if (command(CMD_SHAKE))
+goto no_quest;
+
+i := i+1;
+	}
+		}
+unsecure(pc);
+goto start;
+
+
+:no_quest:
+pause;
+exec("say Fine, then be off.", self);
+unsecure(pc);
+goto start;
+
+:quest_accepted:
+pause;
+	  exec("say Good, I'm glad to hear that.", self);
+	  pause;
+exec("say My brother wears a ring with a dragon inscribed on"+
+" the stone.  Please bring me the ring when you find him.", self);
+pause;
+exec("say Good luck.", self);
+addextra(pc.quests, {BUTTON1_ONGOING}, "");
+unsecure(pc);
+goto start;
+
+
+:lostpc:
+	exec("say That was rude, just leaving", self);
+	pause;
+unsecure(pc);
+goto start;
+
+:ohno_combat:
+heartbeat := PULSE_SEC*3;
+exec("say Help! Help! Help! Help!", self);
+pause;
+exec("say My guards will take care of you!", self);
+pause;
+unsecure(pc);
+goto start;
+}
+dilend
+
+
+dilbegin king_get();
+var
+  pc: unitptr;
+  item: unitptr;
+code
+{
+heartbeat := PULSE_SEC*3;
+	on_activation((self.position <= POSITION_SLEEPING) or
+	  (self.position == POSITION_FIGHTING), skip);
+
+:start:
+
+wait(SFB_DONE, command(CMD_GIVE) and
+(self==target)  and
+(activator.type == UNIT_ST_PC));
+
+if ((BUTTON1_COMPLETE in activator.quests) or
+   (DIV_ARMOR_QUEST in activator.quests))
+goto start;
+
+pc := activator;
+item := medium;
+secure(pc, labsecure);
+secure(item, labsecure);
+
+if ((item.nameidx+"@"+item.zoneidx)=="dragon_ring@dwarves")
+{
+unsecure(item);
+		 destroy(item);
+		   subextra(pc.quests, BUTTON1_ONGOING);
+		   addextra(pc.quests, {BUTTON1_COMPLETE}, "");
+	  exec("say just as I expected.  The poor fool.  He loved those "+
+	       "mines.", self);
+	  pause;
+	  exec("say Thank you "+pc.name+".  As I promised, here is your "+
+	       "reward.", self);
+
+	  act("As Baldin pulls his hand from his pocket, a piece of paper "+
+	      "falls to the floor.", A_ALWAYS, pc, null, null, TO_CHAR);
+	  act("You reach to pick it up as Baldin snatches it from the floor.",
+	      A_ALWAYS, pc, null, null, TO_CHAR);
+	  act("You were able to read 'Tresure room combination 3-' before "+
+	      "the king grabed it.",A_ALWAYS,pc,null,null,TO_CHAR);
+
+	  }
+	  else
+	  {
+	  exec("say This isn't from Gildin.", self);
+	  link(item,pc);
+	  }
+    unsecure (item);
+unsecure(pc);
+goto start;
+:labsecure:
+	  exec("say To bad and I thought "+pc.name+" could find my brother.", self);
+exec ("sigh", self);
+exec ("say Well maybe some day I will find out what happened to him.", self);
+unsecure(pc);
+goto start;
+
+}
+dilend
+end
+
+		farak
+
+names {"farak","lifeguard","guard"}
+title "Farak"
+descr
+"Farak, King Baldin's bodyguard, is here."
+extra{}
+"Numerous battle scars tell you this is one tough dwarf."
+M_DWARF_WARRIOR_AXE (35,SEX_MALE)
+alignment 500
+money 4 SILVER_PIECE
+special SFUN_RESCUE "baldin"
+special SFUN_TEAMWORK "ovo/baldin/greylock"
+end
+
+		ovo
+
+names {"ovo","lifeguard","guard"}
+title "Ovo"
+descr
+"Ovo, King Baldin's bodyguard, is here."
+extra{}
+"Numerous battle scars tell you this is one tough dwarf."
+M_DWARF_WARRIOR_AXE (35,SEX_MALE)
+alignment 500
+money 4 SILVER_PIECE
+
+special SFUN_RESCUE "baldin"
+special SFUN_TEAMWORK "farak/baldin/greylock"
+end
+
+		bolgar
+
+names {"bolgar","guard","dwarf"}
+title "Bolgar"
+descr
+"Bolgar, defender of Farginok, is here."
+extra {}
+"Bolgar is one of the heros of Farginok."
+M_DWARF_WARRIOR_AXE (30,SEX_MALE)
+money 3 SILVER_PIECE
+
+dilbegin prg15();
+var
+  pc : unitptr;
+code
+{
+  :init:
+  heartbeat := WAIT_SEC*10;
+  on_activation((self.position <= POSITION_SLEEPING) or
+    (self.position == POSITION_FIGHTING), skip);
+
+  wait(SFB_CMD, activator.type == UNIT_ST_PC);
+  pc := activator;
+  secure(pc,start);
+
+  :start:
+  if ((pc.race != RACE_DWARF) and command(CMD_EAST))
+  {
+	 exec("say We do not allow non-dwarves in the fortress.", self);
+	 block;
+  }
+  if ((pc.level < 20) and command(CMD_EAST))
+  {
+	 exec("say No low level players.  Didn't you read the sign!?", self);
+	 block;
+  }
+
+  :end:
+  unsecure(pc);
+  goto init;
+}
+dilend
+end
+
+		dain
+
+names {"dain","miner","guard","dwarf"}
+title "Dain"
+descr
+"Dain, a simple miner, is here."
+extra {}
+"Dain is covered with dirt."
+M_DWARF_WARRIOR_POLE (35,SEX_MALE)
+money 4 SILVER_PIECE
+
+end
+
+		dalur
+
+names {"dalur","miner","guard","dwarf"}
+title "Dalur"
+descr
+"Dalur, a simple miner, is here."
+extra {}
+"Dalur is covered with dirt and grime."
+M_DWARF_WARRIOR_POLE (32,SEX_MALE)
+money 4 SILVER_PIECE
+
+end
+
+		belak
+
+names {"belak","armorer","dwarf"}
+title "Belak"
+descr
+"Belak the Armorer is here."
+extra {}
+"Belak is a master of armor construction."
+M_DWARF_WARRIOR_AXE (33,SEX_MALE)
+money 4 SILVER_PIECE
+
+end
+
+		morak
+
+names {"morak","weaponsmith","smith","dwarf"}
+title "Morak"
+descr
+"Morak the Weaponsmith is here."
+extra {}
+"Morak is a master of weapon construction."
+M_DWARF_WARRIOR_AXE (33,SEX_MALE)
+money 4 SILVER_PIECE
+
+end
+
+		bain
+
+names {"bain","priest","dwarf"}
+title "Bain"
+descr
+"Bain the Holy is here."
+extra {}
+"Bain is a kindly dwarf blessed with special powers."
+M_DWARF_CLERIC_CLUB (31,SEX_MALE,"cast harm","cast heal bain")
+money 3 SILVER_PIECE
+alignment 500
+
+dilbegin prg16();
+var
+  pc : unitptr;
+  inpurse : integer;
+	i:integer;
+
+code
+{
+	:init:
+	heartbeat := PULSE_SEC*10;
+	on_activation((self.position <= POSITION_SLEEPING) or
+		 (self.position == POSITION_FIGHTING), skip);
+
+	:start:
+	wait(SFB_CMD, (activator.type == UNIT_ST_PC) and
+	(activator.hp < activator.max_hp));
+
+	pc := activator;
+	secure (pc, start);
+
+	exec("say Hello "+pc.name+", I see you are in need of healing?", self);
+	pause;
+	exec("say I Heal cfor a 2 platinum piece donation.", self);
+	exec ("say Do you want to make this donation.",self);
+
+i := 0;
+while (i < 5)
+{
+wait(SFB_CMD, activator #= pc);
+
+if (command(CMD_NOD))
+{
+goto offer; /* Goto the label if accepted */
+}
+else if (command(CMD_SAY))
+{
+/*  This specifies what happens if the pc says something */
+pause;
+exec("say Nod if you agree to donate, shake your head" +
+"otherwise.", self);
+}
+else if (command(CMD_SHAKE))
+goto end_dil;
+
+i := i+1;
+	}
+unsecure(pc);
+goto start;
+
+	:offer:
+	i:=transfermoney (pc,self,81920);
+	if (i<1) goto broke;
+	:heal:
+	exec("cast heal "+pc.name, self);
+	destroy(self.inside);
+	goto end_dil;
+
+:broke:
+exec ("say I am sorry my friend you don't seem to have enough money.",self);
+exec ("say Just return when you do.",self);
+	:end_dil:
+	exec("say Goodbye "+pc.name+".",self);
+	goto start;
+
+
+}
+dilend
+end
+
+		greylock
+
+names {"greylock","wizard"}
+title "Greylock"
+descr "Greylock, the wizard, is here."
+extra {} "Greylock looks old and powerful."
+M_DWARF_CLERIC_CLUB (35,SEX_MALE,"cast harm","cast heal greylock")
+money 4 SILVER_PIECE
+
+alignment 300
+special SFUN_TEAMWORK "baldin/farak/ovo"
+
+dilbegin glock_move();
+var
+  pc    : unitptr;
+  item  : unitptr;
+  exdp : extraptr;
+
+code
+{
+	:init:
+	heartbeat := PULSE_SEC*10;
+	on_activation(self.position == POSITION_FIGHTING, skip);
+
+	:sleeptime:
+	self.outside_descr := "Greylock, the wizard, is here.";
+	heartbeat := WAIT_SEC*SECS_PER_MUD_HOUR/2;
+	while ((mudhour > 21) or (mudhour < 9))
+	{
+	  exec("snore", self);
+	  pause;
+	}
+	heartbeat := WAIT_SEC*5;
+	exec("wake", self); pause;
+	exec("yawn", self); pause;
+	exec("stand", self); pause;
+	exec("unlock south door", self); pause;
+	exec("open south door", self); pause;
+	exec("south", self); pause;
+	exec("close north door", self); pause;
+	exec("lock north door", self); pause;
+	exec("say karnoff", self); pause;
+	exec("west", self); pause;
+	exec("west", self); pause;
+	exec("emote polishes the Philosopher's Stone.", self); pause;
+	exec("emote gets to work on some new spells.",self); pause;
+	self.outside_descr := "Greylock, the wizard, is here working on spells.";
+
+	:labtime:
+	heartbeat := WAIT_SEC*5;
+	if (mudhour > 17) goto kingtime;
+	wait(SFB_CMD | SFB_TICK, TRUE);
+	if (command(CMD_AUTO_TICK)) goto labtime;
+	if (activator.type != UNIT_ST_PC) goto labtime;
+	pc := activator;
+	secure(pc, labtime);
+if (DIV_ARMOR_QUEST in pc.quests or BUTTON5_COMPLETE in pc.quests) goto waitone;
+	exec("say Hi "+pc.name+", fine day isn't it?", self); pause;
+	exec("say Take a look at my latest discovery.", self);
+	exec("emote points at the Philosopher's Stone.", self); pause;
+	exec("say That's a Philosopher's Stone.  It changes ordinary "+
+	  "lead to gold.  Let me show you how it works.", self); pause;
+	exec("say Let's see, I have some lead somewhere.", self); pause;
+	exec("emote searches frantically for some lead.", self); pause;
+	exec("say Do you have a lead nugget?", self); pause;
+	exec("say If you do, please give it to me.", self); pause;
+	exec("say If you don't, you can find some by digging"+
+	  " in the mines.", self);
+		if (BUTTON5_ONGOING in pc.quests)
+	    addextra(pc.quests, {BUTTON5_ONGOING}, "");
+
+	pause;
+	pause;
+	pause;
+	if ("lead" in self.inside.names)
+	{
+	  destroy(self.inside);
+	  exec("say Cliecto difictu noractu", self); pause;
+	  exec("emote lifts the softly glowing metal.", self); pause;
+	  exec("say There we are.  Pretty good, yes?", self); pause;
+	  item := load("dwarves/gold_nugget");
+	  link(item, pc); pause;
+	  exec("emote shows you a gold nugget before handing it to you.",
+	    self); pause;
+	  exec("say Well, I'm back to work.  Goodbye "+pc.name+".", self);
+	    subextra(pc.quests, BUTTON5_ONGOING);
+	  experience(1500, pc);
+
+	    addextra(pc.quests, {BUTTON5_COMPLETE}, "");
+	  exec("say Oh, by the way, the last button is number 4, but I "+
+	    "didn't tell you that.", self); pause;
+	  goto waitone;
+	}
+	else
+	{
+	  exec("say I bid you good day "+pc.name+".", self);
+	}
+	:waitone:
+	heartbeat := WAIT_SEC*60;
+	pause;
+	goto labtime;
+
+	:kingtime:
+	exec("emote looks at his hourglass.", self); pause;
+	exec("say Oh my, must go to the king!", self); pause;
+	exec("emote drops his spellbook.", self); pause;
+	walkto(findroom("dwarves/throne")); pause;
+	exec("bow", self); pause;
+	exec("say Sorry I'm late your majesty.  I've almost got time travel"+
+	  " perfected.", self); pause;
+	exec("emote holds his fingers about an inch apart.", self);
+	self.outside_descr := "Greylock, the wizard, is here guarding the king.";
+	pause;
+
+	heartbeat := WAIT_SEC*600;
+	while (mudhour < 22)
+	{
+	  exec("emote shifts his weight from side to side.", self);
+	  pause;
+	}
+
+	heartbeat := WAIT_SEC*10;
+	exec("yawn", self); pause;
+	exec("say Goodnight your majesty.", self); pause;
+	walkto(findroom("dwarves/fountain")); pause;
+	exec("drink water", self); pause;
+	exec("east", self); pause;
+	exec("unlock door", self); pause;
+	exec("open door", self); pause;
+	exec("east", self); pause;
+	exec("close door", self); pause;
+	exec("lock door", self); pause;
+	exec("sleep", self); pause;
+	goto init;
+}
+dilend
+
+end
+
+		dwarf_sentry
+
+names {"dwarven sentry","sentry","dwarf"}
+title "a dwarven sentry"
+descr
+"A dwarven sentry is here."
+extra {}
+"The sentry looks like a tough fighter."
+M_DWARF_WARRIOR_POLE (30,SEX_MALE)
+money 3 SILVER_PIECE
+
+alignment 200
+special SFUN_TEAMWORK "dwarf_guard/dwarf_sentry/baldin"
+
+dilbegin prg18();
+var
+  pc : unitptr;
+code
+{
+	:init:
+	heartbeat := WAIT_SEC*30;
+	on_activation((self.position <= POSITION_SLEEPING) or
+		 (self.position == POSITION_FIGHTING), skip);
+
+	:start:
+	wait(SFB_CMD, activator.type == UNIT_ST_PC);
+	if (activator.race != RACE_DWARF)
+	{
+	  act("The sentry eyes you suspiciously and tightens his"+
+	    " grip on his weapon.",A_ALWAYS,activator,null,null,TO_CHAR);
+	}
+	pause;
+}
+dilend
+end
+												 /*
+		dwarf_cleaner
+
+names {"dwarven cleaner","cleaner","dwarf"}
+title "a dwarven cleaner"
+descr
+"A dwarven cleaner is here."
+extra {}
+"The cleaner looks like a tough fighter."
+M_DWARF_WARRIOR_POLE (35,SEX_MALE)
+
+alignment 200
+special SFUN_TEAMWORK "dwarf_guard/dwarf_sentry/baldin"
+
+dilbegin prg19();
+var
+  pc : unitptr;
+  exdp1 : extraptr;
+  exdp2 : extraptr;
+  exdp3 : extraptr;
+  exdp4 : extraptr;
+code
+{
+	:init:
+	wait(SFB_CMD, command("remove"));
+	pc := activator;
+	block;
+	exdp1 := DWARF_TREASURE_QUEST in pc.quests;
+	exdp2 := DIV_ARMOR_QUEST in pc.quests;
+	exdp3 := DWARF_QUEST_COMP in pc.quests;
+	exdp4 := DWARF_QUEST_ONGOING in pc.quests;
+
+
+	if ("button1" in argument) substring(exdp1.names,"button1");
+	if ("button2" in argument) substring(exdp1.names,"button2");
+	if ("button3" in argument) substring(exdp1.names,"button3");
+	if ("button4" in argument) substring(exdp1.names,"button4");
+	if ("button5" in argument) substring(exdp1.names,"button5");
+	if ("button6" in argument) substring(exdp1.names,"button6");
+
+	if ("armor quest on" in argument) subextra(pc.quests,
+		DWARF_TREASURE_QUEST);
+	if ("armor quest com" in argument) subextra(pc.quests,
+		DIV_ARMOR_QUEST);
+	if ("dwarf quest on" in argument) subextra(pc.quests,
+		DWARF_QUEST_ONGOING);
+	if ("dwarf quest com" in argument) subextra(pc.quests,
+		DWARF_QUEST_COMP);
+
+	goto init;
+}
+dilend
+end
+
+*/
+
+
+		dwarf_guard
+
+names {"dwarven guard","dwarf","guard"}
+title "a dwarven guard"
+descr
+"A dwarven guard is here."
+extra {}
+"The guard looks like he's been in more than one fight."
+M_DWARF_WARRIOR_SWORD (29,SEX_MALE)
+alignment 200
+money 3 SILVER_PIECE
+
+special SFUN_TEAMWORK "guard/sentry/baldin"
+special SFUN_RANDOM_ZONE_MOVE time 40 bits SFB_RANTIME
+
+dilbegin prg20();
+var
+  pc : unitptr;
+code
+{
+	:init:
+	heartbeat := WAIT_SEC*30;
+	on_activation((self.position <= POSITION_SLEEPING) or
+		 (self.position == POSITION_FIGHTING), skip);
+
+	:start:
+	wait(SFB_CMD, activator.type == UNIT_ST_PC);
+	if (activator.race != RACE_DWARF)
+	{
+	  act("The guard eyes you suspiciously and tightens his"+
+	    " grip on his weapon.",A_ALWAYS,activator,null,null,TO_CHAR);
+	}
+	pause;
+}
+dilend
+end
+
+		dwarf_miner
+
+names {"dwarven miner","dwarf","miner"}
+title "a dwarven miner"
+descr
+"A dwarven miner is here."
+extra {}
+"The miner looks like he's been in the mines for a while."
+M_DWARF_WARRIOR_POLE (32,SEX_MALE)
+alignment 300
+special SFUN_TEAMWORK "miner"
+special SFUN_RANDOM_ZONE_MOVE time 40 bits SFB_RANTIME
+
+dilbegin prg21();
+code
+{
+	:init:
+	on_activation((self.position <= POSITION_SLEEPING) or
+	  (self.position == POSITION_FIGHTING), skip);
+	heartbeat := PULSE_SEC*60;
+	wait(SFB_TICK, TRUE);
+	exec("dig", self);
+	goto init;
+}
+dilend
+
+dilbegin prg22();
+code
+{
+	:init:
+	on_activation((self.position <= POSITION_SLEEPING) or
+	  (self.position == POSITION_FIGHTING), skip);
+	heartbeat := PULSE_SEC*60;
+	wait(SFB_CMD, activator.type == UNIT_ST_PC);
+	if ("gildin" in argument)
+	{
+	  exec("say Gildin?  I think I saw him by the lake a few days ago.",
+	    self);
+	  exec("say You may want to look there.", self);
+	}
+	goto init;
+}
+dilend
+end
+
+		gimin
+
+names {"gimin","dwarf"}
+title "Gimin"
+descr
+"Gimin, the old dwarf, is here."
+extra {}
+"Gimin is small even by dwarf standards.  His old hands tell of his days as
+a great metalworker for King Thorigorn."
+M_DWARF_WARRIOR_AXE (33,SEX_MALE)
+alignment 600
+
+dilbegin gimin_give();
+var
+  pcname : string;
+  item: unitptr;
+  pc: unitptr;
+  i: integer;
+code
+{
+
+:init:
+heartbeat := PULSE_SEC*3;
+	on_activation((self.position <= POSITION_SLEEPING) or
+	  (self.position == POSITION_FIGHTING), skip);
+
+:start:
+wait(SFB_CMD,(activator.type == UNIT_ST_PC) and (not command(CMD_GIVE)));
+
+if ((BUTTON4_COMPLETE in activator.quests) or
+   (DIV_ARMOR_QUEST in activator.quests) or
+   (BUTTON4_ONGOING in activator.quests))
+	 goto start;
+pc := activator;
+secure(pc, lostpc);
+
+if (not (BUTTON4_ONGOING in pc.quests))
+{
+pause;
+exec("say Hello?  Can I help you?", self);
+pause;
+exec("emote tries to lift his arm but fails.", self);
+pause;
+exec("say Please excuse me, my dexterity has left me.",self);
+pause;
+exec("say If you can help me, I can help you.", self);
+pause;
+exec("say I need my dexterity back.  Without it, I cannot function.", self);
+pause;
+exec("say Bring me the ethereal ring of the ghost and", self);
+exec ("say I will tell you of a great treasure.", self);
+pause;
+exec("say Please nod if you will help me.", self);
+
+i := 0;
+while (i < 5)
+{
+wait(SFB_CMD, activator #= pc);
+
+if (command(CMD_NOD))
+{
+goto quest_accepted; /* Goto the label if accepted */
+}
+else if (command(CMD_SAY))
+{
+/*  This specifies what happens if the pc says something */
+
+pause;
+exec("say Nod if you agree to help, shake your head" +
+"otherwise.", self);
+}
+else if (command(CMD_SHAKE))
+goto no_quest;
+
+i := i+1;
+}
+							}
+unsecure(pc);
+goto start;
+
+:no_quest:
+pause;
+exec("say So be it!", self);
+unsecure(pc);
+goto start;
+
+
+:quest_accepted:
+	pause;
+	exec("say Go now for I may not be long of this world.", self);
+addextra(pc.quests, {BUTTON4_ONGOING}, "");
+unsecure(pc);
+goto start;
+
+:lostpc:
+exec("say Sure leave an old man to die!", self);
+pause;
+exec("say Maybe somebody will help me some day.", self);
+exec("sigh", self);
+unsecure(pc);
+goto start;
+
+:ohno_combat:
+heartbeat := PULSE_SEC*3;
+exec("say Why don't you pick on someone your own age.", self);
+pause;
+exec("say I am sure they will talk of how you killed an old man then!", self);
+pause;
+unsecure(pc);
+goto start;
+}
+dilend
+
+dilbegin gimin_get();
+var
+  pc: unitptr;
+  item: unitptr;
+  exdp: extraptr;
+
+code
+{
+heartbeat := PULSE_SEC*3;
+	on_activation((self.position <= POSITION_SLEEPING) or
+	  (self.position == POSITION_FIGHTING), skip);
+
+:start:
+
+wait(SFB_DONE, command(CMD_GIVE) and
+(self==target)  and
+(activator.type == UNIT_ST_PC));
+
+if (not (BUTTON4_ONGOING in activator.quests) or
+(DWARF_TREASURE_QUEST in activator.quests))
+goto start;
+
+pc := activator;
+item := medium;
+secure(pc, labsecure);
+secure(item, labsecure);
+
+if ((item.nameidx+"@"+item.zoneidx)=="ethereal_ring@kingc")
+{
+unsecure(item);
+		 destroy(item);
+		   subextra(pc.quests, BUTTON4_ONGOING);
+		   addextra(pc.quests, {BUTTON4_COMPLETE}, "");
+		 exec("say You truely are a great adventurer.", self); pause;
+		 exec("emote wears the ring and seems revitalized.", self);
+		 pause;
+		 exec("say There is a great treasure in the Treasure Room of "+
+			"Farginok.", self); pause;
+		 exec("say The fourth button to push is number 5.", self);
+		 pause;
+		 exec("say Good luck and thank you.", self); pause;
+	  }
+	  else
+	  {
+		 exec("Tis nice, but not that for which I asked.", self);
+		 link(self.inside,pc);
+	  }
+    unsecure (item);
+unsecure(pc);
+
+goto start;
+:labsecure:
+exec("say Now I will probably die a slow death.", self);
+unsecure (pc);
+goto start;
+}
+dilend
+end
+
+		norin
+
+names {"norin","dwarf"}
+title "Norin"
+descr
+"Norin, the elder dwarf, is here."
+extra {}
+"Norin was once the herald of King Thorigorn.  These days, he finds his peace
+just walking through the forest."
+M_DWARF_WARRIOR_AXE (33,SEX_MALE)
+alignment 600
+
+dilbegin norin_give();
+var
+  pcname : string;
+  item: unitptr;
+  pc: unitptr;
+  i: integer;
+
+code
+{
+
+:init:
+heartbeat := PULSE_SEC*3;
+	on_activation((self.position <= POSITION_SLEEPING) or
+	  (self.position == POSITION_FIGHTING), skip);
+
+:start:
+wait(SFB_CMD,(activator.type == UNIT_ST_PC) and (not command(CMD_GIVE)));
+
+if ((BUTTON2_COMPLETE in activator.quests) or
+   (DIV_ARMOR_QUEST in activator.quests) or
+   (BUTTON2_ONGOING in activator.quests))
+goto start;
+
+pc := activator;
+secure(pc, lostpc);
+
+if (not (BUTTON2_ONGOING in pc.quests))
+{
+	pause;
+exec("say Hello "+pc.name+"!", self);
+pause;
+exec("say Lovely day we are having isn't it?", self);
+pause;
+exec("say I was out walking among the trees today.",self);
+pause;
+exec("say I love mighty oaks don't you?", self);
+pause;
+exec("say I would love to grow my own.", self);
+exec("sigh", self);
+pause;
+exec("say If you could find an acorn for me, I can give you some "+
+	     "information.", self);
+pause;
+exec("say Please nod if you will help me.", self);
+
+i := 0;
+while (i < 5)
+{
+wait(SFB_CMD, activator #= pc);
+
+if (command(CMD_NOD))
+{
+goto quest_accepted; /* Goto the label if accepted */
+}
+else if (command(CMD_SAY))
+{
+/*  This specifies what happens if the pc says something */
+
+pause;
+exec("say Nod if you agree to help, shake your head" +
+"otherwise.", self);
+}
+else if (command(CMD_SHAKE))
+
+goto no_quest;
+
+i := i+1;
+}
+}
+unsecure(pc);
+goto start;
+
+:no_quest:
+pause;
+exec("say So be it!", self);
+unsecure(pc);
+goto start;
+
+:quest_accepted:
+pause;
+exec("say Just bring one to me if you happen to find one.", self);
+	pause;
+	exec("say Good luck!", self);
+addextra(pc.quests, {BUTTON2_ONGOING}, "");
+unsecure(pc);
+goto start;
+
+:lostpc:
+exec("say How rude!  Fine I will find someone else.", self);
+pause;
+exec("say"+ pc.name+"is probably affraid of an Acorn anyway.", self);
+exec("cackle", self);
+unsecure(pc);
+goto start;
+
+:ohno_combat:
+heartbeat := PULSE_SEC*3;
+exec("say Why don't you pick on someone your own age.", self);
+pause;
+exec("say I am sure they will talk of how you killed an old man then!", self);
+pause;
+unsecure(pc);
+goto start;
+}
+dilend
+
+dilbegin norin_get();
+var
+  pc: unitptr;
+  item: unitptr;
+  exdp: extraptr;
+
+code
+{
+heartbeat := PULSE_SEC*3;
+	on_activation((self.position <= POSITION_SLEEPING) or
+	  (self.position == POSITION_FIGHTING), skip);
+
+:start:
+
+wait(SFB_DONE, command(CMD_GIVE) and
+(self==target)  and
+(activator.type == UNIT_ST_PC));
+
+if (not (BUTTON2_ONGOING in activator.quests) or
+(DWARF_TREASURE_QUEST in activator.quests))
+goto start;
+
+pc := activator;
+item := medium;
+secure(pc, labsecure);
+secure(item, labsecure);
+
+if ((item.nameidx+"@"+item.zoneidx)=="acorn@cypress")
+{
+unsecure(item);
+		 destroy(item);
+		   subextra(pc.quests, BUTTON2_ONGOING);
+		   addextra(pc.quests, {BUTTON2_COMPLETE}, "");
+exec("say Thank you very much.", self);
+pause;
+exec("emote puts the acorn in his pocket.", self);
+pause;
+exec("say The second button to push is number 6.", self);
+pause;
+exec("say Good luck and thank you again.", self); pause;
+
+	  }
+	  else
+	  {
+		 exec("Tis nice, but not that for which I asked.", self);
+     unsecure (item);
+		 link(item,pc.inside);
+	  }
+unsecure(pc);
+goto start;
+:labsecure:
+exec ("say To bad and I had the soil all ready.", self);
+exec ("sigh", self);
+unsecure(pc);
+goto start;
+}
+dilend
+end
+
+		elk
+names {"elk"}
+title "a great elk"
+descr
+"A large elk is here."
+extra {}
+"The elk is large and looks very graceful."
+M_ELK (SEX_FEMALE)
+alignment 725
+special SFUN_RANDOM_ZONE_MOVE time 40 bits SFB_RANTIME
+end
+
+		snake
+names {"snake"}
+title "a deadly viper"
+descr "A snake is slithering through the grass here."
+extra {} "Taking a closer look you see the snake is a deadly viper."
+M_SNAKE_VIPER
+special SFUN_RANDOM_ZONE_MOVE time 40 bits SFB_RANTIME
+end
+
+		thief
+names {"thief","human"}
+title "a common thief"
+descr "A common thief is lurking here."
+extra {} "The thief is grinning at you."
+M_HUMAN_THIEF_SWORD	(4,SEX_MALE)
+alignment -400
+special SFUN_HIDEAWAY time WAIT_SEC*120 bits SFB_RANTIME
+special SFUN_RANDOM_ZONE_MOVE time 40 bits SFB_RANTIME
+dilcopy stealdil@function("money");
+end
+
+
+/* ----------------------------------------------------------------------- */
+/* ----------------------------------------------------------------------- */
+/* ----------------------------------------------------------------------- */
+
+%objects
+
+/*============================== WEAPONS ==================================*/
+
+		ice_staff
+
+names {"platinum staff","staff"}
+title "a platinum staff"
+descr "A platinum staff lies here."
+extra {}
+"This staff is fashioned from pure platinum.  You notice a large G carved
+into the end."
+extra {"$identify"}
+"This staff has many powers.  It makes its wielder stronger and smarter."
+cost 7 GOLD_PIECE
+rent 200 IRON_PIECE
+STAFF_DEF(60, 3, SPL_FROSTBALL_3, SPL_NONE)
+weight 20
+end
+
+		battle_axe
+
+names {"battle axe","axe"}
+title "a large battle axe"
+descr "A huge battle axe lies here."
+extra {}
+"This battle axe is fashioned from the finest metal.  The blade seems to
+retain its edge no matter what it strikes."
+extra {"$identify"}
+"This is obviously no ordinary battle axe."
+cost 3 SILVER_PIECE
+rent 8 IRON_PIECE
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_BATTLE_AXE, 0,0)
+
+weight 20
+end
+
+		halberd
+
+names {"halberd","axe"}
+title "a large halberd"
+descr "A huge halberd lies here."
+extra {}
+"This halbred is rather large and looks very deadly."
+cost 2 SILVER_PIECE
+rent 8 IRON_PIECE
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_HALBERD, 0,0)
+weight 30
+end
+
+		dwarf_sword
+
+names {"broadsword","sword"}
+title "a broadsword"
+descr "A broadsword lies here."
+extra {}
+"This looks like an ordinary broadsword."
+cost 8 COPPER_PIECE
+rent 4 IRON_PIECE
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_BROAD_SWORD,0,0)
+weight 20
+end
+
+		miner_pick
+
+names {"pick"}
+title "a miner's pick"
+descr "A miner's pick lies here."
+extra {}
+"This is an ordinary miner's pick."
+cost 1 COPPER_PIECE
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_SPEAR,0,0)
+weight 20
+end
+
+		dwarf_mace
+
+names {"mace"}
+title "a heavy mace"
+descr "A heavy looking mace lies here."
+extra{}
+"This mace is very hard to lift.  It looks like it could cause some serious
+damage."
+cost 16 COPPER_PIECE
+rent 8 IRON_PIECE
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_MACE, 0, 0)
+weight 30
+end
+
+		dwarf_hammer
+
+names {"hammer"}
+title "a hammer"
+descr "A hammer lies here."
+extra{}
+"This hammer is used to forge weapons and armor.  It is quite heavy and would
+make a good weapon."
+cost 8 COPPER_PIECE
+rent 4 IRON_PIECE
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_WAR_HAMMER ,0, 0)
+weight 30
+end
+
+
+
+/*================================ KEYS ===================================*/
+
+		dwarf_key
+
+names {"mithril key","key"}
+title "a mithril key"
+descr "A large mithril key lies here."
+extra {}
+"Etched on the key is the word 'Farginok'."
+type ITEM_KEY
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+cost 7 IRON_PIECE
+end
+
+		king_key2
+
+names {"silver key","key"}
+title "a silver key"
+descr "A silver key lies here."
+extra {}
+"The key is made of silver."
+type ITEM_KEY
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+cost 4 IRON_PIECE
+end
+
+		king_key3
+
+names {"gold key","key"}
+title "a gold key"
+descr "A gold key lies here."
+extra {}
+"The key is made of gold."
+type ITEM_KEY
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+cost 4 IRON_PIECE
+end
+
+		wiz_key
+
+names {"strange key","key"}
+title "a strange key"
+descr "A very strange key lies here."
+extra {}
+"A most bizarre piece of work."
+type ITEM_KEY
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+cost 4 IRON_PIECE
+end
+
+
+/*=============================== ARMOR ===================================*/
+
+		mith_boots
+
+names {"mithril boots","boots"}
+title "mithril boots"
+descr "A pair of mithril boots lie here."
+extra {}
+"These boots are some of the finest you have seen."
+extra {"$identify"}
+"This is some of the strongest chain mail armour you have ever seen."
+ARMOUR_CHAIN(0, 1)
+dilcopy abi_restrict@function (ABIL_STR,40,0,25,"");
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+cost 40 COPPER_PIECE
+rent 20 IRON_PIECE
+
+weight 10
+end
+
+		mith_skirt
+
+names {"mithril skirt","skirt"}
+title "mithril skirt"
+descr "A mithril skirt lies here."
+extra {}
+"This skirt is one of the finest you have seen."
+extra {"$identify"}
+"This is some of the strongest chain mail armour you have ever seen."
+ARMOUR_CHAIN(0, 1)
+dilcopy abi_restrict@function (ABIL_STR,40,0,25,"");
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+cost 40 COPPER_PIECE
+rent 20 IRON_PIECE
+
+weight 15
+end
+
+		mith_plate
+
+names {"mithril breastplate","breastplate","plate"}
+title "mithril breastplate"
+descr "A mithril breastplate lies here."
+extra {}
+"This breastplate is one of the finest you have seen."
+extra {"$identify"}
+"This is some of the strongest chain mail armour you have ever seen."
+
+ARMOUR_CHAIN(0, 1)
+dilcopy abi_restrict@function (ABIL_STR,40,0,25,"");
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+cost 40 COPPER_PIECE
+rent 20 IRON_PIECE
+weight 25
+end
+
+		mith_sleeves
+
+names {"mithril sleeves","sleeves"}
+title "mithril sleeves"
+descr "A pair of mithril sleeves lie here."
+extra {}
+"These sleeves are some of the finest you have seen."
+extra {"$identify"}
+"This is some of the strongest chain mail armour you have ever seen."
+
+ARMOUR_CHAIN(1,0)
+dilcopy abi_restrict@function (ABIL_STR,40,0,25,"");
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ARMS}
+cost 40 COPPER_PIECE
+rent 20 IRON_PIECE
+weight 15
+end
+
+		mith_gauntlets
+
+names {"mithril gauntlets","gauntlets"}
+title "mithril gauntlets"
+descr "A pair of mithril gauntlets lie here."
+extra {}
+"These gauntlets are some of the finest you have seen."
+extra {"$identify"}
+"This is some of the strongest chain mail armour you have ever seen."
+
+ARMOUR_CHAIN(1,0)
+dilcopy abi_restrict@function (ABIL_STR,40,0,25,"");
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HANDS}
+cost 40 COPPER_PIECE
+rent 20 IRON_PIECE
+weight 5
+end
+
+		mith_helmet
+
+names {"mithril helmet","helmet","helm"}
+title "mithril helmet"
+descr "A mithril helmet lies here."
+extra {}
+"This helmet is one of the finest you have seen."
+extra {"$identify"}
+"This is some of the strongest chain mail armour you have ever seen."
+
+ARMOUR_CHAIN(1,0)
+dilcopy abi_restrict@function (ABIL_STR,40,0,25,"");
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+cost 40 COPPER_PIECE
+rent 20 IRON_PIECE
+weight 8
+end
+
+		div_boots
+
+names {"divine boots","boots"}
+title "divine boots"
+descr "A pair of divine boots lie here."
+extra {}
+"These boots are the finest you have seen.  They were made with the
+assistance of the dwarven gods."
+extra {"$identify"}
+"This is some of the strongest Plate mail armour you have ever seen."
+
+ARMOUR_PLATE(11, +7)
+dilcopy abi_restrict@function (ABIL_STR,50,0,25,"");
+dilcopy quest_restrict@function (DIV_ARMOR_QUEST,0,25,"");
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+cost 212 COPPER_PIECE
+weight 10
+DEX_TRANSFER (2)
+end
+
+		div_skirt
+
+names {"divine skirt","skirt"}
+title "divine skirt"
+descr "A divine skirt lies here."
+extra {}
+"This skirt is one the finest you have seen.  It was made with the assistance
+ of the dwarven gods."
+extra {"$identify"}
+"This is some of the strongest Plate mail armour you have ever seen."
+
+ARMOUR_PLATE(11, +7)
+dilcopy abi_restrict@function (ABIL_STR,50,0,25,"");
+dilcopy quest_restrict@function (DIV_ARMOR_QUEST,0,25,"");
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+cost 212 COPPER_PIECE
+weight 15
+CON_TRANSFER (2)
+end
+
+		div_plate
+
+names {"divine breastplate","breastplate","plate"}
+title "divine breastplate"
+descr "A divine breastplate lies here."
+extra {}
+"This breastplate is the finest you have seen.  It was made with the
+assistance of the dwarven gods."
+extra {"$identify"}
+"This is some of the strongest Plate mail armour you have ever seen."
+
+ARMOUR_PLATE(11, +7)
+dilcopy abi_restrict@function (ABIL_STR,50,0,25,"");
+dilcopy quest_restrict@function (DIV_ARMOR_QUEST,0,25,"");
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+cost 212 COPPER_PIECE
+weight 25
+STR_TRANSFER (2)
+end
+
+		div_sleeves
+
+names {"divine sleeves","sleeves"}
+title "divine sleeves"
+descr "A pair of divine sleeves lie here."
+extra {}
+"These sleeves are the finest you have seen.  They were made with the
+assistance of the dwarven gods."
+extra {"$identify"}
+"This is some of the strongest Plate mail armour you have ever seen."
+
+ARMOUR_PLATE(11, +7)
+dilcopy abi_restrict@function (ABIL_STR,50,0,25,"");
+dilcopy quest_restrict@function (DIV_ARMOR_QUEST,0,25,"");
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ARMS}
+cost 212 COPPER_PIECE
+
+weight 15
+DIV_TRANSFER (2)
+end
+
+		div_gauntlets
+
+names {"divine gauntlets","gauntlets"}
+title "divine gauntlets"
+descr "A pair of divine gauntlets lie here."
+extra {}
+"These gauntlets are the finest you have seen.  They were made with the
+assistance of the dwarven gods."
+extra {"$identify"}
+"This is some of the strongest Plate mail armour you have ever seen."
+
+ARMOUR_PLATE(11, +7)
+dilcopy abi_restrict@function (ABIL_STR,50,0,25,"");
+dilcopy quest_restrict@function (DIV_ARMOR_QUEST,0,25,"");
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HANDS}
+cost 212 COPPER_PIECE
+weight 5
+MAG_TRANSFER (2)
+end
+
+		div_helmet
+
+names {"divine helmet","helmet","helm"}
+title "divine helmet"
+descr "A divine helmet lies here."
+extra {}
+"This helmet is the finest you have seen.  It was made with the assistance
+of the dwarven gods."
+extra {"$identify"}
+"This is some of the strongest Plate mail armour you have ever seen."
+
+ARMOUR_PLATE(11, +7)
+dilcopy abi_restrict@function (ABIL_STR,50,0,25,"");
+dilcopy quest_restrict@function (DIV_ARMOR_QUEST,0,25,"");
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+cost 212 COPPER_PIECE
+
+weight 5
+BRA_TRANSFER (2)
+end
+
+
+/*============================== OTHER ====================================*/
+
+		smelter_box
+
+names {"ore smelter","smelter", "bellows", "bellow"}
+title "the smelter"
+descr "A smelter takes up much of the room here."
+extra {}
+"You put ore into the smelter, work the bellows, and take the metal from it."
+CONTAINER_DEF(5100)
+manipulate {MANIPULATE_ENTER}
+weight 5000
+
+/* Fixed by papi */
+dilbegin smelter();
+var
+  item : unitptr;
+  i : integer;
+code
+{
+   :Init:
+   heartbeat := WAIT_SEC*3;
+
+   :start:
+   wait(SFB_CMD, command("work"));
+   block;
+
+   if (findunit(activator, argument, FIND_UNIT_SURRO, null) != self)
+   {
+      act("If you want to work the bellows, say so!",
+	  A_ALWAYS, activator, null, null, TO_ALL);
+      goto start;
+   }
+
+   act("You work $3n.", A_ALWAYS, activator, null, self, TO_CHAR);
+   act("$1n works $3n.", A_ALWAYS, activator, null, self, TO_ROOM);
+
+   if (findunit(self, "iron ore", 0, self.inside))
+      i := 2;
+   else if (self.inside)
+      i := 1;
+   else
+      i := 0;
+
+   while (self.inside)
+      destroy(self.inside);
+
+   if (i == 2)
+   {
+      pause;
+      act("The ore begins to glow white hot.", A_ALWAYS, activator,
+	  null, null, TO_ALL);
+      pause;
+      item := load("dwarves/steel");
+      act("The ore is transformed into metal.", A_ALWAYS, activator,
+	  null, null, TO_ALL);
+   }
+   else if (i == 1)
+   {
+      act("The stuff in the smelter is incinerated by the heat.",
+	  A_ALWAYS, activator, null, self, TO_ALL);
+   }
+   else
+      act("$3n is empty, nothing happens.",
+	  A_ALWAYS, activator, null, self, TO_ALL);
+
+   goto init;
+}
+dilend
+end
+		miner_helmet
+
+names {"miner's helmet","helmet"}
+title "a miner's helmet"
+descr "A miner's helmet lies on the ground."
+extra {}
+"This is how the miners see in the mines."
+LIGHT_DEF(100,4)
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD, MANIPULATE_WEAR_HEAD}
+cost 5 COPPER_PIECE
+weight 5
+end
+
+		dragon_ring
+
+names {"gildin ring","ring"}
+title "a ring"
+descr "A ring lies on the ground."
+extra {}
+"There is a dragon inscribed upon the stone."
+type ITEM_WORN
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD, MANIPULATE_WEAR_FINGER}
+cost 50 COPPER_PIECE
+rent 25 IRON_PIECE
+weight 1
+CON_TRANSFER(+1)
+end
+
+		phil_stone
+
+names {"philosopher's stone","stone"}
+title "the Philosopher's Stone"
+descr "The Philosopher's Stone sits here on the pedestal."
+extra {}
+"This stone has the magical property of turning metal to gold."
+type ITEM_TREASURE
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 50000
+cost 2 GOLD_PIECE
+end
+
+		ore
+
+names {"iron ore","iron","ore"}
+title "a chunk of iron ore"
+descr "A chunk of iron ore here."
+extra {}
+"This ore looks perfect for smelting."
+type ITEM_TREASURE
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 5
+cost 1 IRON_PIECE
+end
+
+		steel
+
+names {"steel","metal"}
+title "a piece of metal"
+descr "A piece of metal is here."
+extra {}
+"This metal looks and feels like steel."
+type ITEM_TREASURE
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 5
+cost 1 IRON_PIECE
+end
+
+		lead_nugget
+
+names {"lead nugget","lead","nugget"}
+title "a lead nugget"
+descr "A lead nugget lies here."
+extra {}
+"This is ordinary lead."
+type ITEM_TREASURE
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 5
+cost 1 IRON_PIECE
+end
+
+		gold_nugget
+
+names {"gold nugget","gold","nugget"}
+title "a gold nugget"
+descr "A gold nugget lies here."
+extra {}
+"This is a nice chunk of gold."
+type ITEM_TREASURE
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 5
+cost 10 COPPER_PIECE
+end
+
+		silver_nugget
+
+names {"silver nugget","silver","nugget"}
+title "a silver nugget"
+descr "A silver nugget lies here."
+extra {}
+"This is a nice chunk of silver."
+type ITEM_TREASURE
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 5
+cost 10 IRON_PIECE
+end
+
+		diamond
+
+names {"diamond"}
+title "a diamond in the rough"
+descr "A diamond in the rough lies here."
+extra {}
+"This is a nice chunk of carbon."
+type ITEM_TREASURE
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 5
+cost 1 SILVER_PIECE
+end
+
+		ruby
+
+names {"ruby"}
+title "a ruby in the rough"
+descr "A ruby in the rough lies here."
+extra {}
+"This is a nice chunk of rock."
+type ITEM_TREASURE
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 5
+cost 6 COPPER_PIECE
+end
+
+		emerald
+
+names {"emerald"}
+title "an emerald in the rough"
+descr "An emerald in the rough lies here."
+extra {}
+"This is a nice chunk of rock."
+type ITEM_TREASURE
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 5
+cost 5 COPPER_PIECE
+end
+
+		dwarf_fount
+
+names {"fountain","water"}
+title "a water fountain"
+descr "A water fountain sits here."
+LIQ_DEF(LIQ_WATER, 5000, 40000, 20000,0)
+cost 5 COPPER_PIECE
+end
+
+/*-------------------------------------------------------------------------*/
+/*-------------------------------------------------------------------------*/
+/*-------------------------------------------------------------------------*/
+
+%reset
+
+door library WEST {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door clear1 EAST {EX_OPEN_CLOSE, EX_CLOSED}
+door hut1 WEST {EX_OPEN_CLOSE, EX_CLOSED}
+door clear2 NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door hut2 SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door court2 EAST {EX_OPEN_CLOSE, EX_CLOSED}
+door entrance2 WEST {EX_OPEN_CLOSE, EX_CLOSED}
+door court2 WEST {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+door entrance1 EAST {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+door alcove2 EAST {EX_OPEN_CLOSE, EX_CLOSED}
+door king_room1 WEST {EX_OPEN_CLOSE, EX_CLOSED}
+door king_room1 SOUTH {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+door king_room2 NORTH {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+door king_room2 WEST {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_HIDDEN}
+door king_safe EAST {EX_OPEN_CLOSE, EX_CLOSED}
+door small_corridor1 EAST {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+door wizard_room1 WEST {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+door wizard_room1 SOUTH {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+door library NORTH {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+door small_room WEST {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+door treasure_room EAST {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+door armorer WEST {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door weaponsmith WEST {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+
+load baldin into throne max 1 complete
+{
+	load king_key2
+	load king_key3
+	equip mith_helmet position WEAR_HEAD
+	equip mith_boots position WEAR_FEET
+	equip mith_skirt position WEAR_LEGS
+	equip mith_plate position WEAR_BODY
+	equip mith_sleeves position WEAR_ARMS
+	equip mith_gauntlets position WEAR_HANDS
+}
+
+load farak into throne max 1 complete
+{
+	equip battle_axe position WEAR_WIELD
+	equip mith_helmet position WEAR_HEAD
+	equip mith_boots position WEAR_FEET
+	equip mith_skirt position WEAR_LEGS
+	equip mith_plate position WEAR_BODY
+	equip mith_sleeves position WEAR_ARMS
+	equip mith_gauntlets position WEAR_HANDS
+}
+
+load ovo into throne max 1 complete
+{
+	equip battle_axe position WEAR_WIELD
+	equip mith_helmet position WEAR_HEAD
+	equip mith_boots position WEAR_FEET
+	equip mith_skirt position WEAR_LEGS
+	equip mith_plate position WEAR_BODY
+	equip mith_sleeves position WEAR_ARMS
+	equip mith_gauntlets position WEAR_HANDS
+}
+
+load bain into chapel max 1 complete
+{
+	equip dwarf_mace position WEAR_WIELD
+}
+
+load dalur into stair2 max 1 complete
+{
+	equip miner_pick position WEAR_WIELD
+	equip miner_helmet position WEAR_HEAD
+}
+
+load dain into stair1 max 1 complete
+{
+	equip miner_pick position WEAR_WIELD
+	equip miner_helmet position WEAR_HEAD
+}
+
+load morak into weaponsmith max 1 complete
+{
+	equip dwarf_hammer position WEAR_WIELD
+}
+
+load belak into armorer max 1 complete
+{
+	equip dwarf_hammer position WEAR_WIELD
+}
+
+load bolgar into entrance1 max 1
+{
+	load dwarf_key
+	equip battle_axe position WEAR_WIELD
+	equip mith_helmet position WEAR_HEAD
+	equip mith_boots position WEAR_FEET
+	equip mith_skirt position WEAR_LEGS
+	equip mith_plate position WEAR_BODY
+	equip mith_sleeves position WEAR_ARMS
+	equip mith_gauntlets position WEAR_HANDS
+}
+
+load dwarf_sentry into throne_room1 local 2
+{
+	equip halberd position WEAR_WIELD
+	equip mith_skirt position WEAR_LEGS
+	equip mith_plate position WEAR_BODY
+	equip mith_helmet position WEAR_HEAD
+}
+load dwarf_sentry into throne_room1 local 2
+{
+	equip halberd position WEAR_WIELD
+	equip mith_skirt position WEAR_LEGS
+	equip mith_plate position WEAR_BODY
+	equip mith_helmet position WEAR_HEAD
+}
+load dwarf_sentry into tower1_up local 2
+{
+	equip halberd position WEAR_WIELD
+	equip mith_skirt position WEAR_LEGS
+	equip mith_plate position WEAR_BODY
+	equip mith_helmet position WEAR_HEAD
+}
+load dwarf_sentry into tower2_up local 2
+{
+	equip halberd position WEAR_WIELD
+	equip mith_skirt position WEAR_LEGS
+	equip mith_plate position WEAR_BODY
+	equip mith_helmet position WEAR_HEAD
+}
+load dwarf_sentry into court2 local 2
+{
+	equip halberd position WEAR_WIELD
+	equip mith_skirt position WEAR_LEGS
+	equip mith_plate position WEAR_BODY
+	equip mith_helmet position WEAR_HEAD
+}
+
+load dwarf_guard into throne_room3 max 6
+{
+	equip dwarf_sword position WEAR_WIELD
+	equip mith_skirt position WEAR_LEGS
+	equip mith_plate position WEAR_BODY
+	equip mith_helmet position WEAR_HEAD
+}
+load dwarf_guard into court2 max 6
+{
+	equip dwarf_sword position WEAR_WIELD
+	equip mith_skirt position WEAR_LEGS
+	equip mith_plate position WEAR_BODY
+	equip mith_helmet position WEAR_HEAD
+}
+load dwarf_guard into fountain max 6
+{
+	equip dwarf_sword position WEAR_WIELD
+	equip mith_skirt position WEAR_LEGS
+	equip mith_plate position WEAR_BODY
+	equip mith_helmet position WEAR_HEAD
+}
+load dwarf_guard into parapets2 max 6
+{
+	equip dwarf_sword position WEAR_WIELD
+	equip mith_skirt position WEAR_LEGS
+	equip mith_plate position WEAR_BODY
+	equip mith_helmet position WEAR_HEAD
+}
+
+load greylock into wizard_room1 max 1
+{
+	equip ice_staff position WEAR_HOLD max 5
+	equip dwarf_mace position WEAR_WIELD
+	load wiz_key
+}
+
+load thorigorn_ghost into treasure_room max 1
+
+load gimin into hut1 max 1
+{
+	equip dwarf_mace position WEAR_WIELD
+
+	load dwarf_key
+}
+
+load norin into hut2 max 1
+{
+	equip dwarf_mace position WEAR_WIELD
+
+	load dwarf_key
+}
+
+load phil_stone into wizard_room2 max 1
+
+load snake into path1 zonemax 2
+
+load elk into path7 zonemax 2
+
+load thief into path4 zonemax 2
+{
+	equip dwarf_sword position WEAR_WIELD
+	}
+
+load dwarf_fount into fountain max 1
+
+load dwarf_miner into ore1 max 6
+{
+	equip miner_pick position WEAR_WIELD
+	equip miner_helmet position WEAR_HEAD
+}
+
+load dwarf_miner into ore2 max 6
+{
+	equip miner_pick position WEAR_WIELD
+	equip miner_helmet position WEAR_HEAD
+}
+
+load dwarf_miner into ore3 max 6
+{
+	equip miner_pick position WEAR_WIELD
+	equip miner_helmet position WEAR_HEAD
+}
+
+load dwarf_miner into ore4 max 6
+{
+	equip miner_pick position WEAR_WIELD
+	equip miner_helmet position WEAR_HEAD
+}
+
+load dwarf_miner into ore5 max 6
+{
+	equip miner_pick position WEAR_WIELD
+	equip miner_helmet position WEAR_HEAD
+}
+
+load dwarf_miner into ore6 max 6
+{
+	equip miner_pick position WEAR_WIELD
+	equip miner_helmet position WEAR_HEAD
+}
+
+load dragon_ring into by_lake2 max 1
+
+load smelter_box into smelter max 1
+
+
+%end
+

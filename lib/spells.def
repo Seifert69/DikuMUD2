@@ -1,0 +1,5703 @@
+#include <values.h>
+#include <spelldef.h>
+
+/* This file is preprocessed by the C preprocessor and then run through
+   a perl script which performs all calculations. The result is written
+   to lib/spells.dat */
+
+/*
+  The format is to some extent self explanatory. There is only one rule that
+  needs to be observed, namely that it is required that the 'index' is the
+  first keyword to occur for each spell definition.
+
+  Following is a description for each of the fields:
+
+  'index'
+
+    The appropriate SPL_XXX from values.h. If you wish to experiment with
+    you own spells, you can NOT add extra SPL_XXX values, nor change the
+    SPL_TREE_MAX, since the server was compiled with the original values.
+    You can however, select any existing spell and modify it completely
+    to your needs.
+
+  'name'
+    The name of the spell which is used for casting, teaching, etc.
+
+
+  'tochar'
+    This message is sent to the caster when caster is differnt from the
+    target. Message is sent using
+    the ACT format where $1n is the caster and $3n is the OPTIONAL
+    target. If your spell does not require a target, then you should
+    not use $3n. Notice that the described effect is shown regardless
+    of wheter the spell will succeed or fail! You should therefore
+    be careful in your wording not to imply that the spell is a success.
+    For example, this could be used for the spell heal:
+
+       You lay hands on $3n while chanting 'sanctus dominus'.
+
+    And if you fail, the spell should send the message 'nothing happens'.
+    Similarily a finger of death may be:
+
+       You convincingly point your pinky at $3n.
+
+    Or you may even do
+
+       A small ball of black slime flies from your palm towards $3n.
+
+    Still not implying if you succeeded or not. You can leave the field
+    empty if nothing is to be generated, but I suggest that the minimum
+    is to at least send an Ok like this:
+
+       tochar = Ok.
+       toself = Ok.
+
+  'tovict'
+    As 'tochar' but this message is sent to the target.
+
+  'torest'
+    As 'tochar' but this message is sent to the rest of the room.
+
+  'toself'
+    As 'tochar' except this message is used when target equals the caster self.
+
+  'toselfroom'
+    As 'toself' except show to his surroundings.
+
+  'acttype'
+    One of A_ALWAYS, A_HIDEINV or A_SOMEONE. It has effect on the messages,
+    tovict, torest and toselfroom.
+
+  'realm'
+    Either ABIL_DIV for Divine spells or ABIL_MAG for Magic spells.
+    This is the 'realm' that the spell draws it power from, i.e.
+    a mage attempting to cast resurrection (DIV realm) will use
+    his DIV as the power, not his MAG. Likewise, resisting a
+    mage spell will require the MAG ability, not the DIV.
+
+  'sphere'
+    The sphere in which the spell is placed. The spheres are used for
+    defense, and can thus to some extent make a cleric capable of
+    resisting mage attacks if they for example share the fire sphere.
+
+  'func'
+    The symbolic name of DIL procedure which executes the spell
+    (with zone info). Notice that the ones marked 'INTERNAL' should
+    be left alone since the spell implementation has not been converted
+    from C to DIL.
+
+  'minpos'
+    The minimum required position to cast the spell. The value is
+    interpreted literally as defined in POSITION_XXX (see values.h).
+    Thus if minimum position is standing, you can only cast this spell
+    while standing.
+
+  'mana'
+    Amount of mana used by the spell.
+
+  'turns'
+     How many ticks it will take to cast the spell (important for combat).
+
+  'targets'
+     Search parameters for finding the unit and target types. A rather
+     complicated issue, but it is much like findunit, with a few very
+     important additions:
+
+         FIND_XXX
+            Just as in findunit, this determines what environments are sought
+            when a spell is cast. Obviously, a fireball would be SURRO and a
+            locate char would be WORLD or ZONE.
+
+         TAR_IGNORE
+            When this bit is set, nothing is processed and the argument
+            string is passed directly to the spell routine.
+
+         TAR_CHAR
+            Only units of type CHAR (PC / NPC) will be accepted as valid
+            targets (if not of such a type, no mana is wasted).
+
+         TAR_OBJ and TAR_ROOM
+            As above, but for rooms and objects.
+
+         TAR_AUTO_SELF
+            Means that when no argument is given, the spell is cast upon
+            the spellcaster by default (remember TAR_CHAR also!)
+
+         TAR_SELF_NONO
+             Means that the spell in question can not be cast on yourself.
+
+         TAR_SELF_ONLY
+             Means that the spell in question can only be cast on yourself.
+
+         TAR_FIGHT_VICT
+             If the spellcaster is in combat, the spell will automaticaly
+             target his opponent if no argument is given.
+
+         TAR_FIGHT_SELF
+             If the spellcaster is in combat, the spell will automatically
+             target himself if no argument is given.
+
+  'mediums'
+     What the spell can cast from and on. Also rather complicated, here goes:
+
+     MEDIA_SPELL
+       When set, the spell can be 'cast'. Notice that a spell like mana boost
+       is not castable.
+
+     MEDIA_POTION
+       When set, the spell can be applied to potions (in zones).
+
+     MEDIA_WAND
+       As for potions but on wands.
+
+     MEDIA_STAFF
+       As for wands but on staves.
+
+     MEDIA_SCROLL
+       As above, but on scrolls.
+
+     MEDIA_SELF_NONO
+       This is used in comination with the MEDIA_STAFF. When this bit is set,
+       the staff will NOT cast the spell in question on the user of the staff.
+       Usually all peaceful spells will omit this bit, while all attack spells
+       will include this bit.
+
+  'check'
+     Is a self-check, a resist (opponent), or an ignore type.
+     Attack damage spells use SPLCST_IGNORE since the damage
+     routine does all the nessecary caluculations and resisitance
+     checks.
+     Special spells, such as remove curse, also use SPLCST_IGNORE
+     since they need to calculate resistance for each individual
+     object.
+     Spells such as BLINDNESS use SPLCST resist because the victim
+     is entiteled to a saving throw.
+     Spells such as clear skies, create water and protection from
+     good, uses SPLCST check because the caster is not 'fighting'
+     anyone, thus it is merely a check to see if his skills are
+     adequate at the moment of casting.
+
+  'offensive'
+     Set to TRUE if it is an offensive spell, and FALSE otherwise.
+
+  'fumble'
+     The 0% - 99% risk of fumbling the spell. Usually 0%.
+
+  'attack clothes'
+  'attack sleather'
+  'attack hleather'
+  'attack chain'
+  'attack plate'
+     A number list like this {50,30,5}, where the first number is the
+     minimum amount required to roll to give damage. The second number
+     is the base damage when successful, and the third is what the excess
+     is divided by before it is added to the damage.
+
+        if (roll >= num1)
+           damage = num2 + (roll - num1)/num3
+
+     'roll' is the total of dice rolls, resistances, bonuses, skills, etc.
+
+  'race human'
+  'race elf'
+  'race dwarf'
+  'race halfling'
+  'race gnome'
+    Each of these are assigned a number from -3 to +3. The number
+    is an indication of how easy it is for the given race to learn the
+    spell in question, i.e. it affects the teaching skill-point cost.
+    -3 is extremely hard, -2 is very hard, -1 is hard, 0 normal,
+    1 easy, 2 very easy, 3 extremely easy.
+
+    For example, dwarves could have a -3 penalty on fireballs due to
+    their anti-magical nature. Elves could have a -3 on darkness and
+    a +2 on light.
+
+
+These are the power organization of spells (just as for weapons)
+
+
+  1) call lightning, sun ray, sun beam, solar flare
+
+       Minimum Alpha: 3
+       Guide:         (3, 4, 4, 5, 6)
+
+  2) harm, dispel evil, colourspray, firestorm, icestorm, lightning bolt,
+     stinking cloud, acid ball, solar flare, meteor shower
+
+       Minimum Alpha: 4
+       Guide:         (4, 5, 5, 6, 7)
+
+  3) cause serious wounds, colourbeam, fireball, frostball, jolt,
+     bad breath, spray of acid
+
+       Minimum Alpha: 6
+       Guide:         (6, 7, 7, 8, 9)
+
+  4) cause light wounds, flash, burn, snowball, electrical shock, fart,
+     acid drop, clenched fist, energy bolt
+
+       Minimum Alpha: 8
+       Guide:         (8, 9, 9, 10, 11)
+
+
+Dunno if you agree on this, but lets try it... This table lists how
+the level 4 spells (8, 9, 9, 10, 11) will be modified against
+different armours.
+This can be used as an alpha template when making all sorts of spells.
+
+              CLOTHES    SLTH    HLTH    CHAIN    PLATE
+
+Electricity      3         5       5        4        4
+                 4         6       6        5        5
+                 6         8       8        7        7
+                 8        10      10        9        9
+
+Acid             3         6       5        4        5
+                 4         7       6        5        6
+                 6         9       8        7        8
+                 8        11      10        9       10
+
+Light            4         4       4        4        5
+                 5         5       5        5        6
+                 7         7       7        7        8
+                 9         9       9        9       10
+
+Gas              4         4       4        4        4
+                 5         5       5        5        5
+                 7         7       7        7        7
+                 9         9       9        9        9
+
+Channeling       4         4       4        4        4
+                 5         5       5        5        5
+                 7         7       7        7        7
+                 9         9       9        9        9
+
+Fire             3         5       5        3        4
+                 4         6       6        4        5
+                 6         8       8        6        7
+                 8        10      10        8        9
+
+Frost            3         5       5        3        4
+                 4         6       6        4        5
+                 6         8       8        6        7
+                 8        10      10        8        9
+
+Impact           3         4       4        5        6
+                 4         5       5        6        7
+                 6         7       7        8        9
+                 8         9       9       10       11
+
+A vote on the game revealed that 9 / 10 players percept leather
+as being more protective against lightning than metal.
+
+*/
+
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_ALL
+name            = theory
+realm           = ABIL_DIV
+sphere          = SPL_ALL
+minpos          = 0
+mana            = 0
+turns           = 0
+targets         = 0
+mediums         = 0
+check           = 0
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_DIVINE
+name            = divine sphere
+realm           = ABIL_DIV
+sphere          = SPL_ALL
+minpos          = 0
+mana            = 0
+turns           = 0
+targets         = 0
+mediums         = 0
+check           = 0
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_PROTECTION
+name            = protection sphere
+realm           = ABIL_DIV
+sphere          = SPL_ALL
+minpos          = 0
+mana            = 0
+turns           = 0
+targets         = 0
+mediums         = 0
+check           = 0
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_DETECTION
+name            = detection sphere
+realm           = ABIL_DIV
+sphere          = SPL_ALL
+minpos          = 0
+mana            = 0
+turns           = 0
+targets         = 0
+mediums         = 0
+check           = 0
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_SUMMONING
+name            = summoning sphere
+realm           = ABIL_DIV
+sphere          = SPL_ALL
+minpos          = 0
+mana            = 0
+turns           = 0
+targets         = 0
+mediums         = 0
+check           = 0
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_CREATION
+name            = creation sphere
+realm           = ABIL_DIV
+sphere          = SPL_ALL
+minpos          = 0
+mana            = 0
+turns           = 0
+targets         = 0
+mediums         = 0
+check           = 0
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_MIND
+name            = mind sphere
+realm           = ABIL_DIV
+sphere          = SPL_ALL
+minpos          = 0
+mana            = 0
+turns           = 0
+targets         = 0
+mediums         = 0
+check           = 0
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_HEAT
+name            = fire sphere
+realm           = ABIL_DIV
+sphere          = SPL_ALL
+minpos          = 0
+mana            = 0
+turns           = 0
+targets         = 0
+mediums         = 0
+check           = 0
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_COLD
+name            = frost sphere
+realm           = ABIL_DIV
+sphere          = SPL_ALL
+minpos          = 0
+mana            = 0
+turns           = 0
+targets         = 0
+mediums         = 0
+check           = 0
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_CELL
+name            = electricity sphere
+realm           = ABIL_DIV
+sphere          = SPL_ALL
+minpos          = 0
+mana            = 0
+turns           = 0
+targets         = 0
+mediums         = 0
+check           = 0
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_INTERNAL
+name            = poison sphere
+realm           = ABIL_DIV
+sphere          = SPL_ALL
+minpos          = 0
+mana            = 0
+turns           = 0
+targets         = 0
+mediums         = 0
+check           = 0
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_EXTERNAL
+name            = acid sphere
+realm           = ABIL_DIV
+sphere          = SPL_ALL
+minpos          = 0
+mana            = 0
+turns           = 0
+targets         = 0
+mediums         = 0
+check           = 0
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_CALL_LIGHTNING
+name            = call lightning
+acttype         = A_SOMEONE
+tochar          = You raise you arms to the heavens and shout, 'Sholua electra!'...
+tovict          = $1n raises $1s arms to the heavens and shouts, 'Sholua electra!'...
+torest          = $1n raises $1s arms to the heavens and shouts, 'Sholua electra!'...
+toself          = You raise you arms to the heavens and shout, 'Sholua electra!'...
+toselfroom      = $1n raises $1s arms to the heavens and shouts, 'Sholua electra!'...
+realm           = ABIL_MAG
+sphere          = SPL_CELL
+func            = call_lightning@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_CHAR
+mediums         = MEDIA_SPELL + MEDIA_WAND + MEDIA_STAFF + MEDIA_SCROLL +MEDIA_SELF_NONO
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 1
+shield          = SHIELD_M_USELESS /* Its electricity! */
+attack clothes  = {50, 1, 3}
+attack sleather = {50, 1, 5}
+attack hleather = {50, 1, 5}
+attack chain    = {50, 1, 4}
+attack plate    = {50, 1, 4}
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +1
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_REFIT
+name            = refit
+acttype         = A_SOMEONE
+tochar          = You grasp the $3n and utter, 'slarquveemzpe'
+torest          = $1n grasps $3n and utters, 'slarquveemzpe'
+realm           = ABIL_MAG
+sphere          = SPL_CREATION
+func            = refit@basis
+minpos          = POSITION_STANDING
+mana            = 50
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + FIND_UNIT_INVEN + TAR_OBJ
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_RESIST
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = -1
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -2
+race half-elf   = 0
+race brownie    = +1
+race groll      = -3
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_BLESS
+name            = bless
+acttype         = A_SOMEONE
+tochar          = You lay hands on $3n and pray for a blessing from the gods.
+tovict          = $1n lays hands on you and prays for a blessing.
+torest          = $1n touches $3n and begins to pray.
+toself          = You beseech the gods for a blessing.
+toselfroom      = $1n implores the gods for a blessing.
+realm           = ABIL_DIV
+sphere          = SPL_DIVINE
+func            = bless@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF
+mediums         = MEDIA_SCROLL + MEDIA_SPELL + MEDIA_STAFF
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = -1
+race gnome      = -1
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = -1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_CURSE
+name            = curse
+acttype         = A_SOMEONE
+tochar          = You call upon the dark spirits to curse $3n...
+tovict          = "$1n's words make you cringe..."
+torest          = Your blood is chilled as $1n utters words of dark power...
+toself          = You call upon yourself the wrath of the dark powers...
+toselfroom      = $1n calls the powers of darkenss upon $1mself
+realm           = ABIL_DIV
+sphere          = SPL_DIVINE
+func            = curse@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + FIND_UNIT_INVEN + TAR_CHAR + TAR_OBJ + TAR_FIGHT_VICT
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_RESIST
+offensive       = TRUE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = -1
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = -1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_REMOVE_CURSE
+name            = remove curse
+acttype         = A_SOMEONE
+tochar          = You implore the gods to lift the curse on $3n...
+tovict          = $1n implores the gods to lift the curse on you...
+torest          = $1n implores the gods to lift the curse on $3n...
+toself          = You plead for the gods to to lift your curse...
+toselfroom      = $1n pleads the gods to lift $1s curse...
+realm           = ABIL_DIV
+sphere          = SPL_DIVINE
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_OBJ
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_IGNORE
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = -1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_CURE_WOUNDS_1
+name            = cure light wounds
+acttype         = A_SOMEONE
+tochar          = You lay hands on $3n and pray for a minor healing...
+tovict          = $1n lays hands on you and prays...
+torest          = $1n lays hands on $3n and prays...
+toself          = You pray for a minor healing...
+toselfroom      = $1n closes $1s eyes and begins to pray...
+realm           = ABIL_DIV
+sphere          = SPL_DIVINE
+func            = cure_light@basis
+minpos          = POSITION_FIGHTING
+mana            = 20
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF + TAR_FIGHT_SELF
+mediums         = MEDIA_SCROLL + MEDIA_SPELL + MEDIA_POTION +MEDIA_STAFF
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = -1
+race gnome      = -1
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = -1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_CURE_WOUNDS_2
+name            = cure serious wounds
+acttype         = A_SOMEONE
+tochar          = You lay hands on $3n and pray for a healing...
+tovict          = $1n lays hands on you and begins to pray...
+torest          = $1n lays hands on $3n and begins to pray...
+toself          = You beseech the gods to heal your wounds...
+toselfroom      = $1n closes $1s eyes and begins to pray...
+realm           = ABIL_DIV
+sphere          = SPL_DIVINE
+func            = cure_serious@basis
+minpos          = POSITION_FIGHTING
+mana            = 20
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF + TAR_FIGHT_SELF
+mediums         = MEDIA_SCROLL + MEDIA_SPELL + MEDIA_POTION +MEDIA_STAFF
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = -1
+race gnome      = -1
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = -1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_CURE_WOUNDS_3
+name            = heal
+acttype         = A_SOMEONE
+tochar          = You lay hands on $3n and call out to the gods to heal $3s wounds...
+tovict          = $1n lays hands on you and calls out to the gods...
+torest          = $1n lays hands on $3n and calls out to the gods...
+toself          = You call out to the gods to heal your wounds...
+toselfroom      = $1n calls out to the gods...
+realm           = ABIL_DIV
+sphere          = SPL_DIVINE
+func            = heal@basis
+minpos          = POSITION_FIGHTING
+mana            = 20
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF + TAR_FIGHT_SELF
+mediums         = MEDIA_SCROLL + MEDIA_SPELL + MEDIA_POTION +MEDIA_STAFF
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = -1
+race gnome      = -1
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = -2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_CAUSE_WOUNDS_1
+name            = cause light wounds
+acttype         = A_SOMEONE
+tochar          = You boldy speak the word 'scrazgh' and touch $3n...
+tovict          = $1n boldy speaks the word 'scrazgh' and touches you...
+torest          = $1n boldy speaks the word 'scrazgh' and touches $3n...
+toself          = You boldy speak the word 'scrazgh'...
+toselfroom      = $1n boldy speaks the word 'scrazgh'...
+realm           = ABIL_DIV
+sphere          = SPL_DIVINE
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_FIGHTING
+mana            = 20
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_FIGHT_VICT
+mediums         = MEDIA_SCROLL + MEDIA_SPELL
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 2
+shield          = SHIELD_M_BLOCK /* Its touch attack! */
+attack clothes  = {50, 1, 9}
+attack sleather = {50, 1, 9}
+attack hleather = {50, 1, 9}
+attack chain    = {50, 1, 9}
+attack plate    = {50, 1, 9}
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = -1
+race gnome      = -1
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = -1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_CAUSE_WOUNDS_2
+name            = cause serious wounds
+acttype         = A_SOMEONE
+tochar          = You boldly speak the words, 'Scrazgh mes' and touch $3n...
+tovict          = $1n boldy speaks the words, 'Scrazgh mes' and touches you...
+torest          = $1n boldy speaks the words, 'Scrazgh mes' and touches $3n...
+toself          = You boldly speak the words, 'Scrazgh mes'...
+toselfroom      = $1n boldy speaks the words, 'Scrazgh mes'...
+realm           = ABIL_DIV
+sphere          = SPL_DIVINE
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_FIGHTING
+mana            = 20
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_FIGHT_VICT
+mediums         = MEDIA_SCROLL + MEDIA_SPELL
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 2
+shield          = SHIELD_M_BLOCK /* Its touch attack! */
+attack clothes  = {50, 1, 7}
+attack sleather = {50, 1, 7}
+attack hleather = {50, 1, 7}
+attack chain    = {50, 1, 7}
+attack plate    = {50, 1, 7}
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = -1
+race gnome      = -1
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = -1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_CAUSE_WOUNDS_3
+name            = harm
+acttype         = A_SOMEONE
+tochar          = You scream 'enui scrazgh mes ultur!' and slap $3n...
+tovict          = $1n screams 'enui scrazgh mes ultur!' and slaps you...
+torest          = $1n screams 'enui scrazgh mes ultur!' and slaps $3n...
+toself          = You scream 'enui scrazgh mes ultur!'and clutch at your heart...
+toselfroom      = $1n screams 'enui scrazgh mes ultur!' and clutches at $1s heart...
+realm           = ABIL_DIV
+sphere          = SPL_DIVINE
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_FIGHTING
+mana            = 20
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_FIGHT_VICT
+mediums         = MEDIA_SCROLL + MEDIA_SPELL
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 2
+shield          = SHIELD_M_BLOCK /* Its touch attack! */
+attack clothes  = {50, 1, 5}
+attack sleather = {50, 1, 5}
+attack hleather = {50, 1, 5}
+attack chain    = {50, 1, 5}
+attack plate    = {50, 1, 5}
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = -1
+race gnome      = -1
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = -1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_DISPEL_EVIL
+name            = dispel evil
+acttype         = A_SOMEONE
+tochar          = You pray for divine aid in dispelling the evil of $3n...
+tovict          = "You squirm in discomfort as each word of $1n's prayer is spoken..."
+torest          = $1n directs $1s prayers towards $3n...
+toself          = You pray for a cleansing of your own evil...
+toselfroom      = $1n prays for a cleansing of $1s own evil...
+realm           = ABIL_DIV
+sphere          = SPL_DIVINE
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_FIGHTING
+mana            = 20
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_FIGHT_VICT
+mediums         = MEDIA_SPELL + MEDIA_STAFF + MEDIA_SCROLL
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 2
+shield          = SHIELD_M_USELESS
+attack clothes  = {50, 1, 5}
+attack sleather = {50, 1, 5}
+attack hleather = {50, 1, 5}
+attack chain    = {50, 1, 5}
+attack plate    = {50, 1, 5}
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = -1
+race gnome      = -1
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = -2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_REPEL_UNDEAD_1
+name            = repel lesser undead
+acttype         = A_SOMEONE
+tochar          = You raise your hand and chant, 'Muert dislux' at $3n...
+tovict          = $1n raises $1s hand and chants, 'Muert dislux' at you...
+torest          = $1n raises $1s hand and chants, 'Muert dislux' at $3n...
+toself          = You raise your hand and chant, 'Muert dislux'...
+toselfroom      = $1n raises $1s hand and chants, 'Muert dislux'...
+realm           = ABIL_DIV
+sphere          = SPL_DIVINE
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_FIGHTING
+mana            = 20
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_CHAR
+mediums         = MEDIA_SPELL + MEDIA_STAFF + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_RESIST
+offensive       = TRUE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = -1
+race gnome      = -1
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_REPEL_UNDEAD_2
+name            = repel greater undead
+acttype         = A_SOMEONE
+tochar          = You raise your hand and shout, 'Mes muert dislux' at $3n...
+tovict          = $1n raises $1s hand and shouts, 'Mes muert dislux' at you...
+torest          = $1n raises $1s hand and shouts, 'Mes muert dislux' at $3n...
+toself          = You raise your hand and shout, 'Mes muert dislux'
+toselfroom      = $1n raises $1s hand and shouts, 'Mes muert dislux'
+realm           = ABIL_DIV
+sphere          = SPL_DIVINE
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_FIGHTING
+mana            = 20
+turns           = PULSE_VIOLENCE
+targets         = TAR_IGNORE
+mediums         = MEDIA_SPELL + MEDIA_STAFF + MEDIA_SCROLL + MEDIA_WAND
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = -1
+race gnome      = -1
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_BLIND
+name            = blind
+acttype         = A_SOMEONE
+tochar          = "You spit into $3n's eyes and scream, 'Sansa viso!'..."
+tovict          = $1n spits into your eyes and screams, 'Sansa viso!'...
+torest          = "$1n spits into $3n's eyes and screams, 'Sansa viso!'..."
+toself          = You gouge your eyes and scream 'sansa viso!'...
+toselfroom      = $1n gouges $1s eyes and screams 'sansa viso!'...
+realm           = ABIL_DIV
+sphere          = SPL_DIVINE
+func            = blind@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR
+mediums         = MEDIA_SCROLL + MEDIA_SPELL + MEDIA_POTION +MEDIA_STAFF + MEDIA_WAND
+check           = SPLCST_RESIST
+offensive       = TRUE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = -1
+race gnome      = -1
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = -1
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_CURE_BLIND
+name            = cure blind
+acttype         = A_SOMEONE
+tochar          = "You cover $3n's eyes with your hand and pray for $3s sight..."
+tovict          = You feel gentle hands cover your eyes and hear someone begin to pray...
+torest          = "$1n places $1s hand over $3n's eyes and begins to pray..."
+toself          = You plead with the gods to restore your sight...
+toselfroom      = $1n pray to the gods for a curing...
+realm           = ABIL_DIV
+sphere          = SPL_DIVINE
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF
+mediums         = MEDIA_SCROLL + MEDIA_SPELL + MEDIA_POTION
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = -1
+race gnome      = -1
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = -2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_LOCATE_OBJECT
+name            = locate object
+acttype         = A_SOMEONE
+tochar          = You beckon the gods for a revelation...
+tovict          = $1n kneels and beckons the gods for guidance...
+torest          = $1n kneels and beckons the gods for guidance...
+toself          = You beckon the gods for a revelation...
+toselfroom      = $1n kneels and beckons the gods for guidance...
+realm           = ABIL_DIV
+sphere          = SPL_DIVINE
+func            = locate_object@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_WORLD + FIND_UNIT_ZONE + TAR_OBJ
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_RESIST
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = -1
+race gnome      = -1
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_LOCATE_CHAR
+name            = locate person
+acttype         = A_SOMEONE
+tochar          = You beckon the gods for a revelation...
+torest          = $1n kneels and beckons the gods...
+toself          = You beckon the gods for a revelation...
+toselfroom      = $1n kneels and beckons the gods...
+realm           = ABIL_DIV
+sphere          = SPL_DIVINE
+func            = locate_char@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_WORLD + FIND_UNIT_ZONE + TAR_CHAR
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_RESIST
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = -1
+race gnome      = -1
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_RAISE_MAG
+name            = raise magic
+acttype         = A_SOMEONE
+tochar          = You touch $3n and utter the words, 'Risa mystam'...
+tovict          = $1n touches you and utters the words, 'Risa mystam'...
+torest          = $1n touches $3n and utters the words, 'Risa mystam'...
+toself          = You utter the words, 'Risa mystam'...
+toselfroom      = $1n utters the words, 'Risa mystam'...
+realm           = ABIL_MAG
+sphere          = SPL_PROTECTION
+func            = raise_mag@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR
+mediums         = MEDIA_SPELL+MEDIA_POTION+MEDIA_WAND+MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +2
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_RAISE_DIV
+name            = raise divine
+acttype         = A_SOMEONE
+tochar          = You pray to the gods for a boon of divinity...
+tovict          = $1n prays to the gods on your behalf...
+torest          = "$1n prays to the gods on $3n's behalf..."
+toself          = You pray to the gods for a boon of divinity...
+toselfroom      = $1n prays to the gods...
+realm           = ABIL_DIV
+sphere          = SPL_PROTECTION
+func            = raise_div@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR
+mediums         = MEDIA_SPELL+MEDIA_POTION + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = -1
+race groll      = -1
+race darkelf    = -2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_RAISE_STR
+name            = strength
+acttype         = A_SOMEONE
+tochar          = You touch $3n and utter the word, 'Brutos'
+tovict          = $1n touches you and utter the word, 'Brutos'
+torest          = $1n touches $3n and utters the word, 'Brutos'
+toself          = You utter the word, 'Brutos'
+toselfroom      = $1n utters the word, 'Brutos'
+realm           = ABIL_MAG
+sphere          = SPL_PROTECTION
+func            = raise_str@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR
+mediums         = MEDIA_SPELL+MEDIA_POTION + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +1
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_RAISE_DEX
+name            = dexterity
+acttype         = A_SOMEONE
+tochar          = You touch $3n and utter the word, 'Limbras'
+tovict          = $1n touches you and utters the word, 'Limbras'
+torest          = $1n touches $3n and utters the word, 'Limbras'
+toself          = You utter the word, 'Limbras'
+toselfroom      = $1n utters the word, 'Limbras'
+realm           = ABIL_MAG
+sphere          = SPL_PROTECTION
+func            = raise_dex@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR
+mediums         = MEDIA_SPELL+MEDIA_POTION + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +2
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_RAISE_CON
+name            = constitution
+acttype         = A_SOMEONE
+tochar          = You touch $3n and utter the word, 'Physca'
+tovict          = $1n touches you and utters the word, 'Physca'
+torest          = $1n touches $3n and utters the word, 'Physca'
+toself          = You utter the word, 'Physca'
+toselfroom      = $1n utters the word, 'Physca'
+realm           = ABIL_MAG
+sphere          = SPL_PROTECTION
+func            = raise_con@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR
+mediums         = MEDIA_SPELL+MEDIA_POTION + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +1
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_RAISE_CHA
+name            = charisma
+acttype         = A_SOMEONE
+tochar          = You touch $3n and utter the words, 'Bealasa'
+tovict          = $1n touches you and utters the words, 'Bealasa'
+torest          = $1n touches $3n and utters the words, 'Bealasa'
+toself          = You utter the words, 'Bealasa'
+toselfroom      = $1n utters the words, 'Bealasa'
+realm           = ABIL_DIV
+sphere          = SPL_PROTECTION
+func            = raise_cha@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR
+mediums         = MEDIA_SPELL+MEDIA_POTION + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = -1
+race groll      = -1
+race darkelf    = -2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_RAISE_BRA
+name            = brain
+acttype         = A_SOMEONE
+tochar          = You touch $3n and utter the word, 'Menantera'
+tovict          = $1n touches you and utters the word, 'Menatera'
+torest          = $1n touches $3n and utters the word, 'Menantera'
+toself          = You utter the word, 'Menantera'
+toselfroom      = $1n utters the word, 'Menantera'
+realm           = ABIL_MAG
+sphere          = SPL_PROTECTION
+func            = raise_bra@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR
+mediums         = MEDIA_SPELL+MEDIA_POTION + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +2
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_SUN_RAY
+name            = sun ray
+acttype         = A_SOMEONE
+tochar          = "You look to the heavens and call down the sun's cleansing power..."
+tovict          = $1n looks to the heavens and begins to chant...
+torest          = $1n looks to the heavens and begins to chant...
+toself          = "You look to the heavens and call down the sun's cleansing power..."
+toselfroom      = $1n looks to the heavens and begins to chant...
+realm           = ABIL_DIV
+sphere          = SPL_HEAT
+func            = sun_ray@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_CHAR
+mediums         = MEDIA_SPELL + MEDIA_WAND + MEDIA_STAFF + MEDIA_SCROLL +MEDIA_SELF_NONO
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 1
+shield          = SHIELD_M_BLOCK
+attack clothes  = {50, 1, 3}
+attack sleather = {50, 1, 5}
+attack hleather = {50, 1, 5}
+attack chain    = {50, 1, 3}
+attack plate    = {50, 1, 4}
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = -1
+race groll      = -1
+race darkelf    = -2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_DIVINE_RESIST
+name            = divine resistance
+acttype         = A_SOMEONE
+tochar          = You begin a prayer to protect $3n from the influence of the gods...
+tovict          = $1n begins a prayer to protect you from the influence of the gods...
+torest          = $1n begins a prayer to protect $3n...
+toself          = You pray to the gods to spare you from thier influence...
+toselfroom      = $1n prays to the gods for protection...
+realm           = ABIL_DIV
+sphere          = SPL_PROTECTION
+func            = raise_divine@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR
+mediums         = MEDIA_SPELL+MEDIA_POTION + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = -1
+race groll      = -1
+race darkelf    = -3
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_QUICKEN
+name            = quicken
+acttype         = A_SOMEONE
+tochar          = You touch $3n and utter the word, 'Acerra'
+tovict          = $1n touches you and utters the word, 'Acerra'
+torest          = $1n touches $3n and utters the word, 'Acerra'
+toself          = You utter the word, 'Acerra'
+toselfroom      = $1n utters the word, 'Acerra'
+realm           = ABIL_MAG
+sphere          = SPL_CREATION
+func            = quicken@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR
+mediums         = MEDIA_SPELL+MEDIA_POTION + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +2
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_HASTE
+name            = haste
+acttype         = A_SOMEONE
+tochar          = You whirl you finger, touch $3n, and utter the word, 'Acerretania'
+tovict          = $1n whirls $1s finger, touches you, and utters the word, 'Acerrretania'
+torest          = $1n whirls $1s finger, touches $3n and utters the word, 'Acerretania'
+toself          = You whirl your finger and utter the word, 'Acerretania'
+toselfroom      = $1n whirls $1s finger and utters the word, 'Acerretania'
+realm           = ABIL_MAG
+sphere          = SPL_CREATION
+func            = haste@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR
+mediums         = MEDIA_SPELL+MEDIA_POTION + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +2
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_RAISE_SUMMONING
+name            = summoning resistance
+acttype         = A_SOMEONE
+tochar          = You trace a circle around $3n to protect $3m from the magics of conjuration...
+tovict          = $1n traces a circle around you to protect you from those who might summon you...
+torest          = $1n traces a circle around $3n...
+toself          = You trace a circle around yourself to protect against the magics of conjuration...
+toselfroom      = $1n traces a circle around $3mself...
+realm           = ABIL_DIV
+sphere          = SPL_PROTECTION
+func            = raise_summoning@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR
+mediums         = MEDIA_SPELL+MEDIA_POTION + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_AWAKEN
+name            = awaken
+acttype         = A_SOMEONE
+tochar          = You lay hands on $3n and chant the words of awakening, 'Aleora desi'...
+tovict          = You somehow feel that someone is trying to awaken you...
+torest          = $1n lays hands on $3n and chants, 'Aleora desi'...
+toself          = You concentrate and try to rise from the depths of sleep...
+realm           = ABIL_DIV
+sphere          = SPL_PROTECTION
+func            = awaken@basis
+minpos          = POSITION_SLEEPING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF
+mediums         = MEDIA_SPELL + MEDIA_POTION + MEDIA_WAND + MEDIA_SCROLL+ MEDIA_STAFF
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = -1
+
+/* - - - - Yet another definition of a spell - - - - */
+index           = SPL_MIND_SHIELD
+name            = mind shield
+acttype         = A_SOMEONE
+tochar          = "You touch $3n's forehead and softly chant, 'shela menant'..."
+tovict          = $1n touches your forehead and softly chants, 'shela menant'...
+torest          = "$1n touches $3n's forehead and softly chants, 'shela menant'..."
+toself          = You touch your forehead and softly chant, 'shela menant'...
+toselfroom      = $1n touches $1s forehead and softly chants, 'shela menant'...
+realm           = ABIL_MAG
+sphere          = SPL_PROTECTION
+func            = mind_shield@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF
+mediums         = MEDIA_SPELL+MEDIA_POTION + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +2
+race groll      = -2
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_HEAT_RESI
+name            = heat resistance
+acttype         = A_SOMEONE
+tochar          = You touch $3n and softly chant, 'shela incen'...
+tovict          = $1n touches you and softly chants, 'shela incen'...
+torest          = $1n touches $3n and softly chants, 'shela incen'...
+toself          = You softly chant, 'shela incen'...
+toselfroom      = $1n softly chants, 'shela incen'...
+realm           = ABIL_MAG
+sphere          = SPL_PROTECTION
+func            = raise_heat@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF
+mediums         = MEDIA_SPELL+MEDIA_POTION + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = +1
+race groll      = -2
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_COLD_RESI
+name            = cold resistance
+acttype         = A_SOMEONE
+tochar          = You touch $3n and softly chant, 'shela fresi'...
+tovict          = $1n touches you and softly chants, 'shela fresi'...
+torest          = $1n touches $3n and softly chants, 'shela fresi'...
+toself          = You softly chant, 'shela fresi'...
+toselfroom      = $1n softly chants, 'shela fresi'...
+realm           = ABIL_MAG
+sphere          = SPL_PROTECTION
+func            = raise_cold@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF
+mediums         = MEDIA_SPELL+MEDIA_POTION + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = +1
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_ELECTRICITY_RESI
+name            = electricity resistance
+acttype         = A_SOMEONE
+tochar          = You touch $3n and softly chant, 'shela electra'...
+tovict          = $1n touches you and softly chants, 'shela electra'...
+torest          = $1n touches $3n and softly chants, 'shela electra'...
+toself          = You softly chant, 'shela electra'...
+toselfroom      = $1n softly chants, 'shela electra'...
+realm           = ABIL_MAG
+sphere          = SPL_PROTECTION
+func            = raise_elect@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF
+mediums         = MEDIA_SPELL+ MEDIA_POTION + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = +1
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_POISON_RESI
+name            = poison resistance
+acttype         = A_SOMEONE
+tochar          = You touch $3n and softly chant, 'shela entahc'...
+tovict          = $1n touches you and softly chants, 'shela entachc'...
+torest          = $1n touches $3n and softly chants, 'shela entahc'...
+toself          = You softly chant, 'shela entahc'...
+toselfroom      = $1n softly chants, 'shela entahc'...
+realm           = ABIL_MAG
+sphere          = SPL_PROTECTION
+func            = raise_poison@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF
+mediums         = MEDIA_SPELL+MEDIA_POTION + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = +1
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_ACID_RESI
+name            = acid resistance
+acttype         = A_SOMEONE
+tochar          = You touch $3n and softly chant, 'shela causter'...
+tovict          = $1n touches you and softly chants, 'shela causter'...
+torest          = $1n touches $3n and softly chants, 'shela causter'...
+toself          = You softly chant, 'shela causter'...
+toselfroom      = $1n softly chants, 'shela causter'...
+realm           = ABIL_MAG
+sphere          = SPL_PROTECTION
+func            = raise_acid@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF
+mediums         = MEDIA_SPELL+MEDIA_POTION + MEDIA_WAND + MEDIA_SCROLL
+check           = 1
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = +1
+race groll      = -1
+race darkelf    = +1
+
+
+index           = SPL_PRO_EVIL
+name            = protection from evil
+acttype         = A_SOMEONE
+tochar          = You begin a prayer to protect $3n from the forces of evil...
+tovict          = $1n pleads with the gods to grant you protection from the forces of evil...
+torest          = "$1n prays to the gods for $3n's protection..."
+toself          = You pray to the gods for protection from the forces of evil...
+toselfroom      = $1n prays to the gods for protection...
+realm           = ABIL_DIV
+sphere          = SPL_PROTECTION
+func            = prot_evil@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = -1
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = -2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_SANCTUARY
+name            = sanctuary
+acttype         = A_SOMEONE
+tochar          = You pray for the granting of safe passage for $3n...
+tovict          = $1n prays for the granting of safe passage for you...
+torest          = $1n prays for safe passage for $3n...
+toself          = You pray to the gods for safe passage...
+toselfroom      = $1n prays to the gods for safe passage...
+realm           = ABIL_DIV
+sphere          = SPL_PROTECTION
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF
+mediums         = MEDIA_SPELL + MEDIA_SCROLL + MEDIA_STAFF
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = -1
+race groll      = -1
+race darkelf    = -2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_DISPEL_MAGIC
+name            = dispel magic
+acttype         = A_SOMEONE
+tochar          = You make a quick gesture and utter the words, 'Mystam dislux'...
+tovict          = $1n makes a quick gesture and utters the words, 'Mystam dislux'...
+torest          = $1n makes a quick gesture and utters the words, 'Mystam dislux'
+toself          = You make a quick gesture and utter the words, 'Mystam dislux'
+toselfroom      = $1n makes a quick gesture utters the words, 'Mystam dislux'
+realm           = ABIL_MAG
+sphere          = SPL_PROTECTION
+func            = dispel_magic@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + FIND_UNIT_INVEN + FIND_UNIT_EQUIP + TAR_CHAR + TAR_OBJ
+mediums         = MEDIA_SPELL + MEDIA_SCROLL + MEDIA_WAND
+check           = SPLCST_CHECK
+offensive       = TRUE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +2
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_SUSTAIN
+name            = sustain
+acttype         = A_SOMEONE
+tochar          = You pray to the gods to spare $3n from the pains of starvation...
+tovict          = $1n prays to the gods to save you from starvation...
+torest          = $1n prays to the gods to save $3n from starvation...
+toself          = You pray to the gods to spare you from starvation...
+toselfroom      = $1n prays to the gods for mercy...
+realm           = ABIL_DIV
+sphere          = SPL_PROTECTION
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF
+mediums         = MEDIA_SCROLL + MEDIA_SPELL + MEDIA_POTION +MEDIA_STAFF
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = -2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_LOCK
+name            = lock
+acttype         = A_SOMEONE
+tochar          = You point your finger, turn it guickly and say, 'Kroquas'...
+tovict          = $1n points $1s finger, turns it quickly and says, 'Kroquas'...
+torest          = $1n points $1s finger, turns it quickly and says, 'Kroquas'...
+toself          = You point your finger, turn it guickly and say, 'Kroquas'...
+toselfroom      = $1n points $1s finger, turns it quickly and says, 'Kroquas'...
+realm           = ABIL_MAG
+sphere          = SPL_PROTECTION
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = TAR_IGNORE
+mediums         = MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_IGNORE
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = +2
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_UNLOCK
+name            = unlock
+acttype         = A_SOMEONE
+tochar          = You wave your hand slowly and say, 'Sequas'...
+tovict          = $1n waves $1s hand slowly and says, 'Sequas'...
+torest          = $1n waves $1s hand slowly and says, 'Sequas'...
+toself          = You wave your hand slowly and say, 'Sequas'...
+toselfroom      = $1n waves $1s hand slowly and says, 'Sequas'...
+realm           = ABIL_MAG
+sphere          = SPL_PROTECTION
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = TAR_IGNORE
+mediums         = MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_IGNORE
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = +2
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_DROWSE
+name            = drowse
+acttype         = A_SOMEONE
+tochar          = "You wave a finger before your eyes and utter, 'Shonashi'..."
+tovict          = $1n waves a finger before $1s eyes and utters, 'Shonashi'...
+torest          = "$1n waves a finger before $1s eyes and utters, 'Shonashi'..."
+toself          = You wave a finger before your eyes, 'Shonashi'...
+toselfroom      = $1n waves a finger before $1s eyes and utters, 'Shonashi'...
+realm           = ABIL_MAG
+sphere          = SPL_MIND
+func            = drowse@basis
+minpos          = POSITION_FIGHTING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR
+mediums         = MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_RESIST
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +2
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_SLOW
+name            = slow
+acttype         = A_SOMEONE
+tochar          = "You draw a line upon the ground with your foot and say, 'Pless'..."
+tovict          = $1n draws a line upon the ground with $1s foot and says, 'Pless'...
+torest          = "$1n draws a line upon the ground with $1s foot and says, 'Pless'..."
+toself          = You draw a line upon the ground with your foot and say, 'Pless'...
+toselfroom      = $1n draws a line upon the ground with $1s foot and says, 'Pless'...
+realm           = ABIL_MAG
+sphere          = SPL_MIND
+func            = slow@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR
+mediums         = MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_RESIST
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = +1
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_DUST_DEVIL
+name            = dust devil
+acttype         = A_SOMEONE
+tochar          = You whirl your arms over your head and call out, 'Sem tier daeb'...
+torest          = $1n whirls $1s arms over $1s head and calls out, 'Sem tier daeb'...
+realm           = ABIL_MAG
+sphere          = SPL_SUMMONING
+func            = dust_devil@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = TAR_IGNORE
+mediums         = MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = +1
+race groll      = -1
+race darkelf    = +2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_DET_ALIGN
+name            = detect alignment
+acttype         = A_SOMEONE
+tochar          = You pray for the granting of alignment detection to $3n...
+tovict          = $1n prays for the granting of alignment detection to you...
+torest          = $1n prays for the granting of an inner sight to $3n...
+toself          = You pray for the ability of alignment detection...
+toselfroom      = $1n prays for the granting of an inner sight...
+realm           = ABIL_DIV
+sphere          = SPL_DETECTION
+func            = det_align@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF
+mediums         = MEDIA_SPELL + MEDIA_POTION + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = +1
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_DET_INVISIBLE
+name            = detect invisible
+acttype         = A_SOMEONE
+tochar          = You pray for the granting of detecting the invisible to $3n...
+tovict          = $1n prays for the granting of detecting the invisible to you...
+torest          = $1n prays for the granting of an inner sight to $3n...
+toself          = You pray for the ability of detecting the invisible...
+toselfroom      = $1n prays for the granting of an inner sight...
+realm           = ABIL_MAG
+sphere          = SPL_DETECTION
+func            = det_invis@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_OBJ + TAR_AUTO_SELF
+mediums         = MEDIA_SPELL + MEDIA_POTION + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = +1
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +2
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_DET_MAGIC
+name            = detect magic
+acttype         = A_SOMEONE
+tochar          = You close one eye and utter the words, 'Mystam ocuro'...
+tovict          = $1n closes one eye and utters the words, 'Mystam ocuro'...
+torest          = $1n closes one eye and utters the words, 'Mystam ocuro'...
+toself          = You close one eye and utter the words, 'Mystam ocuro'...
+toselfroom      = $1n closes one eye and utters the words, 'Mystam ocuro'...
+realm           = ABIL_MAG
+sphere          = SPL_DETECTION
+func            = det_magic@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF
+mediums         = MEDIA_SPELL + MEDIA_POTION + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = -1
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = +2
+race groll      = -1
+race darkelf    = +2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_DET_POISON
+name            = detect poison
+acttype         = A_SOMEONE
+tochar          = You run your finger from nose to chin and chant, 'Istanta u entahc'...
+tovict          = $1n runs $1s finger from nose to chin and chants, 'Istanta u entahc'...
+torest          = $1n runs $1s finger from nose to chin and chants, 'Istanta u entahc'...
+toself          = You run your finger from nose to chin and chants, 'Istanta u entahc'...
+toselfroom      = $1n runs $1s finger from nose to chin and chants, 'Istanta u entahc'...
+realm           = ABIL_DIV
+sphere          = SPL_DETECTION
+func            = det_poison@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF
+mediums         = MEDIA_SPELL + MEDIA_POTION + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = -1
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_DET_UNDEAD
+name            = detect undead
+acttype         = A_SOMEONE
+tochar          = You pray for the granting of undead detection $3n...
+tovict          = $1n prays for the granting of undead detection to you...
+torest          = $1n prays for the granting of an inner sight to $3n...
+toself          = You pray for the ability of undead detection...
+toselfroom      = $1n prays for the granting of an inner sight...
+realm           = ABIL_DIV
+sphere          = SPL_DETECTION
+func            = det_undead@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF
+mediums         = MEDIA_SPELL + MEDIA_POTION + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_DET_CURSE
+name            = detect curse
+acttype         = A_SOMEONE
+tochar          = You pray for the granting of curse detection to $3n...
+tovict          = $1n prays for the granting of curse detection to you...
+torest          = $1n prays for the granting of an inner sight to $3n...
+toself          = You pray for the ability of curse detection...
+toselfroom      = $1n prays for the granting of an inner sight...
+realm           = ABIL_DIV
+sphere          = SPL_DETECTION
+func            = det_curse@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF
+mediums         = MEDIA_SPELL + MEDIA_POTION + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_SENSE_LIFE
+name            = sense life
+acttype         = A_SOMEONE
+tochar          = You pray for the granting of life force detectiont to $3n...
+tovict          = $1n prays for the granting of life force detection to you...
+torest          = $1n prays for the granting of an inner sight to $3n...
+toself          = You pray for the ability of life force detection...
+toselfroom      = $1n prays for the granting of an inner sight...
+realm           = ABIL_DIV
+sphere          = SPL_DETECTION
+func            = sense_life@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF
+mediums         = MEDIA_SPELL + MEDIA_POTION + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_IDENTIFY_1
+name            = identify
+acttype         = A_SOMEONE
+tochar          = You point two fingers at $3n and utter the word, 'Revela'...
+tovict          = $1n points two fingers at $3n and utters the word, 'Revela'...
+torest          = $1n points two fingers at $3n and utters the word, 'Revela'...
+toself          = You point two fingers at $3n and utter the word, 'Revela'...
+toselfroom      = $1n points two fingers at $3n and utters the word, 'Revela'...
+realm           = ABIL_MAG
+sphere          = SPL_DETECTION
+func            = identify_1@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + FIND_UNIT_INVEN + FIND_UNIT_EQUIP + TAR_OBJ
+mediums         = MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_RESIST
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = +1
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_IDENTIFY_2
+name            = improved identify
+acttype         = A_SOMEONE
+tochar          = You point three fingers at $3n and utter the words, 'Revela incrade'...
+tovict          = $1n points three fingers at $3n and utters the words, 'Revela incrade'...
+torest          = $1n points three fingers at $3n and utters the words, 'Revela incrade'...
+toself          = You point three fingers at $3n and utter the words, 'Revela incrade'..
+toselfroom      = $1n points three fingers at $3n and utters the words, 'Revela incrade'...
+realm           = ABIL_MAG
+sphere          = SPL_DETECTION
+func            = identify_2@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + FIND_UNIT_INVEN + FIND_UNIT_EQUIP + TAR_OBJ
+mediums         = MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_RESIST
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = +1
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_RANDOM_TELEPORT
+name            = random teleport
+acttype         = A_SOMEONE
+tochar          = You hold out your hands and shrug while uttering, 'Helif eyeno'
+tovict          = $1n holds out $1s hands and shrugs while uttering, 'Helif eyeno'
+torest          = $1n holds out $1s hands and shrugs while uttering, 'Helif eyeno'
+toself          = You hold out your hands and shrug while uttering, 'Helif eyeno'
+toselfroom      = $1n holds out $1s hands and shrugs while uttering, 'Helif eyeno'
+realm           = ABIL_MAG
+sphere          = SPL_SUMMONING
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_FIGHTING
+mana            = 20
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF + TAR_SELF_ONLY
+mediums         = MEDIA_SPELL + MEDIA_SCROLL + MEDIA_WAND
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +2
+race groll      = -2
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_CLEAR_SKIES
+name            = clear skies
+acttype         = A_SOMEONE
+tochar          = You spread your arms and implore the gods to clear the skies...
+torest          = $1n spreads $1s arms to the skies and begins to chant...
+realm           = ABIL_DIV
+sphere          = SPL_SUMMONING
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = TAR_IGNORE
+mediums         = MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = -2
+race halfling   = -2
+race gnome      = -2
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = -1
+race groll      = -1
+race darkelf    = -2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_STORM_CALL
+name            = storm call
+acttype         = A_SOMEONE
+tochar          = You spread your arms and beckon the gods to send a violent storm...
+torest          = $1n spreads $1s arms to the skies and invokes the names of the gods...
+realm           = ABIL_MAG
+sphere          = SPL_SUMMONING
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = TAR_IGNORE
+mediums         = MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = -2
+race halfling   = -1
+race gnome      = -1
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = +1
+race groll      = -2
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_WORD_OF_RECALL
+name            = word of recall
+acttype         = A_SOMEONE
+tochar          = You kneel and pray for the gods to send you home...
+tovict          = $1n kneels and prays to the gods...
+torest          = $1n kneels and prays to the gods...
+toself          = You kneel and pray for the gods to send you home...
+toselfroom      = $1n kneels and prays to the gods...
+realm           = ABIL_DIV
+sphere          = SPL_SUMMONING
+func            = word_of_recall@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF + TAR_SELF_ONLY
+mediums         = MEDIA_SPELL + MEDIA_STAFF + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = +1
+race elf        = +1
+race dwarf      = 0
+race halfling   = -1
+race gnome      = -1
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = -1
+race groll      = -2
+race darkelf    = -1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_CONTROL_TELEPORT
+name            = controlled teleport
+acttype         = A_SOMEONE
+tochar          = You clap your hands together sharply and cry out, 'Piort tes diamensiat'...
+torest          = $1n claps $1s hands together sharply and cries out, 'Piort tes diamensiat'...
+toself          = You clap your hands together sharply and cry out, 'Piort tes diamensiat'...
+toselfroom      = $1n claps $1s hands together sharply and cries out, 'Piort tes diamensiat'...
+realm           = ABIL_MAG
+sphere          = SPL_SUMMONING
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_ZONE + FIND_UNIT_WORLD + TAR_CHAR + TAR_OBJ+ TAR_ROOM + TAR_SELF_NONO
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +2
+race groll      = -2
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_MINOR_GATE
+name            = minor gate
+acttype         = A_SOMEONE
+tochar          = You trace a pentagram in the air and utter the words, 'Piort menah'...
+torest          = $1n traces a pentagram in the air and utters the words, 'Piort menah'...
+toself          = You utter the words, 'Piort menah'...
+toselfroom      = $1n utters the words, 'Piort menah'...
+realm           = ABIL_MAG
+sphere          = SPL_SUMMONING
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_WORLD + TAR_CHAR + TAR_SELF_NONO
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_RESIST
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +1
+race groll      = -2
+race darkelf    = +2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_GATE
+name            = gate
+acttype         = A_SOMEONE
+tochar          = You trace a magic circle in the air and utter, 'Sut mag piort'...
+torest          = $1n traces a magic circle in the air and utters, 'Sut mag piort'...
+toself          = You utter, 'Lux mag piort'...
+toselfroom      = $1n utter, 'Lux mag piort'...
+realm           = ABIL_MAG
+sphere          = SPL_SUMMONING
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_WORLD + TAR_CHAR + TAR_SELF_NONO
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_RESIST
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +1
+race groll      = -2
+race darkelf    = +2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_CREATE_FOOD
+name            = create food
+acttype         = A_SOMEONE
+tochar          = You pray to the gods for sustenance...
+torest          = $1n begins a humble prayer...
+realm           = ABIL_DIV
+sphere          = SPL_CREATION
+func            = create_food@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = TAR_IGNORE
+mediums         = MEDIA_SPELL + MEDIA_STAFF + MEDIA_SCROLL +MEDIA_WAND+MEDIA_SELF_NONO
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = -2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_CREATE_WATER
+name            = create water
+acttype         = A_SOMEONE
+tochar          = You pray to the gods to quench your thirst...
+torest          = $1n begins a humble prayer...
+toself          = You pray to the gods to quench your thirst...
+realm           = ABIL_DIV
+sphere          = SPL_CREATION
+func            = create_water@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = TAR_IGNORE
+mediums         = MEDIA_SPELL + MEDIA_STAFF + MEDIA_SCROLL +MEDIA_WAND+MEDIA_SELF_NONO
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = -2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_LIGHT_1
+name            = light
+acttype         = A_SOMEONE
+tochar          = You chant softly, 'Dies tempere'...
+tovict          = $1n chants softly, 'Dies tempere'...
+torest          = $1n chants softly, 'Dies tempere'...
+toself          = You chant softly, 'Dies tempere'...
+toselfroom      = $1n chants soflty, 'Dies tempere'...
+realm           = ABIL_DIV
+sphere          = SPL_CREATION
+func            = mlight@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + FIND_UNIT_INVEN + FIND_UNIT_EQUIP + TAR_ROOM + TAR_OBJ
+mediums         = MEDIA_SPELL + MEDIA_STAFF + MEDIA_SCROLL +MEDIA_WAND+MEDIA_SELF_NONO
+check           = SPLCST_RESIST
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = -2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_LIGHT_2
+name            = continual light
+acttype         = A_SOMEONE
+tochar          = You chant softly, 'Dies infinitu'...
+tovict          = $1n chants softly, 'Dies infinitu'...
+torest          = $1n chants softly, 'Dies infinitu'...
+toself          = You chant softly, 'Dies infinituls'...
+toselfroom      = $1n chants softly, 'Dies infinitu'...
+realm           = ABIL_DIV
+sphere          = SPL_CREATION
+func            = cont_light@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + FIND_UNIT_INVEN + FIND_UNIT_EQUIP + TAR_ROOM + TAR_OBJ
+mediums         = MEDIA_SPELL + MEDIA_STAFF + MEDIA_SCROLL +MEDIA_WAND+MEDIA_SELF_NONO
+check           = SPLCST_RESIST
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -2
+race darkelf    = -2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_DARKNESS_1
+name            = darkness
+acttype         = A_SOMEONE
+tochar          = You snarl the words, 'Necha tempere'...
+tovict          = $1n snarls the words, 'Necha tempere'...
+torest          = $1n snarls the words, 'Necha tempere'...
+toself          = You snarl the words, 'Necha tempere'...
+toselfroom      = $1n snarl the words, 'Necha tempere'...
+realm           = ABIL_DIV
+sphere          = SPL_CREATION
+func            = darkness@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + FIND_UNIT_INVEN + FIND_UNIT_EQUIP + TAR_ROOM + TAR_OBJ
+mediums         = MEDIA_SPELL + MEDIA_STAFF + MEDIA_SCROLL +MEDIA_WAND+MEDIA_SELF_NONO
+check           = SPLCST_RESIST
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = -2
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_DARKNESS_2
+name            = continual darkness
+acttype         = A_SOMEONE
+tochar          = You snarl the words, 'Necha infinitu'...
+tovict          = $1n snarls the words, 'Necha infinitu'...
+torest          = $1n snarls the words, 'Necha infinitu'...
+toself          = You snarl the words, 'Necha infinitu'...
+toselfroom      = $1n snarls the words, 'Necha infinitu'...
+realm           = ABIL_DIV
+sphere          = SPL_CREATION
+func            = cont_darkness@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + FIND_UNIT_INVEN + FIND_UNIT_EQUIP + TAR_ROOM + TAR_OBJ
+mediums         = MEDIA_SPELL + MEDIA_STAFF + MEDIA_SCROLL +MEDIA_WAND+MEDIA_SELF_NONO
+check           = SPLCST_RESIST
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = -2
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_STUN
+name            = stun
+acttype         = A_SOMEONE
+tochar          = You invoke a word of stunning upon $3n, 'Fresfren'...
+tovict          = $1n stares into your eyes and utters the word, 'Fresfren'...
+torest          = "$1n stares into $3n's eyes and utters the word, 'Fresfren'..."
+toself          = You invoke the power word of stunning, 'Fresfren'...
+toselfroom      = $1n utters the word, 'Fresfren'...
+realm           = ABIL_MAG
+sphere          = SPL_MIND
+func            = stun@basis
+minpos          = POSITION_FIGHTING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR
+mediums         = MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL + MEDIA_POTION
+check           = SPLCST_RESIST
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = +1
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_HOLD
+name            = hold
+acttype         = A_SOMEONE
+tochar          = You thrust a clenched fist at $3n and utter the word, 'Desi'...
+tovict          = $1n thrusts a clenched fist at you and utters the word, 'Desi'...
+torest          = $1n thrusts a clenched fist at $3n and utters the word, 'Desi'...
+toself          = You utter the word, 'Desi'...
+toselfroom      = $1n utters the word, 'Desi'...
+realm           = ABIL_MAG
+sphere          = SPL_MIND
+func            = hold@basis
+minpos          = POSITION_FIGHTING
+mana            = 20
+turns           = PULSE_SEC * 3
+targets         = FIND_UNIT_SURRO + TAR_CHAR
+mediums         = MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL + MEDIA_POTION
+check           = SPLCST_RESIST
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = +1
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_ANIMATE_DEAD
+name            = animate dead
+acttype         = A_SOMEONE
+tochar          = You cut yourself and bleed upon $3n, chanting, 'Muera aneme'...
+tovict          = $1n cuts $1mself and bleed on you, chanting, 'Muera aneme'...
+torest          = $1n cuts $1mself and bleed on $3n, chanting, 'Muera aneme'...
+toself          = You cut yourself and chant, 'Muera aneme'...
+toselfroom      = $1n cuts $1mself and chants, 'Muera aneme'...
+realm           = ABIL_DIV
+sphere          = SPL_CREATION
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_OBJ
+mediums         = MEDIA_SPELL + MEDIA_STAFF + MEDIA_SCROLL + MEDIA_WAND+MEDIA_SELF_NONO
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = -2
+race dwarf      = -2
+race halfling   = -2
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = -2
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_LEATHER_SKIN
+name            = leather skin
+acttype         = A_SOMEONE
+tochar          = You begin a prayer to harden your skin to the toughness of leather...
+tovict          = $1n begins a prayer...
+torest          = $1n begins a prayer...
+toself          = You begin a prayer to harden your skin to the toughness of leather...
+toselfroom      = $1n prays to the gods...
+realm           = ABIL_DIV
+sphere          = SPL_CREATION
+func            = leather_skin@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF + TAR_SELF_ONLY
+mediums         = MEDIA_SPELL + MEDIA_POTION + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_BARK_SKIN
+name            = bark skin
+acttype         = A_SOMEONE
+tochar          = You begin a prayer to harden your skin to the toughness of tree bark...
+tovict          = $1n begins a prayer...
+torest          = $1n begins a prayer...
+toself          = You begin a prayer to harden your skin to the toughness of tree bark...
+toselfroom      = $1n begins to pray...
+realm           = ABIL_DIV
+sphere          = SPL_CREATION
+func            = bark_skin@basis
+minpos          = POSITION_STANDING
+mana            = 35
+turns           = PULSE_SEC*2
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF + TAR_SELF_ONLY
+mediums         = MEDIA_SPELL + MEDIA_POTION + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_CONTROL_UNDEAD
+name            = control undead
+acttype         = A_SOMEONE
+tochar          = You utter the words, 'Muera reslox'...
+tovict          = $1n utters the words, 'Muera reslox'...
+torest          = $1n utters the words, 'Muera reslox'...
+toself          = You utter the words, 'Muera reslox'...
+toselfroom      = $1n utters the words, 'Muera reslox'...
+realm           = ABIL_DIV
+sphere          = SPL_CREATION
+func            = control_undead@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR
+mediums         = MEDIA_SPELL + MEDIA_WAND + MEDIA_STAFF + MEDIA_SCROLL+MEDIA_SELF_NONO
+check           = SPLCST_RESIST
+offensive       = TRUE
+fumble          = 0
+race human      = 0
+race elf        = -2
+race dwarf      = -2
+race halfling   = -2
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = -2
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_BONE_SKIN
+name            = bone skin
+acttype         = A_SOMEONE
+tochar          = You utter the words, 'Episa hues'...
+tovict          = $1n utters the words, 'Episa hues'...
+torest          = $1n utters the words, 'Episa hues'...
+toself          = You utter the words, 'Episa hues'...
+toselfroom      = $1n utters the words, 'Episa hues'...
+realm           = ABIL_MAG
+sphere          = SPL_CREATION
+func            = bone_skin@basis
+minpos          = POSITION_STANDING
+mana            = 50
+turns           = PULSE_SEC*3
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF + TAR_SELF_ONLY
+mediums         = MEDIA_SPELL + MEDIA_POTION + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = +1
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_STONE_SKIN
+name            = stone skin
+acttype         = A_SOMEONE
+tochar          = You utter the words, 'Episa pierdif'
+tovict          = $1n utters the words, 'Episa pierdif'
+torest          = $1n utters the words, 'Episa pierdif'
+toself          = You utter the words, 'Episa pierdif'
+toselfroom      = $1n utters the words, 'Episa pierdif'
+realm           = ABIL_MAG
+sphere          = SPL_CREATION
+func            = stone_skin@basis
+minpos          = POSITION_STANDING
+mana            = 75
+turns           = PULSE_SEC*4
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF + TAR_SELF_ONLY
+mediums         = MEDIA_SPELL + MEDIA_POTION + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = +1
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_AID
+name            = aid
+acttype         = A_SOMEONE
+tochar          = "You pray to the gods to spare $3n's life..."
+tovict          = You feel a warm sensation creeping through your body...
+torest          = "$1n begins to pray over $3n's limp body..."
+toself          = You plead with the gods to pull you from the cold arms of death...
+realm           = ABIL_DIV
+sphere          = SPL_DIVINE
+func            = aid@basis
+minpos          = POSITION_MORTALLYW
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF
+mediums         = MEDIA_SPELL + MEDIA_SCROLL + MEDIA_POTION
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = -1
+race groll      = -1
+race darkelf    = -2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_COLOURSPRAY_1
+name            = flash
+acttype         = A_SOMEONE
+tochar          = You snap your fingers and utter the words, 'Rapa mag dies'
+tovict          = $1n snaps $1s fingers and utters the words, 'Rapa mag dies'
+torest          = $1n snaps $1s fingers and utters the words, 'Rapa mag dies'
+toself          = You utter the words, 'Rapa mag dies'
+toselfroom      = $1n utters the words, 'Rapa mag dies'
+realm           = ABIL_DIV
+sphere          = SPL_MIND
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_FIGHTING
+mana            = 12
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_FIGHT_VICT
+mediums         = MEDIA_STAFF + MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL+MEDIA_SELF_NONO
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 2
+shield          = SHIELD_M_REDUCE
+attack clothes  = {50, 1, 9}
+attack sleather = {50, 1, 9}
+attack hleather = {50, 1, 9}
+attack chain    = {50, 1, 9}
+attack plate    = {50, 1,10}
+race human      = 0
+race elf        = +1
+race dwarf      = -1
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = -1
+race groll      = -2
+race darkelf    = -2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_COLOURSPRAY_2
+name            = colourbeam
+acttype         = A_SOMEONE
+tochar          = You spread your fingers utter the words, 'Chroma lasera'...
+tovict          = $1n spread $1s fingers and utters the words, 'Chroma lasera'...
+torest          = $1n spreads $1s fingers and utters the words, 'Chroma lasera'...
+toself          = You utter the words, 'Chroma lasera'...
+toselfroom      = $1n utters the words, 'Chroma lasera'...
+realm           = ABIL_DIV
+sphere          = SPL_MIND
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_FIGHTING
+mana            = 12
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_FIGHT_VICT
+mediums         = MEDIA_STAFF + MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL+MEDIA_SELF_NONO
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 2
+shield          = SHIELD_M_REDUCE
+attack clothes  = {50, 1, 7}
+attack sleather = {50, 1, 7}
+attack hleather = {50, 1, 7}
+attack chain    = {50, 1, 7}
+attack plate    = {50, 1, 8}
+race human      = 0
+race elf        = +1
+race dwarf      = -1
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = -1
+race groll      = -2
+race darkelf    = -2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_COLOURSPRAY_3
+name            = colourspray
+acttype         = A_SOMEONE
+tochar          = You make a sweeping gesture with your hand and scream, 'Oses chroma!'...
+tovict          = $1n makes a sweeping gesture with $1s hand and screams, 'Oses chroma!'...
+torest          = $1n makes a sweeping gesture with $1s and screams, 'Oses chroma!'...
+toself          = You scream, 'Oses chroma!'...
+toselfroom      = $1n scream, 'Oses chroma!'...
+realm           = ABIL_DIV
+sphere          = SPL_MIND
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_FIGHTING
+mana            = 12
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_FIGHT_VICT
+mediums         = MEDIA_STAFF + MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL+MEDIA_SELF_NONO
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 2
+shield          = SHIELD_M_REDUCE
+attack clothes  = {50, 1, 5}
+attack sleather = {50, 1, 5}
+attack hleather = {50, 1, 5}
+attack chain    = {50, 1, 5}
+attack plate    = {50, 1, 6}
+race human      = 0
+race elf        = +1
+race dwarf      = -1
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = -1
+race groll      = -2
+race darkelf    = -2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_INVISIBILITY
+name            = invisibility
+acttype         = A_SOMEONE
+tochar          = You utter the word, 'Sansivise'
+tovict          = $1n utters the word, 'Sansivise'
+torest          = $1n utters the word, 'Sansivise'
+toself          = You utter the word, 'Sansivise'
+toselfroom      = $1n utters the word, 'Sansivise'
+realm           = ABIL_MAG
+sphere          = SPL_MIND
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + FIND_UNIT_INVEN + FIND_UNIT_EQUIP + TAR_CHAR + TAR_OBJ
+mediums         = MEDIA_SPELL+MEDIA_POTION + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = +1
+race dwarf      = -1
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -2
+race half-elf   = 0
+race brownie    = +2
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_WIZARD_EYE
+name            = wizard eye
+acttype         = A_SOMEONE
+tochar          = You close your eyes and utter the words, 'Ocula ad mystam'...
+torest          = $1n closes $1s eyes and utters the words, 'Ocula ad mystam'...
+toself          = You close your eyes and utter the words, 'Ocula ad mystam'...
+toselfroom      = $1n closes $1s eyes and utters the words, 'Ocula ad mystam'...
+realm           = ABIL_MAG
+sphere          = SPL_MIND
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_RESTING
+mana            = 10
+turns           = PULSE_SEC
+targets         = FIND_UNIT_WORLD + TAR_CHAR + TAR_OBJ + TAR_SELF_NONO
+mediums         = MEDIA_SPELL + MEDIA_SCROLL + MEDIA_WAND
+check           = SPLCST_RESIST
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = +1
+race dwarf      = -1
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +2
+race groll      = -2
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_FEAR
+name            = fear
+acttype         = A_SOMEONE
+tochar          = You invoke a word of fear upon $3n, 'Zcargh'...
+tovict          = $1n stares into your eyes and utters the word, 'Zcargh'...
+torest          = "$1n stares into $3n's eyes and utters the word, 'Zcargh'..."
+toself          = You invoke the power word of fear, 'Zcargh'...
+toselfroom      = $1n utters the word, 'Zcargh'...
+realm           = ABIL_DIV
+sphere          = SPL_MIND
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_FIGHT_VICT
+mediums         = MEDIA_SPELL + MEDIA_POTION + MEDIA_WAND +MEDIA_SCROLL + MEDIA_STAFF+MEDIA_SELF_NONO
+check           = SPLCST_RESIST
+offensive       = TRUE
+fumble          = 0
+race human      = 0
+race elf        = +1
+race dwarf      = -1
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = -1
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_CONFUSION
+name            = confusion
+acttype         = A_SOMEONE
+tochar          = You thrust a clawed hand at $3n and scream, 'Suino fanoc!'...
+tovict          = $1n thrusts a clawed hand at you and screams, 'Suino fanoc!'...
+torest          = $1n thrusts a clawed hand at $3n and screams, 'Suino fanoc!'...
+toself          = You scream, 'Suino fanoc!'...
+toselfroom      = $1n screams, 'Suino fanoc!'...
+realm           = ABIL_MAG
+sphere          = SPL_MIND
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR
+mediums         = MEDIA_SPELL + MEDIA_POTION + MEDIA_WAND +MEDIA_STAFF + MEDIA_SCROLL+MEDIA_SELF_NONO
+check           = SPLCST_RESIST
+offensive       = TRUE
+fumble          = 0
+race human      = 0
+race elf        = +1
+race dwarf      = -1
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = +2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_SLEEP
+name            = sleep
+acttype         = A_SOMEONE
+tochar          = You softly whispers, 'Helashhh'...
+tovict          = $1n softly whispers, 'Helashhh'...
+torest          = $1n soflty whispers, 'Helashhh'...
+toself          = You softly whispers, 'Helashhh'...
+toselfroom      = $1n softly whispers, 'Helashhh'...
+realm           = ABIL_DIV
+sphere          = SPL_MIND
+func            = sleep@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR
+mediums         = MEDIA_SPELL + MEDIA_POTION + MEDIA_WAND +MEDIA_STAFF + MEDIA_SCROLL +MEDIA_SELF_NONO
+check           = SPLCST_RESIST
+offensive       = TRUE
+fumble          = 0
+race human      = 0
+race elf        = +1
+race dwarf      = -1
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_XRAY_VISION
+name            = xray vision
+acttype         = A_SOMEONE
+tochar          = You cover your right eye utter, 'Oculo ento'...
+tovict          = $1n covers $1s right eye and utters, 'Oculo ento'...
+torest          = $1n covers $1s right eye and utters, 'Oculo ento'...
+toself          = You cover your right eye and utter, 'Oculo ento'...
+toselfroom      = $1n covers $1s right eye and utters, 'Oculo ento'...
+realm           = ABIL_MAG
+sphere          = SPL_MIND
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_OBJ
+mediums         = MEDIA_SPELL + MEDIA_POTION + MEDIA_SCROLL
+check           = SPLCST_RESIST
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = +1
+race dwarf      = -1
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +2
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_CALM
+name            = calm
+acttype         = A_SOMEONE
+tochar          = You touch $3n lightly and chant softly...
+tovict          = $1n touches you and begins to chant in a calming voice...
+torest          = $1n touches $3n and begins to chant in a calming voice...
+toself          = You close your eyes and begin a mind calming chant...
+toselfroom      = $1n closes $1s eyes and begins to chant in a calm voice...
+realm           = ABIL_DIV
+sphere          = SPL_MIND
+func            = calm@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR
+mediums         = MEDIA_SPELL + MEDIA_POTION + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = +1
+race dwarf      = -1
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -2
+race darkelf    = -2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_SUMMER_RAIN
+name            = summer rain
+acttype         = A_SOMEONE
+tochar          = You begin a prayer to aid the battle weary around you...
+torest          = $1n begins a prayer to aid all present...
+toself          = You begin a prayer to aid the battle weary around you...
+toselfroom      = $1n begins a prayer to aid all present...
+realm           = ABIL_DIV
+sphere          = SPL_DIVINE
+func            = summer_rain@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = TAR_IGNORE
+mediums         = MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = TRUE
+fumble          = 0
+race human      = 0
+race elf        = +1
+race dwarf      = -1
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -2
+race darkelf    = -2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_COMMAND
+name            = command
+acttype         = A_SOMEONE
+tochar          = You invoke a word of command upon $3n, 'Lahse'...
+tovict          = $1n stares into your eyes and utters the word, 'Lahse'...
+torest          = "$1n stares into $3n's eyes and utters the word, 'Lahse'..."
+toself          = You invoke the power word of command, 'Lahse'...
+toselfroom      = $1n utters the word, 'Lahse'...
+realm           = ABIL_DIV
+sphere          = SPL_MIND
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_RESIST
+offensive       = TRUE
+fumble          = 0
+race human      = 0
+race elf        = +1
+race dwarf      = -1
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_LEAVING
+name            = leaving
+acttype         = A_SOMEONE
+tochar          = You utters the words, 'Quis pesat'...
+tovictt         = $1n utters the words 'quis pesat'...
+torest          = $1n utters the words, 'Quis pesat'...
+toself          = You utter the words, 'Quis pesat'...
+toselfroom      = $1n utters the words, 'Quis pesat'...
+realm           = ABIL_MAG
+sphere          = SPL_SUMMONING
+func            = leaving@basis
+minpos          = POSITION_FIGHTING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF + TAR_SELF_ONLY
+mediums         = MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL + MEDIA_STAFF
+check           = SPLCST_CHECK
+offensive       = TRUE
+fumble          = 0
+race human      = 0
+race elf        = +2
+race dwarf      = -1
+race halfling   = +1
+race gnome      = -1
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +2
+race groll      = -2
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_FIREBALL_1
+name            = burn
+acttype         = A_SOMEONE
+tochar          = You utter the word, 'Inceriti'
+tovict          = $1n utters the word, 'Inceriti'
+torest          = $1n utters the word, 'Inceriti'
+toself          = You utter the word, 'Inceriti'
+toselfroom      = $1n utters the word, 'Inceriti'
+realm           = ABIL_MAG
+sphere          = SPL_HEAT
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_FIGHTING
+mana            = 12
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_FIGHT_VICT + TAR_CHAR
+mediums         = MEDIA_STAFF + MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL+MEDIA_SELF_NONO
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 2
+shield          = SHIELD_M_BLOCK
+attack clothes  = {50, 1, 8}
+attack sleather = {50, 1,10}
+attack hleather = {50, 1,10}
+attack chain    = {50, 1, 8}
+attack plate    = {50, 1, 9}
+race human      = +1
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +2
+race groll      = -3
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_FIREBALL_2
+name            = fireball
+acttype         = A_SOMEONE
+tochar          = You utter the words, 'Bolat incerinata' and point at $3n...
+tovict          = $1n utters the words, 'Bolat incerinata' and points menacingly at you...
+torest          = $1n utter the words, 'Bolat incerinata' and points at $3n...
+toself          = You utter the words, 'Bolat incerinata'...
+toselfroom      = $1n utters the words, 'Bolat incerinata'...
+realm           = ABIL_MAG
+sphere          = SPL_HEAT
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_FIGHTING
+mana            = 12
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_FIGHT_VICT + TAR_CHAR
+mediums         = MEDIA_STAFF + MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL+MEDIA_SELF_NONO
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 2
+shield          = SHIELD_M_BLOCK
+attack clothes  = {50, 1, 6}
+attack sleather = {50, 1, 8}
+attack hleather = {50, 1, 8}
+attack chain    = {50, 1, 6}
+attack plate    = {50, 1, 7}
+race human      = +1
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +1
+race groll      = -3
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_FIREBALL_3
+name            = firestorm
+acttype         = A_SOMEONE
+tochar          = You slam a clenched fist into your other hand and scream, 'Maelstra incerinata!'...
+tovict          = $1n slams $1s clench fist into $1s other hand and screams, 'Maelstra incerinata!'...
+torest          = $1n slams $1s clenced fist into $1s other hand and screams, 'Maelstra incerinata!'...
+toself          = You scream, 'Maelstra incerinata!'...
+toselfroom      = $1n screams 'maelstra incerinata!'...
+realm           = ABIL_MAG
+sphere          = SPL_HEAT
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_FIGHTING
+mana            = 12
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_FIGHT_VICT + TAR_CHAR
+mediums         = MEDIA_STAFF + MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL+MEDIA_SELF_NONO
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 2
+shield          = SHIELD_M_REDUCE
+attack clothes  = {50, 1, 4}
+attack sleather = {50, 1, 6}
+attack hleather = {50, 1, 6}
+attack chain    = {50, 1, 4}
+attack plate    = {50, 1, 5}
+race human      = +1
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -2
+race half-ogre  = -2
+race half-elf   = 0
+race brownie    = +1
+race groll      = -3
+race darkelf    = +2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_FROSTBALL_1
+name            = snowball
+acttype         = A_SOMEONE
+tochar          = You hands shake as you utter the words, 'Bolat snellok'...
+tovict          = $1n hands shake as $1e utters the words, 'Bolat snellok'...
+torest          = $1n hands shake as $1e utters the words, 'Bolat snellok'...
+toself          = Your hands shake as you utter the words, 'Bolat snellok'...
+toselfroom      = $1n hands shake as $1e utters the words, 'Bolat snellok'...
+realm           = ABIL_MAG
+sphere          = SPL_COLD
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_FIGHTING
+mana            = 12
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_FIGHT_VICT + TAR_CHAR
+mediums         = MEDIA_STAFF + MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL+MEDIA_SELF_NONO
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 2
+shield          = SHIELD_M_BLOCK
+attack clothes  = {50, 1, 8}
+attack sleather = {50, 1,10}
+attack hleather = {50, 1,10}
+attack chain    = {50, 1, 8}
+attack plate    = {50, 1, 9}
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = +1
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +2
+race groll      = -2
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_FROSTBALL_2
+name            = frostball
+acttype         = A_SOMEONE
+tochar          = You body trembles as you utter the words, 'Bolat fesfroq'...
+tovict          = $1n body trembles as $1e utters the words, 'Bolat fresfroq'...
+torest          = $1n body trembles as $1e utters the words, 'Bolat fresfroq'...
+toself          = Your body trembles as you utter the words, 'Bolat fresfroq'...
+toselfroom      = $1n body trembles as $1e utters the words, 'Bolat fresfroq'...
+realm           = ABIL_MAG
+sphere          = SPL_COLD
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_FIGHTING
+mana            = 12
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_FIGHT_VICT + TAR_CHAR
+mediums         = MEDIA_STAFF + MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL+MEDIA_SELF_NONO
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 2
+shield          = SHIELD_M_BLOCK
+attack clothes  = {50, 1, 6}
+attack sleather = {50, 1, 8}
+attack hleather = {50, 1, 8}
+attack chain    = {50, 1, 6}
+attack plate    = {50, 1, 7}
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = +1
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +1
+race groll      = -2
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_FROSTBALL_3
+name            = icestorm
+acttype         = A_SOMEONE
+tochar          = You cross your arms and scream, 'Maelestra fresi!'...
+tovict          = $1n crosses $1s arms and screams, 'Maelestra fresi!'...
+torest          = $1n crosses $1s arms and screams, 'Maelestra fresi!'...
+toself          = You cross your arms and scream, 'Maelestra fresi'...
+toselfroom      = $1n crosses $1s arms and screams, 'Maelestra fresi'...
+realm           = ABIL_MAG
+sphere          = SPL_COLD
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_FIGHTING
+mana            = 12
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_FIGHT_VICT + TAR_CHAR
+mediums         = MEDIA_STAFF + MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL+MEDIA_SELF_NONO
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 2
+shield          = SHIELD_M_REDUCE
+attack clothes  = {50, 1, 4}
+attack sleather = {50, 1, 6}
+attack hleather = {50, 1, 6}
+attack chain    = {50, 1, 4}
+attack plate    = {50, 1, 5}
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = +1
+race half-orc   = -2
+race half-ogre  = -2
+race half-elf   = 0
+race brownie    = +1
+race groll      = -2
+race darkelf    = +2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_LIGHTNING_1
+name            = electrical shock
+acttype         = A_SOMEONE
+tochar          = You fork two fingers at $3n and utter the word, 'Spaerx'...
+tovict          = $1n forks two fingers at you and utters the word, 'Spaerx'...
+torest          = $1n forks two fingers at $3n and utters the word, 'Spaerx'...
+toself          = You utter the word, 'Spaerx'...
+toselfroom      = $1n utters the word, 'Spaerx'...
+realm           = ABIL_MAG
+sphere          = SPL_CELL
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_FIGHTING
+mana            = 12
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_FIGHT_VICT + TAR_CHAR
+mediums         = MEDIA_STAFF + MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL+MEDIA_SELF_NONO
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 2
+shield          = SHIELD_M_USELESS
+attack clothes  = {50, 1, 8}
+attack sleather = {50, 1,10}
+attack hleather = {50, 1,10}
+attack chain    = {50, 1, 9}
+attack plate    = {50, 1, 9}
+race human      = 0
+race elf        = 0
+race dwarf      = +1
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +2
+race groll      = -2
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_LIGHTNING_2
+name            = jolt
+acttype         = A_SOMEONE
+tochar          = You fork three fingers at $3n and utter the words, 'Ghoules electra'...
+tovict          = $1n forks three fingers at you and utters the words, 'Ghoules electra'...
+torest          = $1n forks three fingers at $3n and utters the words, 'Ghoules electra'...
+toself          = You utter the words, 'Ghoules electra'...
+toselfroom      = $1n utters the words, 'Ghoules electra'...
+realm           = ABIL_MAG
+sphere          = SPL_CELL
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_FIGHTING
+mana            = 12
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_FIGHT_VICT + TAR_CHAR
+mediums         = MEDIA_STAFF + MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL+MEDIA_SELF_NONO
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 2
+shield          = SHIELD_M_USELESS
+attack clothes  = {50, 1, 6}
+attack sleather = {50, 1, 8}
+attack hleather = {50, 1, 8}
+attack chain    = {50, 1, 7}
+attack plate    = {50, 1, 7}
+race human      = 0
+race elf        = 0
+race dwarf      = +1
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +1
+race groll      = -2
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_LIGHTNING_3
+name            = lightning bolt
+acttype         = A_SOMEONE
+tochar          = The air crackles as you gesture at $3n and snarl, 'Thudas electra!'...
+tovict          = Air crackles as $1n gestures at you and snarls, 'Thudas electra!'...
+torest          = Air crackles as $1n gestures at $3n and snarls, 'Thudas electra!'...
+toself          = You scream, 'Thudas electra!'
+toselfroom      = $1n screams, 'Thudas electra!'
+realm           = ABIL_MAG
+sphere          = SPL_CELL
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_FIGHTING
+mana            = 12
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_FIGHT_VICT + TAR_CHAR
+mediums         = MEDIA_STAFF + MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL+MEDIA_SELF_NONO
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 2
+shield          = SHIELD_M_USELESS
+attack clothes  = {50, 1, 4}
+attack sleather = {50, 1, 6}
+attack hleather = {50, 1, 6}
+attack chain    = {50, 1, 5}
+attack plate    = {50, 1, 5}
+race human      = 0
+race elf        = 0
+race dwarf      = +1
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -2
+race half-ogre  = -2
+race half-elf   = 0
+race brownie    = +1
+race groll      = -2
+race darkelf    = +2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_STINKING_CLOUD_1
+name            = fart
+acttype         = A_SOMEONE
+tochar          = You utter the words, 'Schwepa cumei'...
+tovict          = $1n utters the words, 'Schwepa cumei'...
+torest          = $1n utters the words, 'Schwepa cumei'...
+toself          = You utter the words, 'Schwepa cumei'...
+toselfroom      = $1n utters the words, 'Schwepa cumei'...
+realm           = ABIL_DIV
+sphere          = SPL_INTERNAL
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_FIGHTING
+mana            = 12
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_FIGHT_VICT + TAR_CHAR
+mediums         = MEDIA_STAFF + MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL+MEDIA_SELF_NONO
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 0
+shield          = SHIELD_M_USELESS
+attack clothes  = {50, 1, 9}
+attack sleather = {50, 1, 9}
+attack hleather = {50, 1, 9}
+attack chain    = {50, 1, 9}
+attack plate    = {50, 1, 9}
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = +1
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_STINKING_CLOUD_2
+name            = bad breath
+acttype         = A_SOMEONE
+tochar          = You cup your hands before you and and utter, 'Cumus entahc'...
+tovict          = $1n cups $1s hands before $1m and utters, 'Cumus entahc'...
+torest          = $1n cups $1s hands before $1m and utters, 'Cumus entahc'...
+toself          = You cup your hands before you and utter, 'Cumus entahc'...
+toselfroom      = $1n cups $1s hands before $1m and utters, 'Cumus entahc'...
+realm           = ABIL_DIV
+sphere          = SPL_INTERNAL
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_FIGHTING
+mana            = 12
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_FIGHT_VICT + TAR_CHAR
+mediums         = MEDIA_STAFF + MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL+MEDIA_SELF_NONO
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 0
+shield          = SHIELD_M_USELESS
+attack clothes  = {50, 1, 7}
+attack sleather = {50, 1, 7}
+attack hleather = {50, 1, 7}
+attack chain    = {50, 1, 7}
+attack plate    = {50, 1, 7}
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = +1
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_STINKING_CLOUD_3
+name            = stinking cloud
+acttype         = A_SOMEONE
+tochar          = You hold a clawed hand before your face and mouth the words, 'Cumus muerti'...
+tovict          = $1n holds a clawed hand before $1s face and mouths something incomprehensible...
+torest          = $1n holds a clawed hand before $1s face and mouths something incomprehensible...
+toself          = You hold a clawed hand before your fac and mouth the words, 'Cumus muerti'...
+toselfroom      = $1n holds a clawed hand before $1s face and mouths something incomprehensible...
+realm           = ABIL_DIV
+sphere          = SPL_INTERNAL
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_FIGHTING
+mana            = 12
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_FIGHT_VICT + TAR_CHAR
+mediums         = MEDIA_STAFF + MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL+MEDIA_SELF_NONO
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 0
+shield          = SHIELD_M_USELESS
+attack clothes  = {50, 1, 5}
+attack sleather = {50, 1, 5}
+attack hleather = {50, 1, 5}
+attack chain    = {50, 1, 5}
+attack plate    = {50, 1, 5}
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = +1
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = -1
+race groll      = -1
+race darkelf    = -1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_POISON
+name            = toxicate
+acttype         = A_SOMEONE
+tochar          = "You curve your finger like a scorpion's tail, point at $3n, and utter, 'Entahc'..."
+tovict          = $1n points a curved finger at you and utters, 'Entahc'...
+torest          = $1n points a curved finger at $3n and utters, 'Entahc'...
+toself          = You utter the word, 'Entahc'...
+toselfroom      = $1n utters the word, 'Entahc'...
+realm           = ABIL_MAG
+sphere          = SPL_INTERNAL
+func            = poison@basis
+minpos          = POSITION_FIGHTING
+mana            = 20
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + FIND_UNIT_INVEN + FIND_UNIT_EQUIP +TAR_CHAR + TAR_OBJ + TAR_FIGHT_VICT
+mediums         = MEDIA_SPELL+MEDIA_POTION+MEDIA_WAND+MEDIA_SCROLL
+check           = SPLCST_RESIST
+offensive       = TRUE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = -1
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_REMOVE_POISON
+name            = remove poison
+acttype         = A_SOMEONE
+tochar          = "You pray to the gods to cleanse $3n's blood of poison..."
+tovict          = $1n prays to the gods to wash the toxins from your body...
+torest          = "$1n begins a prayer to cure $3n's ailment..."
+toself          = You kneel and pray for the gods to cleanse your body of poison...
+toselfroom      = $1n kneels and prays to the gods for a curing...
+realm           = ABIL_DIV
+sphere          = SPL_INTERNAL
+func            = remove_poison@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + FIND_UNIT_INVEN + FIND_UNIT_EQUIP + TAR_CHAR + TAR_OBJ
+mediums         = MEDIA_SPELL+MEDIA_POTION + MEDIA_WAND + MEDIA_SCROLL + MEDIA_STAFF
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = +2
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -2
+race darkelf    = -1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_ENERGY_DRAIN
+name            = energy drain
+acttype         = A_SOMEONE
+tochar          = "You boldly step forward, grab $3n's arm and begin to chant..."
+tovict          = You feel a cold pulsing run through your body as $1n touches you...
+torest          = $1n utters the words, 'Mortae malik'
+toself          = You begin a dark ritual to sacrifice your life force to the dark powers...
+toselfroom      = $1n begins a vile ritual, you turn away in disgust...
+realm           = ABIL_DIV
+sphere          = SPL_INTERNAL
+func            = energy_drain@basis
+minpos          = POSITION_FIGHTING
+mana            = 12
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_FIGHT_VICT
+mediums         = MEDIA_SPELL + MEDIA_WAND + MEDIA_STAFF + MEDIA_SCROLL+MEDIA_SELF_NONO
+check           = SPLCST_RESIST
+offensive       = TRUE
+fumble          = 0
+race human      = 0
+race elf        = -2
+race dwarf      = -2
+race halfling   = -1
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = -2
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_DISEASE_1
+name            = madness
+acttype         = A_SOMEONE
+tochar          = "You begin a dark prayer to send $3n's mind into chaos..."
+tovict          = $1n begins chanting at you...your mind reels with every word...
+torest          = $1n begins chanting at $3n, $3n winces at each word...
+toself          = You seek to bring a madness upon yourself in a show of dark piety...
+toselfroom      = $1n begins ranting in a vile, gutteral language...
+realm           = ABIL_DIV
+sphere          = SPL_INTERNAL
+func            = madness@basis
+minpos          = POSITION_FIGHTING
+mana            = 20
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_FIGHT_VICT
+mediums         = MEDIA_SPELL+MEDIA_POTION + MEDIA_WAND + MEDIA_SCROLL +MEDIA_STAFF+MEDIA_SELF_NONO
+check           = SPLCST_RESIST
+offensive       = TRUE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_DISEASE_2
+name            = plague
+acttype         = A_SOMEONE
+tochar          = You begin a dark prayer to visit a plague upon $3n...
+tovict          = "$1n begins a vile prayer who's words seem to pierce your very being..."
+torest          = $1n begins chanting in a vile, gutteral language...
+toself          = You pray for the dark powers to strike you down with plague...
+toselfroom      = $1n begins chanting in a vile, gutteral language...
+realm           = ABIL_DIV
+sphere          = SPL_INTERNAL
+func            = plague@basis
+minpos          = POSITION_FIGHTING
+mana            = 20
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_FIGHT_VICT
+mediums         = MEDIA_SPELL+MEDIA_POTION + MEDIA_WAND + MEDIA_SCROLL +MEDIA_STAFF+MEDIA_SELF_NONO
+check           = SPLCST_RESIST
+offensive       = TRUE
+fumble          = 0
+race human      = 0
+race elf        = -2
+race dwarf      = -2
+race halfling   = -1
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_REM_DISEASE
+name            = remove disease
+acttype         = A_SOMEONE
+tochar          = You lay hands on $3n and pray for the power to remove disease...
+tovict          = $1n lays hands on you and prays for your health...
+torest          = $1n lays hands on $3n and prays for $3s health...
+toself          = You kneel down and implore the gods to restore your health...
+toselfroom      = $1n kneels and prays to the gods...
+realm           = ABIL_DIV
+sphere          = SPL_INTERNAL
+func            = remove_disease@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR
+mediums         = MEDIA_SPELL+MEDIA_POTION + MEDIA_SCROLL + MEDIA_STAFF
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = +2
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -2
+race darkelf    = -2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_ACIDBALL_1
+name            = acid drop
+acttype         = A_SOMEONE
+tochar          = You utter the words, 'Drist causter'...
+tovict          = $1n utters the words, 'Drist causter'...
+torest          = $1n utters the words, 'Drist causter'...
+toself          = You utter the words, 'Drist causter'...
+toselfroom      = $1n utters the words, 'Drist causter'...
+realm           = ABIL_MAG
+sphere          = SPL_EXTERNAL
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_FIGHTING
+mana            = 12
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_FIGHT_VICT + TAR_CHAR
+mediums         = MEDIA_STAFF + MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL+MEDIA_SELF_NONO
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 0
+shield          = SHIELD_M_BLOCK
+attack clothes  = {50, 1, 8}
+attack sleather = {50, 1,11}
+attack hleather = {50, 1,10}
+attack chain    = {50, 1, 9}
+attack plate    = {50, 1,10}
+race human      = -1
+race elf        = -2
+race dwarf      = -2
+race halfling   = -2
+race gnome      = -1
+race half-orc   = -2
+race half-ogre  = -2
+race half-elf   = -1
+race brownie    = +1
+race groll      = -3
+race darkelf    =  0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_ACIDBALL_2
+name            = spray of acid
+acttype         = A_SOMEONE
+tochar          = You hiss the words, 'Oses causter'...
+tovict          = $1n hisses the words, 'Oses causter'...
+torest          = $1n hisses the words, 'Oses causter'...
+toself          = You hiss the words, 'Oses causter'...
+toselfroom      = $1n hisses the words, 'Oses causter'...
+realm           = ABIL_MAG
+sphere          = SPL_EXTERNAL
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_FIGHTING
+mana            = 12
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_FIGHT_VICT + TAR_CHAR
+mediums         = MEDIA_STAFF + MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL+MEDIA_SELF_NONO
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 0
+shield          = SHIELD_M_BLOCK
+attack clothes  = {50, 1, 6}
+attack sleather = {50, 1, 9}
+attack hleather = {50, 1, 8}
+attack chain    = {50, 1, 7}
+attack plate    = {50, 1, 8}
+race human      = -1
+race elf        = -2
+race dwarf      = -2
+race halfling   = -2
+race gnome      = -1
+race half-orc   = -2
+race half-ogre  = -2
+race half-elf   = -1
+race brownie    =  0
+race groll      = -3
+race darkelf    =  0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_ACIDBALL_3
+name            = acid ball
+acttype         = A_SOMEONE
+tochar          = You screech the words, 'Bolat causter!'...
+tovict          = $1n screeches the words, 'Bolat causter!'...
+torest          = $1n screeches the words, 'Bolat causter!'...
+toself          = You screech the words, 'Bolat causter!'...
+toselfroom      = $1n screeches the words, 'Bolat causter!'...
+realm           = ABIL_MAG
+sphere          = SPL_EXTERNAL
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_FIGHTING
+mana            = 12
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_FIGHT_VICT + TAR_CHAR
+mediums         = MEDIA_STAFF + MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL+MEDIA_SELF_NONO
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 0
+shield          = SHIELD_M_REDUCE
+attack clothes  = {50, 1, 4}
+attack sleather = {50, 1, 7}
+attack hleather = {50, 1, 6}
+attack chain    = {50, 1, 5}
+attack plate    = {50, 1, 6}
+race human      = -1
+race elf        = -2
+race dwarf      = -2
+race halfling   = -2
+race gnome      = -1
+race half-orc   = -3
+race half-ogre  = -3
+race half-elf   = -1
+race brownie    =  0
+race groll      = -3
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_MANA_BOOST
+name            = mana boost
+acttype         = A_SOMEONE
+tochar          = You focus your thoughts on $3n and broadcast your power toward $3m...
+tovict          = $1n closes $1s eyes and you feel your inners sources of power meld...
+torest          = $1n and $3n close thier eyes and begin to meditate...
+toself          = You close your eyes and try to channel your back upon itself...
+toselfroom      = $1n closes $1s eyes and begins to meditate...
+realm           = ABIL_MAG
+sphere          = SPL_CREATION
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_RESTING
+mana            = 100
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_FIGHT_VICT + TAR_CHAR
+mediums         = MEDIA_SPELL + MEDIA_POTION + MEDIA_SCROLL +MEDIA_WAND
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +2
+race groll      = -1
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_FIND_PATH
+name            = find path
+acttype         = A_SOMEONE
+tochar          = You pray for the gods to show you the way...
+tovict          = $1n prays for divine guidance...
+torest          = $1n prays for divine guidance...
+toself          = You pray for the gods to show you the way...
+toselfroom      = $1n prays for divine guidance...
+realm           = ABIL_DIV
+sphere          = SPL_DIVINE
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_RESTING
+mana            = 5
+turns           = PULSE_SEC
+targets         = FIND_UNIT_WORLD + FIND_UNIT_ZONE + TAR_OBJ + TAR_CHAR
+mediums         = MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_RESIST
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_DISPEL_GOOD
+name            = dispel good
+acttype         = A_SOMEONE
+tochar          = You pray for divine aid in dispelling the goodness of $3n...
+tovict          = "You squirm in discomfort as each word of $1n's prayer is spoken..."
+torest          = $1n directs $1s prayers towards $3n...
+toself          = You pray for a purging of your own own goodness...
+toselfroom      = $1n prays for $1s own destruction...
+realm           = ABIL_DIV
+sphere          = SPL_DIVINE
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_FIGHTING
+mana            = 20
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_FIGHT_VICT
+mediums         = MEDIA_SPELL + MEDIA_STAFF + MEDIA_SCROLL
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 2
+shield          = SHIELD_M_USELESS
+attack clothes  = {50, 1, 5}
+attack sleather = {50, 1, 5}
+attack hleather = {50, 1, 5}
+attack chain    = {50, 1, 5}
+attack plate    = {50, 1, 5}
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = -1
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_PRO_GOOD
+name            = protection from good
+acttype         = A_SOMEONE
+tochar          = You begin a prayer to protect $3n from the forces of good...
+tovict          = $1n pleads with the gods to grant you protection from the forces of good...
+torest          = "$1n prays to the gods for $3n's protection..."
+toself          = You pray to the gods for protection from the forces of good...
+toselfroom      = $1n prays to the gods for protection...
+realm           = ABIL_DIV
+sphere          = SPL_PROTECTION
+func            = prot_good@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = -1
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_TRANSPORT
+name            = transport
+acttype         = A_SOMEONE
+tochar          = You raise one hand over your head and utter the words, 'Piort tier'...
+torest          = $1n raises one hand over $1s head and utters the words, 'Piort tier'...
+toself          = You raise one hand over your head and utter the words, 'Piort tier'...
+toselfroom      = $1n raises one hand over $1s head and utters the words, 'Piort tier'...
+realm           = ABIL_MAG
+sphere          = SPL_SUMMONING
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_WORLD + TAR_CHAR + TAR_OBJ + TAR_ROOM
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -2
+race half-ogre  = -2
+race half-elf   = 0
+race brownie    = +2
+race groll      = -3
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_FIRE_BREATH
+name            = fire breath
+acttype         = A_SOMEONE
+tochar          = You take a deep breath and feel power well within you...
+tovict          = "$1n's eyes begin to glow in a fiery red light..."
+torest          = "$1n's eyes begin to glow in a fiery red light..."
+realm           = ABIL_MAG
+sphere          = SPL_HEAT
+func            = fire_breath@basis
+minpos          = POSITION_FIGHTING
+mana            = 20
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_SELF_NONO + TAR_FIGHT_VICT
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = 0
+race groll      = -2
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_FROST_BREATH
+name            = frost breath
+acttype         = A_SOMEONE
+tochar          = You take a deep breath and feel power well within you...
+tovict          = "$1n's eyes turn a frosty white and begin to glow..."
+torest          = "$1n's eyes turn a frosty white and begin to glow..."
+realm           = ABIL_MAG
+sphere          = SPL_COLD
+func            = frost_breath@basis
+minpos          = POSITION_FIGHTING
+mana            = 20
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_SELF_NONO+ TAR_FIGHT_VICT
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_LIGHTNING_BREATH
+name            = lightning breath
+acttype         = A_SOMEONE
+tochar          = You take a deep breath and feel power well within you...
+tovict          = "$1n's eyes begin to glow a bright electric blue..."
+torest          = "$1n's eyes begin to glow a bright electric blue..."
+realm           = ABIL_MAG
+sphere          = SPL_CELL
+func            = lightning_br@basis
+minpos          = POSITION_FIGHTING
+mana            = 20
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_SELF_NONO+ TAR_FIGHT_VICT
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_ACID_BREATH
+name            = acid breath
+acttype         = A_SOMEONE
+tochar          = You take a deep breath and feel power well within you...
+tovict          = "$1n's eyes begin to emanate a wicked black light..."
+torest          = "$1n's eyes begin to emanate a wickecd black light..."
+realm           = ABIL_MAG
+sphere          = SPL_EXTERNAL
+func            = acid_breath@basis
+minpos          = POSITION_FIGHTING
+mana            = 20
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_SELF_NONO+ TAR_FIGHT_VICT
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_GAS_BREATH
+name            = gas breath
+acttype         = A_SOMEONE
+tochar          = You take a deep breath and feel power well within you...
+tovict          = "$1n's eyes begin to glow in a sickly green light..."
+torest          = "$1n's eyes begin to glow in a sickly green light..."
+realm           = ABIL_MAG
+sphere          = SPL_INTERNAL
+func            = gas_breath@basis
+minpos          = POSITION_FIGHTING
+mana            = 20
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_SELF_NONO+ TAR_FIGHT_VICT
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_LIGHT_BREATH
+name            = light breath
+acttype         = A_SOMEONE
+tochar          = You take a deep breath and feel power well within you...
+tovict          = "$1n's eyes begin to glow in a iridescent light..."
+torest          = "$1n's eyes begin to glow in a iridescent light..."
+realm           = ABIL_MAG
+sphere          = SPL_MIND
+func            = light_breath@basis
+minpos          = POSITION_FIGHTING
+mana            = 20
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_SELF_NONO + TAR_FIGHT_VICT
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_HOLD_MONSTER
+name            = hold monster
+acttype         = A_SOMEONE
+tochar          = You spit upon the ground and utter the words, 'Mag desi'...
+tovict          = $1n spits upon the ground and utters the words, 'Mag desi'...
+torest          = $1n spits upon the ground and utters the words, 'Mag desi'...
+toself          = You utter the word, 'Mag desi'...
+toselfroom      = $1n utters the word, 'Mag desi'...
+realm           = ABIL_MAG
+sphere          = SPL_MIND
+func            = hold_monster@basis
+minpos          = POSITION_FIGHTING
+mana            = 20
+turns           = PULSE_SEC * 3
+targets         = FIND_UNIT_SURRO + TAR_CHAR
+mediums         = MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL + MEDIA_POTION
+check           = SPLCST_RESIST
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +1
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_HOLD_UNDEAD
+name            = hold undead
+acttype         = A_SOMEONE
+tochar          = You thrust hand toward $3n and boldy say, 'Muera desi'...
+tovict          = $1n thrusts $1s hand towrd you and boldy says, 'Muera desi'...
+torest          = $1n thrusts $1s hand toward $3n and boldy says, 'Muera desi'...
+toself          = You grimace and utter the words, 'Muera desi'...
+toselfroom      = $1n grimaces and utters the words, 'Muera desi'...
+realm           = ABIL_DIV
+sphere          = SPL_MIND
+func            = hold_undead@basis
+minpos          = POSITION_FIGHTING
+mana            = 20
+turns           = PULSE_SEC * 3
+targets         = FIND_UNIT_SURRO + TAR_CHAR
+mediums         = MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL + MEDIA_POTION
+check           = SPLCST_RESIST
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = -1
+race groll      = -1
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_RAISE_DEAD
+name            = raise dead
+acttype         = A_SOMEONE
+tochar          = You gather all of your will and begin a powerful prayer...
+torest          = $1n touches $3n and goes into a deep trance...
+realm           = ABIL_DIV
+sphere          = SPL_DIVINE
+func            = raise_dead@basis
+minpos          = POSITION_STANDING
+mana            = 80
+turns           = PULSE_SEC * 3
+targets         = FIND_UNIT_WORLD + TAR_CHAR
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = -2
+race groll      = -3
+race darkelf    = -3
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_RESURRECTION
+name            = resurrection
+acttype         = A_SOMEONE
+tochar          = You kneel piously and plead the gods to return the life to $3n...
+torest          = $1n kneels and pleads the gods to return the life to $3n...
+realm           = ABIL_DIV
+sphere          = SPL_DIVINE
+func            = resurrect@basis
+minpos          = POSITION_STANDING
+mana            = 80
+turns           = PULSE_SEC * 3
+targets         = FIND_UNIT_WORLD + TAR_CHAR
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 1
+race brownie    = -2
+race groll      = -3
+race darkelf    = -3
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_TOTAL_RECALL
+name            = total recall
+acttype         = A_SOMEONE
+tochar          = You spread your arms toward your comrades and utter the word, 'Volventia'...
+tovict          = $1n spreads $1s arms toward $1s comrades and utters the word, 'Volventia'...
+torest          = $1n spreads $1s arms toward $1s comrades and utters the word, 'Volventia'...
+toself          = You spread your arms towards your comrades and utter the word, 'Volventia'...
+toselfroom      = $1n spreads $1s arms toward $1s comrades and utters the word, 'Volventia'...
+realm           = ABIL_DIV
+sphere          = SPL_SUMMONING
+func            = total_recall@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF + TAR_SELF_ONLY
+mediums         = MEDIA_SPELL + MEDIA_STAFF + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = -1
+race groll      = -2
+race darkelf    = -1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_UNDEAD_DOOR
+name            = undead door
+acttype         = A_SOMEONE
+tochar          = You utter the words, 'Muera piort'
+tovict          = $1n utters the words, 'Muera piort'
+torest          = $1n utters the words, 'Muera piort'
+toself          = You utter the words, 'Muera piort'
+toselfroom      = $1n utters the words, 'Muera piort'
+realm           = ABIL_DIV
+sphere          = SPL_SUMMONING
+/* INTERNAL!!! func            = UL */
+minpos          = POSITION_STANDING
+mana            = 50
+turns           = PULSE_SEC
+targets         = FIND_UNIT_WORLD + TAR_CHAR
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = -2
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_LIFE_PROTECTION
+name            = life protection
+acttype         = A_SOMEONE
+tochar          = You begin a prayer to protect the life force of $3n...
+tovict          = $1n begins a prayer to protect your life force...
+torest          = $1n prays to the gods for protection...
+toself          = You pray for the protection of your life force...
+toselfroom      = $1n prays to the gods for protection...
+realm           = ABIL_DIV
+sphere          = SPL_PROTECTION
+func            = life_protection@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_AUTO_SELF
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = -1
+
+/* - - - - Yet another definition of a spell - - - - */
+index           = SPL_SUN_BEAM
+name            = sun beam
+acttype         = A_SOMEONE
+tochar          = "You call to the shining rays of the sun for power..."
+tovict          = $1n calls out to the sun...
+torest          = $1n calls out to the sun...
+toself          = "You call to the shining rays of the sun for power..."
+toselfroom      = $1n calls out to the sun...
+realm           = ABIL_DIV
+sphere          = SPL_HEAT
+func            = sun_beam@basis
+minpos          = POSITION_STANDING
+mana            = 15
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_FIGHT_VICT
+mediums         = MEDIA_SPELL + MEDIA_WAND + MEDIA_STAFF + MEDIA_SELF_NONO
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 1
+shield          = SHIELD_M_REDUCE
+attack clothes  = {50, 1, 3}
+attack sleather = {50, 1, 5}
+attack hleather = {50, 1, 5}
+attack chain    = {50, 1, 3}
+attack plate    = {50, 1, 4}
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -3
+race darkelf    = -2
+
+
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_SOLAR_FLARE
+name            = solar flare
+acttype         = A_SOMEONE
+tochar          = "You raise your palm to the sun and shout the word 'yarnolf'"
+tovict          = $1n raises their palm to the sun and shouts the word 'yarnolf'
+torest          = $1n raises their palm to the sun and shouts the word 'yarnolf'
+toself          = "You raise your palm to the sun and shout the word 'yarnolf'"
+toselfroom      = $1n raises their palm to the sun and shouts the word 'yarnolf'
+realm           = ABIL_DIV
+sphere          = SPL_HEAT
+func            = solar_flare@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_FIGHT_VICT
+mediums         = MEDIA_SPELL + MEDIA_WAND + MEDIA_STAFF
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 1
+shield          = SHIELD_M_REDUCE
+attack clothes  = {50, 1, 3}
+attack sleather = {50, 1, 5}
+attack hleather = {50, 1, 5}
+attack chain    = {50, 1, 3}
+attack plate    = {50, 1, 4}
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = -1
+race groll      = -3
+race darkelf    = -2
+
+
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_METEOR_SHOWER
+name            = meteor shower
+acttype         = A_SOMEONE
+tochar          = You open your palm and motion toward $3n.
+tovict          = $1n opens $1s palm and motions toward you.
+torest          = $1n opens $1s palm and motions toward $3n.
+realm           = ABIL_MAG
+sphere          = SPL_SUMMONING
+func            = meteor_shower@basis
+minpos          = POSITION_FIGHTING
+mana            = 20
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_FIGHT_VICT
+mediums         = MEDIA_SPELL + MEDIA_WAND
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 0
+shield          = SHIELD_M_REDUCE
+attack clothes  = {50, 1, 4}
+attack sleather = {50, 1, 5}
+attack hleather = {50, 1, 5}
+attack chain    = {50, 1, 6}
+attack plate    = {50, 1, 6}
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +1
+race groll      = -2
+race darkelf    = +2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_CLENCHED_FIST
+name            = clenched fist
+acttype         = A_SOMEONE
+tochar          = You point your finger at $3n and chant 'shinar lerial!'
+torest          = $1n points $1s finger at $3n and chants 'shinar lerial!'
+tovict          = $1n points $1s at you and chants 'shinar lerial!'
+realm           = ABIL_MAG
+sphere          = SPL_SUMMONING
+func            = clenched_fist@basis
+minpos          = POSITION_FIGHTING
+mana            = 15
+turns           = PULSE_VIOLENCE
+targets         = FIND_UNIT_SURRO + TAR_CHAR + TAR_FIGHT_VICT
+mediums         = MEDIA_SPELL + MEDIA_WAND
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 0
+shield          = SHIELD_M_REDUCE
+attack clothes  = {50, 1, 6}
+attack sleather = {50, 1, 8}
+attack hleather = {50, 1, 8}
+attack chain    = {50, 1, 6}
+attack plate    = {50, 1, 7}
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = +1
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_ENERGY_BOLT
+name            = energy bolt
+acttype         = A_SOMEONE
+tochar          = You utter the word 'sumai mislis' and point your hand at $3n.
+tovict          = $1n utters the word 'sumai mislis' and points at you!
+torest          = $1n utters the word 'sumai mislis' and points at $3n!
+realm           = ABIL_MAG
+sphere          = SPL_SUMMONING
+func            = energy_bolt@basis
+minpos          = POSITION_FIGHTING
+mana            = 10
+turns           = PULSE_SEC * 3
+targets         = FIND_UNIT_SURRO + TAR_FIGHT_VICT + TAR_CHAR
+mediums         = MEDIA_SPELL + MEDIA_WAND
+check           = SPLCST_IGNORE
+offensive       = TRUE
+fumble          = 0
+shield          = SHIELD_M_BLOCK
+attack clothes  = {50, 1, 8}
+attack sleather = {50, 1,10}
+attack hleather = {50, 1,10}
+attack chain    = {50, 1, 8}
+attack plate    = {50, 1, 8}
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +1
+race groll      = -2
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_SUMMON_DEVIL
+name            = summon devil
+acttype         = A_SOMEONE
+tochar          = You chant the words of binding 'Manarik Despar!'
+torest          = $1n chants the words 'Manarik Despar!'
+realm           = ABIL_MAG
+sphere          = SPL_SUMMONING
+func            = devil_summon@basis
+minpos          = POSITION_STANDING
+mana            = 40
+turns           = PULSE_SEC * 3
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+offensive       = FALSE
+targets		= TAR_IGNORE
+check 		= SPLCST_CHECK
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +1
+race groll      = -1
+race darkelf    = +2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_SUMMON_DEMON
+name            = summon demon
+acttype         = A_SOMEONE
+tochar          = You draw a circle in the air and chant 'Shiala Dushpor!'
+torest          = $1n makes a circle in the air and chants 'Shiala Dushpor!'
+realm           = ABIL_MAG
+sphere          = SPL_SUMMONING
+func            = demon_summon@basis
+minpos          = POSITION_STANDING
+mana            = 30
+turns           = PULSE_SEC * 3
+targets         = TAR_IGNORE
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +1
+race groll      = -2
+race darkelf    = +2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_SUMMON_FIRE
+name            = summon fire
+acttype         = A_SOMEONE
+realm           = ABIL_MAG
+sphere          = SPL_SUMMONING
+tochar		= You chant 'siriulu' and flames burst from you hands!
+torest		= $1n chants 'siriulu' and flames burst from $1s hands!
+func            = summon_fire@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC * 3
+targets         = TAR_IGNORE
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +1
+race groll      = -3
+race darkelf    = +2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_SUMMON_WATER
+name            = summon water
+acttype         = A_SOMEONE
+realm           = ABIL_MAG
+sphere          = SPL_SUMMONING
+tochar		= You chant 'waries' and a column of water forms before you!
+torest		= $1n chants 'waries' and a column of water forms before $1s!
+func            = summon_water@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = TAR_IGNORE
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +1
+race groll      = -2
+race darkelf    = +2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_SUMMON_AIR
+name            = summon air
+acttype         = A_SOMEONE
+realm           = ABIL_MAG
+sphere          = SPL_SUMMONING
+tochar		= You chant 'aires' and a portal of air appears!
+torest		= $1n chants 'aires' and a portal of air appears!
+func		= summon_air@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = TAR_IGNORE
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +1
+race groll      = -2
+race darkelf    = +2
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_SUMMON_EARTH
+name            = summon earth
+acttype         = A_SOMEONE
+realm           = ABIL_MAG
+sphere          = SPL_SUMMONING
+tochar		= You chant 'gea sural' and there is a rumbling sound!
+torest		= $1n chants 'gea sural' and there is a rumbling sound!
+func            = summon_earth@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = TAR_IGNORE
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +1
+race groll      = -2
+race darkelf    = +2
+
+index           = SPL_CHARGE_WAND
+name            = charge wand
+acttype         = A_SOMEONE
+tochar          = You carefully focus your energies toward $3n...
+torest          = $1n touches $3n softly and begins to chant...
+realm           = ABIL_MAG
+sphere          = SPL_CREATION
+func            = charge_wand@basis
+minpos          = POSITION_STANDING
+mana            = 60
+turns           = PULSE_SEC
+targets         = FIND_UNIT_IN_ME + TAR_OBJ
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_RESIST
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = +1
+race dwarf      = -1
+race halfling   = -1
+race gnome      = +2
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +2
+race groll      = -2
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_CHARGE_STAFF
+name            = charge staff
+acttype         = A_SOMEONE
+tochar          = You carefully focus your energies toward $3n...
+torest          = $1n touches $3n softly and begins to chant...
+realm           = ABIL_MAG
+sphere          = SPL_CREATION
+func            = charge_staff@basis
+minpos          = POSITION_STANDING
+mana            = 60
+turns           = PULSE_SEC
+targets         = FIND_UNIT_IN_ME + TAR_OBJ
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_RESIST
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = +1
+race dwarf      = -1
+race halfling   = -1
+race gnome      = +2
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = +1
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_MENDING
+name            = mending
+acttype         = A_SOMEONE
+tochar          = You run your hand along $3n and chant, 'Riforj'...
+torest          = $1n runs $1s hand along $3n and chant, 'Riforj'...
+realm           = ABIL_MAG
+sphere          = SPL_CREATION
+func            = mending@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_IN_ME + TAR_OBJ
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_RESIST
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = -1
+race halfling   = -1
+race gnome      = +1
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = +1
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_REPAIR
+name            = repair
+acttype         = A_SOMEONE
+tochar          = You run your hand along $3n and chant, 'Mes riforj'...
+torest          = $1n runs $1s hand along $3n and chants, 'Mes riforj'...
+realm           = ABIL_MAG
+sphere          = SPL_CREATION
+func            = repair@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_IN_ME + TAR_OBJ
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_RESIST
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = -1
+race halfling   = -1
+race gnome      = +1
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = +1
+race groll      = -1
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_RECONSTRUCT
+name            = reconstruct
+acttype         = A_SOMEONE
+tochar          = You run your hand along $3n and chant, 'nuva riforj'...
+torest          = $1n runs $1s hand along $3n and chants, 'nuva riforj'...
+realm           = ABIL_MAG
+sphere          = SPL_CREATION
+func            = reconstruct@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_IN_ME + TAR_OBJ
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_RESIST
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = -1
+race halfling   = -1
+race gnome      = +1
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +2
+race groll      = -2
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_SENDING
+name            = sending
+acttype         = A_SOMEONE
+tochar          = You raise $3n above your head and utter, 'Selaz'...
+torest          = $1n holds $3n above $1s head and utters, 'Selaz'...
+realm           = ABIL_MAG
+sphere          = SPL_SUMMONING
+func            = sending@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = FIND_UNIT_INVEN + TAR_OBJ
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = +1
+race dwarf      = 0
+race halfling   = 0
+race gnome      = +1
+race half-orc   = -1
+race half-ogre  = -1
+race half-elf   = 0
+race brownie    = +2
+race groll      = -2
+race darkelf    = +1
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_FIND_WANTED
+name            = find wanted
+acttype         = A_SOMEONE
+tochar          = You beseech Tyr, God of Law, to show you the path to justice...
+torest          = $1n calls out to Tyr, the God of Law...
+toself          = Your hipocrisy does not go unnoticed by Tyr...
+toselfroom      = $1n calls out to Tyr, the God of Law...
+realm           = ABIL_DIV
+sphere          = SPL_DIVINE
+func            = find_want@basis
+minpos          = POSITION_RESTING
+mana            = 5
+turns           = PULSE_SEC
+targets         = FIND_UNIT_WORLD + TAR_CHAR
+mediums         = MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_RESIST
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_LOCATE_WANTED
+name            = locate wanted
+acttype         = A_SOMEONE
+tochar          = You beckon Tyr to reveal the location of the accused...
+torest          = $1n beckons Tyr to aid $1m in $1s quest for justice...
+toself          = Your hipocrisy does not go unnoticed by Tyr...
+toselfroom      = $1n beckons Tyr to aid $1m in $1s quest for justice...
+realm           = ABIL_DIV
+sphere          = SPL_DIVINE
+func            = loc_want@basis
+minpos          = POSITION_STANDING
+mana            = 10
+turns           = PULSE_SEC
+targets         = FIND_UNIT_WORLD + TAR_CHAR
+mediums         = MEDIA_SPELL + MEDIA_SCROLL
+check           = SPLCST_RESIST
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = -1
+race gnome      = -1
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = 0
+race darkelf    = 0
+
+/* - - - - Yet another definition of a spell - - - - */
+
+index           = SPL_FIND_PATH
+name            = find path
+acttype         = A_SOMEONE
+tochar          = You pray for the gods to show you the way...
+torest          = $1n prays for divine guidance...
+toself          = You pray for the gods to show you the way...
+toselfroom      = $1n prays for divine guidance...
+realm           = ABIL_DIV
+sphere          = SPL_DIVINE
+func            = find_path@basis
+minpos          = POSITION_RESTING
+mana            = 5
+turns           = PULSE_SEC
+targets         = FIND_UNIT_WORLD + FIND_UNIT_ZONE + TAR_OBJ + TAR_CHAR
+mediums         = MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_RESIST
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = 0
+
+index           = SPL_STORM_GATE
+name            = storm gate
+acttype         = A_SOMEONE
+tochar          = You raise a hand and mumble 'Oofquah.'
+torest          = $1n raises a hand and mumbles 'Oofquah.'
+realm           = ABIL_DIV
+sphere          = SPL_MIND
+func            = storm_gate@basis
+minpos          = POSITION_STANDING
+mana            = 15
+turns           = PULSE_SEC
+targets         = FIND_UNIT_SURRO +  TAR_CHAR
+mediums         = MEDIA_SPELL + MEDIA_WAND + MEDIA_SCROLL
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = -1
+race halfling   = 0
+race gnome      = 0
+race half-orc   = -1
+race half-ogre  = -2
+race half-elf   = 0
+race brownie    = +1
+race groll      = -3
+race darkelf    = +1
+
+index           = SPL_MAGIC_CANDLE
+name            = magic candle
+acttype         = A_SOMEONE
+tochar          = You cup your hands and chant softlyy, 'canendla'...
+torest          = $1n cups $1s hands chants softly, 'canendla'...
+realm           = ABIL_MAG
+sphere          = SPL_CREATION
+func            = magic_candle@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = TAR_IGNORE
+mediums         = MEDIA_SPELL + MEDIA_STAFF + MEDIA_SCROLL +MEDIA_WAND+MEDIA_SELF_NONO
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = -2
+
+
+index           = SPL_SUN_GLOBE
+name            = sun globe
+acttype         = A_SOMEONE
+tochar          = You hold out one hand and chant, 'bolat diesa'...
+torest          = $1n holds out one hand and chants, 'bolat diesa'...
+realm           = ABIL_MAG
+sphere          = SPL_CREATION
+func            = sun_globe@basis
+minpos          = POSITION_STANDING
+mana            = 20
+turns           = PULSE_SEC
+targets         = TAR_IGNORE
+mediums         = MEDIA_SPELL + MEDIA_STAFF + MEDIA_SCROLL +MEDIA_WAND+MEDIA_SELF_NONO
+check           = SPLCST_CHECK
+offensive       = FALSE
+fumble          = 0
+race human      = 0
+race elf        = 0
+race dwarf      = 0
+race halfling   = 0
+race gnome      = 0
+race half-orc   = 0
+race half-ogre  = 0
+race half-elf   = 0
+race brownie    = 0
+race groll      = -1
+race darkelf    = -2
+
+
+
+
+

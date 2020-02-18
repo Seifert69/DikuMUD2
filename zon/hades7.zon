@@ -1,0 +1,2326 @@
+/*
+filename    hades7
+password    2wsl5
+changedby   Whistler
+EmailAdd     Palio <palio@blinksoft.com>
+request     compile
+version     8
+END HEADER*/
+
+#include <composed.h>
+#include <values.h>
+#include <base.h>
+#define UNIT_FLAGS UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT
+
+#define M_ARCH_DEVIL(MLVL,GENDER) \
+    race RACE_ARCH_DEVIL \
+    sex GENDER \
+    level MLVL \
+    weight 320 \
+    height 220 \
+    exp 125 \
+    NATURAL_DEF(WPN_CLAW, ARM_HLEATHER) \
+    MSET_ABILITY(15,15,10,20,10,10,20,0) \
+    MSET_WEAPON(3,3,3,3,15,3) \
+    MSET_SPELL(7,1,1,5,1,11,9,6,15,8,6) \
+    alignment -1000 \
+    special SFUN_COMBAT_MAGIC "cast fireball" \
+    special SFUN_AGGRESSIVE time 20 bits SFB_RANTIME \
+    romflags {CHAR_DETECT_INVISIBLE}
+
+#define M_DEVIL_GREATER(MLVL,GENDER) \
+    race RACE_GREATER_DEVIL \
+    sex GENDER \
+    level MLVL \
+    weight 290 \
+    height 198 \
+    exp 125 \
+    NATURAL_DEF(WPN_CLAW, ARM_LEATHER) \
+    MSET_ABILITY(16,16,11,20,12,8,17,0) \
+    MSET_WEAPON(6,6,6,6,6,6) \
+    MSET_SPELL(1,2,1,3,1,9,8,7,16,9,7) \
+    alignment -1000 \
+    special SFUN_COMBAT_MAGIC "cast lightning bolt" \
+    special SFUN_AGGRESSIVE time PULSE_SEC*15 bits SFB_RANTIME \
+    romflags {CHAR_DETECT_INVISIBLE}
+
+#define M_HADES_SOUL(MLVL,GENDER) \
+    race RACE_SPIRIT \
+    sex GENDER \
+    level MLVL \
+    weight 165 \
+    height 174 \
+    alignment -850 \
+    NATURAL_DEF(WPN_CLAW, ARM_CLOTHES) \
+    MSET_ABILITY(16,19,18,20,15,12,0,0) \
+    MSET_WEAPON(6,6,6,6,16,6) \
+    MSET_SPELL(2,3,3,2,3,10,6,7,6,6,6) \
+    romflags {CHAR_DETECT_INVISIBLE}
+
+%zone hades7
+title ""
+lifespan 20
+reset RESET_ANYHOW
+creators {"tyk", "kilbia"}
+
+notes
+"A complete history of the Nine Planes of Hades area can be found in the
+notes section of Hades1.  All maintenance, creation, and coding of this zone
+is currently coordinated by Tyk.  Direct all questions and comments to Tyk
+(Dan Banick) at ddb2@po.cwru.edu.  Any information following this paragraph
+is original notes by the zones first creator, and may not be current.
+
+Many thanks to Dante Alighieri for his 'Divine Comedy', which I
+stole liberally from.  You automatically have my permission to change internal
+code (i.e. fix bugs and such, changes that a mortal wandering around wouldn't
+notice).But please let me know if you need to do so, and also if you do
+anything like add or subtract mobiles from the zone, so I can make my
+future zones better fit what you need.  Send e-mail to Katie Sehorn
+<sehorn@willamette.edu>."
+
+help
+"&lThe Nine Planes of Hades generally contain the following level mobiles:
+	Tiamat Temple  30-40          Hades5      80-90
+	Hades1         40-50          Hades6      90-100
+	Hades2         50-60          Hades7     100-110
+	Hades3         60-70          Hades8     110-120
+	Hades4         70-80          Hades9     120-130
+
+The entirety is a NO SUM/NO TELE area with the exception of Hades 1, 5, 9 and
+the occasional special item or room.  Once inside, you generally need to walk
+to either the first, fifth, or ninth plane to exit."
+
+
+%rooms
+			center_room
+title "The Center of the Seventh Plane"
+descr
+"You have heard tales of this plane of Hades, place of punishment for all
+those whose love of the material exceeded their love of the spiritual.  A
+chill flutters up your spine as you hear the wail of a soul in torment,
+echoed by another, and yet another.  The cries seem less filled with
+agony than with sorrow, which chills you even more.  You murmur a brief
+prayer to your Deity to spare you from this fate.  Paths lead in all
+directions, and it is not too late to return up.  The smell of smoke
+drifts up from a covered pit in the floor, and a message written in blood is
+scrawled in the dust at your feet."
+extra {"message", "dust", "blood"}
+"The message reads:&n&s2If ye be still among they who draw
+breath,&n&s2then know that misplaced love damns thee like hate.  -  Shyneia"
+extra {"pit", "floor"}
+"You see tendrils of smoke rising from the pit, and a massive grate,
+blackened from the blistering heat lies across it.  Suddenly you hear
+a spine-chilling shriek float up from the depths of the pit, and you briefly
+reconsider exploring it...."
+flags {UNIT_FLAGS, UNIT_FL_NO_MOB}
+movement SECT_CITY
+north to ath_first;
+east to van_first;
+south to lust_first;
+west to avar_first;
+down to light_room open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED,
+EX_PICKPROOF} key gate8_key keyword {"blackened grate", "grate", "down", "pit"};
+ALWAYS_LIGHT
+end
+			   ath_first
+title "Torment of the Infidel: Approaching the Divine City"
+descr
+"Your breath catches in your throat as you catch a glimpse of Heaven in
+the distance.  The leap of your heart in your breast assures you that it is
+no illusion, and you feel the urge to run for its divine gates even though
+you know it is impossible.  It is in this area that those souls who were
+unsure about the existence of deities must ever suffer in the knowledge that
+they are indeed real.  The sighs of regret and self-loathing nearly move
+you to tears, and you vow to be a bit more pious yourself when you return
+to the world above.  You hear a noise behind you, and turn around to see
+that a landslide has blocked your way south.  You must keep going
+northward."
+extra {"heaven"}
+"You cannot bear to look at the glorious city for very long.  Your heart
+breaks as you realize just how far away it really is from here.  But even
+seeing it from this distance is a powerful call to your soul to try to be
+more righteous and kind to others in the future."
+extra {"souls"}
+"They are in lamentable shape, dressed in rags and tatters, but it is the
+regret on their faces that moves your heart the most."
+extra {"landslide"}"You sigh as you see the insurmountable pile of rubble
+standing between you and the way you came.  There is no way you could
+ever climb around that.  You'll just have to keep going and hope that
+there is another way back home from here...."
+flags {UNIT_FLAGS}
+movement SECT_CITY
+north to ath_second;
+ALWAYS_LIGHT
+end
+		      ath_second
+title "Torment of the Infidel: Nearing the Divine City"
+descr
+"You seem to be much closer to Heaven, and can actually see some of the
+delights it has to offer the virtuous believers.  Instead of comforting
+you, though, seeing it only breaks your heart all the more as you realize
+there is still no way to get there from where you stand.  The souls here
+seem to be mostly pagans, who led virtuous lives by the standards of
+their cultures, but followed false deities and denied the Truth.  Their
+weeping is truly heartrending, and you wonder briefly if their
+punishment is truly fair, then decide that the wills of the Deities are
+not to be argued with.  Paths lead back south, and even further north."
+extra {"heaven", "delights"}
+"From here, you can actually see the intricately wrought Gates of Heaven
+themselves.  Peeping over the gates are shining spires and towers, and
+trees bearing fruit that looks like pure gold.  You see white doves flying
+through the skies there, and occasionally a phrase or two of glorious
+singing reaches your ears.  You have to maintain a firm grip on your
+emotions to keep from trying to leap skyward."
+extra {"souls", "pagans"}
+"These souls weep constantly, and tear their garments and their hair in
+their sorrow.  You almost move to console one of them, then decide not to
+interfere with their divine punishment."
+flags {UNIT_FLAGS}
+movement SECT_CITY
+south to ath_first;
+north to ath_third;
+ALWAYS_LIGHT
+end
+	ath_third
+title "Torment of the Infidel: Beneath the Divine City"
+descr
+"You truly believe you might go mad as you enter this room.  The glorious
+City seems to be within arm's reach in this room, but something inside
+tells you it is still unreachable, which frustrates you without end.  The
+true atheists are punished here; those who most loudly refuted the
+possibility of deities are damned to ever look upon the Heaven that could
+have been theirs.  They howl and wail in eternal sorrow and regret for
+their faithlessness, but cannot take their eyes off of the beauty of the
+Divine City any more than you can.  Paths lead both north and south from
+here, but you don't know if you can bear to wrench yourself away from
+this glory."
+extra {"heaven", "city"}
+"You believe that if you stood upon your own shoulders, you could reach
+out and touch the gate of the Heavenly City from here.  You can look through
+the intricate gold gates and see the angels themselves as they kneel in
+worship or raise their voices in ethereal singing.  Your eyes fill with
+tears at such a beautiful sight, and you murmur a prayer that someday you
+will be allowed to live inside."
+extra {"souls", "atheists"}
+"You thought it frustrated you to see Heaven so close and yet so
+unreachable, just imagine going through it for all eternity!  These souls
+deserve it, though, for their lack of belief in their time alive.  As
+heartrending as their howling is, it does not move you to pity them."
+flags {UNIT_FLAGS}
+movement SECT_CITY
+south to ath_second;
+north to ath_fourth;
+ALWAYS_LIGHT
+end
+	ath_fourth
+title "Torment of the Infidel: Beyond the Divine City"
+descr
+"The Divine City appears to be behind you, but you can still see much of
+the glory it offers to the righteous and faithful.  The souls here are those
+who had realized that divine forces govern the existence of all things, but
+would not commit to the True deities that controlled those forces.  Now they
+are doomed to ever look at the home of those deities and know that they are
+not welcome there.  They sigh and shed a few tears, but they do not
+seem to be in as much grief as some of the others you have seen.  Paths
+lead back south, and north to what looks like a crossroads."
+extra {"heaven", "city"}
+"You see the walls of the Divine City, and the spires rising above it.
+You still feel a severe tug at your heart to try and run to the gates, but
+not quite as much as you felt before.  It almost seems to you as if the
+deities are being kinder to these souls than the others, by showing them less
+of the glorious City than the others are forced to see."
+extra {"souls"}
+"These souls weep a little and sigh a little for what might have been,
+but they seem to be able to deal with the fate that they have been condemned
+to.  You feel a little bit happy for them, knowing their torment is not
+completely unbearable."
+flags {UNIT_FLAGS}
+movement SECT_CITY
+south to ath_third;
+north to cross_room;
+ALWAYS_LIGHT
+end
+			cross_room
+title "Torment of the Worldly: The Crossroads"
+descr
+"The ground rumbles behind you as you step into this small area of Hades,
+and you almost don't need to turn around to know there is a huge, yawning
+chasm behind you.  This room is nothing very special, although compared
+to the sights you just left, this cavern seems extremely barren and
+frightening.  There is no returning to the south from whence you came,
+but you may risk traveling to the west.  There is also a very steep path
+leading downward, but looking down there reveals little because of the
+palpably thick darkness."
+extra {"chasm", "pit"}
+"The pit seems to perfectly block your way back.  You idly pick up a
+stone and toss it into the chasm, and listen for it to hit bottom.  You
+never hear that it does...."
+extra {"path"}
+"It seems safe to travel on, but you'd probably do a little bit of
+sliding on the gravel that lines it, and you're not sure you'd be able
+to travel back up.  Actually, after the landslide and the recent
+collapse, you're pretty sure you couldn't."
+flags {UNIT_FLAGS, UNIT_FL_NO_MOB}
+movement SECT_CITY
+west to avar_first;
+down to path_room;
+ALWAYS_LIGHT
+end
+	path_room
+title "The Downward Spiral"
+descr
+"You feel another chill tickle the back of your neck as you carefully
+pick your way down this very steep path.  The wails and howls of the
+tormented are eerily absent here, and you do not even hear the gravel
+crunching under your feet.  The silence presses in close, almost
+tangibly, as if to try and smother you and stop your very breathing, and
+the shadows threaten to extinguish your light with their sheer
+darkness.  But the path that brought you this far is too steep to climb
+back up, and you must keep  descending."
+extra {"silence"}
+"The silence is so thick you swear you can see it, and could reach out to
+touch it if you dared.  It seems to press in closer the longer you stay
+in here, trying to crush you to death!"
+extra {"shadows"}
+"The shadows are almost a pure black, and your feeble light can do
+nothing to drive them away.  In fact, the shadows seem to swallow up
+your light and feed on it."
+flags {UNIT_FLAGS, UNIT_FL_NO_MOB}
+movement SECT_MOUNTAIN
+down to pact_first;
+special SFUN_DEATH_ROOM "10" time WAIT_SEC*20
+end
+	mob_room
+title "A room to load aggr mobs in"
+descr "If you're in this room, you must be an immortal.  This is a room
+that Kilbia put in for loading aggressive mobs, so they can wander out into
+random locations at random times.  You can get out and find yourself in
+six of the seven areas from here."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+up to ath_second descr "this door leads to the atheism section";
+down to lust_second descr "this door leads to the lust section";
+east to van_second descr "this door leads to the vanity section";
+west to avar_second descr "this door leads to the avarice section";
+north to pride_second descr "this door leads to the pride section";
+south to glut_second descr "this door leads to the gluttony section";
+ALWAYS_LIGHT
+end
+	pact_first
+title "Torment of the Soul-Sellers: The Antechamber"
+descr
+"Your feeble light can barely reach to the door not twenty feet ahead of
+you. You shudder as you notice the Serpent carved on the door, and remember
+many of the old ghost stories you heard as a child about the people who would
+make pacts with the Dark One, selling their souls to him in return for riches
+or glory, except the Dark One would always get the better of them......He
+would give them what they desired, but not in the way they had expected,
+and they would still be forced to carry out his evil commands for all
+eternity.  Suddenly you stop believing they were just stories....Again,
+the trail you descended on is too steep to travel back up.  You have no
+choice but to pass through this door."
+extra {"serpent", "carving", "door"}
+"The carving is of the Serpent of the Dark One, curled around the arm of
+a woman who is smiling at it.  The Serpent is poised to strike at this
+woman, and you think the carving may be a reminder of the Dark One's
+wont to betray trust."
+extra {"words"}
+"It reads: 'Chamber of Caliander, the woman blinded by love.'"
+flags {UNIT_FLAGS}
+movement SECT_CITY
+north to pact_second open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED,
+EX_PICKPROOF} key gold_key keyword {"door north", "door", "north"};
+end
+	pact_second
+title "Torment of the Soul-Sellers: Caliander's Chamber"
+descr
+"This is Caliander's chamber, carved out of black obsidian.  You're not
+sure how big it is, because the walls only reflect back your light in small
+points.  You find yourself needing to take deep breaths and hum to keep from
+completely panicking.  The furniture here marks it as sort of a
+dressing-room: A wooden vanity with a mirror sits in the corner, and a
+few trinkets are scattered on it.  A chair is here too, facing away
+from the vanity.  Perhaps Caliander is tired of looking at herself?  The
+door behind you is still usable, and there is another door to the
+north, leading further on."
+extra {"vanity", "dresser", "mirror"}
+"The vanity is carved out of some dark wood, with simple yet elegant
+scrolling on the legs and clawfeet.  The mirror reflects your face back
+with cruel accuracy as you gaze into it, and almost seems to highlight
+the things you hate the most about it."
+extra {"trinkets"}
+"You see some things you would expect to find on a ladies' dresser:
+hairbrush, hand mirror, and various cosmetics.  What you didn't expect to
+see was the thin layer of dust coating them.  You think these things
+were not meant to be used, just placed here as cruel reminders to
+Caliander of the pact she struck with the Dark One."
+extra {"chair"}
+"A simple wooden chair, carved out of the same wood as the dresser, with
+a green velvet cushion and brass casters on the feet."
+extra {"serpent", "picture"}
+"This time, the Serpent of the Dark One shown with two heads.  One is
+poised to strike at the bared heel of a knight who is running his sword
+through a dragon's heart, and the other is ready to bite the leg of a
+roguish-looking fellow planting his dagger in the knight's back.  You
+think this carving may illustrate the Dark One's willingness to take
+anyone to further his wicked plans.  As before, there are a few words
+carved beneath the picture."
+extra {"words", "message"}
+"It reads: Quarters of Xarius, driven by loyalty and bloodlust."
+flags {UNIT_FLAGS}
+movement SECT_CITY
+south to pact_first open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED,
+EX_PICKPROOF} key gold_key keyword {"door south", "south", "door"};
+north to pact_third open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED,
+EX_PICKPROOF} key onyx_key keyword {"door north", "north", "door"};
+end
+	pact_third
+title "Torment of the Soul-Sellers: Xarius's Quarters"
+descr
+"This room is carved of the same cold black obsidian that plays tricks
+with your light and makes the room look bigger than it really is.  You
+realize from the objects in here that Xarius was a warrior proud and
+strong; pieces of armour of many different sizes and workmanships litter
+the floor, and the standards of many kings hang on the walls.  You find
+yourself growing uneasy at the thought of tangling with the shade of a
+true warrior, but you have little other choice if you wish to pass
+through the door ahead of you.  The door behind you is still there if
+you need to make a hasty retreat."
+extra {"armour", "armor"}
+"You recognize helmets and breastplates of elven, dwarven, orcish and
+human manufacture, and you even see a few swords around.  Unfortunately,
+everything here is far too old and rusty to be of any use to you.
+Still, it chills you to think Xarius could have slain so many soldiers
+as to have a collection like this."
+extra {"standards", "flags", "banners"}
+"You see flags and banners of kingdoms all over the land, covered with
+lions, eagles, and unicorns.  Many you recognize, and many you do not.
+They are all slightly tattered, as if they had been through a war and
+all been captured by Xarius.  Strangely, though, he seems to pay little
+attention to them, and you wonder if maybe these are not his own spoils,
+but put here to mock him."
+extra {"serpent", "picture", "door"}
+"This carving of the Serpent shows it with wings and coiled around a
+staff, looking mockingly like the legendary Snake of Bronze that would
+cure any who gazed upon it.  The Serpent, though, is striking at the
+neck of a supplicant who is looking at it in hopes of curing his
+malady.  The message is chillingly clear:  The Dark One will always keep
+his bargains, but never quite in the way you think he will.  Carved
+beneath it are a few words, as with all the pictures."
+extra {"words", "message"}
+"It reads: 'Lair of Liandro, tempted by safety and protection.'"
+flags {UNIT_FLAGS}
+movement SECT_CITY
+south to pact_second open {EX_OPEN_CLOSE, EX_CLOSED} key onyx_key keyword
+{"door south", "south", "door"};
+north to pact_fourth open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED,
+EX_PICKPROOF} key cloud_key keyword {"door north", "north", "door"};
+end
+	pact_fourth
+title "Torment of the Soul-Sellers: Liandro's Lair"
+descr
+"Like the other chambers before this, it is carved of the cold obsidian that
+seems to swallow your light.  Surprisingly, you see little here that you
+would imagine belonged to Liandro: strewn on the floor are various
+children's toys, and a lady's fan and gloves are set on the table.  These
+items were most definitely put here to remind Liandro of the reason why
+he dared to sell his soul to the Dark One.  But right now you are more
+concerned with getting through that door in front of you.  You hope you
+would not need to retreat to the south...."
+
+extra {"toys", "toy"}
+"You see a few stuffed animals, a wooden boat, a hobby-horse and a baby
+doll.  Apparently Liandro had very young children."
+
+extra {"gloves", "fan"}
+"The gloves are a sheer white satin and have very
+long sleeves on them.  The fan is made of Chinese sandalwood, delicately
+and intricately carved in a fleur-de-lis pattern.  It seems Liandro was
+among the gentry of his homeland."
+
+extra {"picture", "carving", "door"}
+"This time you do not see the Dark One's Serpent on the door, but a demon
+that almost could be a manifestation of the Dark One himself.  He firmly
+grips the arm of a weeping elven woman who strains to reach up to a man,
+but cannot touch his hand because a human woman is dragging the man away
+from her.  While the lessons of the first three carvings were obvious,
+you cannot quite seem to understand what this one is trying to say.
+Perhaps the words carved beneath it will help."
+
+extra {"words", "message"}
+"The message reads: 'Antechamber to King Epicures'.  Hmm.  It seems you
+are left to determine the meaning of the carving by yourself."
+
+flags {UNIT_FLAGS}
+movement SECT_CITY
+
+south to pact_third open {EX_OPEN_CLOSE, EX_CLOSED} descr "There is
+nothing special carved on this side of the door, but its immensity still
+chills you." key cloud_key keyword {"door south", "south", "door"};
+
+north to pact_fifth open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED,
+EX_PICKPROOF} descr "There is another picture carved into the face of
+this door, but you do not see the Serpent anywhere in it.  For some
+strange reason, this frightens you.  This door is made of darker wood
+than the others, and you think it may lead somewhere important." key
+teardrop_key keyword {"door north", "north", "door"};
+end
+	pact_fifth
+title "Torment of the Soul-Sellers: Antechamber to King Epicures"
+descr
+"Even though you've never been able to accurately gauge the size of
+these rooms because of the black obsidian walls, something tells you
+this room is a bit bigger than the others.  It is also totally barren,
+save for a single framed portrait on the wall.  But apparently that
+single thing is something of pain and loathing to the female lich who
+guards the King's Chambers, because she looks obviously pained every
+time her gaze chances to fall on it, and heaves a heartbreaking sigh.  A
+pair of huge double doors loom ominously before you, but the way the lich
+raises her mallet to strike as she sees you enter makes you look over
+your shoulder to check that the door south is still open...."
+extra {"portrait", "picture"}
+"The portrait is of a middle-aged human male with streaks of grey in his
+brown hair, hazel-green eyes, and only a few lines on his face, as if his
+aging was not natural.  You wish you knew what that man had to do with
+this lich queen, that it would accompany her for eternity."
+extra {"carving", "door"}
+"The double doors are intricately carved with six dragons all facing
+inward and breathing flames at each other.  Big bold letters carved in
+bas-relief on the door read: 'The Chambers of King Epicures'."
+flags {UNIT_FLAGS}
+movement SECT_CITY
+south to pact_fourth open {EX_OPEN_CLOSE, EX_CLOSED} key teardrop_key keyword
+{"door south", "south", "door"};
+north to kings_room open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED,
+EX_PICKPROOF} key diamond_key keyword {"door north", "north", "door"};
+end
+	kings_room
+title "Reward of the Soul-Sellers: The Chamber of King Epicures"
+descr"Your eyes slam shut at the sudden light in this room.  While the
+souls in the rooms leading here had to suffer in darkness, King
+Epicures's chamber is well-lit by a torch in each corner.  The room is
+lined with plush red carpet, and richly decorated with solid gold
+artifacts of priceless value, but all of them are too large and heavy  to
+carry with you.  Apparently the Dark One saw fit to so reward the man
+who led millions to believe that worldly goods were all that mattered,
+and turned them away from the spiritual rewards of the Deities.  Your
+eyes are especially drawn to the narrow mosaic on the wall behind the
+King's throne.  You can still escape to the south."
+extra {"plush", "carpet"}
+"The carpet is a deep red shag, and were the situation a little less
+dangerous, you would feel sorely tempted to take off your boots and walk
+barefoot on it."
+extra {"gold", "artifacts", "artifact", "treasure"}
+"These are enormous busts and sculptures in pure gold.  Some are copies
+of artworks you have seen in castles in different kingdoms you have
+seen.  Others you do not recognize at all."
+extra {"throne"}
+"An ornate seat made entirely of gold and padded with a thick red satin
+cushion.  It is here that Epicures sits and rules over the condemned
+souls on this plane of Hades."
+extra {"mosaic"}
+"There is something strange about the way it seems to be set INTO the
+wall, instead of being on top of it.  You could almost swear that it was
+a door of some type, but then again, it may just be the new fashion in
+setting mosaics."
+flags {UNIT_FLAGS}
+movement SECT_CITY
+south to pact_fifth open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door
+south", "south", "door"};
+north to light_room open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN} keyword
+{"mosaic", "wall"};
+SECRET_DOOR_DIFFICULTY(NORTH, 125)
+ALWAYS_LIGHT
+end
+	light_room
+title "The Junction of the Planes"
+descr
+"You no longer see any ground under your feet, but you also do not feel
+yourself falling.  All around you is a green luminescence that doesn't
+seem to come from any source.  You see things that look like windows
+above and below you, and you think they may be portals to different
+places.  The way behind you has vanished, but you're not sure if you
+regret leaving."
+extra {"windows", "portals"}
+"There is one above your head, and one beneath your feet.  Above you hideous
+faces leer past in wisps of fog.  Below you is a barren cavern almost identical to the one you
+encountered when you entered this plane of Hades, except the pit in the
+floor is giving off a little more smoke."
+flags {UNIT_FLAGS}
+movement SECT_CITY
+down to center_room2@hades8 descr "From the cavern below you hear
+the shrieks of souls in agony and surmise that it too is a plane of
+Hades.";
+/*
+up to SOME HADES 6 destination;
+
+*/
+flags {UNIT_FL_SACRED, UNIT_FL_NO_TELEPORT}
+ALWAYS_LIGHT
+end
+	avar_first
+title "Torment of the Avaricious: The Cloud of Insects"
+descr
+"The air is swarming heavily with mosquitoes and gnats, thicker
+than you've ever seen before in your whole life.  You find yourself
+frequently needing to brush off your arms and face, and you can't wait
+to see how many times your ankles get bitten.  The souls punished here
+are those who cared only for their gold and treasures in life.  They sit
+here squirming, with their hands firmly tied behind their backs, and you
+wince as you imagine what they must suffer until the end of time.  You
+wince again as you hear the unpleasantly familiar sound of the ground
+crumbling and collapsing, and you know your way east is blocked.  You
+must force your way past all these bugs and keep going."
+extra {"mosquitoes", "gnats", "bugs", "insects"}
+"You can not remember ever seeing this many in one place, even counting
+the huge swarm you saw at the lake one summer afternoon when you were a
+child.  You wonder just how particular these insects are about whom they
+choose to bite...."
+extra {"souls", "soul"}
+"These souls have no shirts on, and their hands are tied behind their
+backs, so they cannot scratch most of the places that they have been
+bitten in.  They squirm in obvious discomfort, and you almost begin to
+itch on their behalf."
+flags {UNIT_FLAGS}
+movement SECT_CITY
+west to avar_second;
+ALWAYS_LIGHT
+end
+	avar_second
+title "Torment of the Avaricious: The Swarm of Insects"
+descr
+"The insects are very dense in this room, to the point where they begin
+to obscure your vision, and their incessant buzzing becomes a torment in
+itself.  Augh!  If you'd known you were going to be coming this way, you
+would have kidnapped a spider or two from Arachnos to take along!  The
+souls here were extreme misers in life, unable to see beyond their
+counting-books to the joys they could bring to both themselves and
+others with the wealth they had.  Now they are unable to see beyond the
+stone floor to which they are chained facedown.  You find yourself
+needing to scratch, and you wonder if the itch is from an insect biting
+you, or a vicarious suffering of these souls' fate.  You can retreat
+east or keep going west."
+extra {"mosquitoes", "gnats", "bugs"}
+"You can barely see ahead of your nose in any direction, because your
+vision is filled with the grey buzzing bodies of these millions of
+insects.  You try and swat them away, but they don't stay clear of your
+face for very long."
+extra {"souls", "soul"}
+"These souls are chained naked, spread-eagled and facedown to the stone
+floor.  Sometimes the insects actually bite them, other times they just
+walk all over the souls' bitten backs and make the bites itch even worse."
+flags {UNIT_FLAGS}
+movement SECT_CITY
+east to avar_first;
+west to avar_third;
+ALWAYS_LIGHT
+end
+	avar_third
+title "Torment of the Avaricious: Surrounded by Insects"
+descr
+"There are so many insects in this room that you don't see any souls in
+this room at all!  That is, not until you bump into something and hear a
+cry.  You squint to see through all the bugs, and notice that the
+ceiling is low enough to reach up and almost touch.  The souls here have
+their feet chained spread-eagle to the floor, and their wrists shackled
+to the ceiling, so they get bitten in almost every conceivable place on
+a body.  These are the ones who had the wealth to help many others in
+need, but coldly refused to give aid of any sort.  Now they are damned
+to eternally feel what it is to need relief.  You can head further west,
+or back east."
+extra {"mosquitoes", "gnats", "bugs", "insects"}
+"You can't believe these things aren't constantly bumping into each
+other with as many as there are of them!  You feel like you are walking
+through a buzzing, biting fog!"
+extra {"souls", "soul"}
+"These souls appear to be just masses of red bumps where they have been
+bitten over and over by the gnats and mosquitoes.  One near you begs you
+to scratch it, but you feel no pity for it and leave it to its torment."
+flags {UNIT_FLAGS}
+movement SECT_CITY
+east to avar_second;
+west to avar_fourth;
+ALWAYS_LIGHT
+end
+	avar_fourth
+title "Torment of the Avaricious: Among the Insects"
+descr
+"The gnats and mosquitoes are still amazingly dense here, but it's not
+nearly as bad as it could be.  Also, you notice that the souls here are
+not chained down or tied up in any way.  They are perfectly free to
+reach and scratch - wait.  No, they're not.  They have no fingers, toes,
+or teeth.  These are the souls that only gave to help others when they
+were very old, so they would be remembered at their deaths as great
+philanthropists.  Such pretensions of charity lead them to this most
+fitting punishment; they can try and rub their itches away with their
+hands or feet, but their attempts will never be enough.  You can head
+into a denser cloud of insects to the east, or navigate a rope bridge to
+the west, to what looks like a barren area."
+extra {"gnats", "mosquitoes", "bugs", "insects"}
+"They swarm about biting the souls, or walking on them to aggravate the
+existing bites.  These guys, however, have to also be very nimble, as
+these souls are able to swat at them!"
+extra {"souls", "soul"}
+"These souls don't seem to be in as much physical torment as some of the
+others you've seen, but the mental anguish is clear in their faces.
+They slap at themselves and rub against the smooth walls of this cavern,
+but everything they try is only minimal and temporary relief."
+extra {"rope bridge", "rope", "bridge"}
+"A very sturdy three-rope bridge shaped like a V; two ropes for your
+hands to grab on to, and one to walk on.  Smaller ropes link the upper
+ropes to the lower, and you think if you focused on putting your feet
+right at each intersection, you stand a good chance of not falling.  You
+wonder why the souls here don't try and escape, then remember they have
+no fingers to grab the upper ropes with and would probably slip off very
+easily."
+flags {UNIT_FLAGS}
+movement SECT_CITY
+west to between_room descr "The rope bridge looks very sturdy, and you
+think you could run an army over that bridge and back fifty times without
+it breaking.  The area it leads to is completely empty - no bugs, no
+souls, nothing.";
+east to avar_third descr "The insects are amazingly thick there!
+You can't believe there are so many of them!";
+ALWAYS_LIGHT
+end
+	between_room
+title "Torment of the Worldly: Between Torments"
+descr
+"This place is relatively quiet.  You hear the moans and wails of
+condemned souls, but their cries seem remote and unreal.  Huge cliffs
+rise to the north and south of you, as stark and bleak as the fate of
+those who must spend eternity here.  You can go across a rope bridge to
+the east, or pass through an archway to the west, but you really think
+you'd just like to stay here a few minutes and recover from all you've
+seen so far."
+extra {"cliffs"}
+"These cliffs appear to be composed of black basalt and
+granite, and look very depressing indeed."
+extra {"rope bridge", "rope", "bridge"}
+"A very sturdy three-rope bridge shaped like a V; two ropes for your
+hands to grab on to, and one to walk on.  Smaller ropes link the upper
+ropes to the lower, and you think if you focused on putting your feet
+right at each intersection, you stand a good chance of not falling."
+extra {"archway", "arch"}
+"It is about six meters high; more than enough to tower over your head.
+For some reason, it makes you think of a guillotine, and you don't know
+why.  It really looks like there should be a door there, but you don't
+see one."
+flags {UNIT_FL_NO_MOB, UNIT_FLAGS}
+east to avar_fourth descr "The rope bridge looks very sturdy, and you
+think you could run an army over that bridge and back fifty times without
+it breaking.  The area it leads to is infested with small flying
+insects.";
+west to glut_first descr "Through the huge arch, you think you
+see a banquet laid out on a table!";
+ALWAYS_LIGHT
+end
+	glut_first
+title "Torment of the Glutton: The Foot of the Table"
+descr
+"A huge banquet is laid out before your eyes!  The large oak table
+is loaded with all sorts of mouthwatering delicacies.  You hungrily reach
+for a nearby sweetroll, but your hand passes right through it.  Your
+tummy rumbles regretfully at the realization that it's not solid.  All
+the souls here have to suffer for their vice of gluttony, but apparently
+there are two different forms of punishment: either they are doomed to
+starve for eternity, or to forever have food constantly shoved down their
+throats.  You are debating which is worse when suddenly a loud rumble
+sounds over your head, and an immense iron door slams down inside the
+archway to the east!  You sigh, and are not completely surprised to find
+that you can't budge it.  You just have to go west."
+extra {"table", "oak"}
+"This is an immense table built out of very thick oak wood.  It would
+have to be thick to support a smorgasbord like that!"
+extra {"delicacies", "food"}
+"You just can't believe all the different kinds of food you see here!
+Game fowl, roast pig, beef, vegetables, pastries...and none of it edible
+by living people. *sigh*"
+extra {"door", "iron"}
+"The iron door is almost six metres tall, and thick
+too, from what you gauge by pounding on it.  It has many bolts and
+reinforcements in it, and you quickly conclude that this door cannot be
+opened by mere mortals."
+flags {UNIT_FLAGS}
+movement SECT_CITY
+west to glut_second;
+ALWAYS_LIGHT
+end
+	glut_second
+title "Torment of the Glutton: The Middle of the Table"
+descr
+"Delicious food stretches in both directions on this table, and you find
+your stomach rumbling appreciatively.  Again, you see the souls suffering
+one of two forms of punishment.  Some extremely thin souls have their
+hands chained behind them, and imps prick them with flaming weapons to
+keep them away from the food despite their pitiable cries of hunger.
+Other souls are amazingly fat, and are groaning in protest and probably
+stomachache as the imps literally shove more food down their
+gullets.  You find you can go east back to the foot of the table, or
+west toward the head of it."
+extra {"table", "oak"}
+"This is an immense table built out of VERY thick oak wood.  It would
+have to be thick to support a smorgasbord like that!"
+extra {"delicacies", "food"}
+"You just can't believe all the different kinds of food you see here!
+Game fowl, roast pig, beef, vegetables, pastries...and none of it edible
+by living people. *sigh*"
+flags {UNIT_FLAGS}
+movement SECT_CITY
+east to glut_first;
+west to glut_third;
+ALWAYS_LIGHT
+end
+	glut_third
+title "Torment of the Glutton: Approaching the Head of the Table"
+descr
+"You still can't get over the feast spread out before you!  This must be
+something akin to what the souls in Heaven sit down to every evening,
+except the souls in Heaven can control if and how much they eat.  Here,
+half of the souls are eternally kept away from the tantalizing food, and
+the other half seemingly have to consume the entire contents of the
+table.  Again, you wish that flesh-clad souls were able to partake of
+this grand banquet - umm, then again, maybe not.  You just saw one of the
+imps here defecate in the food.  Ugh.  You can go west to the very head
+of the table, or east to the middle of it."
+extra {"table", "oak"}
+"This is an immense table built out of very thick oak wood.  It would
+have to be thick to support a smorgasbord like that!"
+extra {"delicacies", "food"}
+"You just can't believe all the different kinds of food you see here!
+Game fowl, roast pig, beef, vegetables, pastries...and none of it edible
+by living people. *sigh*"
+flags {UNIT_FLAGS}
+movement SECT_CITY
+west to glut_fourth;
+east to glut_second;
+ALWAYS_LIGHT
+end
+	glut_fourth
+title "Torment of the Glutton: The Head of the Table"
+descr
+"You are standing at the head of an unbelievably huge oak table, loaded
+down with the biggest selection of food and drink that you have ever
+seen!  A bottle of every conceivable type of wine, mead, beer or ale is
+set here at this end, and the imps have a field day with it.  Some grab
+bottles to guzzle themselves, others pour it over their heads, and some
+use it to nearly drown the souls here that are condemned to constantly
+eat for eternity.  As you watch this spectacle, you hear a moan of hunger
+nearby, and remember that some of the souls here would kill or die for a
+drop of liquid in their throats.  You can go east and look at more of the
+table, or go through another archway to the west, similar to the one you
+came in."
+extra {"table", "oak"}
+"This is an immense table built out of VERY thick oak wood.  It would
+have to be thick to support a smorgasbord like that!"
+extra {"delicacies", "food"}
+"You just can't believe all the different kinds of food you see here!
+Game fowl, roast pig, beef, vegetables, pastries...and none of it edible
+by living people. *sigh*"
+extra {"archway", "arch"}
+"A stone archway about six metres high; amply enough to loom over your
+head and make you feel puny and insignificant."
+flags {UNIT_FLAGS}
+movement SECT_CITY
+west to fork_room descr "You see another empty area, that almost looks
+like it could be a safe place to rest!  You are wary of everything here,
+of course, but you welcome any chance you can take to catch your
+breath.";
+east to glut_third descr "The banquet table seems to stretch out
+forever in that direction.  Your stomach growls again.";
+ALWAYS_LIGHT
+end
+	fork_room
+title "Torment of the Worldly: A Fork in the Path"
+descr
+"To the north, another of the ominous archways looms into view, while to the
+south a plain-looking path winds between two cliffs.  There are a few big
+rocks up near the tops of the cliffs, but they look like they'd stay put
+if you headed that way.  At this peaceful junction you are strongly tempted
+to take a break and rest your weary body.  It doesn't look like any tortured
+wraiths are going to sneak up on you here.  The smell of a gluttonous feast
+wafts from the east."
+extra {"archway", "arch"}
+"It is about six meters high; more than enough to tower over your head.
+For some reason, it makes you think of a guillotine, and you don't know
+why.  It really looks like there should be a door there, but you don't
+see one."
+extra {"door", "iron"}"The iron door is almost six metres tall, and thick
+too, from what you gauge by pounding on it.  It has many bolts and
+reinforcements in it, and you quickly conclude that this door cannot be
+opened by mere mortals."
+flags {UNIT_FLAGS, UNIT_FL_NO_MOB}
+movement SECT_CITY
+north to cross_room;
+east to glut_fourth;
+south to lust_first;
+ALWAYS_LIGHT
+end
+	lust_first
+title "Torment of the Lustful: The Huge Cavern"
+descr
+"This place is huge.  Your footsteps echo amazingly loudly in this
+immense cavern.  You look around you and notice many souls chained to
+the smooth stone walls.  They are all naked, and separated by gender: men
+on one wall, women on the opposite wall.  Their chains have a surprising
+amount of slack in them, and the way they strain to grab any nearby
+member of the opposite gender makes you guess that these souls were
+tremendously promiscuous in their lifetimes.  You hear a chilling cackle
+to the north, and a low rumble as a boulder rolls down from a cliff in
+that direction and comes to rest right in the middle of the pathway
+back.  You sigh.  There is no choice for you now, save to go south."
+extra {"souls", "soul"}
+"You are revolted by the obvious lust in the eyes of these souls.  You
+back away nervously, afraid they might settle for you in whatever they
+are seeking."
+extra {"boulder", "north"}"The immense boulder to your north is a single
+chunk of black basalt, that was obviously pushed from its resting place
+on top of the cliff.  It blocks any hope of retreating that way, and you
+hope you can find a way to safety to the south."
+flags {UNIT_FLAGS}
+movement SECT_CITY
+south to lust_second;
+ALWAYS_LIGHT
+end
+	lust_second
+title "Torment of the Lustful: The Large Room"
+descr
+"This place is about as big as a ballroom in the castle of any
+respectable kingdom.  As before, you see souls chained naked on opposite
+walls from each other.  These souls appear to be a bit finicky in whom
+they are reaching for.  It turns out that these are the souls who engaged
+in adulterous activity with each other, but had plans to marry later.
+The chains that bind these souls have only a little bit of slack in them,
+and the manacles cut painfully into their wrists if they dare to reach
+too far.  They constantly cry out their declarations of love for the one
+chained directly opposite them, and it begins to grate on your nerves.
+You can escape the noise to either the north or south."
+extra {"souls", "soul"}
+"You are revolted by the obvious lust in the eyes of these souls.  You
+back away nervously, afraid they might settle for you in whatever they
+are seeking."
+flags {UNIT_FLAGS}
+movement SECT_CITY
+north to lust_first;
+south to lust_third;
+ALWAYS_LIGHT
+end
+	lust_third
+title "Torment of the Lustful: The Small Chamber"
+descr
+"This room is only about the size of a castle servant's bedroom.
+Accordingly, the chains that hold these souls to the wall is not very
+slack at all.  This is the punishment of the souls who betrayed the vows
+of marriage and were intimate with others.  They spent much time
+illicitly embracing, and now they are all damned to never embrace each
+other again.  Their cries are filled with both passionate love and raw
+animal lust, and you shiver slightly.  You can head north to a larger
+room, or further south to what appears to be a narrow crawlway."
+extra {"souls", "soul"}
+"You are revolted by the obvious lust in the eyes of these souls.  You
+back away nervously, afraid they might settle for you in whatever they
+are seeking."
+flags {UNIT_FLAGS}
+movement SECT_CITY
+north to lust_second;
+south to lust_fourth;
+ALWAYS_LIGHT
+end
+	lust_fourth
+title "Torment of the Lustful: The Narrow Passage"
+descr
+"You can almost spread out your arms and touch the opposite walls of this
+passage.  It seems like just a long bubble in solid stone, but it has
+perfect acoustics, and your footsteps echo as if it were a much larger
+room.  You begin to feel claustrophobic.  Only two souls are chained
+here, but you recognize them from a modern legend.  Their names escape
+you, but you remember that the woman was the High Priestess of some
+deity, and her vows of chastity were successfully breached by the man
+chained across from her.  They are much closer to each other than the
+other souls you've seen were, and you can tell by their faces that it is
+deeply anguishing to both of them.  You can head back north to a small
+room with more chained souls in it, or squeeze your way south to a
+completely empty room."
+extra {"souls", "soul"}
+"You are revolted by the obvious lust in the eyes of these souls.  You
+back away nervously, afraid they might settle for you in whatever they
+are seeking."
+flags {UNIT_FLAGS}
+movement SECT_CITY
+north to lust_third;
+south to empty_room;
+ALWAYS_LIGHT
+end
+	empty_room
+title "Torment of the Worldly: The Empty Room"
+descr
+"This part of the plane is completely empty, and the howls and wails of
+pain seem very far away in here.  Its smooth stone walls almost form a
+perfect cube, suggesting that this room was created manually.  It is
+almost as if this room was designed for adventurers to sit and rest in.
+You don't trust it, but it does look like you  could stop and catch your
+breath for a minute or two without worrying.  The crawlway you squeezed
+your way through to get here looks quite narrow from this side, but you
+can either head into a light fog to the west, or grab a rope and swing
+over a large pit to the east."
+extra {"crawlway", "crawl", "north"}
+"Man, you don't know how you got through that crawlway the first time!
+You think maybe a starved alley cat could go through it, but not you!"
+extra {"pit", "large"}
+"It's a very large chasm, but someone has tied lengths of rope to a rock
+overhang above it, making it possible for you to swing over it."
+extra {"fog"}
+"Just a very light, grey fog.  You wonder if it's humming,
+or if that's just your frightened imagination."
+flags {UNIT_FLAGS, UNIT_FL_NO_MOB}
+movement SECT_CITY
+east to van_first;
+west to cross_room;
+ALWAYS_LIGHT
+end
+	van_first
+title "Torment of the Vain: The Chamber of Mirrors"
+descr
+"The rope that you used to swing across the pit cuts on a sharp rock and
+rudely dumps you on your posterior in this room.  Nursing your
+bruised....ego, you notice that the walls of this room have many mirrors
+hung on them.  It almost looks like a portrait gallery, but with the
+reflections taking the place of painted pictures.  The souls in here are
+ones who were quite good-looking in life and were not very humble about
+it.  They're not particularly pleasant to look at now; all of them have
+disfigured and scarred faces, and many have only patches of hair left on
+their heads.  They wince as they glimpse into the mirrors, and some of
+them shed a tear or two.  There are pits to both the east and west,
+guarded by gremlins so the souls don't try and jump in.  There are no
+ropes within reach to the west, but you can swing over the one to the
+east."
+extra {"mirrors", "mirror"}
+"These mirrors are slightly smoky, and you notice your face is not quite
+accurate in its reflection compared to other mirrors you have looked in.
+Strange...."
+extra {"gremlins", "gremlin"}"These little demons are bright red, as if
+they'd been badly sunburned, and are wearing black robes.  Their purpose
+is to block the souls if they try and throw themselves into the pit and
+so escape their torment.  You try and touch one, but your hand passes
+straight through it.  So much for trying to kill it."
+extra {"souls", "soul"}
+"You shiver in revulsion as you look at these souls.  You guess they are
+as ugly here as they were beautiful in life.  One of them begins to look
+at you with lust in its eye, and you back away nervously."
+flags {UNIT_FLAGS}
+movement SECT_CITY
+east to van_second;
+ALWAYS_LIGHT
+end
+	van_second
+title "Torment of the Vain: The Hall of Mirrors"
+descr
+"The rooms of this wall are lined with mirrors placed edge to edge.  You
+smirk as you notice your reflection cut in half by two adjacent mirrors,
+and sway from left to right a little bit to play with the illusion.  The
+souls in here must have had a really big ego problem because of their
+looks, because they're sure ugly now!  Most of them are hunchbacked and
+wrinkled, and covered with warts.  Nearly all of them have missing eyes
+or teeth.  You shiver in disgust and begin scoping out your exits.  The
+pit to the west is guarded by wolves, to keep the souls from jumping in,
+and there are ropes in reach for swinging across.  You can also continue
+to the east."
+extra {"mirrors", "mirror"}
+"Your reflection in these mirrors is a little different from other
+mirrors you've seen, and it also seems to be surrounded by a misty white
+aura.  You think that must mean something, but you can't put your finger
+on what."
+extra {"wolves", "wolf"}
+"Three wolves guard this immense pit to the west.  You take a swing at
+one out of sheer malice, and your weapon passes right through it.  You
+wonder if these souls know they are illusory."
+extra {"pit"}
+"A huge pit, far too big to jump across.  Someone, though, has hung some
+stout rope from the stone ceiling, so you can swing back and forth across
+it with ease."
+extra {"souls", "soul"}
+"You shiver in revulsion as you look at these souls.  You guess they are
+as ugly here as they were beautiful in life.  One of them begins to look
+at you with lust in its eye, and you back away nervously."
+flags {UNIT_FLAGS}
+movement SECT_CITY
+west to van_first;
+east to van_third;
+ALWAYS_LIGHT
+end
+	van_third
+title "Torment of the Vain: Surrounded by mirrors"
+descr
+"This room looks like one immense, cubical mirror.  Part of the mirror on
+the floor is cracked, and reflects your image back eightfold.  You nearly
+retch as you behold the souls who must suffer in this room.  Many of them
+are covered with oozing blisters, some have grossly deformed limbs, and
+others have greasy, stringy hair.  But not one of them is missing an
+eye.  Oh, no.  They have to suffer through eternity looking at their
+grotesquely maimed selves with perfect vision, and ever regret their
+self-obsession.  The path can take you either east or west."
+extra {"mirrors", "mirror"}
+"You gasp as you see your reflection in this mirror.  Instead of showing
+you in your set of armour, this mirror reflects you wearing a simple
+linen robe and surrounded by mist.  Suddenly you realize that you are
+staring at a reflection of your soul and not of your body."
+extra {"souls", "soul"}
+"You shiver in revulsion as you look at these souls.  You guess they are
+as ugly here as they were beautiful in life.  One of them begins to look
+at you with lust in its eye, and you back away nervously."
+flags {UNIT_FLAGS}
+movement SECT_CITY
+west to van_second descr "You see lots of mirrors in there, but
+not as many as in here.";
+east to van_fourth descr "You see that there aren't as many
+mirrors there as in here.  The souls there look different too, but you
+can't quite figure out why you think so.";
+ALWAYS_LIGHT
+end
+	van_fourth
+title "Torment of the Vain: The Room of Mirrors"
+descr
+"This room seems to have a single mirror running around its walls, but
+the floor and ceiling are plain stone.  You notice the souls look a
+little different in here, and suddenly you realize why.  The souls in
+here seem to have been merged with the souls of some rather hideous
+animals.  One has the head of an iguana, another the arms of a lobster.
+Others have elements of snake, camel, tarantula and warthog.  These souls
+are ones who knew the power of their beauty, and turned it to their
+financial or political advantage, often at the expense of others.  They
+had the bodies of humans and the hearts of beasts, and now they are
+damned to ever see their souls for the twisted things they are.  You can
+go west to an even more heavily mirrored room, or east to a dark stone
+cave."
+extra {"souls", "soul"}
+"You shiver in revulsion as you look at these souls.  You guess they are
+as ugly here as they were beautiful in life.  One of them begins to look
+at you with lust in its eye, and you back away nervously."
+extra {"mirrors", "mirror"}
+"Your reflection shows your face as a little different from what you're
+used to, and also shows you clad in a simple gown instead of your
+armour!  You jump a little as you realize this is a reflection of your
+soul, and you try and get a closer look to see if YOUR soul is as
+deformed as the ones here."
+flags {UNIT_FLAGS}
+movement SECT_CITY
+west to van_third;
+east to cave_room;
+ALWAYS_LIGHT
+end
+	cave_room
+title "Torment of the Worldly: The Dark Cave"
+descr
+"Your light can't make out very much in this cave.  It doesn't look like
+there's anything hiding in the shadows, but you are exceedingly nervous
+anyway.  You probably should sit down and rest here, but you don't like
+the thought of staying here long.  You can go west to a room filled with
+mirrors, or over a rickety wooden bridge to the south."
+extra {"rickety wooden bridge", "wooden bridge", "bridge", "wooden"}
+"The bridge looks like it might be able to hold your weight once.  There
+would be no going back if you went south on it."
+flags {UNIT_FL_NO_MOB, UNIT_FLAGS}
+movement SECT_CITY
+west to van_fourth;
+south to pride_first;
+end
+	pride_first
+title "Torment of the Proud: At the Near End of the Circle"
+descr
+"You blink and falter as you look around.  For a second, you thought
+you'd walked into a monastery!  All the tormented souls here are clad in
+robes of some shiny material.  However, they walk very slowly, and their
+breathing is labored, as if they were truly made of lead and just covered
+with silk.  They file eternally in a circle that seems to extend forever
+to the south.  You hear a blood-curdling scream from not far away, as if
+someone's back were breaking.  The wooden bridge to the north lies in
+splinters, but you can keep going to the south from here."
+flags {UNIT_FLAGS}
+movement SECT_CITY
+south to pride_second descr "The circle of souls seems to go on
+forever in that direction.";
+ALWAYS_LIGHT
+end
+	pride_second
+title "Torment of the Proud: In the Middle of the Circle"
+descr
+"This looks so much like a group of monks wandering around chanting the
+Vespers!  All the tormented souls here are clad in robes of some shiny
+material.  However, they walk very slowly, and their breathing is
+labored, as if they were truly made of lead and just covered with silk.
+They file eternally in a circle that seems to extend forever to the north
+and south, not daring to stop and rest.  You hear a blood-curdling scream
+from not far away, as if someone's back were breaking.  You turn to
+identify the source of the sound, and notice a soul chained down in the
+middle of the path, doomed to suffer eternally by being trod on by these
+heavily weighted souls.  You can follow these souls to either the north
+or south."
+flags {UNIT_FLAGS}
+movement SECT_CITY
+north to pride_first;
+south to pride_third;
+ALWAYS_LIGHT
+end
+	pride_third
+title "Torment of the Proud: In the Center of the Circle"
+descr
+"This area of Hades almost looks like a monastery!  No doubt another one
+of the Dark One's mockeries of those who serve the True deities.  All the
+tormented souls here are clad in robes of some shiny material.  However,
+they walk very slowly, and their breathing is labored, as if they were
+truly made of lead and just covered with silk.  They file eternally in a
+circle that seems to extend forever to the north and south, and are
+rudely stabbed by imps if they dare to rest.  You hear a blood-curdling
+scream from not far away, as if someone's back were breaking.  You look
+horrified as you notice a soul chained down in the middle of their path.
+Imps flank it on either side, making sure the souls do not show
+compassion for it and walk around.  You can follow this circle to either
+the north or south."
+flags {UNIT_FLAGS}
+movement SECT_CITY
+north to pride_second;
+south to pride_fourth;
+ALWAYS_LIGHT
+end
+	pride_fourth
+title "Torment of the Proud: At the Far End of the Circle"
+descr
+"You can't get over the fact that this place looks like a big monastery!
+All the tormented souls here are clad in robes of some shiny material.
+However, they walk very slowly, and their breathing is labored, as if
+they were truly made of lead and just covered with silk.  They file
+eternally in a circle that seems to extend forever to the north.  You
+hear a blood-curdling scream from not far away, as if someone's back were
+breaking.  You can go north, further inside this large circle, or south
+to what appears to be an intersection."
+flags {UNIT_FLAGS}
+movement SECT_CITY
+south to cross_room;
+north to pride_third;
+ALWAYS_LIGHT
+end
+%mobiles
+	king_epicures
+names {"king epicures", "epicures", "king"}
+title "Epicures"
+descr
+"King Epicures rules over the worldly souls from his opulent chambers."
+extra {}
+"This man was notorious for believing that living creatures had no souls,
+and when the body died, that was the end of it.  Since this way of
+thinking not only permitted but encouraged things like laziness,
+promiscuity, and gluttony, he developed quite a large following.  The
+Deities immediately repudiated him at his death, but apparently the Dark
+One saw fit to treat him well for all the souls that he perverted.  He
+roars at your intrusion and lunges to attack."
+M_ARCH_DEVIL(120, SEX_MALE)
+money 1 SILVER_PIECE, 3 COPPER_PIECE
+flags {UNIT_FL_NO_TELEPORT}
+end
+	worldly_demon
+names {"a demon", "demon"}
+title "a demon"
+descr
+"A demon walks around observing the torment of the banished souls."
+extra {}
+"Its eyes are a dull red, and it has two black leathery wings on its
+shoulders like a bat.  Its purpose is to make sure that the souls who
+were condemned here remain in constant torment, and that none among the
+living dare to give them any respite from their suffering through a
+temporary death."
+M_DEVIL_GREATER(105,SEX_NEUTRAL)
+flags {UNIT_FL_NO_TELEPORT}
+end
+
+	ath_woman
+names {"condemned woman", "woman"}
+title "the condemned woman"
+descr
+"The condemned woman sighs for her lack of faith."
+extra {}"This woman did not follow or try to please the True Deities
+while she was alive, and so was repudiated by them at her death.  Her
+punishment is simple and fitting: to ever see the glories of their Heaven
+and know she is denied there."
+M_HADES_SOUL(100,SEX_FEMALE)
+money 1  SILVER_PIECE,1 COPPER_PIECE
+flags {UNIT_FL_NO_TELEPORT}
+
+end
+	ath_man
+names {"condemned man", "man"}
+title "the condemned man"
+descr
+"The condemned man mourns his godless existence."
+extra {}
+"This man knew of the existence of the True Deities, but was unsure if
+they really were the true divine rulers.  Now he must suffer here and
+know that they indeed were, and that he could have been living among them
+forever had he but opened his heart."
+M_HADES_SOUL(100, SEX_MALE)
+money 1  SILVER_PIECE
+flags {UNIT_FL_NO_TELEPORT}
+
+end
+	ath_angel
+names {"an angel", "angel"}
+title "an angel"
+descr
+"An angel stands here looking balefully at the infidels."
+extra {}
+"This angel has the duty of being a constant reminder to these souls of
+all the pleasures that their lack of faith has cost them.  Occasionally
+it flies back to Heaven and returns with some delicious-looking food or
+rich treasure to tease them with."
+M_DEVIL_GREATER(105,SEX_NEUTRAL)
+money 1  SILVER_PIECE, 3 COPPER_PIECE
+flags {UNIT_FL_NO_TELEPORT}
+
+end
+	van_woman
+names {"tormented woman", "woman"}
+title "the tormented woman"
+descr
+"The tormented woman weeps at her grotesqueness."
+extra {}
+"When she was alive, this woman was among the most beautiful woman in the
+world.  But her heart was filled only with love of herself, and her soul
+slowly became the twisted, repulsive thing that you now see before you."
+M_HADES_SOUL(100, SEX_FEMALE)
+money 1 SILVER_PIECE, 6 COPPER_PIECE
+flags {UNIT_FL_NO_TELEPORT}
+
+end
+	van_man
+names {"tormented man", "man"}
+title "the tormented man"
+descr
+"The tormented man sighs for his deformity."
+extra {}
+"This man was well-known far and wide for his handsome face.  But behind
+that face lurked an abusive and unfaithful heart, and now he is damned to
+live in these rooms forever, seeing himself for the cruel monster that he
+was."
+M_HADES_SOUL(100, SEX_MALE)
+money 1 SILVER_PIECE, 6 COPPER_PIECE
+flags {UNIT_FL_NO_TELEPORT}
+
+end
+	van_imp
+names {"an imp", "imp"}
+title "an imp"
+descr
+"An imp pricks the souls to keep their eyes open."
+extra {}
+"This black-winged little devil is even uglier than any of the souls you
+see in this room, which is pretty darn ugly!  Its job is to make sure
+these souls don't just close their eyes to seek relief from their eternal
+torment.  It pokes a nearby soul and threatens to slice out her eyelids."
+M_DEVIL_GREATER(105, SEX_NEUTRAL)
+money 1  SILVER_PIECE, 6 COPPER_PIECE
+
+end
+	lust_woman
+names {"naked woman", "woman"}
+title "the naked woman"
+descr
+"The naked woman strains to reach her beloved."
+extra {}
+"She is chained in a spread-eagle style to the wall, and the look on her
+face tells you that it torments her just as much as it must her lover.
+She strains against her chains to reach him, but with no success."
+M_HADES_SOUL(100, SEX_FEMALE)
+money 1 SILVER_PIECE
+flags {UNIT_FL_NO_TELEPORT}
+
+end
+	lust_man
+names {"naked man", "man"}
+title "the naked man"
+descr
+"The naked man tries to reach and touch his lover."
+extra {}
+"He reaches out to try and touch the woman chained opposite him, but the
+manacles cut into his wrists and he falls back.  His lover and he spent
+too much time in their illicit embracing, and now they are damned to
+spend eternity in a state of unfulfilled desire."
+M_HADES_SOUL(100, SEX_MALE)
+money  2 SILVER_PIECE
+flags {UNIT_FL_NO_TELEPORT}
+
+end
+	avar_woman
+names {"chained woman", "woman"}
+title "the chained woman"
+descr
+"The chained woman writhes to try and scratch herself."
+extra {}
+"Her thirst for money made her its slave.  Now chains of solid gold bind
+her hands and feet and render her unable to escape the stings and bites
+of the insects which will torture her forever."
+M_HADES_SOUL(100, SEX_FEMALE)
+money 1 SILVER_PIECE
+flags {UNIT_FL_NO_TELEPORT}
+
+end
+	avar_man
+names {"chained man", "man"}
+title "the chained man"
+descr
+"The chained man twitches in obvious torture."
+extra {}
+"He was so obsessed with his wealth that he could never see beyond his
+counting-books to the needs of others.  Now he shall never be able to see
+beyond these insects which bite him, and shall ever know what it is to
+need relief."
+M_HADES_SOUL(100, SEX_MALE)
+money 1 SILVER_PIECE
+flags {UNIT_FL_NO_TELEPORT}
+
+end
+	avar_imp
+names {"a mosquito", "mosquito", "insect"}
+title "a mosquito"
+descr
+"A giant mosquito buzzes about your head."
+extra {}
+"Well over a thousand times bigger than any mosquito you have ever seen
+in your life, it coordinates the actions of the other insects here,
+telling them whether to bite the souls or just walk on them and make the
+existing bites flare up and itch again."
+M_DEVIL_GREATER(105, SEX_NEUTRAL)
+money 1 SILVER_PIECE, 3 COPPER_PIECE
+flags {UNIT_FL_NO_TELEPORT}
+
+end
+	glut_corp
+names {"corpulent soul", "soul", "corpulent"}
+title "a corpulent soul"
+descr
+"A corpulent soul cries a muffled protest as more food is shoveled down
+its throat."
+extra {}
+"In life, this soul took pleasure in nothing, save to eat and eat and
+eat.  Now it is condemned to do so forever.  It moans in agony and turns
+its head to retch and heave pitiably."
+M_HADES_SOUL(100, SEX_NEUTRAL)
+money 1 SILVER_PIECE,5 COPPER_PIECE
+flags {UNIT_FL_NO_TELEPORT}
+
+end
+	glut_gaunt
+names {"gaunt soul", "soul", "gaunt"}
+title "a gaunt soul"
+descr
+"A gaunt soul moans a plea for the tiniest amount of food or drink."
+extra {}
+"This soul enjoyed nothing but its culinary delights in life, and would
+often give only minuscule scraps to the people who worked for it just so
+it would have that much more food for itself.  Now it will ever suffer
+and know the fate that it thrust on those people."
+money 1 SILVER_PIECE,3 COPPER_PIECE
+M_HADES_SOUL(100, SEX_NEUTRAL)
+flags {UNIT_FL_NO_TELEPORT}
+
+end
+	glut_imp
+names {"an imp", "imp"}
+title "an imp"
+descr
+"An imp cackles gleefully as it shovels more food into the mouths of the
+corpulent souls."
+extra {}
+"This little guy really loves its job.  It cackles wickedly and shoves a
+muffin in the mouth of the corpulent soul - but not before first cruelly
+waving it in the face of the gaunt soul.  Occasionally it squats to
+defecate in the food, and pokes the gaunt souls to keep them from trying
+to eat anything."
+M_DEVIL_GREATER(105, SEX_NEUTRAL)
+money 1 SILVER_PIECE, 10 COPPER_PIECE
+flags {UNIT_FL_NO_TELEPORT}
+
+end
+	pride_woman
+names {"forsaken woman", "woman"}
+title "the forsaken woman"
+descr
+"The forsaken woman struggles with the load on her shoulders."
+extra {}
+"She was notorious in life for her haughty attitude and withering
+remarks.  Such conduct made it a very large burden for others to tolerate
+being around her.  Now she feels that burden forever in the form of her
+leaden gown."
+M_HADES_SOUL(100, SEX_FEMALE)
+money 1 SILVER_PIECE
+flags {UNIT_FL_NO_TELEPORT}
+
+end
+	pride_man
+names {"forsaken man", "man"}
+title "the forsaken man"
+descr
+"The forsaken man breathes heavily from carrying his burden."
+extra {}
+"This man often made vain boasts of courage which were usually lies.
+With these lies his robes of silk and lead were forged, and he is damned
+to bear this load forever, just as his friends had to bear the load of
+listening to him."
+M_HADES_SOUL(100, SEX_MALE)
+money 1 SILVER_PIECE
+flags {UNIT_FL_NO_TELEPORT}
+
+end
+	pride_imp
+names {"an imp", "imp"}
+title "an imp"
+descr
+"An imp guards the chained-down souls to make sure they get stepped on."
+extra {}
+"This little devil has the duty of guarding the souls who dared to boast
+that they were anywhere near equal to the deities in certain abilities.
+Those souls were chained down in the middle of the path that all the
+other souls must tread, and this imp has to make sure that nobody tries
+to be compassionate to such a blasphemer by walking around them.  Any
+soul who does gets beaten across the back with the staff end of its
+spear."
+M_DEVIL_GREATER(105, SEX_NEUTRAL)
+money 1 SILVER_PIECE
+flags {UNIT_FL_NO_TELEPORT}
+
+end
+	pact_chimaera
+names {"a chimaera", "chimaera"}
+title "a chimaera"
+descr
+"A chimaera guards the possessions of the Dark One."
+extra {}
+"This beast has three heads: one of a lion, one of a snake, and one of a
+goat.  They snap at you in turn, trying to keep you away from the door,
+and from the key around the lion head's neck.  Its scaly body completely
+repulses you, but there is no turning back.  You must destroy it."
+M_DEVIL_GREATER(104, SEX_NEUTRAL)
+money 1 SILVER_PIECE,2 COPPER_PIECE
+flags {UNIT_FL_NO_TELEPORT}
+
+end
+	pact_cali
+names {"caliander", "woman"}
+title "Caliander"
+descr
+"Caliander sits here, with her face in her hands."
+extra {}
+"You find her extremely beautiful, with her dark hair and eyes.  She
+wears a creamy white blouse and a green skirt with gold thread. She
+sighs, and you wonder what such a lovely young lady as her is doing here
+in the house of the damned."
+M_HUMAN_WARRIOR_NATURAL(106, SEX_FEMALE)
+exp 110
+MSET_WEAPON(15,15,15,11,18,11)
+NATURAL_DEF(WPN_CLAW, ARM_CLOTHES)
+position POSITION_SITTING
+money 1 SILVER_PIECE
+romflags {CHAR_DETECT_INVISIBLE}
+special SFUN_COMBAT_MAGIC_HEAL "cast 'heal'"
+flags {UNIT_FL_NO_TELEPORT}
+
+end
+	pact_xarius
+names {"xarius", "man"}
+title "Xarius"
+descr
+"Xarius sees you enter and draws his sword defensively."
+extra {}
+"He stands a full head taller than you, and his grey eyes glare
+mercilessly at you from under a thatch of pale brown hair.  He is strong
+despite his lean stature, and his sinewy arm grips tightly to his sword
+as he aims it at your head."
+M_HUMAN_WARRIOR_SWORD(108, SEX_MALE)
+MSET_WEAPON(15,15,14,15,15,15)
+MSET_SPELL(1,1,1,1,1,1,1,1,1,1,1)
+exp 110
+money 1 SILVER_PIECE
+romflags {CHAR_DETECT_INVISIBLE}
+flags {UNIT_FL_NO_TELEPORT}
+
+end
+	     pact_liandro
+names {"liandro", "man"}
+title "Liandro"
+descr
+"Liandro howls at your intrusion and lunges to destroy you."
+extra {}
+"This man is definitely one of the gently bred, not a warrior like
+Xarius.  A strange cloud of smoke encircles his head, so you can barely
+see his face.  But he is a bit pudgy, and you don't see many muscles on
+him at all.  Even if that IS a threatening look he's giving you, you
+think you could kill him.  Maybe...."
+M_HUMAN_WARRIOR_NATURAL(110, SEX_MALE)
+NATURAL_DEF(WPN_CLAW, ARM_CLOTHES)
+MSET_WEAPON(15,15,15,11,17,12)
+exp 110
+money 1 SILVER_PIECE,7 COPPER_PIECE
+romflags {CHAR_DETECT_INVISIBLE}
+flags {UNIT_FL_NO_TELEPORT}
+
+end
+	pact_shyneia
+names {"shyneia", "woman"}
+title "Shyneia"
+descr
+"Shyneia stands here, guarding the doors to the King's chambers."
+extra {}
+"She has unmistakably elven pointed ears, but other than that, she is
+every inch a lich.  It wouldn't surprise you one bit if she was
+an elf when alive, and then transformed into this hideous beast
+to better guard the King's Chambers."
+M_DEVIL_GREATER(112, SEX_FEMALE)
+money 2 SILVER_PIECE,5 COPPER_PIECE
+flags {UNIT_FL_NO_TELEPORT}
+
+end
+%objects
+	gold_key
+names {"emerald and gold key", "emerald", "key"}
+title "an emerald and gold key"
+descr
+"A gold key with an emerald in it has been dropped here."
+extra {}
+"The key is made of solid gold, and a single huge emerald is embedded in
+its head.  You are almost tempted to pry the gem loose and keep it to sell."
+extra {"$identify"}
+"You can barely make out an inscription on the back of the key: Key to
+the Chamber of Caliander."
+flags {UNIT_FL_NOSAVE}
+type ITEM_KEY
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+end
+	onyx_key
+names {"silver and onyx key", "onyx", "key"}
+title "a silver and onyx key"
+descr
+"A black and silver key lies on the floor here."
+extra {}
+"This key is made of shiny silver with some black onyx inlay.  The onyx
+seems to be in the shape of a longsword."
+extra {"$identify"}
+"In nearly worn-out carving, you can make out the words: Key to the
+Quarters of Xarius."
+flags {UNIT_FL_NOSAVE}
+type ITEM_KEY
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+end
+	cloud_key
+names {"a cloudy key", "cloudy", "cloud", "key"}
+title "a cloudy key"
+descr
+"A vapourous key seems to float slightly above the ground."
+extra {}
+"This key seems to be less of a key, and more of a cloud of smoke in that
+shape."
+extra {"$identify"}"Somehow, you discern that this key of smoke is meant
+to unlock the door to the Lair of Liandro."
+flags {UNIT_FL_NOSAVE}
+type ITEM_KEY
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+end
+	teardrop_key
+names {"a crystal teardrop", "crystal teardrop", "crystal", "teardrop",
+"key"}
+title "a crystal teardrop"
+descr
+"A tiny quartz crystal in the shape of a teardrop is lying on the ground."
+extra {}
+"As you turn the crystal in your hand, you realize that it is not crystal
+at all, but a real, solidified teardrop!  It has a few small wires welded
+to its narrow point, so it almost resembles a key."
+extra {"$identify"}
+"Suddenly you remember the carving on the dark wooden door leading to
+King Epicures's antechamber, and the shallow depression in the face of
+the weeping elf.  You think this teardrop may fit perfectly in that
+spot...."
+flags {UNIT_FL_NOSAVE}
+type ITEM_KEY
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+end
+diamond_key
+names {"a diamond key", "diamond", "key"}
+title "a diamond key"
+descr
+"A key that seems to be cut from a single diamond has been dropped here."
+extra {}
+"The rainbow fires sparkle in this diamond, and you think it would be of
+great value if you were able to cut it up into smaller pieces."
+extra {"$identify"}
+"In sparkling letters, the key's inscription reads: To the Chambers of
+the Dark King Epicures."
+flags {UNIT_FL_NOSAVE}
+type ITEM_KEY
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+end
+
+			gate8_key
+names {"gate key", "key"}
+title "the Hades 8th Gate key"
+descr
+"A key carved of blood red quartz has been dropped here."
+extra {}
+"If you stare at the key long enough, it looks as if blood is flowing through
+the veins of the quartz crystal."
+extra {"$identify"}
+"The head of the key depicts two blood serpents entwined about each other
+in the figure of an eight."
+type ITEM_KEY
+rent 1 PLATINUM_PIECE
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+end
+
+
+	pitch_fork2
+names {"flaming pitchfork", "pitchfork", "fork"}
+title "a flaming pitchfork"
+descr
+"A three-pronged spear with flames at its tips is lying on the ground."
+extra {}
+"The black wooden shaft is cool to the touch, but its three prongs are
+tipped with fire that seems to burn eternally without consuming the
+pitchfork itself."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_TRIDENT, 0,0)
+weight 15
+cost 1 GOLD_PIECE
+end
+	fiery_boots2
+names {"a pair of fiery boots", "fiery boots", "boots", "fiery"}
+title "a pair of fiery boots"
+descr
+"Someone has dropped a pair of fiery boots here."
+extra {}
+"These boots appear to be made of a leathery material, and somehow they
+remain eternally engulfed in flames without being burned up."
+ARMOUR_PLATE(0,+0)
+flags {UNIT_FL_MAGIC}
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+BRA_TRANSFER(-1)
+weight 10
+cost 100 COPPER_PIECE
+rent 50 IRON_PIECE
+special SFUN_RESTRICT_OBJ "Level = 30"
+end
+	white_raiment2
+names {"gleaming white raiment", "white", "raiment", "robe"}
+title "a gleaming white raiment"
+descr
+"A brilliant white robe that could only belong to an angel is lying in
+the dust."
+extra {}
+"The material of this raiment is unlike any you have ever seen.  It
+almost appears to be woven of starlight and moonbeams."
+extra {"$identify"}
+"The voice of an angel whispers in your ear: 'If thou art wise and
+knowing in the ways of the divine, this garment shall give thee the
+closeness to the gods that only the angels may know.  But beware!  To
+purify thy soul to such worthiness, thou must sacrifice strength and
+health of the body.'"
+extra {"$improved identify"}
+"If you are worthy of wearing this raiment, it shall raise your DIV by 1,
+your BRA by 1 and your CHA by 1, and also make you a little more skilled
+in the healing arts.  But it will lower your STR by 1, your CON by 1 and
+your DEX by 1."
+flags {UNIT_FL_MAGIC}
+ARMOUR_PLATE(+0,+0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+DIV_TRANSFER(+1)
+BRA_TRANSFER(+1)
+CHA_TRANSFER(+1)
+CON_TRANSFER(-2)
+weight 15
+cost 310 COPPER_PIECE
+rent 155 IRON_PIECE
+special SFUN_RESTRICT_OBJ "Div = 90
+Bra = 40"
+end
+	brim_ring
+names {"a brimstone ring", "ring", "brimstone", "stone"}
+title "a brimstone ring"
+descr
+"A ring with a fiery red stone in it is lying on the ground at your feet."
+extra {}
+"The metal of this ring cannot be determined.  The stone, however, gleams
+a dull red and smells a bit of sulfur.  It must be brimstone."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FINGER}
+ARMOUR_PLATE(+0,+0)
+STR_TRANSFER(+1)
+weight 5
+cost 150 COPPER_PIECE
+rent 75 IRON_PIECE
+special SFUN_RESTRICT_OBJ "Level = 30"
+end
+	red_hot2
+names {"a red-hot short sword", "red-hot short sword", "short sword",
+"red-hot", "short", "sword"}
+title "a red-hot short sword"
+descr
+"A short sword with a glowing red blade is rusting here."
+extra {}
+"This sword has a cold marble hilt, but the short steel blade gleams as
+if it had just been pulled from the forge.  Just looking at it makes you
+feel clumsy."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_SHORT_SWORD, 0, 0)
+weight 20
+cost 9 COPPER_PIECE
+end
+	iron_man2
+names {"an iron manacle", "iron", "manacle", "bracelet"}
+title "an iron manacle"
+descr
+"A heavy iron bracelet rests on the ground near the wall."
+extra {}
+"This iron circlet still has a few links of chain attached to it.  It is
+rather thick, and rests heavily in your hands."
+extra {"$identify"}
+"This bracelet will increase your strength, but its heaviness will make
+ you quite a bit clumsier."
+extra {"$improved identify"}"The iron manacle adds 3 to STR and 1 to
+CON, but will reduce your DEX by 3.  Only levels 35 and higher may wear
+this object."
+type ITEM_TREASURE
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_WRIST}
+STR_TRANSFER(+2)
+DEX_TRANSFER(-1)
+weight 10
+cost 200 COPPER_PIECE
+rent 100 IRON_PIECE
+special SFUN_RESTRICT_OBJ "Level = 35"
+end
+	arm_chains2
+names {"some solid gold chains", "solid gold chains", "gold chains",
+"chains", "gold"}
+title "some solid gold chains"
+descr
+"A length of chain with links of pure gold lies in the dust."
+extra {}
+"They are rather heavy, but very beautiful and probably very valuable."
+flags {UNIT_FL_MAGIC}
+ARMOUR_PLATE(+11,+0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ARMS}
+CHA_TRANSFER(+1)
+weight 30
+cost 200 COPPER_PIECE
+rent 100 IRON_PIECE
+special SFUN_RESTRICT_OBJ "Level = 36"
+end
+	leg_chains2
+names {"a solid gold chain", "solid gold chain", "gold chain", "chain",
+"gold"}
+title "a solid gold chain"
+descr
+"A chain with links of solid gold gathers dust at your feet."
+extra {}
+"They are very heavy, but quite beautiful and probably of great value."
+extra {"$identify"}
+"These chains will boost your magical abilities, but their heaviness will
+reduce your strength."
+extra {"$improved identify"}
+"These chains will increase both MAG and DIV by 1, but decrease your STR
+by 2.  They are limited to levels 35 and higher."
+flags {UNIT_FL_MAGIC}
+ARMOUR_PLATE(0,0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+MAG_TRANSFER(+1)
+DIV_TRANSFER(+1)
+STR_TRANSFER(-1)
+weight 30
+cost 200 COPPER_PIECE
+rent 100 IRON_PIECE
+special SFUN_RESTRICT_OBJ "Level = 35"
+end
+	white_bib2
+names {"a white cloth bib", "white cloth bib", "white", "cloth", "bib"}
+title "a white cloth bib"
+descr
+"A small piece of white cloth has been dropped here."
+extra {}
+"It resembles the bib that your mother would tie around your neck at
+suppertime when you were young, so no food would fall and stain your
+clothes."
+extra {"$identify"}
+"This bib shall help keep you and all your party amply fed."
+extra {"$improved identify"}
+"This bib, when worn, gives you a better understanding of the SUSTAIN
+spell."
+flags {UNIT_FL_MAGIC}
+ARMOUR_PLATE(+0,+0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_NECK}
+SPELL_TRANSFER(SPL_SUSTAIN, 10)
+weight 10
+cost 160 COPPER_PIECE
+rent 80 IRON_PIECE
+end
+	cloth_apron2
+names {"a white cloth apron", "white cloth apron", "white", "cloth",
+"apron"}
+title "a white cloth apron"
+descr
+"An apron of white cotton cloth has been tossed into a corner."
+extra {}
+"The apron looks threadbare in spots, and the strings have many knots in
+them."
+extra {"$identify"}
+"This apron will reduce your constitution and your strength drastically."
+extra {"$improved identify"}
+"This apron will reduce CON by 5 and STR by 5."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_NECK}
+flags {UNIT_FL_MAGIC}
+ARMOUR_CLOTHES(0,0)
+CON_TRANSFER(-5)
+STR_TRANSFER(-5)
+weight 5
+cost 2 GOLD_PIECE
+end
+	fiery_dagger2
+names {"a fiery dagger", "fiery dagger", "dagger", "fiery"}
+title "a fiery dagger"
+descr
+"A dagger with a flame for the blade smolders at your feet."
+extra {}
+"The handle is rowan wood, enchanted somehow so the fiery blade does not
+burn it.  You recognize the flame as the fire of Hell, and know this
+blade is not for the pure of heart."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_DAGGER,0, 0)
+weight 10
+cost 2 GOLD_PIECE
+dilcopy ali_restrict@function (-1000,-350,0,25,"");
+end
+	lead_gown2
+names {"a silvery silk gown", "silvery gown", "silk gown", "silk", "gown"}
+title "a silvery silk gown"
+descr
+"A gown of grey silk lies piled at your feet."
+extra {}
+"Ugh, this thing is HEAVY!  It must have lead or some other dense metal
+also woven in with the silk to make it such a burden."
+extra {"$identify"}
+"This gown shall give you greater abilities in magic, but your health
+will suffer for it."
+extra {"$improved identify"}
+"When worn, this gown will raise MAG by 1, CHA by 1 and BRA by 1, but
+will lower your CON by 1.  Only powerful mages may use this raiment."
+flags {UNIT_FL_MAGIC}
+ARMOUR_PLATE(+0,+0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+MAG_TRANSFER(+1)
+CHA_TRANSFER(+1)
+BRA_TRANSFER(+1)
+CON_TRANSFER(-1)
+weight 50
+cost 200 COPPER_PIECE
+rent 100 IRON_PIECE
+special SFUN_RESTRICT_OBJ "Mag = 85"
+end
+	flaming_spear2
+names {"a flaming spear", "flaming", "spear"}
+title "a flaming spear"
+descr
+"A spear with a live coal at the tip leans against the wall."
+extra {}
+"The handle of the spear is plain ash wood, and you're surprised that the
+flaming tip does not burn it up.  It must be magic."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_SPEAR, +0, +0)
+weight 20
+cost 2 GOLD_PIECE
+end
+	broc_skirt2
+names {"a green and gold brocade skirt", "green and gold skirt", "skirt",
+"green", "gold", "brocade"}
+title "a green and gold brocade skirt"
+descr
+"A pile of green cloth with golden threads in it lies in the dust here."
+extra {}
+"Made of soft emerald-hued silk, it has thin gold embroidery on it in a
+double-diamond pattern.  It shimmers in the light."
+ARMOUR_PLATE(0,0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+weight 10
+cost 260 COPPER_PIECE
+rent 130 IRON_PIECE
+special SFUN_RESTRICT_OBJ "con = 55"
+end
+	onyx_long2
+names {"an onyx-hilted silver longsword", "onyx silver longsword",
+"onyx", "silver", "longsword", "long"}
+title "an onyx-hilted silver longsword"
+descr
+"A silver longsword with a night-black hilt has been carelessly left here."
+extra {}
+"The silver is etched with a design that looks like a pack of wolves
+running after some unseen prey."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_LONG_SWORD, +5, +5)
+WEAPON_SLAYER(RACE_DARK_ELF)
+weight 30
+cost 100 COPPER_PIECE
+rent 50 IRON_PIECE
+special SFUN_RESTRICT_OBJ "str = 60"
+end
+	smoky_helmet2
+names {"a helmet of smoke", "helmet", "smoke", "cloud"}
+title "a helmet of smoke"
+descr
+"An odd-shaped cloud of smoke floats in the air here."
+extra {}
+"You can just barely tell that it is a helmet, and its vapourous nature
+makes it unclear just where to stick your head."
+extra {"$identify"}
+"If you're smart enough to figure out how to put this thing on, it will
+protect your head."
+extra {"$improved identify"}
+"This helmet requires a little bit of BRAIN power."
+flags {UNIT_FL_MAGIC}
+ARMOUR_PLATE(3,3)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+weight 10
+cost 160 COPPER_PIECE
+rent 80 IRON_PIECE
+special SFUN_RESTRICT_OBJ "Bra = 65"
+end
+	tear_breast2
+names {"a tear-stained breast plate", "tear-stained", "breast plate",
+"breastplate", "breast", "plate"}
+title "a tear-stained breast plate"
+descr
+"A slightly rusted breast plate lies on the ground."
+extra {}"You notice the rust marks are thin vertical lines, and guess
+that they were caused by the tears of whomever wore it prior to you."
+extra {"$identify"}
+"In addition to protection as armour, this breast plate will strengthen
+your internal resolve, if you are in good health."
+extra {"$improved identify"}
+"This breast plate is restricted to those with a CON of over 65."
+flags {UNIT_FL_MAGIC}
+ARMOUR_PLATE(0,0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+CON_TRANSFER(+4)
+weight 20
+cost 200 COPPER_PIECE
+rent 100 IRON_PIECE
+special SFUN_RESTRICT_OBJ "con = 50"
+end
+	heart_locket2
+names {"a gold heart-shaped locket", "gold", "heart-shaped", "locket",
+"pendant", "necklace"}
+title "a gold heart-shaped locket"
+descr
+"You see a thin gold chain with a heart-shaped bauble on it lying in the
+dust."
+extra {}
+"This locket has a tiny diamond in its face.  You open it up and see two
+pictures inside: one of a middle-aged human male, and one of a young
+elven woman."
+flags {UNIT_FL_MAGIC}
+ARMOUR_CLOTHES(0,0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_NECK}
+STR_TRANSFER(-2)
+weight 5
+cost 320 COPPER_PIECE
+rent 160 IRON_PIECE
+end
+	obsid_mallet2
+names {"an obsidian mallet", "obsidian", "mallet", "hammer", "black"}
+title "an obsidian mallet"
+descr "A mallet of heavy black obsidian lies near your feet."
+extra {}
+"This mallet has the word 'Soulcrusher' engraved in its handle.  Its
+slightly oversized head makes it a bit unwieldy, but you think you could
+get the hang of it if you practiced."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_WAR_HAMMER, +2, +2)
+WEAPON_SLAYER(RACE_HUMAN)
+weight 35
+cost 100 COPPER_PIECE
+rent 50 IRON_PIECE
+special SFUN_RESTRICT_OBJ "dex = 80"
+end
+	gold_belt2
+names {"a gold belt", "gold", "belt"}
+title "a gold belt"
+descr "A belt that appears to be made of gold has been tossed into the
+corner."
+extra {}
+"This belt is woven like cloth, but you could swear the threads that
+comprise it are pure gold."
+flags {UNIT_FL_MAGIC}
+ARMOUR_PLATE(0,0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_WAIST}
+weight 12
+cost 200 COPPER_PIECE
+rent 100 IRON_PIECE
+end
+	red_shirt2
+names {"a red and gold shirt", "red", "gold", "shirt"}
+title "a red and gold shirt"
+descr "A richly embroidered red shirt gathers dust here."
+extra {}
+"The shirt is made of red linen, and embroidered with gold thread on the
+back in a large fleur-de-lis."
+extra {"$identify"}
+"This shirt will offer some protection in battle, but very little."
+extra {"$improved identify"}
+"This shirt is pretty much worthless."
+flags {UNIT_FL_MAGIC}
+ARMOUR_CLOTHES(0,0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+weight 7
+cost 1 GOLD_PIECE
+end
+	regal_cape2
+names {"a regal velvet cape", "regal", "velvet", "cape", "red"}
+title "a regal velvet cape"
+descr "A pile of heavy red velvet lies on the ground here."
+extra {}
+"This cape is made of red velvet and trimmed with white fur."
+flags {UNIT_FL_MAGIC}
+ARMOUR_PLATE(0,+0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+weight 15
+cost 200 COPPER_PIECE
+rent 100 IRON_PIECE
+special SFUN_RESTRICT_OBJ "level = 42"
+end
+
+%reset
+door pact_first NORTH {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_PICKPROOF}
+door pact_second SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door pact_second NORTH {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_PICKPROOF}
+door pact_third SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door pact_third NORTH {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_PICKPROOF}
+door pact_fourth SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door pact_fourth NORTH {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_PICKPROOF}
+door pact_fifth SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door pact_fifth NORTH {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_PICKPROOF}
+door kings_room SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door kings_room NORTH {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door center_room DOWN {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_PICKPROOF}
+load worldly_demon into mob_room max 15
+{
+	equip pitch_fork2 position WEAR_WIELD
+}
+load worldly_demon into mob_room max 15
+{
+	equip pitch_fork2 position WEAR_WIELD
+}
+load worldly_demon into mob_room max 15
+{
+	equip pitch_fork2 position WEAR_WIELD
+}
+load worldly_demon into mob_room max 15
+{
+	equip pitch_fork2 position WEAR_WIELD
+}
+load worldly_demon into mob_room max 15
+{
+	equip pitch_fork2 position WEAR_WIELD
+}
+load worldly_demon into mob_room max 15
+{
+	equip pitch_fork2 position WEAR_WIELD
+}
+load worldly_demon into mob_room max 15
+{
+	equip pitch_fork2 position WEAR_WIELD
+}
+load worldly_demon into mob_room max 15
+{
+	equip pitch_fork2 position WEAR_WIELD
+}
+load worldly_demon into mob_room max 15
+{
+	equip pitch_fork2 position WEAR_WIELD
+}
+load worldly_demon into mob_room max 15
+{
+	equip pitch_fork2 position WEAR_WIELD
+}
+load worldly_demon into mob_room max 15
+{
+	equip pitch_fork2 position WEAR_WIELD
+}
+load worldly_demon into mob_room max 15
+{
+	equip pitch_fork2 position WEAR_WIELD
+}
+load worldly_demon into mob_room max 15
+{
+	equip pitch_fork2 position WEAR_WIELD
+}
+load worldly_demon into mob_room max 15
+{
+	equip pitch_fork2 position WEAR_WIELD
+}
+load worldly_demon into mob_room max 15
+{
+	equip pitch_fork2 position WEAR_WIELD
+}
+load avar_imp into avar_fourth max 2
+load avar_imp into avar_first max 2
+load ath_angel into ath_first max 2
+{
+	equip white_raiment2 position WEAR_ABOUT max 20
+}
+load ath_angel into ath_fourth max 2
+{
+	equip white_raiment2 position WEAR_ABOUT max 20
+}
+load van_imp into van_fourth max 2
+{
+	equip red_hot2 position WEAR_WIELD
+}
+load van_imp into van_first max 2
+{
+	equip red_hot2 position WEAR_WIELD
+}
+load glut_imp into glut_fourth max 2
+{
+	equip fiery_dagger2 position WEAR_WIELD
+}
+load glut_imp into glut_first max 2
+{
+	equip fiery_dagger2 position WEAR_WIELD
+}
+load pride_imp into pride_first max 2
+{
+	equip flaming_spear2 position WEAR_WIELD
+}
+load pride_imp into pride_fourth max 2
+{
+	equip flaming_spear2 position WEAR_WIELD
+}
+load pact_chimaera into pact_first max 1
+{
+	load gold_key max 1
+}
+load pact_cali into pact_second max 1
+{
+	equip broc_skirt2 position WEAR_LEGS max 20
+	load onyx_key max 1
+}
+load pact_xarius into pact_third max 1
+{
+	equip onyx_long2 position WEAR_WIELD max 35
+	load cloud_key max 1
+}
+load pact_liandro into pact_fourth max 1
+{
+	equip smoky_helmet2 position WEAR_HEAD max 20
+	load teardrop_key max 1
+}
+load pact_shyneia into pact_fifth max 1
+{
+	equip tear_breast2 position WEAR_BODY max 25
+	equip heart_locket2 position WEAR_NECK_1 max 35
+	equip obsid_mallet2 position WEAR_WIELD max 35
+	load diamond_key max 1
+}
+load king_epicures into kings_room max 1
+{
+	equip red_shirt2 position WEAR_BODY
+	equip regal_cape2 position WEAR_ABOUT max 20
+	equip gold_belt2 position WEAR_WAIST max 20
+	load gate8_key max 1
+}
+load ath_woman into ath_second max 2
+{
+	equip fiery_boots2 position WEAR_FEET max 20
+}
+load ath_man into ath_first max 2
+{
+	equip fiery_boots2 position WEAR_FEET max 20
+}
+load ath_woman into ath_fourth max 2
+{
+	equip fiery_boots2 position WEAR_FEET max 20
+}
+load ath_man into ath_third max 2
+{
+	equip fiery_boots2 position WEAR_FEET max 20
+}
+load van_woman into van_second max 2
+load van_woman into van_fourth max 2
+load van_man into van_first max 2
+load van_man into van_third max 2
+load lust_woman into lust_second max 3
+{
+	equip iron_man2 position WEAR_WRIST_R max 30
+}
+load lust_man into lust_second max 3
+{
+	equip iron_man2 position WEAR_WRIST_R max 30
+}
+load lust_man into lust_third max 3
+{
+	equip iron_man2 position WEAR_WRIST_R max 30
+}
+load lust_woman into lust_third max 3
+{
+	equip iron_man2 position WEAR_WRIST_R max 30
+}
+load lust_man into lust_fourth max 3
+{
+	equip iron_man2 position WEAR_WRIST_R max 30
+}
+load lust_woman into lust_fourth max 3
+{
+	equip iron_man2 position WEAR_WRIST_R max 30
+}
+load avar_woman into avar_second max 2
+{
+	equip arm_chains2 position WEAR_ARMS max 20
+}
+load avar_man into avar_third max 2
+{
+	equip arm_chains2 position WEAR_ARMS max 20
+}
+load avar_woman into avar_fourth max 2
+{
+	equip leg_chains2 position WEAR_LEGS max 20
+}
+load avar_man into avar_first max 2
+{
+	equip leg_chains2 position WEAR_LEGS max 20
+}
+load glut_corp into glut_third max 2
+{
+	equip white_bib2 position WEAR_NECK_1 max 10
+}
+load glut_corp into glut_first max 2
+{
+	equip white_bib2 position WEAR_NECK_1 max 10
+}
+load glut_gaunt into glut_second max 2
+load glut_gaunt into glut_fourth max 2
+load pride_woman into pride_second max 2
+{
+	equip lead_gown2 position WEAR_BODY max 20
+}
+load pride_woman into pride_fourth max 2
+{
+	equip lead_gown2 position WEAR_BODY max 20
+}
+load pride_man into pride_first max 2
+{
+	equip lead_gown2 position WEAR_BODY max 20
+}
+load pride_man into pride_third max 2
+{
+	equip lead_gown2 position WEAR_BODY max 20
+}
+%end
+
+

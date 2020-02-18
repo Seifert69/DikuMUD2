@@ -1,0 +1,824 @@
+/*
+filename    games
+password    xxx
+changedby   Papi
+EmailAdd    Valhalla Administrator <mud@valhalla-usa.com>
+request     compile
+version     3
+END HEADER*/
+
+#include <composed.h>
+
+
+%zone                      games
+
+lifespan 20
+reset RESET_ANYHOW
+creators {"papi"}
+
+notes
+"This zone may only be edited by Papi."
+
+%dil
+
+dilbegin do_distribute();
+var
+   i    : integer;
+   exdp : extraptr;
+   s    : string;
+code
+{
+   exdp := "$parti" in self.extra;
+
+   if (length(exdp.names) < 3)
+     return;
+
+   i := 1; /* Skip [0] which is $parti */
+
+   while (i < length(exdp.names))
+   {
+      s := "= "+exdp.names.[i]+" "+
+                exdp.names.[1+(i % (length(exdp.names)-1))];
+      sendtoalldil(s, "rod_target@games");
+      i := i + 1;
+   }
+
+   return;
+}
+dilend
+
+
+dilbegin do_collect(i : integer);
+code
+{
+   /* Collect all pings... */
+   subextra(self.extra, "$parti");
+   addextra(self.extra, {"$parti"}, "");
+   if (i)
+     sendtoalldil("?", "rod_comm@games");
+   else
+     sendtoalldil("i", "rod_comm@games");
+   return;
+}
+dilend
+
+
+%objects
+
+                               tombola
+
+names {"tombola"}
+title "0"
+type ITEM_OTHER
+minv 255
+extra {"$competitors"} ""
+end
+
+                               ticket
+
+names {"ticket"}
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+type ITEM_TREASURE
+end
+
+                           hise_obj
+
+names {"banner", "hide and seek banner"}
+title "a hide and seek banner"
+descr "A hide and seek banner has carelessly been left here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+extra {}
+"The banner is intended for the game of hide and seek. You notice that the
+instructions are written on the inner side of the banner."
+
+extra {"instructions", "instruction", "letters", "letter", "inner side",
+       "inner"}
+"Do not remove this banner at any time before or during the game, or you
+will be expelled. Quitting or dieing will likewise expell you from the
+hide and seek competition.&l
+
+  To catch an opponent, write: &c+wTAG&cw
+
+Using any of the following commands will dispel you from the game:
+
+  Mortals                                 Gods
+  -------                                 ----
+  where                                   at
+  cast gate                               goto
+  cast minor gate                         wstat
+  cast controlled teleport                transfer
+  cast transport                          force
+  cast undead door                        set / setskill
+  cast random teleport
+
+When the competition commences, you will be teleported to a random location
+and assigned a target. Find it, and write 'tag' when at the same location.
+Notice, that writing 'tag' when the target is not present, will give you
+a penalty of a 10 second pause.&n&n
+&c+yIf you want to quit the competition, simply remove the banner,
+this will send you right back to Kylee! So if you are completely lost or
+in a dangerous situation, remove it fast!&cw"
+
+extra {"$target"} ""
+
+dilbegin rod_rules();
+var
+   owner : unitptr;
+   exdp  : extraptr;
+code
+{
+   on_activation(self.equip != WEAR_CHEST, violation);
+   on_activation(self.outside.minv != 0, violation);
+
+   owner := self.outside;
+   secure(owner, violation);
+
+   addextra(self.extra, {"$owner"}, owner.name);
+
+   :waitloop:
+   wait(SFB_MSG | SFB_DONE | SFB_TICK, TRUE);
+
+   if (command(CMD_GOTO))
+     goto violation;
+   if (command(CMD_TRANSFER))
+     goto violation;
+   if (command(CMD_FORCE))
+     goto violation;
+   if (command(CMD_SET))
+     goto violation;
+   if (command(CMD_SETSKILL))
+     goto violation;
+   if (command(CMD_AT))
+     goto violation;
+   if (command(CMD_WHERE))
+     goto violation;
+   if (command(CMD_CAST))
+   {
+      if (power == SPL_RANDOM_TELEPORT)
+         goto violation;
+      if (power == SPL_CONTROL_TELEPORT)
+         goto violation;
+      if (power == SPL_TRANSPORT)
+         goto violation;
+      if (power == SPL_UNDEAD_DOOR)
+         goto violation;
+      if (power == SPL_MINOR_GATE)
+         goto violation;
+      if (power == SPL_GATE)
+         goto violation;
+   }
+
+   goto waitloop;
+
+   :violation:
+   act("You have broken the rules and are expelled from the competition.",
+       A_ALWAYS, owner, null, null, TO_CHAR);
+   owner := findsymbolic("game_master@games");
+   link(self, owner.outside);
+   exdp := "$owner" in self.extra;
+   sendto("# "+exdp.descr, findsymbolic("game_master@games"));
+   destroy(self);
+}
+dilend
+
+
+
+dilbegin rod_target();
+var
+   tgt  : string;
+   s    : string;
+   exdp : extraptr;
+code
+{
+   wait(SFB_MSG, argument == "start");
+
+   :loop:
+   wait(SFB_MSG, getword(argument) == "=");
+
+   if (getword(argument) == self.outside.name)
+   {
+      s := getword(argument);
+      if (s != tgt)
+      {
+         tgt := s;
+         act("You have been assigned a new target: "+tgt,
+             A_ALWAYS, self.outside, null, null, TO_CHAR);
+         exdp := "$target" in self.extra;
+         exdp.descr := tgt;
+      }
+   }
+   goto loop;
+}
+dilend
+
+
+dilbegin rod_use();
+var
+   u     : unitptr;
+   tgt   : string;
+   s     : string;
+   exdp  : extraptr;
+code
+{
+   heartbeat := PULSE_SEC * 10;
+
+   wait(SFB_MSG, argument == "start");
+
+   act("$1n disappears in a cloud of pink smoke.",
+       A_ALWAYS, self.outside, null, null, TO_ROOM);
+
+   act("The game has begun! You have been teleported to a random "+
+        "location.", A_ALWAYS, self.outside, null, null, TO_CHAR);
+
+   :teleloop:
+   u := findrndunit(self.outside, FIND_UNIT_WORLD, UNIT_ST_ROOM);
+   if (u.flags & UNIT_FL_NO_TELEPORT)
+      goto teleloop;
+   link(self.outside, u);
+
+   act("$1n arrives in a cloud of pink smoke.",
+       A_ALWAYS, self.outside, null, null, TO_ROOM);
+
+   :loop1:
+   wait(SFB_CMD, command("tag"));
+   block;
+
+   exdp := "$target" in self.extra;
+   s := exdp.descr;
+
+   u := findunit(self.outside, s, FIND_UNIT_SURRO, null);
+   if (u and (u.type == UNIT_ST_PC))
+   {
+      u := equipment(u, WEAR_CHEST);
+      if (u)
+      {
+         sendto("v", u);
+         goto loop1;
+      }
+   }
+
+   act("$2t is not here to tag, you can not tag for the next 10 seconds.",
+       A_ALWAYS, self.outside, exdp.descr, null, TO_CHAR);
+
+   :loop2:
+   wait(SFB_CMD | SFB_TICK, TRUE);
+
+   if (command(CMD_AUTO_TICK))
+   {
+      exdp := "$target" in self.extra;
+      act("You can now tag $2t again!",
+	  A_ALWAYS, self.outside, exdp.descr, null, TO_CHAR);
+      goto loop1;
+   }
+   else if (command("tag"))
+   {
+      act("You can not tag now because of the tag penalty!",
+	  A_ALWAYS, self.outside, null, null, TO_CHAR);
+      block;
+   }
+   goto loop2;
+}
+dilend
+
+
+dilbegin rod_comm();
+var
+   u     : unitptr;
+   s     : string;
+code
+{
+   :init:
+   wait(SFB_MSG, TRUE);
+
+   s := getword(argument);
+
+   if (self.outside.type != UNIT_ST_PC)
+     destroy(self);
+
+   if (s == "start")
+     goto loop;
+   else if (s == "i")
+     sendto("! "+self.outside.name, activator);
+   else if (s == "m")
+     act(argument, A_ALWAYS, self.outside, null, null, TO_CHAR);
+   goto init;
+
+   :loop:
+   wait(SFB_MSG, TRUE);
+
+   s := getword(argument);
+
+   if (s == "?")
+   {
+      sendto("! "+self.outside.name, activator);
+   }
+   else if (s == "m")
+   {
+      act(argument, A_ALWAYS, self.outside, null, null, TO_CHAR);
+   }
+   else if (s == "w")
+   {
+      u := findsymbolic("game_master@games");
+      link(self.outside, u.outside);
+      destroy(self);
+   }
+   else if (s == "v")
+   {
+      act("$2n has caught you by surprise, you are no longer in the game!",
+          A_ALWAYS, self.outside, activator.outside, null, TO_CHAR);
+      u := findsymbolic("game_master@games");
+      sendto("# "+self.outside.name, u);
+      u := findsymbolic("game_master@games");
+      link(self.outside, u.outside);
+      destroy(self);
+   }
+   goto loop;
+}
+dilend
+
+end
+
+%mobiles
+
+                             lottery_master
+
+names {"Lois"}
+title "Lois"
+descr
+"Lois is standing here."
+extra {}
+"She is a charming elderly grey haired lady, she apparently wants to sell
+you a lottery ticket."
+
+M_SHOP_KEEPER(3, SEX_FEMALE, RACE_HUMAN)
+money 30 IRON_PIECE
+
+special SFUN_WHISTLE
+
+dilbegin lottery_maint();
+var
+   u : unitptr;
+   winner : string;
+   i : integer;
+   won : integer;
+   exdp : extraptr;
+code
+{
+   if (self.loadcount > 1)
+   {
+      exec("say I am a clone, I must die!", self);
+      destroy(self);
+   }
+   u := restore("games", "tombola");
+
+   if (u == null)
+     addextra(self.extra, {"$nums"}, "0");
+   else
+     addextra(self.extra, {"$nums"}, u.title);
+
+   destroy(u);
+
+   :loop:
+   wait(SFB_DONE, command("poke"));
+   if (target != self)
+     goto loop;
+
+   if (activator.level < ULTIMATE_LEVEL)
+     goto loop;
+
+   exec("say If you really want me to end this weeks lottery, nod now.", self);
+
+   wait(SFB_DONE, TRUE);
+   if (command(CMD_NOD) and (target == self))
+   {
+      u := restore("games", "tombola");
+      if ((u == null) or (atoi(u.title) < 1))
+      {
+         destroy(u);
+         exec("say There has been sold no tickets this week.",
+               self);
+         goto loop;
+      }
+
+      i := rnd(1, atoi(u.title));
+      won := (4*atoi(u.title)) / 5;
+      if (won < 7)
+        won := 7;
+
+      exdp := "$competitors" in u.extra;
+      winner := exdp.names.[i];
+      act("There has been sold "+u.title+" tickets this week, "+
+           "the winner is ticket #"+itoa(i)+" bought by "+winner+
+           ". The amount won is $$"+itoa(won),
+           A_ALWAYS, activator, null, null, TO_CHAR);
+      destroy(u);
+      u := load("games/tombola");
+      store(u);
+      destroy(u);
+
+      exdp := "$nums" in self.extra;
+      exdp.descr := "0";
+   }
+   goto loop;
+}
+dilend
+
+
+dilbegin lottery_list();
+code
+{
+   on_activation(self.position <= POSITION_SLEEPING, skip);
+
+   :loop:
+   wait(SFB_CMD, command(CMD_LIST));
+   if (activator.position <= POSITION_SLEEPING)
+     goto loop;
+
+   act("You can buy:&n&s3A lottery ticket for $$1.",
+       A_ALWAYS, activator, null, null, TO_CHAR);
+   block;
+   goto loop;
+}
+dilend
+
+
+dilbegin lottery_sell();
+code
+{
+   on_activation(self.position <= POSITION_SLEEPING, skip);
+
+   :loop:
+   wait(SFB_CMD, command(CMD_SELL));
+   if (activator.position <= POSITION_SLEEPING)
+     goto loop;
+
+   exec("say I dont buy anything, "+activator.name+".", self);
+   block;
+   goto loop;
+}
+dilend
+
+
+dilbegin lottery_buy();
+var
+   pc : unitptr;
+   u : unitptr;
+   i : integer;
+   exdp : extraptr;
+
+code
+{
+   heartbeat := PULSE_SEC * 3;
+   on_activation(self.position <= POSITION_SLEEPING, skip);
+
+   :loop:
+   unsecure(pc);
+   wait(SFB_CMD, command(CMD_BUY));
+   if (activator.position <= POSITION_SLEEPING)
+     goto loop;
+   if (activator.type != UNIT_ST_PC)
+     goto loop;
+
+   pc := activator;
+   secure(pc, loop);
+
+   block;
+
+   if (argument != "lottery ticket")
+   {
+      exec("say If you want to buy a lottery ticket, "+pc.name+
+	   ", you should say so.", self);
+      goto loop;
+   }
+
+   if (pc.acc_balance < 100)
+   {
+      exec("say I am sorry, "+pc.name+", but you do not have "+
+           "sufficient cash.", self);
+      goto loop;
+   }
+
+   u := restore("games", "tombola");
+   if ((u == null) or (atoi(u.title) < 1))
+   {
+      if (u == null)
+        u := load("tombola@games");
+      if (atoi(u.title) < 1)
+         exec("say You are the first player to get a ticket this week, "+
+             pc.name, self);
+   }
+
+   i := atoi(u.title) + 1;
+   u.title := itoa(i);
+   exdp := "$competitors" in u.extra;
+   addstring(exdp.names, pc.name);
+   store(u);
+   destroy(u);
+
+   exdp := "$nums" in self.extra;
+   exdp.descr := itoa(i);
+
+   acc_modify(pc, -100);
+   log(pc.name+" accquired a lottery ticket.");
+   u := load("ticket@games");
+   u.title := pc.name+"'s lottery ticket";
+   u.outside_descr :=
+        pc.name+"'s lottery ticket has carelessly been left here!";
+   addextra(u.extra, {""}, "The ticket has number "+itoa(i));
+   act("$1n gives you a lottery ticket.", A_ALWAYS,
+       self, null, pc, TO_VICT);
+   act("$1n sells a lottery ticket to $3n.", A_ALWAYS,
+       self, null, pc, TO_NOTVICT);
+   link(u, pc);   
+   pause;
+   exec("say Remember to take good care of your ticket. I hope its your "+
+        "lucky number.", self);
+
+   goto loop;
+}
+dilend
+end
+
+                game_master
+
+names {"Kylee", "game master", "master"}
+title "Kylee the game master"
+descr "Kylee the game master is standing here."
+extra {}
+"She is waiting for you to join a game of hide and seek, type 'join' to
+become a participant (the cost is one gold piece per level). Beware that
+you will be teleported to a *random location* when the game begins, and
+there can therefore be a significant risk of ending up dead, especially
+for low level players."
+
+romflags {CHAR_DETECT_INVISIBLE}
+
+ATTACK_DEFENSE(+500, +500)
+M_AVG_HUMAN(50, SEX_FEMALE, RACE_HUMAN)
+exp -500
+alignment 0
+weight 150
+height 179
+
+/* ====================================================== */
+
+dilbegin give_rod();
+var
+   u : unitptr;
+   progress : integer;
+   i : integer;
+   gp : integer;
+
+code
+{
+   :loop:
+   wait(SFB_CMD | SFB_MSG, TRUE);
+
+   if (command(CMD_JOIN))
+   {
+      block;
+      if (progress)
+        exec("say Sorry, but a game is already in progress, try later.", self);
+      else
+        goto join;
+   }
+   else if (command(CMD_AUTO_MSG))
+   {
+      if (argument == "start")
+        progress := TRUE;
+      else if (argument == "end")
+        progress := FALSE;
+   }
+
+   goto loop;
+
+   :join:
+
+   if (activator.type != UNIT_ST_PC)
+     goto loop;
+
+   u := findunit(activator, "hide and seek rod",
+                 FIND_UNIT_INVEN|FIND_UNIT_EQUIP, null);
+
+   if (u)
+   {
+      exec("say You already have a game rod, "+activator.name, self);
+      goto loop;
+   }
+
+   u := equipment(activator, WEAR_CHEST);
+
+   if (u)
+   {
+      exec("say You must be able to wear the banner around your chest, "+
+            activator.name+", so please remove your "+u.name+
+            ", and try again.", self);
+      goto loop;
+   }
+
+   gp := activator.level;
+
+   if (gp > 50)
+     gp := 50;
+
+   if (not transfermoney(activator, self, GOLD_MULT * gp))
+   {
+      exec("say You can not afford the fee of "+itoa(gp)+
+           " gold pieces, "+activator.name, self);
+      goto loop;
+   }
+
+   /* Deduct 50% of the money for herself */
+   i := transfermoney(self, null, (GOLD_MULT * gp)/2);
+
+   u := load("hise_obj@games");
+
+   act("$3n straps $2n around your chest.",
+       A_ALWAYS, activator, u, self, TO_CHAR);
+   act("$3n straps $2n around $1n's chest.",
+       A_ALWAYS, activator, u, self, TO_ROOM);
+
+   link(u, activator);
+   addequip(u, WEAR_CHEST);
+
+   exec("say Now look at the instructions on the banner, "+activator.name,
+	 self);
+}
+dilend
+
+
+dilbegin aware collect_ping();
+var
+   s : string;
+   exdp : extraptr;
+   i : integer;
+code
+{
+   :loop:
+   wait(SFB_MSG, TRUE);
+
+   s := getword(argument);
+
+   if (s == "!")
+   {
+      exdp := "$parti" in self.extra;
+      addstring(exdp.names, argument);
+   }
+
+   goto loop;
+}
+dilend
+
+
+dilbegin aware do_coordinate();
+external
+  do_distribute();
+
+var
+   exdp : extraptr;
+   s : string;
+   i : integer;
+   u    : unitptr;
+
+code
+{
+   :init:
+   wait(SFB_MSG, argument == "start");
+
+   :msgloop:
+   wait(SFB_MSG, TRUE);
+
+   s := getword(argument);
+
+   if (s == "#")
+   {
+      exdp := "$parti" in self.extra;
+      substring(exdp.names, argument);
+      sendtoalldil("m "+argument+" is no longer in the competition.",
+                   "rod_comm@games");
+      do_distribute();
+
+      exdp := "$parti" in self.extra;
+
+      if (length(exdp.names) < 3)
+      {
+         s := exdp.names.[1];
+         sendto("end", self);
+         goto winner;
+      }
+   }
+   goto msgloop;
+
+   :winner:
+   exec("Shout The almighty winner of the Hide and Seek game is "+
+        s, self);
+   heartbeat := PULSE_SEC * 10;
+   sendtoalldil("w", "rod_comm@games");
+   u := findunit(self, s, FIND_UNIT_HERE, null);
+   if (u)
+   {
+      secure(u, init);
+      pause;
+      exec("say Congratulations, "+u.name, self);
+      pause;
+      exec("say That was a mighty fine victory, here is your prize.", self);
+      pause;
+      exec("give gold to "+u.name, self);
+      exec("give platinum to "+u.name, self);
+
+      unsecure(u);
+   }
+
+   goto init;
+}
+dilend
+
+
+
+dilbegin main();
+external
+  do_distribute@games();
+  do_collect(i : integer);
+
+var
+   exdp : extraptr;
+   i    : integer;
+   s    : string;
+
+code
+{
+   heartbeat := PULSE_SEC * 60;
+
+   :init:
+   i := 3;
+
+   :start:
+   wait(SFB_DONE | SFB_TICK, TRUE);
+
+   if (command("poke") and (target == self) and (activator.level >= 200))
+     goto begin;
+   else if (command(CMD_AUTO_TICK))
+     goto begin;
+
+   goto start;
+
+   :begin:
+   do_collect(FALSE);
+
+   exdp := "$parti" in self.extra;
+
+   if (command(CMD_AUTO_TICK))
+   {
+      if (i == 3)
+        if (length(exdp.names) < 5)
+           goto start;
+
+      i := i - 1;
+      if (i == 2)
+        exec("shout A new game of hide and seek begins in two minutes!", self);
+      else if (i == 0)
+        goto prerun;
+
+      goto start;
+   }
+
+   :prerun:
+   if (length(exdp.names) < 3)
+   {
+      sendtoalldil("m There are not enough participants to start the game.",
+                   "rod_comm@games");
+      goto init;
+   }
+
+   sendtoall("start", "hise_obj@games");
+   sendto("start", self);
+
+   :run:
+   do_collect(TRUE);
+
+   do_distribute();
+
+   wait(SFB_TICK, TRUE); /* Collect every 30 seconds... */
+
+   exdp := "$parti" in self.extra;
+
+   if (length(exdp.names) < 3)
+   {
+      sendto("#", self);
+      goto init;
+   }
+
+   goto run;
+}
+dilend
+
+
+end
+
+%reset
+
+load game_master into inn@udgaard max 1
+load lottery_master into bank@udgaard max 1
+
+%end

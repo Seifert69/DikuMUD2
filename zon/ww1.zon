@@ -1,0 +1,1747 @@
+/*
+filename    ww1
+password    huloo
+changedby   Whistler
+EmailAdd     Palio <palio@blinksoft.com>
+request     compile
+version     6
+END HEADER*/
+
+/* ************************************************************** *\
+*                     *** The WightWarrens ***                     *
+*      Created by Pjotr   (d90-pem@nada.kth.se) and                *
+*                 Sapowox (d90-jkr@nada.kth.se)                    *
+*                                                                  *
+*          Version -1.41 (92-07-24)                                *
+\* *************************************************************** */
+
+#include <composed.h>
+
+%zone ww1
+title "The WightWarrens"
+lifespan 30
+reset RESET_IFEMPTY
+
+notes
+"
+
+Whistler changed to levels 20-25 so it would be more benifical to the mud
+there was not any zone in this range and no low levels from 5 to 15
+have  even found this place.  See whistler for more explination.
+See the kingc.zon for further info. Papi has done much updating.
+Monsters range from level 20 to 25 in this area."
+
+%dil
+
+dilbegin has_ww_water();
+var
+   u : unitptr;
+
+code
+{
+   :loop:
+   wait(SFB_CMD, command(CMD_DRINK));
+
+   if (self != findunit(activator, argument, FIND_UNIT_IN_ME, null))
+      goto loop;
+
+   if (self.value[1] <= 0)
+     quit;
+
+   u := activator;
+   secure(u, the_end);
+
+   pause;
+
+   act("You feel a tingling sensation.",
+       A_ALWAYS, u, null, null, TO_CHAR);
+
+   :the_end:
+   quit;
+}
+dilend
+
+
+
+dilbegin integer count_mobs(s : string);
+var
+   u : unitptr;
+code
+{
+   u := findsymbolic(s);
+
+   if (u)
+     return (u.loadcount);
+   else
+     return (0);
+}
+dilend
+
+
+dilbegin integer master_func(num_mobs : integer, max_mobs : integer);
+var
+   iTmp : integer;
+code
+{
+   iTmp := ((max_mobs * max_mobs) - (num_mobs * num_mobs)) / max_mobs;
+
+   if (iTmp > 0)
+     return (iTmp);
+   else
+     return (0);
+}
+dilend
+
+
+/* SFUN_WW_VAT */
+dilbegin vat_machine();
+external
+  integer master_func(num_mobs : integer, max_mobs : integer);
+  integer count_mobs(s : string);
+
+
+var
+   fi   : string;
+   baby : unitptr;
+   iTmp : integer;
+   mx   : integer;
+
+code
+{
+   :loop:
+   wait(SFB_DONE, command(CMD_EMOTE));
+
+   if ((activator.nameidx != "loremaster") or (activator.zoneidx != "ww1"))
+     goto loop;
+
+   /* We stand operating a VAT */
+   if (rnd(0,12) != 0)
+     goto loop;
+
+   /* Pick a random monster to create */
+   /* This could be replaced with "switch (OBJ_VALUE(sarg->owner, 0))" */
+
+   while (TRUE)
+   {
+      on rnd(0,4) goto c1, c2, c3, c4, c5;
+
+      :c1:
+      fi := "delver@ww1";
+      mx := 8;
+      break;
+
+      :c2:
+      fi := "servant@ww1";
+      mx := 8;
+      break;
+
+      :c3:
+      fi := "fighter@ww1";
+      mx := 10;
+      break;
+
+      :c4:
+      fi := "ur_vile@ww1";
+      mx := 7;
+      break;
+
+      :c5:
+      fi := "loremaster@ww1";
+      mx := 5;
+      break;
+   }
+
+   iTmp := count_mobs(fi);
+   iTmp := master_func(iTmp, mx);
+
+   /* How many slimy creeps of my kind are around? */
+
+   if (rnd(0, rnd(0, iTmp))) /* If not many enuff, create another! */
+   {
+      baby := load(fi);
+      link(baby, activator.outside);
+
+      act("$1n monotonically chants a strange song.",
+	  A_ALWAYS, activator, null, baby, TO_NOTVICT);
+      act("A strange light emits from the sarg->owner, and $3n is created.",
+	  A_ALWAYS, activator, null, baby, TO_NOTVICT);
+      act("You have created $3n, because you felt like it.",
+	  A_ALWAYS, activator, null, baby, TO_CHAR);
+   }
+}
+dilend
+
+%rooms
+
+
+		rn_8200
+
+title "The Tunnel"
+descr
+"   You are standing with your feet in a little puddle. To your north,
+a tunnel stretches away into the dark."
+north to rn_8201;
+
+movement SECT_FOREST
+ALWAYS_LIGHT
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8201
+
+title "The Tunnel"
+descr
+"   The tunnel leads north and south, in a fairly straight line. You get
+the impression that this tunnel has been carved by water, sometime long
+ago. It slopes slightly upwards to the north.
+"
+north to rn_8202;
+south to rn_8200;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8202
+
+title "The Tunnel"
+descr
+"   The tunnel leads north and south, in a fairly straight line. You get
+the impression that this tunnel has been carved by water, sometime long
+ago. It slopes slightly upwards to the north."
+north to rn_8203;
+south to rn_8201;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8203
+
+title "The Tunnel"
+descr
+"   The tunnel leads north and south, in a fairly straight line. You get
+the impression that this tunnel has been carved by water, sometime long
+ago. It slopes slightly upwards to the north."
+north to rn_8204;
+south to rn_8202;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8204
+
+title "The End of the Tunnel"
+descr
+"   Here the tunnel turns east and widens into a vast cave. You can't see
+far into the the cave, due to the tree-trunk-like rock formations that
+are everywhere."
+east to rn_8205;
+south to rn_8203;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8205
+
+title "The Forest-Like Cave"
+descr
+"   You are in a vast cave with rock pillars everywhere, making it seem
+almost like a forest. You are forced to take a very winding path among
+the pillars, confusing your sense of direction."
+south to rn_8207;
+north to rn_8206;
+west to rn_8204;
+east to rn_8211;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8206
+
+title "The Forest-Like Cave"
+descr
+"   You are in a vast cave with rock pillars everywhere, making it seem
+almost like a forest. You are forced to take a very winding path among
+the pillars, confusing your sense of direction."
+south to rn_8205;
+east to rn_8212;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8207
+
+title "The Forest-Like Cave"
+descr
+"   You are in a vast cave with rock pillars everywhere, making it seem
+almost like a forest. You are forced to take a very winding path among
+the pillars, confusing your sense of direction."
+south to rn_8208;
+east to rn_8209;
+north to rn_8205;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8208
+
+title "The Forest-Like Cave"
+descr
+"   You are in a vast cave with rock pillars everywhere, making it seem
+almost like a forest. You are forced to take a very winding path among
+the pillars, confusing your sense of direction."
+east to rn_8209;
+north to rn_8207;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8209
+
+title "The Forest-Like Cave"
+descr
+"   You are in a vast cave with rock pillars everywhere, making it seem
+almost like a forest. You are forced to take a very winding path among
+the pillars, confusing your sense of direction."
+north to rn_8210;
+west to rn_8208;
+east to rn_8215;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8210
+
+title "The Forest-Like Cave"
+descr
+"   You are in a vast cave with rock pillars everywhere, making it seem
+almost like a forest. You are forced to take a very winding path among
+the pillars, confusing your sense of direction."
+north to rn_8211;
+east to rn_8214;
+south to rn_8209;
+west to rn_8210;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8211
+
+title "The Forest-Like Cave"
+descr
+"   You are in a vast cave with rock pillars everywhere, making it seem
+almost like a forest. You are forced to take a very winding path among
+the pillars, confusing your sense of direction."
+north to rn_8212;
+east to rn_8214;
+south to rn_8210;
+west to rn_8205;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8212
+
+title "The Forest-Like Cave"
+descr
+"   You are in a vast cave with rock pillars everywhere, making it seem
+almost like a forest. You are forced to take a very winding path among
+the pillars, confusing your sense of direction."
+east to rn_8213;
+south to rn_8214;
+west to rn_8206;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8213
+
+title "The Forest-Like Cave"
+descr
+"   You are in a vast cave with rock pillars everywhere, making it seem
+almost like a forest. You are forced to take a very winding path among
+the pillars, confusing your sense of direction."
+east to rn_8220;
+south to rn_8211;
+west to rn_8212;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8214
+
+title "The Forest-Like Cave"
+descr
+"   You are in a vast cave with rock pillars everywhere, making it seem
+almost like a forest. You are forced to take a very winding path among
+the pillars, confusing your sense of direction."
+north to rn_8213;
+east to rn_8219;
+south to rn_8215;
+west to rn_8211;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8215
+
+title "The Forest-Like Cave"
+descr
+"   You are in a vast cave with rock pillars everywhere, making it seem
+almost like a forest. You are forced to take a very winding path among
+the pillars, confusing your sense of direction."
+east to rn_8217;
+south to rn_8217;
+west to rn_8210;
+north to rn_8214;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8217
+
+title "The Forest-Like Cave"
+descr
+"   You are in a vast cave with rock pillars everywhere, making it seem
+almost like a forest. You are forced to take a very winding path among
+the pillars, confusing your sense of direction."
+north to rn_8218;
+west to rn_8209;
+east to rn_8224;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8218
+
+title "The Forest-Like Cave"
+descr
+"   You are in a vast cave with rock pillars everywhere, making it seem
+almost like a forest. You are forced to take a very winding path among
+the pillars, confusing your sense of direction."
+north to rn_8219;
+east to rn_8223;
+south to rn_8217;
+west to rn_8209;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8219
+
+title "The Forest-Like Cave"
+descr
+"   You are in a vast cave with rock pillars everywhere, making it seem
+almost like a forest. You are forced to take a very winding path among
+the pillars, confusing your sense of direction."
+north to rn_8220;
+east to rn_8222;
+south to rn_8218;
+west to rn_8213;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8220
+
+title "The Forest-Like Cave"
+descr
+"   You are in a vast cave with rock pillars everywhere, making it seem
+almost like a forest. You are forced to take a very winding path among
+the pillars, confusing your sense of direction."
+east to rn_8221;
+south to rn_8219;
+west to rn_8213;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8221
+
+title "The Forest-Like Cave"
+descr
+"   You are in a vast cave with rock pillars everywhere, making it seem
+almost like a forest. You are forced to take a very winding path among
+the pillars, confusing your sense of direction."
+east to rn_8228;
+south to rn_8222;
+west to rn_8220;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8222
+
+title "The Forest-Like Cave"
+descr
+"   You are in a vast cave with rock pillars everywhere, making it seem
+almost like a forest. You are forced to take a very winding path among
+the pillars, confusing your sense of direction."
+east to rn_8222;
+south to rn_8223;
+north to rn_8221;
+west to rn_8227;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8223
+
+title "The Forest-Like Cave"
+descr
+"   You are in a vast cave with rock pillars everywhere, making it seem
+almost like a forest. You are forced to take a very winding path among
+the pillars, confusing your sense of direction."
+west to rn_8218;
+south to rn_8224;
+east to rn_8226;
+north to rn_8219;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8224
+
+title "The Forest-Like Cave"
+descr
+"   You are in a vast cave with rock pillars everywhere, making it seem
+almost like a forest. You are forced to take a very winding path among
+the pillars, confusing your sense of direction."
+east to rn_8225;
+north to rn_8223;
+west to rn_8215;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8225
+
+title "By the River"
+descr
+"   You are walking by a rather swift river flowing south. Its water in
+an undefinable way seems to radiate a great power, although very diluted
+at this point. The river disappears downwards, but to the south, a narrow
+crack allows passage."
+south to rn_8238;
+east to rn_8236;
+north to rn_8226;
+west to rn_8224;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8226
+
+title "By the River"
+descr
+"   You are walking by a rather swift river flowing south. Its water in
+an undefinable way seems to radiate a great power, although very diluted
+at this point."
+east to rn_8235;
+north to rn_8229;
+south to rn_8225;
+west to rn_8223;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8227
+
+title "The Forest-Like Cave"
+descr
+"   You are in a vast cave with rock pillars everywhere, making it seem
+almost like a forest. You are forced to take a very winding path among
+the pillars, confusing your sense of direction."
+north to rn_8228;
+south to rn_8226;
+west to rn_8222;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8228
+
+title "The Forest-Like Cave"
+descr
+"   You are in a vast cave with rock pillars everywhere, making it seem
+almost like a forest. You are forced to take a very winding path among
+the pillars, confusing your sense of direction."
+south to rn_8227;
+west to rn_8221;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8229
+
+title "By the River"
+descr
+"   You are walking by a rather swift river flowing south. Its water in
+an undefinable way seems to radiate a great power, although very diluted
+at this point."
+east to rn_8230;
+south to rn_8226;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8230
+
+title "On the River"
+descr
+"   The water flows pretty quickly south, and you have to exert yourself
+in order to paddle your boat upriver. To the west, you can get off the
+river, but to the east is an impregnable granite wall."
+south to rn_8235;
+north to rn_8231;
+west to rn_8229;
+
+movement SECT_WATER_SAIL
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8231
+
+title "On the River"
+descr
+"   Here the river flows between rock walls on both sides. The flow of water
+is much faster here than further south. To the north, the river gets still
+narrower and faster."
+north to rn_8232;
+south to rn_8230;
+
+movement SECT_WATER_SAIL
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+
+dilbegin block_river();
+code
+{
+   :loop:
+   wait(SFB_CMD, command(CMD_NORTH));
+
+   if (activator.type != UNIT_ST_OBJ)
+     goto loop;
+
+   if ((activator.nameidx == "strange_boat") and
+       (activator.zoneidx == "ww2"))
+     goto loop;
+
+   if (activator.inside)
+     act("You try hard to get your boat up against the stream, but the "+
+	 "stream is far too powerful, and your boat too clumsy, for that "+
+	 "to be possible.",
+	 A_SOMEONE, activator.inside, null, null, TO_ALL);
+
+  block;
+}
+dilend
+end
+
+
+		rn_8232
+
+title "The Glowing Lake"
+descr
+"   This is where the river seems to originate. A small lake, whose water
+has a strange, faintly orange glow. There are small streams filling the
+lake coming from all directions. To the north, one of the streams has
+a rough path following it."
+north to rn_8233;
+south to rn_8231;
+
+movement SECT_FOREST
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8233
+
+title "On the Path by the Stream"
+descr
+"   The stream flows happily southwards next to you. To the north, it seems
+to come to its source."
+north to rn_8234;
+south to rn_8232;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8234
+
+title "The Spring"
+descr
+"   You have arrived at the spring of the little stream. It is quite apparent
+to you that this is the source of the power you detected in the river before.
+The water seems almost alive, sentient somehow. It throbs with power, power
+enough to make the very walls glow and there is a sort of deep, low-pitched,
+almost inaudible hum in the air. The water comes out into a little natural
+bowl in the middle of the room, and flows out via a little depression in the
+southern side of the bowl. You are strangely aware that the water means danger,
+but also possible gain..."
+
+south to rn_8233;
+
+movement SECT_FOREST
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+
+end
+
+
+		rn_8235
+
+title "On the River"
+descr
+"   The water flows pretty quickly south, and you have to exert yourself
+in order to paddle your boat upriver. To the west, you can get off the
+river, but to the east is an impregnable granite wall."
+south to rn_8236;
+west to rn_8226;
+north to rn_8230;
+
+movement SECT_WATER_SAIL
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8236
+
+title "On the River"
+descr
+"   The water flows pretty quickly south, and you have to exert yourself
+in order to paddle your boat upriver. To the west, you can get off the
+river, but to the east is an impregnable granite wall."
+south to rn_8237;
+north to rn_8235;
+west to rn_8225;
+
+movement SECT_WATER_SAIL
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8237
+
+title "On the River"
+descr
+"   The water flows pretty quickly south, and you have to exert yourself
+in order to paddle your boat upriver. The walls close in on you, and the
+river now flows between two steep walls. It keeps flowing steadily south."
+north to rn_8236;
+/* XXX is that true??? Was rn_5005 but thats not there! */
+south to undergr_lake descr
+"The river plunges down to an underground lake in that direction.";
+
+movement SECT_WATER_SAIL
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8238
+
+title "The Ravine-like Crack"
+descr
+"   You are walking along a narrow path at the bottom of a deep crack. The
+echoes of a swift river to the north produce a constant noise in here,
+making it hard to speak, and virtually impossible to anticipate the
+presence of dangers."
+south to rn_8239;
+north to rn_8225;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8239
+
+title "The Ravine-like Crack"
+descr
+"   You are walking along a narrow path at the bottom of a deep crack. The
+ravine seems to come to a stop further south, but there is a small hole in
+the west wall.      "
+west to rn_8240;
+north to rn_8238;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8240
+
+title "The Smelly Tunnel"
+descr
+"   A truly horrendous stench wafts towards you from the west. There really
+must be lots of filth in there to cause all that smell. The tunnel leads
+west, and there is a small hole in the eastern wall."
+west to rn_8241;
+east to rn_8239;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8241
+
+title "The Intersection"
+descr
+"   You have arrived at a four-way intersection. A great part of the stench
+seems to emanate from the northern tunnel. To the west, the tunnel slopes
+somewhat downwards, and a fairly broad tunnel leads south."
+south to rn_8248;
+west to rn_8246;
+north to rn_8242;
+east to rn_8240;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8242
+
+title "The Small Tunnel"
+descr
+"   You are walking along a small tunnel. The air is fouler than anything
+you have previously come across. The tunnel continues north, but there is
+a branch leading east as well. To the south you can see the intersection."
+north to rn_8244;
+east to rn_8243;
+south to rn_8241;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8243
+
+title "A Cave"
+descr
+"   This is a small cave with apparently no exits except back west. The cave
+is filled with bones and half-rotten corpses and seems to be some sort of
+garbage dump."
+west to rn_8242;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8244
+
+title "The Small Tunnel"
+descr
+"   The tunnel leads west and south from here. To the west it seems to get
+somewhat broader, whereas it is quite small to the south. "
+west to rn_8245;
+south to rn_8242;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8245
+
+title "The Cave-wight Warren"
+descr
+"   You have arrived at a cave-wight warren, a cave in which the cave-wights
+live, eat, sleep, quarrel and simply are disgusting in every possible way.
+The cave is filled with evidence that they have been very successful in doing
+all these things, and this is where a great part of the stench originates."
+east to rn_8244;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8246
+
+title "The Downward Slope"
+descr
+"   This tunnel definitely slopes downwards on its way west. To the east, you
+can see an intersection. The draft coming from the west brings with it a
+new vileness, making the air still less breathable than before. "
+west to rn_8247;
+east to rn_8241;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8247
+
+title "The Downward Slope"
+descr
+"   The tunnel slopes more steeply here, and you feel a sudden dread at what
+may face you down there to the west. To the east, the tunnel continues up
+into the comparatively fresh air, while the ubiquitous stench just gets
+fouler to the west."
+east to rn_8246;
+west to ww2/rn_8318;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8248
+
+title "The Tunnel"
+descr
+"   You are standing in a rather broad and well-made tunnel leading north
+and south. The walls and the floor of this tunnel are smoother than others
+you have seen down here, and the tunnel itself runs straighter than usual."
+south to rn_8249;
+north to rn_8241;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8249
+
+title "The Cavern"
+descr
+"   You have entered a very large cavern. Your light does not suffice to
+show it all, but you are able to make out entrances to tunnels in
+all four directions. Besides those four, there seems to an exit leading
+down."
+south to rn_8256;
+west to rn_8252;
+east to rn_8250;
+north to rn_8248;
+down to ww2/rn_8345;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8250
+
+title "A Tunnel"
+descr
+"   You are standing in a fairly boring tunnel leading north and west. In
+both directions, the tunnel seems to grow wider than it is at this point,
+evidently forming caves of some sort."
+north to rn_8251;
+west to rn_8249;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8251
+
+title "A Cave-wight Warren"
+descr
+"   You have arrived at a cave-wight warren, a cave in which the cave-wights
+live, eat, sleep, quarrel and simply are disgusting in every possible way.
+The cave is filled with evidence that they have been very successful in doing
+all these things, and this is where a great part of the stench originates."
+south to rn_8250;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8252
+
+title "The Broad Tunnel"
+descr
+"   This tunnel is quite broad and straight. To the east, it leads out into
+a vast cavern, and to the west it continues into the dark. "
+west to rn_8253;
+east to rn_8249;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8253
+
+title "The T-Cross"
+descr
+"   You have arrived at a t-cross. There are tunnels leading off to the
+north, south and east. From the northern tunnel, emanations of pure evil
+send shivers down your spine. That place must be the abode of some powerful
+evil."
+south to rn_8255;
+north to rn_8254;
+east to rn_8252;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8254
+
+title "The Ur-Vile Warren"
+descr
+"   You are standing in a large, dirty cave, which is filled with arcane
+items of all kinds. It seems that this is a place where a lot of the
+ur-viles' ungodly experiments are being performed. The only obvious
+exit is back to the t-crossing to the south."
+south to rn_8253;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8255
+
+title "A Dead End"
+descr
+"   The tunnel comes to a dead end here. It seems you will have to go
+back north again, since there are no other visible exits. Quite a boring
+place in all, this. "
+north to rn_8253;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8256
+
+title "A Rough Tunnel"
+descr
+"   This tunnel is roughly made and seems less used than the other parts
+of the Dungeons that you have seen. It runs in a north-south direction,
+and widens significantly to the north."
+south to rn_8257;
+north to rn_8249;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8257
+
+title "A Junction"
+descr
+"   You have arrived at a junction. There is an exit south, but it is evident
+that the main tunnel turns and continues to the west. The exit south
+actually seems to be no more than a natural crack in the mountain, while
+the tunnel clearly is artificial."
+south to rn_8260;
+west to rn_8258;
+north to rn_8256;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8258
+
+title "A Rough Tunnel"
+descr
+"   This tunnel is roughly made and seems less used than the other parts
+of the Dungeons that you have seen. It runs in an east-west direction,
+and it seems to be newly made, as if work was still in progress."
+west to rn_8259;
+east to rn_8257;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8259
+
+title "The End of the Tunnel"
+descr
+"   Here the tunnel comes to a stop, and it is obvious that this is where
+the work is currently being done, since the western wall is scored with
+the marks of cave-wight delvers' hands and there are chips of stone all
+over the floor."
+east to rn_8258;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+
+		rn_8260
+
+title "An Insignificant Tunnel"
+descr
+"   You are forced to crawl through this tunnel, since it is very narrow
+and the roof is very low. You find it hard to believe that a cave-wight
+could actually pass here, so perhaps this tunnel is unused by them."
+east to rn_8261;
+north to rn_8257;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_NO_MOB, UNIT_FL_INDOORS}
+end
+
+
+		rn_8261
+
+title "By the Crack"
+descr
+"   You are standing by a crack in the floor, leading downwards into
+darkness. There is a low and narrow tunnel leading off to the west."
+west to rn_8260;
+down to ww2/rn_8347;
+
+movement SECT_FOREST
+IN_ALWAYS_DARK
+flags {UNIT_FL_NO_MOB, UNIT_FL_INDOORS}
+end
+
+		undergr_lake
+
+title "At the Underground Lake"
+descr
+"   You have arrived at a cold underground lake. The air here is really
+clammy, and makes you shiver uncomfortably. From pretty high up in the
+northern wall there is a waterfall, its wet spray filling the air here
+with tiny droplets of water. The lake seems to be formed by the slow
+moving underground river which enters through an inlet to the west."
+west to river_1;
+
+movement SECT_WATER_SAIL
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+		river_1
+
+title "On the Underground River"
+descr
+"   You are moving along a gentle underground river, flowing steadily
+towards the east. The noises of the river echo back from the walls and
+roof of the tunnel, obscuring all other sounds almost completely. The
+tunnel itself seems remarkably straight, for no discernible reason. It
+makes you wonder..."
+east to undergr_lake;
+west to river_2;
+
+movement SECT_WATER_SAIL
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+		river_2
+
+title "On the Underground River"
+descr
+"   You are moving along a deep tunnel in the mountains, floating on
+the dark waters of a slow river. The tunnel is quite wide, and the
+riverbed itself is at least twenty meters across. You get the feeling,
+mostly based on the sounds of the echoes, that the tunnel is about to
+end further to the west."
+east to river_1;
+west to river_3;
+
+movement SECT_WATER_SAIL
+IN_ALWAYS_DARK
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+end
+
+		river_3
+
+title "On a River"
+descr
+"   You are paddling along a large, slow-flowing river, running
+east away from Midgaard. The countryside it flows through is pretty
+wild, with the country rising to the east to form a vast mountain
+range. In the side of the hills just to the east, however, there is
+a wide tunnel, in which the river enters."
+east to river_2;
+west to ratswarf/stream1;
+
+movement SECT_WATER_SAIL
+end
+
+
+
+
+%mobiles
+
+
+		delver
+names {"cave-wight","wight","cave","delver"}
+title "the Cave-Wight Delver"
+descr "There is a Cave-Wight Delver here, looking for some stone to crush."
+extra {} "The Delver, like all Cave-Wights, looks frightfully strong. Its eyes
+glow redly, like lava, and its hands are as huge and heavy as shovels."
+
+M_CAVE_WIGHT_DELVER(SEX_NEUTRAL)
+level 20
+money 1 SILVER_PIECE, 2 COPPER_PIECE
+
+special SFUN_RANDOM_GLOBAL_MOVE time 40 bits SFB_RANTIME
+special SFUN_SCAVENGER time 40 bits SFB_RANTIME
+special SFUN_AGGRESSIVE time 40
+end
+
+
+
+		servant
+names {"cave-wight","wight","cave","servant"}
+title "the Cave-Wight Servant"
+descr "There is a Cave-Wight Servant here, hurrying somewhere."
+extra {} "The Servant, like all Cave-Wights, looks frightfully strong. Its eyes
+glow redly, like lava, and while its hands are very large and powerful,
+it seems to be able to use them for other things than digging."
+romflags {CHAR_WIMPY}
+M_CAVE_SERVANT(SEX_NEUTRAL)
+level 21
+alignment -800
+money 2 SILVER_PIECE, 5 COPPER_PIECE
+
+special SFUN_RANDOM_GLOBAL_MOVE time 40 bits SFB_RANTIME
+special SFUN_SCAVENGER time 40 bits SFB_RANTIME
+special SFUN_AGGRESSIVE time 40
+end
+
+
+
+		fighter
+names {"cave-wight","wight","cave","fighter"}
+title "the Cave-Wight Fighter"
+descr "There is a Cave-Wight Fighter here, snarling at you."
+extra {} "The Fighter, like all Cave-Wights, looks frightfully strong. Its eyes
+glow redly, like lava. This is a highly trained fighting Cave-Wight, and
+by far the most dangerous of them all."
+
+M_CAVE_WIGHT_FIGHTER(SEX_NEUTRAL)
+level 22
+money 2 SILVER_PIECE, 6 COPPER_PIECE
+
+special SFUN_RANDOM_GLOBAL_MOVE time 40 bits SFB_RANTIME
+special SFUN_SCAVENGER time 40 bits SFB_RANTIME
+special SFUN_AGGRESSIVE time 40
+end
+
+
+
+		ur_vile
+names {"ur-vile"}
+title "the Ur-Vile"
+descr "There is an Ur-Vile here, sniffing suspiciously at the air."
+extra {}
+"The Ur-Vile is tall, with an unhumanly long torso. Its limbs are all
+of equal length, clearly made for running on all fours as well as upright.
+Its skin is very black, and its ears are pointed and sit high up on its
+head. It has no eyes, and instead its face is almost filled by its gaping
+nostrails."
+
+romflags {CHAR_DETECT_INVISIBLE}
+M_UR_VILE(SEX_NEUTRAL)
+level 23
+money 2 SILVER_PIECE, 7 COPPER_PIECE
+
+special SFUN_RANDOM_GLOBAL_MOVE time 40 bits SFB_RANTIME
+special SFUN_AGGRESSIVE time 40
+end
+
+
+
+		loremaster
+names {"ur-vile","loremaster"}
+title "the Ur-Vile Loremaster"
+descr "An Ur-Vile Loremaster barks sharply as it senses your presence."
+extra {} "The Ur-Vile Loremaster is larger than most other Ur-Viles, though it
+has the same general shape and looks. Ur-Viles are known for their great
+arcane knowledge and the Loremasters are the most powerful and cunning
+keepers of this."
+
+romflags {CHAR_DETECT_INVISIBLE}
+M_UR_VILE_LOREMASTER(SEX_NEUTRAL)
+level 25
+money 3 SILVER_PIECE, 1 COPPER_PIECE
+
+special SFUN_COMBAT_MAGIC time 20 "cast fireball"
+special SFUN_AGGRESSIVE time 40
+
+/* Papi: Moved PAIN random move to SFUN_GLOBAL_MOVE to prevent wandering */
+/*       into the death rooms. XXX                                       */
+
+special SFUN_RANDOM_GLOBAL_MOVE time WAIT_SEC*60 bits SFB_RANTIME
+special SFUN_PAIN_INIT time WAIT_SEC*65 bits SFB_RANTIME
+"10 I100ww1/servant_vat@
+ 20 I200ww1/delver_vat@
+ 30 I300ww1/fighter_vat@
+ 40 I400ww1/urvile_vat@
+ 50 I500ww1/lm_vat@
+ 60 J600@
+
+100 I600ww1/loremaster@
+110 Cemote slowly chants an eery tune, chilling your very bones.@
+120 J800@
+
+200 I600ww1/loremaster@
+210 Cemote makes a warbling sound that fills the cave with its sickening echoes.@
+220 J800@
+
+300 I600ww1/loremaster@
+310 Cemote emits a high-pitched, drawn out sound that leaves you feeling drained.@
+320 J800@
+
+400 I600ww1/loremaster@
+410 Cemote waves its wand over the vat, chanting in a strange, oscillating way.@
+420 J800@
+
+500 I600ww1/loremaster@
+510 Cemote chants a strangely majestic and fear-inspiring song.@
+520 J800@
+
+600 J100@
+601 R630,83@
+610 Cnorth@
+620 J10@
+630 R660,80@
+640 Ceast@
+650 J10@
+660 R690,75@
+670 Csouth@
+680 J10@
+690 R720,66@
+700 Cwest@
+710 J10@
+720 R750,50@
+730 Cup@
+740 J10@
+750 Cdown@
+760 J10@
+
+800 J10@"
+end
+
+
+%objects
+
+                               bowl
+
+names {"bowl", "depression", "stream", "spring", "water", "blood"}
+title "the bowl"
+/* No description... implicitly described in the room */
+LIQ_DEF(LIQ_BLOOD, 4000, 20000, 20000, 0)
+spell 200
+extra {}
+"The water runs through the bowl, obviously you could drink it but you are
+strangely aware that it means possible danger."
+
+
+dilbegin drink_blood();
+var
+  ch    : unitptr;
+  s : string;
+code
+{
+   :loop:
+   wait(SFB_DONE, command(CMD_DRINK) or
+	          command(CMD_SIP) or
+                  command(CMD_TASTE));
+
+   if (medium != self)
+     goto loop;
+
+   ch := activator;
+   secure(ch, loop);
+
+   if (ch.type != UNIT_ST_PC) /* NPCs die... >:-) */
+     goto die;
+
+   if (ch.level >= 200)
+   {
+      act("Doesn't work on Gods, silly you!",
+	  A_ALWAYS, ch, null, null, TO_CHAR);
+      goto loop;
+   }
+
+   if (QUEST_WW in ch.quests)
+     goto die;
+
+   addextra(ch.quests, {QUEST_WW}, "Blood");
+
+   act("As $1n reaches into the water, $1s whole body begins to glow, "+
+       "and then quickly fades away.",
+       A_SOMEONE, ch, null, null, TO_ROOM);
+
+   act(
+"As your hands enter the sparkling water, a tingling sensation travels up "+
+"your arms. You feel strangely lightheaded, and as you swallow the fresh, "+
+"earthy water, its power overwhelms you.
+",
+       A_ALWAYS, ch, null, null, TO_CHAR);
+
+   experience(1000, ch);
+
+   act("Suddenly the world seems to explode around you, "+
+       "sending you back to...
+
+", A_ALWAYS, ch, null, null,
+       TO_CHAR);
+
+   link(ch, findsymbolic(ch.hometown));
+
+   act("In a flash of light, a strangely glowing creature appears. "+
+       "It is only after a while that you understand that the radiant "+
+       "being in front of you is $1n.",
+       A_HIDEINV, ch, null, null, TO_ROOM);
+
+   unsecure(ch);
+   exec("look", ch);
+
+   sendtoalldil(".", "strange_boat@ww2");
+   goto loop;
+
+   :die:
+
+   experience(-2000, ch);
+
+   act("As $1n reaches into the water $1e screams with agony, "+
+       "and $1s whole body quickly crumbles into dust.",
+       A_SOMEONE, ch, null, null, TO_ROOM);
+
+   act(
+"As your hands enter the sparkling water, the spring turns black as "+
+"Ur-Vile blood. Pain runs through your entire body. Fire and acid seem to "+
+"run through your veins, and your muscles cramp in terrible spasms. "+
+"A great part of your strength, body and soul, deserts you, as fire "+
+"surrounds you. You meet Death, more horrible and cruel than you had "+
+"ever imagined possible...", A_ALWAYS, ch, null, null, TO_CHAR);
+
+   unsecure(ch);
+
+   s := ch.name;
+   ch.hp := -100;
+   position_update(ch);
+
+   foreach (UNIT_ST_OBJ, ch)
+   {
+      if (("corpse of" in ch.outside_descr) and (s in ch.outside_descr))
+	destroy(ch);
+   }
+}
+dilend
+
+
+dilbegin bowl();
+var
+   pc : unitptr;
+   u : unitptr;
+   i : integer;
+   s : string;
+
+code
+{
+   :loop:
+   wait(SFB_CMD, command(CMD_POUR));
+
+   if (self != findunit(activator, argument, FIND_UNIT_SURRO, null))
+     goto loop;
+
+   s := argument;
+   u := findunit(activator, argument, FIND_UNIT_IN_ME, null);
+   if (u == null)
+     goto loop;
+
+   pc := activator;
+   secure(pc, loop);
+
+   i := u.value[1]; /* Liquid inside */
+
+   wait(SFB_CMD, TRUE);
+
+   u := findunit(pc, s, FIND_UNIT_IN_ME, null);
+
+   if (u.value[1] > i) /* Yes, something was poured into the drinkcon! */
+   {
+      dilcopy("has_ww_water@ww1", u);
+   }
+   goto loop;
+}
+dilend
+
+end
+
+
+			   brown_potion
+
+names {"potion","brown potion"}
+title "a brown potion"
+descr
+"A large vial, filled with a disgusting brown liquid, stands on the floor."
+manipulate {MANIPULATE_TAKE}
+flags {UNIT_FL_MAGIC}
+POTION_DEF(65, SPL_CURE_WOUNDS_2, SPL_NONE, SPL_NONE)
+weight 4
+cost 2 GOLD_PIECE
+extra {"$identify"}
+"This potion makes wounds go away."
+extra {"$improved identify"}
+"This potion removes wounds as the 'cure serious wounds' spell."
+end
+
+			   delver_vat
+
+names {"vat","breeding vat"}
+title "the Breeding Vat"
+descr "On the floor is a huge breeding vat, full with disgusting slime."
+type ITEM_OTHER
+weight 900
+extra {}
+"The vat is really large, and the slime inside it bubbles and
+frothes. You get a feeling that this is a very magical thing."
+
+dilcopy vat_machine();
+end
+
+			   servant_vat
+
+names {"vat","breeding vat"}
+title "the Breeding Vat"
+descr "On the floor is a huge breeding vat, full with disgusting slime."
+type ITEM_OTHER
+weight 900
+extra {}
+"The vat is really large, and the slime inside it bubbles and
+frothes. You get a feeling that this is a very magical thing."
+dilcopy vat_machine();
+end
+
+			   fighter_vat
+
+names {"vat","breeding vat"}
+title "the Breeding Vat"
+descr "On the floor is a huge breeding vat, full with disgusting slime."
+type ITEM_OTHER
+weight 900
+extra {}
+"The vat is really large, and the slime inside it bubbles and
+frothes. You get a feeling that this is a very magical thing."
+
+dilcopy vat_machine();
+end
+
+			   urvile_vat
+
+names {"vat","breeding vat"}
+title "the Breeding Vat"
+descr "On the floor is a huge breeding vat, full with disgusting slime."
+type ITEM_OTHER
+weight 900
+extra {}
+"The vat is really large, and the slime inside it bubbles and
+frothes. You get a feeling that this is a very magical thing."
+
+dilcopy vat_machine();
+end
+
+			   lm_vat
+
+names {"vat","breeding vat"}
+title "the Breeding Vat"
+descr "On the floor is a huge breeding vat, full with disgusting slime."
+type ITEM_OTHER
+weight 900
+extra {}
+"The vat is really large, and the slime inside it bubbles and
+frothes. You get a feeling that this is a very magical thing."
+
+dilcopy vat_machine();
+end
+
+			   lore_wand
+
+names {"wand"}
+title "a Loremaster's Wand"
+descr "Tucked away in a corner is a strange, black wand."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+flags {UNIT_FL_MAGIC}
+WAND_DEF(87, 17, SPL_FIREBALL_2, SPL_NONE)
+weight 5
+cost 10 GOLD_PIECE
+rent 2 SILVER_PIECE
+extra {}
+   "The wand is all black and looks wet with power or blood."
+dilcopy ali_restrict@function (-1000,-350,0,25,"");
+extra {"$identify"}
+"This wand can burn your enemies."
+extra {"$improved identify"}
+"This is a wand of fireball at power 87."
+end
+
+
+%reset
+
+load delver into rn_8240 max 10
+load delver into rn_8245 max 10
+load delver into rn_8251 max 10
+load delver into rn_8258 max 10
+load servant into rn_8251 max 10
+load servant into rn_8245 max 10
+load servant into rn_8258 max 10
+load servant into rn_8257 max 10
+load servant into rn_8246 max 10
+load servant into rn_8252 max 10
+load fighter into rn_8255 max 10
+{
+    load brown_potion max 40   /* YYY To be loaded into their inventory.. */
+}
+load fighter into rn_8246 max 10
+{
+    load brown_potion max 40
+}
+load fighter into rn_8258 max 10
+{
+    load brown_potion max 40
+}
+load loremaster into rn_8245 max 10
+{
+    equip lore_wand max 15 position WEAR_HOLD
+}
+load delver_vat into rn_8245 max 5
+{
+    load brown_potion max 40
+}
+
+load loremaster into rn_8254 max 10
+{
+    equip lore_wand max 15 position WEAR_HOLD
+}
+
+load servant_vat into rn_8254 max 5
+{
+    load brown_potion max 40
+}
+
+load bowl into rn_8234 max 1
+
+%end
+

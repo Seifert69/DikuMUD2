@@ -1,0 +1,787 @@
+/*
+filename    cemetery
+password    asdklj
+changedby   Palio
+EmailAdd     Palio <palio@blinksoft.com>
+request     compile
+version     7
+END HEADER*/
+
+#include <composed.h>
+
+%zone cemetery
+title "Cemetery"
+lifespan 32
+reset RESET_ANYHOW
+creators {"Tharlock", "Papi"}
+notes
+"I don't have an e-mail and Tharlock && Papi don't know how to spell
+to cemetary."
+
+
+%dil
+
+dilbegin intercomm(controller : string);
+
+var
+  s : string;
+
+code
+{
+   wait(SFB_MSG, (activator.nameidx+activator.zoneidx) == controller);
+
+   s := getword(argument);
+
+   /* 1 == Inside only, 2 == Outside Only, 3 == Inside & Outside */
+
+   if ((s == "1") or (s == "3"))
+     act(argument, A_ALWAYS, self.inside, null, null, TO_ALL);
+
+   if ((s == "2") or (s == "3"))
+     act(argument, A_ALWAYS, self.outside.inside, null, null, TO_ALL);
+}
+dilend
+
+%rooms
+
+
+/*  ---------------------------------------------------------------------  */
+/*  The ghostly longship... Uses different routine than the usual ships.   */
+/*  ---------------------------------------------------------------------  */
+
+#define SHIP_MAIN    "lsh_mid@cemetery"
+#define SHIP_CONTROL "lsh_stern@cemetery"
+#define SHIP_OCEAN   "ocean@cemetery"
+#define SHIP_ICOMM   "intercomm@cemetery" /* A DIL SYMBOLIC! */
+
+#define SHIP_PORTNAMES \
+   {"the island of death", "Torsbay",  \
+    "the island of death", "Torsbay",  \
+    "the island of death", "Torsbay",  \
+    "the island of death", "Torsbay"}
+
+#define SHIP_PORTS \
+   {"gravel_beach@torsbay", "isledead/rn_0004", \
+    "gravel_beach@torsbay", "isledead/rn_0004", \
+    "gravel_beach@torsbay", "isledead/rn_0004", \
+    "gravel_beach@torsbay", "isledead/rn_0004"}
+
+#define SHIP_DEPARTS \
+    {"0", "2", "4", "6", "16", "18", "20", "22"}
+
+#define SHIP_DURATION \
+   {"2", "2", "2", "2", "2", "2", "2", "2"}
+
+
+                                   ocean
+
+title "Misty Ocean"
+descr
+"   You drifting helplessly around in the ocean, unable to see very far
+due to a fine mist."
+movement SECT_WATER_SAIL
+flags {UNIT_FL_NO_TELEPORT}
+end
+
+
+			lsh_bow
+
+title "The Bow of the longship"
+descr
+"   The bow of the longship affords a fine view of the water and of the
+great dragon-like prow of the ship. To the
+south lies the the midship with it's mast and the torn sail. A strange
+smell of decay fill the air."
+
+extra {"water"}
+"From here, the water looks cold and dark."
+
+extra {"sail", "mast", "rope", "ropes"}
+"A network of old rotten ropes are holding the sail in place against the mast,
+you can see that the sail is in a pretty bad shape, it looks torn and dirty
+with black mud."
+
+extra {"prow", "dragon", "dragon-like"}
+"The prow resembles a dragon with big pointy theeth and a scaly head. It does
+seem a bit scary."
+
+extra {"$get", "dragon"}
+"You are mad! It is huge and is fastened to the bow."
+
+movement SECT_INSIDE
+
+south to lsh_mid;
+
+dilcopy intercomm("helmsmancemetery");
+end
+
+
+
+			lsh_mid
+
+names {"longship","ship"}
+title "Midship on the Longship"
+descr
+"   You are on the deck directly under the mast and sail of the old longship.
+On the port and starboard side of the midship you can see eight wooden shields
+attached to the gunwale. The gangplanks in the middle of the ship are sotten
+with a strange greasy white ash. You get a feeling of someting unatural has
+happend here. A smell of rotten wood and cloth fills the air."
+movement SECT_INSIDE
+north to lsh_bow;
+south to lsh_stern;
+
+outside_descr
+"A large longship is lying at the shore enshrouded in a cloud of mist."
+
+/*extra {}
+"The mist obscures any clear vision of the longship. It looks large
+enough to carry perhaps twenty men or so."*/
+
+extra {"ash", "gangplanks", "gangplank", "shields", "shield"}
+"The eight shields as well as the gangplanks are covered with a fine white
+greasy ash. Just the thought of what this might have been makes you look
+elsewhere."
+
+extra {"sail", "mast", "rope", "ropes"}
+"A network of old rotten ropes are holding the sail in place against the mast,
+you can see that the sail is in a pretty bad shape, it looks torn and dirty
+with black mud."
+
+in ocean
+
+dilcopy intercomm("helmsmancemetery");
+end
+
+			lsh_stern
+
+title "The Stern of the Longship."
+descr
+"   You are standing on the stern deck of the longship. On either sides
+of the deck there are rotten rigging ropes extending up to the mast in
+the midship to the north. You can see a thwart on the starboard side, and a
+great tiller. The air is very damp here, and you feel cold. A smell of rotten
+rottenness fill the air."
+movement SECT_INSIDE
+north to lsh_mid;
+
+extra {"tiller"}
+"It is surely a big tiller! It looks quite used."
+
+extra {"ropes", "rope", "mast"}
+"Rotten for sure, you wonder how these can hold anything at all."
+
+extra {"thwart"}
+"It is a thwart, clearly someone has been sitting on it lately."
+
+dilcopy intercomm("helmsmancemetery");
+end
+
+
+			 cemetery_gate
+
+title "The cemetery gate"
+descr
+"   You are standing in front of a large iron gate. The gate is covered
+with rust. The only obvious exits are east through the gate or south to the
+narrow path."
+
+/* west to Bridge in undead City */
+east to cemetery_road open {EX_OPEN_CLOSE, EX_CLOSED}
+	keyword {"iron gate", "gate"};
+south to deathlink/cemlin6;
+end
+
+
+			cemetery_road
+
+title "The cemetery road"
+descr
+"   A road is leading through the old graveyard. Some of the tombstones are
+tilted awry. Moss is covering most of them. As you walk among the graves,
+you feel a chill running down your neck. Suddenly it is as if you can
+hear low voices, chanting cries from the ground. At the end of the road you
+see a strange fog floating near the ground. To the west you see an iron gate,
+to the north and east you see the fog."
+movement SECT_SWAMP
+west to cemetery_gate open {EX_OPEN_CLOSE, EX_CLOSED}
+	keyword {"iron gate", "gate"};
+north to north_cem_end;
+east to fog;
+end
+
+
+			       fog
+title "In the Fog"
+descr
+"   You are standing in a strange cold fog. You can barely see 2 feet in front
+of you. The fog is emanating it's own light.. The air is very damp and it is
+difficult to breathe. Here and there you notice small red lights, but as soon
+you turn your head to examine them, they disappear. It is as if you are being
+watched, or so you feel."
+movement SECT_SWAMP
+west to cemetery_road;
+south to mossy_road;
+north to ruin_hill;
+end
+
+
+				mossy_road
+title "On the Mossy road"
+descr
+"   You are walking on the center road of the cemetery. To the left and to
+the right you can barely see some crosses and tombstones. The fog is very
+dense. A strange and dark shadow seems to dominate the fog to the east."
+movement SECT_SWAMP
+north to fog;
+east to the_old_elm;
+end
+
+
+				the_old_elm
+title "By the old elm"
+descr
+"   The fog is very dense here. A great shadow turns slowly into a huge old
+elm tree. The air is very damp and there is a rotten smell all over the place.
+It looks like the elm is dead, moss is covering a great part of it. As you
+stand there, you get a feeling of safety... A grave is here almost totally hidden
+by moss."
+movement SECT_SWAMP
+flags {UNIT_FL_NO_MOB}
+flags {UNIT_FL_SACRED}
+west to mossy_road;
+/* east to undead_city/cemetery_end; */
+
+SECRET_DOOR_DIFFICULTY(DOWN, 100)
+down to clan_home_028@clans
+keyword {"grave"} open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN} descr
+"Something funny...";
+
+end
+
+
+			ruin_hill
+title "The ruin Hill"
+descr
+"   You are standing on a hill in a sea of dense fog. Irregular lumps of gray,
+lichen-coated stone is half buried in the ground. Brambles web the stones
+and low brush half hide most. Here and there amid the desiccated brown of
+brambles and brush a lone green sprout announces that this was once a special
+place. To the north you can see an old ruin of a church, far to the east you
+see another hilltop in the sea of fog."
+movement SECT_SWAMP
+north to church_ruin@necro_guild;
+south to fog;
+east to foggy_path;
+end
+
+			  foggy_path
+title "The foggy path"
+descr
+"   You are standing in the middle of cold fog, you can barely see 2 feet in
+front of you. Now you know the feeling of being blind and numb."
+movement SECT_SWAMP
+west to ruin_hill;
+east to giant_hillock;
+end
+
+			  giant_hillock
+title "The giant hillock"
+descr
+"   You are standing by a huge hillock. The hillock is marked by sparse brown
+skeletons of head-high bushes. On the top of the hillock you can see a odd
+rounded rock with a sharp break on one side where moss, old and brown,
+covers the ragged surface. In the rounded part grooves and hollows are
+erroded. All around, you can see nothing but fog, gray and impenetrable."
+extra {"rounded rock","rock","moss", "surface"}
+"You notice something strange about the brown moss."
+movement SECT_SWAMP
+west to foggy_path;
+down to undergr_tomb keyword
+    {"tomb door", "hillock", "hill", "tomb", "bushes", "rock", "brown moss",
+     "entrance", "door", "moss"};
+SECRET_DOOR_DIFFICULTY(DOWN, 70)
+end
+
+
+
+			undergr_tomb
+
+names{"underground tomb","tomb"}
+title "underground tomb"
+descr
+"   A thick layer of dust covers the floor. As you walk further into the tomb
+you get a chilling feeling all over, like you are being watched. In the dim
+light you can see two small stone figures perched beside a large opening to
+the north. It is like your light is fading."
+extra {"stone figure","figure"}
+"The dim light gives the sensation of life inside these queer looking stone
+figures. They look like two small gargoyles. Their glassy eyes appear to
+emanate its own light, or so you think."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_MOB}
+open {EX_OPEN_CLOSE,EX_CLOSED,EX_INSIDE_OPEN}
+up to giant_hillock keyword {"tomb door", "door"};
+north to agmarrs_tomb;
+end
+
+
+			agmarrs_tomb
+title "Agmarrs tomb"
+descr
+"   The dim light fills the entire tomb, leaving an eerie atmosphere. In the
+center of the tomb there is an enormous throne of limestone. The throne is
+inscribed with runes, and some strange looking marks."
+extra {"runes"}
+"Light, forgive me!."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+movement SECT_INSIDE
+south to undergr_tomb;
+end
+
+
+
+
+		  north_cem_end
+
+title "north cemetery end"
+descr
+"   Old tombstones and crosses are tilted awry. You are standing on the north
+end of the graveyard. A strange fog is floating near the ground among the
+graves. You feel a strange cold from the ground, it is as if time stands still
+in this place. The fog seems to become more dense."
+movement SECT_SWAMP
+south to cemetery_road;
+east to east_cem_end;
+west to west_cem_end;
+/* SPECIAL *****RAISE UNDEAD******** */
+
+end
+
+
+		   west_cem_end
+
+title "west cemetery end"
+descr
+"You are standing in the west end of the graveyard. More tombstones and
+crosses are tilted awry. The fog is more dense here."
+flags (UNIT_FL_NO_WEATHER)
+movement SECT_SWAMP
+east to north_cem_end;
+/* SPECIAL ********RAISE UNDEAD******** */
+end
+
+
+		     east_cem_end
+
+title "east cemetery end"
+descr
+"You are standing in the east end of the cemetery. All around,
+you see nothing but fog, gray and impenetrable."
+west to north_cem_end;
+/* *******SPECIAL RAISE UNDEAD********** */
+end
+
+
+
+
+
+/* MALICIUS BEINGS OF THE FALL ZONE. */
+
+
+%mobiles
+
+                    helmsman
+
+names {"helmsman"}
+title "the helmsman"
+descr "The helmsman is sitting here silently staring into thin air."
+extra {}
+"Despite the chillness in the air, the helmsman is dressed in nothing but
+a dark robe. You notice that his hands appear old and bony with skin as white
+as the palest moon. Clearly he controls the longship."
+
+M_SPIRIT_AVG(SEX_NEUTRAL)
+
+default POSITION_SITTING
+position POSITION_SITTING
+
+dilbegin lsh_control();
+var
+   i       : integer;
+   counter : integer;
+   portname: stringlist;
+   ports   : stringlist;
+   departs : stringlist;
+   duration: stringlist;
+   shipname: string;
+
+code
+{
+   on_activation((self.outside.nameidx+"@"+self.outside.zoneidx) !=
+                 SHIP_CONTROL, skip);
+
+   on_activation(self.position <= POSITION_SLEEPING, skip);
+
+   portname := SHIP_PORTNAMES;
+   ports    := SHIP_PORTS;
+   departs  := SHIP_DEPARTS;
+   duration := SHIP_DURATION;
+
+   i := 0;
+   counter := 0;
+
+   while (counter < length(ports))
+   {
+      if (mudhour > atoi(departs.[counter]))
+        i := i + 1;
+
+      counter := counter+1;
+   }
+
+   pause;
+
+   link(self, findroom(SHIP_CONTROL));
+   link(findroom(SHIP_MAIN), findroom(ports.[i]));
+
+   :loop:
+   heartbeat := SECS_PER_MUD_HOUR * PULSE_SEC / 5;
+
+   while (mudhour != atoi(departs.[i]))
+     pause;
+
+   heartbeat := PULSE_SEC * 10;
+   exec("emote stares coldly into thin air.", self);
+   pause;
+   sendtoalldil("3 A cold wind blows towards the sea causing the longship "+
+             "to move slowly.", SHIP_ICOMM);
+   pause;
+   sendtoalldil("1 The longship creaks unsettling as it leaves the shore.",
+              SHIP_ICOMM);
+   sendtoalldil("2 The longship leaves the shore into the ocean.", SHIP_ICOMM);
+   link(findroom(SHIP_MAIN), findroom(SHIP_OCEAN));
+
+   heartbeat := PULSE_SEC * 30;
+   counter := atoi(duration.[i]);
+
+   while (counter > 0)
+   {
+      pause;
+      sendtoalldil("1 The ship moves silently through the water.",
+                SHIP_ICOMM);
+      pause;
+      counter := counter - 1;
+   }
+
+   /* Lets arrive */
+   heartbeat := PULSE_SEC * 10;
+
+   sendtoalldil("1 The longship approaches land.", SHIP_ICOMM);
+   pause;
+
+   sendtoalldil("1 The longship groans loudly as it slides up on the shore.",
+             SHIP_ICOMM);
+
+   sendtoalldil("2 A mist rolls up on shore and you hear a scraping sound of "+
+             "wood against the ground.", SHIP_ICOMM);
+   link(findroom(SHIP_MAIN), findroom(ports.[(i+1) % length(ports)]));
+   pause;
+
+   i := (i + 1) % length(ports);
+   goto loop;
+}
+dilend
+end
+
+
+		       lord_agmarr
+
+names {"lord agmarr","agmarr"}
+title "Lord Agmarr"
+descr
+"The remains of Highlord Agmarr is sitting here in his throne "
+
+extra{}
+ "His clothes were regal once, in dark red, black and gold.
+Now it is torn and dirty, thick with the same dust that covers the
+tomb floor. As you look closer, you see what you feared most : two
+pulsing red sparks glowing in the darkness of the hood with pure
+hatred, directed towards your person."
+
+
+flags {UNIT_FL_NO_TELEPORT}
+
+dilbegin prg1();
+code
+{
+   wait(SFB_COM, self.position == POSITION_FIGHTING);
+   act("YOU FOOL ! Light forgive me ?",
+       A_ALWAYS, self, null, null, TO_ROOM);
+   sendto("", findsymbolic("gargoyle_statue@cemetery"));
+   quit;
+}
+dilend
+special SFUN_TEAMWORK "gargoyle"
+special SFUN_AGGRES_REVERSE_ALIGN time WAIT_SEC*20 bits SFB_RANTIME
+
+M_LICH_AGMARR
+level 51
+end
+
+
+			  stone_gargoyle
+
+names {"stone gargoyle","gargoyle"}
+title "the stone gargoyle"
+descr
+"A stone gargoyle is sitting here guarding."
+extra {}
+"The stone gargoyle is a small animal like creature with some long horns,
+pointing out from the forehead. With glowing green eyes, the stone gargoyle
+looks at you with cold and hatred."
+
+M_GARGOYLE_STONE(SEX_NEUTRAL)
+
+special SFUN_TEAMWORK "lord agmarr"
+special SFUN_RESCUE "lord agmarr"
+special SFUN_AGGRES_REVERSE_ALIGN time WAIT_SEC*10 bits SFB_RANTIME
+end
+
+
+
+			       banshee
+
+
+names {"beautiful woman", "woman", "banshee"}
+title "Banshee"
+descr "A beautiful woman is standing in front of you."
+
+extra{}
+" She is wearing a long white rope, the rope is flaping
+with a light wind. You can see right through her."
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INVISIBLE}
+M_BANSHEE
+special SFUN_AGGRES_REVERSE_ALIGN time WAIT_SEC*20 bits SFB_RANTIME
+level 50
+special SFUN_PAIN_INIT time PULSE_SEC*180 bits SFB_RANTIME
+"5 *By Rene Olsen@
+7 S7@
+10 Cemote screams, 'IIIiiiiiiiiiiiiiiiissssshhhhhhaaaaaaaaaa....'@
+15 d7 follow %s@
+20 J7@"
+end
+
+			 black_skeleton
+
+names {"black skeleton", "skeleton"}
+title "a black skeleton"
+descr "A black skeleton is roaming around here."
+extra {}
+"The skeleton is wearing a torned grey rope, the rope looks like
+it have been burned, black with soot. With glowing green empty eyes,
+the skeleton looks at you with terrifyring intense hatred."
+
+flags {UNIT_FL_NO_TELEPORT}
+M_SKELETON_BLACK(SEX_NEUTRAL)
+level 50
+special SFUN_AGGRES_REVERSE_ALIGN time WAIT_SEC*30 bits SFB_RANTIME
+special SFUN_RANDOM_ZONE_MOVE time WAIT_SEC*60 bits SFB_RANTIME
+
+dilbegin prg2();
+code
+{
+   heartbeat := PULSE_SEC * 60;
+
+   :loop:
+   wait(SFB_TICK | SFB_RANTIME, TRUE);
+   if (self.outside.nameidx $= "coffin")
+   {
+      if (isset(self.outside.openflags, EX_CLOSED))
+      {
+	 exec("knock coffin", self);
+	 goto loop;
+      }
+      else
+	exec("exit", self);
+   }
+   quit;
+}
+dilend
+end
+
+%objects
+
+			    white_robe
+
+names {"robe","white robe"}
+title "a white robe"
+descr "A white robe is lying on the ground."
+extra {} "The robe seems to be made of some sort of silk. It feels very
+light."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+ARMOUR_CLOTHES(0, 0)
+type ITEM_WORN
+weight 3
+cost 1 COPPER_PIECE
+dilcopy ali_restrict@function (-1000,-350,0,25,"");
+end
+
+
+			    coffin
+
+names {"old coffin", "coffin"}
+title "an old coffin"
+descr "An old rotten coffin has been left here."
+extra {}
+"It is made from wood that has now nearly rotted away."
+flags {UNIT_FL_BURIED}
+open {EX_CLOSED, EX_OPEN_CLOSE}
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD, MANIPULATE_ENTER}
+open {EX_OPEN_CLOSE, EX_INSIDE_OPEN}
+type ITEM_CONTAINER
+capacity 350   /* Space for large human */
+weight 40
+end
+
+
+			  gargoyle_statue
+
+names {"stone gargoyles", "gargoyles", "gargoyle", "statues", "statue"}
+title "the stone gargoyle"
+descr "Two stone gargoyle statues are guarding the tomb entrance."
+extra {}
+"The stone gargoyles are small statues of a creature with long horns
+pointing out from the forehead. With glowing green eyes the statues
+almost seems to look at you with cold and hatred."
+weight 450
+dilbegin prg3();
+var
+   u : unitptr;
+code
+{
+   wait(SFB_MSG, activator.nameidx $= "lord_agmarr");
+   act("$1n becomes alive and leaves north.",
+	A_ALWAYS, self, null, null, TO_ROOM);
+   u := load("stone_gargoyle@cemetery");
+   link(u, activator.outside);
+   act("$1n has arrived from south.",
+	A_ALWAYS, u, null, null, TO_ROOM);
+   u := load("stone_gargoyle@cemetery");
+   link(u, activator.outside);
+   act("$1n has arrived from south.",
+	A_ALWAYS, u, null, null, TO_ROOM);
+   destroy(self);
+}
+dilend
+end
+
+
+
+		     toadstone
+
+names {"toadstone", "stone"}
+title "a toadstone"
+descr "A toadstone in a leather string lies here"
+extra {}
+"The stone looks like it is made of limestone. As you touch it
+it gives a strange green glow."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_NECK}
+type ITEM_WORN
+weight 1
+rent 80 IRON_PIECE
+cost 10 GOLD_PIECE
+SPELL_TRANSFER(SPL_INTERNAL, +5)
+extra {"$identify"}
+"The toadstone provides protection against poison sphere spells."
+extra {"$improved identify"}
+"The toadstone provides +10 poison sphere protection."
+end
+
+			    dusty_robe
+names {"dusty robe","robe"}
+title "a dusty robe"
+descr "A dusty robe is lying on the ground."
+extra {}
+"The robe looks like it has been regal once, dark red, black and gold marks
+coveres the back. But now it is torned and dirty."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+ARMOUR_CLOTHES(3,3)
+weight 10
+rent 120 IRON_PIECE
+cost 77 SILVER_PIECE
+dilcopy ali_restrict@function (-1000,-350,0,25,"");
+extra {"$identify"}
+"The cloth of this robe makes it easier for the wearer to hide. It may only
+be worn by evil persons."
+extra {"$improved identify"}
+"The robe gives +10 to the hiding skill."
+end
+
+			      kinslayer
+names {"great axe", "axe", "kinslayer"}
+title "the axe"
+descr "A great axe is lying here."
+extra {}
+"The axe head is very slim and has two edges. The axe seems to be corroded
+of rust but you notice an inscription on the blade. Near the end of the
+handle you can see a faded dark blue gem."
+extra {"blade", "inscription"}
+"The inscription says, 'Kinslayer'."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_BATTLE_AXE, 2, 2)
+weight 20
+rent 20 IRON_PIECE
+cost 30 GOLD_PIECE
+dilcopy ali_restrict@function (-1000,-350,0,25,"");
+extra {"$identify"}
+"This battle axe is made of extraordinarily strong metal. It may only
+be wielded by evil persons."
+extra {"$improved identify"}
+"The axe has a +20 bonus because of the strong metal."
+end
+
+%reset
+
+door cemetery_gate EAST {EX_OPEN_CLOSE, EX_CLOSED}
+door cemetery_road WEST {EX_OPEN_CLOSE, EX_CLOSED}
+
+door giant_hillock DOWN {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door undergr_tomb  UP   {EX_OPEN_CLOSE, EX_CLOSED}
+
+load lord_agmarr into agmarrs_tomb max 1 complete
+{
+   equip toadstone position WEAR_NECK_1 max 1
+   equip kinslayer position WEAR_WIELD max 1
+   equip dusty_robe position WEAR_ABOUT max 1
+}
+
+load banshee into fog zonemax 1
+
+load coffin into west_cem_end local 2 complete
+{
+   load black_skeleton max 4
+}
+
+load coffin into east_cem_end local 2 complete
+{
+   load black_skeleton max 4
+}
+
+load coffin into west_cem_end local 2 complete
+{
+   load black_skeleton max 4
+}
+
+load coffin into east_cem_end local 2 complete
+{
+   load black_skeleton max 4
+}
+
+load gargoyle_statue into undergr_tomb max 1
+
+load helmsman into lsh_stern max 1
+
+%end
+
+

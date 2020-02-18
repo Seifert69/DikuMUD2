@@ -1,0 +1,6405 @@
+/*
+filename    ogre
+password    green1
+changedby   eirinn
+EmailAdd     Jpc - John <clarej@tcd.ie>
+request     compile
+version     9
+END HEADER*/
+
+/* 2nd May 1997 brought into new limits */
+
+#include <composed.h> 
+ 
+%zone ogre
+ 
+title "Moochan Tandor" 
+ 
+lifespan 20 
+ 
+reset RESET_ANYHOW 
+ 
+creators {"eirinn"} 
+ 
+notes "This is part one of my second zone for Valhalla-USA. Planned as basically an Ogre city-state, with fungus mine, ogre town, slave pit, small over ground marsh area. Designed for levels 25-40. Mainly underground though. It's planned as a pretty large zone, basically the town, the mines, the pit, and the marsh area are separate. If you have any questions/queries/advice/bug-reports, please mail them to clarej@alf2.tcd.ie. Thanks :)"
+
+help "So you want some help do you? Ok, this is Moochan Tandor - the land of the Ogres. It has been designed for those of levels 25-40, and anyone below that should be very careful here. If you need more help, look for Eirinn and he'll do his best to assist."
+
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++  E X T R A S  M A C R O S   ++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* MACROS for various extras throughout the zone */
+
+#define TUNNEL_EXTRAS \
+    extra {"steps", "step"} \
+"The steps seem to be carved from rock. They are regularly shaped, and deliberately \
+ placed all the way through the tunnel. They seem to be very old, and some bear the \
+ marks of frequent and prolonged use." \
+    extra {"luminous green fungus", "green fungus", "fungus"} \
+"The fungus is like a mat here, fluffed like cotton wool in places. It seems to glow \
+ in a luminous green, and glistens in the darkness. The smell seems to come from \
+ the fruiting bodies on the fungus, probably the spores. The fungus seems to be \
+ warm to the touch." \
+    extra {"rock"} \
+"The rock seems to have been chiselled out by great tools a long, long time ago. \
+ It seems to be some sort of pale granite." \
+    extra {"beads of moisture", "beads", "moisture"} \
+"The beads of moisture are like dew drops laid down by the dawn, but perhaps \
+ they are just a by-product of the fungus's activity." \
+    extra {"$leave_s", "n s e w"} \
+"You head $3t through the tunnel." \
+    extra {"$leave_o", "n s e w"} \
+"$1n heads $3t through the tunnel." \
+    extra {"$arrive_o", "n s e w"} \
+"$1n has arrived through the tunnel from $3t." \
+
+#define CITY_EXTRAS \
+    extra {"walls", "wall"} \
+"The walls have been hewn out of the rock itself. They are quite uneven in places, but \
+ very solid. They are almost devoid of fungus, the granite provides its own decoration \ 
+ as pieces of mica and feldspar glint in the light as you pass." \
+    extra {"ground", "floor", "pavement"} \
+"The ground has been hewn out of the rock itself. It is more regular in shape than \ 
+ the walls, either through design, or just continual use. It is covered with a light \
+ dusting of what appears to be sand, though it could just be dust." \
+    extra {"ceiling", "roof"} \
+"The roof of this area is quite high, probably to allow the ogres to pass unencumbered. \
+ It is hewn out of the granite which is the makes up most of the rock around here." \
+    extra {"glowlights", "glowlight", "glow lights", "glow light", "lights", "light"} \
+"These strange fittings look like torches, but instead of having a flame, their light \
+ comes from the ball of fungus impaled on the end of a stone spike which has been \
+ hammered into the wall. The light is a luminous green colour and it casts an eerie \
+ glow on the place." \
+    extra {"trash", "rubbish", "waste", "remnants", "remnant"} \
+"The rubbish is made up of old bones, dead fungus, ogre excrement, even rocks and \
+ pebbles. It all seems to be material which the ogres no longer value or want. The \ 
+ idea of disposing of the rubbish properly probably hasn't occurred to them, and \
+ you seriously doubt if it ever will..." \
+
+#define PIT_EXTRAS \
+    extra {"walls", "wall"} \
+"The walls are cut out of the sandstone rock which predominates the rock \
+ type in this part of Moochan Tandor. They are around 3 metres high, and \
+ then there is a huge space between their top and the cavern ceiling far \
+ above. The walls are a faded red yellow colour, and there is a lot of \
+ dust on the ground. Torches are mounted along the walls." \
+    extra {"ground", "floor", "pavement"} \
+"The ground is flat and unpaved. It is like the walls in colour, but there \
+ is a light covering of dust on it." \
+    extra {"ceiling", "roof"} \
+"Far above you is the cavern ceiling, barely visible as the light only \
+ barely penetrates the darkness as far as the ceiling It is domed, and \
+ you wonder whether this is a natural cavern because you can't imagine \
+ something so large could be hollowed out by hand." \
+    extra {"torches", "torch"} \
+"The torches burn with animal fat. They cast an orange glow on the \
+ sandstone walls and floor, flickering in a draft which is barely \
+ noticeable. The glow makes the yellow walls look like the sun is \
+ shining on them." \
+    extra {"gate"} \
+"The gate is made from iron bars. You can see straight through it down \
+ the main corridor of the slave pit. The gate is about 3 metres tall, and \
+ is on a single hinge. It is not lockable and seems to serve only to mark \
+ the entrance to the pit." \
+    extra {"bars"} \
+"These bars are made from iron. They are crude in design, but they serve \
+ their purpose adequately. They are lockable, and there is large metal \
+ lock on the right hand side. These would be almost impossible to force \
+ open." \
+    extra {"excrement", "shit"} \
+"It's shit, what more can I say?!" \
+    extra {"dust"} \
+"The dust is sandy coloured, probably from the sandstone walls." \
+
+#define FARM_EXTRAS \
+    extra {"walls", "wall"} \
+"The walls of this cavern would probably be granite, but for the fact that \
+ they're absolutely covered in Fungus. They are curved up to the domed \
+ ceiling of the cavern." \
+    extra {"cavern ceiling", "ceiling", "roof"} \
+"The ceiling of the cavern is dome shaped, and the fungus seems to ascend the walls \
+ almost to the top of this dome. There is a bare patch right at the top, where the \
+ bare granite reflects the eerie green light of the fungus back down into the cavern." \
+    extra {"floor of the cavern", "cavern floor", "ground", "floor"} \
+"The ground is covered in a thick spongy blanket of fungus. It carpets the entire \
+ cavern and even extends up the walls towards the ceiling. As you walk, you step \
+ on the fungus and it gives you a strange feeling as it squelches and spurts green \
+ ooze onto your feet." \
+    extra {"fungus crop", "fungus", "carpet of fungus", "carpet"} \
+"The fungus is a disgusting green colour. It grows in a carpet over the floor of the \
+ cavern like a sickly green field. It emits an eerie luminous green light and this light \
+ almost dazzles you because there is so much of it. The entire cavern seems to glow \
+ and slowly throb with this spooky illumination. As you step on the fungus, it \
+ releases a green fluid all over your feet." \
+    extra {"$leave_s", "n s e w"} \
+"You wade through the fungus and make your way $3t." \
+    extra {"$leave_o", "n s e w"} \
+"$1n wades off $3t through the fungus." \
+    extra {"$arrive_s", "n s e w"} \
+"You manage to wade through the fungus." \
+    extra {"$arrive_o", "n s e w"} \
+"$1n wades in from $3t through the fungus." \
+
+#define LEDGE_EXTRAS \
+    extra {"walls", "wall"} \
+"The walls are granite, and they curve inwards over your head towards the centre \
+ of the cavern roof." \
+    extra {"cavern ceiling", "ceiling", "roof"} \
+"The ceiling of the cavern is dome shaped, and the fungus seems to ascend the walls \
+ almost to the top of this dome. There is a bare patch right at the top, where the \
+ bare granite reflects the eerie green light of the fungus back down into the cavern." \
+    extra {"ground", "floor", "ledge"} \
+"The ledge floor is free of fungus. It is clumsily-cut granite, and you must mind your \
+ step as your walk upon it so as not to stumble." \
+    extra {"cavern below", "cavern itself", "cavern", "over the ledge"} \
+"You get an amazing view of the cavern below you - you are high above it and can \
+ things moving about in the haze of green fungus. You could probably jump down \
+ onto the bed of fungus below." \
+    extra {"$leave_s", "n s e w"} \
+"You edge your way carefully $3twards." \
+    extra {"$leave_o", "n s e w"} \
+"$1n edges $1s way carefully $3twards." \
+    extra {"$arrive_o", "n s e w"} \
+"$1n edges $1s way along the ledge from $3t." \
+
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++
++++++++++++++++  M O B  M A C R O S  +++++++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++ */
+/* MACROS for various mobs */
+
+/*
+	Mobile Macros for Ogres, Dark elves, Frogs, Centipedes, Beetles
+	and slaves.
+*/
+
+#define OGRE(SEX,LEVE) \
+   sex SEX \
+   race RACE_OGRE \
+   level LEVE \
+   height 200 + LEVE \
+   weight 300 + LEVE*2 \
+   NATURAL_DEF(WPN_FIST,ARM_LEATHER) \
+   MSET_ABILITY(20,20,13,12,5,16,8,6) \
+   MSET_WEAPON(10,5,20,3,5,7) \
+   MSET_SPELL(5,5,4,4,4,4,4,5,5,5,5) \
+   alignment -500 \
+   exp 100 \
+
+#define DARKELF(SEX,LEVE) \
+   race RACE_DARK_ELF \
+   sex SEX \
+   height 190 + LEVE \
+   weight 150 + LEVE \
+   level LEVE \
+   alignment -1000 \
+   NATURAL_DEF(WPN_FIST, ARM_HLEATHER) \
+   MSET_ABILITY(20,30,5,15,15,10,5,0) \
+   MSET_WEAPON(11,10,7,10,10,2) \
+   MSET_SPELL(4,4,4,4,4,4,5,5,6,5,5) \
+
+#define FROG(LEVE) \
+   MSET_ABILITY(15,20,20,10,6,29,0,0) \
+   MSET_WEAPON(6,6,6,6,15,6) \
+   MSET_SPELL(4,4,4,5,5,5,5,5,6,6,6) \
+   sex SEX_NEUTRAL \
+   race RACE_FROG \
+   level LEVE \
+   height 150 + LEVE \
+   weight 300 + LEVE*2 \
+   NATURAL_DEF(WPN_KICK,ARM_LEATHER) \
+   alignment 0 \
+   exp 100 \
+
+#define CENTI(LEVE) \
+   MSET_ABILITY(15,15,17,10,10,23,5,5) \
+   MSET_WEAPON(9,9,9,6,6,6) \
+   MSET_SPELL(4,4,4,5,5,5,5,5,6,6,6) \
+   sex SEX_NEUTRAL \
+   race RACE_OTHER_INSECT \
+   level LEVE \
+   height 100 + LEVE \
+   weight 300 + LEVE \
+   NATURAL_DEF(WPN_BITE,ARM_LEATHER) \
+   special SFUN_COMBAT_POISON \
+   special SFUN_AGGRESSIVE "The Centipede attacks!" time 100 bits SFB_RANTIME \
+   alignment -350 \
+   exp 125 \
+
+#define BEETLE(LEVE) \
+   MSET_ABILITY(17,17,19,10,12,9,8,8) \
+   MSET_WEAPON(6,6,6,6,15,6) \
+   MSET_SPELL(4,4,4,5,5,5,5,5,6,6,6) \
+   sex SEX_NEUTRAL \
+   race RACE_BEETLE \
+   level LEVE \
+   height 150 + LEVE \
+   weight 300 + LEVE \
+   NATURAL_DEF(WPN_BITE,ARM_HLEATHER) \
+   alignment 0 \
+   exp 100 \
+
+#define SLAVE(SEXE, LEVE, RAC) \
+   alignment 500 \
+   sex SEXE \
+   race RAC \
+   level LEVE \
+   height 140 + LEVE \
+   weight 240 + LEVE \
+   NATURAL_DEF(WPN_FIST,ARM_CLOTHES) \
+   MSET_ABILITY(19,19,9,11,15,13,4,10) \
+   MSET_WEAPON(17,0,17,0,16,0) \
+   MSET_SPELL(5,5,5,5,2,4,5,5,4,5,5) \
+   exp 100 \
+
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++  QUEST MACROS   S E C T I O N   +++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++ */
+
+#define SLAVE_QUEST_ONGOING     "Slave's quest ongoing"
+#define SLAVE_QUEST_FINISHED    "Slave's quest complete"
+#define VILAN_GIVE_SHIELD       "$skyshield_vilan"
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++  D I L C O D E   S E C T I O N  +++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++ */
+%dil 
+
+dilbegin block_movement(); /* Block movement commands */
+
+code 
+{
+
+:start:
+    wait(SFB_CMD,( (command("north") or command("south") or command("west") or command("east") or command("up") or command("down") or command("look")) and (activator.level<CREATOR_LEVEL) ));
+    block;
+    goto start;
+
+}
+dilend /* block_movement */
+
+dilbegin jumper(place:string); /* Jumping off the cliff */ 
+ 
+external
+falling@ogre(place:string); 
+
+var 
+  pc      : unitptr; 
+  result : integer;
+
+code  
+{ 
+:start: 
+   heartbeat := PULSE_SEC*1; 
+   wait(SFB_CMD,command("jump"));
+   block; 
+   pc := activator; 
+   secure(pc,lost); 
+   dilcopy("block_movement@ogre",pc);
+
+   act("You hurl yourself off the ledge!",
+A_ALWAYS,pc,null,null,TO_CHAR);
+   act("$1n jumps off the ledge and falls down into the cavern!",
+A_SOMEONE,pc,null,null,TO_REST);
+   act("You close your eyes and hope for the best!",
+A_ALWAYS,pc,null,null,TO_CHAR);
+   act("$1n closes $1s eyes as $1e goes over the edge!",
+A_SOMEONE,pc,null,null,TO_REST);		
+pause;
+link(pc,findroom("jump_room@ogre")); 
+result := dildestroy("block_movement@ogre",pc);
+dilcopy("falling@ogre("+place+")",pc);
+unsecure(pc); 
+goto start; 
+ 
+:lost: 
+   unsecure(pc); 
+   goto start; 
+} 
+dilend /* jumper */ 
+
+dilbegin recall falling(place:string);  /* Wooo I'm falling */
+
+var 
+the_place : string;
+
+code 
+{
+:start:
+   heartbeat := PULSE_SEC*3;
+
+the_place := "farm_" + place + "@ogre";
+
+   act("You plummet through the air towards the fungus far below!",
+A_ALWAYS,self,null,null,TO_CHAR);
+   pause;
+   act("The only thought which goes through your mind is 'Why did I do this!?!?!'",
+A_ALWAYS,self,null,null,TO_CHAR);
+   pause;
+   act("You near the ground after a long fall!",
+A_ALWAYS,self,null,null,TO_CHAR);
+   pause;
+
+link(self,findroom(the_place)); 
+act("As you land, the fungus cushions your fall.",
+A_ALWAYS,self,null,null,TO_CHAR);
+act("$1n lands in a heap amongst the fungus.", 
+A_SOMEONE,self,null,null,TO_REST);
+exec("look",self);
+pause;
+quit;
+}
+dilend /* falling */
+
+dilbegin hop();
+
+var
+   i            : integer;
+   n            : integer;
+   dir          : integer;
+   dest         : unitptr;
+   here         : unitptr;
+   heart        : integer;
+
+code 
+{
+:init:
+   heartbeat := PULSE_SEC*10;
+   heart := 10;
+   i := interrupt(SFB_COM,self.position==POSITION_FIGHTING,fight);
+:start:
+wait(SFB_TICK, TRUE);
+if (self.position!=POSITION_STANDING) goto start;
+:moving:
+
+   n := 0;  /* initilize loop counter, to prevent dil destroy */
+:get_dir:
+   heartbeat := 3;
+   dir := rnd(0,5);
+   here := self.outside;
+   dest := self.outside.exit_to[dir];
+
+   if ((dest == null) or
+       (isset(dest.flags, UNIT_FL_NO_MOB)) or
+       (dest.movement == SECT_WATER_SWIM) or
+       (dest.movement == SECT_WATER_SAIL) or
+       (dest.movement == SECT_UNDER_WATER))
+   {
+      n := n + 1;
+      if (n > 20)
+      {
+         n := 0;
+         pause;
+      }
+      goto get_dir;
+   }
+   heartbeat := PULSE_SEC*heart;
+
+   if (isset (self.outside.exit_info[dir], EX_CLOSED)) goto moving;
+
+   act("$1n hops away into the marsh.",
+      A_SOMEONE,self,null,null,TO_ALL);
+   link(self,dest);
+   act("$1n hops in and lands nearby.",
+      A_SOMEONE,self,null,null,TO_ALL);
+   goto init;
+
+:fight:
+   heartbeat := PULSE_SEC*3;
+   while (self.position == POSITION_FIGHTING) pause;
+   heartbeat := PULSE_SEC*1;
+   goto start;
+}
+dilend /* hop */
+
+dilbegin no_passage();  /* Prevent passage downwards (just a healthy warning, not supposed to be iron clad or anything) */ 
+
+var 
+pc :unitptr;
+code 
+{ 
+on_activation(self.position <= POSITION_SLEEPING, sleep);
+
+:start: 
+heartbeat := 3;
+
+wait(SFB_CMD,( (command("down")) and ("bouncerdown" in self.outside.names) and (activator.level <20) )); 
+pc:=activator;
+secure(pc, lostem);
+if (not("bouncerdown" in self.outside.names)) goto goback;
+block;
+
+heartbeat := PULSE_SEC*1;
+exec("say Your name's not Dan, you're not comin in", self);
+pause;
+act("Bouncer blocks your passage into Moochan Tandor.", 
+	A_ALWAYS, pc, null, null, TO_CHAR); 
+act("Bouncer blocks $1n's passage into Moochan Tandor.", 
+	A_ALWAYS, pc, null, null, TO_REST); 
+act("You are not high enough in level to enter Moochan Tandor.", 
+	A_ALWAYS, pc, null, null, TO_CHAR); 
+pause;
+exec("laugh " + pc.name, self);
+
+:lostem:
+unsecure(pc);
+goto start;
+
+:sleep:
+   heartbeat := 240; /* approx 1 min max sleeping time */
+   pause;
+:goback:
+   self.position := POSITION_STANDING;
+   exec("yawn", self);
+   heartbeat := 3;
+   walkto(findroom("marsh_14@ogre1"));  /* incase he was dragged away while asleep */
+   goto start;  /* Back to work */
+} 
+dilend /* Prevent Passage */
+
+dilbegin kill_block(); /* Block kill on bouncer and wait for confirmation */ 
+ 
+var 
+    perp : unitptr; 
+    i : integer;
+
+code  
+{ 
+:init:
+   heartbeat:=PULSE_SEC*1;
+   i := interrupt(SFB_COM,self.position==POSITION_FIGHTING,fight); 
+
+:start: 
+    wait(SFB_CMD,command(CMD_KILL)); 
+    perp := activator; 
+    secure(perp,lost); 
+     
+       if ((findunit(activator,argument,FIND_UNIT_SURRO,null)==self) and (perp.level < 30))
+       { 
+           block;
+	act("Bouncer's right head says '" + perp.name + ", I would not " +
+		"try that if I were you.'", 
+		A_ALWAYS,perp,null,null,TO_ALL); 
+	pause;
+	act("Bouncer's left head exclaims 'huh huh, me neither!'",
+		A_ALWAYS,perp,null,null,TO_ALL); 
+	pause;
+	pause;
+	act("Both heads exclaim in unison 'But it you really want to die, " +
+		"then try now!",
+		A_ALWAYS,perp,null,null,TO_ALL); 
+	heartbeat:=PULSE_SEC*15;
+	pause;
+	heartbeat:=PULSE_SEC*1;
+            goto start; 
+       } 
+    goto start; 
+ 
+:fight: 
+   heartbeat := PULSE_SEC*3; 
+   while (self.position == POSITION_FIGHTING) pause; 
+   heartbeat := PULSE_SEC*1; 
+   goto start; 
+
+:lost: 
+    unsecure(perp); 
+    goto start; 
+ } 
+dilend /* kill_block */
+
+dilbegin whip_lash_ef(medi : unitptr, targ : unitptr, hm : integer);
+
+code 
+{
+
+   act("The pins on your whip's thongs bristle and shred $3n's flesh!",
+      A_ALWAYS,self,null,targ,TO_CHAR);
+   act("The pins on $1n's whip's thongs bristle and shred your flesh!",
+      A_ALWAYS,self,null,targ,TO_VICT);
+   act("$1n's whip's pins bristle and shred $3n's flesh!",
+      A_SOMEONE,self,null,targ,TO_REST);
+   return;
+}
+dilend /* whip_lash_ef */
+
+dilbegin crush_ef(medi : unitptr, targ : unitptr, hm : integer);
+
+code 
+{
+
+   act("Your &c+yFist of Odin&cw crushes $3n into the ground!",
+      A_ALWAYS,self,null,targ,TO_CHAR);
+   act("$1n's &c+yFist of Odin&cw impacts on your skull and " +
+       "crushes you into the ground!", 
+      A_ALWAYS,self,null,targ,TO_VICT);
+   act("$1n's &c+yFist of Odin&cw crushes $3n into the ground!",
+      A_SOMEONE,self,null,targ,TO_REST);
+   return;
+}
+dilend /* crush_ef */
+
+dilbegin busy_questor(); /* I'm busy giving a quest, wait */
+
+var 
+itemg : unitptr;
+pc : unitptr;
+
+code
+{
+   :start:
+heartbeat := PULSE_SEC*4;  /* Give quest a chance to work, if busy, give back */
+   wait (SFB_DONE,((command(CMD_GIVE)) and (self==target)));
+
+itemg := medium;
+secure(itemg, lostit);
+pc := activator;
+secure(pc, lostit);
+
+pause;
+exec ("drop " + itemg.name, self);
+exec ("tell " + pc.name + " Please wait a moment, I'm busy.", self);
+unsecure(itemg);
+unsecure(pc);
+goto start;
+
+:lostit:
+unsecure(itemg);
+unsecure(pc);
+goto start;
+}
+dilend /* Questor busy */
+
+dilbegin disarm_block(); /* Block Disarming */ 
+ 
+var 
+    giver : unitptr; 
+ 
+code  
+{ 
+:start: 
+    wait(SFB_CMD,command(CMD_DISARM)); 
+    giver := activator; 
+    secure(giver,lost); 
+     
+       if (findunit(activator,argument,FIND_UNIT_SURRO,null)==self) 
+       { 
+           block; 
+           act("$1n vainly tries to disarm " + self.title + ".", 
+                A_SOMEONE,giver,null,null,TO_REST); 
+           exec("say Don't be foolish " + giver.name + "." ,self); 
+           act(self.title + " glares at you!", 
+                A_ALWAYS,giver,null,null,TO_CHAR); 
+           act(self.title + " glares at $1n!", 
+                A_SOMEONE,giver,null,null,TO_REST); 
+           goto start; 
+       } 
+    goto start; 
+ 
+:lost: 
+    unsecure(giver); 
+    goto start; 
+ 
+} 
+dilend /* disarm_block */
+
+dilbegin filch_block(); /* Block Filching */ 
+ 
+var 
+    filcher  : unitptr; 
+    unitname : string; 
+ 
+code 
+{ 
+:start: 
+    wait(SFB_CMD,command(CMD_FILCH)); 
+    filcher := activator; 
+    secure(filcher,lost); 
+ 
+       while (argument != "") 
+       { 
+           unitname := getword(argument); 
+           if (unitname == "from") 
+           { 
+               goto bus; 
+           } 
+       } 
+goto start;   
+  
+:bus: 
+       unitname := getword(argument); 
+       if (findunit(activator,unitname,FIND_UNIT_SURRO,null)==self) 
+       { 
+       block; 
+           act("$1n vainly tries to filch something from " + self.title + ".", 
+                A_SOMEONE,filcher,null,null,TO_REST); 
+           exec("say Don't be foolish " + filcher.name + "." ,self); 
+           act(self.title + " glares at you!", 
+                A_ALWAYS,filcher,null,null,TO_CHAR); 
+           act(self.title + " glares at $1n!", 
+                A_SOMEONE,filcher,null,null,TO_REST); 
+           goto start; 
+       } 
+    goto start; 
+ 
+:lost: 
+    unsecure(filcher); 
+    goto start; 
+ 
+} 
+dilend /* filch_block */
+
+dilbegin body_set();
+var
+  unit:unitptr;
+code
+{
+  unit:=load("sword@ogre");
+  addequip(unit,WEAR_WIELD);
+  quit;
+}
+dilend
+
+dilbegin recall bc_life(); /* Black Crystal armour lasts a mud month */
+
+code 
+{
+:init:
+heartbeat := PULSE_SEC*SECS_PER_MUD_MONTH;
+
+:start:
+heartbeat:=PULSE_SEC*20;
+pause;
+heartbeat := PULSE_SEC*SECS_PER_MUD_MONTH;
+   wait(SFB_TICK,(self.equip));
+if ("darkelf" in self.outside.names) goto start;
+
+   act("Your " + self.name + " shatters into hundreds of shards!",
+      A_ALWAYS,self.outside,self,null,TO_CHAR);
+   act("$1n's " + self.name + " shatters into hundreds of shards!",
+      A_ALWAYS,self.outside,self,null,TO_REST);
+   destroy(self); 
+   goto start;
+}
+dilend /* bc_life */
+
+dilbegin item_repair(base_charge:integer);
+
+external
+  string accept_dil@function (pc:unitptr,s:string);
+
+var
+   tcost   : integer;
+   state   : integer;
+   magmod  : integer;
+   addmag  : integer; 
+   die     : integer;
+   result  : integer;
+   percent : integer;
+   thing   : unitptr;
+   pc      : unitptr;
+   answer  : string;
+   mn      : string;
+
+code
+{
+
+:init:
+   heartbeat := PULSE_SEC*5;
+   self.spells[SPL_RECONSTRUCT] := 200;
+
+:start:
+   wait (SFB_DONE,( (command(CMD_GIVE)) and (self==target) ));
+
+pc:=activator;
+thing:=medium;
+secure(pc,lost_pc);
+secure(thing,lost_pc);
+
+if ("jpcrag" in thing.names) goto lost_pc;
+
+if( not visible( self, pc ) )
+   {
+      exec("say I only do business with people i can see.", self );
+      exec("drop " + thing.name, self);
+      goto lost_pc;
+   }
+
+dilcopy ("busy@function(Please wait I am busy with other work right now.", self);
+
+if (thing.type!=UNIT_ST_OBJ)
+   {
+      exec ("say How am I supposed to repair that then "+pc.name+"?",self);
+      exec ("bonk " + pc.name,self);
+      goto give_back;
+   }
+
+/* If people don't wish their items repairable by shops, they declare an 
+   extra, $norepair, on the item. */
+
+if ("$norepair" in thing.extra) 
+   {
+      exec ("say I can't repair this " + thing.title +
+            ", pc.name. It is beyond my ability.", self);
+      goto give_back;
+   }
+
+/* 
+
+OK , is the item actually repairable? (Not nearly broken) 
+
+90% - 100%      excellent  
+75% - 89%       good       
+50% - 74%       worn   
+30% - 49%       poor  
+10% - 29%       horrible
+1%  - 9%        nearly broken 
+-   - 0%        broken  
+
+*/
+
+percent :=  ((thing.hp*100)/thing.max_hp);
+
+if ( percent >= 90 )
+   {
+      exec("say It is in excellent condition, what do you want " +
+           "to go repairing it for?!?", self);
+      exec("bonk " + pc.name, self);
+      goto give_back;
+   }
+
+else if ( percent >= 75 ) 
+   {
+      state := 2560;
+      goto how_much;
+   }
+
+else if ( percent >= 50 )   
+   {
+      state := 5120;
+      goto how_much;
+   }
+
+else if ( percent >= 30 ) 
+   {
+      state := 10240;
+      goto how_much;
+   }
+
+else if ( percent >= 10 )  
+   {
+      state := 20480;
+      goto how_much;
+   }
+
+else if (( thing.hp > 0 ) and (percent < 10))
+   {
+      goto not_possible;
+   }
+else if (thing.hp <= 0 )                      
+   {
+      goto broken_thing;
+   }
+
+:broken_thing:
+   exec("say Oh my, it's broken. I can't fix that. I suggest " +
+        "you try to obtain another.", self);
+   goto give_back;
+
+:not_possible:
+   exec("say Oh dear, I'm afraid that it's past the point " +
+           "of no return. Repairing it would only make it " +
+           "worse " + pc.name + ".", self);
+   goto give_back; 
+
+:how_much:
+   tcost := (base_charge*5120); /* Base cost in gold (x5120). Modified by 
+                                   how badly damaged the item is and its 
+                                   Magical Modifier */
+   tcost := tcost + state;     /* Adjust for how bad the damage is */
+   magmod := thing.value[2]; /* Take Magical Mod into account    */
+
+   if ((magmod > 0) and (magmod < 25))
+   {
+      addmag := magmod*5120; /* 1 gp per mag point */
+      tcost := tcost + addmag;  /* Final cost         */
+   }
+  
+   mn := moneystring(tcost, 0); 
+   exec ("say It will cost you " + mn + " for me to " +
+         "repair that for you.", self);
+   answer := accept_dil@function(pc, "Are you sure you want me to repair it?");
+   pause;
+
+   if (answer=="no")
+   {
+      exec("say Very well. Come back to me when you want it repaired.", self);
+      goto give_back;
+   }
+
+   if (transfermoney(pc, self, tcost))
+   {
+      exec(", focuses on your " + thing.name + " and utters the words " +
+           "'Se reforma'...", self);
+:repair_it:
+      result := cast_spell(SPL_RECONSTRUCT, self, self, thing, "");
+      percent :=  ((thing.hp*100)/thing.max_hp);
+      if (percent < 90) goto repair_it;
+      heartbeat:=PULSE_SEC*1;
+      pause;
+      exec("say There, hope you like it, " + pc.name + "!", self);     
+      heartbeat:=PULSE_SEC*5;
+      goto give_back;
+   }
+   else goto no_money;
+
+:no_money:
+   exec ("say You can't afford my services right now. Please come back " +
+         "when you have enough money.",self);
+   goto give_back;
+
+:give_back:
+   act(self.name + " returns your " + thing.name + " to you.",
+       A_ALWAYS,pc,null,null,TO_CHAR);
+   act(self.name + " returns $1n's " + thing.name + " to $1m.",
+       A_SOMEONE,pc,null,null,TO_REST);
+   link(thing,pc);
+   goto lost_pc;
+
+:lost_pc:
+   die := dildestroy ("busy@function",self);
+   unsecure(pc);
+   unsecure(thing);
+   goto start;
+}
+dilend /* item_repair */
+
+dilbegin mound_gurg();
+
+code
+{
+:init:
+   heartbeat := PULSE_SEC*21;
+
+:start:
+wait(SFB_TICK, TRUE);
+
+act("The Ogre Mound heaves and sighs as the fungus and " +
+    "ogre sputem coalesce and then dissolve once again.",
+    A_SOMEONE,self,null,null,TO_REST);
+pause;
+
+goto start;
+}
+dilend /* mound_gurg */
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++  R O O M S   S E C T I O N  +++++++++++
++++++++++++++++++++++++++++++++++++++++++++++++++ */
+%rooms
+
+/*
+   This zone is divided into 5 areas: the over ground marsh, under which are the other 3 areas, the town of Moochan Tandor, the slave pits, and the fungus mine. All of these are linked by the Tunnel area. The zone is dominated by the Ogres who "control it
+
+
+
+", the leader of whom is a darkelf. THIS IS THE LAST 3 SECTIONS
+*/
+
+/* SECTION 3: MOOCHAN TANDOR CITY */
+
+				city_1
+names {"inside gates"}
+title "Inside the gates of Moochan Tandor"
+
+descr
+" These are the gates of Moochan Tandor, the city of the ogres. The stench of rubbish and decaying waste pervades the place like a foul parasite. Pieces of waste matter have been strewn about and no effort has been made to dispose of it properly. The gate
+
+
+
+s stand to your east, intimidating in their brutal simplicity. A tunnel lies beyond the gates. To the south what appears to be some form of guard post has been cut into the wall, like an after-thought, but it could just be a large alcove. The main square 
+
+
+
+is to the west. The only light is provided by glowlights which have been mounted on the walls."
+
+extra {"city gates", "gates", "gate"}
+"These gates have been crafted by great hammers and chisels. They aren't particularly fine, but they are definitely unique in their design. They are both ugly and repulsive, with the evil faces of two great ogres staring out at you."
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_MOB}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+east to tunnel_15@ogre1 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"gates", "gate"} 
+descr "Outside the gates";
+west to city_3 descr "Mooch Square";
+south to city_2 descr "Guard room";
+
+end
+
+			city_2
+names {"guard room"}
+title "The gate guard's room"
+
+descr
+" This must be the gate guard's room - it is beside the entrance to the city of Moochan Tandor. It's little more than a large alcove, and the remnants of the occupant's last meal lie around and about. There is a single glowlight on the south wall providin
+
+
+
+g light to the room. The only exit is north to the gates."
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+north to city_1 descr "At the gates";
+
+end
+
+			city_3
+names {"south east of square"}
+title "The south eastern corner of Mooch Square"
+
+descr
+" Some paving slabs have been laid down in this part of the city, though they are better described as rubble, because they have been left to wear away. The square is lit by glowstones which have been mounted on the walls around it."
+
+extra {"paving slabs", "slabs"}
+"The slabs are made out of the same granite as the walls, floors, and ceilings. It seems a bit pointless to pave granite with granite, but that's ogres for you."
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+north to city_4 descr "The east side of Mooch Square";
+east to city_1 descr "At the gates";
+west to city_17 descr "The south end of Mooch Square";
+
+end
+
+			city_4
+names {"east side of square"}
+title "The east side of Mooch Square"
+
+descr
+" The air is quite cool, but there is a distinct draft coming from the north - there must be some warmer air in that direction. The glowstones provide just enough light to see by, but you find it hard to see any great distance."
+
+extra {"paving slabs", "slabs"}
+"The slabs are made out of the same granite as the walls, floors, and ceilings. It seems a bit pointless to pave granite with granite, but that's ogres for you."
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+north to city_5 descr "The north east corner of Mooch Square";
+west to city_18 descr "The centre of Mooch Square";
+south to city_3 descr "The south east corner of Mooch Square";
+
+end 
+
+			city_5
+names {"north east corner of square"}
+title "The north east corner of Mooch Square"
+
+descr
+" The air is noticeably warmer than that elsewhere in the square. It seems to increase in temperature to the east, and a brightly-lit tunnel leads in that direction. The square is south and west from here. From time to time, sounds like gurgles come from 
+
+
+
+the tunnel to the east, but they're barely discernible from the noise of the city."
+
+extra {"paving slabs", "slabs"}
+"The slabs are made out of the same granite as the walls, floors, and ceilings. It seems a bit pointless to pave granite with granite, but that's ogres for you."
+
+extra {"brightly-lit tunnel", "tunnel"}
+"The tunnel is brightly lit, not by glowstones, but by fungus growing on the walls. A warm airflow comes from it." 
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+east to city_6 descr "Down a warm, bright tunnel";
+west to city_19 descr "The north end of Mooch Square";
+south to city_4 descr "The east side of Mooch Square";
+
+end 
+
+			city_6
+names {"spawn tunnel"}
+title "In a tunnel near Mooch Square"
+
+descr
+" The ceiling is much higher than that of the square. The tunnel seems to generate its own heat, probably because of the shining fungus. The tunnel continues its progress northwards, and the fungus is so bright that it dazzles you, thus preventing you fro
+
+
+
+m seeing much further in that direction."
+
+TUNNEL_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_MOUNTAIN
+
+ALWAYS_LIGHT
+
+west to city_5 descr "The north east corner of Mooch Square";
+north to city_7 descr "Inside the warm tunnel";
+
+end 
+
+			city_7
+names {"spawn tunnel"}
+title "In the ogre spawning tunnel"
+
+descr
+" It's not only warm, but very smelly, like someone has forgotten to clean under their arms and then bottled the smell - pew! The fungus shines very brightly all around you, and to the north it is just about possible to make out a widening in the tunnel w
+
+
+
+here it becomes a great chamber."
+
+TUNNEL_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_MOUNTAIN
+
+ALWAYS_LIGHT
+
+south to city_6 descr "The tunnel entrance near Mooch Square";
+north to city_8 descr "The spawning chamber";
+
+end
+
+			city_8
+names {"spawning chamber"}
+title "At the Ogre Spawning Mound"
+
+descr
+" A very strange sight lies before you. This chamber is quite wide and tall, hollowed out into a vaguely circular cavern. There is a huge mass of fungus, and what appears to be ogre flesh, on the ground before you. It seethes like a great blob with awful 
+
+
+
+ogre groans emmanating from it. This is the ogre spawning place, and that great blob is the ogre spawning mound. The ogres must be born, at least partly, from the fungus itself! The only exit from this chamber is to the south."
+
+TUNNEL_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_MOUNTAIN
+
+ALWAYS_LIGHT
+
+dilcopy mound_gurg@ogre();
+
+south to city_7 descr "Along a brightly-lit tunnel";
+
+end
+
+			city_9
+names {"food store"}
+title "The Ogre food repository"
+
+descr
+" It is a struggle to keep your footing. This is a large alcove where large quantities of ogre food are piled. Fungus, animal flesh, pieces of bone, and the occasional arm or leg, probably from the slaves, can be seen. It has all been piled against the ea
+
+
+
+st wall in a disorderly mound of food. The only way out is west into Gahan way."
+
+extra {"pile", "mound"}
+"Assorted pieces of fungus and flesh have been piled here into a great mound for the ogres to eat from when they feel hungry."
+
+extra {"fungus"}
+"Yet more of that green fungus which the ogres seem to love. The bits of fungus in the pile have been ruled into little balls for eating, and they don't seem to glow very much anymore."
+
+extra {"animal flesh", "flesh"}
+"Beetle flesh and frogs carcasses have been put in the pile for future digestion."
+
+extra {"pieces of bone", "bone pieces", "pieces", "bone"}
+"They seem to be from some form of animal, maybe a cow, but they are choice bones, full of marrow. Good for sucking on."
+
+extra {"arms and legs", "legs", "arms", "leg", "arm"}
+"The merciless ogres have chopped up old slaves, or those that have tried to escape, so they can eat them when they feel peckish. Yuck!"
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+west to city_12 descr "Into Gahan way";
+
+end
+
+			city_10
+names {"ogre hovel"}
+title "A small hovel belonging to an ogre"
+
+descr
+" This small off-shoot from Gahan way appears to be nothing more than an alcove. There is a variety of rubbish and bones lying around, and a worn patch on the ground against the east wall, probably from a great ogre sleeping there over a long period of ti
+
+
+
+me. The alcove is dimly lit by some fungus which manages to live in small patches on the walls. The only exit is west into Gahan way."
+
+extra {"worn patch", "patch", "hollow"}
+"This appears to have been made by the bulk of a great creature as it slept here. The hollow is a few centimetres deep, probably because the creature lived here for so long."
+
+extra {"pieces of bone", "bone pieces", "pieces", "bone"}
+"They seem to be from some form of animal, maybe a cow, but they are choice bones, full of marrow. Good for sucking on."
+
+CITY_EXTRAS
+
+TUNNEL_EXTRAS 
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+west to city_14 descr "Into Gahan way";
+
+end
+
+			city_11
+names {"waste patch"}
+title "The Ogre dump"
+
+descr
+" The first thing that strikes you is the incredibly disgusting odour which emanates from and pervades this area of the town. All around you have been piled pieces of indescribable filth and detritus. It turns your stomach to even be here. It's not really
+
+
+
+ possible to discern the identity of the waste because it is in such an advanced state of decay. This must be where the ogres put there waste. The only exit is north along Gahan way."
+
+extra {"detritus", "waste"}
+"It smells, it turns your stomach to look at it, and you wonder why you stay near it! The detritus is made up of green disgusting slime, and all around are pieces of fungus thriving on the rubbish."
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_SWAMP
+
+ALWAYS_LIGHT
+
+north to city_12 descr "Along Gahan way";
+
+end
+
+			city_12
+names {"gahan way"}
+title "On Gahan way"
+
+descr
+" Gahan way is the main street which runs south from Mooch Square to the city dump. At intervals along the walls are mounted glowstones which provide that eerie green light of the fungus, giving the street a feeling of spookiness. To the south lies the ci
+
+
+
+ty dump, east is where the ogres keep their food, and Gahan way runs north from here."
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+north to city_13 descr "On Gahan way";
+south to city_11 descr "The Ogre waste patch";
+east to city_9 descr "The foodstore";
+
+end
+
+			city_13
+names {"gahan way"}
+title "On Gahan way"
+
+descr
+" Gahan way widens along this stretch, as it runs north-south through the city. There is a strange unpleasant smell drifting in from the south which reminds you of rotting vegetation, only far more pungent. The light from the glowstones reflects off the p
+
+
+
+avement which has been polished from regular traffic. Gahan way runs north and south, and also west to what appears to be an ogre hovel."
+
+extra {"door"}
+"The door is large, and almost square. Surprisingly, it's made of wood, one of the few wooden things you have se
+en down here."
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+north to city_14 descr "North on Gahan way";
+south to city_12 descr "South on Gahan way";
+west to city_22 descr "The Ogre princess's room"
+open {EX_OPEN_CLOSE} keyword {"door"};
+
+end
+
+			city_14
+names {"gahan way"}
+title "On Gahan way"
+
+descr
+" The air is surprisingly warm, and the cooler air from the north causes a noticeable draft as it mingles with the air around you. Gahan way runs south from here, and north to the entrance of a side-tunnel near Mooch Square. A dimly-lit ogre hovel can be 
+
+
+
+seen to the east, with its own unique and uninviting smell."
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+north to city_15 descr "Outside the crystal tunnel";
+south to city_13 descr "South on Gahan way";
+east to city_10 descr "An Ogre hovel";
+
+end
+
+			city_15
+names {"gahan way"}
+title "On Gahan way"
+
+descr
+" This tunnel is Gahan way, at the entrance of another tunnel, but this time the tunnel has been carved out of pure black crystal. It contrasts quite sharply with the other tunnels of Moochan Tandor because it is made from that magical type of obsidian wh
+
+
+
+ich is most rare in the world. What could be so special to warrant such a beautiful feat of underground architecture. Gahan way runs south from here, and north towards Mooch square. This tunnel leads west."
+
+extra {"black crystal", "crystal", "obsidian"}
+"This is magical obsidian - a natural black crystal which is formed when the lava from volcanoes cools suddenly. This type is called black crystal rather than obsidian in order to differentiate it from ordinary obsidian because black crystal is obsidian w
+
+
+
+hich has been imbued with great magical power to prevent it from fracturing or being broken easily. It is as hard as tempered steel."
+
+CITY_EXTRAS
+
+    extra {"$leave_s", "w"} 
+"Trying not to slip on the crystal, you cautiously make your way $3t." 
+    extra {"$leave_o", "w"} 
+"$1n heads $3twards while trying not to slip on the crystal." 
+    extra {"$arrive_s", "w"} 
+"You tread carefully on the crystal as you exit the tunnel into Gahan way." 
+    extra {"$arrive_o", "w"} 
+"$1n arrives from $3t and steps out of the black crystal tunnel into the street." 
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+north to city_16 descr "Near Mooch Square";
+south to city_14 descr "South on Gahan way";
+west to city_23 descr "A tunnel carved out of black crystal";
+
+end
+
+			city_16
+names {"gahan way"}
+title "On Gahan way"
+
+descr
+" The street is quite straight and it runs directly south from Mooch Square. The way is lit by the glowstones which have been mounted at intervals along the walls. The ceiling is perhaps three metres tall, just enough for an ogre to walk under comfortably
+
+
+
+."
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+north to city_17 descr "The southern end of Mooch Square";
+south to city_15 descr "South on Gahan way";
+
+end
+
+			city_17
+names {"south end of square"}
+title "The southern end of Mooch Square"
+
+descr
+" Mooch Square is the heart of Moochan Tandor. This area endures regular traffic from great shambling ogres, and this has taken its toll on the pavement. To the north lies the centre of the Square, while to the east lies the town entrance."
+
+extra {"pavement", "paving slabs", "slabs"}
+"The slabs are made out of the same granite as the walls, floors, and ceilings. It seems a bit pointless to pave granite with granite, but that's ogres for you."
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+north to city_18 descr "The centre of Mooch Square";
+south to city_16 descr "On Gahan way";
+east to city_3 descr "The south eastern corner of the Square";
+west to city_24 descr " The south western corner of the Square";
+
+end
+
+			city_18
+names {"centre of square"}
+title "The centre of Mooch Square"
+
+descr
+" There is a diabolical smell permeating the air and you wish that whatever god controlled that sense had spared you this experience. This area is dimly-lit, because it is far from the walls of the square and the glowstones mounted upon them."
+
+extra {"pavement", "paving slabs", "slabs"}
+"The slabs are made out of the same granite as the walls, floors, and ceilings. It seems a bit pointless to pave granite with granite, but that's ogres for you."
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+north to city_19 descr "The northern end of Mooch Square";
+south to city_17 descr "The southern end of Mooch Square";
+east to city_4 descr "The east side of the Square";
+west to city_25 descr " The west side of the Square";
+
+end
+
+			city_19
+names {"northern end of square"}
+title "The northern end of Mooch Square"
+
+descr
+" Mooch Square joins Troll head lane at this point, and it leads off to the north, where the pavement is in better repair than the rest of the town. The only light comes from the glowstones on the walls. The centre of the square lies to the south, while e
+
+
+
+ast and west are the north corners of the Square."
+
+extra {"pavement", "paving slabs", "slabs"}
+"The slabs are made out of the same granite as the walls, floors, and ceilings. It seems a bit pointless to pave granite with granite, but that's ogres for you."
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+north to city_20 descr "Troll head lane";
+south to city_18 descr "The centre of Mooch Square";
+east to city_5 descr "The north east corner of the Square";
+west to city_26 descr " The north west corner of the Square";
+
+end
+
+			city_20
+names {"troll head lane"}
+title "Troll head lane"
+
+descr
+" Troll head lane runs directly north from Mooch Square a short distance and then bends to the west. The pavement here bears a lot less marks of travel than that elsewhere in the town. The ogres obviously don't come this way very often."
+
+extra {"pavement", "paving slabs", "slabs"}
+"The slabs are made out of the same granite as the walls, floors, and ceilings. It seems a bit pointless to pave granite with granite, but that's ogres for you."
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+north to city_21 descr "The end of Troll head lane";
+south to city_19 descr "Mooch Square";
+
+end
+
+			city_21
+names {"troll head lane"}
+title "Outside the Repair Shop"
+
+descr
+" Troll head lane ends to the north. The air is quite still. The only sound is that of a hammer on an anvil coming from the west. There is an arch-way in that direction, and scrawled on the wall to the north is an arrow pointing westwards with the words '
+
+
+
+Vilan's Repair Shop'. Troll head lane runs southwards, and west is Vilan's Repair Shop."
+
+extra {"pavement", "paving slabs", "slabs"}
+"The slabs are made out of the same granite as the walls, floors, and ceilings. It seems a bit pointless to pave granite with granite, but that's ogres for you."
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+west to city_27 descr "Vilan's Repair Shop";
+south to city_20 descr "Along Troll head lane";
+
+end
+
+                        city_22
+names {"princess room"}
+title "The Ogre princess's room"
+
+descr
+" This room is an absolute mess! There are toys strewn around the room, and lots of statues of the different gods of Valhalla. Who ever lives here doesn't seem to care how their home looks. Some of the toys have been broken, and their heads removed, proba
+
+
+
+bly out of frustration. The only light in this room is from a single glowstone mounted on the west wall."
+
+extra {"toys", "toy"}
+"The toys are dolls of ogres, humans, elves, and what look like newbies who didn't please the princess. She has mangled them in the most curious, yet gruesome ways."
+
+extra {"statues", "statue", "god statue", "gods", "god"}
+"The statues are quite crude, obviously of ogre craft, and they have been given ogre-like visages. My, they're ugly."
+
+extra {"door"}
+"The door is large, and almost square. Surprisingly, it's made of wood, one of the few wooden things you have seen down here."
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+east to city_13 descr "Out into Gahan way"
+open {EX_OPEN_CLOSE} keyword {"door"};
+
+end
+
+                        city_23
+names {"eldritch tunnel"}
+title "In a tunnel cut out of black crystal"
+
+descr
+" The tunnel is almost perfectly circular - it is almost possible to picture a sphere of fire rolling through the rock, fusing it into crystal. Perhaps that really did happen, aeons ago. There is a low light level here, but it is constant, and seems to be
+
+
+
+ from the walls. The light seems to be transmitted by the walls. It is strange phenomenon you have not seen before. The tunnel leads almost straight west and it is perfectly level. Gahan way lies to the east."
+
+extra {"black crystal", "crystal", "obsidian"}
+"This is magical obsidian - a natural black crystal which is formed when the lava from volcanoes cools suddenly. This type is called black crystal rather than obsidian in order to differentiate it from ordinary obsidian because black crystal is obsidian w
+
+
+
+hich has been imbued with great magical power to prevent it from fracturing or being broken easily. It is as hard as tempered steel."
+
+CITY_EXTRAS
+
+    extra {"$leave_s", "e w"} 
+"Trying not to slip on the crystal, you cautiously make your way $3t." 
+    extra {"$leave_o", "e w"} 
+"$1n heads $3twards while trying not to slip on the crystal." 
+    extra {"$arrive_s", "e w"} 
+"You tread carefully on the crystal as you move along the tunnel." 
+    extra {"$arrive_o", "e w"} 
+"$1n arrives from the $3t, as $1e carefully walks on the crystal." 
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT, UNIT_FL_NO_MOB}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+west to city_28 descr "Down the tunnel";
+east to city_15 descr "Out into Gahan way";
+
+end
+
+                        city_24
+names {"south west corner of square"}
+title "The south west corner of Mooch Square"
+
+descr
+" The south west corner of Mooch Square is quite unremarkable in every way, other than the fact that it stinks like so much manure. There are piles of smelly green stuff heaped against the southern wall, almost up to the level of the glowstones which prov
+
+
+
+ide the only light there is to see by. Best stay clear of that dung."
+
+extra {"pavement", "paving slabs", "slabs"}
+"The slabs are made out of the same granite as the walls, floors, and ceilings. It seems a bit pointless to pave granite with granite, but that's ogres for you."
+
+extra {"dung"}
+"The dung is in lumps of gooey semi-solid lumps. It glows slightly, like fungus."
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+north to city_25 descr "The west side of Mooch Square";
+east to city_17 descr "The southern end of the Square";
+
+end
+
+                        city_25
+names {"west side of square"}
+title "The west side of Mooch Square"
+
+descr
+" The pavement is bare, and the slabs aren't in too bad a state of repair. There must not have been as much traffic here as elsewhere. A 'street' leads off to the west, and the dim glow of glowstones leads off into the distance in that direction."
+
+extra {"pavement", "paving slabs", "slabs"}
+"The slabs are made out of the same granite as the walls, floors, and ceilings. It seems a bit pointless to pave granite with granite, but that's ogres for you."
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+north to city_26 descr "The north west corner of Mooch Square";
+east to city_18 descr "The centre of the Square";
+south to city_24 descr "The south west corner of Mooch Square";
+west to city_29 descr "Along Grobund street";
+
+end
+
+				city_26
+names {"north west corner of square"}
+title "The north west corner of Mooch Square"
+
+descr
+" This corner of Mooch Square seems to be slightly sloped, being higher than the more southern parts of the square. The pavement underfoot has been distorted somehow, perhaps by the actions of the earth - this place might not be stable. The north wall see
+
+
+
+ms a little distorted too."
+
+extra {"pavement", "paving slabs", "slabs"}
+"The slabs are made out of the same granite as the walls, floors, and ceilings. The slabs in this place are highly distorted, as if the ground here has been pushed out of shape by some great force."
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+east to city_19 descr "The northern end of the Square";
+south to city_25 descr "The west side of Mooch Square";
+
+end
+
+				city_27
+names {"vilan's repair shop", "vilans"}
+title "Vilan's Repair Shop"
+
+descr
+" By far the tidiest you have seen in this city, this room has furniture made of wood. There is a great anvil resting in the centre of the room, and it looks to have been put to much use. A tool rack has been mounted on the north wall, and against the sou
+
+
+
+th is a hard, but well kept bed. There is a variety of hammers, chisels and a variety of other weapon-smith's tools arranged in places around the room. Various pieces of armour and weaponry, and a great vat of water have been placed against the south wall
+
+
+
+, alongside a great furnace."
+
+extra {"furniture"}
+"The furniture is made of wood - there is a single chair and a large wooden workbench. The wood appears to be some kind of hardwood, perhaps oak, but it has faded through long years of use, and bears the scars of long hours of toil."
+
+extra {"anvil"}
+"The anvil is just over a metre high and made from what appears to be hard tempered steel. The sides are black in colour, through lack of contact with any form of tool, but the upper surface is pristine and it shines silver in the light of the glowstones.
+
+
+
+"
+
+extra {"tool rack", "rack", "tools"}
+"The tool rack is mounted on the wall. There are many tools hanging from it, some you recognise as hammers, chisels, polishing instruments and thongs, but there are some more exotic ones which you haven't seen before."
+
+extra {"bed"}
+"The bed is plain, and it looks uncomfortably hard to lie on. However, it is well kept, with clean sheets and a reasonably new-looking pillow at its head."
+
+extra {"hammers", "hammer"}
+"Hammers of all different shapes and sizes can be seen around and about. Some are huge, with great wooden handles, while a few are tiny, and would barely damage a fruit."
+
+extra {"chisels", "chisel"}
+"Each chisel has been crafted to perfection, but some bear the marks of heavy use."
+
+extra {"armour"}
+"There are various pieces of armour here, shields, jerkin, mail, sleeves, leggings and boots. All are of varying quality, some exquisite, some almost rubbish."
+
+extra {"weaponry", "weapons"}
+"The weapons are of many different types and sizes. Short swords, Long swords, hammers, axes, and an array of other devices of war and violence."
+
+extra {"vat of water", "vat", "water"}
+"This vat is for tempering and cooling the hot metal after it comes out of the furnace."
+
+extra {"furnace"}
+"The furnace radiates heat into the room. It hurts your eyes to look in through the grating at the white hot metal which has been melted within it."
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+east to city_21 descr "Out into Troll head lane";
+
+end
+
+				city_28
+names {"eldritch tunnel"}
+title "In a tunnel through black crystal"
+
+descr
+" There is no air movement, no noise, and no light, except the radiance which the crystal emits into the darkness. In the distance to the east a point of dim light is visible, tinged with that luminous green which only the glowstones emit."
+
+extra {"black crystal", "crystal", "obsidian"}
+"This is magical obsidian - a natural black crystal which is formed when the lava from volcanoes cools suddenly. This type is called black crystal rather than obsidian in order to differentiate it from ordinary obsidian because black crystal is obsidian w
+
+
+
+hich has been imbued with great magical power to prevent it from fracturing or being broken easily. It is as hard as tempered steel."
+
+CITY_EXTRAS
+
+    extra {"$leave_s", "e w"}
+"Trying not to slip on the crystal, you cautiously make your way $3t."
+    extra {"$leave_o", "e w"}
+"$1n heads $3twards while trying not to slip on the crystal." 
+    extra {"$arrive_s", "e w"} 
+"You tread carefully on the crystal as you move along the tunnel." 
+    extra {"$arrive_o", "e w"} 
+"$1n arrives from the $3t, as $1e carefully walks on the crystal." 
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+west to city_36 descr "A bend in the tunnel";
+east to city_23 descr "Towards Gahan way";
+
+end
+
+city_29
+names {"grobund street"}
+title "At the east end of Grobund Street"
+
+descr
+" Grobund street runs east-west in the western part of Moochan Tandor. The street leads through a wide tunnel which has been cut out of solid granite. The only light which permeates the darkness is that emitted by the glowstones which have been mounted at
+
+
+
+ intervals along the walls. The street runs east into Mooch Square, but it proceeds west as far as the eye can see."
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+west to city_30 descr "West along Grobund street";
+east to city_25 descr "Out into Mooch Square";
+
+end
+
+				city_30
+names {"grobund street"}
+title "On Grobund Street"
+
+descr
+" This street runs east-west through this part of Moochan Tandor. There is a door to the north. An evil ogre face has been carved on it, and it stares menacingly out at you. Off to the east lies Mooch Square, while westwards, Grobund street continues into
+
+
+
+ the darkness."
+
+extra {"door"}
+"The door is tall and wooden, with a large ogre face carved at its centre, like a knob. The door doesn't seem to be lockable."
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+north to city_31 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"} 
+descr "Inside an Ogre's home";
+west to city_33 descr "Along Grobund street";
+east to city_29 descr "East towards Mooch Square";
+
+end
+
+				city_31
+names {"an ogre's home"}
+title "An Ogre's home"
+
+descr
+" This room is quite bare, with a fine layer of dust on the ground which has been disturbed only by the footprints of a large humanoid, and a dust-free place against the north wall. There are two glowstones lighting this room. The only exit from the room 
+
+
+
+is an oak door set in the south wall."
+
+extra {"door"}
+"The door is tall and wooden, with a large ogre face carved at its centre, like a knob. The door doesn't seem to be lockable."
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+south to city_30 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"} 
+descr "Out into Grobund Street";
+
+end
+
+				city_32
+names {"an ogre's home"}
+title "An Ogre's home"
+
+descr
+" A low-roof reminds you to watch your head in this room, which is lit by three glowstones, one mounted on each of the west, south and east walls. This is the home of an ogre, but it must be a small one if that is the case. The room is almost bare, except
+
+
+
+ for a few bones which look old, but freshly gnawed. The only exit from the room is the door to the north which leads out onto Grobund Street."
+
+extra {"door"}
+"This door is made from some kind of wood, probably pine or some other softwood. There is no handle, and the door seems to hang loose on its hinges."
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+north to city_33 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"} 
+descr "Out into Grobund Street";
+
+end
+
+				city_33
+names {"grobund street"}
+title "On Grobund Street"
+
+descr
+" The west quarter of the city seems much quieter than elsewhere. There was probably a legend of about an Ogre named Grobund, but the name doesn't ring any bells. Perhaps this street is named after that very ogre. It ends some way westwards, and it also l
+
+
+
+eads eastwards. To the south is a wooden door."
+
+extra {"door"}
+"This door is made from some kind of wood, probably pine or some other softwood. There is no handle, and the door seems to hang loose on its hinges."
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+west to city_34 descr "At the end of Grobund Street";
+east to city_30 descr "East along Grobund Street";
+south to city_32 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"} 
+descr "Out into Grobund Street";
+
+end
+
+				city_34
+names {"grobund street"}
+title "The west end of Grobund Street"
+
+descr
+" This is where Grobund Street ends. To the west is the bare granite of the tunnel wall. A single glowstone hangs there. To the north is a narrow doorway, too narrow for an ogre. Something else probably lives in that place. Grobund street runs east from h
+
+
+
+ere towards Mooch Square."
+
+extra {"door"}
+"Made of what appears to be oak, this door is quite narrow, at least for ogres."
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+east to city_33 descr "East along Grobund Street";
+north to city_35 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"}
+descr "A narrow doorway";
+
+end
+
+                                city_35
+names {"darkelf guard's room"}
+title "A darkelf guard's room"
+
+descr
+" The room is very sparse in its adornment. Unlike most of the city, it is lit by torches, one each on the west and east walls. They provide a warm glow to an otherwise cold room. There is a bed against the north wall, a table at its head, and a small cha
+
+
+
+ir near the table. There is a door out onto Grobund way set in the south wall."
+
+extra {"door"}
+"Made of what appears to be oak, this door is quite narrow, at least for ogres."
+
+extra {"torch"} 
+"The torch is lit and seems to burn endlessly. You can't put it out, no matter what you try. It provides an orange flickering light." 
+
+extra {"bed"} 
+"The bed is very Spartan. The mattress is very thin and it doesn't look comfortable at all. It is quite low down too." 
+
+extra {"chairs", "chair"} 
+"The chair is made of the same oak as the door, but is more like a stool than a chair because the back is very low." 
+
+extra {"table"} 
+"The table is quite low. It is made of oak. The size of the table makes you think it is only intended for one person to use." 
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+south to city_34 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"}
+descr "Grobund Street";
+
+end
+
+                                city_36
+names {"eldritch tunnel"}
+title "A bend in the black crystal tunnel"
+
+descr
+" The tunnel bends smoothly east-south. There isn't a single angle in the wall of the tunnel, even as it bends, it maintains its circular perfection. By the light which is transmitted by the crystal walls of the tunnel, it is possible to see a short dista
+
+
+
+nce south - there appears to be a doorway further south. To the east, the dim green glow from far off Gahan way permeates the blackness."
+
+extra {"black crystal", "crystal", "obsidian"}
+"This is magical obsidian - a natural black crystal which is formed when the lava from volcanoes cools suddenly. This type is called black crystal rather than obsidian in order to differentiate it from ordinary obsidian because black crystal is obsidian w
+
+
+
+hich has been imbued with great magical power to prevent it from fracturing or being broken easily. It is as hard as tempered steel."
+
+CITY_EXTRAS
+
+    extra {"$leave_s", "e s"}
+"Trying not to slip on the crystal, you cautiously make your way $3t."
+    extra {"$leave_o", "e s"}
+"$1n heads $3twards while trying not to slip on the crystal." 
+    extra {"$arrive_s", "e s"} 
+"You tread carefully on the crystal as you move along the tunnel." 
+    extra {"$arrive_o", "e s"} 
+"$1n arrives from the $3t, as $1e carefully walks on the crystal." 
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+south to city_37 descr "Outside Eldritch's quarters";
+east to city_28 descr "Along the tunnel of black crystal";
+
+end
+
+                                city_37
+names {"eldritch tunnel"}
+title "Outside Eldritch's Quarters"
+
+descr
+" There are torches flickering against the black crystal walls, one on either side of a great oak door, which is set in the south wall. The ceiling melts into the south wall, and the door seems to have been cut into the black crystal."
+
+extra {"oak door", "door"}
+"This door very sturdy looking. It is quit big enough for two people to walk through at the same time. There is a single handle on the left-hand side. It doesn't appear to be locked."
+
+extra {"torches", "torch"}
+"The torch is lit and seems to burn endlessly. You can't put it out, no matter what you try. It provides an orange flickering light."
+
+extra {"black crystal", "crystal", "obsidian"}
+"This is magical obsidian - a natural black crystal which is formed when the lava from volcanoes cools suddenly. This type is called black crystal rather than obsidian in order to differentiate it from ordinary obsidian because black crystal is obsidian w
+
+
+
+hich has been imbued with great magical power to prevent it from fracturing or being broken easily. It is as hard as tempered steel."
+
+CITY_EXTRAS
+
+   extra {"$leave_s", "n s"}
+"Trying not to slip on the crystal, you cautiously make your way $3t."
+    extra {"$leave_o", "n s"}
+"$1n heads $3twards while trying not to slip on the crystal." 
+    extra {"$arrive_s", "n s"} 
+"You tread carefully on the crystal as you move along the tunnel." 
+    extra {"$arrive_o", "n s"} 
+"$1n arrives from the $3t, as $1e carefully walks on the crystal."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+south to city_38 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"}
+descr "Eldritch's study";
+north to city_36 descr "Along the tunnel of black crystal";
+
+end
+
+                                city_38
+names {"eldritch study"}
+title "Eldritch's Study"
+
+descr
+" A great sense of cold evil hits you as you enter this room. It is like a lord's study, and in a sense, that's probably true. Eldritch, Darkelf prince and Lord of Moochan Tandor, lives and broadens his span of knowledge here. There is a tall bookcase set
+
+
+
+ against the south wall, and a large desk and a great chair in the centre of the room. The room is lit by a torch on the south and east walls. There is a large oak door set in the north wall, and a smaller one in the east wall."
+
+extra {"bookcase", "book case"}
+"The bookcase is laden down with an assortment of books, almost all of which seem to have been written in some obscure elfish language, probably darkelfish. The bookcase is made from Oak, just like the rest of the furniture in the room."
+
+extra {"chair"}
+"The chair is a highly ornamental-looking armchair. It has the most elegant wood carvings on it that you have ever seen. It seems to be oak, but a darker kind than the desk."
+
+extra {"desk"}
+"The desk is rectangular and tall, made of the same oak as the door. It looks very old, but it is in very good condition."
+
+extra {"oak door", "door"}
+"This door very sturdy looking. It is quit big enough for two people to walk through at the same time. There is a single handle on the left-hand side. It doesn't appear to be locked."
+
+extra {"torches", "torch"}
+"The torch is lit and seems to burn endlessly. You can't put it out, no matter what you try. It provides an orange flickering light."
+
+extra {"black crystal", "crystal", "obsidian"}
+"This is magical obsidian - a natural black crystal which is formed when the lava from volcanoes cools suddenly. This type is called black crystal rather than obsidian in order to differentiate it from ordinary obsidian because black crystal is obsidian w
+
+
+
+hich has been imbued with great magical power to prevent it from fracturing or being broken easily. It is as hard as tempered steel."
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+north to city_37 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"}
+descr "Out into the tunnel";
+east to city_39 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"}
+descr "Eldritch's Bedroom";
+
+end
+
+                                city_39
+names {"eldritch bedroom"}
+title "An small, but elegant Bedroom"
+
+descr
+" These rooms seem so alien to the rest of the city - no ogre would, or probably could, live here. There is a large bed with its head against the east wall. Two very regal torches are mounted on the north wall, and another two on the south one. There is e
+
+
+
+ven a plush carpet on the floor. The only exit is a door to the west."
+
+extra {"bed"}
+"The bed is very decorative in its design. It is quite high off the ground, and the blankets on it look clean and untouched. If you didn't know better, you would think no one had slept in this bed, and that it was but a picture."
+
+extra {"carpet"}
+"The carpet has a strange pile to it - it's very comfortable, and seems to be rather thick. The design is like that of a vortex swirling in an infinite spread of rings. As you move, the light tries to trick you into thinking the vortices are actually movi
+
+
+
+ng."
+
+extra {"oak door", "door"}
+"This door very sturdy looking. It is quit big enough for two people to walk through at the same time. There is a single handle on the left-hand side. It doesn't appear to be locked."
+
+extra {"torches", "torch"}
+"The torches are large and golden. The light which shines from them is constant and unflickering."
+
+CITY_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+
+movement SECT_CITY
+
+ALWAYS_LIGHT
+
+west to city_38 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"door"}
+descr "Eldritch's study";
+
+end
+
+/* END MOOCHAN TANDOR CITY */
+
+/* SECTION 4: BEGIN SLAVE PIT */
+
+pit_1
+names {"slave pit entrance"}
+title "At a gate in the slave pit"
+
+descr
+" A magnificent sight, this great cavern has been cut out of sandstone. The gate stands here. It is tall and made from bars of metal. The moans and chatter of the voices of many different beings can be heard from inside. Some sounds are elfish, some human
+
+
+
+, yet others aren't as easy to identify. It is possible to proceed through the gate into the pit, or up onto the ledge at the mouth of the tunnels."
+
+PIT_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_MOB}
+
+movement SECT_FIELD
+
+east to pit_2 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"gate"}
+descr "Inside the pit";
+up to tunnel_21@ogre1 descr "Above the pit";
+
+end
+
+                        pit_2
+names {"slave pit"}
+title "Inside the slave pit gate"
+
+descr
+" A long stretch of corridor runs directly eastwards through the pit. To the east there are cells either side of the corridor. To the west is the gate, beyond which the edge of the pit rises up to a tunnel opening far about the pit floor."
+
+PIT_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+ALWAYS_LIGHT
+
+movement SECT_FIELD
+
+west to pit_1 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"gate"}
+descr "Outside the pit";
+east to pit_3 descr "The main corridor through the pit";
+
+end
+
+                        pit_3
+names {"slave pit"}
+title "In the main corridor"
+
+descr
+" The corridor is quite wide at this point. The walls and floor have been cut so that they are quite square and angular. To the north and south are two barred cells. The smell here is a mixture of excrement, rubbish, and dust."
+
+PIT_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+ALWAYS_LIGHT
+
+movement SECT_FIELD
+
+west to pit_2 descr "Inside the main gate";
+east to pit_4 descr "Along the corridor";
+north to pit_7 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED} key ogre_key
+keyword {"cell door", "door", "bars"} descr "In a cell";
+south to pit_6 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED} key ogre_key
+keyword {"cell door", "door", "bars"} descr "In a cell";
+
+end
+
+                        pit_4
+names {"slave pit"}
+title "West of a junction in the corridors"
+
+descr
+" The corridor narrows ever so slightly. There are two cells, one to the north, one to the south. The air around you is filled with noise - some screaming, some chattering, and the occasional moan from someone, or something, which is in pain. The main cor
+
+
+
+ridor continues to the west, and there is a junction to the east."
+
+PIT_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+ALWAYS_LIGHT
+
+movement SECT_FIELD
+
+west to pit_3 descr "Near the main gate";
+east to pit_5 descr "At a junction in the corridors";
+north to pit_9 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED} key ogre_key
+keyword {"cell door", "door", "bars"} descr "In a cell";
+south to pit_8 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED} key ogre_key
+keyword {"cell door", "door", "bars"} descr "In a cell";
+
+end
+
+                        pit_5
+names {"slave pit"}
+title "A junction in the corridors"
+
+descr
+" There is an unlocked door set in the east wall and the sounds of ugly laughter permeating the groans and moans of the slaves. To the north side of the door is scrawled in the common tongue 'Elves', while to the south of the door you can make out the wor
+
+
+
+d 'Humans'. The door to the east obviously leads into the ogre guard room."
+
+PIT_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+ALWAYS_LIGHT
+
+movement SECT_FIELD
+
+west to pit_4 descr "The main corridor";
+south to pit_15 descr "The human quarter";
+north to pit_10 descr "The elven quarter";
+east to pit_14 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"door"} descr "The guards' room";
+
+end
+
+                        pit_6
+names {"slave cell"}
+title "A dark, disgusting cell"
+
+descr
+" Typical of the ogre philosophy, this room is devoid of furniture or decoration. The occupants obviously have no where to defecate because the rooms smells of excrement, and some bones are scattered about. There is a lot of dust on the ground. The only e
+
+
+
+xit from the room is through the north door."
+
+PIT_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_FIELD
+
+north to pit_3 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED} key ogre_key
+keyword {"cell door", "door", "bars"} descr "Out into the corridor";
+
+end
+
+                        pit_7
+names {"slave cell"}
+title "A dark, disgusting cell"
+
+descr
+" The state of this room is unbelievable. There is excrement smeared on almost everything. One must pity whoever lives here. The ogres are not renowned for their kindness and consideration for their prisoners. The only exit from the room is through the no
+
+
+
+rth door."
+
+PIT_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_FIELD
+
+south to pit_3 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED} key ogre_key
+keyword {"cell door", "door", "bars"} descr "Out into the corridor";
+
+end
+
+                        pit_8
+names {"slave cell"}
+title "A dark, disgusting cell"
+
+descr
+" This room is empty save for rubbish and excrement. It makes the room smell like who-knows-what, just be glad you don't have to live in it. The walls are about three metres tall. There are no lights, and the only exit from the room is barred-door which i
+
+
+
+s set in the north wall."
+
+PIT_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_FIELD
+
+north to pit_4 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED} key ogre_key
+keyword {"cell door", "door", "bars"} descr "Out into the corridor";
+
+end
+
+                        pit_9
+names {"slave cell"}
+title "A dark, disgusting cell"
+
+descr
+" There is no light in this cell except for your own. The walls are smeared with what looks like (and smells like) excrement. The smell is overpowering and only one thought occurs to you - get out. There is only one exit from this cell, and that's through
+
+
+
+ a door to the south."
+
+PIT_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_FIELD
+
+south to pit_4 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED} key ogre_key
+keyword {"cell door", "door", "bars"} descr "Out into the corridor";
+
+end
+
+                        pit_10
+names {"slave pit"}
+title "A corridor in the elf quarter"
+
+descr
+" The elf quarter of the pit is unsurprisingly populated by elves. Ogres seem to have a distinct dislike for other humanoid races, and they have separated most of them into different parts of the pit. This corridor ends some way north of here, while to th
+
+
+
+e south is a junction in the corridors. There is a cell east of here."
+
+PIT_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+ALWAYS_LIGHT
+
+movement SECT_FIELD
+
+north to pit_11 descr "The end of the corridor";
+south to pit_5 descr "At a junction in the corridors";
+east to pit_20 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED} key ogre_key
+keyword {"cell door", "door", "bars"} descr "In a dark cell";
+
+end
+
+                        pit_11
+names {"slave pit"}
+title "A corridor in the elf quarter"
+
+descr
+" The corridor reaches a dead end to the north. The wall to the north has been partially excavated, but it looks like someone started the job and then changed their mind, leaving just an uneven wall. To the west and the east are two cells, each with barre
+
+
+
+d doors. The corridor leads southwards."
+
+PIT_EXTRAS
+
+extra {"wall"}
+"The north wall has been partially excavated. It looks like the excavator stopped half-way through his work."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+ALWAYS_LIGHT
+
+movement SECT_FIELD
+
+south to pit_10 descr "Along the corridor";
+east to pit_13 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED} key ogre_key
+keyword {"cell door", "door", "bars"} descr "In a dark cell";
+west to pit_12 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED} key ogre_key
+keyword {"cell door", "door", "bars"} descr "In a dark cell";
+
+end
+
+                        pit_12
+names {"slave cell"}
+title "A dark, disgusting cell"
+
+descr
+" Devoid of furniture and decoration, this room is little more than bare walls and floor. The occupants obviously have no where to defecate because the rooms smells of excrement, and some are bones scattered about. There is a lot of dust on the ground. Th
+
+
+
+e only exit from the room is through the east door."
+
+PIT_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_FIELD
+
+east to pit_11 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED} key ogre_key
+keyword {"cell door", "door", "bars"} descr "Out into the corridor";
+
+end
+
+                        pit_13
+names {"slave cell"}
+title "A dark, disgusting cell"
+
+descr
+" The state of this room is unbelievable. There is excrement smeared on almost everything. The ogres are not renowned for their kindness and consideration for their prisoners, as this room demonstrates. The only exit from the room is through the west door
+
+
+
+."
+
+PIT_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_FIELD
+
+west to pit_11 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED} key ogre_key
+keyword {"cell door", "door", "bars"} descr "Out into the corridor";
+
+end
+
+                        pit_14
+names {"guard room"}
+title "The ogre guards' room"
+
+descr
+" The first thing that hits you when you enter this room is the fact that it smells like hell! This is the room in which the ogres who guard the slave pit stay when they're off-duty, which seems to be all the time. There is a large, crude stone table with
+
+
+
+ some crude etchings in it sitting in the centre of the room. There is a sign on the wall. Only one exit leads from this room - a door in the west wall."
+
+extra {"table"}
+"The table is quite tall, over a metre and a half. It is made up from a large stone slab mounted on top of four wide legs, also cut from stone."
+
+extra {"etchings", "etching"}
+"The etchings are in some dark language, probably that of the ogres. You don't understand them, although one of the letters looks strangely similar to a male anatomical feature..."
+
+extra {"sign"}
+"The sign says, 'Work? Wassat?'" 
+
+PIT_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+ALWAYS_LIGHT
+
+movement SECT_FIELD
+
+west to pit_5 open {EX_OPEN_CLOSE, EX_CLOSED} 
+keyword {"door"} descr "Out into the corridor";
+
+end
+
+                        pit_15
+names {"slave pit"}
+title "A corridor in the human quarter"
+
+descr
+" This area is predominately populated by humans, or what ogres think are human. There are cells to the east and west, and the corridor continues southwards towards a closed door. There is a junction in the corridors to the north."
+
+PIT_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+ALWAYS_LIGHT
+
+movement SECT_FIELD
+
+south to pit_16 descr "The end of the corridor";
+north to pit_5 descr "At a junction in the corridors";
+east to pit_19 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED} key ogre_key
+keyword {"cell door", "door", "bars"} descr "In a dark cell";
+
+end
+
+                        pit_16
+names {"slave pit"}
+title "At the south end of the corridor"
+
+descr
+" The corridor through the human quarter of the pit ends in a room to the south. The torch light dances on the walls, occasionally glinting off the metal in the cell doors. There are two cells, one to the east and one to the west. There is a large wooden 
+
+
+
+door set in the south wall. Every once and a while, a scream comes from behind that door and startles you. The corridor runs north."
+
+PIT_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+ALWAYS_LIGHT
+
+movement SECT_FIELD
+
+north to pit_15 descr "Along the corridor";
+east to pit_18 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED} key ogre_key
+keyword {"cell door", "door", "bars"} descr "In a dark cell";
+west to pit_17 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED} key ogre_key
+keyword {"cell door", "door", "bars"} descr "In a dark cell";
+south to pit_21 open {EX_OPEN_CLOSE, EX_CLOSED}
+keyword {"door"} descr "In a torture room";
+
+end
+
+                        pit_17
+names {"slave cell"}
+title "A dark, disgusting cell"
+
+descr
+" Save for the rubbish and excrement which is scattered about, this room is quite empty. It makes the room smell like who-knows-what - it makes you glade that you don't have to live in it. The walls are about three metres tall. There are no lights, and th
+
+
+
+e only exit from the room is barred-door which is set in the east wall."
+
+PIT_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_FIELD
+
+east to pit_16 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED} key ogre_key
+keyword {"cell door", "door", "bars"} descr "Out into the corridor";
+
+end
+
+                        pit_18
+names {"slave cell"}
+title "A dark, disgusting cell"
+
+descr
+" There is no light in this cell except for your own. The walls are smeared with what looks like (and smells like) excrement. The smell is overpowering and only one thought occurs to you - get out. There is only one exit from this cell, and that's through
+
+
+
+ a door to the west."
+
+PIT_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_FIELD
+
+west to pit_16 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED} key ogre_key
+keyword {"cell door", "door", "bars"} descr "Out into the corridor";
+
+end
+
+                        pit_19
+names {"slave cell"}
+title "A dark, disgusting cell"
+
+descr
+" The occupants of this cell obviously have no where to defecate because the rooms smells of excrement, and some bones are scattered about. There is a lot of dust in here. The only exit from the room is through the west door."
+
+PIT_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_FIELD
+
+west to pit_15 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED} key ogre_key
+keyword {"cell door", "door", "bars"} descr "Out into the corridor";
+
+end
+
+                        pit_20
+names {"slave cell"}
+title "A dark, disgusting cell"
+
+descr
+" There is no light in this cell except for your own. The walls are smeared with what looks like (and smells like) excrement. The smell is overpowering and only one thought occurs to you - get out. There is only one exit from this cell, and that's through
+
+
+
+ a door to the west."
+
+PIT_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_FIELD
+
+west to pit_10 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED} key ogre_key
+keyword {"cell door", "door", "bars"} descr "Out into the corridor";
+
+end
+
+                        pit_21
+names {"torture room"}
+title "The Torture Chamber"
+
+descr
+" The use to which this room is put is quite apparent - to cause agonising pain to the slaves who live their short lives within Moochan Tandor. The ogres are known as great torturers, and this room bears all the hallmarks of their evil skill. There are im
+
+
+
+plements of torture all around, but the room is dominated by a great rack in its centre. The remains of a previous victim lie on the floor beside it - the ogres couldn't even be bothered to dispose of them. A large cage hangs from the ceiling nearby. The 
+
+
+
+only exit from this room is through the door to the north."
+
+extra {"implements", "implement"}
+"These implements vary in type enormously - there are needles, whips, vats of oil, and a variety of items you have never laid eyes on before. Each looks as if it could inflict a sizable amount of pain..."
+
+extra {"rack"}
+"The rack is a great table, for stretching it's victims until it kills them with the pain, or they are pulled apart. There are manacles, a pair at the top, a pair at the bottom, and the table is at an incline to the level of the floor, so the torturer can
+
+
+
+ get a good view of his victim."
+
+extra {"remains"}
+"There is little more than bone left from the previous victim of the torturers - it looks to have been a young elf. You shudder at the thought of suffering the same fate as him."
+
+extra {"cage", "a large cage"}
+"This cage hangs from the ceiling by a short thick rope. People are obviously left in it for days or weeks to die, or to suffer the twin agonies of hunger and sleep deprevation."
+
+PIT_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_FIELD
+
+north to pit_16 open {EX_OPEN_CLOSE, EX_CLOSED}
+keyword {"chamber door", "door"} descr "Out into the corridor";
+
+end
+
+
+/* END SLAVE PIT */
+
+/* SECTION 5: BEGIN FUNGUS FARM */
+
+				farm_1
+names {"east farm"}
+title "The eastern edge of the fungus cavern"
+
+descr
+" The fungus cavern is an awesome sight; it opens out to the west before you and the ceiling can be seen through the green light of the fungus as it towers far above you. The fungus is absolutely everywhere. It forms a deep carpet which extends in all dir
+
+
+
+ections, and even up the walls towards the top of the cavern. In places, it's a lot thicker, forming spongy clumps of disgusting green growth. Above and to the east is a large tunnel. It is possible to wade out into the fungus to the west, or enter the tu
+
+
+
+nnel up above."
+
+FARM_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_MOB}
+
+movement SECT_SWAMP
+
+ALWAYS_LIGHT
+
+west to farm_2 descr "Out into the fungus cavern";
+up to tunnel_27@ogre1 descr "Up into a tunnel overlooking the cavern";
+
+end
+
+				farm_2
+names {"east farm"}
+title "Wading through a field of ripe fungus"
+
+descr
+" It is a most disgusting feeling to move through this fungus field. Occasionally, you put your foot down only to find that it keeps going into some hole hidden beneath the fungus mass. The odour of fungus spores is overpowering and you try to breath thro
+
+
+
+ugh your mouth so you don't have to endure that awful smell."
+
+FARM_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_SWAMP
+
+ALWAYS_LIGHT
+
+north to farm_4 descr "The north east corner of the fungus field";
+south to farm_3 descr "The south east corner of the fungus field";
+east to farm_1 descr "The eastern edge of the field";
+west to farm_7 descr "Out into the middle of the cavern";
+
+end
+
+				farm_3
+names {"south east corner"}
+title "The south east corner of the fungus field"
+
+descr
+" Unlike most conventional fields where the crop doesn't grow anywhere but on the ground, the fungus crop proceeds up the south and east walls here towards the ceiling, albeit not as thickly as on the floor of the cavern, but nonetheless, you have never s
+
+
+
+een anything like this before."
+
+FARM_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_SWAMP
+
+ALWAYS_LIGHT
+
+north to farm_2 descr "Near the edge of the field";
+west to farm_6 descr "Along the south wall of the cavern";
+
+end
+
+				farm_4
+names {"north east corner"}
+title "The north east corner of the fungus field"
+
+descr
+" The cavern is more than comfortably warm - you feel your feet sweating under the fungus as it radiates heat out into the cavern. If you take a deep breath, the warm air and the spores from the fungus which float in it make you cough, and the hot liquid 
+
+
+
+which squelches out from the fungus as you tread upon it steams vigorously into the air."
+
+FARM_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_SWAMP
+
+ALWAYS_LIGHT
+
+south to farm_2 descr "Near the edge of the field";
+west to farm_8 descr "Along the north wall of the cavern";
+
+end
+
+				farm_5
+names {"south wall"}
+title "At the south wall of the cavern"
+
+descr
+" The south wall of the cavern leads west, and in the other direction bends around north, then east. The fungus covers the walls, and the smell is almost overpowering. It is possible to see far up into the cavern - a ledge seems to skirt the southern part
+
+
+
+ of the cavern can be seen quite clearly."
+
+FARM_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_SWAMP
+
+ALWAYS_LIGHT
+
+north to farm_6 descr "North near the centre of the fungus";
+west to farm_10 descr "The south west corner of the field";
+
+end
+
+				farm_6
+names {"field"}
+title "In a fungus patch"
+
+descr
+" Fungus extends in all directions. It becomes tedious lifting your feet through the fungal mass which holds them. If you could get your feet above it, perhaps you could walk on it, but you know that your feet would just break the surface and you would si
+
+
+
+nk down again."
+
+FARM_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_SWAMP
+
+ALWAYS_LIGHT
+
+north to farm_7 descr "The centre of the fungus cavern";
+south to farm_5 descr "At the south wall of the cavern";
+east to farm_3 descr "The south east corner of the cavern";
+west to farm_11 descr "Through the fungus field";
+
+end
+
+				farm_7
+names {"centre field", "fungus centre", "centre"}
+title "The centre of the fungus field"
+
+descr
+" The relationship between the ogres and the fungus is very obscure. Some say that the ogres are actually spawned from the fungus, but you do know for certain that ogres farm this fungus for food, and they force slaves to tend the fields and to harvest th
+
+
+
+e ripe fungus for them. All around you, the feeling of life is apparent, and the fungus seems to proliferate like nothing you've ever seen. What the fungus is feeding on escapes you, for it is growing on bare rock."
+
+FARM_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_SWAMP
+
+ALWAYS_LIGHT
+
+north to farm_8 descr "Towards the north wall of the cavern";
+south to farm_6 descr "Towards the south wall of the cavern";
+east to farm_2 descr "Through the fungus field";
+west to farm_12 descr "Through the fungus field";
+
+end
+
+				farm_8
+names {"field"}
+title "In a fungus patch"
+
+descr
+" The layer of fungus is even thicker than elsewhere in the field. It reaches above your knees, and as you wade through it, clumps occasionally rupture and spray the area with that disgusting green liquid. It would make some very nasty stains."
+
+FARM_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_SWAMP
+
+ALWAYS_LIGHT
+
+north to farm_9 descr "At the north wall of the cavern";
+south to farm_7 descr "The centre of the fungus cavern";
+east to farm_4 descr "The north east corner of the cavern";
+west to farm_13 descr "Through the fungus field";
+
+end
+
+				farm_9
+names {"north wall"}
+title "At the north wall of the cavern"
+
+descr
+" The north wall runs west, and in the direction south, bending around to the east. The fungus runs up the walls, but in places it is patchy and the underlying granite rock on which the fungus seems to grow so readily can be quite clearly seen."
+
+FARM_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_SWAMP
+
+ALWAYS_LIGHT
+
+south to farm_8 descr "South near the centre of the fungus";
+west to farm_14 descr "The north west corner of the field";
+
+end
+
+				farm_10
+names {"south west corner"}
+title "The south west corner of the cavern"
+
+descr
+" The south west corner of the cavern is blanketed with fungus, like the rest of the cavern, but the west wall is inclined inwards sharply, and it rises to meet the domed ceiling far above. Maybe it's your imagination, but the fungus here doesn't seem to 
+
+
+
+glow quite as brightly as the rest of the cavern, but it still dazzles you."
+
+FARM_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_SWAMP
+
+ALWAYS_LIGHT
+
+north to farm_11 descr "North along the west wall";
+east to farm_5 descr "Along the south wall";
+
+end
+
+				farm_11
+names {"south west wall"}
+title "The west wall of the fungus cavern"
+
+descr
+" To the west, that side of the cavern is marked by a fungus covered wall. Any sound you make seems to be absorbed by the surrounding fungus, like a sponge. The wall leads north to an alcove and it extends southwards to the south west corner of the cavern
+
+
+
+."
+
+FARM_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_SWAMP
+
+ALWAYS_LIGHT
+
+north to farm_12 descr "Outside the farm master's alcove";
+south to farm_10 descr "The south west corner of the cavern";
+east to farm_6 descr "Through the fungus field";
+
+end
+
+				farm_12
+names {"Outside the alcove"}
+title "Outside an alcove in the west wall of the cavern"
+
+descr
+" The fungus grows in great clumps to the north, south and east. The west wall dips in westwards and there is a large alcove there. The fungus seems to grow in a thinner layer in that direction. Sounds of laughing and grunting come from the west."
+
+FARM_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_SWAMP
+
+ALWAYS_LIGHT
+
+north to farm_13 descr "North along the west wall";
+south to farm_11 descr "South along the west wall";
+west to farm_15 descr "The farm master's alcove";
+east to farm_7 descr "The centre of the fungus field";
+
+end
+
+				farm_13
+names {"north west wall"}
+title "The west wall of the fungus cavern"
+
+descr
+" The fungus underfoot is very soft indeed, and it seems to stretch and give way as you move, unlike the rest which seems to burst into green liquid as you walk through it. The fungus wafts a dust of spores out into the air as you pass through it, and it 
+
+
+
+seems to be very ripe. There is an alcove in the west wall to the south."
+
+FARM_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_SWAMP
+
+ALWAYS_LIGHT
+
+north to farm_14 descr "The north west corner of the cavern";
+south to farm_12 descr "Outside the farm master's alcove";
+east to farm_8 descr "Through the fungus field";
+
+end
+
+				farm_14
+names {"north west corner"}
+title "The north west corner of the cavern"
+
+descr
+" The west wall inclines sharply inwards, but the wall to the north runs almost vertically upwards, then curving to meet the centre of the domed ceiling. Both are blanketed with fungus like the rest of the cavern, but not quite as thickly as elsewhere. "
+
+FARM_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_SWAMP
+
+ALWAYS_LIGHT
+
+south to farm_13 descr "South along the west wall";
+east to farm_9 descr "Along the north wall";
+
+end
+
+				farm_15
+names {"farm master's alcove", "alcove"}
+title "The Ogre Farm master's alcove"
+
+descr
+" The floor of this alcove has been almost cleared of fungus, and there is a large chair against the north wall. A weapon rack has been hung on the south wall, and the ceiling is about three metres above you. There is the stench of rotten food and fungus,
+
+
+
+ and the sources of this smell can be seen lying around and about the place."
+
+FARM_EXTRAS
+
+extra {"chair", "large chair"}
+"The chair is quite crude in design, being little more than a piece of wood on stumps. It looks quite old and well used - obviously, whoever lives here doesn't do much active work."
+
+extra {"weapon rack", "rack"}
+"The weapon rack has two holders on it, but neither are in use at the moment."
+
+extra {"ceiling"}
+"The ceiling is low compared to the rest of the cavern, and it is also flat."
+
+extra  {"wall", "walls"}
+"The walls are sheer and bare of any fungus, unlike the rest of the cavern. They meet the flat ceiling about three metres off the ground."
+
+extra {"ground", "floor"}
+"The ground is almost devoid of fungus, unlike the rest of the cavern. It is cut out of granite, like the rest of the alcove."
+
+extra {"rotten food and fungus", "rotten food", "rotten fungus"}
+"These are obviously the remnants of the room's occupant's last meal. Quite disgusting really."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_SWAMP
+
+ALWAYS_LIGHT
+
+east to farm_12 descr "Out into fungus farm";
+
+end
+
+/* BEGIN SUB-SECTION: FARM LEDGE */
+
+				farm_ledge_1
+names {"south ledge"}
+title "On a ledge above the fungus farm"
+
+descr
+" The ledge is quite narrow and care must be taken while walking along it for fear of losing your balance or your footing and falling off the ledge into the cavern below. It is possible to jump off the ledge, but would the fungus on the cavern floor be en
+
+
+
+ough to cushion a fall? Only one way to find out..."
+
+LEDGE_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_MOUNTAIN
+
+ALWAYS_LIGHT
+
+dilcopy jumper@ogre("3");
+
+south to farm_ledge_2 descr "South along the ledge";
+north to tunnel_27@ogre1 descr "Above the fungus cavern";
+
+end
+
+				farm_ledge_2
+names {"south ledge"}
+title "Along the southern ledge above the fungus farm"
+
+descr
+" It bends around and goes westwards and northwards. There is movement on the fungus, and the light which the fungus emits seems to throb slowly. The ledge runs west around the cavern, and north towards its end."
+
+LEDGE_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_MOUNTAIN
+
+ALWAYS_LIGHT
+
+dilcopy jumper@ogre("3");
+
+west to farm_ledge_3 descr "West along the ledge";
+north to farm_ledge_1 descr "Near the end of the ledge";
+
+end
+
+				farm_ledge_3
+names {"south ledge"}
+title "On the southern ledge"
+
+descr
+" The ledge bends again, south and east. The true size of the cavern becomes apparent - it may well stretch half a mile in width, and close to that in height, although the green light makes discerning distance quite tricky."
+
+LEDGE_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_MOUNTAIN
+
+ALWAYS_LIGHT
+
+dilcopy jumper@ogre("3");
+
+south to farm_ledge_4 descr "South along the ledge";
+east to farm_ledge_2 descr "The south east part of the ledge";
+
+end
+
+				farm_ledge_4
+names {"south ledge"}
+title "Along the southern ledge"
+
+descr
+" The ledge runs straight west. Far below you, figures of people move over the fungus, and every once and a while a particularly large figure standing over one of the smaller ones. There is an occasionally howl of pain from below, though the fungus seems 
+
+
+
+to deaden that noise. You could jump off the ledge into the cavern below from here if you wanted to."
+
+LEDGE_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_MOUNTAIN
+
+ALWAYS_LIGHT
+
+dilcopy jumper@ogre("6");
+
+north to farm_ledge_3 descr "North along the ledge";
+west to farm_ledge_5 descr "Straight west on the southern ledge";
+
+end
+
+				farm_ledge_5
+names {"south ledge"}
+title "On the southern ledge overlooking the cavern"
+
+descr
+" As the ledge runs further west, it narrows, and it gets increasingly precarious to walk along it. To the east, it widens gradually, making it safer to go in that direction. As you make your way along the ledge, the occasionally scream from below startle
+
+
+
+s you have to think quickly so as not to lose your balance and fall off."
+
+LEDGE_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_MOUNTAIN
+
+ALWAYS_LIGHT
+
+dilcopy jumper@ogre("5");
+
+east to farm_ledge_4 descr "East to a twist in the ledge";
+west to farm_ledge_6 descr "The end of the ledge";
+
+end
+
+				farm_ledge_6
+names {"end south ledge"}
+title "The west end of the southern ledge"
+
+descr
+" The ledge is extremely narrow and you take great care in walking along it. The west wall blocks your passage further west, and the only way it is possible to go is east, unless of course you decide to jump off the ledge into the cavern below."
+
+LEDGE_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_MOUNTAIN
+
+ALWAYS_LIGHT
+
+dilcopy jumper@ogre("10");
+
+east to farm_ledge_5 descr "East along the ledge";
+
+end
+
+				farm_ledge_7
+names {"north ledge"}
+title "On a ledge above the fungus farm"
+
+descr
+" The wall juts in and creates a ledge on which it is possible to walk upon. There is a good view out over the cavern floor below, which is carpeted in that green fungus which proliferates throughout Moochan Tandor. You could jump off the ledge, but you w
+
+
+
+onder if the fungus on the cavern floor would be enough to cushion your fall. The only way to find out is to jump."
+
+LEDGE_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_MOUNTAIN
+
+ALWAYS_LIGHT
+
+dilcopy jumper@ogre("4");
+
+north to farm_ledge_8 descr "North along the ledge";
+south to tunnel_27@ogre1 descr "Above the fungus cavern";
+
+end
+
+				farm_ledge_8
+names {"north ledge"}
+title "Along the northern ledge above the fungus cavern"
+
+descr
+" It is quite hot up on this ledge, and the only source of heat is probably the fungus in the cavern below. The ledge bends around, going westwards, and then southwards. There is movement on the fungus, and the light which the fungus emits seems to throb 
+
+
+
+slowly."
+
+LEDGE_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_MOUNTAIN
+
+ALWAYS_LIGHT
+
+dilcopy jumper@ogre("4");
+
+west to farm_ledge_9 descr "West along the ledge";
+south to farm_ledge_7 descr "Near the end of the ledge";
+
+end
+
+				farm_ledge_9
+names {"north ledge"}
+title "On the northern ledge overlooking the fungus field"
+
+descr
+" The ledge bends again, north and east. It is possible to make out the true expanse of the cavern - it is enormous and you wonder how any living creature but a giant could hollow it out, for you know this cavern has been cut from the stone by hand and ha
+
+
+
+mmer, and not by nature."
+
+LEDGE_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_MOUNTAIN
+
+ALWAYS_LIGHT
+
+dilcopy jumper@ogre("4");
+
+north to farm_ledge_10 descr "North along the ledge";
+east to farm_ledge_8 descr "The north east part of the ledge";
+
+end
+
+				farm_ledge_10
+names {"north ledge"}
+title "Along the northern ledge above the fungus field"
+
+descr
+" The north ledge leads in a westerly direction. There is an occasionally howl of pain from below, and the shouts of ogres in their deep voices, though the fungus seems to deaden that noise. You could jump off the ledge into the cavern below from here if 
+
+
+
+you wanted to."
+
+LEDGE_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_MOUNTAIN
+
+ALWAYS_LIGHT
+
+dilcopy jumper@ogre("8");
+
+south to farm_ledge_9 descr "South along the ledge";
+west to farm_ledge_11 descr "Straight west on the northern ledge";
+
+end
+
+				farm_ledge_11
+names {"north ledge"}
+title "On the northern ledge overlooking the cavern"
+
+descr
+" The ledge narrows as it runs westwards. It makes it increasingly difficult to walk safely along it. To the east, it widens gradually, making it safer to go in that direction. As you make your way along the ledge, the occasionally scream from below start
+
+
+
+les you and you have to think quickly so as not to lose your balance and fall off."
+
+LEDGE_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_MOUNTAIN
+
+ALWAYS_LIGHT
+
+dilcopy jumper@ogre("9");
+
+east to farm_ledge_10 descr "East to a twist in the ledge";
+west to farm_ledge_12 descr "The end of the north ledge";
+
+end
+
+				farm_ledge_12
+names {"end north ledge"}
+title "The west end of the northern ledge"
+
+descr
+" The ledge ends to the west, as the west wall blocks you from going any further in that direction. The ledge beneath your feet is quite narrow and you think it might be safer to go east, and indeed, this is the only way possible in which to go, unless of
+
+
+
+ course you jump off the ledge into the cavern below."
+
+LEDGE_EXTRAS
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_MOUNTAIN
+
+ALWAYS_LIGHT
+
+dilcopy jumper@ogre("12");
+
+east to farm_ledge_11 descr "East along the ledge";
+
+end
+
+
+/* END SUB-SECTION: FARM LEDGE */
+
+/* END FUNGUS FARM */
+
+/* MISC ROOMS */
+
+				jump_room
+names {"jump_room"}
+title "After Jumping off the ledge"
+descr "You shouldn't be able to see this, and if you are, SHAME ON YOU!"
+
+dilbegin jump_look();  /* Stop the pc looking around */
+
+var
+   pc   : unitptr;
+
+code 
+{
+:start:
+   heartbeat := PULSE_SEC*1;
+   wait(SFB_CMD,command(CMD_LOOK));
+   block;
+   pc := activator;
+   secure(pc,lostem);
+   act("You just see the walls rushing by as you hurtle towards the ground!",
+A_ALWAYS,pc,null,null,TO_CHAR);
+   unsecure(pc);
+   goto start;
+    
+:lostem:
+   goto start;
+
+}
+dilend /* jump_look */
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+
+movement SECT_INSIDE
+
+ALWAYS_LIGHT
+
+end /* jump_room */
+
+/* END MISC ROOMS */
+
+/*                        END ROOMS                         */
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++  M O B I L E S   S E C T I O N  +++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++ */
+%mobiles
+
+
+				frog
+names {"a giant frog", "giant frog", "frog"}
+title "a giant frog"
+descr "A giant frog is sitting here, looking for giant insects."
+
+extra {}
+"This frog is by far the biggest you have ever laid eyes upon. It is almost as tall as a man, and its great hind feet, which are folded beneath its hind-quarters, look like they could do a lot of damage if they wanted to."
+
+FROG(29)
+
+exp 100
+
+money 2 SILVER_PIECE 
+
+dilcopy hop@ogre(); /* HOP off! */
+ 
+dilbegin frog_act(); 
+ 
+var 
+   i    : integer; 
+   j    : integer; 
+code { 
+ 
+:init: 
+   j := rnd(5, 12);
+   heartbeat := PULSE_SEC*j; 
+ 
+   i := interrupt(SFB_COM,self.position==POSITION_FIGHTING,fight); 
+:start: 
+   wait(SFB_DONE,((activator.type==UNIT_ST_PC) and (self.position!=POSITION_SLEEPING) and (self.position!=POSITION_RESTING))); 
+   pause; 
+   act(self.title + " croaks loudly.",
+       A_SOMEONE,self,null,null,TO_REST); 
+   pause; 
+   pause; 
+   act(self.title + " flicks out its tongue and swallows a giant centipede " +
+          "whole!",
+       A_SOMEONE,self,null,null,TO_REST); 
+   pause; 
+   pause; 
+   pause; 
+   pause; 
+   goto start; 
+ 
+:fight: 
+   heartbeat := PULSE_SEC*3; 
+   while (self.position == POSITION_FIGHTING) pause; 
+   exec("emote croaks with pride!",self); 
+   goto init; 
+ 
+} 
+dilend /* frog_act */ 
+
+end /* frog */
+
+				centipede
+names {"a giant centipede", "giant centipede", "centipede", "insect", "bug"}
+title "a giant centipede"
+descr "A giant centipede is crawling around here, looking nasty!"
+
+extra {}
+"This creature's most amazing attribute are its many, many legs! It could have almost a hundred. It has a nasty set of jaws which uncomfortably resemble fangs, and they drip a disgusting green ooze which looks rather poisonous. Its antennae twitch inanely
+
+
+
+ as it searches for food."
+
+extra {"legs", "leg"}
+"The legs are long, narrow and curved to the ground. The centipede has so many, they're almost uncountable."
+
+extra {"jaws", "fangs", "jaw", "fang"}
+"The jaws are definitely more dangerous than they appear, dripping poisonous ooze as the centipede searches for prey."
+
+CENTI(30)
+
+exp 125  /* Poison and Agressive (see Macro) */
+
+money 2 SILVER_PIECE 
+
+special SFUN_RANDOM_ZONE_MOVE time 150 bits SFB_RANTIME
+
+dilbegin centi_act(); 
+ 
+var 
+   i    : integer; 
+   j    : integer; 
+code 
+{ 
+ 
+:init: 
+   j := rnd(6, 13);
+   heartbeat := PULSE_SEC*j; 
+
+   i := interrupt(SFB_COM,self.position==POSITION_FIGHTING,fight); 
+:start: 
+   wait(SFB_DONE,((activator.type==UNIT_ST_PC) and (self.position!=POSITION_SLEEPING) and (self.position!=POSITION_RESTING))); 
+   pause; 
+   act(self.title + " eyes you coldly and its fangs drip poison.",
+       A_SOMEONE,self,null,null,TO_REST); 
+   pause; 
+   pause; 
+   pause; 
+   pause; 
+   goto start; 
+ 
+:fight: 
+   heartbeat := PULSE_SEC*3; 
+   while (self.position == POSITION_FIGHTING) pause; 
+   exec("emote makes a hideous clicking noise in triumph!",self); 
+   goto init; 
+} 
+dilend /* centi_act */ 
+
+end /* centipede */
+
+				beetle
+names {"a great fungus beetle", "great fungus beetle", "fungus beetle", "beetle", "bug"}
+title "a great fungus beetle"
+descr "A great fungus beetle is foraging here for food!"
+
+extra {}
+"The beetle is very large. It is a shiny black colour, and its carapace glistens in the light. It has great jaws which is uses for cutting lumps of fungus in order to eat them. Its carapace is domed and its legs let it keep itself above the fungus."
+
+extra {"carapace"}
+"The beetle's carapace is a tall dome of shiny black chitin. It moves in a jerky fashion as it searches for choice pieces of fungus."
+
+extra {"jaws", "jaw"}
+"Its jaws are highly curved, and it uses them to slice pieces of fungus off larger fungal bodies. They are serrated on their inner edge."
+
+extra {"legs", "leg"}
+"The beetle's legs are segmented, but not very long. They have claspers at their tips in order to hold the beetle to the fungus on which it feeds."
+
+extra {"antennae", "antenna"}
+"These segmented antennae twitch and move in a characteristically insectoid fashion, as it searches out those choice pieces of fungus."
+
+BEETLE(32)
+
+money 2 SILVER_PIECE 
+
+exp 100
+
+special SFUN_RANDOM_ZONE_MOVE time 220 bits SFB_RANTIME
+
+dilbegin beetle_act(); 
+ 
+var 
+   i    : integer; 
+   j    : integer; 
+code 
+{ 
+ 
+:init: 
+   j := rnd(6, 13);
+   heartbeat := PULSE_SEC*j; 
+ 
+   i := interrupt(SFB_COM,self.position==POSITION_FIGHTING,fight); 
+:start: 
+   wait(SFB_DONE,((activator.type==UNIT_ST_PC) and (self.position!=POSITION_SLEEPING) and (self.position!=POSITION_RESTING))); 
+   pause; 
+   act("The beetle's antennae twitch in excitement as it searches " +
+         "for choice pieces of fungus.",
+       A_SOMEONE,self,null,null,TO_REST); 
+   pause; 
+   pause; 
+   act(self.title + " makes a strange clicking noice.",
+       A_SOMEONE,self,null,null,TO_REST); 
+   pause;
+   pause; 
+   pause; 
+   goto start; 
+ 
+:fight: 
+   heartbeat := PULSE_SEC*3; 
+   while (self.position == POSITION_FIGHTING) pause; 
+   exec("emote resumes its search for food",self); 
+   goto init; 
+} 
+dilend /* beetle_act */ 
+
+end /* beetle */
+
+				bouncer
+names {"Bouncer the guardian ogre", "Bouncer", "guardian ogre", "guardian", "ogre"}
+title "Bouncer the guardian ogre"
+descr "A huge two-headed ogre stands here, chatting with himself."
+
+extra {}
+"This creature is quite amazing. He stands well over three metres tall, but sitting atop his shoulders is not one head, but two! His fat body is covered in a skin which is tinted with a sickly green colour, and his left head has only one eye, with a horn 
+
+
+
+sitting above it. He seems quite capable of chatting with himself, and indeed does. He is very imposing, and he appears to be the guardian of this place. He would be almost comical if it weren't for the fact that he could do so much damage if he felt like
+
+
+
+ it. His left head is having an in depth conversation with his right head."
+
+extra {"left head", "left"}
+"Bouncer's left head is quite enormous and sits above his left shoulder. It has only a single eye, but above this eye is a large horn. Like his right head, this head seems to be quite capable of independent thought."
+
+extra {"right head", "right"}
+"Bouncer's right head has two eyes, and his forehead is devoid of any decoration such as a horn. This head seems to have a need to carry on a conversation with the left one, and the two seem quite capable of independent thought."
+
+extra {"eyes", "eye"}
+"He has three eyes in total, one on his left head, two on the right. The left head makes up for its lack by having a rather large horn sitting about the eye."
+
+extra {"skin"}
+"His skin covers his body quite adequately, which is no mean feat considering how much flab there is on that body. But he makes up for this with a more than equal amount of muscle. Make no mistake, he's a force to be reckoned with."
+
+OGRE(SEX_MALE,40)
+
+money 2 SILVER_PIECE 
+
+exp 100
+
+dilcopy no_passage@ogre();
+dilcopy kill_block@ogre();
+
+dilbegin bouncer_act(); 
+ 
+var 
+   i    : integer; 
+
+code 
+{ 
+ 
+:init: 
+   heartbeat := PULSE_SEC*5; 
+ 
+   i := interrupt(SFB_COM,self.position==POSITION_FIGHTING,fight); 
+
+:start: 
+   wait(SFB_DONE,((activator.type==UNIT_ST_PC) and (self.position!=POSITION_SLEEPING) and (self.position!=POSITION_RESTING) )); 
+   pause; 
+act ("Bouncer's left head says 'You're more stupid than me'",
+       A_SOMEONE,self,null,null,TO_REST); 
+   pause; 
+act ("Bouncer's right head says 'No I am not'",
+       A_SOMEONE,self,null,null,TO_REST); 
+   pause;
+act ("Bouncer's left head exclaims 'Yes you are too!'",
+       A_SOMEONE,self,null,null,TO_REST); 
+   pause; 
+act ("Bouncer's right head exclaims 'Am not!'",
+       A_SOMEONE,self,null,null,TO_REST); 
+   pause;
+act ("Bouncer's left head exclaims 'Are too!'",
+       A_SOMEONE,self,null,null,TO_REST); 
+   pause; 
+act ("Bouncer's right head exclaims 'Am not!'",
+       A_SOMEONE,self,null,null,TO_REST); 
+   pause;
+act ("Bouncer's left head exclaims 'Are too!'",
+       A_SOMEONE,self,null,null,TO_REST); 
+   pause; 
+act ("Bouncer's right head exclaims 'Am not!'",
+       A_SOMEONE,self,null,null,TO_REST); 
+act ("Bouncer's right hand forms a fist and clobbers his left head.",
+       A_SOMEONE,self,null,null,TO_REST); 
+   pause; 
+act ("Bouncer's right head grins evilly.",
+       A_SOMEONE,self,null,null,TO_REST); 
+   pause; 
+   pause; 
+   pause; 
+   pause;
+goto start; 
+ 
+:fight: 
+   heartbeat := PULSE_SEC*3; 
+   while (self.position == POSITION_FIGHTING) pause; 
+   exec("emote resumes the argument with himself.",self); 
+   heartbeat := PULSE_SEC*7; 
+   goto start; 
+ 
+} 
+dilend /* bouncer_act */ 
+
+end /* bouncer */
+
+				h_farm_slave
+names {"human slave", "human", "slave", "man"}
+title "a human slave"
+descr "A human slave toils here, cutting fungus for his ogre masters."
+
+extra {}
+"This man looks very unhealthy, tired, and worn down. Once he was perhaps almost two metres tall, but now he is bent from long years of toil under the merciless whips of the ogres of Moochan Tandor. He cuts the fungus slowly and meticulously with long yea
+
+
+
+rs of experience on his brow."
+
+SLAVE(SEX_MALE, 33, RACE_HUMAN)
+
+money 3 SILVER_PIECE
+
+exp 100
+
+special SFUN_RANDOM_ZONE_MOVE time 300 bits SFB_RANTIME
+
+dilbegin h_f_s_action();
+
+var
+   i    : integer;
+   j    : integer;
+   pc   : unitptr;
+
+code
+{
+:init:
+   j:=rnd(6, 15);   
+   heartbeat := PULSE_SEC*j;
+
+   i := interrupt(SFB_COM,self.position==POSITION_FIGHTING,fight);
+:start:
+wait(SFB_DONE,((activator.type==UNIT_ST_PC) and (self.position!=POSITION_SLEEPING) and ((command("north")) or (command("west")) or (command("east")) or (command("south"))) and (self.position!=POSITION_SLEEPING)));   
+
+pc := activator;
+secure(pc,lostem);
+   pause;
+   pause;
+   exec("emote examines a patch of fungus and carefully removes some of the ripe " +
+	"fungus with his shears.", self);
+   pause;
+   pause;
+   exec("examine " + pc.name,self);
+   pause;
+   exec("whisper " + pc.name + " Leave quickly before the ogres catch you!", self);
+   pause;
+   pause;
+   pause;
+   pause;
+   goto lostem;
+
+:fight:
+   heartbeat := PULSE_SEC*3;
+   while (self.position == POSITION_FIGHTING) pause;
+   exec("emote resumes his work.",self);
+   pause;
+   goto lostem;
+
+:lostem:
+unsecure(pc);
+goto init;
+}
+dilend /* h_f_s_action */
+
+end /* h_farm_slave */
+
+				e_farm_slave
+names {"elf slave", "elf", "slave", "man"}
+title "an elf slave"
+descr "An elf slave carefully harvests the fungus here."
+
+extra {}
+"What a sight. This elf was obviously tall and proud once, but now he is reduced to a mere shadow of his former self. He is frail and looks quite worn by his work. He is bend over a patch of ripe fungus which he is carefully harvesting with his pair of sh
+
+
+
+ears. There is a look of fear and constant worry on his face, probably from ill-treatment received from the ogres."
+
+SLAVE(SEX_MALE, 33, RACE_ELF)
+
+money 3 SILVER_PIECE
+
+exp 100
+
+special SFUN_RANDOM_ZONE_MOVE time 250 bits SFB_RANTIME
+
+dilbegin e_farm_s_action();
+
+var
+   i    : integer;
+   j    : integer;
+   pc   : unitptr;
+
+code
+{
+:init:
+   j:=rnd(6, 15);   
+   heartbeat := PULSE_SEC*2*j;
+
+   i := interrupt(SFB_COM,self.position==POSITION_FIGHTING,fight);
+:start:
+wait(SFB_DONE,((activator.type==UNIT_ST_PC) and (self.position!=POSITION_SLEEPING) and ((command("north")) or (command("west")) or (command("east")) or (command("south"))) and (self.position!=POSITION_SLEEPING)));   
+
+pc := activator;
+secure(pc,lostem);
+   pause;
+   exec("emote squeezes the fungus to feel its ripeness.", self);
+   pause;
+   pause;
+   exec("say " + pc.name + ", you had better leave before your are discovered by " +
+"the ogres, or you will end up like me.", self);
+   pause;
+   pause;
+   goto lostem;
+
+:fight:
+   heartbeat := PULSE_SEC*3;
+   while (self.position == POSITION_FIGHTING) pause;
+   exec("emote sighs and then gets back to his work.", self);
+   pause;
+   goto lostem;
+
+:lostem:
+unsecure(pc);
+goto init;
+}
+dilend /* e_f_s_action */
+
+end /* e_farm_slave */
+
+				d_farm_slave
+names {"dwarf slave", "dwarf", "slave", "woman"}
+title "a dwarf slave"
+descr "A dwarf slave is working in the fungus bed here."
+
+extra {}
+"This dwarf looks quite healthy compared to the other slaves here. She appears to be quite young, and her resoluteness together with dwarven zeal are probably all that keeps her going. She is cutting the fungus carefully from the root up."
+
+SLAVE(SEX_FEMALE, 33, RACE_DWARF)
+
+money 3 SILVER_PIECE
+
+exp 100
+
+special SFUN_RANDOM_ZONE_MOVE time 260 bits SFB_RANTIME
+
+dilbegin d_f_s_action();
+
+var
+   i    : integer;
+   j    : integer;
+   pc   : unitptr;
+
+code
+{
+:init:
+   j:=rnd(6, 15);   
+   heartbeat := PULSE_SEC*j;
+
+   i := interrupt(SFB_COM,self.position==POSITION_FIGHTING,fight);
+:start:
+wait(SFB_DONE,((activator.type==UNIT_ST_PC) and (self.position!=POSITION_SLEEPING) and ((command("north")) or (command("west")) or (command("east")) or (command("south"))) and (self.position!=POSITION_SLEEPING)));   
+
+pc := activator;
+secure(pc,lostem);
+   pause;
+   exec("emote puts her hands down far into the fungus and cuts a stalk.", self);
+   pause;
+   pause;
+   pause;
+   exec("say " + pc.name + ", you should not have come here if you value your " + 	"freedom!", self);
+   pause;
+   pause;
+   pause;
+   goto lostem;
+
+:fight:
+   heartbeat := PULSE_SEC*3;
+   while (self.position == POSITION_FIGHTING) pause;
+   exec("emote delves down into the fungus bed once more.", self);
+   pause;
+   goto lostem;
+
+:lostem:
+unsecure(pc);
+goto init;
+}
+dilend /* d_f_s_action */
+
+end /* d_farm_slave */
+
+				farm_overseer
+names {"farm overseer", "ogre overseer", "overseer", "ogre"}
+title "an Overseer"
+descr "A large ogre watches over the slaves here, brandishing a cruel-looking whip."
+
+extra {}
+"This Ogre is heavily muscled and stands about two and a half metres in height. He wears a thick loin cloth and wields a nasty looking whip with which he beats the slaves when he gets the whim. He is definitely not to be challenged unless you're feeling e
+
+
+
+xtremely confident..."
+
+OGRE(SEX_MALE,35)
+
+money 3 SILVER_PIECE
+
+exp 105
+
+special SFUN_RANDOM_ZONE_MOVE time 230 bits SFB_RANTIME
+special SFUN_AGGRESSIVE "The Overseer attacks!" time 200 bits SFB_RANTIME
+special SFUN_TEAMWORK "ogre"
+special SFUN_RESCUE "ogre"
+
+dilbegin f_o_action();
+
+var
+   i    : integer;
+   j    : integer;
+   pc   : unitptr;
+
+code
+{
+:init:
+   j:=rnd(6, 15);   
+   heartbeat := PULSE_SEC*j;
+
+   i := interrupt(SFB_COM,self.position==POSITION_FIGHTING,fight);
+:start:
+wait(SFB_DONE,((self.position!=POSITION_SLEEPING) and ((command("north")) or (command("west")) or (command("east")) or (command("south"))) and (self.position!=POSITION_SLEEPING)));   
+
+pc := activator;
+secure(pc,lostem);
+if (pc.type == UNIT_ST_PC) goto ispc;
+
+pause;
+   exec("say Get back to work!", self);
+   pause;
+   pause;
+   goto lostem;
+
+:ispc:
+   pause;
+   exec("emote snarls at you!", self);
+   pause;
+   pause;
+   pause;
+   goto lostem;
+
+:fight:
+   heartbeat := PULSE_SEC*3;
+   while (self.position == POSITION_FIGHTING) pause;
+   exec("emote gets back to whipping the slaves.", self);
+   pause;
+   goto lostem;
+
+:lostem:
+unsecure(pc);
+goto init;
+}
+dilend /* f_o_action */
+
+end /* farm_overseer */
+
+				master_ogre
+names {"farm master ogre", "master ogre", "farm ogre", "master", "ogre"}
+title "the Farm Master Ogre"
+descr "A huge bloated ogre sits here, lazing about."
+
+extra {}
+"This ogre is immensely fat, and you wonder how he can possibly support his bulk. He is sitting on a great chair. He brandishes a huge whip and you would do well to avoid him, if only for this reason. Despite his bulk, he could kill almost anything."
+
+OGRE(SEX_MALE,37)
+
+money 3 SILVER_PIECE
+
+exp 105
+
+special SFUN_AGGRESSIVE "The Farm Master attacks!" time 200 bits SFB_RANTIME
+special SFUN_TEAMWORK "ogre"
+special SFUN_RESCUE "ogre"
+
+dilbegin f_m_action();
+
+var
+   i    : integer;
+   j    : integer;
+   pc   : unitptr;
+
+code
+{
+:init:
+   j:=rnd(6, 15);   
+   heartbeat := PULSE_SEC*j;
+
+   i := interrupt(SFB_COM,self.position==POSITION_FIGHTING,fight);
+:start:
+wait(SFB_DONE,((self.position!=POSITION_SLEEPING) and ((command("north")) or (command("west")) or (command("east")) or (command("south"))) and (self.position!=POSITION_SLEEPING)));   
+
+pc := activator;
+secure(pc,lostem);
+   exec("fart", self);
+   pause;
+   pause;
+   exec("burp", self);
+   pause;
+   exec("laugh", self);
+   pause;
+   pause;
+   goto lostem;
+
+:fight:
+   heartbeat := PULSE_SEC*3;
+   while (self.position == POSITION_FIGHTING) pause;
+   exec("emote dozes off.", self);
+   pause;
+   goto lostem;
+
+:lostem:
+unsecure(pc);
+goto init;
+}
+dilend /* f_m_action */
+
+end /* master_ogre */
+
+                                h_pit_slave
+names {"human slave", "human", "slave", "woman"}
+title "a human slave"
+descr "A human slave is here, living in fear for her life."
+
+extra {}
+"She looks to be in her middle twenties, but there are many lines on her forehead, and the marks of long toil on her body. She has been lashed and there is blood on her rags. You hope that you never end up like that."
+
+SLAVE(SEX_FEMALE, 33, RACE_HUMAN)
+
+money 3 SILVER_PIECE
+
+exp 100
+
+dilbegin h_p_s_action();
+
+var
+   i    : integer;
+   j    : integer;
+   pc   : unitptr;
+
+code
+{
+:init:
+   j:=rnd(6, 15);
+   heartbeat := PULSE_SEC*j;
+
+   i := interrupt(SFB_COM,self.position==POSITION_FIGHTING,fight);
+:start:
+wait(SFB_DONE,((activator.type==UNIT_ST_PC) and (self.position!=POSITION_SLEEPING) and ((command("north")) or (command("west")) or (command("east")) or (command("south"))) and (self.position!=POSITION_SLEEPING)));
+
+pc := activator;
+secure(pc,lostem);
+   pause;
+   pause;
+   exec("emote sighs forlornly at her lot in life.", self);
+   pause;
+   pause;
+   exec("examine " + pc.name,self);
+   pause;
+   exec("say " + pc.name + ", you would do well to leave this place...", self);
+   pause;
+   pause;
+   pause;
+   pause;
+   goto lostem;
+
+:fight:
+   heartbeat := PULSE_SEC*3;
+   while (self.position == POSITION_FIGHTING) pause;
+   exec("emote sighs forlornly and resumes her vigil.",self);
+   pause;
+   goto lostem;
+
+:lostem:
+unsecure(pc);
+goto init;
+}
+dilend /* h_p_s_action */
+
+end /* h_pit_slave */
+
+                                e_pit_slave
+names {"elf slave", "elf", "slave", "man"}
+title "an elf slave"
+descr "An elf slave is cowering here, afraid of further torture."
+
+extra {}
+"This elf is quite beautiful. She is about fifty years old, but she has been beaten frequently by her cruel masters - she bears many scars on her arms and legs. She is clothed only in rags, and she seems frightened of even the slightest noise."
+
+SLAVE(SEX_FEMALE, 33, RACE_ELF)
+
+money 3 SILVER_PIECE
+
+exp 100
+
+dilbegin e_p_s_action();
+
+var
+   i    : integer;
+   j    : integer;
+   pc   : unitptr;
+
+code
+{
+:init:
+   j:=rnd(6, 15);
+   heartbeat := PULSE_SEC*j;
+
+   i := interrupt(SFB_COM,self.position==POSITION_FIGHTING,fight);
+:start:
+wait(SFB_DONE,((activator.type==UNIT_ST_PC) and (self.position!=POSITION_SLEEPING) and ((command("north")) or (command("west")) or (command("east")) or (command("south"))) and (self.position!=POSITION_SLEEPING)));
+
+pc := activator;
+secure(pc,lostem);
+   pause;
+   pause;
+   pause;
+   exec("emote tries to hide herself.", self);
+   pause;
+   pause;
+   pause;
+   exec("emote shivvers uncomfortably as you approach.", self);
+   pause;
+   pause;
+   pause;
+   pause;
+   goto lostem;
+
+:fight:
+   heartbeat := PULSE_SEC*3;
+   while (self.position == POSITION_FIGHTING) pause;
+   exec("emote cringes at the blood.",self);
+   pause;
+   goto lostem;
+
+:lostem:
+unsecure(pc);
+goto init;
+}
+dilend /* e_p_s_action */
+
+end /* e_pit_slave */
+
+                                d_pit_slave
+names {"dwarf slave", "dwarf", "slave", "man"}
+title "a dwarf slave"
+descr "An dwarf slave is here, standing resolutely in his cell."
+
+extra {}
+"This young dwarf is perhaps least affected by the cruelty which the ogres inflict upon their slaves. He stands almost one and a half metres tall, and he wears the scars of his ill-treatment with pride. He never gave in, and they'll have to kill him first
+
+
+
+."
+
+SLAVE(SEX_MALE, 33, RACE_DWARF)
+
+money 3 SILVER_PIECE
+
+exp 100
+
+dilbegin d_p_s_action();
+
+var
+   i    : integer;
+   j    : integer;
+   pc   : unitptr;
+
+code
+{
+:init:
+   j:=rnd(6, 15);
+   heartbeat := PULSE_SEC*j;
+
+   i := interrupt(SFB_COM,self.position==POSITION_FIGHTING,fight);
+:start:
+wait(SFB_DONE,((activator.type==UNIT_ST_PC) and (self.position!=POSITION_SLEEPING) and ((command("north")) or (command("west")) or (command("east")) or (command("south"))) and (self.position!=POSITION_SLEEPING)));
+
+pc := activator;
+secure(pc,lostem);
+   pause;
+   pause;
+   exec("emote hails you.", self);
+   pause;
+   pause;
+   pause;
+   exec("say They shall never have my soul!", self);
+   pause;
+   pause;
+   pause;
+   pause;
+   goto lostem;
+
+:fight:
+   heartbeat := PULSE_SEC*3;
+   while (self.position == POSITION_FIGHTING) pause;
+   exec("strut",self);
+   pause;
+   goto lostem;
+
+:lostem:
+unsecure(pc);
+goto init;
+}
+dilend /* d_p_s_action */
+
+end /* d_pit_slave */
+
+                                tortured_slave
+names {"tortured slave", "elf slave", "elf", "slave", "man"}
+title "a tortured slave"
+descr "An old elf slave is chained to the rack here."
+
+extra {}
+"This old elf has been chained to the rack. It doesn't seem possible to remove him. He is in bad shape, and the ogres have chained him so tightly to the rack that his wrists are bleeding. He may die soon, but he might still have some fight in him."
+
+SLAVE(SEX_MALE, 33, RACE_ELF)
+
+money 3 SILVER_PIECE
+
+exp 100
+
+dilbegin t_p_s_action();
+
+var
+   i    : integer;
+   j    : integer;
+   pc   : unitptr;
+
+code
+{
+:init:
+   j:=rnd(6, 15);
+   heartbeat := PULSE_SEC*j;
+
+   i := interrupt(SFB_COM,self.position==POSITION_FIGHTING,fight);
+:start:
+wait(SFB_DONE,((activator.type==UNIT_ST_PC) and (self.position!=POSITION_SLEEPING) and ((command("north")) or (command("west")) or (command("east")) or (command("south"))) and (self.position!=POSITION_SLEEPING)));
+
+pc := activator;
+secure(pc,lostem);
+   pause;
+   pause;
+   exec("emote winces in pain.", self);
+   pause;
+   pause;
+   pause;
+   exec("say Go quickly, before you suffer my fate!", self);
+   pause;
+   pause;
+   pause;
+   pause;
+   goto lostem;
+
+:fight:
+   heartbeat := PULSE_SEC*3;
+   while (self.position == POSITION_FIGHTING) pause;
+   exec("emote sighs.",self);
+   pause;
+   goto lostem;
+
+:lostem:
+unsecure(pc);
+goto init;
+}
+dilend /* t_p_s_action */
+
+end /* tortured_slave */
+
+                                wander_guard
+names {"ogre prison guard", "ogre guard", "pit guard", "ogre", "guard", "overseer"}
+title "an ogre pit guard"
+descr "A muscular ogre casually patrols the prison here."
+
+extra {}
+"About two and a half metres in height, you wouldn't want to meet this character at night in a dark alley. He is patrolling the pit to make sure none of the slaves are endeavouring to escape or to cause mischief. He probably wants to have some fun with th
+
+
+
+em too."
+
+OGRE(SEX_MALE,35)
+
+money 3 SILVER_PIECE
+
+exp 105
+
+special SFUN_RANDOM_ZONE_MOVE time 230 bits SFB_RANTIME
+special SFUN_AGGRESSIVE "The guard attacks!" time 150 bits SFB_RANTIME
+special SFUN_TEAMWORK "ogre"
+special SFUN_RESCUE "ogre"
+
+dilbegin w_g_action();
+
+var
+   i    : integer;
+   j    : integer;
+   pc   : unitptr;
+
+code
+{
+:init:
+   j:=rnd(6, 15);   
+   heartbeat := PULSE_SEC*j;
+
+   i := interrupt(SFB_COM,self.position==POSITION_FIGHTING,fight);
+:start:
+wait(SFB_DONE,((self.position!=POSITION_SLEEPING) and ((command("north")) or (command("west")) or (command("east")) or (command("south"))) and (self.position!=POSITION_SLEEPING)));   
+
+pc := activator;
+secure(pc,lostem);
+
+if (not(rnd(0,5) == 1)) goto init;
+
+if (pc.type == UNIT_ST_PC) goto ispc;
+
+pause;
+   exec("say Slaves are yummy, it is a pity me not allowed eat 'em!", self);
+   pause;
+   pause;
+   goto lostem;
+
+:ispc:
+   pause;
+   exec("say " + pc.name + ", you are ugly!", self);
+   exec("snarl " + pc.name, self);
+   pause;
+   pause;
+   pause;
+   goto lostem;
+
+:fight:
+   heartbeat := PULSE_SEC*3;
+   while (self.position == POSITION_FIGHTING) pause;
+   exec(", continues on his patrol.", self);
+   pause;
+   goto lostem;
+
+:lostem:
+unsecure(pc);
+goto init;
+}
+dilend /* w_g_action */
+
+end /* wander_guard */
+
+                                still_guard
+names {"ogre prison guard", "ogre guard", "pit guard", "ogre", "guard", "overseer"}
+title "an ogre pit guard"
+descr "A tall ogre is here, trying to look busy."
+
+extra {}
+"This ogre is standing here doing nothing. He probably has better things to do. There is an evil smile on his face - you get the impression that he likes you, but for who knows what... Better keep your distance from this one."
+
+OGRE(SEX_MALE,35)
+
+money 3 SILVER_PIECE
+
+exp 105
+
+special SFUN_AGGRESSIVE "The guard attacks!" time 150 bits SFB_RANTIME
+special SFUN_TEAMWORK "ogre"
+special SFUN_RESCUE "ogre"
+
+dilbegin s_g_action();
+
+var
+   i    : integer;
+   j    : integer;
+   pc   : unitptr;
+
+code
+{
+:init:
+   j:=rnd(6, 15);
+   heartbeat := PULSE_SEC*j;
+
+   i := interrupt(SFB_COM,self.position==POSITION_FIGHTING,fight);
+:start:
+wait(SFB_DONE,((self.position!=POSITION_SLEEPING) and ((command("north")) or (command("west")) or (command("east")) or (command("south"))) and (self.position!=POSITION_SLEEPING)));
+
+pc := activator;
+secure(pc,lostem);
+
+if (not(rnd(0,5) == 1)) goto init;
+if (pc.type == UNIT_ST_PC) goto ispc;
+
+pause;
+   exec("say Humans taste nice when you cook them!", self);
+   pause;
+   pause;
+   goto lostem;
+
+:ispc:
+   pause;
+   exec("say " + pc.name + ", you would be nice on toast!", self);
+   exec("grin " + pc.name, self);
+   pause;
+   pause;
+   pause;
+   goto lostem;
+
+:fight:
+   heartbeat := PULSE_SEC*3;
+   while (self.position == POSITION_FIGHTING) pause;
+   exec("grin", self);
+   pause;
+   goto lostem;
+
+:lostem:
+unsecure(pc);
+goto init;
+}
+dilend /* s_g_action */
+
+end /* still_guard */
+
+                                pit_master
+names {"Sergeant Apone", "Apone", "pit master", "ogre", "master", "overseer"}
+title "Sergeant Apone"
+descr "A particularly imposing black-skinned ogre stands here, grinning evilly."
+
+extra {}
+"This ogre is quite different to the others - he has black skin, and carries a whip. He is slightly taller and more muscular than the others here, and he seems particularly evil. There is a smell of cigars from him."
+
+OGRE(SEX_MALE,40)
+
+money 3 SILVER_PIECE
+
+exp 105
+
+special SFUN_AGGRESSIVE "Apone attacks!" time 150 bits SFB_RANTIME
+special SFUN_TEAMWORK "ogre"
+special SFUN_RESCUE "ogre"
+
+dilbegin apone_action();
+
+var
+   i    : integer;
+   j    : integer;
+   k    : integer;
+   pc   : unitptr;
+
+code
+{
+:init:
+   j:=rnd(6, 15);
+   heartbeat := PULSE_SEC*j;
+
+  i := interrupt(SFB_COM,self.position==POSITION_FIGHTING,fight);
+  k := interrupt(SFB_DONE,((command("say")) and ("gee wiz sarge" in argument)),hehheh);
+:start:
+wait(SFB_DONE,((self.position!=POSITION_SLEEPING) and ((command("north")) or (command("west")) or (command("east")) or (command("south"))) and (self.position!=POSITION_SLEEPING)));
+pc := activator;
+secure(pc,lostem);
+pause;
+   exec("say Stay frosty!", self);
+   pause;
+   exec("say Watch those corners...", self);
+   pause;
+   exec("say " + pc.name + ", the corps would eat you for breakfast!", self);
+   exec("snicker " + pc.name, self);
+   pause;
+   exec("say Sweetheart!", self);
+   pause;
+   pause;
+   pause;
+   pause;
+   pause;
+   goto lostem;
+
+:fight:
+   heartbeat := PULSE_SEC*3;
+   while (self.position == POSITION_FIGHTING) pause;
+   exec("grin", self);
+   pause;
+   goto lostem;
+
+:hehheh:
+   heartbeat := PULSE_SEC*4;
+   exec("shout What are you waiting for Sweethearts?!? Breakfast " +
+        "in bed?!", self);
+
+   goto init;
+
+:lostem:
+unsecure(pc);
+goto init;
+}
+dilend /* apone_action */
+
+end /* pit_master */
+
+                                morgalen
+names {"Morgalen", "elf slave", "slave", "elf", "man"}
+title "Morgalen"
+descr "An old elf slave is here, waiting to die."
+
+extra {}
+"This elf is very, very old indeed. His hair is silver, and for an elf, that is some achievement. He has the features of one of the old elf lords out of legend, but he has been treated badly by his captives. In his youth, he must have been quite tall, and
+
+
+
+ stood among the ranks of the great elves of old. He is to be respected. By the looks of him, he doesn't have long left to live."
+
+SLAVE(SEX_MALE, 33, RACE_ELF)
+
+money 3 SILVER_PIECE
+
+exp 100
+
+flags {UNIT_FL_NO_TELEPORT}
+
+dilbegin morgalen_quest(); /* Slave Quest */
+
+var
+   pc    : unitptr;
+   item  : unitptr;
+   qname : extraptr;
+   i     : integer;
+code
+{
+
+:init:
+   heartbeat:=PULSE_SEC*6;
+
+i := interrupt(SFB_COM,self.position==POSITION_FIGHTING,in_fight); 
+
+:start:
+   wait(SFB_DONE,((activator.type==UNIT_ST_PC) or ((target==self) and (command("give")) and (activator.type==UNIT_ST_PC))));
+   pc:=activator;
+   secure(pc,lost_pc);
+
+   if ((command("give")) and (target==self)) goto checkitem1;  
+    
+   if(SLAVE_QUEST_ONGOING in pc.quests)  goto start;
+   if(SLAVE_QUEST_FINISHED in pc.quests) goto start;
+
+   pause;
+   exec(", looks up.", self);
+   pause;
+   exec("examine " + pc.name, self);
+   pause;
+   exec("think",self); 
+   pause;
+   exec("say Greetings " + pc.name + ", you find me in a bad position.",self); 
+   pause;
+   exec("say As you can see, I am old, and my health is failing. I need " +
+        "your help if I am to fulfill my destiny." ,self); 
+   pause;
+   exec("say When I was young, I lived in the Valley of Serenity, once " +
+        "the bastion of elfdom. That was many many centuries ago.", self);
+   pause;
+   exec("say My people decided they would attempt to help the world by " +
+        "sending a great warrior from their ranks to rid the world of " +
+        "some of its great evils.", self);
+   pause;
+   exec("sigh",self);
+   pause;
+   exec("say That warrior was me, Morgalen, Earl of Ninfrendel.", self);
+   pause;
+   exec("say But alas, I was captured by the ogres before I could complete " +
+        "my quest. I have been here ever since, unable to escape.", self);
+   pause;
+   act("Morgalen looks at you with hope in his eyes.",
+       A_ALWAYS,pc,null,null,TO_CHAR);
+   act("Morgalen looks at $1n with hope in his eyes.",
+       A_SOMEONE,pc,null,null,TO_REST);
+   pause;
+   exec("say Would you relieve me of my burden and finish the quest that " +
+        "began so long ago, please? I promise, you won't regret it.", self);
+   pause;
+   exec("say Please NOD if you will, or SHAKE if you decline my request.", self);
+   wait(SFB_DONE,((command("nod") or command("shake")) and (activator==pc)));
+   if (command("shake")) goto rejection;
+
+   addextra(pc.quests,{SLAVE_QUEST_ONGOING},""); /* One born every day */
+   exec("say You are indeed courageous!", self); 
+   pause;
+
+/* Ok, here's what I want */
+   exec("say In order to complete the quest, you must bring me the " +
+        "heads of some demons and monsters which exist in this world.", self); 
+   pause;
+   exec("say In this way, we can rid the world of some of its evil.", self); 
+   pause;
+   exec("say These are the monsters, there are three in all, each very hard. " +
+        "You may need some friends in order to combat them, but the reward " +
+        "will more than compensate you for your efforts.", self);
+   pause;
+   exec("say The first is the evil master of the ogre fungus farm. That is a " +
+        "personal vendetta, but it would give hope to the slaves.", self);
+   pause;
+   exec("say The second is Pallowaz, an evil human who roams the world in " +
+        "search of good which he can destroy.", self);
+   pause;
+   exec("say The third is the head of one of the blind witches of the caves.", self);
+   pause;
+   exec("say Be warned " + pc.name + ", heads decay, so bring me each head " +
+        "as soon as you get it. Farewell!", self);
+   pause;
+   exec("wave " + pc.name, self);
+   unsecure(pc);
+   goto start;
+
+:rejection:
+   unsecure(pc);
+   exec("sigh", self);
+   pause;
+   exec("say I bear the burden yet...", self);
+   heartbeat := PULSE_SEC*20;
+   pause;
+   heartbeat := PULSE_SEC*6;
+   goto start;
+
+:checkitem1:
+   if(SLAVE_QUEST_ONGOING in pc.quests) goto checkitem2;
+   exec("say I don't need this " + pc.name + ", thanks all the same." , self);
+   pause;
+   exec("drop " + medium.name, self);
+   unsecure(pc);
+   goto start;
+
+:checkitem2:
+   if("The decapitated head of Pallowaz is here" in medium.outside_descr)
+   {
+      if("hpall" in pc.quests)
+      {
+         exec("say You already killed Pallowaz for me.", self);
+         exec("drop " + medium.name, self);
+      }
+      else
+      {
+          destroy(medium); /* Tick */
+
+          qname:=SLAVE_QUEST_ONGOING in pc.quests;
+          addstring(qname.names, "hpall");
+          exec("say Thank you " + pc.name + ". He won't be hurting anyone " +
+               "for a while at least.", self);
+      }
+   }
+   else if("The decapitated head of the Farm Master Ogre is here" in medium.outside_descr)
+   {
+      if("hmast" in pc.quests)
+      {
+         exec("say You already killed him for me.", self);
+         exec("drop " + medium.name, self);
+      }
+      else
+      {
+         destroy(medium); /* Tick */
+
+         qname:=SLAVE_QUEST_ONGOING in pc.quests;
+         addstring(qname.names, "hmast");
+         exec("say The slaves will have new hope in their misery.",self);
+      }
+   }
+   else if("The decapitated head of the Blind Witch is here" in medium.outside_descr)
+   {
+      if("hwitc" in pc.quests)
+      {
+         exec("say She is dead already and you gave me the head!", self);
+         exec("drop " + medium.name, self);
+      }
+      else
+      {
+         destroy(medium); /* Tick */
+
+         qname:=SLAVE_QUEST_ONGOING in pc.quests;
+         addstring(qname.names, "hwitc");
+         exec("say She will plot her evil no more!", self);
+      }
+   }
+   else
+   {
+      exec("say I didn't ask for this.", self);
+      exec("drop " + medium.name, self);
+     }
+:check_quest:
+   if(("hpall" in pc.quests) and
+      ("hmast" in pc.quests) and
+      ("hwitc" in pc.quests)) goto all_got;
+   unsecure(pc);
+   goto start;
+
+:all_got:  /* REWARD & FINISH */
+   pause;
+   exec("say That is all of them! Thank you " + pc.name + ".", self); 
+   pause;
+   exec("say My burden has been lifted, thanks to you.", self); 
+   pause;
+   exec("smile " + pc.name, self);
+   pause;
+   exec("say Now for your reward.", self); 
+   pause;
+   exec("say I am afraid I told a mistruth - I myself can reward you only " +
+        "with my blessing and goodwill. I am but a wretched slave.", self);
+   pause;
+   exec("say However, my friend Vilan works for the ogres, not as a slave, " +
+        "but as an armourer and repair man. Just give him this.", self);
+   exec(", tears a piece off his rags and gives it to you.", self);
+   item:=load("rag_piece@ogre");
+   link(item, pc);
+   subextra(pc.quests, SLAVE_QUEST_ONGOING);
+   addextra(pc.quests, {SLAVE_QUEST_FINISHED}, "");
+   addextra(pc.quests, {VILAN_GIVE_SHIELD}, "");
+   experience(2500,pc);
+   pause;
+   exec("emote smiles at you.", self);
+   pause;
+   exec("say Goodbye " + pc.name + ", thank you for helping me. " +
+        "Now I can die in peace.", self);
+   pause;
+   exec("wave " + pc.name, self);      
+   self.hp := -11;
+   position_update(self);
+   unsecure(pc);
+   goto start;
+
+:in_fight:  /* DO NOTHING UNTIL FIGHT IS OVER */
+   heartbeat:=PULSE_SEC*2;
+   while(self.position==POSITION_FIGHTING) pause;
+   heartbeat:=PULSE_SEC*6;
+   goto start;
+
+:lost_pc:
+   unsecure(pc);
+   pause;
+   pause;
+   goto start;
+}
+dilend /* Slave Quest */
+
+end /* morgalen */
+
+                                wandering_ogre
+names {"wandering ogre", "ogre"}
+title "an wandering ogre"
+descr "A somewhat dumbfounded and maybe lost ogre, wanders around here."
+
+extra {}
+"Over two and a half metres in height, this ogre is very fat, but also quite muscular. His skin is a greeny-white, and he has no hair on his body. He has a slightly dumbfounded look on his face. Perhaps he's lost?"
+
+OGRE(SEX_MALE,30)
+
+money 3 SILVER_PIECE
+
+exp 105
+
+special SFUN_RANDOM_ZONE_MOVE time 200 bits SFB_RANTIME
+special SFUN_AGGRESSIVE "A wandering ogre attacks!" time 150 bits SFB_RANTIME
+special SFUN_TEAMWORK "ogre"
+special SFUN_RESCUE "ogre"
+
+end /* wandering_ogre */
+
+				eldritch /* Big bad kick ass darkelf type */
+names {"Eldritch the Darkelf Prince", "Eldritch", "darkelf prince", "darkelf", "prince", "andrew"}
+title "Eldritch the Darkelf Prince"
+descr "Eldritch the Darkelf Prince is here, working on his next conquest."
+
+extra {}
+"This being personates evil. He stands over two metres in height, and he is built like the most powerful of warriors. He bears the marks of evil intelligence on his brow and no matter how his expression changes, his face seems to look at everything with l
+
+
+
+oathing and hatred. Eldritch is the Lord and Master of Moochan Tandor. How he came to power is not widely known, but someone of his intelligence would not find it hard to dominate ogres, with their meagre quotient of intelligence. Eldritch's eyes are solid black."
+
+extra {"face"}
+"His face is dark and cold. It bears no sign of mercy or the capability to pity. He is evil, pure evil."
+
+extra {"eyes", "eye"}
+"His eyes are most unusual - they are solid black, no whites at all. It is most unnerving to look him in the eye."
+
+DARKELF(SEX_MALE,90)
+
+dilcopy combat_mag@function("lightning bolt","",0,1);
+
+special SFUN_AGGRES_REVERSE_ALIGN "Eldritch attacks!" time 500 bits SFB_RANTIME
+
+alignment -1000
+money 4 SILVER_PIECE
+
+flags {UNIT_FL_NO_TELEPORT}
+
+dilcopy disarm_block@ogre();
+dilcopy filch_block@ogre();
+
+dilbegin eldritch_talk();
+
+var
+   i    : integer;
+
+code 
+{
+
+:init:
+   heartbeat := PULSE_SEC*10;
+   i := interrupt(SFB_COM,self.position==POSITION_FIGHTING,in_fight);
+:start:
+   wait(SFB_DONE,activator.type==UNIT_ST_PC);
+   pause;
+   exec("ponder",self);
+   pause;
+   exec(", sinks into his own evil thoughts.",self);
+   pause;
+   exec("moo",self);
+   pause;
+   exec("say My ogre armies could overcome the meagre forces of " +
+        "Udgaard with ease, and then on to Midgaard.", self);
+   pause;
+   exec("say If only these ogres had some sense of intelligence.", self);
+   pause;
+   exec(", wonders if there could be someway to make his minions " +
+        "smarter.",self);
+   pause;   
+   exec("say I suppose I could always send my bodyguards to lead them.", self);
+   pause;
+   exec("cackle", self);
+   pause;
+   exec("say I love the smell of charred flesh in the morning...", self);
+   pause;
+   exec("say Smells like Victory!", self);
+   pause;
+   heartbeat := PULSE_SEC*60;
+   pause;
+   pause;
+   heartbeat := PULSE_SEC*10;
+   goto start;
+
+:in_fight:
+   heartbeat := PULSE_SEC*3;
+   while (self.position == POSITION_FIGHTING) pause;
+   pause;
+   pause;
+   exec("say Fools!",self);
+   pause;
+   exec("emote resumes his plotting.",self);
+   heartbeat := PULSE_SEC*10;
+   goto start;
+}
+dilend /* eldritch_talk */
+
+dilbegin get_em(); 
+
+var
+room     : unitptr;
+unit1    : unitptr;
+unit2    : unitptr; 
+
+code 
+{ 
+:init: 
+   heartbeat := PULSE_SEC*2; 
+:start: 
+   wait(SFB_COM,(command(CMD_AUTO_COMBAT) and (self.position==POSITION_FIGHTING)) );
+
+act("Eldritch calls for his guards and they rush into " +
+    "the room and to his aid!",
+    A_ALWAYS,self,null,null,TO_ROOM);
+room:=self.outside;
+unit1:=load("body_guard@ogre");
+link(unit1,self.outside);
+dilcopy("body_set@ogre",unit1);
+
+unit2:=load("body_guard@ogre");
+link(unit2,self.outside);
+dilcopy("body_set@ogre",unit2);
+
+set_fighting(unit1,self.fighting);
+set_fighting(unit2,self.fighting);
+
+while(self.position==POSITION_FIGHTING) pause;
+exec("say Begone guards!",self);
+goto start;
+}
+dilend /* get_em */
+
+end /* eldritch */
+
+                                body_guard /* These come when Eldritch is attacked */
+names {"Darkelf bodyguard", "bodyguard", "darkelf guard", "darkelf", "body guard", "guard"}
+title "a Darkelf Bodyguard"
+descr "One of Eldritch's bodyguards is standing guard here."
+
+extra {}
+"This warrior is almost as tall as his master. He has an evil face, and the body of a great warrior. He could defend his master against almost anything. Do not cross him."
+
+extra {"face"}
+"His face is dark and cold. It bears no sign of mercy or the capability to pity. He is evil, pure evil."
+
+DARKELF(SEX_MALE,40)
+
+special SFUN_AGGRES_REVERSE_ALIGN "A body guard attacks!" time 200 bits SFB_RANTIME
+special SFUN_TEAMWORK "darkelf"
+special SFUN_RESCUE "darkelf"
+
+alignment -1000
+money 4 SILVER_PIECE
+
+flags {UNIT_FL_NO_TELEPORT}
+
+dilbegin yes_boss();
+
+code
+{
+:init:
+   heartbeat := PULSE_SEC*2;
+:start:
+   wait(SFB_COM,(command(CMD_AUTO_COMBAT) and (self.position==POSITION_FIGHTING)) );
+
+while(self.position==POSITION_FIGHTING) pause;
+
+pause;
+exec(", leaves the room.",self);
+destroy(self);
+goto start;
+}
+dilend /* yes_boss */
+
+end /* body_guard */
+
+				vilan
+names {"Vilan the Repair man","sorcerous repair man","repair man","dwarf","vilan","man"}
+title "Vilan the Repair man"
+descr "Vilan the Repair man stands here, ready to assist you."
+
+extra {}
+"This is quite strange. Vilan is a dwarf, in mid-age, but he is not chained up like a slave. The ogres obviously use him to repair their weapons. He looks quite amicable and willing to assist you. Perhaps you should read the sign."
+
+alignment 0 
+sex SEX_MALE 
+race RACE_DWARF 
+level 40
+height 140  
+weight 240 
+NATURAL_DEF(WPN_FIST,ARM_CLOTHES) 
+MSET_ABILITY(19,19,9,11,15,3,24,0) 
+MSET_WEAPON(17,0,17,0,16,0) 
+MSET_SPELL(5,5,5,5,2,4,5,5,4,5,5) 
+exp -100  /* I don't want people killing him */
+
+flags {UNIT_FL_NO_TELEPORT}
+
+money 3 SILVER_PIECE
+
+dilcopy item_repair@ogre(5); /* Charge 5 gold minimum */
+
+dilbegin reward_shield(); /* Reward the pc for Morgalen's quest */
+
+/* VILAN_GIVE_SHIELD */
+
+var
+   pc    : unitptr;
+   item  : unitptr;
+   qname : extraptr;
+   i     : integer;
+
+code
+{
+:init:
+
+heartbeat:=PULSE_SEC*6;
+
+i := interrupt(SFB_COM,(self.position==POSITION_FIGHTING),in_fight);
+
+:start:
+   wait(SFB_DONE,( (target==self) and (command("give")) and (activator.type==UNIT_ST_PC) ));
+   pc:=activator;
+   secure(pc,lost_pc);
+
+   if(not("jpcrag" in medium.names)) goto start;
+   if(SLAVE_QUEST_ONGOING in pc.quests) goto start;
+   if(not(VILAN_GIVE_SHIELD in pc.quests)) goto start;
+
+destroy(medium);
+   pause;
+   exec("say This is a piece of Morgalen's cloak. So he has finally been " +
+        "relieved of his burden. I am glad.", self);
+   pause;
+   exec("say I promised him I would reward the person who helped him, but " +
+        "I never thought this day would come.", self);
+   pause;
+   exec("say I give you the Sky shield, the one thing Morgalen valued " +
+        "most in this life.",self);
+   item:=load("sky_shield@ogre");
+   link(item, pc);
+   subextra(pc.quests, VILAN_GIVE_SHIELD);
+   pause;
+   exec("bow " + pc.name, self);
+   exec("say Farewell and thank you for helping my friend.", self);
+   unsecure(pc);
+   goto start;
+
+:in_fight:  /* DO NOTHING UNTIL FIGHT IS OVER */
+   heartbeat:=PULSE_SEC*2;
+   while(self.position==POSITION_FIGHTING) pause;
+   heartbeat:=PULSE_SEC*6;
+   goto start;
+
+:lost_pc:
+   unsecure(pc);
+   pause;
+   pause;
+   goto start;
+}
+dilend /* reward_shield */
+end /* vilan */
+
+                                cg1_guard
+names {"ogre gate guard", "ogre guard", "gate guard", "ogre", "guard"}
+title "an ogre gate guard"
+descr "A tall imposing ogre is standing watch here, trying to look busy."
+
+extra {}
+"This ogre is standing here doing nothing. He probably has better things to do. There is an evil smile on his face - you get the impression that he likes you, but for who knows what... Better keep your distance from this one."
+
+OGRE(SEX_MALE,32)
+
+money 3 SILVER_PIECE
+
+exp 105
+
+special SFUN_GUARD_WAY "3@@$1n stops you.@$1n prevents $3n from going west."
+special SFUN_AGGRESSIVE "The guard attacks!" time 150 bits SFB_RANTIME
+special SFUN_TEAMWORK "ogre"
+special SFUN_RESCUE "ogre"
+
+end /* cg1_guard */
+
+                                ogre_cit
+names {"ogre citizen", "ogre", "citizen"}
+title "an ogre citizen"
+descr "An ogre citizen is going about her business here."
+
+extra {}
+"This ogre is going about her business in the city. Not much of a city, but ogres aren't great for civilised things so this one should be appreciated, at least a little. She doesn't seem to be sure of where she's going or what she's doing."
+
+OGRE(SEX_FEMALE,32)
+
+exp 100
+
+special SFUN_RANDOM_ZONE_MOVE time 230 bits SFB_RANTIME
+
+money 3 SILVER_PIECE
+
+dilbegin oc_action();
+
+var
+   i    : integer;
+   j    : integer;
+   pc   : unitptr;
+
+code
+{
+:init:
+   j:=rnd(6, 15);
+   heartbeat := PULSE_SEC*j;
+
+   i := interrupt(SFB_COM,self.position==POSITION_FIGHTING,fight);
+:start:
+wait(SFB_DONE,((self.position!=POSITION_SLEEPING) and ((command("north")) or (command("west")) or (command("east")) or (command("south"))) and (self.position!=POSITION_SLEEPING)));
+
+pc := activator;
+secure(pc,lostem);
+
+if (not(rnd(0,5) == 1)) goto init;
+
+   pause;
+   exec("say " + pc.name + ", mmmmm, you look yummy.", self);
+   exec("grin " + pc.name, self);
+   pause;
+   pause;
+   pause;
+   goto lostem;
+
+:fight:
+   heartbeat := PULSE_SEC*3;
+   while (self.position == POSITION_FIGHTING) pause;
+   exec("grin", self);
+   pause;
+   goto lostem;
+
+:lostem:
+unsecure(pc);
+goto init;
+}
+dilend /* oc_action */
+
+end /* ogre_cit */
+
+                                ogre_cit_2
+names {"ogre citizen", "ogre", "citizen"}
+title "an ogre citizen"
+descr "An ogre citizen is standing here, wondering what to do to pass the time."
+
+extra {}
+"When you look at this ogre, all the things people told you about ogres come flooding back like a bad dream. They're ugly, they're fat, they're muscular in all the wrong places, and they have these nasty toothless grins. Big, dumb and evil."
+
+OGRE(SEX_MALE,33)
+
+money 3 SILVER_PIECE
+
+exp 105 
+
+special SFUN_AGGRESSIVE "The Farm Master attacks!" time 200 bits SFB_RANTIME
+
+dilbegin oc2_action();
+
+var
+   i    : integer;
+   j    : integer;
+   pc   : unitptr;
+
+code
+{
+:init:
+   j:=rnd(6, 15);
+   heartbeat := PULSE_SEC*j;
+
+   i := interrupt(SFB_COM,self.position==POSITION_FIGHTING,fight);
+:start:
+wait(SFB_DONE,((self.position!=POSITION_SLEEPING) and ((command("north")) or (command("west")) or (command("east")) or (command("south"))) and (self.position!=POSITION_SLEEPING)));
+
+pc := activator;
+secure(pc,lostem);
+
+   pause;
+   exec("say " + pc.name + ", what are you doing in my home???!.", self);
+   exec("boggle " + pc.name, self);
+   pause;
+   pause;
+   pause;
+   goto lostem;
+
+:fight:
+   heartbeat := PULSE_SEC*3;
+   while (self.position == POSITION_FIGHTING) pause;
+   pause;
+   exec("cackle", self);
+   pause;
+   goto lostem;
+
+:lostem:
+unsecure(pc);
+goto init;
+}
+dilend /* oc2_action */
+
+end /* ogre_cit_2 */
+
+                                princess
+names {"Ogre Princess", "ogre", "princess"}
+title "an Ogre Princess"
+descr "A child ogre is throwing a tantrum here."
+
+extra {}
+"She is by far the youngest ogre you have seen thus far in Moochan Tandor, and probably the ugliest. You know how they say all children are cute? Well this one definitely isn't. She is about a metre and a half tall and she looks mean. I would stay well aw
+
+
+
+ay from her if I were you."
+
+OGRE(SEX_FEMALE,30)
+
+money 3 SILVER_PIECE
+
+exp 105
+
+special SFUN_AGGRESSIVE "The Princess throws a tantrum!" time 200 bits SFB_RANTIME
+
+dilbegin princess_act();
+
+var
+   i    : integer;
+   j    : integer;
+   pc   : unitptr;
+
+code
+{
+:init:
+   j:=rnd(6, 15);
+   heartbeat := PULSE_SEC*j;
+
+   i := interrupt(SFB_COM,self.position==POSITION_FIGHTING,fight);
+:start:
+wait(SFB_DONE,((self.position!=POSITION_SLEEPING) and ((command("north")) or (command("west")) or (command("east")) or (command("south"))) and (self.position!=POSITION_SLEEPING)));
+
+pc := activator;
+secure(pc,lostem);
+
+   pause;
+   exec("say " + pc.name + ", you broke my toys!", self);
+   exec("cry " + pc.name, self);
+   pause;
+   exec(", whinges horribly!", self);
+   pause;
+   pause;
+   pause;
+   pause;
+   pause;
+   pause;
+   goto lostem;
+
+:fight:
+   heartbeat := PULSE_SEC*3;
+   while (self.position == POSITION_FIGHTING) pause;
+   exec("cry", self);
+   pause;
+   goto lostem;
+
+:lostem:
+unsecure(pc);
+goto init;
+}
+dilend /* princess_act */
+
+end /* princess */
+ 
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++  O B J E C T S   S E C T I O N  +++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++ */ 
+%objects
+
+				loin_cloth
+names {"loin cloth","cloth"}
+title "a loin cloth"
+descr "An ogre's loin cloth has been carelessly discarded here."
+
+extra {}
+"This loin cloth is made from some sort of fur, or skin, it's hard to tell. It could be amphibian in source."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_WAIST}
+MATERIAL_CLOTH("frog skin")
+weight 2
+
+end /* loin_cloth */
+
+                                ogre_key
+names {"ogre key","cell key", "door key", "key"}
+title "a large black key"
+descr "A large black key has been left here."
+
+extra {}
+"This key is made from a dull black metal. It is quite large, and fits more than comfortably in your hand."
+
+type ITEM_KEY
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+cost 3 IRON_PIECE
+
+weight 1
+
+end /* ogre_key */
+
+				battle_club
+names {"huge battle club", "battle club", "club", "ogre club"}
+title "a huge battle club"
+descr "A huge ogre battle club lies here, forgotten by its owner."
+
+extra {}
+"This club is made from what appears to be wood bound in steel. It could pulverise anything into dust when used by the right person. It is extremely heavy and you wonder who could wield such a weapon effectively."
+
+
+WEAPON_DEF(WPN_BATTLE_CLUB,5,0)
+MATERIAL_METAL("Steel")
+weight 30
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD,MANIPULATE_HOLD}
+
+end /* battle_club */
+
+                                guard_club
+names {"guard club", "big club", "ogre club", "club"}
+title "a big club"
+descr "An ogre guard's club has been left here."
+
+extra {}
+"This club is simple in design, but quite potent to use. In the capable hands of an ogre, this club could do enormous damage."
+
+WEAPON_DEF(WPN_BATTLE_CLUB,-5,0)
+MATERIAL_WOOD("Wood")
+weight 15
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD,MANIPULATE_HOLD}
+
+cost 50 IRON_PIECE
+
+end /* guard_club */
+
+
+				slave_rags
+names {"worn rags", "rags"}
+title "Old rags"
+descr "Some old rags have been discarded here."
+
+extra {}
+"These were once fine clothes, but they have been torn and worn by endless wearing and abrasion. They aren't fit to be warn."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+MATERIAL_CLOTH("Old cotton")
+
+weight 4
+
+end /* slave_rags */
+
+                               rag_piece
+names {"rag piece","piece of rag","piece","rag","jpcrag"}
+title "a piece of rag"
+descr "A piece of rag has been left here."
+
+extra {}
+"This is a faded piece of elf cloth, now little more than a rag."
+
+manipulate {MANIPULATE_TAKE}
+MATERIAL_CLOTH("Elf cloth")
+
+weight 1
+
+end /* rag_piece */
+
+
+				shears
+names {"fungus shears", "shears"}
+title "a pair of fungus shears"
+descr "A pair of shears lie on the ground here, forgotten by their owner."
+
+extra {}
+"These shears are too small to be used by ogres and are obviously intended for the slaves to use. They have two blades, one sharp and one blunt which cut together quite effectively."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD, MANIPULATE_HOLD}
+WEAPON_DEF(WPN_DAGGER, 0, 0)
+weight 5
+
+cost 1 IRON_PIECE
+
+MATERIAL_METAL("Iron")
+
+end /* shears */
+
+				sandals /* Ogre sandals */
+names {"leather sandals", "ogre sandals", "sandals", "sandal"}
+title "a pair of black leather sandals"
+descr "A crude pair of black leather sandals have been left here."
+
+extra {}
+"They appear to be made of some kind of black leather, but the texture of the leather leads you to believe that it comes from something other than a cow. These sandals are very simple in design. They are thonged at the rear and the owner's foot slips into one and a thong goes between the large toe and the next toe beside it."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+
+MATERIAL_LEATHER("Dwarf hide")
+
+weight 6
+
+cost 5 IRON_PIECE
+
+end /* sandals */
+
+				ogre_whip
+names {"an evil whip", "evil whip", "whip"} 
+title "an evil whip" 
+descr "An evil-looking hand whip has been left here." 
+ 
+extra {} 
+"This whip is most cruel in design. It is quite large, but unadorned and undecorated. It is made from a thick wooden handle and a set of thongs at the end of the whip which appear to be some sort of black leather. There are tiny spikes of metal tied to the end of each thong, and you wouldn't want to be on the receiving end of those..." 
+
+extra {"wooden handle", "handle"}
+"The handle is smooth and made from a dark-coloured wood. It is quite sturdy and about a foot in length."
+
+extra {"thongs", "thong"}
+"The thongs are made from strong black leather which has been cut into strips and then fastened to the handle, all at one point. At the end of each thong is a small cylindrical piece of metal with a point at each end. You don't envy those on which this weapon is used."
+
+WEAPON_DEF(WPN_WHIP,3,0) 
+
+MATERIAL_WOOD("Wooden handle") 
+MATERIAL_LEATHER("Dwarf hide thongs")
+MATERIAL_METAL("Thong-ends") 
+ 
+weight 10
+ 
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD,MANIPULATE_HOLD} 
+ 
+cost 50 IRON_PIECE
+
+end /* ogre_whip */
+
+				lion_whip
+names {"&crOgre Lion whip&cw", "ogre lion whip", "lion whip", "whip"} 
+title "&crOgre Lion whip&cw" 
+descr "An Ogre Lion whip lies here, tempting you with its cruelty." 
+ 
+extra {} 
+"Unlike other ogre whips, this whip is made almost entirely from metal, except for the thongs, which have been crafted from what appears to be ogre skin. The handle is a metal rod about forty five centimetres in length. There are five thongs, each made from slightly different lengths of ogre hide, tipped at the ends with metal pins. This weapon could inflict great cruelty, and there is a small inscription along the handle."
+
+extra {"metal handle", "handle"}
+"The handle is a perfect thin cylinder of metal precisely forty five centimetres long. There is an inscription running the length of it, and five thongs have been fixed at the end."
+
+extra {"thongs", "thong"}
+"The thongs are quite obviously made from ogre hide which has been tanned and strengthened through the application of some strange oil. The thongs are all very long, the longest being almost two metres in length. Each is tipped with a terribly sharp pin of metal."
+
+extra {"pins", "pin"}
+"The pins are about the length of your finger nail, and are sharpened at both ends to give grip to the thongs as they flay their target."
+
+extra {"inscription"}
+"The inscription says 'Those who wield this weapon may not know its hidden power.'"
+
+extra {"$wear_s"}
+"Your &crOgre Lion whip&cw tenses as you put your hand firmly on its handle."
+
+extra {"$wear_o"}
+"An evil smile crosses $1n's face as $1e grips the handle of $1s &crOgre Lion whip&cw."
+
+extra {"$rem_s"}
+"You feel the &crOgre Lion whip&cw let go of you."
+
+extra {"$rem_o"}
+"The evil smile on $1n's lips lessens as $1e removes his &crOgre Lion whip&cw."
+
+WEAPON_DEF(WPN_WHIP,3,0) 
+
+MATERIAL_METAL("Handle and thong-ends") 
+MATERIAL_LEATHER("Ogre skin")
+
+weight 15
+ 
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD,MANIPULATE_HOLD} 
+ 
+
+cost 86 IRON_PIECE
+
+dilbegin recall whip_charge();
+
+code 
+{
+
+:start:
+   heartbeat := PULSE_SEC*SECS_PER_MUD_DAY/10;
+   wait(SFB_TICK,( (self.equip==WEAR_WIELD)));
+   heartbeat := PULSE_SEC*3;
+
+   act("Your &crOgre Lion whip&cw tenses with a life of its own.",
+      A_ALWAYS,self.outside,self,null,TO_CHAR);
+   act("$1n's &crOgre Lion whip&cw tenses with a life of its own.",
+      A_ALWAYS,self.outside,self,null,TO_REST);
+   
+   sendto("charge",self);
+
+   goto start;
+
+}
+dilend /* whip_charge */
+
+dilbegin recall aware whip_lash();
+
+var
+   result       : integer;
+   charge       : integer;
+   charges      : integer;
+   
+
+code 
+{
+
+   charges := 5;
+
+:init:
+   heartbeat := PULSE_SEC*1;
+   charge := interrupt(SFB_MSG,(activator==self) and
+      (argument=="charge"), charge);
+
+:start:
+   wait(SFB_CMD,((activator==self.outside) and
+                 (self.equip==WEAR_WIELD) and
+                ((command("lash") or command("lashes")) )));
+      if (cmdstr=="lashes") goto report;
+      if (cmdstr=="lash") goto okgo;
+      goto start;
+:okgo:
+block;
+      pause;
+      if (charges<=0) goto empty;
+      charges := charges - 1;
+      self.spells[SPL_ALL] := 50;
+      result := cast_spell(SPL_FIREBALL_1, self.outside, self, self.outside.fighting, "whip_lash_ef@ogre");
+      goto start;
+      
+:empty:
+   act("Your &crOgre Lion whip&cw hasn't got enough power yet.",
+      A_SOMEONE,self.outside,null,null,TO_CHAR);
+   goto start;
+
+:report:
+block;
+
+     act("&crOgre Lion whip&cw charges left:&c+g" + itoa(charges) + "&cw.",
+        A_SOMEONE,self.outside,null,null,TO_CHAR);
+     goto start;
+
+:charge:
+   clear(charge);
+   if (charges<5) charges := charges + 1;
+   if (charges>5) charges := 5;
+   goto init;
+}
+dilend /* whip_lash */	
+
+end /* lion_whip */
+
+				fungus_piece 
+names {"piece of fungus", "fungus piece", "fungus", "piece"}
+title "a large piece of fungus"
+descr "A large piece of fungus has been left here."
+
+extra {}
+"It seems to glow in a luminous green, and glistens in the darkness. The smell seems to come from the fruiting bodies on the fungus, probably the spores. The fungus seems to be warm to the touch."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+
+MATERIAL_ORGANIC("fungus")
+
+LIGHT_DEF(-1, 2)
+
+weight 3
+
+end /* fungus_piece */
+
+/* DARKELF ARMOUR - based on a level 40 guard */
+
+                 bc_helmet
+names {"&c+nBlack crystal helmet&cw", "black crystal helmet","crystal helmet","helmet"}
+title "&c+nBlack Crystal Helmet&cw"
+descr "An helmet of black crystal has been left here."
+
+extra{}
+"This helmet has been crafted or maybe cast from black crystal. It reflects the light which hits it, making it shine with an eerie radiance."
+
+flags {UNIT_FL_MAGIC}
+
+ARMOUR_PLATE(5,0)
+MATERIAL_METAL("Black Crystal")
+weight 10
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+
+CHAR_FLAG_TRANSFER(CHAR_DETECT_INVISIBLE)
+
+cost 50 IRON_PIECE
+rent 25 IRON_PIECE
+
+dilcopy bc_life@ogre();
+dilcopy level_restrict@function(25,0,0,"");
+
+end /* bc_helmet */
+
+
+                bc_sleeves
+names {"&c+nBlack crystal sleeves&cw","black crystal sleeves","crystal sleeves","sleeves"}
+title "&c+nBlack Crystal Sleeves&cw"
+descr "Some sleeves of black crystal have been left here."
+
+extra{}
+"These sleeves have been crafted or maybe cast from black crystal. They reflect the light which hits them, making them shine with an eerie radiance."
+
+flags {UNIT_FL_MAGIC}
+
+ARMOUR_PLATE(5,0)
+MATERIAL_METAL("Black Crystal")
+weight 10
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ARMS}
+
+cost 50 IRON_PIECE
+rent 25 IRON_PIECE
+
+dilcopy bc_life@ogre();
+dilcopy level_restrict@function(25,0,0,"");
+
+end /* bc_sleeves */
+
+                bc_gauntlets
+names {"&c+nBlack crystal gauntlets&cw","black crystal gauntlets","crystal gauntlets","gauntlets"}
+title "&c+nBlack Crystal Gauntlets&cw"
+descr "A pair of black crystal gauntlets lie here, forgotten."
+
+extra{}
+"These gauntlets have been crafted or maybe cast from black crystal. They reflect the light which hits them, making them shine with an eerie radiance."
+
+flags {UNIT_FL_MAGIC}
+
+ARMOUR_PLATE(5,0)
+MATERIAL_METAL("Black Crystal")
+weight 10
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HANDS}
+
+cost 50 IRON_PIECE
+rent 25 IRON_PIECE
+
+dilcopy bc_life@ogre();
+dilcopy level_restrict@function(25,0,0,"");
+
+end /* bc_gauntlets */
+
+                bc_plate
+names {"&c+nBlack crystal plate&cw","black crystal plate","crystal plate","plate"}
+title "&c+nBlack Crystal Plate&cw"
+descr "A black crystal plate has been left here."
+
+extra{}
+"This plate has been crafted or maybe cast from black crystal. They reflect the light which hits them, making them shine with an eerie radiance."
+
+flags {UNIT_FL_MAGIC}
+
+ARMOUR_PLATE(5,0)
+MATERIAL_METAL("Black Crystal")
+weight 10
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+
+cost 50 IRON_PIECE
+rent 25 IRON_PIECE
+
+dilcopy bc_life@ogre();
+dilcopy level_restrict@function(25,0,0,"");
+
+end /* bc_plate */
+
+                bc_leggings
+names {"&c+nBlack crystal leggings&cw","black crystal leggings","crystal leggings","leggings"}
+title "&c+nBlack Crystal Leggings&cw"
+descr "A pair of black crystal leggings lie here, forgotten."
+
+extra{}
+"These leggings have been crafted or maybe cast from black crystal. They reflect the light which hits them, making them shine with an eerie radiance."
+
+flags {UNIT_FL_MAGIC}
+
+ARMOUR_PLATE(5,0)
+MATERIAL_METAL("Black Crystal")
+weight 10
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+
+cost 50 IRON_PIECE
+rent 25 IRON_PIECE
+
+dilcopy bc_life@ogre();
+dilcopy level_restrict@function(25,0,0,"");
+
+end /* bc_leggings */
+
+                bc_boots
+names {"&c+nBlack crystal boots&cw","black crystal boots","crystal boots","boots"}
+title "&c+nBlack Crystal Boots&cw"
+descr "A pair of black crystal boots lie here, forgotten."
+
+extra{}
+"These boots have been crafted or maybe cast from black crystal. They reflect the light which hits them, maki
+ng them shine with an eerie radiance."
+
+flags {UNIT_FL_MAGIC}
+
+ARMOUR_PLATE(5,0)
+MATERIAL_METAL("Black Crystal")
+weight 10
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+
+cost 50 IRON_PIECE
+rent 25 IRON_PIECE
+
+dilcopy bc_life@ogre();
+dilcopy level_restrict@function(25,0,0,"");
+
+end /* bc_boots */
+                 
+/*END DARKELF ARMOUR*/
+
+                morning_star
+names {"Fist of Odin","Odin's fist","fist","star","morningstar","morning star","mace"}
+title "&c+yFist of Odin&cw"
+descr "A Massive Morningstar lies here - you want it."
+
+extra{}
+"This weapon is quite remarkable - it is a solid piece of &c+nblack crystal&cw! It is like a large mace, but the head has spikes of black crystal protruding from it. It is no cleric's weapon, and you know that if used by the right person, it could inflict enormous damage on its victim. It is quite heavy, but is wieldable in one hand. If you had a second, you could hold it."
+
+flags {UNIT_FL_MAGIC}
+
+extra {"$identify"}
+"This weapon has a Craftmanship of &c+g3&cw and a Magical Modifier of &c+g3&cw. It boosts your strength by 2, and it also lets you see invisible people. It will increase your skill with morningstar by 2%. You must have 50% Morning Star skill, be level 40 or above, and have 70 strength."
+
+extra {"$improved identify"}
+"This weapon also has a dil which is very powerful - it charges once per week and it only retains one charge. To activate the dil, type '&c+rCRUSH&cw' during combat to crush your oponent. To see if your &c+yFist of Odin&cw has its charge, type '&c+gCHARGES&cw'."
+
+extra {"$wear_s"}
+"You feel a tingle of power pass through your body as you wield your &c+yFist of Odin&cw."
+
+extra {"$wear_o"}
+"$1n shudders as $1e wields $1s &c+yFist of Odin&cw."
+
+extra {"$rem_s"}
+"You release your &c+yFist of Odin&cw and the power it gave leaves your body."
+
+extra {"$rem_o"}
+"$1n stops wielding $1s &c+yFist of Odin&cw $1e seems to grow smaller."
+
+extra {"$get_s"}
+"You grin as you feel the power of the &c+yFist of Odin&cw in your hand."
+
+extra {"$get_o"}
+"$1n grins as $1e gets the &c+yFist of Odin&cw."
+
+STR_TRANSFER(+2)
+WEAPON_TRANSFER(WPN_MORNING_STAR,+2)
+CHAR_FLAG_TRANSFER(CHAR_DETECT_INVISIBLE)
+
+WEAPON_DEF(WPN_MORNING_STAR,3,3)
+MATERIAL_METAL("Black Crystal")
+weight 15
+manipulate {MANIPULATE_TAKE,MANIPULATE_WIELD,MANIPULATE_HOLD}
+
+cost 300 IRON_PIECE
+rent 150 IRON_PIECE
+
+dilcopy level_restrict@function(40,0,0,"");
+dilcopy abi_restrict@function(ABIL_STR,80,25,0,""); 
+dilcopy weap_restrict@function(WPN_MORNING_STAR,50,0,0,""); 
+
+dilbegin recall star_charge();
+
+code 
+{
+
+:start:
+   heartbeat := PULSE_SEC*SECS_PER_MUD_DAY*7; /* 1 charge per MUD week */
+   wait(SFB_TICK,( (self.equip==WEAR_WIELD)));
+   heartbeat := PULSE_SEC*3;
+
+   act("Your &c+yFist of Odin&cw shudders as it gains its massive " +
+       "power!",
+      A_ALWAYS,self.outside,self,null,TO_CHAR);
+   act("$1n's &c+yFist of Odin&cw shudders as it gains its massive " +
+       "power!",
+      A_ALWAYS,self.outside,self,null,TO_REST);
+   
+   sendto("charge",self);
+
+   goto start;
+
+}
+dilend /* star_charge */
+
+dilbegin recall aware crush();
+
+var
+   result       : integer;
+   charge       : integer;
+   charges      : integer;
+   
+
+code 
+{
+
+   charges := 1;
+
+:init:
+   heartbeat := PULSE_SEC*1;
+   charge := interrupt(SFB_MSG,(activator==self) and
+      (argument=="charge"), charge);
+
+:start:
+   wait(SFB_CMD,((activator==self.outside) and 
+                 (self.equip==WEAR_WIELD) and
+                ((command("crush") or command("charges")) )));
+      if (cmdstr=="charges") goto report;
+      if (cmdstr=="crush") goto okgo;
+      goto start;
+:okgo:
+block;
+      pause;
+      if (charges<=0) goto empty;
+      charges := 0;
+      self.spells[SPL_ALL] := 50;
+      result := cast_spell(SPL_FIREBALL_2, self.outside, self, self.outside.fighting, "crush_ef@ogre");
+      goto start;
+      
+:empty:
+   act("Your &c+yFist of Odin&cw does not have its charge.",
+      A_SOMEONE,self.outside,null,null,TO_CHAR);
+   goto start;
+
+:report:
+block;
+
+     act("&c+yFist of Odin&cw charge: &c+g" + itoa(charges) + "&cw.",
+        A_SOMEONE,self.outside,null,null,TO_CHAR);
+     goto start;
+
+:charge:
+   clear(charge);
+   if (charges<1) charges := 1;
+   if (charges>1) charges := 1;
+   goto init;
+}
+dilend /* crush */
+
+dilbegin fatality(); 
+ 
+code { 
+ 
+   heartbeat := PULSE_SEC*2; 
+:start: 
+   wait(SFB_COM,command(CMD_AUTO_COMBAT) and 
+      (self.equip==WEAR_WIELD) and 
+      (self.outside.fighting.hp < 10)); 
+   act("Your &c+yFist of Odin&cw impacts against $3n's head and&n " + 
+        "&c+rC&s&c+gR&s&c+yU&s&c+bS&s&c+mH&s&c+cE&s&c+gS&cw &s$3m!", 
+      A_ALWAYS,self.outside,null,self.outside.fighting,TO_CHAR); 
+   act("$1n's  &c+yFist of Odin&cw impacts against your head and&n " + 
+        "&c+rC&s&c+gR&s&c+yU&s&c+bS&s&c+mH&s&c+cE&s&c+gS&cw &syou!", 
+      A_ALWAYS,self.outside,null,self.outside.fighting,TO_VICT); 
+   act("$1n's &c+yFist of Odin&cw impacts against $3n's head and&n " + 
+       "&c+rC&s&c+gR&s&c+yU&s&c+bS&s&c+mH&s&c+cE&s&c+gS&cw &s$3m!",
+      A_SOMEONE,self.outside,null,self.outside.fighting,TO_NOTVICT);
+   self.outside.fighting.hp := -10;
+   goto start; 
+} 
+dilend /* fatality */ 
+
+end /* morning_star */
+
+				stealth_ring
+names {"&c+nRing of Stealth&cw", "stealth ring", "ring"} 
+title "&c+nRing of Stealth&cw" 
+descr "You spot a polished silver ring lying here." 
+ 
+extra {} 
+"This ring is very simple in design. It is a perfect circle of silver, and it does not appear to be special in anyway."
+
+extra {"$identify"} 
+"This ring gives the bearer a boost in dexterity and the ability to see the invisible, as well as to move in silence while hiding its wearer from prying eyes. When worn, the wearer can see in the dark."
+
+extra {"$no_engrave"}
+"I can't make a mark on it, I'm sorry."
+
+DEX_TRANSFER(+1)
+
+flags {UNIT_FL_MAGIC} 
+
+LIGHT_DEF(-1, 2)
+ 
+CHAR_FLAG_TRANSFER(CHAR_DETECT_INVISIBLE)
+CHAR_FLAG_TRANSFER(CHAR_HIDE)
+CHAR_FLAG_TRANSFER(CHAR_SNEAK)
+
+dilcopy level_restrict@function(25,0,0,""); 
+dilcopy abi_restrict@function(ABIL_DEX,30,0,0,"");
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FINGER} 
+ 
+cost 250 IRON_PIECE
+rent 125 IRON_PIECE
+ 
+type ITEM_TREASURE 
+ 
+end /* stealth_ring */
+
+				sword /* Body guard sword */
+names {"long sword", "sword"}
+title "a long sword"
+descr "A well-crafted longsword has been left here."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_LONG_SWORD, 3, 0)
+MATERIAL_METAL("A dark metal")
+
+weight 15
+cost 50 IRON_PIECE
+
+end /* sword for body guards */
+
+				vilan_sign
+names {"large sign", "plaque", "sign"} 
+title "a prominent sign" 
+descr "&c+yA large sign has been put on prominent display here.&cw" 
+extra {} 
+"&lThe sign says: 
+
+       =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+                 &c+cVilan's Item Repair Shop&cw
+
+      &c+gItems repaired, objects mended, armour patched&c+w
+        
+    Yes, you too can have your equipment repaired for 
+    the unbeatable base price of 5 gold pieces! Yes,
+    just 5 gold pieces. Items which are badly damanged
+    and/or have a magical quality may cost more to 
+    repair due to their structural complexity. 
+
+    &c+bHow:&cw Just give your item to Vilan and he'll do
+    the rest for you. Have your purses at the ready!
+       =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+"
+  
+type ITEM_NOTE 
+ 
+end /* vilan_sign */
+
+                                ugly_dress
+names {"ugly pink dress","pink dress","ugly dress","dress"}
+title "an Ugly pink dress"
+descr "A rather ugly pink dress lies in a heap on the ground here."
+
+extra {}
+"This dress is a disgusting shade of bilious pink. Whoever made it ought to be put away for lack of sanity!"
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+MATERIAL_CLOTH("Horrible pink cloth")
+weight 5 
+
+end /* ugly_dress */
+
+                                fountain
+names {"ogre fountain", "fountain"} 
+title "fountain" 
+descr "&c+nA disgusting black treacle fountain sits here, gurgling.&cw"
+extra {} 
+"The fountain has been crafted from black crystal and has been carved in the shape of an ogre head which spews a black treacle-like substance into the air, only to fall down into a pool to the north of the head. It is profoundly ugly to look upon and you 
+
+
+
+can only wonder what twisted mind dreamt it up."
+
+weight 1000 
+
+MATERIAL_STONE("Black Crystal")
+
+dilbegin gurgle();
+
+var
+   i :integer;
+
+code
+{
+:init:
+   heartbeat := PULSE_SEC*21;
+   i := interrupt(SFB_CMD,(command("drink")),drinkme);
+
+:start:
+wait(SFB_TICK, TRUE);
+
+act("The fountain gurgles horribly and the sound turns your stomach.",
+    A_SOMEONE,self,null,null,TO_REST);
+pause;
+
+goto start;
+
+:drinkme:
+if (findunit (activator,argument,FIND_UNIT_SURRO,null)!=self) goto start;
+block;
+act("ICK! You don't want to drink from that!",
+    A_SOMEONE,activator,null,null,TO_CHAR);
+goto start;
+}
+dilend /* gurgle */
+
+end /* fountain */
+
+/* ====================== QUEST REWARDS ======================= */
+
+				sky_shield
+names {"Sky shield", "the elven shield of the sky", "skyshield", "elven shield of the sky", "elven shield", "shield"}
+title "&c+cSky shield&cw"
+descr "A great shield lies here, forgotten."
+
+extra {}
+"This shield is quite large and made from a light metal. It is light grey in colour, and there are studs on its face, coloured like the blue sky. They seem more than just a decoration because they penetrate the shield's surface, giving it a greater structural integrity."
+
+extra {"$identify"}
+"This shield has a Craftsmanship modifier of 9 and a Magical Modifier of 5. It will boon your dexterity."
+
+extra {"$improved identify"}
+"This shield will give you a dexterity boost of 3 and your skill in shield by 5%. It also allows you to see the invisible."
+
+extra {"$wear_s"}
+"As you wear the shield on your arm, the straps tighten and you know it won't come off."
+
+extra {"$wear_o"}
+"As $1n puts on his shield, his arms clenches in the straps."
+
+extra {"$rem_s"}
+"As you unstrap your shield, the muscles in your arm relax."
+
+extra {"$rem_o"}
+"$1n removes $1s shield and puts it aside for later use."
+
+extra {"$get_s"}
+"A smile crosses your face as you pick up this shield. It just has to be good."
+
+extra {"$get_o"}
+"A knowing smile crosses $1n's face as he lifts the &c+cSky shield&cw from the ground."
+
+flags {UNIT_FL_MAGIC}
+
+CHAR_FLAG_TRANSFER(CHAR_DETECT_INVISIBLE)
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_SHIELD}
+SHIELD_DEF(SHIELD_LARGE, +9, +5)
+DEX_TRANSFER (+3)
+SKILL_TRANSFER(SKI_SHIELD, +5)
+
+weight 15
+cost 320 IRON_PIECE
+
+dilcopy quest_restrict@function(SLAVE_QUEST_FINISHED,0,0,"");
+
+end /* End elven shield of the sky */
+
+/* +++++++++++++++++++++++++++++++++++++++++++++++++
+++++++++++++  R E S E T    S E C T I O N  ++++++++++
+++++++++++++++++++++++++++++++++++++++++++++++++ */
+%reset
+/*
+LOAD OBJ/MOB		INTO	WHERE	MAX TYPE	NO.
+*/
+
+load	h_farm_slave		into 	farm_2		zonemax	3
+{
+	equip	slave_rags	position WEAR_BODY
+	equip	shears		position WEAR_WIELD
+	load	fungus_piece
+}
+load	h_farm_slave		into	farm_12		zonemax	3
+{
+	equip	slave_rags	position WEAR_BODY
+	equip	shears		position WEAR_WIELD
+	load    fungus_piece
+}
+
+load	e_farm_slave		into	farm_5		zonemax	3
+{
+	equip	slave_rags	position WEAR_BODY
+	equip	shears		position WEAR_WIELD
+	load    fungus_piece
+}
+load	e_farm_slave		into	farm_8		zonemax	3
+{
+	equip	slave_rags	position WEAR_BODY
+	equip	shears		position WEAR_WIELD
+	load    fungus_piece
+}
+
+load	d_farm_slave		into 	farm_11		zonemax	3
+{
+	equip	slave_rags	position WEAR_BODY
+	equip	shears		position WEAR_WIELD
+	load    fungus_piece
+}
+load	d_farm_slave		into	farm_4		zonemax	3
+{
+	equip	slave_rags	position WEAR_BODY
+	equip	shears		position WEAR_WIELD
+	load    fungus_piece
+}
+
+load	farm_overseer		into	farm_8		zonemax	5
+{
+	equip	ogre_whip	position WEAR_WIELD
+	equip	loin_cloth	position WEAR_WAIST
+	equip	sandals		position WEAR_FEET
+}
+load	farm_overseer		into	farm_6		zonemax	5
+{
+	equip	ogre_whip	position WEAR_WIELD
+	equip	loin_cloth	position WEAR_WAIST
+	equip	sandals		position WEAR_FEET
+}
+load    farm_overseer           into    farm_15          zonemax 5
+{
+        equip   ogre_whip       position WEAR_WIELD
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+}
+load    farm_overseer           into    farm_15          zonemax 5
+{
+        equip   ogre_whip       position WEAR_WIELD
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+}
+
+load	master_ogre		into	farm_15		zonemax	1
+{
+	equip	lion_whip	position WEAR_WIELD
+	equip	loin_cloth	position WEAR_WAIST
+	equip	sandals		position WEAR_FEET
+}
+
+load    h_pit_slave             into     pit_6         zonemax 8
+{
+        equip   slave_rags      position WEAR_BODY
+}
+load    h_pit_slave             into     pit_7         zonemax 8
+{
+        equip   slave_rags      position WEAR_BODY
+}
+load    h_pit_slave             into     pit_8         zonemax 8
+{
+        equip   slave_rags      position WEAR_BODY
+}
+load    h_pit_slave             into     pit_9         zonemax 8
+{
+        equip   slave_rags      position WEAR_BODY
+}
+
+load    morgalen                into     pit_12        zonemax 1
+{
+        equip   slave_rags      position WEAR_BODY
+}
+
+load    h_pit_slave             into     pit_13        zonemax 8
+{
+        equip   slave_rags      position WEAR_BODY
+}
+load    h_pit_slave             into     pit_20        zonemax 8
+{
+        equip   slave_rags      position WEAR_BODY
+}
+
+load    e_pit_slave             into     pit_6         zonemax 8
+{
+        equip   slave_rags      position WEAR_BODY
+}
+load    e_pit_slave             into     pit_7         zonemax 8
+{
+        equip   slave_rags      position WEAR_BODY
+}
+load    e_pit_slave             into     pit_8         zonemax 8
+{
+        equip   slave_rags      position WEAR_BODY
+}
+load    e_pit_slave             into     pit_9         zonemax 8
+{
+        equip   slave_rags      position WEAR_BODY
+}
+load    e_pit_slave             into     pit_17        zonemax 8
+{
+        equip   slave_rags      position WEAR_BODY
+}
+load    e_pit_slave             into     pit_18        zonemax 8
+{
+        equip   slave_rags      position WEAR_BODY
+}
+load    e_pit_slave             into     pit_19        zonemax 8
+{
+        equip   slave_rags      position WEAR_BODY
+}
+
+load    d_pit_slave             into     pit_6         zonemax 5
+{
+        equip   slave_rags      position WEAR_BODY
+}
+load    d_pit_slave             into     pit_7         zonemax 5
+{
+        equip   slave_rags      position WEAR_BODY
+}
+load    d_pit_slave             into     pit_8         zonemax 5
+{
+        equip   slave_rags      position WEAR_BODY
+}
+load    d_pit_slave             into     pit_9         zonemax 5
+{
+        equip   slave_rags      position WEAR_BODY
+}
+
+load    tortured_slave          into     pit_21        zonemax 1
+{
+        equip   slave_rags      position WEAR_BODY
+}
+
+load	wander_guard		into     pit_11        zonemax 6
+{
+        equip   ogre_whip       position WEAR_WIELD
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+        load    ogre_key
+}
+load    wander_guard            into     pit_16        zonemax 6
+{
+        equip   ogre_whip       position WEAR_WIELD
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+        load    ogre_key
+}
+load    wander_guard            into     pit_5         zonemax 6
+{
+        equip   ogre_whip       position WEAR_WIELD
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+        load    ogre_key
+}
+load    wander_guard            into     pit_4         zonemax 6
+{
+        equip   ogre_whip       position WEAR_WIELD
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+        load    ogre_key
+}
+load    wander_guard            into     pit_3         zonemax 6
+{
+        equip   ogre_whip       position WEAR_WIELD
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+        load    ogre_key
+}
+
+load    still_guard             into     pit_14        zonemax 6
+{
+        equip   guard_club      position WEAR_WIELD
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+        load    ogre_key
+}
+load    still_guard             into     pit_14        zonemax 6
+{
+        equip   guard_club      position WEAR_WIELD
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+        load    ogre_key
+}
+load    still_guard             into     pit_14        zonemax 6
+{
+        equip   guard_club      position WEAR_WIELD
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+        load    ogre_key
+}
+load    still_guard             into     pit_2        zonemax 6
+{
+        equip   guard_club      position WEAR_WIELD
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+        load    ogre_key
+}
+load    still_guard             into     pit_2        zonemax 6
+{
+        equip   guard_club      position WEAR_WIELD
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+        load    ogre_key
+}
+
+load    pit_master              into     pit_14       zonemax 1
+{
+        equip   fat_cigar@udgaard position WEAR_HOLD
+        equip   ogre_whip       position WEAR_WIELD 
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+        load    ogre_key
+}
+
+load    eldritch                into     city_38      max     1
+{
+        equip   morning_star    position WEAR_WIELD
+        equip   stealth_ring    position WEAR_FINGER_L
+        equip   bc_helmet       position WEAR_HEAD
+        equip   bc_sleeves      position WEAR_ARMS
+        equip   bc_gauntlets    position WEAR_HANDS
+        equip   bc_plate        position WEAR_BODY
+        equip   bc_leggings     position WEAR_LEGS
+        equip   bc_boots        position WEAR_FEET
+}
+
+load    cg1_guard               into     city_1       zonemax 4
+{
+        equip   guard_club       position WEAR_WIELD
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+}
+load    cg1_guard               into     city_1       zonemax 4
+{
+        equip   guard_club       position WEAR_WIELD
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+}
+load    cg1_guard               into     city_23       zonemax 4
+{
+        equip   guard_club       position WEAR_WIELD
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+}
+load    cg1_guard               into     city_23       zonemax 4
+{
+        equip   guard_club       position WEAR_WIELD
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+}
+
+load    vilan                   into     city_27       zonemax 1
+
+load    ogre_cit                into     city_11       zonemax 10
+{
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+}
+load    ogre_cit                into     city_13      zonemax 10
+{
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+}
+load    ogre_cit                into     city_16       zonemax 10
+{
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+}
+load    ogre_cit                into     city_18       zonemax 10
+{
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+}
+load    ogre_cit                into     city_20       zonemax 10
+{
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+}
+load    ogre_cit                into     city_5        zonemax 10
+{
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+}
+load    ogre_cit                into     city_29       zonemax 10
+{
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+}
+load    ogre_cit                into     city_7        zonemax 10
+{
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+}
+load    ogre_cit                into     city_34       zonemax 10
+{
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+}
+load    ogre_cit                into     city_24       zonemax 10
+{
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+}
+
+load    ogre_cit_2              into     city_10       zonemax 5
+{
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+}
+load    ogre_cit_2              into     city_2        zonemax 5
+{
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+}
+load    ogre_cit_2              into     city_31       zonemax 5
+{
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+}
+load    ogre_cit_2              into     city_32       zonemax 5
+{
+        equip   loin_cloth      position WEAR_WAIST
+        equip   sandals         position WEAR_FEET
+}
+
+load    princess                into     city_22       zonemax 1
+{
+        equip   ugly_dress      position WEAR_LEGS
+}
+
+load    vilan_sign              into     city_27       zonemax 1
+
+load    fountain                into     city_18       zonemax 1
+
+/* DOOR RESET */
+
+door city_1 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+
+door city_13 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+door city_22 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+
+door city_30 NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+door city_31 SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+
+door city_32 NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+door city_33 SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+
+door city_34 NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+door city_35 SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+
+door city_37 SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door city_38 NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+
+door city_38 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door city_39 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+
+
+door pit_1 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door pit_2 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+
+door pit_3 NORTH {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+door pit_7 SOUTH {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+
+door pit_3 SOUTH {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+door pit_6 NORTH {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+
+door pit_4 NORTH {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+door pit_9 SOUTH {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+
+door pit_4 SOUTH {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+door pit_8 NORTH {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+
+door pit_5 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door pit_14 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+
+door pit_10 EAST {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+door pit_20 WEST {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+
+door pit_11 EAST {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+door pit_13 WEST {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+
+door pit_11 WEST {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+door pit_12 EAST {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+
+door pit_15 EAST {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+door pit_19 WEST {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+
+door pit_16 EAST {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+door pit_18 WEST {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+
+door pit_16 WEST {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+door pit_17 EAST {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+
+door pit_16 SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door pit_21 NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+
+/* END DOOR RESET */
+
+/* END RESET */
+
+%end
+

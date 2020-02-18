@@ -1,0 +1,3651 @@
+/*
+filename    clan
+password    hideout
+changedby   jager
+EmailAdd     Palio <palio@blinksoft.com>
+request     compile
+version     32
+END HEADER*/
+
+/*pwd:hideout*/
+
+#include <composed.h>
+
+#define CONT_MESSAGE_MORETIME   	"$_$moretime$_$"
+
+#define CLAN_GODS					{"Jager", "Palio", "Whistler"}
+#define CLAN_MASTER_ABUSER			"$ClanAbuser"
+#define CLAN_TITLE_ABUSER			"$ClanTitleAbuser"
+#define CLAN_MESSAGE_NEWCOUNT		"$_$newcount$_$"
+#define CLAN_MESSAGE_NEWITEM		"$_$newitem$_$"
+#define CLAN_MESSAGE_DISBAND		"$_$disband$_$"
+#define CLAN_MESSAGE_REQUEST   		"$_$request$_$"
+#define CLAN_MESSAGE_GRANTED   		"$_$granted$_$"
+#define CLAN_MESSAGE_DENIED  		"$_$denied$_$"
+#define CLAN_MESSAGE_DONE     		"$_$done$_$"
+#define CLAN_MAILER         		"hansen@udgaard"
+
+#define CLAN_STATUS_MEMBER			"Member"
+#define CLAN_STATUS_MASTER			"Master"
+#define CLAN_STATUS_GUARD			"Guard"
+#define CLAN_STATUS_NEW 			"New"
+#define CLAN_STATUS_DISBANDED		"Disbanded"
+#define CLAN_STATUS_ACTIVE  		"Active"
+
+#define CLAN_COST                   100*PLATINUM_MULT
+#define CLAN_MASTER_LEVEL_MIN		50
+#define CLAN_CHEST_MAX              25
+
+#define CLAN_M_FLAG_INDEX			0
+#define CLAN_M_VERSION_INDEX		1
+#define CLAN_M_NAME_INDEX			2
+#define CLAN_M_STATUS_INDEX			3
+#define CLAN_M_FORMER_HOME_INDEX	4
+#define CLAN_M_FORMER_TITLE_INDEX	5
+#define CLAN_M_FLAGS_INDEX       	6
+#define CLAN_M_INVALID_INDEX       	7
+
+#define CLAN_M_FLAG				    "Clan Member"
+#define CLAN_M_CURRENT_VERSION      "2"
+#define CLAN_M_FLAG_INFO            1
+
+#define CLAN_O_VERSION_INDEX		0
+#define CLAN_O_NAME_INDEX			1
+#define CLAN_O_STATUS_INDEX	    	2
+#define CLAN_O_TATTOO_INDEX			3
+#define CLAN_O_HOME_INDEX			4
+#define CLAN_O_ENTRANCE_INDEX		5
+#define CLAN_O_MASTER_INDEX			6
+#define CLAN_O_INVALID_INDEX       	7
+
+#define CLAN_O_CURRENT_VERSION      "1"
+
+#define CLAN_H_FLAG_INDEX			0
+#define CLAN_H_NAME_INDEX			1
+#define CLAN_H_MASTER_INDEX			2
+#define CLAN_H_ENTRANCE_INDEX		3
+#define CLAN_H_TATTOO_INDEX			4
+#define CLAN_H_CHEST_INDEX       	5
+#define CLAN_H_INVALID_INDEX       	6
+
+#define CLAN_H_FLAG                 "$Clan"
+
+#define CLAN_OBJECTS(chestname, boardname, dataname, datanameq) \
+	chestname \
+	    title "a treasure chest" \
+	    names {"treasure chest", "clanchest", "chest"} \
+	    descr "A massive treasure chest sits solidly in the corner." \
+	    extra {} \
+	    "This huge wooden chest has long since rusted open.  It will hold twice the number of items 
+as people in your clan, or the maximum of 30, whichever is less." \
+	    flags {UNIT_FL_NO_TELEPORT} \
+	    CONTAINER_DEF(30000) \
+	    manipulate {MANIPULATE_ENTER} \
+	end \
+    \
+	BOARD_DATA_OBJECT(dataname) \
+	BOARD_DEF(boardname, datanameq, "clans", "a clan bulletin board", "A clan bulletin board is 
+here.")
+
+#define CLAN_RESET(board, home, dir1, entrance, dir2) \
+	load board into home local 1 \
+	\
+	load clan_guard into entrance local 2{ \
+		equip boots@xiyang position WEAR_FEET \
+		equip helmet@xiyang position WEAR_HEAD \
+		equip gloves@xiyang position WEAR_HANDS \
+		equip bplate@xiyang position WEAR_BODY \
+		equip leggings@xiyang position WEAR_LEGS \
+		equip bracers@xiyang position WEAR_ARMS \
+		equip guard_hammer@ishlor position WEAR_WIELD \
+		equip guards_shield@kingc position WEAR_SHIELD \
+	} \
+	\
+	load clan_guard into entrance local 2{ \
+		equip boots@xiyang position WEAR_FEET \
+		equip helmet@xiyang position WEAR_HEAD \
+		equip gloves@xiyang position WEAR_HANDS \
+		equip bplate@xiyang position WEAR_BODY \
+		equip leggings@xiyang position WEAR_LEGS \
+		equip bracers@xiyang position WEAR_ARMS \
+		equip guard_hammer@ishlor position WEAR_WIELD \
+		equip guards_shield@kingc position WEAR_SHIELD \
+	} \
+	\
+	door home dir1 {EX_OPEN_CLOSE, EX_CLOSED} \
+	door entrance dir2 {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+
+#ifdef CLAN_KEEP_DISBANDED
+
+#define CLAN_RESET_DISBANDED(board, home, dir1, entrance, dir2) \
+	load clan_chest into home local 1 \
+	door home dir1 {EX_OPEN_CLOSE, EX_CLOSED} \
+	door entrance dir2 {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+
+#else
+
+#define CLAN_RESET_DISBANDED(board, home, dir1, entrance, dir2)
+
+#endif
+
+#define BOARD_POST	0
+#define BOARD_LOOK	1
+#define BOARD_READ	2
+#define BOARD_REPLY	3
+#define BOARD_ERASE	4
+#define BOARD_COPY	5
+
+#define BOARD_DATA_OBJECT(dataname) \
+	dataname \
+	names {"board"} \
+	flags {UNIT_FL_NO_TELEPORT} \
+	minv CREATOR_LEVEL \
+	end
+
+#define BOARD_DEF(boardname, dataname, datazone, tit, des) \
+	boardname \
+	title tit \
+	descr des \
+	names {"board"} \
+	extra {} \
+	"&c+wYou may:&nread <#>, copy <item> <subject>, post <subject>, reply <#>, and erase 
+<#>.&cw" \
+	extra {"$board name"} dataname \
+	extra {"$board zone"} datazone \
+	flags {UNIT_FL_NO_TELEPORT} \
+	dilcopy board@clans(); \
+	dilcopy board_poster@clans(); \
+	end
+
+%zone clans
+
+title "Clan Zone"
+lifespan 5
+reset RESET_ANYHOW
+creators {"jager"}
+
+notes
+"&l
+This zone is for clan homes and dil.
+
+Jager - jem@eskimo.com
+Jager - a-briasp@microsoft.com
+
+History:
+09/18/96 - First code written
+10/01/96 - Zone installed in Valhalla
+10/02/96 - First four clans installed in Valhalla
+10/16/96 - 11 clans now.  Guards are more powerful, entrances hidden and bugs fixed
+10/20/96 - fixed a bug in boards as well as changed the data format and added more error protection
+10/22/96 - major update to clan data format
+01/26/97 - Many new clans - up to 26 (including 3 disbanded clans)
+&f
+"
+
+help
+"Try HELP CLANS.&n"
+
+%dil
+
+/* BULLETIN BOARD DILS */
+
+dilbegin unitptr board_get();
+var
+	board : unitptr;
+	index : string;
+	boardname : string;
+	boardzone : string;
+	data : extraptr;
+code{
+	heartbeat:=2*PULSE_SEC;
+	board:=null;
+
+	data:="$board name" in self.extra;
+	if(data==null)
+		return(board);
+	boardname:=data.descr;
+
+	data:="$board zone" in self.extra;
+	if(data==null)
+		return(board);
+	boardzone:=data.descr;
+
+	index:=boardname+"@"+boardzone;
+
+:loop:
+	board:=findsymbolic(index);
+	if(board!=null){
+		board.value[4]:=board.value[4]+1;
+		if(board.value[4]>5)
+			destroy(board);
+		goto loop;
+	}
+
+	board:=restore(boardzone, boardname);
+	if(board==null)
+		board:=load(index);
+
+	return(board);
+}
+dilend
+
+dilbegin integer board_copy(original : unitptr);
+external
+	unitptr board_get@clans();
+var
+	header : stringlist;
+	time : string;
+	data : extraptr;
+	board : unitptr;
+	author : string;
+	subject : string;
+	text : string;
+code{
+	if(original.type!=UNIT_ST_OBJ)
+		return(0);
+	if(original.objecttype!=ITEM_NOTE)
+		return(0);
+
+	data:="" in original.extra;
+	if(data==null)
+		return(0);
+	if(data.descr=="")
+		return(0);
+	text:=data.descr;
+
+	data:="$author" in original.extra;
+	if(data.descr=="")
+		author:="<No Author>";
+	else
+		author:=data.descr;
+
+	data:="$subject" in original.extra;
+	if(data.descr=="")
+		subject:="<No Subject>";
+	else
+		subject:=data.descr;
+
+	time:=asctime(realtime);
+
+	header:={"$message"};
+	addstring(header, author);
+	addstring(header, subject);
+	addstring(header, time);
+
+	board:=board_get@clans();
+	if(board==null)
+		return(0);
+
+	addextra(board.extra, header, text);
+
+	store(board);
+	destroy(board);
+
+	return(1);
+}
+dilend
+
+dilbegin board_poster();
+external
+	integer board_copy@clans(original : unitptr);
+var
+	object : unitptr;
+	data : extraptr;
+	i : integer;
+code{
+	heartbeat:=2*PULSE_SEC;
+
+:start:
+	wait(SFB_TICK, (self.inside!=null));
+
+	object:=self.inside;
+
+	data:="" in object.extra;
+	if(data==null)
+		goto start;
+
+	if(data.descr==""){
+		object.value[4]:=object.value[4]+1;
+		if(object.value[4]>150)
+			destroy(object);
+		goto start;
+	}
+
+	i:=board_copy@clans(object);
+	if(i==0)
+		log("ERROR: board post failed.");
+
+	destroy(object);
+	goto start;
+}
+dilend
+
+dilbegin board();
+external
+	integer board_copy@clans(original : unitptr);
+	unitptr board_get@clans();
+var
+	number : integer;
+	pc : unitptr;
+	cur : extraptr;
+	subject : string;
+	author : string;
+	argnum : integer;
+	arg : string;
+	time : string;
+	paper : unitptr;
+	original : unitptr;
+	item : string;
+	i : integer;
+	action : integer;
+	board : unitptr;
+	clanextra : extraptr;
+	clanboard : integer;
+	clanname : string;
+	garbage : string;
+code{
+    clanboard:=0;
+
+	clanextra:="$board zone" in self.extra;
+	if(clanextra==null)
+		quit;
+
+	if(clanextra.descr!="clans")
+		goto start;
+
+	if(self.outside.zoneidx!="clans")
+		goto start;
+
+	clanextra:=CLAN_H_FLAG in self.outside.extra;
+	if(clanextra==null)
+		goto start;
+
+	clanname:=clanextra.names.[CLAN_H_NAME_INDEX];
+	garbage:=getword(clanname);
+	clanboard:=1;
+
+:start:
+	wait(SFB_CMD, (activator.type==UNIT_ST_PC) and
+        ((command("look") and (argument=="board")) or
+        (command("post")) or (command("read") and (atoi(argument)>0)) or
+        (command("reply")) or (command("copy")) or
+        (command("erase"))
+        ));
+
+	pc:=activator;
+	arg:=argument;
+	number:=0;
+
+	/* figure out what sort of operation we are attempting to run */
+
+	block;
+
+	if((clanboard==1) and (pc.level<OVERSEER_LEVEL) and not (pc.name in CLAN_GODS)){
+		clanextra:=CLAN_M_FLAG in pc.quests;
+		if(clanextra==null){
+			sendtext("You are not a member of the right clan.&n", pc);
+			goto start;
+		}
+		else if(clanextra.names.[CLAN_M_NAME_INDEX]!=clanname){
+			sendtext("You are not a member of the right clan.&n", pc);
+			goto start;
+		}
+	}
+
+	if(command("post")){
+		paper:=load("paper@midgaard");
+		addextra(paper.extra, {"$subject"}, arg);
+		addextra(paper.extra, {"$author"}, pc.name);
+
+		link(paper, pc);
+		exec("write paper", pc);
+		link(paper, self);
+
+		goto start;
+	}
+	else if(command("copy")){
+		item:=getword(arg);
+		if(item==""){
+			sendtext("Please specify the object with the text to copy.&n", pc);
+			goto start;
+		}
+
+		original:=findunit(pc, item, FIND_UNIT_INVEN, null);
+		if(original==null){
+			sendtext("You don't have any such item!&n", pc);
+			goto start;
+		}
+		addextra(original.extra, {"$subject"}, arg);
+		addextra(original.extra, {"$author"}, pc.name);
+
+		i:=board_copy@clans(original);
+		if(i==0){
+			sendtext("That item contains no text.&n", pc);
+			goto start;
+		}
+
+		sendtext("Your message was copied to the board.&n", pc);
+		goto start;
+	}
+
+	board:=board_get@clans();
+	if(board==null){
+		log("INFO: board error");
+		sendtext("Bulletin board error.&n", pc);
+		goto start;
+	}
+
+	if(command("look")){
+		cur:="" in self.extra;
+		sendtext(cur.descr+"&n", pc);
+
+		cur:="$message" in board.extra;
+		while(cur!=null){
+			if("$message" in cur.names){
+				number:=number+1;
+				author:=cur.names.[1];
+				subject:=cur.names.[2];
+				time:=cur.names.[3];
+
+				sendtext(itoa(number)+" - "+time+" : "+subject+" ("+author+")&n", pc);
+			}
+			cur:=cur.next;
+		}
+
+		if(number==0)
+			sendtext("No messages.&n", pc);
+
+		goto cleanup;
+	}
+
+	argnum:=atoi(arg);
+
+	cur:="$message" in board.extra;
+	while(cur!=null){
+		if("$message" in cur.names){
+			number:=number+1;
+			if(number==argnum)
+				break;
+		}
+		cur:=cur.next;
+	}
+
+	if(cur==null){
+		sendtext("No such message.&n", pc);
+		goto cleanup;
+	}
+
+	if(command("read")){
+		author:=cur.names.[1];
+		subject:=cur.names.[2];
+
+		sendtext("&nMessage: "+itoa(number)+"&n", pc);
+		sendtext("From: "+author+"&n", pc);
+		sendtext("Subject: "+subject+"&n", pc);
+		sendtext("&n"+cur.descr+"&n", pc);
+	}
+	else if(command("reply")){
+		if("RE: " in cur.names.[2])
+			subject:=cur.names.[2];
+		else
+			subject:="RE: "+cur.names.[2];
+
+		paper:=load("paper@midgaard");
+		addextra(paper.extra, {"$subject"}, subject);
+		addextra(paper.extra, {"$author"}, pc.name);
+
+		link(paper, pc);
+		exec("write paper", pc);
+		link(paper, self);
+	}
+	else if(command("erase")){
+		author:=cur.names.[1];
+
+		if((author==pc.name) or (pc.level>=CREATOR_LEVEL) or ((clanboard==1) and 
+(clanextra.names.[CLAN_M_STATUS_INDEX]==CLAN_STATUS_MASTER))){
+			addstring(cur.names, "$deleteme");
+			subextra(board.extra, "$deleteme");
+			sendtext("Message "+itoa(number)+" has been erased.&n", pc);
+		}
+		else
+			sendtext(author+" wrote that message, you can't erase it!&n", pc);
+	}
+
+:cleanup:
+	store(board);
+	destroy(board);
+
+	goto start;
+}
+dilend
+
+/* CONTAINER DILS */
+
+#if 0
+
+dilbegin integer cont_get_elapsed();
+var
+    result : integer;
+code{
+    result:=0;
+    result:=result+(mudyear*SECS_PER_MUD_YEAR);
+    result:=result+(mudmonth*SECS_PER_MUD_MONTH);
+    result:=result+(mudday*SECS_PER_MUD_DAY);
+    result:=result+(mudhour*SECS_PER_MUD_HOUR);
+    result:=result/SECS_PER_REAL_MIN;
+
+/* result is now the number of minutes that has passed since creation (the zero date) */
+
+    return(result);
+}
+dilend
+
+dilbegin recall cont_container(expirestr : string);
+external
+    integer cont_get_elapsed@clans();
+var
+    expires : integer;
+    current : integer;
+    timeleft : integer;
+    i1 : integer;
+    i2 : integer;
+    arg : string;
+    garbage : string;
+code{
+    expires:=atoi(expirestr);
+
+    heartbeat:=5*SECS_PER_REAL_MIN*PULSE_SEC;
+
+:init:
+    i1:=interrupt(SFB_MSG, CONT_MESSAGE_MORETIME in argument, moretime);
+
+:start:
+    i2:=interrupt(SFB_CMD, command(CMD_TIME) and (activator==self.outside), remaining);
+
+    pause;
+
+    clear(i2);
+
+    current:=cont_get_elapsed@clans();
+    timeleft:=expires-current;
+
+    if(timeleft<=0){
+        item:=self.inside;
+        while(not (item==null)){
+            link(item, self.outside);
+            item:=self.inside;
+        }
+
+        sendtext("&c+wYour storage locker has expired, your items have been returned to 
+you.&cw&n", self.outside);
+        destroy(self);
+        quit;
+    }
+    else if(timeleft<=5)
+        sendtext("&c+wYour storage locker expires in 5 minutes.&cw&n", self.outside);
+    else if(timeleft<=10)
+        sendtext("&c+wYour storage locker expires in 10 minutes.&cw&n", self.outside);
+    else if(timeleft<=30)
+        sendtext("&c+wYour storage locker expires in 30 minutes.&cw&n", self.outside);
+    else if(timeleft<=60)
+        sendtext("&c+wYour storage locker expires in 1 hour.&cw&n", self.outside);
+    else if(timeleft<=3*60)
+        sendtext("&c+wYour storage locker expires in 3 hours.&cw&n", self.outside);
+    else if(timeleft<=12*60)
+        sendtext("&c+wYour storage locker expires in 12 hours.&cw&n", self.outside);
+    else if(timeleft<=24*60)
+        sendtext("&c+wYour storage locker expires in 1 day.&cw&n", self.outside);
+    else if(timeleft<=2*24*60)
+        sendtext("&c+wYour storage locker expires in 2 days.&cw&n", self.outside);
+    else if(timeleft<=5*24*60)
+        sendtext("&c+wYour storage locker expires in 5 days.&cw&n", self.outside);
+    else if(timeleft<=10*24*60)
+        sendtext("&c+wYour storage locker expires in 10 days.&cw&n", self.outside);
+
+    goto start;
+
+:moretime:
+    clear(i1);
+    clear(i2);
+
+    arg:=argument;
+    garbage:=getword(arg);
+    expires:=expires+atoi(arg);
+
+    i1:=interrupt(SFB_MSG, CONT_MESSAGE_MORETIME in argument, moretime);
+    i2:=interrupt(SFB_CMD, command(CMD_TIME) and (activator==self.outside), remaining);
+
+:remaining:
+    clear(i2);
+
+    sendtext("&c+wYour storage locker expires in ", self.outside);
+
+    current:=cont_get_elapsed@clans();
+
+    timeleft:=expires-current;
+    current:=timeleft/(24*60);
+    sendtext(itoa(current)+" days, ", self.outside);
+
+    timeleft:=timeleft-(current*(24*60));
+    current:=timeleft/(60);
+    sendtext(itoa(current)+" hours, ", self.outside);
+
+    timeleft:=timeleft-(current*60);
+    current:=timeleft;
+    sendtext("and "+itoa(current)+" minutes.&cw&n", self.outside);
+
+    goto start;
+}
+dilend
+
+#endif
+
+/* CLAN DILS */
+
+/* CLAN GOD DILS */
+
+dilbegin integer clan_notify(pc : unitptr, message : string);
+var
+	letter : unitptr;
+	clangods : stringlist;
+	clangodcount : integer;
+	mailman : unitptr;
+	n : integer;
+code{
+
+/* get that mailman! */
+
+	mailman:=load(CLAN_MAILER);
+	if(mailman==null)
+		return(0);
+	mailman.minv:=CREATOR_LEVEL;
+
+	clangods:=CLAN_GODS;
+	clangodcount:=length(clangods);
+	n:=0;
+
+/* have the pc mail the message */
+
+	while(n<clangodcount){
+		letter:=load("letter@basis");
+		if(letter==null)
+			return(0);
+
+		addextra(letter.extra, {""}, message);
+
+		link(letter, pc);
+		exec("mail letter "+clangods.[n], pc);
+		n:=n+1;
+	}
+
+	destroy(mailman);
+
+	return(1);
+}
+dilend
+
+dilbegin clan_admin();
+external
+    clan_disband@clans(pc : unitptr, clanname : string);
+	string clan_get@clans(clanname : string, index : integer);
+	integer clan_set@clans(clanname : string, index : integer, data : string);
+	unitptr clan_get_object@clans(context : string);
+    clan_put_object@clans(object : unitptr, context : string);
+var
+	pc : unitptr;
+	abuser : unitptr;
+	home : unitptr;
+	result : integer;
+	data : string;
+	object : unitptr;
+	countstring : string;
+	count : integer;
+	arg : string;
+	action : string;
+	room : unitptr;
+    clanextra : extraptr;
+code{
+	heartbeat:=5*PULSE_SEC;
+
+:start:
+	wait(SFB_CMD, (command("cm")) and (activator.type==UNIT_ST_PC) and 
+((activator.level>=OVERSEER_LEVEL) or (activator.name in CLAN_GODS)));
+
+	pc:=activator;
+	secure(pc, start);
+	arg:=argument;
+	action:=getword(arg);
+
+	if(action=="setnew"){
+		block;
+
+		result:=clan_set@clans(arg, CLAN_O_STATUS_INDEX, CLAN_STATUS_NEW);
+		if(result==0)
+			sendtext("Could not set "+arg+" to new.&n", pc);
+        else
+		    sendtext("Ok.&n", pc);
+	}
+	else if(action=="title"){
+		block;
+		abuser:=findunit(pc, arg, FIND_UNIT_GLOBAL, null);
+		if(abuser==null){
+			sendtext(arg+" is nowhere to be seen!&n", pc);
+			goto done;
+		}
+
+		if(abuser.type!=UNIT_ST_PC){
+			sendtext(arg+" is not a pc!&n", pc);
+			goto done;
+		}
+
+		if(CLAN_TITLE_ABUSER in abuser.quests){
+    		subextra(abuser.quests, CLAN_TITLE_ABUSER);
+    		sendtext(abuser.name+" is no longer marked as a Title Abuser.&n", pc);
+            exec("save", abuser);
+        }
+        else{
+            addextra(abuser.quests, {CLAN_TITLE_ABUSER}, "NO DATA");
+    		sendtext(abuser.name+" is now marked as a Title Abuser.&n", pc);
+            exec("save", abuser);
+        }
+    }
+	else if(action=="abuser"){
+		block;
+		abuser:=findunit(pc, arg, FIND_UNIT_GLOBAL, null);
+		if(abuser==null){
+			sendtext(arg+" is nowhere to be seen!&n", pc);
+			goto done;
+		}
+
+		if(abuser.type!=UNIT_ST_PC){
+			sendtext(arg+" is not a pc!&n", pc);
+			goto done;
+		}
+
+		if(CLAN_MASTER_ABUSER in abuser.quests){
+    		subextra(abuser.quests, CLAN_MASTER_ABUSER);
+    		sendtext(abuser.name+" is no longer marked as a Clan Master Abuser.&n", pc);
+            exec("save", abuser);
+        }
+        else{
+            addextra(abuser.quests, {CLAN_MASTER_ABUSER}, "NO DATA");
+    		sendtext(abuser.name+" is now marked as a Clan Master Abuser.&n", pc);
+            exec("save", abuser);
+        }
+	}
+	else if(action=="list"){
+		block;
+		object:=clan_get_object@clans("list");
+        clanextra:=object.extra;
+		sendtext("&c+w" + arg + " Clans:" + "&cw&n&n", pc);
+		while(not (clanextra==null)){
+			if((clanextra.names.[CLAN_O_STATUS_INDEX]==arg) or (arg=="all")){
+				sendtext(clanextra.names.[CLAN_O_NAME_INDEX]+"&n", pc);
+			}
+			clanextra:=clanextra.next;
+		}
+		clan_put_object@clans(object, "list");
+	}
+	else if(action=="info"){
+		block;
+		object:=clan_get_object@clans("data");
+        clanextra:=arg in object.extra;
+        if(clanextra.names.[CLAN_O_VERSION_INDEX]!=CLAN_O_CURRENT_VERSION){
+            sendtext("Incorrect data version.&n", pc);
+        }
+        else{
+            sendtext("Clan Name: "+clanextra.names.[CLAN_O_NAME_INDEX]+"&n", pc);
+            sendtext("Status: "+clanextra.names.[CLAN_O_STATUS_INDEX]+"&n", pc);
+            sendtext("Tattoo: "+clanextra.names.[CLAN_O_TATTOO_INDEX]+"&n", pc);
+            sendtext("Home: "+clanextra.names.[CLAN_O_HOME_INDEX]+"&n", pc);
+            sendtext("Entrance: "+clanextra.names.[CLAN_O_ENTRANCE_INDEX]+"&n", pc);
+            sendtext("Master: "+clanextra.names.[CLAN_O_MASTER_INDEX]+"&n", pc);
+            sendtext("Members: "+clanextra.descr+"&n", pc);
+        }
+		clan_put_object@clans(object, "data");
+	}
+	else if(action=="readraw"){
+		block;
+		object:=clan_get_object@clans("raw");
+		object.title:="a clan object";
+		object.manipulate:=object.manipulate | MANIPULATE_TAKE;
+		link(object, pc);
+		sendtext("Ok.&n", pc);
+	}
+	else if(action=="writeraw"){
+		block;
+		object:=findsymbolic("clan_object@clans");
+		if(not (object==null)){
+			if(object.outside==pc){
+				store(object);
+                clan_put_object@clans(object, "raw");
+				sendtext("Ok.&n", pc);
+			}
+			else
+				sendtext("Clan object is not in you.&n", pc);
+		}
+		else
+			sendtext("Clan object is not loaded.&n", pc);
+	}
+	else if(action=="disband"){
+		block;
+        clan_disband@clans(pc, arg);
+		sendtext("Ok.&n", pc);
+	}
+
+:done:
+    unsecure(pc);
+	goto start;
+}
+dilend
+
+/* CLAN OBJECT DILS */
+
+dilbegin unitptr clan_get_object(context : string);
+var
+	object : unitptr;
+    count : integer;
+code{
+    heartbeat:=1;
+    pause;
+
+:start:
+    object:=restore("clans", "clan_object");
+	if(object==null)
+		object:=load("clan_object@clans");
+
+    count:=object.loadcount;
+
+    if(count>1){
+        destroy(object);
+        heartbeat:=rnd(2, 6);
+        pause;
+        goto start;
+    }
+
+    return(object);
+}
+dilend
+
+dilbegin clan_put_object(object : unitptr, context : string);
+code{
+    destroy(object);
+
+	return;
+}
+dilend
+
+dilbegin integer clan_set(clanname : string, index : integer, data : string);
+external
+	unitptr clan_get_object@clans(context : string);
+    clan_put_object@clans(object : unitptr, context : string);
+var
+	clanextra : extraptr;
+	object : unitptr;
+	result : integer;
+code{
+	object:=clan_get_object@clans("clan_set");
+
+	clanextra:=clanname in object.extra;
+	if(clanextra==null){
+		result:=0;
+		log("clan '"+clanname+"' index "+itoa(index)+" NOT set to "+data);
+	}
+	else{
+	    clanextra.names.[index]:=data;
+		store(object);
+		result:=1;
+	}
+
+	clan_put_object@clans(object, "clan_set");
+	return(result);
+}
+dilend
+
+dilbegin string clan_get(clanname : string, index : integer);
+external
+	unitptr clan_get_object@clans(context : string);
+    clan_put_object@clans(object : unitptr, context : string);
+var
+	data : string;
+	clanextra : extraptr;
+	object : unitptr;
+code{
+    object:=clan_get_object@clans("clan_get");
+
+	clanextra:=clanname in object.extra;
+	if(clanextra==null){
+		data:=null;
+		log("clan '"+clanname+"' index "+itoa(index)+" NOT found");
+    }
+	else
+   		data:=clanextra.names.[index];
+
+    clan_put_object@clans(object, "clan_get");
+
+	return(data);
+}
+dilend
+
+dilbegin integer clan_get_count(clanname : string);
+external
+	unitptr clan_get_object@clans(context : string);
+    clan_put_object@clans(object : unitptr, context : string);
+var
+	data : integer;
+	clanextra : extraptr;
+	object : unitptr;
+    memberlist : stringlist;
+code{
+    object:=clan_get_object@clans("clan_get_count");
+
+	clanextra:=clanname in object.extra;
+	if(clanextra==null){
+		data:=0;
+		log("clan '"+clanname+"' descr NOT found");
+    }
+	else{
+        memberlist:=getwords(clanextra.descr);
+        data:=length(memberlist);
+    }
+
+    clan_put_object@clans(object, "clan_get_count");
+
+	return(data);
+}
+dilend
+
+dilbegin clan_set_add(clanname : string, data : string);
+external
+	unitptr clan_get_object@clans(context : string);
+    clan_put_object@clans(object : unitptr, context : string);
+var
+	clanextra : extraptr;
+	object : unitptr;
+code{
+    object:=clan_get_object@clans("clan_set_add");
+
+	clanextra:=clanname in object.extra;
+	if((clanextra==null) or (data in clanextra.descr))
+        clan_put_object@clans(object, "clan_set_add");
+    else{
+        clanextra.descr:=clanextra.descr+data+" ";
+	    store(object);
+        clan_put_object@clans(object, "clan_set_add");
+        sendtoalldil(CLAN_MESSAGE_NEWCOUNT+" "+clanname, "clan_chest@clans");
+    }
+
+	return;
+}
+dilend
+
+dilbegin clan_set_sub(clanname : string, data : string);
+external
+	unitptr clan_get_object@clans(context : string);
+    clan_put_object@clans(object : unitptr, context : string);
+var
+	clanextra : extraptr;
+	object : unitptr;
+    memberlist : stringlist;
+    count : integer;
+    index : integer;
+code{
+	count:=0;
+	object:=clan_get_object@clans("clan_set_sub");
+
+	clanextra:=clanname in object.extra;
+	if((clanextra==null) or (not (data in clanextra.descr)))
+        clan_put_object@clans(object, "clan_set_sub");
+    else{
+        memberlist:=getwords(clanextra.descr);
+        substring(memberlist, data);
+        count:=length(memberlist);
+
+        clanextra.descr:="";
+        index:=0;
+        while(index<count){
+            clanextra.descr:=clanextra.descr+memberlist.[index]+" ";
+            index:=index+1;
+        }
+
+	    store(object);
+        clan_put_object@clans(object, "clan_set_sub");
+        sendtoalldil(CLAN_MESSAGE_NEWCOUNT+" "+clanname, "clan_chest@clans");
+    }
+
+	return;
+}
+dilend
+
+/* CLAN MANAGEMENT DILS */
+
+dilbegin clan_creator();
+external
+	integer clan_notify@clans(pc : unitptr, message : string);
+	string clan_get@clans(clanname : string, index : integer);
+	integer clan_add@clans(pc : unitptr, clanname : string, clanstatus : string);
+var
+	pc : unitptr;
+	clanextra : extraptr;
+	clanname : string;
+	clanstatus : string;
+	clantattoo : string;
+	clanentrance : string;
+	clanhometitle : string;
+	clanhomedesc : string;
+	clanrequest : string;
+	clanhome : unitptr;
+	result : integer;
+	object : unitptr;
+	paper : unitptr;
+	clandoor : string;
+    temp : string;
+code{
+	heartbeat:=2*PULSE_SEC;
+
+:start:
+	wait(SFB_CMD, command("apply") or command("check"));
+	block;
+
+	pc:=activator;
+	secure(pc, start);
+
+/* check if they are currently in a clan */
+
+	clanextra:=CLAN_M_FLAG in pc.quests;
+	if(not (clanextra==null)){
+		exec("say You must leave "+clanextra.names.[CLAN_M_NAME_INDEX]+" before you can 
+start your own clan.", self);
+		goto done;
+	}
+
+/* check if they are of sufficient level */
+
+	if(pc.level<CLAN_MASTER_LEVEL_MIN){
+		exec("say You are still young!", self);
+		exec("say You must attain level "+itoa(CLAN_MASTER_LEVEL_MIN)+" before you can 
+start your own clan.", self);
+		goto done;
+	}
+
+/* make sure no nasty abusers get a clan */
+
+	if(CLAN_MASTER_ABUSER in pc.quests){
+		exec("say I find you unworthy to start your own clan!", self);
+		goto done;
+	}
+
+	if(command("check")){
+
+/* check to see if there is a clan for them */
+
+		clanname:=clan_get@clans(pc.name, CLAN_O_NAME_INDEX);
+		if(clanname==null){
+			exec("say Either you haven't applied, or your clan is not yet ready.", self);
+    		goto done;
+		}
+
+/* make sure the clan is a new clan */
+
+		clanstatus:=clan_get@clans(pc.name, CLAN_O_STATUS_INDEX);
+		if(clanstatus==CLAN_STATUS_ACTIVE){
+			exec("say Your clan has already been started!", self);
+    		goto done;
+		}
+		else if(clanstatus==CLAN_STATUS_DISBANDED){
+			exec("say Your clan has been disbanded!", self);
+    		goto done;
+		}
+
+/* take the money */
+
+		exec("say Your clan is ready and will cost you 100 pp.", self);
+
+		result:=transfermoney(pc, null, CLAN_COST);
+		if(result==0){
+			exec("say Come back when you can afford it.", self);
+    		goto done;
+		}
+
+		exec("say You have been charged 100 pp.", self);
+
+/* they are worthy, add em */
+
+		result:=clan_add@clans(pc, clanname, CLAN_STATUS_MASTER);
+		if(result==0){
+			log("couldn't add "+pc.name+" to "+clanname);
+    		goto done;
+		}
+
+/* make sure they have a valid home (it crashes the mud if not!) */
+
+		temp:=clan_get@clans(pc.name, CLAN_O_HOME_INDEX);
+        clanhome:=findroom(temp);
+		if(clanhome==null){
+			exec("say Could not find your clan home, please contact a Clan God.", self);
+    		goto done;
+		}
+
+/* stick the guy in his home so he knows where it is */
+
+		act("&c+wA glowing portal appears and you are sucked through!&cw", A_ALWAYS, pc, 
+null, null, TO_CHAR);
+		act("&c+w$1n gets sucked through a glowing portal!&cw", A_ALWAYS, pc, null, null, 
+TO_REST);
+		unsecure(pc);
+		link(pc, clanhome);
+		act("&c+wA glowing portal appears and $1n comes flying out of it!&cw", A_ALWAYS, pc, 
+null, null, TO_REST);
+		exec("look", pc);
+
+   		goto start;
+	}
+
+	clanstatus:=clan_get@clans(pc.name, CLAN_O_STATUS_INDEX);
+	if(clanstatus==CLAN_STATUS_NEW){
+		exec("say Perhaps you should CHECK instead.", self);
+   		goto done;
+	}
+
+	pause;
+	exec("say Hello young one.", self);
+	pause;
+	exec("say Many, many years ago i was the Master of a powerful clan, this was our home.", 
+self);
+	pause;
+	exec("emote coughs tiredly.", self);
+	pause;
+	exec("say Alas we were overthrown by evils that swept the land.  My clan was destroyed, and I 
+cursed!", self);
+	pause;
+	exec("emote has fire in his eyes, remembering days long past.", self);
+	pause;
+	exec("say I cannot ascend to Odin until I have restored clans to their former glory on this 
+world.", self);
+	pause;
+	exec("say Ahhh YOU are worthy to be the Master of a clan, and I can help you!", self);
+
+:getname:
+	pause;
+	exec("say What would you like your clan to be called?", self);
+	exec("say EXAMPLE: The Clan of the Bear", self);
+	wait(SFB_CMD, command(CMD_SAY) and (activator==pc));
+
+	clanname:=argument;
+
+	pause;
+	exec("say Is '"+clanname+"' correct? (NOD or SHAKE)", self);
+	wait(SFB_CMD, (command(CMD_NOD) or command(CMD_SHAKE)) and (activator==pc));
+	if(command(CMD_SHAKE))
+		goto getname;
+
+:gettattoo:
+	pause;
+	exec("say What would you like your clan tattoo to be?", self);
+	exec("say EXAMPLE: a small green dragon", self);
+	wait(SFB_CMD, command(CMD_SAY) and (activator==pc));
+
+	clantattoo:=argument;
+
+	pause;
+	exec("say Is '"+clantattoo+"' correct? (NOD or SHAKE)", self);
+	wait(SFB_CMD, (command(CMD_NOD) or command(CMD_SHAKE)) and (activator==pc));
+	if(command(CMD_SHAKE))
+		goto gettattoo;
+
+:getentrance:
+	pause;
+	exec("say Where would you like your clan located? Please be as specific as possible.", self);
+	exec("say EXAMPLE: Directly north of the north west corner of the Cypress Forest.", self);
+	wait(SFB_CMD, command(CMD_SAY) and (activator==pc));
+
+	clanentrance:=argument;
+
+	pause;
+	exec("say Is '"+clanentrance+"' correct? (NOD or SHAKE)", self);
+	wait(SFB_CMD, (command(CMD_NOD) or command(CMD_SHAKE)) and (activator==pc));
+	if(command(CMD_SHAKE))
+		goto getentrance;
+
+:getdoor:
+	pause;
+	exec("say What would you like your entrance to be?", self);
+	exec("say EXAMPLES: door, gate, trapdoor, grave", self);
+	wait(SFB_CMD, command(CMD_SAY) and (activator==pc));
+
+	clandoor:=argument;
+
+	pause;
+	exec("say Is '"+clandoor+"' correct? (NOD or SHAKE)", self);
+	wait(SFB_CMD, (command(CMD_NOD) or command(CMD_SHAKE)) and (activator==pc));
+	if(command(CMD_SHAKE))
+		goto getdoor;
+
+:gethometitle:
+	pause;
+	exec("say What would you like your clan home to be called?", self);
+	exec("say EXAMPLE: The Clan of the Sun's Hideout", self);
+	wait(SFB_CMD, command(CMD_SAY) and (activator==pc));
+
+	clanhometitle:=argument;
+
+	pause;
+	exec("say Is '"+clanhometitle+"' correct? (NOD or SHAKE)", self);
+	wait(SFB_CMD, (command(CMD_NOD) or command(CMD_SHAKE)) and (activator==pc));
+	if(command(CMD_SHAKE))
+		goto gethometitle;
+
+:gethomedesc:
+	pause;
+	exec("say What would you like your clan home to look like?", self);
+	exec("say EXAMPLE: Around you are all the trappings and trophies of the famous 'Clan of the 
+Bear'.  A high vaulted cieling is above you, and you can leave south.", self);
+	paper:=load("paper@midgaard");
+	addstring(paper.names, "dletter");
+	link(paper, pc);
+	exec("write dletter", pc);
+	link(paper, self);
+	secure(paper, start);
+
+	result:=interrupt(SFB_CMD, activator==pc, done);
+
+:descloop:
+	pause;
+
+	clanextra:="" in paper.extra;
+	if(clanextra==null)
+		goto descloop;
+
+	clanhomedesc:=clanextra.descr;
+	if(clanhomedesc=="")
+		goto descloop;
+
+:compose:
+	clear(result);
+	unsecure(paper);
+
+	clanrequest:="&l
+    clan_home_XXX
+        title \x22"+clanhometitle+"\x22
+        descr \x22"+clanhomedesc+"\x22
+
+        extra {CLAN_H_FLAG, \x22$ "+clanname+"\x22, \x22$ "+pc.name+"\x22,
+            \x22$ ROOM@ZONE\x22, \x22$ "+clantattoo+"\x22, \x22$ clan_chest_XXX\x22}
+        \x22You do not see that here.\x22
+&f";
+
+	result:=clan_notify@clans(pc, clanrequest);
+
+	clanrequest:="&l
+        movement SECT_INSIDE
+        ALWAYS_LIGHT
+        flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+        dilcopy clan_initialize@clans();
+        dilcopy block_commands@clans();
+
+        DIRECTION to ROOM@ZONE
+        descr \x22That way leads you out of your clan home.\x22
+        keyword {\x22door\x22}
+        open {EX_OPEN_CLOSE, EX_CLOSED};
+    end
+&f";
+	clanrequest:=clanrequest+"&nClan Home Entrance: "+clanentrance;
+	clanrequest:=clanrequest+"&nClan Home Door: "+clandoor;
+
+	result:=clan_notify@clans(pc, clanrequest);
+
+	if(result==0){
+		pause;
+		exec("say Your request failed to get sent to the Clan Gods (see WIZLIST).", self);
+		pause;
+		exec("say Please write down your request and send mudmail to the Clan Gods.", self);
+	}
+	else{
+		pause;
+		exec("say Thank you.  Your request for a new clan has been sent to the Clan Gods (see 
+WIZLIST).", self);
+		pause;
+		exec("say Please CHECK with me after every reboot to see if your clan has been installed.  
+When it has you will be charged a 100 pp clan creation fee, so start collecting now.", self);
+		pause;
+		exec("say If you screwed up or changed your mind simply redo your request or send 
+mudmail to the Clan Gods.", self);
+	}
+
+:done:
+	unsecure(pc);
+	goto start;
+}
+dilend
+
+dilbegin integer clan_add(pc : unitptr, clanname : string, clanstatus : string);
+external
+	string clan_get@clans(clanname : string, index : integer);
+	integer clan_set@clans(clanname : string, index : integer, data : string);
+    clan_set_add@clans(clanname : string, data : string);
+var
+	data : stringlist;
+	clanextra : extraptr;
+	tattooextra : extraptr;
+	clantattoo : string;
+	clanhome : string;
+	count : integer;
+	countstring : string;
+	result : integer;
+    bigstatus : string;
+    members : string;
+code{
+	secure(pc, lost);
+
+/* make sure we are dealing with a PC */
+
+	if(pc.type!=UNIT_ST_PC)
+		goto fail;
+
+/* make sure they are not already in a clan */
+
+	clanextra:=CLAN_M_FLAG in pc.quests;
+	if(not (clanextra==null))
+		goto fail;
+
+/* make sure its an active clan */
+
+    bigstatus:=clan_get@clans(clanname, CLAN_O_STATUS_INDEX);
+    if(bigstatus==null)
+		goto fail;
+    if((bigstatus==CLAN_STATUS_NEW) and (clanstatus!=CLAN_STATUS_MASTER))
+		goto fail;
+    if(bigstatus==CLAN_STATUS_DISBANDED)
+		goto fail;
+
+/* prepare the data that goes on the player */
+
+	data:={""};
+	addstring(data, CLAN_M_FLAG);
+	addstring(data, CLAN_M_CURRENT_VERSION);
+	addstring(data, clanname);
+	addstring(data, clanstatus);
+	addstring(data, pc.hometown);
+	addstring(data, pc.title);
+	addstring(data, "0");
+	clanhome:=clan_get@clans(clanname, CLAN_O_HOME_INDEX);
+	clantattoo:=clan_get@clans(clanname, CLAN_O_TATTOO_INDEX);
+
+/* actually add the data to the PC */
+
+	addextra(pc.quests, data, "NO DATA");
+	pc.hometown:=clanhome;
+	tattooextra:="tattoo" in pc.extra;
+	if(tattooextra==null){
+		addextra(pc.extra, {"tattoos", "tattoo"}, "&n"+clantattoo);
+	}
+	else if(not (clantattoo in tattooextra.descr))
+		tattooextra.descr:=tattooextra.descr+"&n"+clantattoo;
+
+/* update the clan membership list */
+
+    clan_set_add@clans(clanname, pc.name);
+
+/* set master data on the clan object and copy the correct dil to the player */
+
+	if(clanstatus==CLAN_STATUS_MASTER){
+		result:=clan_set@clans(clanname, CLAN_O_STATUS_INDEX, CLAN_STATUS_ACTIVE);
+		if(result==0)
+			log("could not set master of "+clanname+" to "+pc.name);
+
+		result:=clan_set@clans(clanname, CLAN_O_MASTER_INDEX, pc.name);
+		if(result==0)
+			log("could not set master of "+clanname+" to "+pc.name);
+
+		result:=dilfind("clan_master@clans", pc);
+		if(result==0)
+			dilcopy("clan_master@clans", pc);
+
+		sendtext("&c+wThe powers of a Clan Master are now yours.&cw&n", pc);
+	}
+	else{
+		result:=dilfind("clan_member@clans", pc);
+		if(result==0)
+			dilcopy("clan_member@clans", pc);
+
+		sendtext("&c+w"+clanname+" have accepted you into their clan.&cw&n", pc);
+	}
+
+/* make sure the player is in the clan and guild channels */
+
+	exec("comm add clan", pc);
+	exec("comm add gchat", pc);
+
+/* inform the player of the changes and force them to save */
+
+	sendtext("&c+wtype 'cm help' for a list of your new abilites.&n", pc);
+	sendtext("You have a new tattoo representing your clan. (LOOK "+pc.name+"'s tattoo).&cw&n", 
+pc);
+
+	exec("save", pc);
+
+	unsecure(pc);
+	return(1);
+
+:fail:
+	unsecure(pc);
+:lost:
+	return(0);
+}
+dilend
+
+dilbegin integer clan_sub(pc : unitptr, clanname : string);
+external
+	clan_set_sub@clans(clanname : string, data : string);
+var
+	clanextra : extraptr;
+	result : integer;
+code{
+	secure(pc, lost);
+
+/* make sure we are dealing with a PC */
+
+	if(pc.type!=UNIT_ST_PC)
+		return(0);
+
+/* make sure they are in a clan */
+
+	clanextra:=CLAN_M_FLAG in pc.quests;
+	if(clanextra==null)
+		return(0);
+
+/* make sure its the correct clan! */
+
+	if(clanextra.names.[CLAN_M_NAME_INDEX]!=clanname)
+		return(0);
+
+/* remove all data from the player */
+
+	pc.title:=clanextra.names.[CLAN_M_FORMER_TITLE_INDEX];
+	pc.hometown:=clanextra.names.[CLAN_M_FORMER_HOME_INDEX];
+	subextra(pc.quests, CLAN_M_FLAG);
+
+/* inform the player of the change */
+
+	sendtext("&c+wYou are no longer a member of "+clanname+".&cw&n", pc);
+
+/* clean up the dil on the player */
+
+	result:=dilfind("clan_master@clans", pc);
+	if(result==1)
+		result:=dildestroy("clan_master@clans", pc);
+
+	result:=dilfind("clan_member@clans", pc);
+	if(result==1)
+		result:=dildestroy("clan_member@clans", pc);
+
+/* remove from the clan channel and force them to save */
+
+	exec("comm del clan", pc);
+	exec("save", pc);
+
+/* decrement the list */
+
+    clan_set_sub@clans(clanname, pc.name);
+
+	return(1);
+
+:lost:
+    return(0);
+}
+dilend
+
+dilbegin clan_disband(pc : unitptr, clanname : string);
+external
+	integer clan_notify@clans(pc : unitptr, message : string);
+	integer clan_set@clans(clanname : string, index : integer, data : string);
+var
+    result : integer;
+    message : string;
+code{
+	secure(pc, lost);
+
+	result:=clan_set@clans(clanname, CLAN_O_STATUS_INDEX, CLAN_STATUS_DISBANDED);
+    if(result==0)
+        goto done;
+
+    message:=CLAN_MESSAGE_DISBAND+" "+clanname;
+	sendtoalldil(message, "clan_member@clans");
+	sendtoalldil(message, "clan_master@clans");
+
+    message:=clanname+" has been disbanded";
+	result:=clan_notify@clans(pc, message);
+
+:done:
+    unsecure(pc);
+:lost:
+    return;
+}
+dilend
+
+/* CLAN HOME DILS */
+
+dilbegin clan_door();
+external
+	string clan_get@clans(clanname : string, index : integer);
+var
+	clanextra : extraptr;
+	clanname : string;
+	clanhome : unitptr;
+	room : unitptr;
+	roomname : string;
+	clanentrance : string;
+	garbage : string;
+	clanhomename : string;
+code{
+	if(self.position<POSITION_STANDING){
+    	sendtext("You can't do that now!&n", self);
+	    return;
+    }
+
+    room:=self.outside;
+	if(room.type!=UNIT_ST_ROOM)
+		goto failed;
+
+/* if we are in the clan zone then we are trying to leave */
+
+	if(room.zoneidx=="clans"){
+		clanextra:=CLAN_H_FLAG in room.extra;
+
+/* make sure we are in a clan home */
+
+		if(clanextra==null)
+			goto failed;
+
+/* locate the entrance */
+
+		clanentrance:=clanextra.names.[CLAN_H_ENTRANCE_INDEX];
+		garbage:=getword(clanentrance);
+		clanhome:=findroom(clanentrance);
+		if(clanhome==null)
+			goto failed;
+
+/* move the player out */
+
+		act("&c+wYou silently step through the secret entrance and are gone.&cw", A_ALWAYS, 
+self, null, null, TO_CHAR);
+		act("$1n exits through the secret entrance.", A_ALWAYS, self, null, null, TO_REST);
+		link(self, clanhome);
+		exec("look", self);
+		return;
+	}
+
+/* if we are not in the clan zone then we are trying to get in */
+
+	else{
+
+/* if we are not in a clan we certainly don't belong */
+
+		clanextra:=CLAN_M_FLAG in self.quests;
+		if(clanextra==null)
+			quit;
+
+/* get the relevant info */
+
+		clanname:=clanextra.names.[CLAN_M_NAME_INDEX];
+		clanentrance:=clan_get@clans(clanname, CLAN_O_ENTRANCE_INDEX);
+    	room:=self.outside;
+		roomname:=room.nameidx+"@"+room.zoneidx;
+		clanhomename:=clan_get@clans(clanname, CLAN_O_HOME_INDEX);
+		clanhome:=findroom(clanhomename);
+
+/* make sure we are actually at our own entrance */
+
+		if(clanentrance!=roomname)
+			goto failed;
+
+/* make sure the home exists */
+
+		if(clanhome==null)
+			goto failed;
+
+/* all is well, move us into the clan home */
+
+		act("&c+wYou silently step through the secret entrance and are gone.&cw", A_ALWAYS, 
+self, null, null, TO_CHAR);
+		link(self, clanhome);
+		act("$1n enters through the secret entrance.", A_ALWAYS, self, null, null, TO_REST);
+		exec("look", self);
+		return;
+	}
+
+:failed:
+
+/* no can do */
+
+	sendtext("You can't do that here!&n", self);
+	return;
+}
+dilend
+
+dilbegin clan_guard();
+external
+	string dirstring@function(dr : integer);
+	clan_donate@clans(arg : string);
+var
+	clanextra : extraptr;
+	dir : integer;
+	guarddir : integer;
+	pc : unitptr;
+	clanname : string;
+	clantattoo : string;
+	clanhome : unitptr;
+	room : unitptr;
+	spot : string;
+	i1 : integer;
+	i2 : integer;
+	data : stringlist;
+	garbage : string;
+	dirarg : string;
+    item : unitptr;
+    itemname : string;
+    itemtitle : string;
+code{
+	heartbeat:=4*PULSE_SEC;
+
+/* figure out where we are */
+
+	room:=self.outside;
+	if(room.type!=UNIT_ST_ROOM)
+		quit;
+
+	spot:=room.nameidx;
+
+/* if we are inside a clan we attack on sight */
+
+	if(room.zoneidx=="clans"){
+		clanextra:=CLAN_H_FLAG in room.extra;
+		guarddir:=6;
+		goto init;
+	}
+
+/* if not then find the direction we are guarding */
+
+	dir:=0;
+	while(dir<=5){
+		clanhome:=room.exit_to[dir];
+		if(clanhome.zoneidx=="clans"){
+			clanextra:=CLAN_H_FLAG in clanhome.extra;
+			guarddir:=dir;
+			goto init;
+		}
+		else
+			dir:=dir+1;
+	}
+
+	quit;
+
+:init:
+
+/* figure out who is allowed in */
+
+	if(clanextra==null)
+		quit;
+
+	clanname:=clanextra.names.[CLAN_H_NAME_INDEX];
+	garbage:=getword(clanname);
+
+/* give ourselves the necessary data to work with channels and then give ourself channel */
+
+	data:={""};
+	addstring(data, CLAN_M_FLAG);
+	addstring(data, "$ 1");
+	addstring(data, "$ "+clanname);
+	addstring(data, "$ "+CLAN_STATUS_GUARD);
+	addextra(self.extra, data, "NO DATA");
+
+	dilcopy("channel@function", self);
+
+/* give ourselves the clan tattoo for completeness */
+
+	clantattoo:=clanextra.names.[CLAN_H_TATTOO_INDEX];
+	garbage:=getword(clantattoo);
+	clantattoo:="&n"+clantattoo;
+	addextra(self.extra, {"tattoos", "tattoo"}, clantattoo);
+
+:start:
+
+/* set up the interrupt that calls for help */
+
+	i1 := interrupt(SFB_COM, self.position==POSITION_FIGHTING, fight);
+	i2 := interrupt(SFB_DONE, command(CMD_GIVE) and (target==self), given);
+
+	if(guarddir>=6)
+		goto ginside;
+	else
+		dirarg:=dirstring@function(guarddir);
+
+:goutside:
+
+/* we are outside so wait for any thing that may allow a nonmember in */
+
+	wait(SFB_CMD, (self.outside.nameidx==spot) and (activator.type==UNIT_ST_PC) and 
+(activator.level<IMMORTAL_LEVEL) and
+	(command(guarddir) or command(CMD_DRAG) or command(CMD_FLEE) or 
+command(CMD_SEARCH) or command(CMD_OPEN) or command(CMD_CAST)));
+
+	if(command(CMD_CAST) and (not (dirarg in argument)))
+		goto goutside;
+
+	pc:=activator;
+
+	room:=self.outside;
+	if(room.type!=UNIT_ST_ROOM)
+		quit;
+
+/* if the entrance isn't even open don't jump the gun */
+
+	if(room.exit_info[guarddir] & EX_CLOSED)
+		goto goutside;
+
+/* see if the person is allowed or not */
+
+	clanextra:=CLAN_M_FLAG in pc.quests;
+	if(clanextra==null)
+		goto noentry;
+
+	if(clanextra.names.[CLAN_M_NAME_INDEX]!=clanname)
+		goto noentry;
+
+	goto goutside;
+
+:noentry:
+	block;
+
+	exec("comm add clan", self);
+	exec("clan "+pc.name+" is trying to enter our home, come quick!", self);
+	exec("say I can't allow you to do that, "+pc.name+"!", self);
+
+	goto goutside;
+
+:ginside:
+
+/* wait for someone who is not allowed */
+
+	wait(SFB_CMD, (self.outside.nameidx==spot) and (activator.type==UNIT_ST_PC) and 
+(activator.level<IMMORTAL_LEVEL));
+
+	pc:=activator;
+
+	clanextra:=CLAN_M_FLAG in pc.quests;
+	if(clanextra==null)
+		goto getem;
+
+	if(clanextra.names.[CLAN_M_NAME_INDEX]!=clanname)
+		goto getem;
+
+	goto ginside;
+
+:getem:
+
+/* attack them if they are not allowed here! */
+
+	block;
+
+	exec("say I can't allow you to be here, "+pc.name+"!", self);
+	exec("kill "+pc.name, self);
+
+	goto ginside;
+
+:fight:
+/* if we are in a fight then call for help */
+
+	clear(i1);
+	clear(i2);
+
+	exec("comm add clan", self);
+	exec("clan Help! I'm being attacked by "+self.fighting.name+"!", self);
+	while(self.position==POSITION_FIGHTING) pause;
+	goto start;
+
+:given:
+/* if we are being given something - call for help */
+
+	clear(i1);
+	clear(i2);
+
+	garbage:=activator.name;
+    item:=medium;
+    itemname:=item.name;
+    itemtitle:=item.title;
+
+    link(item, self.outside);
+
+	exec("comm add clan", self);
+	exec("clan "+garbage+" just gave me "+itemtitle+", which I will donate to our clan.", self);
+
+    clan_donate@clans(itemname);
+
+    goto start;
+}
+dilend
+
+dilbegin clan_initialize();
+external
+	unitptr clan_get_object@clans(context : string);
+    clan_put_object@clans(object : unitptr, context : string);
+var
+	clanhome : string;
+	clanchest : string;
+	result : integer;
+	object : unitptr;
+	array : stringlist;
+	clanextra : extraptr;
+	clanname : string;
+	clantattoo : string;
+	clanmaster : string;
+	clanentrance : string;
+	garbage : string;
+	version : string;
+	count : integer;
+    chest : unitptr;
+code{
+    heartbeat:=2*PULSE_SEC;
+
+/* get the data from the home and setup the structures */
+
+	clanextra:=CLAN_H_FLAG in self.extra;
+	if(clanextra==null)
+		quit;
+
+	clanname:=clanextra.names.[CLAN_H_NAME_INDEX];
+	garbage:=getword(clanname);
+	clanentrance:=clanextra.names.[CLAN_H_ENTRANCE_INDEX];
+	garbage:=getword(clanentrance);
+	clanmaster:=clanextra.names.[CLAN_H_MASTER_INDEX];
+	garbage:=getword(clanmaster);
+	clantattoo:=clanextra.names.[CLAN_H_TATTOO_INDEX];
+	garbage:=getword(clantattoo);
+	clanchest:=clanextra.names.[CLAN_H_CHEST_INDEX];
+	garbage:=getword(clanchest);
+	clanhome:=self.nameidx+"@"+self.zoneidx;
+
+	array:={""};
+	addstring(array, CLAN_O_CURRENT_VERSION);
+	addstring(array, clanname);
+	addstring(array, CLAN_STATUS_NEW);
+	addstring(array, clantattoo);
+	addstring(array, clanhome);
+	addstring(array, clanentrance);
+	addstring(array, clanmaster);
+
+	object:=clan_get_object@clans("clan_initialize");
+
+/* see if we're already in the database, if not just add us */
+/* if we are, then make sure we have the most recent data format */
+
+	clanextra:=clanname in object.extra;
+	if(not (clanextra==null)){
+        version:=clanextra.names.[CLAN_O_VERSION_INDEX];
+        if(length(version)>=3){
+            clanextra.descr:="";
+            clanextra.names.[CLAN_O_STATUS_INDEX]:=clanextra.names.[6];
+            clanextra.names.[CLAN_O_MASTER_INDEX]:=clanextra.names.[1];
+            clanextra.names.[CLAN_O_NAME_INDEX]:=clanextra.names.[0];
+            clanextra.names.[CLAN_O_VERSION_INDEX]:="1";
+            garbage:=clanextra.names.[3];
+            clanextra.names.[CLAN_O_TATTOO_INDEX]:=clanextra.names.[4];
+            clanextra.names.[CLAN_O_HOME_INDEX]:=garbage;
+       		store(object);
+            version:="1";
+        }
+	}
+	else{
+		addextra(object.extra, array, "");
+		store(object);
+	}
+
+    clan_put_object@clans(object, "clan_initialize");
+
+    chest:=restore(self.zoneidx, clanchest);
+    if(chest==null)
+        chest:=load(clanchest+"@"+self.zoneidx);
+
+    if(not (chest==null)){
+        result:=dilfind("clan_chest@clans", chest);
+        while(result==1){
+            result:=dildestroy("clan_chest@clans", chest);
+    		result:=dilfind("clan_chest@clans", chest);
+        }
+
+        result:=dilfind("block_commands@clans", chest);
+        while(result==1){
+            result:=dildestroy("block_commands@clans", chest);
+    		result:=dilfind("block_commands@clans", chest);
+        }
+
+        result:=dilfind("block_where@clans", chest);
+        while(result==1){
+            result:=dildestroy("block_where@clans", chest);
+    		result:=dilfind("block_where@clans", chest);
+        }
+
+        store(chest);
+
+        dilcopy("clan_chest@clans("+clanname+")", chest);
+    }
+
+	quit;
+}
+dilend
+
+dilbegin block_commands();
+code{
+	heartbeat:=5*PULSE_SEC;
+
+:start:
+
+/* just waits for and blocks where command */
+
+	wait(SFB_CMD, (activator.type==UNIT_ST_PC) and (activator.level<IMMORTAL_LEVEL) and 
+(command(CMD_WHERE) or command(CMD_ENTER)));
+	block;
+
+	sendtext("You can't do that here.&n", activator);
+
+	goto start;
+}
+dilend
+
+dilbegin clan_chest(clanname : string);
+external
+    integer clan_get_count@clans(clanname : string);
+var
+    count : integer;
+    item : unitptr;
+    temp : unitptr;
+    max : integer;
+    i1 : integer;
+    i2 : integer;
+    garbage : string;
+    arg : string;
+    itemextra : extraptr;
+code{
+
+    itemextra:="$item" in self.extra;
+    while(not (itemextra==null)){
+        item:=load(itemextra.descr);
+        itemextra:="$item" in itemextra.next;
+    }
+
+    max:=clan_get_count@clans(clanname);
+    max:=max*2;
+    if(max>CLAN_CHEST_MAX)
+        max:=CLAN_CHEST_MAX;
+
+:start:
+
+    i1:=interrupt(SFB_MSG, CLAN_MESSAGE_NEWCOUNT in argument, newmax);
+    i2:=interrupt(SFB_MSG, CLAN_MESSAGE_NEWITEM in argument, update);
+
+    wait(SFB_DONE, ((command(CMD_PUT) and (target==self)) or (command(CMD_GET) and 
+(medium==self))));
+
+:update:
+    clear(i1);
+    clear(i2);
+
+    count:=0;
+    item:=self.inside;
+    while(not (item==null)){
+        if((item.type==UNIT_ST_OBJ) and (item.zoneidx!="basis") and (item.hp>0)){
+            count:=count+1;
+            item:=item.next;
+        }
+        else{
+            temp:=item;
+            item:=item.next;
+            link(temp, self.outside);
+        }
+    }
+
+    itemextra:="$item" in self.extra;
+    while(not (itemextra==null)){
+        subextra(self.extra, "$item");
+        itemextra:="$item" in self.extra;
+    }
+
+    item:=self.inside;
+    while(not (item==null)){
+        if(count>max){
+            temp:=item;
+            item:=item.next;
+            link(temp, self.outside);
+            count:=count-1;
+        }
+        else{
+            if((item.type==UNIT_ST_OBJ) and (item.zoneidx!="basis") and (item.hp>0))
+                addextra(self.extra, {"$item"}, item.nameidx+"@"+item.zoneidx);
+
+            item:=item.next;
+        }
+    }
+
+    store(self);
+
+    goto start;
+
+:newmax:
+    clear(i1);
+    clear(i2);
+
+    arg:=argument;
+    garbage:=getword(arg);
+    if(arg!=clanname)
+        goto start;
+
+    max:=clan_get_count@clans(clanname);
+    max:=max*2;
+    if(max>CLAN_CHEST_MAX)
+        max:=CLAN_CHEST_MAX;
+
+    goto start;
+}
+dilend
+
+/* CLAN PERSON DILS */
+
+dilbegin clan_update(pc : unitptr);
+external
+	string clan_get@clans(clanname : string, index : integer);
+	integer clan_sub@clans(pc : unitptr, clanname : string);
+    clan_set_add@clans(clanname : string, data : string);
+var
+	count : integer;
+	garbage : string;
+	tattoo : string;
+	result : integer;
+    clanextra : extraptr;
+    version : string;
+    clanname : string;
+code{
+
+	secure(pc, lost);
+
+/* updates player clan data */
+
+	clanextra:=CLAN_M_FLAG in pc.quests;
+	if(clanextra==null){
+    	clanextra:="$Clan" in pc.quests;
+    	if(clanextra==null){
+		    log("no clan flag on "+pc.name);
+		    goto done;
+        }
+
+        clanextra.names.[CLAN_M_FLAG_INDEX]:=CLAN_M_FLAG;
+        clanextra.names.[CLAN_M_VERSION_INDEX]:=CLAN_M_CURRENT_VERSION;
+	}
+
+    version:=clanextra.names.[CLAN_M_VERSION_INDEX];
+
+	if(length(version)>2){
+        count:=length(clanextra.names);
+	    if(count==4){
+		    addstring(clanextra.names, "of Udgaard");
+            count:=count+1;
+	    }
+
+	    if(count==5){
+		    addstring(clanextra.names, "0");
+            count:=count+1;
+	    }
+
+        if(count==6){
+            addstring(clanextra.names, "temp");
+            clanextra.names.[CLAN_M_FLAGS_INDEX]:=clanextra.names.[5];
+            clanextra.names.[CLAN_M_FORMER_TITLE_INDEX]:=clanextra.names.[4];
+            clanextra.names.[CLAN_M_FORMER_HOME_INDEX]:=clanextra.names.[3];
+            clanextra.names.[CLAN_M_STATUS_INDEX]:=clanextra.names.[2];
+            clanextra.names.[CLAN_M_NAME_INDEX]:=clanextra.names.[1];
+            clanextra.names.[CLAN_M_VERSION_INDEX]:="1";
+            version:="1";
+            count:=count+1;
+        }
+
+	    clanextra:="tattoo" in pc.extra;
+	    if(clanextra==null){
+		    log("no tattoo on "+pc.name);
+	    }
+        else if("You see the following tattoos:&n" in clanextra.descr){
+		    tattoo:=clanextra.descr;
+		    garbage:=getword(tattoo);
+		    garbage:=getword(tattoo);
+		    garbage:=getword(tattoo);
+		    garbage:=getword(tattoo);
+		    garbage:=getword(tattoo);
+		    subextra(pc.extra, "tattoo");
+		    addextra(pc.extra, {"tattoos", "tattoo"}, tattoo);
+	    }
+
+	    exec("save", pc);
+    }
+
+	clanextra:=CLAN_M_FLAG in pc.quests;
+    clanname:=clanextra.names.[CLAN_M_NAME_INDEX];
+
+/* wait here until clan_initialize is done */
+
+    count:=0;
+    garbage:=clan_get@clans(clanname, CLAN_O_VERSION_INDEX);
+    while(garbage!=CLAN_O_CURRENT_VERSION){
+        heartbeat:=4*PULSE_SEC;
+        pause;
+        count:=count+1;
+        if(count>20)
+    		result:=clan_sub@clans(pc, clanname);
+        garbage:=clan_get@clans(clanname, CLAN_O_VERSION_INDEX);
+    }
+
+/* see if we've disbanded */
+
+	garbage:=clan_get@clans(clanname, CLAN_O_STATUS_INDEX);
+	if((garbage==null) or (garbage!=CLAN_STATUS_ACTIVE)){
+		sendtext("&c+w"+clanname+" has been disbanded.&cw&n", pc);
+		result:=clan_sub@clans(pc, clanname);
+	}
+    else{
+        clan_set_add@clans(clanname, pc.name);
+    }
+
+:done:
+    unsecure(pc);
+:lost:
+    return;
+}
+dilend
+
+dilbegin aware clan_master();
+external
+	unitptr clan_get_object@clans(context : string);
+    clan_put_object@clans(object : unitptr, context : string);
+	clan_update@clans(pc : unitptr);
+	clan_donate@clans(arg : string);
+	string clan_get@clans(clanname : string, index : integer);
+	integer clan_set@clans(clanname : string, index : integer, data : string);
+	integer clan_notify@clans(pc : unitptr, message : string);
+	integer clan_add@clans(pc : unitptr, clanname : string, clanstatus : string);
+	integer clan_sub@clans(pc : unitptr, clanname : string);
+	clan_door@clans();
+    clan_disband@clans(pc : unitptr, clanname : string);
+var
+	arg : string;
+	args : stringlist;
+	pc : unitptr;
+	clanextra : extraptr;
+	questextra : extraptr;
+	pcclanextra : extraptr;
+	clanname : string;
+	clantattoo : string;
+	clanhome : string;
+	result : integer;
+	argcount : integer;
+	message : string;
+	temp : string;
+    object : unitptr;
+    bits : integer;
+code{
+	heartbeat:=4*PULSE_SEC;
+
+	clan_update@clans(self);
+
+	clanextra:=CLAN_M_FLAG in self.quests;
+	if(clanextra==null){
+		log("no clan flag on "+self.name);
+		quit;
+	}
+
+	clanname:=clanextra.names.[CLAN_M_NAME_INDEX];
+
+	interrupt(SFB_MSG, (CLAN_MESSAGE_DISBAND in argument)  and (clanname in argument), 
+disband);
+
+	clantattoo:=clan_get@clans(clanname, CLAN_O_TATTOO_INDEX);
+	clanhome:=clan_get@clans(clanname, CLAN_O_HOME_INDEX);
+
+:start:
+	wait(SFB_CMD, command("cm") and (activator==self));
+	block;
+
+	clanextra:=CLAN_M_FLAG in self.quests;
+	if(clanextra==null){
+		log("no clan flag on "+self.name);
+		quit;
+	}
+
+	arg:=argument;
+	args:=getwords(argument);
+	argcount:=length(args);
+
+	if(args.[0]=="induct"){
+		if(argcount<2){
+			sendtext("You must specify who you are inducting.&n", self);
+			goto start;
+		}
+
+		pc:=findunit(self, args.[1], FIND_UNIT_SURRO, null);
+		if(pc==null){
+			sendtext(args.[1]+" is nowhere to be seen!&n", self);
+			goto start;
+		}
+
+		if(pc==self){
+			sendtext("You are already the Master of this clan!&n", self);
+			goto start;
+		}
+
+		if(not (pc.master==self)){
+			sendtext("They must be following you first.&n", self);
+			goto start;
+		}
+
+        secure(pc, start);
+
+		result:=clan_add@clans(pc, clanname, CLAN_STATUS_MEMBER);
+		if(result==0){
+			log("couldn't add "+pc.name+" to "+clanname);
+			sendtext(pc.name+" could not be brought into your clan.&n", self);
+            unsecure(pc);
+			goto start;
+		}
+
+		sendtext(pc.name+" is now a member of "+clanname+".&n", self);
+
+        unsecure(pc);
+		goto start;
+	}
+	else if(args.[0]=="expel"){
+		if(argcount<2){
+			sendtext("You must specify who you are expelling.&n", self);
+			goto start;
+		}
+
+		pc:=findunit(self, args.[1], FIND_UNIT_SURRO, null);
+		if(pc==null){
+			sendtext(args.[1]+" is nowhere to be seen!&n", self);
+			goto start;
+		}
+
+		if(pc==self){
+			sendtext("Try retiring instead.&n", self);
+			goto start;
+		}
+
+        secure(pc, start);
+
+		result:=clan_sub@clans(pc, clanname);
+		if(result==0){
+			log("couldn't remove "+pc.name+" from "+clanname);
+			sendtext(pc.name+" could not be removed from your clan.&n", self);
+            unsecure(pc);
+			goto start;
+		}
+
+		sendtext(pc.name+" is no longer a member of "+clanname+".&n", self);
+        unsecure(pc);
+		goto start;
+	}
+	else if(args.[0]=="info"){
+		if(argcount<2){
+			sendtext("You must specify who you want info on.&n", self);
+			goto start;
+		}
+
+		pc:=findunit(self, args.[1], FIND_UNIT_GLOBAL, null);
+		if(pc==null){
+			sendtext(args.[1]+" is nowhere to be seen!&n", self);
+			goto start;
+		}
+
+		if(pc==self){
+			sendtext("Boy you really don't know yourself, do you?&n", self);
+			goto start;
+		}
+
+		pcclanextra:=CLAN_M_FLAG in pc.quests;
+		if(pcclanextra==null){
+			sendtext(pc.name+" is not a member of your clan!&n", self);
+			goto start;
+		}
+
+		if(pcclanextra.names.[CLAN_M_NAME_INDEX]!=clanname){
+			sendtext(pc.name+" is not a member of your clan!&n", self);
+			goto start;
+		}
+
+		bits:=atoi(pcclanextra.names.[CLAN_M_FLAGS_INDEX]);
+        if(not isset(bits, CLAN_M_FLAG_INFO)){
+			sendtext(pc.name+" does not allow that.&n", self);
+			goto start;
+		}
+
+		sendtext("&c+w"+pc.name+":&n", self);
+        pcclanextra:="$guild" in pc.quests;
+		while(not (pcclanextra==null)){
+            message:=pcclanextra.names.[0];
+            temp:=getword(message);
+            if(temp=="$Udgaard")
+                temp:="Udgaard "+message;
+            else if(temp=="$Midgaard")
+                temp:="Midgaard "+message;
+            else if(temp=="$Khorsabad")
+                temp:="Khorsabad "+message;
+            else if(temp=="$Necromancer")
+                temp:="Necromancer";
+
+            message:=temp+" ("+pcclanextra.names.[1]+")";
+            sendtext(message+"&n", self);
+            pcclanextra:="$guild" in pcclanextra.next;
+        }
+
+        sendtext("&cw&n", self);
+
+		goto start;
+	}
+	else if(args.[0]=="retire"){
+		if(argcount<2){
+			sendtext("You must specify your replacement.&n", self);
+			goto start;
+		}
+
+		pc:=findunit(self, args.[1], FIND_UNIT_SURRO, null);
+		if(pc==null){
+			sendtext(args.[1]+" is nowhere to be seen!&n", self);
+			goto start;
+		}
+
+		secure(pc, start);
+
+		if(pc==self){
+			sendtext("You must specify a replacement other than yourself.&n", self);
+			goto done;
+		}
+
+		pcclanextra:=CLAN_M_FLAG in pc.quests;
+		if(pcclanextra==null){
+			sendtext(pc.name+" is not a member of your clan!&n", self);
+			goto done;
+		}
+
+		if(pcclanextra.names.[CLAN_M_NAME_INDEX]!=clanname){
+			sendtext(pc.name+" is not a member of your clan!&n", self);
+			goto done;
+		}
+
+		if(pc.level<CLAN_MASTER_LEVEL_MIN){
+			sendtext(pc.name+" must attain level "+itoa(CLAN_MASTER_LEVEL_MIN)+" first.&n", 
+self);
+			goto done;
+		}
+
+		if(CLAN_MASTER_ABUSER in pc.quests){
+			sendtext("The Clan Gods have found "+pc.name+" unworthy to lead a clan.", self);
+			goto done;
+		}
+
+/* promote the new master */
+		pcclanextra.names.[CLAN_M_STATUS_INDEX]:=CLAN_STATUS_MASTER;
+
+		result:=dilfind("clan_member@clans", pc);
+		if(result==1)
+			result:=dildestroy("clan_member@clans", pc);
+
+		result:=dilfind("clan_master@clans", pc);
+		if(result==0)
+			dilcopy("clan_master@clans", pc);
+
+		sendtext("&c+wThe powers of a Clan Master are now yours,&n", pc);
+		sendtext("type 'cm help' for a list of your new abilites.&cw&n", pc);
+
+		exec("save", pc);
+
+/* demote self */
+		clanextra.names.[CLAN_M_STATUS_INDEX]:=CLAN_STATUS_MEMBER;
+
+		result:=dilfind("clan_member@clans", self);
+		if(result==0)
+			dilcopy("clan_member@clans", self);
+
+		sendtext("&c+wYou are no longer the Clan Master.&n", self);
+		sendtext("The Clan Gods have been notified of the change.&cw&n", self);
+
+		exec("save", self);
+
+/* update the database */
+		result:=clan_set@clans(clanname, CLAN_O_MASTER_INDEX, pc.name);
+		if(result==0){
+			sendtext("Please notify the Clan Gods that you wish to retire.&n", self);
+			goto done;
+		}
+
+/* notify the gods */
+		message:="I have retired as master of "+clanname+".";
+		message:=message+"  "+pc.name+" will replace me.&n";
+		result:=clan_notify@clans(self, message);
+		if(result==0){
+			sendtext("Please notify the Clan Gods that you wish to retire.&n", self);
+			goto done;
+		}
+
+		unsecure(pc);
+		quit;
+	}
+	else if(args.[0]=="title"){
+		if(CLAN_TITLE_ABUSER in self.quests){
+			sendtext("That privilege has been revoked.&n", self);
+			goto start;
+		}
+
+		if(argcount<2){
+			sendtext("You must specify who to title.&n", self);
+			goto start;
+		}
+
+		pc:=findunit(self, args.[1], FIND_UNIT_GLOBAL, null);
+		if(pc==null){
+			sendtext(args.[1]+" is nowhere to be seen!&n", self);
+			goto start;
+		}
+
+		pcclanextra:=CLAN_M_FLAG in pc.quests;
+		if(pcclanextra==null){
+			sendtext(pc.name+" is not a member of your clan!&n", self);
+			goto start;
+		}
+
+		if(pcclanextra.names.[CLAN_M_NAME_INDEX]!=clanname){
+			sendtext(pc.name+" is not a member of your clan!&n", self);
+			goto start;
+		}
+
+		if(argcount<3){
+			sendtext("You must specify the new title.&n", self);
+			goto start;
+		}
+
+		temp:=getword(arg);
+		temp:=getword(arg);
+		message:="I am giving "+pc.name+" the title of:&n&n"+arg+"&n";
+		result:=clan_notify@clans(self, message);
+		if(result==0){
+			sendtext("Please notify the Clan Gods that you wish to give "+pc.name+" this title.&n", 
+self);
+			goto start;
+		}
+
+		result:=transfermoney(self, null, 1*PLATINUM_MULT);
+		if(result==0){
+			sendtext("Try again when you can afford it.&n", self);
+			goto start;
+		}
+		sendtext("You have been charged 1 pp.&n", self);
+
+		pc.title:=arg;
+
+		sendtext("&c+wYou have gained the title of "+arg+".&n", pc);
+		if(not (self==pc))
+			sendtext(pc.name+"'s title is now "+arg+".&n", self);
+		sendtext("The Clan Gods have been notified of the change.&cw&n", self);
+
+		exec("save", pc);
+
+		goto start;
+	}
+	else if(args.[0]=="donate"){
+		temp:=getword(arg);
+		clan_donate@clans(arg);
+		goto start;
+	}
+	else if(args.[0]=="disband"){
+        clan_disband@clans(self, clanname);
+		goto disband;
+	}
+	else if(args.[0]=="door"){
+		clan_door@clans();
+		goto start;
+	}
+	else if(args.[0]=="list"){
+		object:=clan_get_object@clans("list");
+        clanextra:=clanname in object.extra;
+        if(clanextra.names.[CLAN_O_VERSION_INDEX]!=CLAN_O_CURRENT_VERSION){
+            sendtext("Incorrect data version.&n", self);
+        }
+        else{
+            sendtext("Members: "+clanextra.descr+"&n", self);
+        }
+		clan_put_object@clans(object, "list");
+		goto start;
+	}
+	else if(args.[0]=="help"){
+		sendtext("&n&c+wClan Master Commands:&n", self);
+		sendtext("clan <message> - speak on your clan channel&n", self);
+		sendtext("cm induct <who to induct> - inducts a new clan member&n", self);
+		sendtext("cm expel <who to expel> - expels a new clan member&n", self);
+		sendtext("cm retire <your replacement> - give the title of Clan Master to another&n", self);
+		sendtext("cm title <who to title> <new title> - give a clan title (costs 1 pp)&n", self);
+		sendtext("cm list - shows you a current membership list&n", self);
+		sendtext("cm info <who you want info on> - get extended info on a clan member&n", self);
+		sendtext("cm donate <what to donate> - donates an item to your clan&n", self);
+		sendtext("cm disband - will disband your clan&n", self);
+		sendtext("cm door - lets you in and out of your clan home&n", self);
+		sendtext("cm help - this message&n", self);
+		sendtext("&nClan Master Guidelines:&n", self);
+		sendtext("- Abuse of Clan Master powers will result in severe punishment.&n", self);
+		sendtext("- Only appropriate clan / mud related titles will be tolerated.&n", self);
+		sendtext("- If you retire, please don't pick an idiot to replace you.&cw&n", self);
+		goto start;
+	}
+
+	sendtext(args.[0]+" is not a valid clan command.&n", self);
+
+:done:
+    unsecure(pc);
+	goto start;
+
+:disband:
+	sendtext("&c+w"+clanname+" has been disbanded.&cw&n", self);
+	result:=clan_sub@clans(self, clanname);
+	goto start;
+}
+dilend
+
+dilbegin aware clan_member();
+external
+	clan_update@clans(pc : unitptr);
+	clan_donate@clans(arg : string);
+	clan_door@clans();
+	integer clan_sub@clans(pc : unitptr, clanname : string);
+var
+	arg : string;
+	temp : string;
+	args : stringlist;
+	clanextra : extraptr;
+	argcount : integer;
+	dest : unitptr;
+	clanname : string;
+	result : integer;
+    bits : integer;
+code{
+	heartbeat:=4*PULSE_SEC;
+
+	clan_update@clans(self);
+
+	clanextra:=CLAN_M_FLAG in self.quests;
+	if(clanextra==null){
+		log("no clan flag on "+self.name);
+		quit;
+	}
+
+	clanname:=clanextra.names.[CLAN_M_NAME_INDEX];
+
+	interrupt(SFB_MSG, (CLAN_MESSAGE_DISBAND in argument)  and (clanname in argument), 
+disband);
+
+:start:
+	wait(SFB_CMD, command("cm") and (activator==self));
+	block;
+
+	arg:=argument;
+	args:=getwords(argument);
+	argcount:=length(args);
+
+	if(args.[0]=="donate"){
+		temp:=getword(arg);
+		clan_donate@clans(arg);
+		goto start;
+	}
+	else if(args.[0]=="defect"){
+		result:=clan_sub@clans(self, clanname);
+		if(result==0){
+			log("couldn't remove "+self.name+" from "+clanname);
+			sendtext("You could not be removed from your clan.&n", self);
+		}
+		goto start;
+	}
+	else if(args.[0]=="door"){
+		clan_door@clans();
+		goto start;
+	}
+	else if(args.[0]=="info"){
+	    clanextra:=CLAN_M_FLAG in self.quests;
+	    if(clanextra==null){
+		    log("no clan flag on "+self.name);
+		    quit;
+	    }
+
+		bits:=atoi(clanextra.names.[CLAN_M_FLAGS_INDEX]);
+        if(isset(bits, CLAN_M_FLAG_INFO)){
+            unset(bits, CLAN_M_FLAG_INFO);
+			sendtext("&c+wYou no longer allow guild data to be seen by your Clan 
+Master.&cw&n", self);
+        }
+        else{
+            set(bits, CLAN_M_FLAG_INFO);
+			sendtext("&c+wYou now allow guild data to be seen by your Clan Master.&cw&n", 
+self);
+        }
+		clanextra.names.[CLAN_M_FLAGS_INDEX]:=itoa(bits);
+
+		goto start;
+	}
+	else if(args.[0]=="help"){
+		sendtext("&n&c+wClan Member Commands:&n", self);
+		sendtext("clan <message> - speak on your clan channel&n", self);
+		sendtext("cm donate <what to donate> - donates an item to your clan&n", self);
+		sendtext("cm info - toggle whether you will allow your Clan Master to see your guild 
+info&n", self);
+		sendtext("cm defect - allows you to leave the clan&n", self);
+		sendtext("cm door - lets you in and out of your clan home&n", self);
+		sendtext("cm help - this message&cw&n", self);
+		goto start;
+	}
+
+	sendtext(args.[0]+" is not a valid clan command.&n", self);
+	goto start;
+
+:disband:
+	sendtext("&c+w"+clanname+" has been disbanded.&cw&n", self);
+	result:=clan_sub@clans(self, clanname);
+	goto start;
+}
+dilend
+
+dilbegin clan_donate(arg : string);
+external
+	string clan_get@clans(clanname : string, index : integer);
+var
+	clanhomename : string;
+	args : stringlist;
+	argcount : integer;
+	clanhome : unitptr;
+	object : unitptr;
+	clanextra : extraptr;
+	clanname : string;
+	chest : unitptr;
+    garbage : string;
+code{
+	if(self.type==UNIT_ST_PC)
+        clanextra:=CLAN_M_FLAG in self.quests;
+    else
+        clanextra:=CLAN_M_FLAG in self.extra;
+
+	if(clanextra==null){
+		log("no clan flag on "+self.name);
+		quit;
+	}
+
+	clanname:=clanextra.names.[CLAN_M_NAME_INDEX];
+	if(self.type!=UNIT_ST_PC)
+        garbage:=getword(clanname);
+
+    clanhomename:=clan_get@clans(clanname, CLAN_O_HOME_INDEX);
+	clanhome:=findroom(clanhomename);
+	if(clanhome==null){
+		log("couldn't find "+clanhomename);
+		sendtext("Could not find your clan home.&n", self);
+		return;
+	}
+
+	chest:=findunit(self, "clanchest", 0, clanhome.inside);
+	if(chest==null){
+		log("couldn't find the clan's chest");
+		chest:=clanhome;
+	}
+
+	args:=getwords(arg);
+	argcount:=length(args);
+
+	if(argcount<1){
+		sendtext("You must specify what you are donating.&n", self);
+		return;
+	}
+
+	object:=findunit(self, arg, (FIND_UNIT_INVEN + FIND_UNIT_SURRO), null);
+	if(object==null){
+		sendtext(arg+" is nowhere to be seen!&n", self);
+		return;
+	}
+
+	if(object.type!=UNIT_ST_OBJ){
+		sendtext("You can only donate objects!&n", self);
+		return;
+	}
+
+	if(not isset(object.manipulate, MANIPULATE_TAKE)){
+		sendtext("You can only donate things you can pick up!&n", self);
+		return;
+	}
+
+	if(object.zoneidx == "treasure"){
+		sendtext("Donating that item is not a good idea.&n", self);
+		return;
+	}
+
+	object.cost:=1;
+
+	link(object, clanhome);
+	act("&c+wA churning vortex opens and "+object.title+" falls into the Treasure Chest.&cw", 
+A_ALWAYS, object, null, null, TO_ALL);
+	link(object, chest);
+	act("&c+wA churning vortex opens and "+object.title+" falls into the Treasure Chest.&cw", 
+A_ALWAYS, object, null, null, TO_ALL);
+	act("You donated "+object.title+" to your clan.", A_ALWAYS, self, null, null, TO_CHAR);
+	act("$1n donates "+object.title+" to $1s clan.", A_ALWAYS, self, null, null, TO_REST);
+
+    sendto(CLAN_MESSAGE_NEWITEM, chest);
+
+    return;
+}
+dilend
+
+%rooms
+
+    clan_control
+		title "The Clan Control Room"
+    	names {"clanroom"}
+		descr "You are surrounded by dozens of computer terminals monitoring all
+        aspects of clans on Valhalla.  The less than user-friendly controls stare
+        back at you, as if challenging you to figure out how the hell it all
+        works.  There is a sign here that might help."
+
+		extra {"sign"}
+	    "Commands are:&n
+		cm list <new/active/disbanded/all> - lists all clans of the specified type&n
+        cm info <clan/master> - shows you info on a given clan&n
+		cm disband <clan> - disbands the given clan&n
+        cm abuser <person> - toggles someone as unfit/fit to be a Clan Master&n
+        cm title <person> - toggles someone as unfit/fit to give out titles&n"
+
+		movement SECT_INSIDE
+		ALWAYS_LIGHT
+		flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT, UNIT_FL_PRIVATE}
+		dilcopy clan_admin@clans();
+		dilcopy clan_object_mgr@clans();
+    end
+
+/* BEGIN CLAN_SPECIFIC */
+	clan_home_000
+		title "A Huge Underground Cavern"
+		descr "You look around and are in awe of the great age apparent around you.
+		High vaulted ceilings are not quite illuminated by the hundreds of
+		wax candles in sconses on the walls."
+
+		extra {CLAN_H_FLAG, "$ The Clan of the Dragon", "$ Jem", "$ uni_home@elfdom", "$ an 
+intricate ebony dragon", "$ clan_chest_000"}
+		"You do not see that here."
+
+		movement SECT_INSIDE
+		ALWAYS_LIGHT
+		flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+		dilcopy clan_initialize@clans();
+		dilcopy block_commands@clans();
+
+		south to uni_home@elfdom
+		descr "That way leads you out of your clan home."
+		keyword {"door"}
+		open {EX_OPEN_CLOSE, EX_CLOSED};
+
+		north to jem_1@houses descr
+		"Jem's personal quarters lie north.";
+	end
+
+	clan_home_001
+		title "A Large Underground Keep"
+		descr "You have obviously entered a secret underground keep.  You wonder which was 
+here
+        first the hut above or the large structure below.  This place is well lived in and seems
+        to be some sort of common room, with a large fireplace against the north wall.  Above the
+        fireplace is a large coat of arms. There is a stairwell to the west."
+
+        extra {"coat of arms",  "fireplace"}
+        "Above the warm fireplace you see the McDroog coat of arms - a
+        pair of crossed swords above a red dragon on a black shield.
+        An inscription below it reads:&n&n
+        'If ye be a friendly and peaceful soul who is in need of help then seek ye
+        those who's blood is of Clan McDroog.'"
+
+		extra {CLAN_H_FLAG, "$ The Clan McDroog", "$ Wonko", "$ mcdroog_0@houses", "$ a 
+shield with a red dragon", "$ clan_chest_001"}
+		"You do not see that here."
+
+        movement SECT_INSIDE
+		ALWAYS_LIGHT
+		flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+		dilcopy clan_initialize@clans();
+		dilcopy block_commands@clans();
+
+		east to mcdroog_0@houses
+		descr "That way leads you out of your clan home."
+	    keyword {"door"}
+	    open {EX_OPEN_CLOSE, EX_CLOSED};
+
+        west to mcdroog_1@houses
+		descr "You see a stairwell leading down.";
+	end
+
+#ifdef CLAN_KEEP_DISBANDED
+	clan_home_002
+		title "The Lost Sanctuary of the Ancient One"
+		descr "You have walked into what is obviously an ancient structure.
+		The first thing that catches your eye is the 20 foot round
+		table that dominates the room.  Beyond the table, is a small hall that leads to an altar
+		which could be used to worship nearly all gods.  The walls are
+		painted white and blend into the sky blue ceiling nearly seamlessly.
+		An aura of truth and pure good permeates this room.
+		You know you are safe here."
+
+		extra {CLAN_H_FLAG, "$ The Order", "$ Dominic", "$ des_1G@desert", "$ a small silver 
+hand", "$ clan_chest_002"}
+		"You do not see that here."
+
+		extra {"table"}
+		"It is perfectly smooth black slate."
+
+		movement SECT_INSIDE
+		ALWAYS_LIGHT
+		flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+		dilcopy clan_initialize@clans();
+		dilcopy block_commands@clans();
+
+		east to des_1G@desert
+		descr "That way leads you out of your clan home."
+		keyword {"door"}
+		open {EX_OPEN_CLOSE, EX_CLOSED};
+	end
+#endif
+
+	clan_home_003
+		title "a Rotten Cafe"
+		descr "The sound of gambling and nice ladies fills the air in this
+		small but cozy room.  In this, Udgaard's place of sin, you feel at home. A
+		note on the wall informs you that looted equipment can be despoited here.
+		Painted on the ceiling is a  the famous picture of the fallen Anti-Rotten
+		Sylvar that fell under the heavy armor of Realgar. "
+
+		extra {CLAN_H_FLAG, "$ The Rotten Team", "$ Shar", "$ bel_thf@udsewer", "$ a twisted 
+gothic sun", "$ clan_chest_003"}
+		"You do not see that here."
+
+		movement SECT_INSIDE
+		ALWAYS_LIGHT
+		flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+		dilcopy clan_initialize@clans();
+		dilcopy block_commands@clans();
+
+		east to bel_thf@udsewer
+		descr "That way leads you out of your clan home."
+		keyword {"door"}
+		open {EX_OPEN_CLOSE, EX_CLOSED};
+	end
+
+	clan_home_004
+		title "A Broken Bone"
+		descr "A dark gloomy, purple light swirls around you, glimpses of beings believed to be no 
+longer
+		existent keeps fading in and out of view. Everything is upside down, yet there seems to be
+		an odd kind of order. There is a symbol, the symbol of chaos, burned onto the dark rock
+		that must be the floor."
+
+		extra {"symbol"}
+		"The symbols consists of eight arrows, each pointing in a new direction,
+		symbolizing the order in chaos."
+
+		extra {CLAN_H_FLAG, "$ Entropy", "$ Fisken", "$ rn_0038@isledead", "$ a cockatrice", "$ 
+clan_chest_004"}
+		"You do not see that here."
+
+		movement SECT_INSIDE
+		ALWAYS_LIGHT
+		flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+		dilcopy clan_initialize@clans();
+		dilcopy block_commands@clans();
+
+		up to rn_0038@isledead
+		descr "That way leads you out of your clan home."
+		keyword {"door"}
+		open {EX_OPEN_CLOSE, EX_CLOSED};
+	end
+
+	clan_home_005
+		title "A Viking Longship"
+		descr "You are standing on the deck of the Viking Clan's longship.
+		Round shields are fastened along the sides of the ship, and on the mast the
+		proud banner of the Vikings is waving in the wind.
+		A big pile of treasure gathered by the vikings is lying on the deck."
+
+		extra {CLAN_H_FLAG, "$ The Viking Clan", "$ Lobo", "$ dock4@torsbay", "$ the legendary 
+hammer Mjolner", "$ clan_chest_005"}
+		"You do not see that here."
+
+		movement SECT_INSIDE
+		ALWAYS_LIGHT
+		flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+		dilcopy clan_initialize@clans();
+		dilcopy block_commands@clans();
+
+		west to dock4@torsbay
+		descr "That way leads you out of your clan home."
+		keyword {"door"}
+		open {EX_OPEN_CLOSE, EX_CLOSED};
+	end
+
+#ifdef CLAN_KEEP_DISBANDED
+	clan_home_006
+		title "An Old Abandoned Inn"
+		descr "You look around and see the remains of a once prosperous inn.  There is a bar
+		on one side, and tables and chairs mostly facing the large fireplace on the south wall.
+		stairs that once led to the second story are broken and you fear not safe to ascend."
+
+		extra {CLAN_H_FLAG, "$ The GUKK Clan", "$ Crystal", "$ rn_6019@haon_dor", "$ the 
+word GUKK underlined by a great sword", "$ clan_chest_006"}
+		"You do not see that here."
+
+		movement SECT_INSIDE
+		ALWAYS_LIGHT
+		flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+		dilcopy clan_initialize@clans();
+		dilcopy block_commands@clans();
+
+		east to rn_6019@haon_dor
+		descr "That way leads you out of your clan home."
+		keyword {"door"}
+		open {EX_OPEN_CLOSE, EX_CLOSED};
+	end
+
+	clan_home_007
+		title "A Large Glowing Cavern"
+		descr "This huge cave is well lit by the phosphorescent stone that must have been 
+crystalizing
+		here for ages.  This place looks like it was once lived in, but has obviously been long
+        abandoned."
+
+		extra {CLAN_H_FLAG, "$ The Unseen Angels of Death", "$ Belar", "$ ct_17@cypress", "$ 
+a small angel", "$ clan_chest_007"}
+		"You do not see that here."
+
+		movement SECT_INSIDE
+		ALWAYS_LIGHT
+		flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+		dilcopy clan_initialize@clans();
+		dilcopy block_commands@clans();
+
+		up to ct_17@cypress
+		descr "That way leads you out of your clan home."
+		keyword {"door"}
+		open {EX_OPEN_CLOSE, EX_CLOSED};
+	end
+
+	clan_home_008
+		title "The Sacred Den"
+		descr "The room has been chiseled
+		out of the cold stone of the Underdark. A fine velvet rug covers the floor
+		and placed high on the wall is a large golden plaque.  The room is sparsely
+		decorated, it would seem the inhabitants spend more time hunting than hiding."
+
+		extra {"plaque"}
+		"The Plaque reads: Loyalty above all."
+
+		extra {CLAN_H_FLAG, "$ The Predators", "$ Hex", "$ wizard@darkelf", "$ a mighty Adder 
+in battle", "$ clan_chest_008"}
+		"You do not see that here."
+
+		movement SECT_INSIDE
+		ALWAYS_LIGHT
+		flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+		dilcopy clan_initialize@clans();
+		dilcopy block_commands@clans();
+
+		south to wizard@darkelf
+		descr "That way leads you out of your clan home."
+		keyword {"door"}
+		open {EX_OPEN_CLOSE, EX_CLOSED};
+	end
+
+	clan_home_009
+        title "An Ancient Sky Observatory"
+        descr "You enter a very dimly lit room.  All around you you can make out the
+		faint outlines of books, scrolls, and well used star charts.
+		Two curved tables form a ring around a huge telescope that points
+		upwards towards the heavens.  On the tables lie piles of papers,
+		maps, mathematical calculations, and general scrawlings of all
+		types and penmanship.  The air here is crisp and cool, and a feeling
+		of peace comes over you as your eyes adjust to the darkness."
+
+        extra {CLAN_H_FLAG, "$ Eclipse", "$ Odo", "$ cav_e35@hills", "$ a small crescent moon", 
+"$ clan_chest_009"}
+        "You do not see that here."
+
+        movement SECT_INSIDE
+        ALWAYS_LIGHT
+        flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+        dilcopy clan_initialize@clans();
+        dilcopy block_commands@clans();
+
+        down to cav_e35@hills
+        descr "That way leads you out of your clan home."
+        keyword {"door"}
+        open {EX_OPEN_CLOSE, EX_CLOSED};
+	end
+
+	clan_home_010
+		title "The Temple of Anger"
+		descr "You see a twisted altar of black crystal erected here. You can feel
+		the warmth of the molten rock oozing from the fissure behind the altar, where
+		sacrifices of living flesh are made to the Spirit of Anger. The walls are cut
+		out of the bare black rock, and the binding runes of the the Spirit are written
+		all around in what appears to be dried blood.  You feel a scream building inside
+		of you, a scream inspired by the Spirit. You need to vent your anger on someone,
+		or something... You know this to be the Temple of Anger, a deep feeling of respect
+		and loyalty wells within you."
+
+		extra {CLAN_H_FLAG, "$ The Clan of Anger", "$ Irelander", "$ moor_w10@moor", "$ a 
+screaming skull", "$ clan_chest_010"}
+		"You do not see that here."
+
+		movement SECT_INSIDE
+		ALWAYS_LIGHT
+		flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+		dilcopy clan_initialize@clans();
+		dilcopy block_commands@clans();
+
+		up to moor_w10@moor
+		descr "That way leads you out of your clan home."
+		keyword {"door"}
+		open {EX_OPEN_CLOSE, EX_CLOSED};
+	end
+
+    clan_home_011
+        title "The Top of the Tower"
+        descr "As you look at the walls of the splendid room you see the
+        mounted heads of many great warriors.  With a great shudder
+        of fear you think that you had better leave before you are
+        found here without an invitation and your life gets cut short."
+
+        extra {CLAN_H_FLAG, "$ The Brotherhood of the Moon", "$ Chavez", "$ apartment@ratswarf", 
+"$ a dragon wrapped around a gold moon over a silver star", "$ clan_chest_011"}
+        "You do not see that here."
+        movement SECT_INSIDE
+        ALWAYS_LIGHT
+        flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+        dilcopy clan_initialize@clans();
+        dilcopy block_commands@clans();
+
+        down to apartment@ratswarf
+        descr "That way leads you out of your clan home."
+        keyword {"door"}
+        open {EX_OPEN_CLOSE, EX_CLOSED};
+    end
+
+    clan_home_012
+        title "A large dimly lit room"
+        descr "You have entered a large intimidating room.  It almost looks
+        like some sort of courthouse, there are several great chairs
+        on either side of a larger one in the middle.  On the wall behind
+        the the largest chair is a tapestry showing a large set of evenly balanced scales."
+
+        extra {CLAN_H_FLAG, "$ The Wardens", "$ Gunnar", "$ ct_23@cypress", "$ a set of 
+balanced scales", "$ clan_chest_012"}
+        "You do not see that here."
+
+        movement SECT_INSIDE
+        ALWAYS_LIGHT
+        flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+        dilcopy clan_initialize@clans();
+        dilcopy block_commands@clans();
+
+        south to ct_23@cypress
+        descr "That way leads you out of your clan home."
+        keyword {"door"}
+        open {EX_OPEN_CLOSE, EX_CLOSED};
+    end
+#endif
+
+    clan_home_013
+        title "Purgatory"
+        descr "You are in Purgatory, where fallen angels meet.  Mist and greyness surround you,
+        and you it's not exactly warm.  You feel a strange presence fill the air, and wonder
+        how safe it really is here."
+
+        extra {CLAN_H_FLAG, "$ The Fallen Angels", "$ Spag", "$ path_mound5@gnome", "$ a 
+sword with angel's wings", "$ clan_chest_013"}
+        "You do not see that here."
+
+        movement SECT_INSIDE
+        ALWAYS_LIGHT
+        flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+        dilcopy clan_initialize@clans();
+        dilcopy block_commands@clans();
+
+        west to path_mound5@gnome
+        descr "That way leads you out of your clan home."
+        keyword {"door"}
+        open {EX_OPEN_CLOSE, EX_CLOSED};
+    end
+
+    clan_home_014
+        title "The Rant"
+        descr "Multitudes of holes for coffins are in the walls.  The air smells of death.
+        There are kegs of blood resting on dark stains that mark centuries of murder and sacrifice."
+
+        extra {CLAN_H_FLAG, "$ The Brujah Clan", "$ Bloodrage", "$ de_swamp8@deadl1", "$ the 
+symbol of anarchy", "$ clan_chest_014"}
+        "You do not see that here."
+
+        movement SECT_INSIDE
+        ALWAYS_LIGHT
+        flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+        dilcopy clan_initialize@clans();
+        dilcopy block_commands@clans();
+
+        north to de_swamp8@deadl1
+        descr "That way leads you out of your clan home."
+        keyword {"door"}
+        open {EX_OPEN_CLOSE, EX_CLOSED};
+    end
+
+    clan_home_015
+        title "The Palace of the Blood, School of the Faith."
+        descr "At the front of this great hall is an altar.  Although you feel
+        as if you're in a museum, it is quite cozy and you feel vary much at
+        home.  Standing in here you can almost feel the immense power of the Faith."
+
+        extra {CLAN_H_FLAG, "$ The Blood", "$ Warrax", "$ in_nec@urland", "$ a bleeding wound 
+with a cross burnt into it", "$ clan_chest_015"}
+        "You do not see that here."
+
+        movement SECT_INSIDE
+        ALWAYS_LIGHT
+        flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+        dilcopy clan_initialize@clans();
+        dilcopy block_commands@clans();
+
+        east to in_nec@urland
+        descr "That way leads you out of your clan home."
+        keyword {"door"}
+        open {EX_OPEN_CLOSE, EX_CLOSED};
+    end
+
+    clan_home_016
+        title "The Balance Rest"
+        descr "You see lots of pillows scattered around the place, and as you
+        look closer you notice some weapons and armour too. The atmosphere is
+        very relaxing, and you feel at home in this place."
+
+        extra {CLAN_H_FLAG, "$ The Clan of Balance", "$ Urk", "$ bifrost_bridge@asgaard", "$ a 
+scale balancing a sword and the book of laws", "$ clan_chest_016"}
+        "You do not see that here."
+
+        movement SECT_INSIDE
+        ALWAYS_LIGHT
+        flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+        dilcopy clan_initialize@clans();
+        dilcopy block_commands@clans();
+
+        up to bifrost_bridge@asgaard
+        descr "That way leads you out of your clan home."
+        keyword {"door"}
+        open {EX_OPEN_CLOSE, EX_CLOSED};
+    end
+
+    clan_home_017
+        title "Lair of The Claw"
+        descr "You are in a dark and sinister room. The heads of the many
+        victims of The Claw adorne the walls, thier faces locked in anguish.
+        The walls and roof are made of a pale stone that is deathly cold to touch.
+        This place has the all the airs of a tomb and a great and sinister table sits
+        in its centre."
+
+        extra {CLAN_H_FLAG, "$ The Claw", "$ Darkhand", "$ ct_17@cypress", "$ a black twisted 
+claw", "$ clan_chest_017"}
+        "You do not see that here."
+
+        movement SECT_INSIDE
+        ALWAYS_LIGHT
+        flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+        dilcopy clan_initialize@clans();
+        dilcopy block_commands@clans();
+
+        south to ct_17@cypress
+        descr "That way leads you out of your clan home."
+        keyword {"door"}
+        open {EX_OPEN_CLOSE, EX_CLOSED};
+    end
+
+    clan_home_018
+        title "Vortex of Nothingness"
+        descr "As you look around, you see that there are no boundaries of any kind. There
+        is a feeling that everything exists here, yet you see nothing. There is light
+        here but it is dark at the same time. You feel a strong
+        presence of evil, good and neutrality. You feel hatred, but there is
+        love in the air. In this room, nothing prevails over its counterpart. This is a
+        room of perfect harmony because everything is balanced here. Only those who
+        truly are the rightful ones can find peace in this room."
+
+        extra {CLAN_H_FLAG, "$ The Knights of the Apocalypse", "$ Rikuo", "$ cave@volcano", "$ a 
+hand tightly gripping the earth.", "$ clan_chest_018"}
+        "You do not see that here."
+
+        movement SECT_INSIDE
+        ALWAYS_LIGHT
+        flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+        dilcopy clan_initialize@clans();
+        dilcopy block_commands@clans();
+
+        south to cave@volcano
+        descr "That way leads you out of your clan home."
+        keyword {"door"}
+        open {EX_OPEN_CLOSE, EX_CLOSED};
+    end
+
+#ifdef CLAN_KEEP_DISBANDED
+    clan_home_019
+        title "The Domain of Legends"
+        descr "Before you lies a mighty diamond hallway shimmering in the
+        torches' light that is thrown around the walls.
+        You see many weapons mounted on the walls along with assorted battle armours
+        that have been well used and stored here with plaques depicting when the
+        battle occured.  Ahead you see the flag of the army of darkness hanging on the
+        wall above a large throne.  You can leave to the south through the clan
+        portal"
+
+        extra {CLAN_H_FLAG, "$ The Clan of Legends", "$ Madmax", "$ rn_6026@haon_dor", "$ a 
+creeping tiger", "$ clan_chest_019"}
+        "You do not see that here."
+
+        movement SECT_INSIDE
+        ALWAYS_LIGHT
+        flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+        dilcopy clan_initialize@clans();
+        dilcopy block_commands@clans();
+
+        west to rn_6026@haon_dor
+        descr "That way leads you out of your clan home."
+        keyword {"door"}
+        open {EX_OPEN_CLOSE, EX_CLOSED};
+    end
+#endif
+
+    clan_home_020
+        title "The Inner Circle of Truth"
+        descr "This room is filled with candles, all alight. There is
+        an exit to the south. The room itself is shining a sort of peaceful melodious
+        soft white light that makes you feel at ease.  On the wall to the north is a
+        plaque with the picture of a bygone era and bygone divine entities. On the left
+        wall is a stuffed and mounted beastly fido, with an inscription on it.
+        It is a place of friendship and good times, a place that will keep all who
+        desire safety protected from evil-doings."
+
+        extra {"inscription", "wall", "fido"}
+        "The inscription under the stuffed fido reads: To Kuros from Sky."
+
+        extra {CLAN_H_FLAG, "$ The Clan of Honor", "$ Kuros", "$ small_valley@halfzon", "$ two 
+knights fighting side by side", "$ clan_chest_020"}
+        "You do not see that here."
+
+        movement SECT_INSIDE
+        ALWAYS_LIGHT
+        flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+        dilcopy clan_initialize@clans();
+        dilcopy block_commands@clans();
+
+        west to small_valley@halfzon
+        descr "That way leads you out of your clan home."
+        keyword {"door"}
+        open {EX_OPEN_CLOSE, EX_CLOSED};
+    end
+
+    clan_home_021
+        title "A Large Conference Room"
+        descr "You have entered a well lit room, its walls built around the deep wooden
+        posts which support the pier above. In the center of the room is a large
+        table. Apparently this table is used for meetings. A fine golden scale rests
+        on the table."
+
+        extra {CLAN_H_FLAG, "$ The Guardians of Justice", "$ Zag", "$ in_ch@urland", "$ a bald 
+eagle", "$ clan_chest_021"}
+        "You do not see that here."
+
+        movement SECT_INSIDE
+        ALWAYS_LIGHT
+        flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+        dilcopy clan_initialize@clans();
+        dilcopy block_commands@clans();
+
+        up to in_ch@urland
+        descr "That way leads you out of your clan home."
+        keyword {"door"}
+        open {EX_OPEN_CLOSE, EX_CLOSED};
+    end
+
+#ifdef CLAN_KEEP_DISBANDED
+    clan_home_022
+        title "The Empty Lair"
+        descr "All around you are broken remains of a once great place.  Various
+        serpents find their way through the maze of holes in the walls around
+        this area.  Etched on the walls are figures depicting the
+        glory days of Valhalla clans."
+
+        extra {CLAN_H_FLAG, "$ The Exterminators", "$ Adder", "$ icy_tr3@mount", "$ a paisley 
+rainbow", "$ clan_chest_022"}
+        "You do not see that here."
+
+        movement SECT_INSIDE
+        ALWAYS_LIGHT
+        flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+        dilcopy clan_initialize@clans();
+        dilcopy block_commands@clans();
+
+        south to icy_tr3@mount
+        descr "That way leads you out of your clan home."
+        keyword {"door"}
+        open {EX_OPEN_CLOSE, EX_CLOSED};
+    end
+#endif
+
+    clan_home_023
+        title "Shadowhome"
+        descr "There is grey mist all around you.  It constantly changes shape as you turn and look 
+around.
+        The mist feels almost firm to the touch, yet there is room to move.  The mist relaxes you, and 
+makes
+        you feel safe."
+
+        extra {CLAN_H_FLAG, "$ The Malaugrym Shadowmasters", "$ Kelben", "$ 
+hforest_2@haunted", "$ grey shadow mist", "$ clan_chest_023"}
+        "You do not see that here."
+
+        movement SECT_INSIDE
+        ALWAYS_LIGHT
+        flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+        dilcopy clan_initialize@clans();
+        dilcopy block_commands@clans();
+
+        south to hforest_2@haunted
+        descr "That way leads you out of your clan home."
+        keyword {"door"}
+        open {EX_OPEN_CLOSE, EX_CLOSED};
+    end
+
+#ifdef CLAN_KEEP_DISBANDED
+    clan_home_024
+        title "The Grave Of The Warlock"
+        descr "As you enter the room, you feel a powerful magical essence in the air.
+        The walls are lined with bookshelves and cabinets
+        full of scrolls and potions. On the north wall you see a large plaque.
+        To the west there's a large coffin propped against the wall."
+
+        extra {CLAN_H_FLAG, "$ The Clan Of The Warlock", "$ Tyslin", "$ tomb@deadl1", "$ a mage 
+calling upon lightning", "$ clan_chest_024"}
+        "You do not see that here."
+
+        movement SECT_INSIDE
+        ALWAYS_LIGHT
+        flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+        dilcopy clan_initialize@clans();
+        dilcopy block_commands@clans();
+
+        up to tomb@deadl1
+        descr "That way leads you out of your clan home."
+        keyword {"door"}
+        open {EX_OPEN_CLOSE, EX_CLOSED};
+    end
+#endif
+
+    clan_home_025
+        title "A Beautiful Temple"
+        descr "This is definitly not an abandoned temple. You can clearly
+        see evidence of people using this place as a home.
+        Left on the floor you spot some items that monks use during their rituals.
+        This looks like a place great warriors could come to regain strength."
+
+        extra {CLAN_H_FLAG, "$ The Celestian Order", "$ Parma", "$ tsaar_church@demon_realm", 
+"$ a small white angel", "$ clan_chest_025"}
+        "You do not see that here."
+
+        movement SECT_INSIDE
+        ALWAYS_LIGHT
+        flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+        dilcopy clan_initialize@clans();
+        dilcopy block_commands@clans();
+
+        down to tsaar_church@demon_realm
+        descr "That way leads you out of your clan home."
+        keyword {"door"}
+        open {EX_OPEN_CLOSE, EX_CLOSED};
+    end
+
+    clan_home_026
+        title "A Stone Compound"
+        descr "This is the spartan home of someone, its obviously being lived in. You see little else of interest, and can leave south."
+
+        extra {CLAN_H_FLAG, "$ Kung-PAO Clan", "$ Patric", "$ before_dragon@ratswarf", "$ a flaming, squawking chicken", "$ clan_chest_026"}
+        "You do not see that here."
+
+        movement SECT_INSIDE
+        ALWAYS_LIGHT
+        flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+        dilcopy clan_initialize@clans();
+        dilcopy block_commands@clans();
+
+        south to before_dragon@ratswarf
+        descr "That way leads you out of your clan home."
+        keyword {"door"}
+        open {EX_OPEN_CLOSE, EX_CLOSED};
+    end
+
+#if 0
+Clan Home Door: gate
+
+    clan_home_027
+        title "The Guild House of the Boo-Yaa-Tribe"
+        descr "You stand in the centre of the smoke and soundfilled Boo-Yaa
+		headquarters. The music is of a pounding quality, and you can't help
+		but move to the rythm. There is much furniture here, but since the
+		last drive-by, the place has been a mess.
+		This is where The Tribe rests before battle."
+
+        extra {CLAN_H_FLAG, "$ The Boo-Yaa-Tribe", "$ Strife", "$ ROOM@ZONE", "$ A blue ring", "$ clan_chest_027"}
+        "You do not see that here."
+
+        movement SECT_INSIDE
+        ALWAYS_LIGHT
+        flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+        dilcopy clan_initialize@clans();
+        dilcopy block_commands@clans();
+
+        DIRECTION to ROOM@ZONE
+        descr "That way leads you out of your clan home."
+        keyword {"door"}
+        open {EX_OPEN_CLOSE, EX_CLOSED};
+	end
+#endif
+
+    clan_home_028
+        title "The Holy Ground"
+        descr "As you enter this room you see that it is a great temple of
+		worship and the massive array of weapons on the walls leaves you awestruck. You
+		realize quickly that if you are found here without the proper invitation that
+		you will be dealt a quick death by the temple's dwellers."
+
+        extra {CLAN_H_FLAG, "$ The Lost Souls", "$ Nemo", "$ the_old_elm@cemetery", "$ three letters: T.P.R.", "$ clan_chest_028"}
+        "You do not see that here."
+
+        movement SECT_INSIDE
+        ALWAYS_LIGHT
+        flags {UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+        dilcopy clan_initialize@clans();
+        dilcopy block_commands@clans();
+
+        down to the_old_elm@cemetery
+        descr "That way leads you out of your clan home."
+        keyword {"door"}
+        open {EX_OPEN_CLOSE, EX_CLOSED};
+    end
+
+/* END CLAN_SPECIFIC */
+
+%mobiles
+
+	douglas
+	    title "Douglas"
+	    names {"Douglas", "Doug", "bundle", "rags"}
+	    descr "A bundle of rags is huddled up on the floor."
+	    extra{}
+	    "This guy is obviously older than anyone you've ever seen.  He can barely
+	    move and his skin is deeply creased.  You wonder how he stayed alive
+	    for so long up here in the bitter cold.  (hint: try APPLY)"
+	    level 12
+	    race RACE_HUMAN
+	    sex SEX_MALE
+	    height 140
+	    weight 105
+	    /*(str,dex,con,hpp,bra,cha,mag,div)*/
+	    MSET_ABILITY(13, 10, 9, 13, 18, 13, 12, 12)
+	    /*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+	    MSET_WEAPON(1, 2, 2, 0, 4, 1)
+	    /*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+	    MSET_SPELL(10,10,0,10,10,10,10,10,10,10,0)
+	    NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+	    dilcopy clan_creator@clans();
+	    flags {UNIT_FL_NO_TELEPORT}
+	    romflags {CHAR_DETECT_INVISIBLE}
+	    special SFUN_POSTMAN
+	    exp -50
+	    alignment 500
+	end
+
+	clan_guard
+	    title "the Clan Guard"
+	    names {"The Clan Guard", "Guard", "clanguard"}
+	    descr "A Clan Guard is standing here solemnly."
+	    extra{}
+	    "The guard doesn't look kind, he doesn't even look alive!"
+	    level 120
+	    race RACE_HUMAN
+	    sex SEX_MALE
+	    height 200
+	    weight 200
+	    /*(str,dex,con,hpp,bra,cha,mag,div)*/
+	    MSET_ABILITY(16, 19, 2, 16, 16, 7, 10, 14)
+	    /*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+	    MSET_WEAPON(20, 15, 5, 5, 10, 5)
+	    /*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+	    MSET_SPELL(20,0,0,0,0,20,0,0,0,0,0)
+	    NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+	    flags {UNIT_FL_NO_TELEPORT}
+	    romflags {CHAR_HIDE, CHAR_SNEAK, CHAR_DETECT_INVISIBLE}
+	    exp -10
+	    alignment 0
+	    dilcopy combat_mag@function("colourspray", "heal", 33, 2);
+	    dilcopy clan_guard@clans();
+        special SFUN_RESCUE "clanguard"
+        special SFUN_TEAMWORK "clanguard"
+	end
+
+%objects
+
+	storage_locker
+	    title "a storage locker"
+	    names {"storage locker"}
+	    descr "a storage locker is here."
+	    extra {}
+	    "This object should not be visible to a mortal."
+	    manipulate {MANIPULATE_TAKE, MANIPULATE_ENTER}
+	    CONTAINER_DEF(30000)
+	    minv CREATOR_LEVEL
+        weight 0
+	end
+
+	clan_object
+	    title "a clan object"
+	    names {"clandata"}
+	    descr "a clan object is here."
+	    extra {}
+	    "This object contains clan data."
+	    flags {UNIT_FL_NO_TELEPORT}
+	    manipulate {MANIPULATE_TAKE}
+	    minv CREATOR_LEVEL
+	end
+
+	CLAN_OBJECTS(clan_chest_all, clan_board_all, board_data_all, "board_data_all")
+
+/* BEGIN CLAN SPECIFIC */
+	CLAN_OBJECTS(clan_chest_000, clan_board_000, board_data_000, "board_data_000")
+	CLAN_OBJECTS(clan_chest_001, clan_board_001, board_data_001, "board_data_001")
+	CLAN_OBJECTS(clan_chest_002, clan_board_002, board_data_002, "board_data_002")
+	CLAN_OBJECTS(clan_chest_003, clan_board_003, board_data_003, "board_data_003")
+	CLAN_OBJECTS(clan_chest_004, clan_board_004, board_data_004, "board_data_004")
+	CLAN_OBJECTS(clan_chest_005, clan_board_005, board_data_005, "board_data_005")
+	CLAN_OBJECTS(clan_chest_006, clan_board_006, board_data_006, "board_data_006")
+	CLAN_OBJECTS(clan_chest_007, clan_board_007, board_data_007, "board_data_007")
+	CLAN_OBJECTS(clan_chest_008, clan_board_008, board_data_008, "board_data_008")
+	CLAN_OBJECTS(clan_chest_009, clan_board_009, board_data_009, "board_data_009")
+	CLAN_OBJECTS(clan_chest_010, clan_board_010, board_data_010, "board_data_010")
+	CLAN_OBJECTS(clan_chest_011, clan_board_011, board_data_011, "board_data_011")
+	CLAN_OBJECTS(clan_chest_012, clan_board_012, board_data_012, "board_data_012")
+	CLAN_OBJECTS(clan_chest_013, clan_board_013, board_data_013, "board_data_013")
+	CLAN_OBJECTS(clan_chest_014, clan_board_014, board_data_014, "board_data_014")
+	CLAN_OBJECTS(clan_chest_015, clan_board_015, board_data_015, "board_data_015")
+	CLAN_OBJECTS(clan_chest_016, clan_board_016, board_data_016, "board_data_016")
+	CLAN_OBJECTS(clan_chest_017, clan_board_017, board_data_017, "board_data_017")
+	CLAN_OBJECTS(clan_chest_018, clan_board_018, board_data_018, "board_data_018")
+	CLAN_OBJECTS(clan_chest_019, clan_board_019, board_data_019, "board_data_019")
+	CLAN_OBJECTS(clan_chest_020, clan_board_020, board_data_020, "board_data_020")
+	CLAN_OBJECTS(clan_chest_021, clan_board_021, board_data_021, "board_data_021")
+	CLAN_OBJECTS(clan_chest_022, clan_board_022, board_data_022, "board_data_022")
+	CLAN_OBJECTS(clan_chest_023, clan_board_023, board_data_023, "board_data_023")
+	CLAN_OBJECTS(clan_chest_024, clan_board_024, board_data_024, "board_data_024")
+	CLAN_OBJECTS(clan_chest_025, clan_board_025, board_data_025, "board_data_025")
+	CLAN_OBJECTS(clan_chest_026, clan_board_026, board_data_026, "board_data_026")
+	CLAN_OBJECTS(clan_chest_027, clan_board_027, board_data_027, "board_data_027")
+	CLAN_OBJECTS(clan_chest_028, clan_board_028, board_data_028, "board_data_028")
+/* END CLAN SPECIFIC */
+
+%reset
+
+	load douglas into hut@mount max 1{
+		equip lth_pants@midgaard position WEAR_LEGS
+		equip lth_jerkin@midgaard position WEAR_BODY
+	}
+	load clan_board_all into th_council@midgaard local 1
+	load clan_board_all into clan_control local 1
+	load bull_board@udgaard into jem_1@houses local 1
+
+/* BEGIN CLAN SPECIFIC */
+	CLAN_RESET(clan_board_000, clan_home_000, SOUTH, uni_home@elfdom, NORTH)
+    CLAN_RESET(clan_board_001, clan_home_001, EAST, mcdroog_0@houses, WEST)
+	CLAN_RESET_DISBANDED(clan_board_002, clan_home_002, EAST, des_1G@desert, WEST)
+	CLAN_RESET(clan_board_003, clan_home_003, EAST, bel_thf@udsewer, WEST)
+	CLAN_RESET(clan_board_004, clan_home_004, UP, rn_0038@isledead, DOWN)
+	CLAN_RESET(clan_board_005, clan_home_005, WEST, dock4@torsbay, EAST)
+	CLAN_RESET_DISBANDED(clan_board_006, clan_home_006, EAST, rn_6019@haon_dor, WEST)
+	CLAN_RESET_DISBANDED(clan_board_007, clan_home_007, UP, ct_17@cypress, DOWN)
+    CLAN_RESET_DISBANDED(clan_board_008, clan_home_008, SOUTH, wizard@darkelf, NORTH)
+	CLAN_RESET_DISBANDED(clan_board_009, clan_home_009, DOWN, cav_e35@hills, UP)
+	CLAN_RESET_DISBANDED(clan_board_010, clan_home_010, UP, moor_w10@moor, DOWN)
+	CLAN_RESET_DISBANDED(clan_board_011, clan_home_011, DOWN, apartment@ratswarf, UP)
+	CLAN_RESET_DISBANDED(clan_board_012, clan_home_012, SOUTH, ct_23@cypress, NORTH)
+	CLAN_RESET(clan_board_013, clan_home_013, WEST, path_mound5@gnome, EAST)
+	CLAN_RESET(clan_board_014, clan_home_014, NORTH, de_swamp8@deadl1, SOUTH)
+	CLAN_RESET(clan_board_015, clan_home_015, EAST, in_nec@urland, WEST)
+	CLAN_RESET(clan_board_016, clan_home_016, UP, bifrost_bridge@asgaard, DOWN)
+	CLAN_RESET(clan_board_017, clan_home_017, SOUTH, ct_17@cypress, NORTH)
+	CLAN_RESET(clan_board_018, clan_home_018, SOUTH, cave@volcano, NORTH)
+	CLAN_RESET_DISBANDED(clan_board_019, clan_home_019, WEST, rn_6026@haon_dor, EAST)
+	CLAN_RESET(clan_board_020, clan_home_020, WEST, small_valley@halfzon, EAST)
+	CLAN_RESET(clan_board_021, clan_home_021, UP, in_ch@urland, DOWN)
+	CLAN_RESET_DISBANDED(clan_board_022, clan_home_022, SOUTH, icy_tr3@mount, NORTH)
+	CLAN_RESET(clan_board_023, clan_home_023, SOUTH, hforest_2@haunted, NORTH)
+	CLAN_RESET_DISBANDED(clan_board_024, clan_home_024, UP, tomb@deadl1, DOWN)
+	CLAN_RESET(clan_board_025, clan_home_025, DOWN, tsaar_church@demon_realm, UP)
+	CLAN_RESET(clan_board_026, clan_home_026, SOUTH, before_dragon@ratswarf, NORTH)
+/*	CLAN_RESET(clan_board_027, clan_home_027, DOWN, tsaar_church@demon_realm, UP) */
+	CLAN_RESET(clan_board_028, clan_home_028, DOWN, the_old_elm@cemetery, UP)
+/* END CLAN SPECIFIC */
+
+%end
+

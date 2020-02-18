@@ -1,0 +1,5112 @@
+/*
+filename    gazha
+password    devil
+changedby   Whistler
+EmailAdd     Palio <palio@blinksoft.com>
+request     compile
+version     12
+END HEADER*/
+
+#include <composed.h>
+
+#define GHOST_ONGOING "Ghost Quest Ongoing"
+#define GHOST_COMPLETE "Ghost Quest Complete"
+#define LEGACY_ONGOING "Legacy Quest Ongoing"
+#define LEGACY_COMPLETE "Legacy Quest Complete"
+#define ELEMENT_ONGOING "Elemental Quest Ongoing"
+#define ELEMENT_COMPLETE "Elemental Quest Complete"
+
+
+%zone gazha
+title "Gazha"
+lifespan 20
+reset RESET_ANYHOW
+creators {"Mephisto"}
+
+notes
+"&lThis is the world of Gazha.  An old world filled with long forgotten
+intrigues and wars.  Somewhere south of the Gazha Tower itself lies a
+castle where an element master has been framed by his advisors.
+
+       1994 v1.00  - Gazha was born, created by Badone and Hellfire.
+   Sep 1995 v2.00a - Great Changes.
+                     - DIL 3.0. By Mephisto and Hellfire.
+                     - All mobiles and objects changed so they
+                       would fit into the new level system. By Hellfire.
+                     - All mobile names and map layouts changed. By Mephisto.
+                     - Added descr on exits. By Hellfire.
+                     - Fixed the bugging quests. By Mephisto.
+   Oct 1995 v3.00a - Castle of the Elements added. By Mephisto.
+Nov 19 1995 v3.01a - Level restrictions added. By Mephisto.
+Nov 23 1995 v3.02a - Quest restrictions added. By Mephisto.
+Dec 14 1995 v3.02b - Different small changes (buging quest etc.)
+
+For later updates/changes we appreciate typo and bug reports.
+Other things about Gazha can be E-Mailed to:
+
+Mephisto - &c+wskokim@hobbes.nhidh.nki.no&cw.&f"
+
+help
+"This is the ancient world of Gazha, beware this is a high level zone.
+No lower than level 50 characters should enter this area. The easiest
+way to survive here is to enter as a group. Somewhere south of Gazha lies
+The castle of Elements a high level zone for experienced players.
+This zone includes three quests, The Legacy Quest, The Ghost Quest and
+The Elemental Quest. Good luck, may the Gods shine upon you."
+
+
+%dil
+dilbegin plate_he(medi : unitptr, targ : unitptr, hm : integer);
+code
+{
+        act("Your $2N summons the powers of the elements and heals your "+
+          "wounds.",
+        A_ALWAYS, self, medi, targ , TO_CHAR);
+        act("$1n's $2N starts to glow and heals $1s wounds.",
+        A_SOMEONE, targ, null, null, TO_REST);
+
+                                     return;
+                                                 }
+                                                 dilend
+
+dilbegin plate_act();
+code
+{
+      act("Your $2N starts to burn and damage you severly before it disapears. "+
+          "You have obviously not completed the right quest.",
+          A_ALWAYS, self.outside, self, null, TO_CHAR);
+      act("$1n's $2N starts to burn and damage $1m severly before it disapears.",
+          A_SOMEONE, self.outside, self, null, TO_REST);
+      self.outside.hp := self.outside.hp/10;
+      destroy(self);
+}
+dilend
+
+
+dilbegin helmet_act();
+code
+{
+      act("Your $2n slips off your head and falls on the ground.",
+          A_ALWAYS, self.outside, self, null, TO_CHAR);
+          act ("You should realy do the Ghost quest before trying to wear it.",
+          A_ALWAYS, self.outside, self, null, TO_CHAR);
+          act ("$1n's $2n slips of $1s head and falls on the ground.",
+          A_SOMEONE, self.outside, self, null, TO_REST);
+          return;
+}
+dilend
+
+dilbegin dagger_act ();
+code
+{
+      act("The $2N disapears in a flash of light.",
+          A_SOMEONE, self.outside, self, null, TO_CHAR);
+          act ("You realy should do the Legacy quest before trying to wield that.",
+          A_SOMEONE, self.outside, self, null, TO_CHAR);
+      act("$1n's $2N disapears in a flash of light.",
+          A_SOMEONE, self.outside, self, null, TO_REST);
+      destroy(self);
+      return;
+}
+dilend
+
+%rooms
+
+/* ----------------------- The Gazha Tower ------------------------------*/
+/* -------------------------- The Temple --------------------------------*/
+
+lvl10
+
+title "Temple of the beginning"
+descr "This elegant gazebo sits amidst one of the flowery meadow of Eshtar,
+its pitched ceiling with curved, up-swept eaves rests on four pillars ancored
+in a stepped dais. The ceiling, the eaves, the pillars and the steps are all
+sculptured from necrys, The floor within the rectangle defined by the
+pillars is an unbroken slab of ironwood."
+extra {"ceiling"}
+"The ceiling rises high above your head, and shows a starlike pattern."
+extra {"pillar","pillars"}
+"The pillars looks quite ordinary."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+west to lvl11
+   descr "You look into a sleeping chamber.";
+east to lvl10
+   descr "You can see another section of the temple.";
+north to lvl12
+   descr "You look into a forechamber.";
+end
+
+lvl11
+
+title "The sleeping chambers"
+descr "This chamber was once used of the priests to have their well deserved
+sleep after a hard days work. Many old beds are placed around in seperate
+alcoves. Four pillars rises from each corner. The pillars are sculptured
+out from necrys."
+extra {"pillar","pillars"}
+"The pillars looks quite ordinary."
+extra {"bed","beds"}
+"The beds must once have been quite comfortable."
+extra {"alcove","alcoves"}
+"The alcoves separates the beds so the priests recived some degree of privacy."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+west to lvl13
+   descr "You can see a dressing room.";
+south to lvl13
+   descr "You can see a dressing room.";
+east to lvl14
+   descr "You look into a forechamber.";
+special SFUN_FORCE_MOVE time 180 bits SFB_RANTIME
+  "lvl10!The protection part of the legazy strikes you with awesome power and
+transports you back.@$1n are transported back."
+north to lvl11
+   descr "You look into a sleeping chamber.";
+end
+
+lvl12
+
+title "Temple of the beginning, forechamber"
+descr "As you enter this chamber you get the feeling that something is watching
+you. As you study the chamber closer you notice that the ceiling is covered
+with picture of eyes. Eyes in all sizes and shapes. In this chamber the high
+priests of Gazha prepared themselves for larger rituals, and you don't dare
+think of what rituals they used to perform. The floor is covered with
+expensive looking carpets, and the walls are embellished with pictures
+detailing the priests religion."
+extra {"eye","eyes"}
+"The eyes looks quite alive."
+extra {"carpet","carpets"}
+"The carpets are very beautifully made. And they are arranged so that they
+forms the priests holy symbol."
+extra {"picture","pictures"}
+"Wonder in which order this picture should be looked at."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+west to lvl11
+   descr "You look into a sleeping chamber.";
+south to lvl11center
+   descr "You can see another section of the temple.";
+east to lvl11
+   descr "You look into a sleeping chamber.";
+special SFUN_FORCE_MOVE time 180 bits SFB_RANTIME
+  "lvl13!The protection part of the legacy strikes you with awesome power and
+transports you back.@$1n are transported back."
+north to lvl12
+   descr "You look into a forechamber.";
+end
+
+lvl13
+
+title "Dressing room"
+descr "This room was once used by the priests to get dressed in the morning
+Several closets are placed along the walls and in the corners you can see
+some holes in the floor, probably toilets. A large tank with tiny holes
+underneath is hanging from the ceiling. This tank was probably used as a
+shower."
+extra {"tank","shower"}
+"The tank looks old and rusty."
+extra {"hole","holes"}
+"You don't want to put your hands down there."
+extra {"closet","closets"}
+"The closets appears to be stuck."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+west to lvl14
+   descr "You look into a forechamber.";
+up to lvl11
+   descr "You look into a sleeping chamber.";
+down to lvl13
+   descr "You can see a dressing room.";
+east to lvl12
+   descr "You look into a forechamber.";
+special SFUN_FORCE_MOVE time 180 bits SFB_RANTIME
+  "lvl11center!The protection part of the legacy strikes you with awesome power and
+transports you back.@$1n are transported back."
+north to lvl12
+   descr "You look into a forechamber.";
+end
+
+lvl14
+
+title "Temple of the beginning, forechamber"
+descr "This chamber is beautifully created out of ironwood, the walls, floor
+and ceiling look like they have been cut out of one large piece. Several
+alcoves have been setup, so the priests can pray to their gods in privacy,
+without being disturbed."
+extra {"alcove","alcoves"}
+"The alcoves are decorated with holy symbols, and small pots for incense."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+west to lvl12
+   descr "You look into a forechamber.";
+south to lvl13
+   descr "You can see a dressing room.";
+east to lvl14
+   descr "You look into a forechamber.";
+special SFUN_FORCE_MOVE time 180 bits SFB_RANTIME
+  "lvl11!The protection part of the legazy strikes you with awesome power and
+transports you back.@$1n are transported back."
+north to lvl11
+   descr "You look into a sleeping chamber.";
+end
+
+lvl11center
+
+title "Temple of the beginning"
+descr "This chamber is formed as a large pyramid. In the exact center in thin
+air, hangs a huge holy symbol, No radiation of magic indicates how that symbol
+could hang there all by itself. The walls and the floors consists of an unknown
+material, maybe a gods creation. In the middle of the room you notice a
+small crack in the floor. This feels like a good place to rest."
+extra {"symbol","holy symbol"}
+"The holy symbol is created out of necrys, and you feel a strong urge to touch it."
+movement SECT_INSIDE
+flags {UNIT_FL_SACRED}
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+west to lvl11
+   descr "You look into a sleeping chamber.";
+down to lvl21 open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+   descr "As you search the crack, you discover a hidden hatch leading down."
+keyword {"crack","hatch","door"};
+SECRET_DOOR_DIFFICULTY(DOWN,50)
+end
+
+lvl21
+
+title "Temple of the Search"
+descr "You have entered a featureless room filled with slabs of desert stone.
+There is an obelisk which rises 500 feet in the center of the room. The east and
+west wall looks somehow different from the other two."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+west to lvl31 open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+   descr "As you search the wall, you discover a staircase behind it, leading down."
+keyword {"wall","stair","west wall"};
+SECRET_DOOR_DIFFICULTY(WEST,50)
+east to lvl21 open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+   descr "As you search the wall, you discover a staircase behind it, leading down."
+keyword {"wall","stair","east wall"};
+SECRET_DOOR_DIFFICULTY(EAST,50)
+up to lvl11center open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+   descr "As you search the obelisk, you discover a staircase inside it, leading up."
+keyword {"obelisk","door","stair"};
+SECRET_DOOR_DIFFICULTY(UP,50)
+end
+
+lvl31
+
+title "Temple of the Search, Subchamber"
+descr "Blocks of desert stone cantilevered out from the vertical surface of the
+monolith forms a staircase leading down. The beautiful carvings on the wall
+gives you the feeling that this room must have cost a fortune to build."
+extra {"carving","carvings"}
+"The carvings symbolizes the the creation of the world."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_MOB}
+up to lvl21
+   descr "You can see a staircase.";
+down to maze1
+   descr "You can see a subchamber.";
+end
+
+/* --------------------------- The Maze ---------------------------------*/
+
+maze1
+
+title "Temple of the Search, Subchamber"
+descr "Blocks of desert stone cantilevered out from the monolith forms a steady
+ground floor here. The beautiful carvings on the wall gives you the feeling
+that this room must have cost a fortune to build."
+extra {"carving","carvings"}
+"The carvings symbolizes the the creation of the world."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+north to maze1
+   descr "You can see a subchamber.";
+south to maze1
+   descr "You can see a subchamber.";
+west to maze11
+   descr "You can see a subchamber.";
+east to maze3
+   descr "You can see a subchamber.";
+end
+
+maze2
+
+title "Temple of the Search, Subchamber"
+descr "Blocks of desert stone cantilevered out from the monolith forms a steady
+ground floor here. The beautiful carvings on the wall gives you the feeling
+that this room must have cost a fortune to build."
+extra {"carving","carvings"}
+"The carvings symbolizes the the creation of the world."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+north to maze4
+   descr "You can see a subchamber.";
+south to maze9
+   descr "You can see a subchamber.";
+west to maze4
+   descr "You can see a subchamber.";
+east to maze2
+   descr "You can see a subchamber.";
+end
+
+maze3
+
+title "Temple of the Search, Subchamber"
+descr "Blocks of desert stone cantilevered out from the monolith forms a steady
+ground floor here. The beautiful carvings on the wall gives you the feeling
+that this room must have cost a fortune to build."
+extra {"carving","carvings"}
+"The carvings symbolizes the the creation of the world."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+north to maze5
+   descr "You can see a subchamber.";
+south to maze6
+   descr "You can see a subchamber.";
+west to maze1
+   descr "You can see a subchamber.";
+east to maze6
+   descr "You can see a subchamber.";
+end
+
+maze4
+
+title "Temple of the Search, Subchamber"
+descr "Blocks of desert stone cantilevered out from the monolith forms a steady
+ground floor here. The beautiful carvings on the wall gives you the feeling
+that this room must have cost a fortune to build."
+extra {"carving","carvings"}
+"As you study the carvings closer you can spell the characters: S N S E."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+north to maze1
+   descr "You can see a subchamber.";
+south to maze11
+   descr "You can see a subchamber.";
+west to maze1
+   descr "You can see a subchamber.";
+east to maze6
+   descr "You can see a subchamber.";
+end
+
+maze5
+
+title "Temple of the Search, Subchamber"
+descr "Blocks of desert stone cantilevered out from the monolith forms a steady
+ground floor here. The beautiful carvings on the wall gives you the feeling
+that this room must have cost a fortune to build."
+extra {"carving","carvings"}
+"The carvings symbolizes the the creation of the world."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+north to maze11
+   descr "You can see a subchamber.";
+south to maze5
+   descr "You can see a subchamber.";
+west to maze10
+   descr "You can see a subchamber.";
+east to maze4
+   descr "You can see a subchamber.";
+end
+
+maze6
+
+title "Temple of the Search, Subchamber"
+descr "Blocks of desert stone cantilevered out from the monolith forms a steady
+ground floor here. The beautiful carvings on the wall gives you the feeling
+that this room must have cost a fortune to build."
+extra {"carving","carvings"}
+"The carvings symbolizes the the creation of the world."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+north to maze9
+   descr "You can see a subchamber.";
+south to maze11
+   descr "You can see a subchamber.";
+west to maze9
+   descr "You can see a subchamber.";
+east to maze3
+   descr "You can see a subchamber.";
+end
+
+maze7
+
+title "Temple of the Search, Subchamber"
+descr "Blocks of desert stone cantilevered out from the monolith forms a steady
+ground floor here. The beautiful carvings on the wall gives you the feeling
+that this room must have cost a fortune to build."
+extra {"carving","carvings"}
+"The carvings symbolizes the the creation of the world."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+north to maze2
+   descr "You can see a subchamber.";
+south to maze4
+   descr "You can see a subchamber.";
+west to maze6
+   descr "You can see a subchamber.";
+east to maze3
+   descr "You can see a subchamber.";
+end
+
+maze8
+
+title "Temple of the Search, Subchamber"
+descr "Blocks of desert stone cantilevered out from the monolith forms a steady
+ground floor here. The beautiful carvings on the wall gives you the feeling
+that this room must have cost a fortune to build."
+extra {"carving","carvings"}
+"The carvings symbolizes the the creation of the world."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+north to maze10
+   descr "You can see a subchamber.";
+south to maze4
+   descr "You can see a subchamber.";
+west to maze6
+   descr "You can see a subchamber.";
+east to maze2
+   descr "You can see a subchamber.";
+end
+
+maze9
+
+title "Temple of the Search, Subchamber"
+descr "Blocks of desert stone cantilevered out from the monolith forms a steady
+ground floor here. The beautiful carvings on the wall gives you the feeling
+that this room must have cost a fortune to build."
+extra {"carving","carvings"}
+"The carvings symbolizes the the creation of the world."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+north to maze11
+   descr "You can see a subchamber.";
+south to maze4
+   descr "You can see a subchamber.";
+west to maze10
+   descr "You can see a subchamber.";
+east to maze12
+   descr "You can see a subchamber.";
+end
+
+maze10
+
+title "Temple of the Search, Subchamber"
+descr "Blocks of desert stone cantilevered out from the monolith forms a steady
+ground floor here. The beautiful carvings on the wall gives you the feeling
+that this room must have cost a fortune to build."
+extra {"carving","carvings"}
+"The carvings symbolizes the the creation of the world."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+north to maze6
+   descr "You can see a subchamber.";
+south to maze11
+   descr "You can see a subchamber.";
+west to maze1
+   descr "You can see a subchamber.";
+east to maze10
+   descr "You can see a subchamber.";
+end
+
+maze11
+
+title "Temple of the Search, Subchamber"
+descr "Blocks of desert stone cantilevered out from the monolith forms a steady
+ground floor here. The beautiful carvings on the wall gives you the feeling
+that this room must have cost a fortune to build."
+extra {"carving","carvings"}
+"As you study the carvings closer you can spell the characters: W N S E."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+north to maze2
+   descr "You can see a subchamber.";
+south to maze2
+   descr "You can see a subchamber.";
+west to maze7
+   descr "You can see a subchamber.";
+east to maze1
+   descr "You can see a subchamber.";
+end
+
+maze12
+
+title "Temple of the Search, Subchamber"
+descr "Blocks of desert stone cantilevered out from the monolith forms a steady
+ground floor here. The beautiful carvings on the wall gives you the feeling
+that this room must have cost a fortune to build. You notice some scribbles
+on the east wall."
+extra {"carving","carvings"}
+"The carvings symbolizes the the creation of the world."
+extra {"scribble","scribbles"}
+"&lLooks like someone has scribbled some words here in a blood red color:
+
+&cr        t l  t I h ve ma/e .t out  f th.s m ze
+       I on\y n e  to ta<e a fe  steps e s
+
+                                   Re,al. t e So c re s.&cw&f"
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+north to maze8
+   descr "You can see a subchamber.";
+south to maze1
+   descr "You can see a subchamber.";
+west to maze10
+   descr "You can see a subchamber.";
+east to lvl41
+   descr "You can see a room filled with monoliths.";
+end
+
+/* --------------------------- The Tempel -------------------------------*/
+
+lvl41
+
+title "Temple of the Deathfight"
+descr "You have entered a featureless room filled with monoliths. The temple
+walls are covered with old and expensive curtains and the floor is sculptured
+with squares of mahogany."
+extra {"curtain","curtains"}
+"The curtain looks very old and valuable. They have been made of a material
+similar to silk. Each curtain shows a symbol of an ancient god."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+south to lvl45
+   descr "You can see the west corridor of the Temple.";
+east to lvl42
+   descr "You can see the north corridor of the Temple.";
+end
+
+lvl42
+
+title "Temple of the Deathfight"
+descr "You have entered a featureless room filled with monoliths.The temple
+walls are covered with old and expensive curtains and the floor is sculptured
+with squares of mahogany."
+extra {"curtain","curtains"}
+"The curtain looks very old and valuable. They have been made of a material
+similar to silk. Each curtain shows a symbol of an ancient god."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+west to lvl41
+   descr "You can see northwest corner of the Temple.";
+east to lvl43
+   descr "You can see the north corridor of the Temple.";
+end
+
+lvl43
+
+title "Temple of the Deathfight"
+descr "You have entered a featureless room filled with monoliths. The temple
+walls are covered with old and expensive curtains and the floor is sculptured
+with squares of mahogany. The wall to the south looks somehow different from
+the rest of the walls."
+extra {"curtain","curtains"}
+"The curtain looks very old and valuable. They have been made of a material
+similar to silk. Each curtain shows a symbol of an ancient god."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+south to lvl417 open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+   descr "As you search the wall, you discover a door behind it, leading
+          into the fighting area."
+keyword {"wall","entrance","south wall"};
+SECRET_DOOR_DIFFICULTY(SOUTH,50)
+west to lvl42
+   descr "You can see the north corridor of the Temple.";
+east to lvl44
+   descr "You can see the northeast corner of the Temple.";
+end
+
+lvl44
+
+title "Temple of the Deathfight"
+descr "You have entered a featureless room filled with monoliths. The temple
+walls are covered with old and expensive curtains and the floor is sculptured
+with squares of mahogany."
+extra {"curtain","curtains"}
+"The curtain looks very old and valuable. They have been made of a material
+similar to silk. Each curtain shows a symbol of an ancient god."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+west to lvl43
+   descr "You can see the north corridor of the Temple.";
+south to lvl416
+   descr "You can see the east corridor of the Temple.";
+end
+
+lvl45
+
+title "Temple of the Deathfight"
+descr "You have entered a featureless room filled with monoliths. The temple
+walls are covered with old and expensive curtains and the floor is sculptured
+with squares of mahogany."
+extra {"curtain","curtains"}
+"The curtain looks very old and valuable. They have been made of a material
+similar to silk. Each curtain shows a symbol of an ancient god."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to lvl41
+   descr "You can see the northwest corner of the Temple.";
+south to lvl46
+   descr "You can see the west corridor of the Temple.";
+end
+
+lvl46
+
+title "Temple of the Deathfight"
+descr "You have entered a featureless room filled with monoliths. The temple
+walls are covered with old and expensive curtains and the floor is sculptured
+with squares of mahogany."
+extra {"curtain","curtains"}
+"The curtain looks very old and valuable. They have been made of a material
+similar to silk. Each curtain shows a symbol of an ancient god."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to lvl45
+   descr "You can see the west corridor of the Temple.";
+south to lvl47
+   descr "You can see the west corridor of the Temple.";
+end
+
+lvl47
+
+title "Temple of the Deathfight"
+descr "You have entered a featureless room filled with monoliths. The temple
+walls are covered with old and expensive curtains and the floor is sculptured
+with squares of mahogany."
+extra {"curtain","curtains"}
+"The curtain looks very old and valuable. They have been made of a material
+similar to silk. Each curtain shows a symbol of an ancient god."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to lvl46
+   descr "You can see the west corridor of the Temple.";
+south to lvl48
+   descr "You can see the southwest corner of the Temple.";
+end
+
+lvl48
+
+title "Temple of the Deathfight"
+descr "You have entered a featureless room filled with monoliths. The temple
+walls are covered with old and expensive curtains and the floor is sculptured
+with squares of mahogany."
+extra {"curtain","curtains"}
+"The curtain looks very old and valuable. They have been made of a material
+similar to silk. Each curtain shows a symbol of an ancient god."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to lvl47
+   descr "You can see the west corridor of the Temple.";
+east to lvl49
+   descr "You can see the south corridor of the Temple.";
+end
+
+lvl49
+
+title "Temple of the Deathfight"
+descr "You have entered a featureless room filled with monoliths. The temple
+walls are covered with old and expensive curtains and the floor is sculptured
+with squares of mahogany."
+extra {"curtain","curtains"}
+"The curtain looks very old and valuable. They have been made of a material
+similar to silk. Each curtain shows a symbol of an ancient god."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+west to lvl48
+   descr "You can see the southwest corner of the Temple.";
+east to lvl410
+   descr "You can see the south corridor of the Temple.";
+end
+
+lvl410
+
+title "Temple of the Deathfight"
+descr "You have entered a featureless room filled with monoliths. The temple
+walls are covered with old and expensive curtains and the floor is sculptured
+with squares of mahogany. The south wall looks somehow different than the
+other walls."
+extra {"curtain","curtains"}
+"The curtain looks very old and valuable. They have been made of a material
+similar to silk. Each curtain shows a symbol of an ancient god."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+west to lvl49
+   descr "You can see the south corridor of the Temple.";
+east to lvl411
+   descr "You can see the south corridor of the Temple.";
+south to sec_pass1 open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+   descr "As you search the wall, you discover a hidden door leading south."
+keyword {"wall","south wall","door"};
+SECRET_DOOR_DIFFICULTY(SOUTH,50)
+end
+
+lvl411
+
+title "Temple of the Deathfight"
+descr "You have entered a featureless room filled with monoliths. The temple
+walls are covered with old and expensive curtains and the floor is sculptured
+with squares of mahogany."
+extra {"curtain","curtains"}
+"The curtain looks very old and valuable. They have been made of a material
+similar to silk. Each curtain shows a symbol of an ancient god."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+west to lvl410
+   descr "You can see the south corridor of the Temple.";
+east to lvl412
+   descr "You can see the southeast corner of the Temple.";
+end
+
+lvl412
+
+title "Temple of the Deathfight"
+descr "You have entered a featureless room filled with monoliths. The temple
+walls are covered with old and expensive curtains and the floor is sculptured
+with squares of mahogany."
+extra {"curtain","curtains"}
+"The curtain looks very old and valuable. They have been made of a material
+similar to silk. Each curtain shows a symbol of an ancient god."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to lvl413
+   descr "You can see the east corridor of the Temple.";
+west to lvl411
+   descr "You can see the south corridor of the Temple.";
+end
+
+lvl413
+
+title "Temple of the Deathfight"
+descr "You have entered a featureless room filled with monoliths. The temple
+walls are covered with old and expensive curtains and the floor is sculptured
+with squares of mahogany."
+extra {"curtain","curtains"}
+"The curtain looks very old and valuable. They have been made of a material
+similar to silk. Each curtain shows a symbol of an ancient god."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to lvl414
+   descr "You can see the east corridor of the Temple.";
+south to lvl412
+   descr "You can see the southeast corner of the Temple.";
+end
+
+lvl414
+
+title "Temple of the Deathfight"
+descr "You have entered a featureless room filled with monoliths. The temple
+walls are covered with old and expensive curtains and the floor is sculptured
+with squares of mahogany."
+extra {"curtain","curtains"}
+"The curtain looks very old and valuable. They have been made of a material
+similar to silk. Each curtain shows a symbol of an ancient god."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to lvl415
+   descr "You can see the east corridor of the Temple.";
+south to lvl413
+   descr "You can see the east corridor of the Temple.";
+end
+
+lvl415
+
+title "Temple of the Deathfight"
+descr "You have entered a featureless room filled with monoliths. The temple
+walls are covered with old and expensive curtains and the floor is sculptured
+with squares of mahogany."
+extra {"curtain","curtains"}
+"The curtain looks very old and valuable. They have been made of a material
+similar to silk. Each curtain shows a symbol of an ancient god."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to lvl416
+   descr "You can see the east corridor of the Temple.";
+south to lvl414
+   descr "You can see the east corridor of the Temple.";
+end
+
+lvl416
+
+title "Temple of the Deathfight"
+descr "You have entered a featureless room filled with monoliths. The temple
+walls are covered with old and expensive curtains and the floor is sculptured
+with squares of mahogany."
+extra {"curtain","curtains"}
+"The curtain looks very old and valuable. They have been made of a material
+similar to silk. Each curtain shows a symbol of an ancient god."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to lvl44
+   descr "You can see the northeast corner of the Temple.";
+south to lvl415
+   descr "You can see the east corridor of the Temple.";
+end
+
+lvl417
+
+title "Temple of the Deathfight, The Fightarena"
+descr "You have entered a featureless room filled with monoliths. The temple
+walls are covered with old and expensive curtains and the floor is sculptured
+with squares of mahogany."
+extra {"curtain","curtains"}
+"The curtain looks very old and valuable. They have been made of a material
+similar to silk. Each curtain shows a symbol of an ancient god."
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to lvl43
+   descr "You can see the north corridor of the Temple.";
+up to gazha_entrance
+   descr "You can see a path leading north to a river.";
+end
+
+death
+
+title "In the trap..."
+descr "You have fallen into a trap. Everywhere around you there are skeletons
+of the others who have did just the same as you and not got out in time.
+Slowly the walls move towards you and makes the room smaller.
+The ceiling is about 2 inches above you and looks like its about to cave in."
+extra {"skeleton","skeletons"}
+"When you take a closer look at the skeletons, you notice that it's remains
+of all kinds of humanoids. Some skeletons look like they have been here for
+a very long time, others have pieces of rotten flesh hanging from the bones."
+movement SECT_INSIDE
+ALWAYS_LIGHT
+up to gazha2_3 open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+   descr "As you search the ceiling, a rope ladder falls down to your rescue."
+keyword {"ceiling","door","ladder","rope"};
+SECRET_DOOR_DIFFICULTY(UP,50)
+special SFUN_DEATH_ROOM "150" time WAIT_SEC*20
+end
+
+/* --------------------------- The River --------------------------------*/
+
+gazha_entrance
+
+title "Gazha Tower trail"
+descr "This is the start of the trail towards the Gazha Tower. Beware that this is
+a very high level zone, and that the authors takes no responsibility for what
+might happen to you."
+movement SECT_CITY
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_MOB}
+north to river_0
+   descr "You can see a river.";
+down to lvl417
+   descr "You can see a large fightarena.";
+end
+
+river_0
+
+title "On the river to Gazha"
+descr "You are on a muddy river with lots if dead fish in it. The water
+itself is as dark as the night, and the smell here is awful."
+extra {"water","river"}
+"The water in the river is dark and muddy."
+extra {"fish"}
+"It's dead."
+movement SECT_WATER_SAIL
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+south to river_1
+   descr "You can see turn in the river.";
+north to stream1@ratswarf
+descr "The river continues to the north.";
+end
+
+river_1
+
+title "A turn in the river"
+descr "You are on a muddy river with lots of dead fish in it. The water
+itself is as dark as the night, and the smell here is awful."
+extra {"water","river"}
+"The water in the river is dark and muddy."
+extra {"fish"}
+"It's dead."
+movement SECT_WATER_SAIL
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to river_0
+   descr "You can see the Gazha river.";
+east to river_2
+   descr "You can see the Gazha river.";
+end
+
+river_2
+
+title "On the river to Gazha"
+descr "You are on a muddy river with lots if dead fish in it. The water
+itself is as dark as the night, and the smell here is awful."
+extra {"water","river"}
+"The water in the river is dark and muddy."
+extra {"fish"}
+"It's dead."
+movement SECT_WATER_SAIL
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+east to river_3
+   descr "You can see a turn in the river.";
+west to river_1
+   descr "You can see a turn in the river.";
+end
+
+river_3
+
+title "A turn in the river"
+descr "You have finally found a change in the river. The stream makes you drift
+south into the same boring water. The water is still dark, and the smell is
+still awful."
+movement SECT_WATER_SAIL
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+south to river_4
+   descr "You can see the Gazha river.";
+west to river_2
+   descr "You can see the Gazha river.";
+end
+
+river_4
+
+title "On the river to Gazha"
+descr "You are on a muddy river with lots if dead fish in it. The water
+itself is as dark as the night, and the smell here is awful."
+extra {"water","river"}
+"The water in the river is dark and muddy."
+extra {"fish"}
+"It's dead."
+movement SECT_WATER_SAIL
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to river_3
+   descr "You can see a turn in the river.";
+south to river_5
+   descr "You can see a turn in the river.";
+end
+
+river_5
+
+title "A turn in the river"
+descr "You have finally found a change in the river. The stream makes you drift
+east into the same boring water. The water is still dark, and the smell is
+still awful."
+movement SECT_WATER_SAIL
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to river_4
+   descr "You can see the Gazha river.";
+east to river_6
+   descr "You can see the Gazha river.";
+end
+
+river_6
+
+title "On the river to Gazha"
+descr "You are on a muddy river with lots if dead fish in it. The water
+itself is as dark as the night, and the smell here is awful."
+extra {"water","river"}
+"The water in the river is dark and muddy."
+extra {"fish"}
+"It's dead."
+movement SECT_WATER_SAIL
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+west to river_7
+   descr "You can see a turn in the river.";
+east to river_1
+   descr "You can see a turn in the river.";
+end
+
+river_7
+
+title "A turn in the river"
+descr "You are on a muddy river with lots if dead fish in it. The water
+itself is as dark as the night, and the smell here is awful."
+extra {"water","river"}
+"The water in the river is dark and muddy."
+extra {"fish"}
+"It's dead."
+movement SECT_WATER_SAIL
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+south to river_8
+   descr "You can see the Gazha river.";
+east to river_6
+   descr "You can see the Gazha river.";
+end
+
+river_8
+
+title "On the river to Gazha"
+descr "You are on a muddy river with lots if dead fish in it. The water
+itself is as dark as the night, and the smell here is awful."
+extra {"water","river"}
+"The water in the river is dark and muddy."
+extra {"fish"}
+"It's dead."
+movement SECT_WATER_SAIL
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+south to river_9
+   descr "You can see a beach.";
+north to river_7
+   descr "You can see a turn in the river.";
+end
+
+river_9
+
+title "At the end of the river Gazha"
+descr "You have reached the end of river Gazha. At the far end of the beach you can
+spot a huge building. The water is still dark, and the smell is still awful."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+south to gazha1_1
+   descr "You can see the Gazha Tower Entrance.";
+north to river_8
+   descr "You can see the Gazha river.";
+end
+
+/* ---------------------- Entrance to Gazha -----------------------------*/
+
+gazha1_1
+
+title "The entrance to Gazha Tower"
+descr "The entrance to the tower is a huge hall, with torches placed around the
+walls. Dim lights shows four pillars at the north end of the entrance."
+movement SECT_CITY
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to gazha1_2 open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+   descr "As you search the pillar you find that one of them can be moved."
+keyword {"door","pillar"};
+SECRET_DOOR_DIFFICULTY(NORTH,40)
+end
+
+gazha1_2
+
+title "The stair room"
+descr "As you enter this huge room. the first thing you notice is that there are
+doors in almost every direction. The room is filled with dim lit torches
+which makes it difficult to see what the room really contains."
+extra {"torch","torches"}
+"The torches burn with an almost blue flame."
+movement SECT_CITY
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+west to gazha2_1
+   descr "You look into the chamber of memories.";
+south to gazha1_1
+   descr "To the south you can see the Gazha Tower Entrance.";
+east to gazha0_1
+   descr "You can see an underground lake.";
+north to gazha1_2
+   descr "You can see a huge room.";
+end
+
+/* ------------------------ The Underground -----------------------------*/
+
+gazha0_1
+
+title "The underground lake"
+descr "You have fallen into the lake of gazha. The lake is about 20 feet deep
+and stretch out as far as the eye can see in every direction."
+movement SECT_WATER_SWIM
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to gazha0_2
+   descr "You can see the lake.";
+west to gazha0_3
+   descr "You can see the lake.";
+south to gazha0_4
+   descr "You can see the lake.";
+east to gazha0_5
+   descr "You can see the lake.";
+end
+
+gazha0_2
+
+title "The underground lake"
+descr "You are swimming around in the lake of gazha. The lake is about 20
+feet deep and stretch out as far as the eye can see in every direction."
+movement SECT_WATER_SWIM
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to gazha0_1
+   descr "You can see the lake.";
+west to gazha0_1
+   descr "You can see the lake.";
+south to gazha0_3
+   descr "You can see the lake.";
+east to gazha0_4
+   descr "You can see the lake.";
+end
+
+gazha0_3
+
+title "The underground lake"
+descr "You are swimming around in the lake of gazha. The lake is about 20
+feet deep and stretch out as far as the eye can see in every direction."
+movement SECT_WATER_SWIM
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to gazha0_2
+   descr "You can see the lake.";
+west to gazha0_2
+   descr "You can see the lake.";
+south to gazha0_1
+   descr "You can see the lake.";
+east to gazha0_4
+   descr "You can see the lake.";
+end
+
+gazha0_4
+
+title "The underground lake"
+descr "You are swimming around in the lake of gazha. The lake is about 20
+feet deep and stretch out as far as the eye can see in every direction."
+movement SECT_WATER_SWIM
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to gazha0_3
+   descr "You can see the lake.";
+west to gazha0_5
+   descr "You can see the lake.";
+south to gazha0_1
+   descr "You can see the lake.";
+east to gazha0_2
+   descr "You can see the lake.";
+end
+
+gazha0_5
+
+title "The underground lake"
+descr "You are swimming around in the lake of gazha. The lake is about 20
+feet deep and stretch out as far as the eye can see in every direction."
+movement SECT_WATER_SWIM
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to gazha0_1
+   descr "You can see the lake.";
+west to gazha0_2
+   descr "You can see the lake.";
+south to gazha0_2
+   descr "You can see the lake.";
+east to gazha0_1
+   descr "You can see the lake.";
+up to gazha1_1
+   descr "You can see the Gazha Tower Entrance.";
+end
+
+/* ----------------------- The Second Floor -----------------------------*/
+
+gazha2_1
+
+title "Chamber of memories"
+descr "Images resembling curtains of light drift through the air. Their forms
+ripple and change, while their color move slowly through the spectrum
+of the rainbow. The essence lords considered the pastime to be a form of
+rest and recreation."
+extra {"curtain","curtains"}
+"The curtains looks quite odd."
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_SACRED}
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_MOB}
+north to gazha2_2
+   descr "You can see a lyceum.";
+east to gazha1_2
+   descr "You look into a huge room.";
+end
+
+gazha2_2
+
+title "Lyceum"
+descr "The rectangular stage is still faced by the stepped floor where the
+audience would sit. The chamber was rarely used, but occasionally
+Maya Reval or one of her assistants would narrate long epics that were
+part entertainment, part lecture to a small group gathered for the
+purpose."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+west to gazha2_3
+   descr "You can see a vault.";
+south to gazha2_1
+   descr "You look into the chamber of memories.";
+east to gazha2_5
+   descr "You cam see a workshop.";
+end
+
+gazha2_3
+
+title "The vault"
+descr "Gazha was not closed down completely when Maya and Paal left its comfort
+for a better life somewhere else. On each wall there are shelves filled
+with books and other useless stuff. There are markings on the wall after
+an ancient door."
+extra {"markings"}
+"The markings are rectangular, with a hole after a doorknob in the middle."
+extra {"shelves"}
+"The shelves are made out of pure oak, and seems to have been here forever."
+extra {"book","books"}
+"It looks like bank deposit books."
+extra {"stuff"}
+"What stuff?"
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+west to death open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+   descr "As you search the markings in the wall, you find a secret entrance."
+keyword {"door","markings"};
+SECRET_DOOR_DIFFICULTY(WEST,45)
+south to gazha2_4
+   descr "You look into the planetarium.";
+east to gazha2_2
+   descr "You can see a lyceum.";
+end
+
+gazha2_4
+
+title "The planetarium"
+descr "A magical orb in the center of the room can be programmed to
+project nearly any image on the ceiling of this chamber. Currently its
+showing Kustars sky as it would appear to you where the atmosphere
+is missing. Maya used it primarily to help her visualize the puzzles
+that is the Kirbitz, and how it many internal facets fits together."
+extra {"orb"}
+"The orb is glowing with a dim red light."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to gazha2_3
+   descr "You can see a vault.";
+south to gazha2_7
+   descr "You can see a storage.";
+east to gazha2_1
+   descr "You look into the chamber of memories.";
+end
+
+gazha2_5
+
+title "Workshop"
+descr "Many of the smaller facets of the Kirbitz where created in this workroom.
+The floor is deformed by many orthogonal depression and platforms of
+differing heights, also reached by steps that give them a pyramidal shape.
+How these formations were used is a mystery to anyone including Maya
+herself."
+extra {"depression","platform","platforms"}
+"The depression and the platforms looks very solid, but somehow also fragile."
+extra {"steps"}
+"The steps are created by marble, and is forming a pyramidal shape around the
+platforms."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+west to gazha2_2
+   descr "You can see a lyceum.";
+south to gazha2_6
+   descr "You can see a workshop.";
+end
+
+gazha2_6
+
+title "Workshop"
+descr "One-foot pyramids of essicrysta projects form the walls, floor and ceiling
+of this room. They are spaced in a grid forming diamonds with seven-foot
+sides."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to gazha2_5
+   descr "You can see a workshop.";
+west to gazha2_2
+   descr "You can see a lyceum.";
+end
+
+gazha2_7
+
+title "Storage"
+descr "Along with mundane cleaning supplies and other essentials, a minor
+magical cleaning machine stands here."
+extra {"cleaning machine","machine"}
+"This magical cleaning machine is created to do easy housekeeping tasks.
+Several buttons are placed on the machine's 'belly'."
+extra {"button","buttons"}
+"The buttons appears to be stuck."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to gazha2_4
+   descr "You look into the planetarium.";
+west to gazha2_8
+   descr "You can see a meeting room.";
+end
+
+gazha2_8
+
+title "Major meetingroom"
+descr "This room was used for greater meetings. Several chairs and tables
+is set up for the high priests. A large board is set up for the meeting leader
+to write down the objects of the meeting."
+extra {"board"}
+"As you study the board you can see some old writings."
+extra {"chair","chairs"}
+"The chairs look very comfortable."
+extra {"table"}
+"The table is made of the finest oak material."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+east to gazha2_7
+   descr "You can see a storage.";
+south to gazha2_9
+   descr "You look into a large chamber.";
+west to gazha2_10
+   descr "You look into a meeting room.";
+end
+
+gazha2_9
+
+title "Seclusion Chamber"
+descr "Doors of vitreaen open from the room onto a balcony with an excellent
+view of the grotto. This room was used for accommodations for assistants."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to gazha2_8
+   descr "You can see a meeting room.";
+special SFUN_FORCE_MOVE time 25
+"gazha1_1!The balcony crumbles to dust because of your weight.@$1n falls down."
+end
+
+gazha2_10
+
+title "Minor meetingroom"
+descr "This room was used for smaller meetings. Several chairs and tables
+is set up for the priests. A small board is set up for the meeting leader
+to write down the objects of the meeting."
+extra {"board"}
+"As you study the board you can see some old writings."
+extra {"chair","chairs"}
+"The chairs look very uncomfortable."
+extra {"table"}
+"The table is made of oak."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+east to gazha2_8
+   descr "You look into a meeting room.";
+south to gazha2_11
+   descr "You can see a large chamber.";
+west to gazha2_12
+   descr "You look into a room with a large fountain.";
+end
+
+gazha2_11
+
+title "Seclusion Chamber"
+descr "These are the living quarters of Paal Dvendor. The bed in the corner is
+neatly made out of oak and the sheets are all cleaned up."
+extra {"bed"}
+"The bed looks very... expensive."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to gazha2_10
+   descr "You look into a meeting room.";
+end
+
+gazha2_12
+
+title "Fountain"
+descr "This room is dominated by the huge fountain in the middle of the room.
+However the fountain has been dry for quite some time now and are covered
+with dust. The floor consists of black and white bricks, forming a huge chess
+board pattern. The walls are covered with the finest quality of oak
+panels, and you notice to oak doors, one to the east and one to the south."
+extra {"fountain"}
+"The fountain was very beautiful once, but now it is covered with dust."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+south to gazha2_13
+   descr "You look into a conservatory.";
+east to gazha2_10
+   descr "You can see a meeting room.";
+end
+
+gazha2_13
+
+title "Conservatory"
+descr "Vitreaen globes, suspended from the arched ceiling, once shed their light
+on the ornamental plants in this room. Now all the plants are gone and the
+lights are gone too. The only thin left is empty flowercases and dust."
+extra {"flowercase","case","flowercases","cases"}
+"The flowercases are filled with old smelly dirt."
+extra {"globe","globes"}
+"The globes look somehow magical."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to gazha2_12
+   descr "You look into a room with a large fountain.";
+west to gazha2_14
+   descr "You can see a storage.";
+end
+
+gazha2_14
+
+title "Storage"
+descr "The once proud castle of Maya had a huge store, meant for supplies of food
+and other necessary supplies. Now almost everything has crumbled to dust
+but some food are still left here."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+east to gazha2_13
+   descr "You look into a conservatory.";
+up to gazha2_15
+   descr "You can see a beautiful bedroom.";
+end
+
+gazha2_15
+
+title "Maya's Bedroom"
+descr "You have reached the end of the castle of Maya. You have battled the worst
+of the worst so far, and you may just come out alive. You can sense freedom
+very near."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_MOB, UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+down to gazha2_14
+   descr "You can see a storage.";
+north to catacomb0
+   descr "You can see the catacomb entrance.";
+end
+
+gazha99
+
+title "On your way out..."
+descr "Finally you made it. Freedom at last. The castle has shown itself as a
+mighty task for anyone who is willing to rid the world of the evil powers.
+The only thing that stands between you and a forest is a huge rainbow."
+flags {UNIT_FL_NO_MOB}
+special SFUN_FORCE_MOVE time 30
+"forest_edge@haon_dor!You are magical moved from this end of the rainbow to
+the other end down to a forest.@$1n starts walking over the rainbow."
+down to gazha2_15
+   descr "You can see a bedroom.";
+end
+
+/* ------------------------- The Catacombs ------------------------------*/
+
+catacomb0
+
+title "Entrance to the Catacombs"
+descr "You stand before the entrance to the catacombs of the castle. This is where
+all the great citizens of Gazha rests in peace. The air is humid and the
+smell is awful."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_MOB, UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+down to catacomb1
+   descr "You can see the catacombs.";
+end
+
+catacomb1
+
+title "The Catacombs"
+descr "Once down in the catacombs you realize that you might have made a big error
+going down here. This looks like a very difficult maze to figure out and
+that is exactly what you will have to do, if you plan on getting out of
+here. From all directions, screams of horror can be heard."
+movement SECT_INSIDE
+flags  {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to catacomb7
+   descr "You can see... catacombs.";
+south to catacomb1
+   descr "You can see... catacombs.";
+east to catacomb5
+   descr "You can see... catacombs.";
+west to catacomb8
+   descr "You can see... catacombs.";
+end
+
+catacomb2
+
+title "The Catacombs"
+descr "You are wandering around down in the catacombs. Every exit looks the
+same, and every wall is similar to all the other walls. No matter what
+direction you focus your eyes on, you can only see catacombs. From everywhere,
+screams of horror can be heard."
+movement SECT_INSIDE
+flags  {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to catacomb6
+   descr "You can see... catacombs.";
+south to catacomb1
+   descr "You can see... catacombs.";
+east to catacomb9
+   descr "You can see... catacombs.";
+west to catacomb4
+   descr "You can see... catacombs.";
+end
+
+catacomb3
+
+title "The Catacombs"
+descr "You are totally lost down here. Everywhere around you you can see only
+another sections of corridors and small rooms. The air here smells rather
+strange, a kind of and old smell, the kind if smell you could expect from
+an old man. From all directions, screams of horror can be heard."
+movement SECT_INSIDE
+flags  {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to catacomb8
+   descr "You can see... catacombs.";
+south to catacomb9
+   descr "You can see... catacombs.";
+east to catacomb7
+   descr "You can see... catacombs.";
+west to catacomb4
+   descr "You can see... catacombs.";
+end
+
+catacomb4
+
+title "The Catacombs"
+descr "You are totally lost down here. Everywhere around you you can see only
+another sections of corridors and small rooms. The air here smells rather
+strange, a kind of and old smell, the kind if smell you could expect from
+an old man. From all directions, screams of horror can be heard."
+movement SECT_INSIDE
+flags  {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to catacomb1
+   descr "You can see... catacombs.";
+south to catacomb8
+   descr "You can see... catacombs.";
+east to catacomb6
+   descr "You can see... catacombs.";
+west to catacomb1
+   descr "You can see... catacombs.";
+end
+
+catacomb5
+
+title "The Catacombs"
+descr "You are wandering around down in the catacombs. Every exit looks the
+same, and every wall is similar to all the other walls. No matter what
+direction you focus your eyes on, you can only see catacombs. From everywhere,
+screams of horror can be heard."
+movement SECT_INSIDE
+flags  {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to catacomb2
+   descr "You can see... catacombs.";
+south to catacomb6
+   descr "You can see... catacombs.";
+east to catacomb2
+   descr "You can see... catacombs.";
+west to catacomb3
+   descr "You can see... catacombs.";
+end
+
+catacomb6
+
+title "The Catacombs"
+descr "You are totally lost down here. Everywhere around you you can see only
+another sections of corridors and small rooms. The air here smells rather
+strange, a kind of and old smell, the kind if smell you could expect from
+an old man. From all directions, screams of horror can be heard."
+movement SECT_INSIDE
+flags  {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to catacomb4
+   descr "You can see... catacombs.";
+south to catacomb4
+   descr "You can see... catacombs.";
+east to catacomb4
+   descr "You can see... catacombs.";
+west to catacomb4
+   descr "You can see... catacombs.";
+end
+
+catacomb7
+
+title "The Catacombs"
+descr "You are wandering around down in the catacombs. Every exit looks the
+same, and every wall is similar to all the other walls. No matter what
+direction you focus your eyes on, you can only see catacombs. From everywhere,
+screams of horror can be heard."
+movement SECT_INSIDE
+flags  {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to catacomb3
+   descr "You can see... catacombs.";
+south to catacomb1
+   descr "You can see... catacombs.";
+east to catacomb8
+   descr "You can see... catacombs.";
+west to catacomb5
+   descr "You can see... catacombs.";
+end
+
+catacomb8
+
+title "The Catacombs"
+descr "You are wandering around down in the catacombs. Every exit looks the
+same, and every wall is similar to all the other walls. No matter what
+direction you focus your eyes on, you can only see catacombs. From everywhere,
+screams of horror can be heard."
+movement SECT_INSIDE
+flags  {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to catacomb7
+   descr "You can see... catacombs.";
+south to catacomb2
+   descr "You can see... catacombs.";
+east to catacomb4
+   descr "You can see... catacombs.";
+west to catacomb5
+   descr "You can see... catacombs.";
+end
+
+catacomb9
+
+title "The Catacombs"
+descr "You are totally lost down here. Everywhere around you you can see only
+another sections of corridors and small rooms. The air here smells rather
+strange, a kind of and old smell, the kind if smell you could expect from
+an old man. From all directions, screams of horror can be heard."
+movement SECT_INSIDE
+flags  {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to catacomb9
+   descr "You can see... catacombs.";
+south to catacomb9
+   descr "You can see... catacombs.";
+east to catacomb5
+   descr "You can see... catacombs.";
+west to catacomb2
+   descr "You can see... catacombs.";
+up to catacomb10
+   descr "You can see... catacombs.";
+end
+
+catacomb10
+
+title "The end of the Catacombs"
+descr "You realize that you have made it out of the burial grounds of the citizens
+of Gazha. The fresh air in your lungs fills you with vitality and you are
+ready to face danger again."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_MOB, UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+up to gazha99
+   descr "You can see the end of a rainbow.";
+end
+
+/* --------------------- The Castle of Elements -------------------------*/
+/* ----------------------- The Secret Passage ---------------------------*/
+
+sec_pass1
+
+title "A secret passage"
+descr "You are standing in a small passage. To the north you may enter the
+temple corridor, the passage leads on to the south. Several orbs placed in
+the ceiling lights up this passage."
+extra {"orb","orbs"}
+"The orbs shines with a beautiful dim light."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+ALWAYS_LIGHT
+north to lvl410
+   descr "You can see a temple corridor.";
+south to sec_pass2
+   descr "You can see the passage leading on to the south.";
+end
+
+sec_pass2
+
+title "A secret passage"
+descr "You are standing in a small passage. The passage leads on to the
+north and to the south. Several orbs placed in the ceiling lights up this
+passage. You notice a strange odour from the south."
+extra {"orb","orbs"}
+"The orbs shines with a beautiful dim light."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+ALWAYS_LIGHT
+north to sec_pass1
+   descr "You can see the passage leading on to the north.";
+south to sec_pass3
+   descr "You can see the passage leading on to the south.";
+end
+
+sec_pass3
+
+title "A secret passage"
+descr "You are standing in a small passage. To the south you may enter a
+dark dungeon, the passage leads on to the south. Several orbs placed in
+the ceiling lights up this passage. A strong odour of death and decay tickles
+in yor nose."
+extra {"orb","orbs"}
+"The orbs shines with a beautiful dim light."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+ALWAYS_LIGHT
+north to sec_pass2
+   descr "You can see the passage leading on to the north.";
+south to dung1
+   descr "You look into a dungeon.";
+end
+
+/* --------------------------- The Dungeon ------------------------------*/
+
+dung1
+
+title "A dark dungeon"
+descr "You are standing in a dark dungeon. A pile of old rotten corpses
+is placed in the northeast corner of the room. The odour of rotten flesh
+is strong, it makes you gasp for fresh air."
+extra {"corpse","corpses","pile"}
+"The corpses looks like they have been masacred by a powerful being."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to sec_pass3
+   descr "You look into a small passage.";
+south to dung2
+   descr "You can see a corridor leading south.";
+west to dung10
+   descr "You can see a corridor leading west.";
+end
+
+dung2
+
+title "A dungeon corridor"
+descr "You are standing in a dark dungeon corridor. Water is running down the
+mossgrowned walls, and many spiders and other insects is crawling around in
+the ceiling and on the floor."
+extra {"spider","spiders","insect","insects"}
+"The insects crawl around everywhere."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to dung1
+   descr "You look into a room filled with rotten corpses.";
+west to dung11
+   descr "You can see a corridor leading west.";
+south to dung12
+   descr "You can see an old storage.";
+end
+
+dung3
+
+title "A dark corridor"
+descr "You are standing in a dark corridor. The walls, ceiling and floor is
+created out of huge slabs of stone, but yet it is not cold here, but it is
+infact rather hot."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+east to dung12
+   descr "You can see an old storage.";
+north to dung5
+   descr "You can see a corridor leading north.";
+west to dung4 open {EX_OPEN_CLOSE, EX_CLOSED}
+   descr "You look into a torture chamber."
+keyword {"door"};
+end
+
+dung4
+
+title "Torture Chamber"
+descr "This room was once used to torture uncooperative prisoners. The room
+has a fire pit, a stretch rack, and an iron maiden, and various barbed and
+piercing instruments. There are no victims currently enjoying the hospitality
+of this room."
+extra {"pit","fire pit","fire"}
+"The fire pit is not on fire right now, it seems obvious to you that this is
+used to give the nice barbed and pierced instrument a nice white glow."
+extra {"rack","stretch rack"}
+"This rack has four chackles, two on the top and two on the bottom. The chackles
+is probably used to chain prisoners."
+extra {"iron maiden","guillotine"}
+"This guillotine looks as sharp as a razors edge. Several blood stains is still
+left on the solid metal."
+extra {"instruments"}
+"This barbed and pierced instruments is used to torture prisoners, after they
+have been put into the fire pit."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to dung6 open {EX_OPEN_CLOSE, EX_CLOSED}
+   descr "You can see a corridor leading north."
+keyword {"door"};
+east to dung3 open {EX_OPEN_CLOSE, EX_CLOSED}
+   descr "You can see a corridor leading east."
+keyword {"door"};
+end
+
+dung5
+
+title "A low ceilinged passage"
+descr "The darkness in this passageway seems almost palable, and there is
+an overwhelming feeling of claustrophobic tendension. It almost seems as if
+the ceiling were lowering itself to crush all who enters here."
+extra {"ceiling"}
+"As you study the ceiling closer you notices that it is just your mind that
+thinks this ceiling is lowering. The ceiling itself is solid as a mountain."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to dung6
+   descr "You can see a corridor leading north.";
+south to dung13 open {EX_OPEN_CLOSE, EX_CLOSED}
+   descr "You can see a pantry."
+keyword {"door"};
+end
+
+dung6
+
+title "A dungeon corridor"
+descr "You are standing in a dark dungeon corridor. Water is running down the
+mossgrowned walls, and many spiders and other insects is crawling around in
+the ceiling and on the floor."
+extra {"spider","spiders","insect","insects"}
+"The insects crawl around everywhere."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to dung7 open {EX_OPEN_CLOSE, EX_CLOSED}
+   descr "You look into an interrogation room."
+keyword {"door"};
+south to dung4 open {EX_OPEN_CLOSE, EX_CLOSED}
+   descr "You look into a torture chamber."
+keyword {"door"};
+end
+
+dung7
+
+title "Interrogation Room"
+descr "This room has a table in the center of it, with an uncomfortable,
+rickety chair on the opposite side. On the table, there is a metal dome,
+in which is set a stone that glows with a pure white light."
+extra {"dome"}
+"The dome is made out of an unknown metal."
+extra {"stone"}
+"The stone radiates no magic, yet the light that glows within it seems quite
+unatural."
+extra {"table"}
+"The table has a semicircular depression where the dome can rest facing the
+chair."
+extra {"chair"}
+"The chair bears stout leather straps and some blood stains."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+ALWAYS_LIGHT
+south to dung6 open {EX_OPEN_CLOSE, EX_CLOSED}
+   descr "You can see a corridor leading south."
+keyword {"door"};
+east to dung8  open {EX_OPEN_CLOSE, EX_CLOSED}
+   descr "You can see a corridor leading east."
+keyword {"door"};
+end
+
+dung8
+
+title "A low ceilinged passage"
+descr "The darkness in this passageway seems almost palable, and there is
+an overwhelming feeling of claustrophobic tendension. It almost seems as if
+the ceiling were lowering itself to crush all who enters here."
+extra {"ceiling"}
+"As you study the ceiling closer you notices that it is just your mind that
+thinks this ceiling is lowering. The ceiling itself is solid as a mountain."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+west to dung7 open {EX_OPEN_CLOSE, EX_CLOSED}
+   descr "You look into an interrogation room."
+keyword {"door"};
+east to dung10
+   descr "You can see a corridor leading east.";
+south to dung11
+   descr "You can see a corridor leading south.";
+end
+
+dung9
+
+title "A small smelly corridor"
+descr "As you enter this corridor you notice a strange smell. I smells almost
+as burned flesh, but somehow sweeter. The walls here is covered with oak
+tree panels. But the ceiling and the floor is made of huge slabs of stone."
+extra {"wall","walls","oak"}
+"As you study the walls closer, you understand what the strange smell is.
+Behind the panel you can see a ivory white substance that once must have
+been a strange creature."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+east to dung10
+   descr "You can see a corridor leading east.";
+west to dung8
+   descr "You can see a corridor leading west.";
+south to dung11
+   descr "You can see a corridor leading south.";
+end
+
+dung10
+
+title "A dungeon corridor"
+descr "You are standing in a dark dungeon corridor. Water is running down the
+mossgrowned walls, and many spiders and other insects is crawling around in
+the ceiling and on the floor."
+extra {"spider","spiders","insect","insects"}
+"The insects crawl around everywhere."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+east to dung1
+   descr "You look into a room filled with rotten corpses.";
+west to dung9
+   descr "You can see a corridor leading west.";
+south to dung2
+   descr "You can see a corridor leading south.";
+end
+
+dung11
+
+title "A small smelly corridor"
+descr "As you enter this corridor you notice a strange smell. I smells almost
+as burned flesh, but somehow sweeter. The walls here is covered with oak
+tree panels. But the ceiling and the floor is made of huge slabs of stone."
+extra {"wall","walls","oak"}
+"As you study the walls closer, you understand what the strange smell is.
+Behind the panel you can see a ivory white substance that once must have
+been a strange creature."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to dung9
+   descr "You can see a corridor leading north.";
+east to dung2
+   descr "You can see a corridor leading east.";
+end
+
+dung12
+
+title "Storage room"
+descr "This room contains barrels upon barrels of oil. This barrels have
+probably been gathered over hundreds of years, just waiting to be used if
+the castle got attacked."
+extra {"barrel","barrels","oil"}
+"All the barrels are filled with a black liquid, known as oil. The oil was
+probably heated yp, then pored down on poor attackers."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to dung2
+   descr "You can see a corridor leading north.";
+west to dung3
+   descr "You can see a corridor leading west.";
+end
+
+dung13
+
+title "Pantry"
+descr "This looks like a pantry of some sort. Old and decayed food is
+scatered around on several shelves. The remains of an old stairway lies
+on the floor. Probably it was used to enter this room for above."
+extra {"food","shelves"}
+"The food in this shelves looks so old and rotten that you wouldn't dare
+to even touch it."
+extra {"stairway"}
+"Once this broken stairway must have gone up to a room above you, but
+you can't seem to notice any hole in the ceiling."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to dung5 open {EX_OPEN_CLOSE, EX_CLOSED}
+   descr "You can see a corridor leading north."
+keyword {"door"};
+up to ground1 open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+   descr "As you search the ceiling, you discover a hatch, leading up."
+keyword {"ceiling","hatch","door"};
+SECRET_DOOR_DIFFICULTY(UP,45)
+end
+
+/* -------------------------- Ground Floor ------------------------------*/
+
+ground1
+
+title "The courtyard"
+descr "This room looks like a huge courtyard. It looks like a place where many
+pitched battles have taken place, judging by the scars and pits in the granite
+walls and the scorch marks burned into the floor. There is no apparent activity
+here now. A hatch leads down to the castles dungeon, and four passages leads
+north, south, east and west to four huge corridors. A stairway leads up to the
+center tower. In the south-east corner of the room there must have once been
+a huge entrance, but now it's covered with huge parts of the granite walls
+from the upper levels of the castle."
+extra {"entrance"}
+"You can't look at something that aren't existing anymore, stupid."
+extra {"hatch"}
+"The hatch probably been placed there so that the drunken guards wouldn't
+fall down into the pantry below."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+down to dung13 open {EX_OPEN_CLOSE, EX_CLOSED}
+   descr "You can see a pantry."
+keyword {"door"};
+north to ground2
+   descr "You can see the corridor to the north tower.";
+east to ground3
+   descr "You can see the corridor to the east tower.";
+south to ground4
+   descr "You can see the corridor to the south tower.";
+west to ground5
+   descr "You can see the corridor to the west tower.";
+up to sec_fl1
+   descr "You can see the stairway up to the center tower.";
+end
+
+ground2
+
+title "The lower level of the north tower"
+descr "You are standing in the lower level of the north tower. A huge iron
+ladder descend up the second floor, and a large corridor leads south to the
+center courtyard."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+south to ground1
+   descr "You can see a courtyard..";
+up to sec_fl2
+   descr "You can see the second level of the north tower.";
+end
+
+ground3
+
+title "The lower level of the east tower"
+descr "You are standing in the lower level of the east tower. A huge iron
+ladder descend up the second floor, and a large corridor leads west to the
+center courtyard."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+west to ground1
+   descr "You can see a courtyard.";
+up to sec_fl3
+   descr "You can see the second level of the east tower.";
+end
+
+ground4
+
+title "The lower level of the south tower"
+descr "You are standing in the lower level of the south tower. A huge iron
+ladder descend up the second floor, and a large corridor leads north to the
+center courtyard."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+north to ground1
+   descr "You can see a courtyard.";
+up to sec_fl4
+   descr "You can see the second level of the south tower.";
+end
+
+ground5
+
+title "The lower level of the west tower"
+descr "You are standing in the lower level of the west tower. A huge iron
+ladder descend up the second floor, and a large corridor leads east to the
+center courtyard."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+east to ground1
+   descr "You can see a courtyard.";
+up to sec_fl5
+   descr "You can see the second level of the west tower.";
+end
+
+/* -------------------------- Second Floor ------------------------------*/
+
+sec_fl1
+
+title "The second floor of the center tower"
+descr "You are standing in the second floor of the center tower. A huge
+iron ladder leads both up and down. You get the feeling that this room has
+strong connections with the four elements."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+down to ground1
+   descr "You can see a courtyard.";
+up to center_tower
+   descr "You can see the top floor of the center tower.";
+end
+
+sec_fl2
+
+title "The second floor of the north tower"
+descr "You are standing in the second floor of the center tower. A huge
+iron ladder leads both up and down. You get the feeling that this room has
+strong connections with the element of air and winds."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+down to ground2
+   descr "You can see the lower level of the north tower.";
+up to air_tower
+   descr "You can see the top floor of the north tower.";
+end
+
+sec_fl3
+
+title "The second floor of the east tower"
+descr "You are standing in the second floor of the center tower. A huge
+iron ladder leads both up and down. You get the feeling that this room has
+strong connections with the element of earth and stone."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+down to ground3
+   descr "You can see the lower level of the east tower.";
+up to earth_tower
+   descr "You can see the top floor of the east tower.";
+end
+
+sec_fl4
+
+title "The second floor of the south tower"
+descr "You are standing in the second floor of the center tower. A huge
+iron ladder leads both up and down. You get the feeling that this room has
+strong connections with the element of fire and heath."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+down to ground4
+   descr "You can see the lower level of the south tower.";
+up to fire_tower
+   descr "You can see the top floor of the south tower.";
+end
+
+sec_fl5
+
+title "The second floor of the west tower"
+descr "You are standing in the second floor of the center tower. A huge
+iron ladder leads both up and down. You get the feeling that this room has
+strong connections with the element of water and snow."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+down to ground5
+   descr "You can see the lower level of the west tower.";
+up to water_tower
+   descr "You can see the top floor of the west tower.";
+end
+
+/* -------------------------- Tower Rooms -------------------------------*/
+
+center_tower
+
+title "The top floor of the center tower"
+descr "You are standing at the top floor of the center tower. The four
+elements, fire, water, earth and air, are all represented here in their
+harmonic connections. The walls are made of fire and water, the ceiling of air
+and the floor of earth."
+movement SECT_INSIDE
+flags {UNIT_FL_SACRED}
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+down to sec_fl1
+   descr "You can see the second floor of the center tower.";
+end
+
+air_tower
+
+title "The top floor of the north tower"
+descr "You are standing at the top floor of the east tower. Even how strange
+it might seem, this room has now walls. The winds can freely circle around
+in here. And it also appears to you that it is infact the winds that keeps the
+ceiling up."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+down to sec_fl2
+   descr "You can see the second floor of the north tower.";
+end
+
+earth_tower
+
+title "The top floor of the east tower"
+descr "You are standing at the top floor of the east tower. The walls, the
+floor and the ceiling here consists of mud and huge bricks of rock, not
+granite as the rest of the castle."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+down to sec_fl3
+   descr "You can see the second floor of the east tower.";
+end
+
+fire_tower
+
+title "The top floor of the south tower"
+descr "You are standing at the top floor of the south tower. Fire is burning
+freely everywhere around you. Even in thin air the fire is burning with no
+signs of any sources."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+down to sec_fl4
+   descr "You can see the second floor of the south tower.";
+end
+
+water_tower
+
+title "The top floor of the west tower"
+descr "You are standing at the top floor of the west tower. Water is flowing
+freely on the floor here. But it don't stream down to the floor below, the
+water over the stairway down is floating in thin air."
+movement SECT_INSIDE
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+down to sec_fl5
+   descr "You can see the second floor of the west tower.";
+end
+
+/* ----------------------- Mephisto's Quarter ---------------------------*/
+/* ------------------------ Private Chamber -----------------------------*/
+
+meph_quarter
+
+title "Mephisto's Quarter"
+descr "You have entered Mephisto's Quarter. The floor, ceiling and walls looks
+like they have been created out of, even how strange it might seem, frozen fire.
+In the middle of the room two chairs have been set up on each side of an old
+mahogany table. You can also see an strange chamber of some sort."
+extra {"chamber"}
+"This looks like some sort of a teleport chamber. You notice a sign attached
+to it."
+extra {"sign"}
+"&lThe sign reads:
+
+To use this teleportation chamber type 'to <destination>'
+
+Valid destinations: 1 - midgaard     (Inner Sanctum)
+                    2 - udgaard      (The Temple)
+                    3 - gazha        (The Temple of the Begining)
+                    4 - board        (Board Room   - immortals only)
+                    5 - chat         (Chat Room    - immortals only)
+                    6 - bar          (Builders Bar - immortals only)
+
+&f"
+extra {"fire","wall","walls","ceiling","floor"}
+"Even if the fire seems frozen, you get the feeling that it would have burned
+your hands severly if you have dared to touch it."
+extra {"chairs","chair"}
+"The chairs is created out black diamonds, but still they looks very comfortable."
+extra {"table"}
+"The table look very old, an a large map has been carefully been laid upon it.
+You also see a poem attached on the desk drawer."
+extra {"drawer","drawers"}
+"Strange... The drawer has no handle, how do you open this?"
+extra {"handle"}
+"There is no handle to look at!"
+extra {"poem"}
+"The poem is written in silver letters on a mahogany plate.&l
+
+It reads:
+
+&c+w Woe to you, oh Earth and Sea, for the Devil sends the
+ beast with wrath, because he knows the time is short...
+ Let him who hath understanding reckon the number of the
+ beast for it is a human number, its number is Six hundred and
+ sixty six.&cw
+
+&f"
+extra {"map"}
+"The map shows a detailed map of Gazha. Your head starts spinning as you try
+to insert all the rooms, exits and corridors into your mind."
+movement SECT_INSIDE
+flags {UNIT_FL_SACRED}
+flags {UNIT_FL_PRIVATE, UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS}
+ALWAYS_LIGHT
+
+dilbegin otahere();
+var
+   pc : unitptr;
+   pc_name : string;
+
+code
+{
+
+ :init:
+   heartbeat := PULSE_SEC*5;
+
+ :start:
+   wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and
+   (command("to"))));
+   block;
+   pc := activator;
+
+   if("udgaard" in argument)
+   {
+      act("As you step into the chamber you are teleported to Udgaard.",
+          A_SOMEONE,self,null,null,TO_CHAR);
+      act("You see $2N enter the chamber, and suddenly $2s is gone.",
+          A_SOMEONE,self,pc,null,TO_REST);
+      link(pc, findroom("temple@udgaard"));
+      exec("look",pc);
+      unsecure(pc);
+      goto start;
+   }
+
+   if("midgaard" in argument)
+   {
+      act("As you step into the chamber you are teleported to Midgaard.",
+          A_SOMEONE,self,null,null,TO_CHAR);
+      act("You see $2N enter the chamber, and suddenly $2s is gone.",
+          A_SOMEONE,self,pc,null,TO_REST);
+      link(pc, findroom("cth_sanctum@midgaard"));
+      exec("look",pc);
+      unsecure(pc);
+      goto start;
+   }
+
+   if("gazha" in argument)
+   {
+      act("As you step into the chamber you are teleported to Gazha.",
+          A_SOMEONE,self,null,null,TO_CHAR);
+      act("You see $2N enter the chamber, and suddenly $2s is gone.",
+          A_SOMEONE,self,pc,null,TO_REST);
+      link(pc, findroom("lvl10@gazha"));
+      exec("look",pc);
+      unsecure(pc);
+      goto start;
+   }
+
+   if (("board" in argument) and (activator.level > IMMORTAL_LEVEL))
+   {
+      act("As you step into the chamber you are teleported to The Goods Board Room.",
+          A_SOMEONE,self,null,null,TO_CHAR);
+      act("You see $2N enter the chamber, and suddenly $2s is gone.",
+          A_SOMEONE,self,pc,null,TO_REST);
+      link(pc, findroom("board_room@wiz"));
+      exec("look",pc);
+      unsecure(pc);
+      goto start;
+   }
+
+   if (("chat" in argument) and (activator.level > IMMORTAL_LEVEL))
+   {
+      act("As you step into the chamber you are teleported to The Goods Chat Room.",
+          A_SOMEONE,self,null,null,TO_CHAR);
+      act("You see $2N enter the chamber, and suddenly $2s is gone.",
+          A_SOMEONE,self,pc,null,TO_REST);
+      link(pc, findroom("chat@wiz"));
+      exec("look",pc);
+      unsecure(pc);
+      goto start;
+   }
+
+   if (("bar" in argument) and (activator.level > IMMORTAL_LEVEL))
+   {
+      act("As you step into the chamber you are teleported to The Builders Bar.",
+          A_SOMEONE,self,null,null,TO_CHAR);
+      act("You see $2N enter the chamber, and suddenly $2s is gone.",
+          A_SOMEONE,self,pc,null,TO_REST);
+      link(pc, findroom("builders_bar@wiz"));
+      exec("look",pc);
+      unsecure(pc);
+      goto start;
+   }
+
+}
+dilend
+end
+
+
+%objects
+
+/* ------------------------------ Signs ---------------------------------*/
+
+meph_sign
+
+names {"sign"}
+title "Mephisto's - Not Home - sign"
+descr "A - Not Home - sign is posted on the wall."
+type ITEM_NOTE
+weight 100
+extra {}
+"The sign says:&l
+                  _
+                 / \
+  ______________|___|_______________
+ |              :   :               |
+ |                                  |
+ |  I'm NOT home right now. If you  |
+ | want to, give me a message after |
+ |  the *PIP* :) I'm usually home   |
+ |    between 12pm tp 9pm CET       |
+ |                                  |
+ |                     - Mephisto   |
+ |__________________________________|
+
+&f"
+end
+
+warn_sign
+
+names {"sign"}
+title "a sign"
+descr "A sign is posted here."
+type ITEM_NOTE
+weight 100
+extra {}
+"&l
+                            &crBEWARE!!!&cw
+
+A secret entrance to the catacombs of Gazha is near, you should not search
+for it if you don't feel like a powerful being. The Gazha Tower houses very
+evil and powerful creatures, do you dare take the risk?
+
+                                      Reyali the Sorceress.&f"
+end
+
+csign
+
+names {"sign"}
+title "a small sign"
+descr "A sign is posted here."
+type ITEM_NOTE
+weight 100
+extra {}
+"Beware as you enter the catacombs of Gazha, you might face some evil creatures
+down here.
+
+&lAn old Gazha saying goes like this :
+A One
+A Two
+A One two three, HIT IT!!!!!!!!
+
+Enjoy
+life
+while
+you
+still
+can
+use
+it.&f
+"
+end
+
+lvl1sign
+
+names {"sign"}
+title "a large sign"
+descr "A large sign mounted on a pillar in the center of the room."
+type ITEM_NOTE
+weight 100
+extra {"pillar"}
+"Not the most interesting pillar in the world.
+Better leave it here, though, as it holds the sign in place."
+extra {}
+"&lIt says:
+
+                  The Legacy of Maya Reval Part 1
+                  -------------------------------
+  Urbat, The First Master of the Streams, was not the last of his kind.  Many
+successors arose in his wake to continue his fight against the lifestealers.
+In concealment and stealth, they waged their battles.  Their numbers were
+few and their order fragile, prohibiting open confrontation.  The first
+years of the Second Era of The Sun saw the land wasted and barren, slow in
+its recovery from wanton manipulation by warring Stream-masters.
+
+  Sathin Anbath led a few survivors to sanctuary.  The sought renewal of
+strength and hope, to be followed by further plans for the triumph of
+good and evil.  The calming of the land remained their first priority
+along with provision for the sentient people of Kulthea.  Sathin Anbath
+and his life-mate, Liba Smerkov, conceived and initiated long machinations
+that would result in the arrival of benevolent leaders at crucial points
+in history.  Persistence and patience marked all their efforts, since their
+enemies sought to undo each portion of the task as it was achieved.
+
+  Like Utha, Kaistha Lifestealer did not lack heirs upon her cataclysmic death.
+Naravel Jyrch struggled against numerous aspirants in the one sect before
+securely grasping the rains of power.  She and her disciples healed their
+wounds, inflicted by both friend and enemy, while the land reclaimed its
+greenery.  The spring leaves provided new inspiration for these lovers of
+molten earth and flaming sky.  Naravel Jyrch and her cohort, Paal Dvendor,
+researched means to glory and dominance.  Their efforts unlocked the knowledge
+requisite for the freeing of the Great Demons and ultimate touched the
+ravening forces of the Unlife.
+
+                                          - To be continued -
+&f"
+end
+
+lvl2sign
+
+names {"sign"}
+title "a large sign"
+descr "A large sign mounted on the wall."
+type ITEM_NOTE
+extra {}
+"&lIt says:
+
+                  The Legacy of Maya Reval Part 2
+                  -------------------------------
+  Even before the release of the Demons, evil sprites cavorted amidst the
+wreckage of the anguished land.  Foul smokes and nauseous vapors prowled the
+laval flames and groaning earth.  Silhouetted, angulard forms fitted through
+these fumes, partially concealed by the mists.  To men, they were the stuff
+of hallucination, the hideous Blackbird, a half-seen, putrescent, winged,
+and beaked monster who fed the eyes of children to her fetid brood.
+The brutish Moldeviar, a bull-headed shadow whose skin drew mens souls
+from their bodies by night, the enticing Meldar, a serpentine-tressed horror
+whose cipers craved the blood of lost innocense.
+
+  To Maya Reval, daughter of Liba Smerkov and Paal Dvendor, the land in travail
+exhibited a tragic, noble temper, deserving of respect and nurturance.
+Maya celebrated the emergence of each new, delicately green frond and the
+birth of each infant badger, mole and raccoon.  These were signs of the earths
+returning health.  The nightmarish beings that haunted the wastelands seemed
+an evil remnant of the lifestealers destructive schemes.  As she hated her
+dark father, Paal, so Maya hated this small portion of his labors.  Early in
+life, she bent her young and still limited powers to the destruction of the
+fiends he must have created.
+
+  When Maya first departed the havens that comprised home, against the wishes
+of Liba and Sathin, inexperienced marked her campaign against Paal Dvendor.
+In ignorance, she tracked the Ishru and their children.  Premature encounters
+with these malevolent entities left her body racked and bleeding upon the
+field of battle.  Only her inherited strength as a lord of Essence allowed
+her to survive.  She grew strong and subtle.  New stratagems led her to the
+ancient records compiled by men.  From them, she learned much concerning her
+prey, yet never of its true nature.  Always, the trail swept Maya onward to
+a personal confrontation with the stranger who fathered her.
+
+                                          - To be continued -
+&f"
+end
+
+lvl3sign
+
+names {"sign"}
+title "a large sign"
+descr "A large sign mounted on the monolith."
+type ITEM_NOTE
+weight 100
+extra {}
+"&lIt says:
+
+                  The Legacy of Maya Reval Part 3
+                  -------------------------------
+  In the eleventh hour, Paal and Niyoreh fathomed the true sentiments held by
+Libas daughter.  Within the core of the volcano cradling the Kirbitz,
+a last, cataclysmic battle raged between the three.  Drawn steel and
+channeled Essence wielded by her foes threatened Maya's person, yet
+compassion stayed her hand.  Unable to slay her father, Maya limited her
+now mature powers as a Stream-master to self-defense.  The struggle woke the
+mountain beneath the contestants, and laval fumes seeped from cracks in
+the floor, threatening a violet eruption.
+
+  Desperation moved Paal to chant the final syllables needed to activate the
+Kirbitz.  Eight gemstone pillars crystallized from these coded resonances,
+improbably trapping Maya within one of their number while completing the
+sorcery of constraint.  The prison held its maker, but the Blackbird and
+the Meldar, Luviel and Gabriel in alien skins, had also come home.
+
+                                          - The End -
+&f"
+end
+
+/* ------------------------- Haon Dor Objects ---------------------------*/
+
+scalp
+
+names {"scalp","necklace"}
+title "a bloody scalp"
+descr "A scalp, fastened on a string, with dried up blood stains on it lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_NECK}
+weight 20
+end
+
+/* --------------------------- Gazha Objects ----------------------------*/
+
+meph_card
+
+names {"visit card","card"}
+title "Mephisto's visit card"
+descr "A glowing visit card has been left here."
+extra {}
+"&l
+ ____________________________
+| &c+wMEPHISTO - GOD OF CREATION&cw |
+|----------------------------|
+|Kim Skogen                  |
+|Jacob Aals Gate 31a         |
+|0364 OSLO                   |
+|NORWAY                      |
+|----------------------------|
+|Phone :+47 22 60 43 68      |
+|E-Mail:skokim@nhidh.nki.no  |
+|____________________________|
+
+&f"
+manipulate {MANIPULATE_TAKE}
+type ITEM_NOTE
+weight 0
+end
+
+pyramid
+
+names {"pyramid"}
+title "a small pyramid"
+descr "A pyramid lies here, shining with a silvery light."
+manipulate {MANIPULATE_TAKE}
+type ITEM_OTHER
+weight 50
+end
+
+legacy_ring
+
+names {"legacy ring","ring","legacy"}
+title "an old ring"
+descr "An old but well made ring lies here."
+extra {"$identify"}
+"When this ring is worned it gives you enhanced brain capacity."
+extra {"$improved identify"}
+"The brain ability is increased with three points."
+flags {UNIT_FL_MAGIC}
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FINGER}
+BRA_TRANSFER(+3)
+weight 20
+cost 750 COPPER_PIECE
+rent 75 IRON_PIECE
+dilcopy level_restrict@function (35,0,25,"");
+dilcopy abi_restrict@function (ABIL_BRA,40,0,25,"");
+end
+
+legacy_bracer
+
+names {"legacy bracers","bracers"}
+title "some old bracers"
+descr "Some rusty and old-looking bracers lies here."
+extra {"$identify"}
+"When this bracers is worned it gives you enhanced brain capacity."
+extra {"$improved identify"}
+"The brain ability is increase with three points."
+flags {UNIT_FL_MAGIC}
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_WRIST}
+ARMOUR_PLATE(0,0)
+BRA_TRANSFER(+3)
+weight 10
+cost 1550 COPPER_PIECE
+rent 155 IRON_PIECE
+dilcopy level_restrict@function (35,0,25,"");
+dilcopy abi_restrict@function (ABIL_BRA,40,0,25,"");
+end
+
+legacy_helmet
+
+names {"fancy warhelmet","fancy helmet","helmet","warhelmet"}
+title "a fancy warhelmet"
+descr "A fancy looking warhelmet lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+ARMOUR_PLATE(3,0)
+weight 10
+rent 50 IRON_PIECE
+dilcopy level_restrict@function (35,0,25,"");
+cost 800 COPPER_PIECE
+end
+
+broadsword
+
+names {"weird broadsword","weird sword","sword","broadsword"}
+title "a weird looking sword"
+descr "A huge, but weird looking sword lies glowing on the ground."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_BROAD_SWORD,0,0)
+weight 10
+dilcopy level_restrict@function (35,0,25,"");
+cost 1200 COPPER_PIECE
+end
+
+legacy_shield
+
+names {"weird shield","shield"}
+title "a weird looking shield"
+descr "A huge, but well made shield lies here, fading in and out."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_SHIELD}
+SHIELD_DEF(SHIELD_LARGE,0,0)
+weight 10
+cost 1550 COPPER_PIECE
+dilcopy level_restrict@function (35,0,25,"");
+dilcopy abi_restrict@function (ABIL_BRA,40,0,25,"");
+end
+
+legacy_dagger
+
+names {"legacy dagger","weird dagger","dagger"}
+title "a weird looking dagger"
+descr "A small, but well made dagger lies here, fading in and out."
+extra {}
+"As you study the dagger, a vision of Bathym the fightmaster apears in front
+of you. Bathym tells you in your vision that you can sacrifice the dagger at
+any time to teleport yourself to the fightarena in Gazha. Just say the word
+'bathym' when the dagger is wielded."
+extra {"$identify"}
+"When this dagger is wielded it gives you enhanced magical and charismatic
+capacity, but it will also make you feel weaker."
+extra {"$improved identify"}
+"Your magic and charisma abilities are increased with four points, and your
+strength ability is decreased with three points."
+flags {UNIT_FL_MAGIC}
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD, MANIPULATE_WIELD}
+MAG_TRANSFER(+3)
+CHA_TRANSFER(+2)
+STR_TRANSFER(-3)
+WEAPON_DEF(WPN_DAGGER,9,6)
+weight 10
+cost 4710 COPPER_PIECE
+dilcopy quest_restrict@function (LEGACY_COMPLETE,0,0,"dagger_act@gazha");
+end
+
+ghost_sword
+
+names {"ghost sword","sword"}
+title "a huge ghostly sword"
+descr "A huge shady sword lies here."
+extra {"$identify"}
+"When this sword is wielded it gives your enhanced strength and dexterity
+capacity."
+extra {"$improved identify"}
+"Your strength and dexterity abilities are increased with four points."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_LONG_SWORD,0,3)
+weight 20
+rent 100 IRON_PIECE
+cost 3440 COPPER_PIECE
+dilcopy level_restrict@function (35,0,25,"");
+dilcopy abi_restrict@function (ABIL_STR,50,0,25,"");
+dilcopy abi_restrict@function (ABIL_DEX,50,0,25,"");
+end
+
+lost_dagger
+
+names {"small dagger","dagger"}
+title "a small dagger"
+descr "A small but well-made dagger lies here."
+extra {"$identify"}
+"When this dagger is wielded it gives you enhanced dexterity capacity."
+extra {"$improved identify"}
+"Your dexterity ability is increased with five points."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_DAGGER,0,0)
+weight 10
+cost 2130 COPPER_PIECE
+dilcopy level_restrict@function (35,0,25,"");
+dilcopy abi_restrict@function (ABIL_DEX,40,0,25,"");
+end
+
+ghost_helmet
+
+names {"ghost helmet","helmet"}
+title "a heavy ghostly helmet"
+descr "A heavy shady helmet lies here, glowing in a mysterious light."
+extra {}
+"You notice some words on the inside of the helmet. They reads: Thank you for
+helping me. Demirza."
+extra {"$identify"}
+"When this helmet is worned it gives you enhanced strength and dexterity
+capacity. But it will also make you feel less magical experienced, more
+parted from your god and less authoritative."
+extra {"$improved identify"}
+"Your strength and dexterity abilities are increased with four points. Your
+charisma ability is decreased with one point and your magic and divination
+abilities with two points."
+flags {UNIT_FL_MAGIC}
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+ARMOUR_PLATE(+10,+5)
+STR_TRANSFER(+2)
+DEX_TRANSFER(+2)
+CON_TRANSFER(+2)
+MAG_TRANSFER(-2)
+DIV_TRANSFER(-2)
+weight 20
+cost 1550 COPPER_PIECE
+dilcopy quest_restrict@function (GHOST_COMPLETE,0,0,"helmet_act@gazha");
+end
+
+gb_plate
+
+names {"breast plate","plate"}
+title "a ghostly breast plate"
+descr "A heavy shady breast plate lies here."
+extra {"$identify"}
+"When this breast plate is worned it gives you enhanced strength and dexterity
+capacity. But it will also make you feel less magical experienced and more
+parted from your god."
+extra {"$improved identify"}
+"Your strength and dexterity abilities are increased with four points, but your
+magical and divination abilities are decreased with two points."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_PLATE(3,0)
+weight 5
+rent 100 IRON_PIECE
+cost 1800 COPPER_PIECE
+dilcopy level_restrict@function (40,0,25,"");
+end
+
+guard_axe
+
+names {"huge guard axe","huge axe","guard axe","axe"}
+title "a huge axe"
+descr "A huge guards axe lies on the ground."
+extra {"$identify"}
+"When this huge axe is wielded it gives your enhanced brain capacity."
+extra {"$improved identify"}
+"Your brain ability is increased with five points."
+flags {UNIT_FL_MAGIC}
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_BATTLE_AXE, 0, 0)
+weight 25
+cost 2210 COPPER_PIECE
+dilcopy level_restrict@function (35,0,25,"");
+end
+
+mayas_ring
+
+names {"ghost ring","ring"}
+title "a ghostly ring"
+descr "A ring, with a dark shade lies before you."
+extra {"$identify"}
+"When this ring is worned it gives you enhanced constitution capacity. But it
+will also make you feel more parted from your god."
+extra {"$improved identify"}
+"Your constitution ability is increased with three points, but your divination
+ability is decreased with one points."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FINGER}
+DIV_TRANSFER(-1)
+weight 5
+cost 500 COPPER_PIECE
+rent 50 IRON_PIECE
+end
+
+/* ------------------------- Elemental Objects --------------------------*/
+
+diamond
+
+names {"fire diamond","diamond"}
+title "a fire diamond"
+descr "A fire diamond lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+type ITEM_TREASURE
+cost 5 GOLD_PIECE
+weight 1
+end
+
+ruby
+
+names {"air ruby","ruby"}
+title "an air ruby"
+descr "An air ruby lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+type ITEM_TREASURE
+cost 500 COPPER_PIECE
+weight 1
+end
+
+crystal
+
+names {"water crystal","crystal"}
+title "a water crystal"
+descr "A water crystal lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+type ITEM_TREASURE
+cost 500 COPPER_PIECE
+weight 1
+end
+
+smaragd
+
+names {"earth smaragd","smaragd"}
+title "an earth smaragd"
+descr "An earth smaragd lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+type ITEM_TREASURE
+cost 500 COPPER_PIECE
+weight 1
+end
+
+wh_bottle
+
+names {"whisky bottle","bottle","whisky"}
+title "a bottle of cheap whisky"
+descr "A bottle of cheap whisky has been left here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+LIQ_DEF(5,1,10,10,0)
+cost 100 COPPER_PIECE
+end
+
+grd_plate
+
+names {"guard plate","plate"}
+title "a guard plate"
+descr "A guard plate has been left here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_PLATE(0,0)
+weight 4
+cost 1500 COPPER_PIECE
+rent 150 IRON_PIECE
+dilcopy abi_restrict@function (ABIL_STR,50,0,25,"");
+end
+
+grd_sword
+
+names {"guard sword","sword"}
+title "a guard sword"
+descr "A guard sword has been left here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_LONG_SWORD,0,0)
+weight 5
+cost 1400 COPPER_PIECE
+end
+
+ele_sh_sword
+
+names {"short sword","shortsword","sword"}
+title "an elemental short sword"
+descr "An elemental short sword has been left here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_SHORT_SWORD,0,0)
+weight 6
+cost 1700 COPPER_PIECE
+end
+
+ele_dagger
+
+names {"elemental dagger","dagger"}
+title "an elemental dagger"
+descr "An elemental dagger lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_DAGGER,0,0)
+weight 2
+cost 400 COPPER_PIECE
+end
+
+torture_dagger
+
+names {"torture dagger","dagger"}
+title "a torture dagger"
+descr "A torture dagger has been left here."
+extra {"$identify"}
+"When this dagger is wielded it gives you enhanced strength and dexterity
+capacity."
+extra {"$improved identify"}
+"Your strength and dexterity ability is increased with two points."
+flags {UNIT_FL_MAGIC}
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_DAGGER,0,3)
+weight 2
+cost 600 COPPER_PIECE
+rent 60 IRON_PIECE
+dilcopy level_restrict@function (30,0,25,"");
+end
+
+torture_whip
+
+names {"torture whip","whip"}
+title "a torture whip"
+descr "A torture whip lies here."
+extra {}
+"This torture whip is created from the soft skin on a black dragons belly. This
+looks like an evil weapon."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_SLAYER(RACE_HUMAN)
+WEAPON_DEF(WPN_WHIP, 0, 0)
+CHA_TRANSFER(-1)
+BRA_TRANSFER(-1)
+weight 10
+cost 8000 COPPER_PIECE
+rent 800 IRON_PIECE
+dilcopy level_restrict@function (45,0,25,"");
+dilbegin isevil();
+code
+{
+ :init:
+   heartbeat := PULSE_SEC * 3;
+   on_activation((self.outside.position <= POSITION_SLEEPING) or
+                 (self.outside.type != UNIT_ST_PC), skip);
+
+ :start:
+   priority;
+   wait(SFB_CMD, command(CMD_WIELD) and (activator #= self.outside));
+   nopriority;
+   if (self.equip == 0)
+      pause;
+   else
+   {
+      if (self.outside.alignment < -350)
+      {
+         act("You feel evil.",
+             A_ALWAYS, self.outside, null, null, TO_CHAR);
+         act("An evil glimpse apears in $1n's eyes as he wields the $2N.",
+             A_SOMEONE, self.outside, null, null, TO_REST);
+         self.outside.alignment := self.outside.alignment -100;
+         if (self.outside.alignment < -1000)
+			{
+            self.outside.alignment := -1000;
+		   }
+      }
+      else
+      {
+         act("You have no use of this evil weapon, so you throw it away.",
+             A_ALWAYS, self.outside, self, null, TO_CHAR);
+         act("$1n has no use of the $2N, and throws it away.",
+             A_SOMEONE, self.outside, self, null, TO_REST);
+         link(self, self.outside.outside);
+      }
+   }
+   goto start;
+
+}
+dilend
+end
+
+element_plate
+
+names {"element breast plate","element plate","breast plate","plate"}
+title "a element breast plate"
+descr "A beautiful breast plate lies here."
+extra {}
+"This breast plate is created from a light but still strong metal and it
+bears the symbol of the elemental lords. The symbols show the connection
+between the four elements, fire, water, earth and air."
+extra {"$identify"}
+"When this breast plate is worned it gives you enhanced brain and magical
+capacity. And also additional POWERs in the ways of the elements."
+extra {"$improved identify"}
+"Your brain and magic abilities are increased with four points. And you will
+be more skilled in the spells sphere protection. Additionally this armor has
+the ability to call for the elemental power when it is needed the most. 
+Simply say POWER." flags {UNIT_FL_MAGIC}
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_PLATE(+10,+10)
+SPELL_TRANSFER(SPL_PROTECTION,+10)
+BRA_TRANSFER(+3)
+MAG_TRANSFER(+3)
+weight 20
+spell 50
+dilcopy quest_restrict@function (ELEMENT_COMPLETE,0,0,"plate_act@gazha");
+dilbegin recall charger1();
+code
+{
+:start:
+heartbeat:=PULSE_SEC*SECS_PER_MUD_DAY/24;
+wait (SFB_TICK,(self.equip==WEAR_BODY));
+heartbeat:=PULSE_SEC*5;
+act ("Your $2N glows.",
+A_ALWAYS,self.outside,self,null,TO_CHAR);
+act ("$1n's  $2N  glows.",
+A_ALWAYS,self.outside,self,null,TO_REST);
+sendto ("add charge",self);
+goto start;
+}
+dilend
+dilbegin recall aware  plate_hea();
+var
+        i : integer;
+        enemy :unitptr;
+        n:integer;
+        charge:integer;
+        pwr:integer;
+code
+{
+pwr:=10;
+:init:
+        heartbeat := PULSE_SEC*5;
+charge:=interrupt (SFB_MSG,((self==activator) and
+        (argument=="add charge")), charge);
+:start:
+
+wait (SFB_CMD,(command (CMD_SAY)) and
+("power" in argument) and
+            ((self.equip==WEAR_BODY)));
+               block;
+if (pwr<=0) goto fail;
+pwr:=pwr-1;
+        i := rnd (1,20);
+
+   enemy := self.outside.fighting;
+
+        if (i < 2) goto start;
+n:= cast_spell(SPL_CURE_WOUNDS_1,self.outside,self,self.outside,"plate_he@gahza");
+goto start;
+         :fail:
+             act ("Your $2N is unable to help you now.",
+                  A_ALWAYS,self.outside,self,null,TO_CHAR);
+                goto start;
+:charge:
+clear (charge);
+if (pwr<12)
+ pwr:=pwr+1;
+ goto init;
+  goto start;
+}
+dilend
+
+end
+
+
+%mobiles
+
+/* ------------------------ Elemental Mobs ------------------------------*/
+
+zelstar
+
+names {"zelstar","torturer","him"}
+title "Zelstar the evil torturer"
+descr "Zelstar the evil torturer stands here."
+extra {}
+"This man look like he have been torturing people for centuries. He has
+long black hair and strong and hard muscles. He is dressed in black leather
+straps and a brown cloak. His eyes radiates a strong malice."
+alignment -700
+level 60
+money 6 SILVER_PIECE
+sex SEX_MALE
+race RACE_HUMAN
+attack WPN_FIST
+MSET_ABILITY(15,15,15,15,15,8,7,10)
+MSET_WEAPON(5,5,5,5,5,75)
+weight 220
+height 190
+end
+
+broshmir
+
+names {"broshmir","interrogater","him"}
+title "Broshmir the interrogater"
+descr "Broshmir the interrogater stands here."
+extra {}
+"This man look like he have been interrogating people for centuries. He is
+bold and quite fat. He is dressed in a purple tunic and red pants. He also
+has a big black mustache which is wild and all over."
+alignment -500
+level 58
+money 5 SILVER_PIECE
+sex SEX_MALE
+race RACE_HUMAN
+attack WPN_FIST
+MSET_ABILITY(20,20,10,10,10,10,10,10)
+MSET_WEAPON(10,60,5,5,10,10)
+weight 190
+height 180
+end
+
+dr_guard
+
+names {"drunken guard","guard","him"}
+title "a drunken castle guard"
+descr "A drunken castle guard reels around here."
+extra {}
+"This guard bears the elemental lords symbol. He would have looked just like
+any other guard that you have met, if it hadn't been for his alcoholic breath
+and the unsteady walking."
+alignment -100
+level 60
+money 6 SILVER_PIECE
+sex SEX_MALE
+race RACE_HUMAN
+attack WPN_FIST
+MSET_ABILITY(20,20,20,20,5,5,5,5)
+MSET_WEAPON(10,70,5,5,5,5)
+special SFUN_RANDOM_ZONE_MOVE time 60 bits SFB_RANTIME
+weight 200
+height 185
+
+dilbegin drinkit();
+var
+   pc : unitptr;
+   i  : integer;
+
+code
+{
+ :init:
+   i := 0;
+   heartbeat := PULSE_SEC*10;
+
+ :start:
+   on_activation((self.position <= POSITION_SLEEPING) or
+                 (self.position == POSITION_FIGHTING), skip);
+
+   wait(SFB_CMD,activator.type == UNIT_ST_PC);
+
+   pc := activator;
+   secure(pc,lostpc);
+
+   exec("emote takes a large gulp of a cheap whisky bottle.",self);
+   pause;
+   exec("emote grins in of cheap whisky's taste.",self);
+   pause;
+   exec("burp",self);
+   pause;
+
+   while (i < 1)
+   {
+      exec("say Hi "+pc.name+" dho yoh *HIC* want schome cheap whischky?",self);
+      pause;
+      exec("say No wait! I chan't give it away, it'sch *HIC* noth mine, schorry!",self);
+      pause;
+      i := 1;
+   }
+
+   exec("say Ohhhh, I hate *HIC* thisch damn whischky.",self);
+   pause;
+   exec("puke",self);
+   unsecure(pc);
+   goto start;
+
+ :lostpc:
+   unsecure(pc);
+   exec("grin",self);
+   i := 0;
+   goto init;
+}
+dilend
+end
+
+xegvina
+
+names {"xegvina","lady","air lady","her"}
+title "Xegvina the air lady"
+descr "Xegvina the air lady stands here."
+extra {}
+"This woman look like she have been playing with air elementals for too long.
+She look almost invisible since his skin has taken a quite transparent color.
+Her clothes bears the symbol of the air, a large cloud-like arrow."
+alignment -200
+level 68
+money 6 SILVER_PIECE
+sex SEX_FEMALE
+race RACE_HUMAN
+attack WPN_FIST
+MSET_ABILITY(15,15,15,15,10,8,15,7)
+MSET_WEAPON(10,30,5,5,5,5)
+MSET_SPELL(0,0,0,0,0,0,0,0,40,0,0)
+special SFUN_COMBAT_MAGIC "cast lightning bolt"
+special SFUN_AGGRESSIVE time WAIT_SEC*30 bits SFB_RANTIME
+special SFUN_TEAMWORK "elemental"
+weight 180
+height 170
+end
+
+lifbuth
+
+names {"lifbuth","lord","earth lord","him"}
+title "Lifbuth the earth lord"
+descr "Lifbuth the earth lord stands here."
+extra {}
+"This man looks like he have been playing with earth elementals for too long.
+He looks almost dirty since his skin has an almost dirt-brown color. His clothes
+bears the symbol of the earth, a wooden brick with mahogany bricks in a fancy
+pattern."
+alignment 200
+level 68
+money 6 SILVER_PIECE
+sex SEX_MALE
+race RACE_HUMAN
+attack WPN_FIST
+MSET_ABILITY(15,15,15,15,10,8,15,7)
+MSET_WEAPON(10,30,5,5,5,5)
+MSET_SPELL(0,0,0,0,0,40,0,0,0,0,0)
+special SFUN_COMBAT_MAGIC "cast fear"
+special SFUN_AGGRESSIVE time WAIT_SEC*30 bits SFB_RANTIME
+special SFUN_TEAMWORK "elemental"
+weight 180
+height 170
+end
+
+nehedali
+
+names {"nehedali","lady","fire lady","her"}
+title "Nehedali the fire lady"
+descr "Nehedali the fire lady stands here."
+extra {}
+"This woman looks like she have been playing with fire elementals for too long.
+She looks as dark as the night since her skin has a ash-like color. Her clothes
+bears the symbol of fire, a beautiful fire arc."
+alignment -400
+level 68
+money 6 SILVER_PIECE
+sex SEX_FEMALE
+race RACE_HUMAN
+attack WPN_FIST
+MSET_ABILITY(15,15,15,15,10,8,15,7)
+MSET_WEAPON(10,30,5,5,5,5)
+MSET_SPELL(0,0,0,0,0,0,40,0,0,0,0)
+special SFUN_COMBAT_MAGIC "cast fireball"
+special SFUN_AGGRESSIVE time WAIT_SEC*30 bits SFB_RANTIME
+special SFUN_TEAMWORK "elemental"
+weight 180
+height 170
+end
+
+qentirol
+
+names {"qentirol","lord","water lord","him"}
+title "Qentirol the water lord"
+descr "Qentirol the water lord stands here."
+extra {}
+"This man looks like he have been playing with water elementals for too long.
+He looks frozen since his skin has an almost blue color. His clothes bears the
+symbol of the water, a large wave."
+alignment 400
+level 68
+money 6 SILVER_PIECE
+sex SEX_MALE
+race RACE_HUMAN
+attack WPN_FIST
+MSET_ABILITY(15,15,15,15,10,8,15,7)
+MSET_WEAPON(10,30,5,5,5,5)
+MSET_SPELL(0,0,0,0,0,0,0,0,0,40,0)
+special SFUN_COMBAT_MAGIC "cast toxicate"
+special SFUN_AGGRESSIVE time WAIT_SEC*30 bits SFB_RANTIME
+special SFUN_TEAMWORK "elemental"
+weight 180
+height 170
+end
+
+air_element
+
+names {"elemental","air elemental","air","it"}
+title "an air elemental"
+descr "An air elemental flies around here."
+extra {}
+"Yeah, it's air alright."
+level 72
+alignment -200
+sex SEX_NEUTRAL
+race RACE_ELEMENTAL_AIR
+NATURAL_DEF(WPN_FIST, ARM_CHAIN)
+MSET_ABILITY (20,20,15,10,10,5,15,5)
+MSET_WEAPON (2,2,2,2,40,2)
+MSET_SPELL (0,0,0,0,0,0,0,0,50,0,0)
+special SFUN_COMBAT_MAGIC "cast lightning bolt"
+special SFUN_TEAMWORK "xegvina/elemental"
+height 200
+weight 300
+end
+
+ear_element
+
+names {"elemental","earth elemental","earth","it"}
+title "an earth elemental"
+descr "An earth elemental flies is here."
+extra {}
+"Yeah, it's earth alright."
+level 72
+alignment 200
+sex SEX_NEUTRAL
+race RACE_ELEMENTAL_EARTH
+NATURAL_DEF(WPN_FIST, ARM_CHAIN)
+MSET_ABILITY (20,20,15,10,10,5,15,5)
+MSET_WEAPON (2,2,2,2,40,2)
+MSET_SPELL (0,0,0,0,0,50,0,0,0,0,0)
+special SFUN_COMBAT_MAGIC "cast fear"
+special SFUN_TEAMWORK "lifbuth/elemental"
+height 200
+weight 300
+end
+
+
+fir_element
+
+names {"elemental","fire elemental","fire","it"}
+title "a fire elemental"
+descr "A fire elemental burns here."
+extra {}
+"Yeah, it's fire alright."
+level 72
+alignment -400
+sex SEX_NEUTRAL
+race RACE_ELEMENTAL_FIRE
+NATURAL_DEF(WPN_FIST, ARM_CHAIN)
+MSET_ABILITY (20,20,15,10,10,5,15,5)
+MSET_WEAPON (2,2,2,2,40,2)
+MSET_SPELL (0,0,0,0,0,0,50,0,0,0,0)
+special SFUN_COMBAT_MAGIC "cast fireball"
+special SFUN_TEAMWORK "nehedali/elemental"
+height 200
+weight 300
+end
+
+wat_element
+
+names {"elemental","water elemental","water","it"}
+title "a water elemental"
+descr "A water elemental flows around here."
+extra {}
+"Yeah, it's water alright."
+level 72
+alignment 400
+sex SEX_NEUTRAL
+race RACE_ELEMENTAL_WATER
+NATURAL_DEF(WPN_FIST, ARM_CHAIN)
+MSET_ABILITY (20,20,15,10,10,5,15,5)
+MSET_WEAPON (2,2,2,2,40,2)
+MSET_SPELL (0,0,0,0,0,0,0,0,0,50,0)
+special SFUN_COMBAT_MAGIC "cast toxicate"
+special SFUN_TEAMWORK "qentirol/elemental"
+height 200
+weight 300
+end
+
+morvald
+
+names {"morvald","lord","elemental lord","him"}
+title "Morvald the elemental lord"
+descr "Morvald the elemental lord stands here."
+extra {}
+"Morvald looks like a very old magician, but still his movements are rather
+fast. His clothes looks like they have been created directly out of the
+four elements. On his breast he wears the elemental lords main symbol.
+The symbol describes the connection between fire, water, earth and air."
+alignment 0
+level 70
+money 7 SILVER_PIECE
+sex SEX_MALE
+race RACE_HUMAN
+attack WPN_FIST
+MSET_ABILITY(15,15,15,15,10,8,15,7)
+MSET_WEAPON(2,45,2,2,2,2)
+MSET_SPELL(0,0,0,0,0,0,0,0,0,0,45)
+special SFUN_COMBAT_MAGIC "cast acid storm"
+weight 180
+height 170
+
+/* ------------------- Part 1 of "ELEMENTAL" Quest ----------------------*/
+/* ------------ The program acquires new loyal PC subjects. -------------*/
+
+dilbegin element1();
+var
+   pcname : string;
+   item   : unitptr;
+   pc     : unitptr;
+   i      : integer;
+   exdp   : extraptr;
+
+code
+{
+
+ :init:
+   heartbeat := PULSE_SEC*10;
+   on_activation( (self.position <= POSITION_SLEEPING) or
+                (self.position == POSITION_FIGHTING), skip);
+
+ :start:
+   wait(SFB_CMD,(activator.type == UNIT_ST_PC) and (not command(CMD_GIVE)));
+
+   if (ELEMENT_COMPLETE in activator.quests)
+      goto waitawhile;
+
+   pc := activator;
+   secure(pc,lostpc);
+
+   if (not(ELEMENT_ONGOING in pc.quests))
+   {
+      pause;
+      exec("say Welcome "+pc.name+", you must help me.",self);
+      pause;
+      exec("say My closest advisors have turned against me and "+
+           "enthralled my servants.",self);
+      pause;
+      exec("say I need you to go find them and bring me their "+
+           "must valued possesions.",self);
+      pause;
+      exec("say What I need is four gems that my old advisors always "+
+           "carries with them.",self);
+      pause;
+      exec("say A fire diamond, a water crystal, an earth smaragd and an "+
+           "air ruby.",self);
+      pause;
+      exec("say Bring me this items "+pc.name+" and you will be rewarded "+
+           "with a great armor.",self);
+      pause;
+      exec("say Oh I almost forgot, I also need a torture weapon to punish "+
+           "my servants.",self);
+      pause;
+      exec("say Will you bring me this items "+pc.name+"?",self);
+
+      i := 0;
+      while (i < 3)
+      {
+         wait(SFB_CMD,activator #= pc);
+
+         if (command(CMD_NOD))
+            goto quest_accepted;
+         else if (command(CMD_SAY))
+         {
+            pause;
+            exec("say Please nod if you accept or "+
+                 "shake of you reject.",self);
+         }
+         else if (command(CMD_SHAKE))
+            goto no_quest;
+
+         i := i+1;
+      }
+
+    :no_quest:
+      pause;
+      exec("say Well, I'll have to kill you then.",self);
+      goto killplayer;
+
+    :quest_accepted:
+      pause;
+      exec("say Ah nice, please hurry!",self);
+      addextra(pc.quests,{ELEMENT_ONGOING},"");
+
+   unsecure(pc);
+   goto start;
+   }
+   else /* ELEMENT_ONGOING in pc.quests */
+   {
+      exdp := ELEMENT_ONGOING in pc.quests;
+
+      if (("diamond" in exdp.names) and
+          ("ruby" in exdp.names) and
+          ("crystal" in exdp.names) and
+          ("smaragd" in exdp.names) and
+          ("whip" in exdp.names))
+      {
+         pause;
+         subextra(pc.quests,ELEMENT_ONGOING);
+         addextra(pc.quests,{ELEMENT_COMPLETE},"");
+         item := load("element_plate@gazha");
+         item.height := pc.height;
+         exec("give plate to "+pc.name+"",self);
+         exec("drop plate",self);
+         experience(10000,pc);
+         exec("say Well, here is the plate I promised you. This plate "+
+              "is created directly out of the four elements.",self);
+         unsecure(pc);
+         pause;
+         exec("say Now please go so I can punish my servants. ",self);
+         pause;
+      }
+   }
+   unsecure(pc);
+   goto start;
+
+ :lostpc:
+   exec("say Hah, what a looser!",self);
+   goto start;
+
+ :waitawhile:
+   heartbeat := PULSE_SEC*5;
+   pause;
+   goto init;
+
+ :killplayer:
+   heartbeat := PULSE_SEC*5;
+   exec("kill "+pc.name+"",self);
+   unsecure(pc);
+   goto init;
+
+}
+dilend
+
+/* ------------------- Part 2 of "ELEMENTAL" Quest ----------------------*/
+/* ------- The program tests if an "Ongoing" PC gives any quest. --------*/
+
+dilbegin element2();
+var
+   pc   : unitptr;
+   item : unitptr;
+   exdp : extraptr;
+
+code
+{
+
+ :init:
+   heartbeat := PULSE_SEC*10;
+   on_activation( (self.position <= POSITION_SLEEPING) or
+                (self.position == POSITION_FIGHTING), skip);
+
+ :start:
+   wait(SFB_CMD,command(CMD_GIVE) and (activator.type == UNIT_ST_PC));
+
+ :give:
+   if (not(ELEMENT_ONGOING in activator.quests))
+      goto start;
+
+   pc := activator;
+   item := self.inside;
+   secure(pc,labsecure);
+   secure(item,labsecure);
+
+   wait(SFB_CMD | SFB_TICK,TRUE);
+
+   if (not(item #= self.inside))
+   {
+      unsecure(item);
+      exdp := ELEMENT_ONGOING in pc.quests;
+
+      if ("diamond@gazha"==(self.inside.nameidx+"@"+self.inside.zoneidx))
+      {
+         addstring(exdp.names,"diamond");
+         exec("say At last my fire diamond. Now I can control the flames "+
+              "again. Thank you "+pc.name+".",self);
+         destroy(self.inside);
+      }
+      else if ("crystal@gazha"==(self.inside.nameidx+"@"+self.inside.zoneidx))
+      {
+         addstring(exdp.names,"crystal");
+         exec("say Ahh... Look at that, my water crystal. Now I can control "+
+              "the waves again. Thank you "+pc.name+".",self);
+         destroy(self.inside);
+      }
+      else if ("smaragd@gazha"==(self.inside.nameidx+"@"+self.inside.zoneidx))
+      {
+         addstring(exdp.names,"smaragd");
+         exec("say Nice, my earth smaragd. Now I can make earthquakes again. "+
+              "Thank you "+pc.name+".",self);
+         destroy(self.inside);
+      }
+      else if ("ruby@gazha"==(self.inside.nameidx+"@"+self.inside.zoneidx))
+      {
+         addstring(exdp.names,"ruby");
+         exec("say Look at that, my air ruby. Now I can make storms again. "+
+              "Thank you "+pc.name+".",self);
+         destroy(self.inside);
+      }
+      else if ("torture_whip@gazha"==(self.inside.nameidx+"@"+self.inside.zoneidx))
+      {
+         addstring(exdp.names,"whip");
+         exec("say So, you got the whip from the torturer? I can't wait to "+
+              "use it. Thank you "+pc.name+".",self);
+         destroy(self.inside);
+      }
+      else
+      {
+         exec("slap "+pc.name+"",self);
+         exec("say Did I ask for this? I don't think so!",self);
+         /* Returns the item to the player - Aren't we nice :) */
+         link(self.inside,pc);
+      }
+   }
+   unsecure(pc);
+
+   if (command(CMD_GIVE) and (activator.type == UNIT_ST_PC))
+      goto give;
+   else
+      goto start;
+
+ :labsecure:
+   exec("say I hate it when that happens.",self);
+   goto start;
+}
+dilend
+
+dilbegin giveback();
+var
+   pc    : unitptr;
+   item  : unitptr;
+
+code
+{
+ :init:
+   heartbeat := PULSE_SEC*5;
+
+ :start:
+   wait(SFB_CMD, (activator.type == UNIT_ST_PC) and
+       (ELEMENT_COMPLETE in activator.quests));
+
+   item := findunit(activator, "element breast plate", FIND_UNIT_INVEN, null);
+
+   pc := activator;
+   secure(pc, lost_pc);
+   if (not(item.nameidx $= "element_plate"))
+   {
+      exec("say Hi "+pc.name+", I see that you have lost something.", self);
+      pause;
+      item := load("element_plate@gazha");
+      item.height := pc.height;
+      link(item, pc);
+      exec("emote gives you the element breast plate.", self);
+      pause;
+      exec("say Take better care of it this time.", self);
+   }
+   unsecure(pc);
+   goto start;
+
+ :lost_pc:
+   goto init;
+}
+dilend
+
+end
+/* ------------------------ Haon Dor Mobs -------------------------------*/
+
+trophy_boy
+
+names {"trophy boy","boy","him"}
+title "the trophy boy"
+descr "A proud looking young boy stands here."
+extra {}
+"This young boy looks like a servant for some powerful creature. His hair is
+black as the night and his eyes are without any sense of life. He looks more
+like a zombie than a young, vital boy. Odd as it may seem, he has a tattoo of
+a spider on his forehead."
+alignment 500
+level 6
+sex SEX_MALE
+race RACE_HUMAN
+attack WPN_FIST
+MSET_ABILITY(15,7,8,10,15,15,25,5)
+MSET_WEAPON(10,10,10,10,20,10)
+MSET_SPELL(0,0,0,0,0,0,0,0,0,30,0)
+special SFUN_RANDOM_ZONE_MOVE time 60 bits SFB_RANTIME
+special SFUN_COMBAT_MAGIC "cast toxicate"
+weight 109
+height 50
+
+dilbegin story();
+var
+   pc : unitptr;
+   i  : integer;
+
+code
+{
+ :init:
+   i := 0;
+   heartbeat := PULSE_SEC*25;
+   on_activation( (self.position <= POSITION_SLEEPING) or
+                (self.position == POSITION_FIGHTING), skip);
+
+ :start:
+   wait(SFB_CMD, (activator.type == UNIT_ST_PC) and (not command(CMD_GIVE)));
+
+   pc := activator;
+   secure(pc, lostpc);
+
+   while (i < 1)
+   {
+      exec("say Hello there "+pc.name+".",self);
+      pause;
+      if (self.position == POSITION_RESTING)
+      {
+        exec("stand",self);
+        pause;
+      }
+      exec("say I am looking for my master, the Spider Queen.",self);
+      pause;
+      exec("say Do you know where I can find her?",self);
+      pause;
+      exec("rest",self);
+      exec("say Sit down and I will tell you my story.",self);
+      pause;
+      wait(SFB_CMD, (activator.type == UNIT_ST_PC) and
+                    (command(CMD_SIT) or command(CMD_REST)));
+      exec("say One day a long time ago, I set out to visit my "+
+           "sick grandmother with some food and something "+
+           "to drink. She was really sick, because she had "+
+           "to stay in bed. Walking through the forest "+
+           "I felt that something was watching me.",self);
+      pause;
+      exec("say When I finally got to my grandmothers house, I "+
+           "knocked on the door, waiting for an answer. "+
+           "When she answered, I entered the house.",self);
+      pause;
+      exec("say The room was dimly lit, and grandmother wished me "+
+           "welcome. I thought she sounded a bit strange, "+
+           "but she was sick so I didn't take any notice "+
+           "of it. She said to me: Come sit by my side.",self);
+      pause;
+      exec("say And I so did. When I sat down on the bedside, "+
+           "I saw the face of my grandmother. Boy, had she gotten "+
+           "ugly in the last week!!! I asked: Grandmother, are you hungry?.",self);
+      pause;
+      exec("say And she answered: Yes my dear. Did you bring "+
+           "any food for me?. I got up and collected the "+
+           "food from my basket and returned with it. "+
+           "As I sat down again, I noticed that my "+
+           "grandmother's body had changed too.",self);
+      pause;
+      exec("say I asked grandmother: Why do you have so many "+
+           "arms and legs?. And she answered: Because I am not your "+
+           "grandmother.",self);
+      pause;
+      exec("say I am the evil Spider Queen, and I am here to make "+
+           "you my everlasting slave.And then she bit me, leaving "+
+           "me unconscious.",self);
+      pause;
+      exec("say When I woke up, I was in her den, serving her every "+
+           "needs. After that I have been her slave and will "+
+           "continue to do so until...",self);
+      pause;
+      exec("stand",self);
+      pause;
+      exec("emote shows you his tattoo of the spider, which is placed in his forehead",self);
+      i := 1;
+   }
+   unsecure(pc);
+   goto start;
+
+ :lostpc:
+   exec("say How rude!",self);
+   pause;
+   goto init;
+}
+
+dilend
+end
+
+/* -------------------------- Gazha Mobs --------------------------------*/
+
+galeolamna
+
+names {"galeolamna","shark","it"}
+title "a beastly galeolamna"
+descr "A beastly galeolamna macrurus is swimming around here."
+extra {}
+"This shark looks very deadly indeed. Those jaws could easily split your
+person in two pieces."
+alignment 0
+level 40
+sex SEX_NEUTRAL
+NATURAL_DEF(WPN_BITE,ARM_HLEATHER)
+weight 500
+height 300
+MSET_ABILITY(35,15,15,35,0,0,0,0)
+MSET_WEAPON(10,10,10,10,50,10)
+special SFUN_TEAMWORK "galeolamna"
+special SFUN_RANDOM_ZONE_MOVE time 20 bits SFB_RANTIME
+special SFUN_AGGRESSIVE time WAIT_SEC*20 bits SFB_RANTIME
+end
+
+nafael
+
+names {"nafael","adventurer","him"}
+title "Nafael"
+descr "Nafael the relaxed-looking adventurer stands before you."
+extra {}
+"The once proud and happy adventurer now stands before you as an old man
+which has had his glory days."
+alignment -50
+level 47
+money 4 SILVER_PIECE
+sex SEX_MALE
+race RACE_HUMAN
+attack WPN_FIST
+MSET_ABILITY(15,10,15,15,15,15,8,7)
+MSET_WEAPON(50,50,0,0,0,0)
+weight 309
+height 298
+end
+
+nabar
+
+names {"nabar","adventurer","him"}
+title "Nabar"
+descr "Nabar The alert looking adventurer stands before you."
+extra {}
+"The once proud and wary adventurer now stands before you as an old man
+which as had his glory days, but is still on the alert."
+alignment -50
+level 50
+money 5 SILVER_PIECE
+sex SEX_MALE
+race RACE_HUMAN
+attack WPN_FIST
+MSET_ABILITY(15,10,15,15,15,15,8,7)
+MSET_WEAPON(50,50,0,0,0,0)
+weight 309
+height 298
+special SFUN_RANDOM_ZONE_MOVE time 60 bits SFB_RANTIME
+special SFUN_AGGRESSIVE time WAIT_SEC*20 bits SFB_RANTIME
+end
+
+/* ------------------------- 2nd lvl NPCs -------------------------------*/
+
+plendyna
+
+names {"plendyna","lady","her"}
+title "Plendyna"
+descr "Plendyna stands before you."
+extra {}
+"The lady in front of you must have been quite a sight when she was younger.
+She still has some of the markings of a great woman, with lots of powers
+left. You can not really figure out what kind of a lady she really was."
+alignment 250
+level 51
+money 5 SILVER_PIECE
+sex SEX_FEMALE
+race RACE_HUMAN
+attack WPN_FIST
+MSET_ABILITY(15,10,15,15,15,8,15,7)
+MSET_WEAPON(30,40,0,0,0,0)
+MSET_SPELL(0,0,0,0,0,0,0,0,0,0,30)
+weight 309
+height 298
+special SFUN_RANDOM_ZONE_MOVE time 60 bits SFB_RANTIME
+special SFUN_AGGRESSIVE time WAIT_SEC*20 bits SFB_RANTIME
+special SFUN_COMBAT_MAGIC "cast acid ball"
+end
+
+ithildis
+
+names {"ithildis","him"}
+title "Ithildis"
+descr "Ithildis stands here, watching you."
+extra {}
+"The once proud and wary old man now stands before you as a shadow of his
+past greatness."
+alignment -50
+level 53
+money 5 SILVER_PIECE
+sex SEX_MALE
+race RACE_HUMAN
+attack WPN_FIST
+MSET_ABILITY(15,10,15,15,15,8,15,7)
+MSET_WEAPON(30,40,0,0,0,0)
+MSET_SPELL(0,0,0,0,0,0,0,0,0,0,30)
+weight 309
+height 298
+special SFUN_RANDOM_ZONE_MOVE time 60 bits SFB_RANTIME
+special SFUN_COMBAT_MAGIC "cast firestorm"
+end
+
+/* ------------------------- 3rd lvl NPCs -------------------------------*/
+
+thema
+
+names {"thema","warrior","fighter","him"}
+title "Thema"
+descr "Thema is here minding his own business."
+extra {}
+"A young man with scaly black hair looks at you with disgrace. You get the
+feeling that you should not have been in this place."
+alignment -50
+level 58
+money 5 SILVER_PIECE
+sex SEX_MALE
+race RACE_HUMAN
+attack WPN_FIST
+MSET_ABILITY(15,10,15,15,15,15,8,7)
+MSET_WEAPON(50,50,0,0,0,0)
+weight 309
+height 298
+special SFUN_RANDOM_ZONE_MOVE time 60 bits SFB_RANTIME
+special SFUN_AGGRESSIVE time WAIT_SEC*15 bits SFB_RANTIME
+end
+
+zerberes
+
+names {"zerberes","warrior","fighter","him"}
+title "Zerberes"
+descr "Zerberes the young warrior stands before you."
+extra {}
+"A young man with scaly black hair looks at you with disgrace, You get the
+feeling that you should not have been in this place."
+alignment -50
+level 52
+money 5 SILVER_PIECE
+sex SEX_MALE
+race RACE_HUMAN
+attack WPN_FIST
+MSET_ABILITY(15,10,15,15,15,15,8,7)
+MSET_WEAPON(50,50,0,0,0,0)
+weight 309
+height 298
+special SFUN_RANDOM_ZONE_MOVE time 60 bits SFB_RANTIME
+special SFUN_AGGRESSIVE time WAIT_SEC*10 bits SFB_RANTIME
+end
+
+dilibis
+
+names {"dilibis","warrior","fighter","him"}
+title "Dilibis"
+descr "Dilibis stands here."
+extra {}
+"A young man with scaly black hair looks at you with disgrace, You get the
+feeling that you should not have been in this place."
+alignment -50
+level 58
+money 5 SILVER_PIECE
+sex SEX_MALE
+race RACE_HUMAN
+attack WPN_FIST
+MSET_ABILITY(15,10,15,15,15,15,8,7)
+MSET_WEAPON(50,50,0,0,0,0)
+weight 309
+height 298
+special SFUN_RANDOM_ZONE_MOVE time 60 bits SFB_RANTIME
+special SFUN_AGGRESSIVE time WAIT_SEC*15 bits SFB_RANTIME
+end
+
+palagin
+
+names {"palagin","warrior","fighter","him"}
+title "Palagin"
+descr "Palagin the warrior stands before you."
+extra {}
+"A young man with scaly black hair looks at you with disgrace. You get the
+feeling that you should not have been in this place."
+alignment -150
+level 52
+money 5 SILVER_PIECE
+sex SEX_MALE
+race RACE_HUMAN
+attack WPN_FIST
+MSET_ABILITY(15,10,15,15,15,15,8,7)
+MSET_WEAPON(50,50,0,0,0,0)
+weight 309
+height 298
+special SFUN_RANDOM_ZONE_MOVE time 60 bits SFB_RANTIME
+special SFUN_AGGRESSIVE time WAIT_SEC*20 bits SFB_RANTIME
+end
+
+/* ------------------------ Last lvl NPCs -------------------------------*/
+
+orgeth
+
+names {"orgeth","fighter","warrior","him"}
+title "Orgeth"
+descr "Orgeth the fighter stands before you."
+extra {}
+"This man has been in many battles before this one. You can see scars all over
+his face and body. Do you dare attack this one?"
+alignment -50
+level 60
+money 6 SILVER_PIECE
+sex SEX_MALE
+race RACE_HUMAN
+attack WPN_FIST
+MSET_ABILITY(15,10,15,15,15,15,8,7)
+MSET_WEAPON(50,50,0,0,0,0)
+weight 309
+height 298
+special SFUN_RANDOM_ZONE_MOVE time 60 bits SFB_RANTIME
+end
+
+mentreb
+
+names {"mentreb","fighter","warrior","him"}
+title "Mentreb"
+descr "Mentreb stands before you."
+extra {}
+"This man has been in many battles before this one. You can see scars all over
+his face and body. Do you dare attack this one?"
+alignment -50
+level 60
+money 6 SILVER_PIECE
+sex SEX_MALE
+race RACE_HUMAN
+attack WPN_FIST
+MSET_ABILITY(15,10,15,15,15,15,8,7)
+MSET_WEAPON(50,50,0,0,0,0)
+weight 309
+height 298
+special SFUN_RANDOM_ZONE_MOVE time 120 bits SFB_RANTIME
+special SFUN_AGGRESSIVE time WAIT_SEC*10 bits SFB_RANTIME
+end
+
+kvendar
+
+names {"kvendar","fighter","warrior","him"}
+title "Kvendar"
+descr "Kvendar stands here looking at you."
+extra {}
+"This man has been in many battles before this one. You can see scars all over
+his face and body. Do you dare attack this one?"
+alignment -50
+level 60
+money 6 SILVER_PIECE
+sex SEX_MALE
+race RACE_HUMAN
+attack WPN_FIST
+MSET_ABILITY(15,10,15,15,15,8,15,7)
+MSET_WEAPON(30,40,0,0,0,0)
+MSET_SPELL(0,0,0,0,0,0,0,0,0,0,30)
+weight 309
+height 298
+special SFUN_RANDOM_ZONE_MOVE time 120 bits SFB_RANTIME
+special SFUN_COMBAT_MAGIC "cast stinking cloud"
+end
+
+trevald
+
+names {"trevald","fighter","warrior","him"}
+title "Trevald"
+descr "Trevald stands proud before you."
+extra {}
+"This man has been in many battles before this one. You can see scars all over
+his face and body. Do you dare attack this one?"
+alignment -50
+level 60
+money 6 SILVER_PIECE
+sex SEX_MALE
+race RACE_HUMAN
+attack WPN_FIST
+MSET_ABILITY(15,10,15,15,15,8,15,7)
+MSET_WEAPON(30,40,0,0,0,0)
+MSET_SPELL(0,0,0,0,0,0,0,0,0,0,30)
+weight 309
+height 298
+special SFUN_RANDOM_ZONE_MOVE time 120 bits SFB_RANTIME
+special SFUN_COMBAT_MAGIC "cast icestorm"
+end
+
+fightmaster
+
+names {"bathym","master","fightmaster","him"}
+title "Bathym"
+descr "Bathym the fightmaster stands before you."
+extra {}
+"This man is the leader of this bunch of headhunters. He has led many young
+warriors into their death with his battle tactics, but he always come
+out alive. You can notice that he ha been in many battles before this one.
+You can see scars all over his face and body. Do you dare attack this one?"
+alignment -500
+level 68
+money 6 SILVER_PIECE
+sex SEX_MALE
+race RACE_HUMAN
+attack WPN_FIST
+MSET_ABILITY(15,15,10,15,8,15,7,15)
+MSET_WEAPON(0,40,0,0,30,0)
+MSET_SPELL(30,0,0,0,0,0,0,0,0,0,0)
+weight 309
+height 298
+special SFUN_COMBAT_MAGIC_HEAL "cast heal"
+
+/* -------------------- Part 1 of "LEGACY" Quest ------------------------*/
+/* ------------ The program acquires new loyal PC subjects. -------------*/
+
+dilbegin legacy1();
+var
+   pcname : string;
+   item   : unitptr;
+   pc     : unitptr;
+   i      : integer;
+   exdp   : extraptr;
+
+code
+{
+
+ :init:
+   heartbeat := PULSE_SEC*5;
+   on_activation( (self.position <= POSITION_SLEEPING) or
+                (self.position == POSITION_FIGHTING), skip);
+
+ :start:
+   wait(SFB_CMD,(activator.type == UNIT_ST_PC) and (not command(CMD_GIVE)));
+
+   if (LEGACY_COMPLETE in activator.quests)
+      goto waitawhile;
+
+   pc := activator;
+   secure(pc,lostpc);
+
+   if (not(LEGACY_ONGOING in pc.quests))
+   {
+      pause;
+      exec("say Hello "+pc.name+", could you help me?",self);
+      pause;
+      exec("say I have found a way to free the daughter of the "+
+           "lifestealer, but I need your help to do it.",self);
+      pause;
+      exec("say I need a creation made by the lifestealers daughter.",self);
+      pause;
+      exec("say I also need an almost invisible weapon.",self);
+      pause;
+      exec("say And finally I need a trophy of some kind.",self);
+      pause;
+      exec("say Are you "+pc.name+", willing to take on this task?",self);
+
+      i := 0;
+      while (i < 3)
+      {
+         wait(SFB_CMD,activator #= pc);
+
+         if (command(CMD_NOD))
+            goto quest_accepted;
+         else if (command(CMD_SAY))
+         {
+            pause;
+            exec("say Please nod if you accept or "+
+                 "shake if you reject.",self);
+         }
+         else if (command(CMD_SHAKE))
+            goto no_quest;
+
+         i := i+1;
+      }
+
+    :no_quest:
+      pause;
+      exec("say OK, then you must die for your ignorance.",self);
+      goto killplayer;
+
+    :quest_accepted:
+      pause;
+      exec("say Good, now get going!",self);
+      addextra(pc.quests,{LEGACY_ONGOING},"");
+
+   unsecure(pc);
+   goto start;
+   }
+   unsecure(pc);
+   goto start;
+
+ :lostpc:
+   exec("say How rude!",self);
+   goto start;
+
+ :waitawhile:
+   heartbeat := PULSE_SEC*5;
+   pause;
+   goto init;
+
+ :killplayer:
+   heartbeat := PULSE_SEC*5;
+   exec("kill "+pc.name+"",self);
+   unsecure(pc);
+   goto init;
+
+}
+dilend
+
+/* -------------------- Part 2 of "LEGACY" Quest ------------------------*/
+/* ------- The program tests if an "Ongoing" PC gives any quest. --------*/
+
+dilbegin bathym_get();
+var
+  pc: unitptr;
+  item: unitptr;
+ extra_ptr: extraptr;
+code
+{
+heartbeat := PULSE_SEC*3;
+	on_activation((self.position <= POSITION_SLEEPING) or
+	  (self.position == POSITION_FIGHTING), skip);
+
+:start:
+
+wait(SFB_DONE, command(CMD_GIVE) and
+(self==target)  and
+(activator.type == UNIT_ST_PC));
+
+if (not(LEGACY_ONGOING in activator.quests))
+  goto thanks;
+
+pc := activator;
+item := medium;
+secure(pc, labsecure);
+secure(item, labsecure);
+
+     extra_ptr:= LEGACY_ONGOING in pc.quests;
+
+if ((item.nameidx+"@"+item.zoneidx) in extra_ptr.names)
+  goto have_it;
+unsecure(item);
+
+if ((item.nameidx+"@"+item.zoneidx)=="trans_sword@mount")
+{
+		 destroy(item);
+         addstring(extra_ptr.names,(item.nameidx+"@"+item.zoneidx));
+         exec("say Ahh... Finally my collection of weapons are complete. "+
+              "I hope you had a hard time finding this one.",self);
+	  }
+else if ("pyramid@gazha"==(item.nameidx+"@"+item.zoneidx))
+  {
+         addstring(extra_ptr.names,(item.nameidx+"@"+item.zoneidx));
+  destroy(item);
+  exec("say Thank you "+pc.name+". I guess Maya "+
+    "wouldn't mind this.",self);
+  }
+else if ("scalp@gazha"==(item.nameidx+"@"+item.zoneidx))
+  {
+  addstring(extra_ptr.names,(item.nameidx+"@"+item.zoneidx));
+  destroy(item);
+         exec("say Cool, look at this scalp. What a fine addition to my trophy "+
+              "collection. Do you want to see it, or maybe join it?",self);
+  }
+else
+  {
+  exec("slap "+pc.name+"",self);
+  exec("emote screams 'THIS is NOT what I asked for!'",self);
+         link (item,pc);
+	act("$3n gives you $2n.", A_SOMEONE, pc, item, self, TO_CHAR);
+	act("$3n gives $1n $2n.", A_SOMEONE, pc, item, self, TO_REST);
+  unsecure (pc);
+  goto start;
+  }
+
+if (("scalp@gazha" in extra_ptr.names) and
+  ("pyramid@gazha" in extra_ptr.names) and
+  ("trans_sword@mount" in extra_ptr.names))
+      {
+         subextra(pc.quests,LEGACY_ONGOING);
+         addextra(pc.quests,{LEGACY_COMPLETE},"");
+         item := load("legacy_dagger@gazha");
+         item.height := pc.height;
+         link (item,pc);
+	act("$3n gives you $2n.", A_SOMEONE, pc, item, self, TO_CHAR);
+	act("$3n gives $1n $2n.", A_SOMEONE, pc, item, self, TO_REST);
+         experience(5000,pc);
+         exec("say I have made this dagger just for you, as a sign of "+
+              "my gratitude towards you.",self);
+         pause;
+         exec("say Now leave, as I will try to free the lifestealers "+
+              "daughter.",self);
+         pause;
+      }
+
+
+unsecure(pc);
+goto start;
+:labsecure:
+   exec("say You have no respect for the powerful Stream-master.",self);
+   unsecure (pc);
+   unsecure (item);
+   goto start;
+
+:thanks:
+exec ("say Thanks but maybe you should listen to me first and find outwhat I need.",self);
+         link (item,pc);
+	act("$3n gives you $2n.", A_SOMEONE, pc, item, self, TO_CHAR);
+	act("$3n gives $1n $2n.", A_SOMEONE, pc, item, self, TO_REST);
+goto start;
+
+:have_it:
+exec ("say Your memory must be failing you have already gave me one of these.",self);
+         link (item,pc);
+	act("$3n gives you $2n.", A_SOMEONE, pc, item, self, TO_CHAR);
+	act("$3n gives $1n $2n.", A_SOMEONE, pc, item, self, TO_REST);
+
+unsecure (pc);
+goto start;
+}
+dilend
+end
+
+vguard
+
+names {"keeper","vaultguard","guard","him"}
+title "the vaultguard"
+descr "A huge ghostly figure stands guard here."
+extra {}
+"This is a huge man-shaped guard, which used to guard the vault against
+trespassers. In his face you can see that he has been in combat more then
+once to defend the treasures of Maya."
+alignment -900
+level 73
+money 7 SILVER_PIECE
+sex SEX_MALE
+race RACE_GHOST
+attack WPN_FIST
+MSET_ABILITY(18,17,10,25,15,5,5,5)
+MSET_WEAPON(20,50,0,0,30,0)
+weight 309
+height 298
+end
+
+lost_soul1
+names {"lost soul","soul","it"}
+title "the Lost Soul"
+descr "A tired looking soul crawls on the floor before you."
+extra {}
+"The lost soul has been in the maze for god-know-how-long. This is what
+you will end up as if you don't get out."
+alignment -200
+level 63
+sex SEX_NEUTRAL
+race RACE_GHOST
+attack WPN_FIST
+MSET_ABILITY(18,17,5,25,15,5,10,5)
+MSET_WEAPON(20,20,20,20,10,10)
+weight 109
+height 198
+special SFUN_RANDOM_ZONE_MOVE time 100 bits SFB_RANTIME
+special SFUN_AGGRESSIVE time PULSE_SEC*20 bits SFB_RANTIME
+special SFUN_COMBAT_MAGIC "cast stinking cloud"
+
+dilbegin lost1();
+var
+   pc : unitptr;
+
+code
+{
+   heartbeat := PULSE_SEC*10;
+   on_activation(self.position <= POSITION_SLEEPING,skip);
+   wait(SFB_CMD,activator.type == UNIT_ST_PC);
+   exec("say could you please do me a favor?",self);
+   pause;
+   exec("say I have been in this castle for so long now",self);
+   exec("say that I am really lost",self);
+   pause;
+   exec("say Could you please kill me?",self);
+   unsecure(pc);
+}
+dilend
+end
+
+lost_soul2
+
+names {"lost soul","soul","it"}
+title "the Lost Soul"
+descr "A tired looking soul crawls on the floor before you."
+extra {}
+"The lost soul has been in the maze for god-know-how-long. This is what
+you will end up as if you don't get out."
+alignment -200
+level 63
+sex SEX_NEUTRAL
+race RACE_GHOST
+attack WPN_FIST
+MSET_ABILITY(18,17,5,25,15,5,10,5)
+MSET_WEAPON(20,20,20,20,10,10)
+weight 109
+height 198
+special SFUN_RANDOM_ZONE_MOVE time 100 bits SFB_RANTIME
+special SFUN_AGGRESSIVE time PULSE_SEC*20 bits SFB_RANTIME
+special SFUN_COMBAT_MAGIC "cast firestorm"
+
+dilbegin lost2();
+var
+   pc : unitptr;
+
+code
+{
+   heartbeat := PULSE_SEC*10;
+   on_activation(self.position <= POSITION_SLEEPING,skip);
+   wait(SFB_CMD,activator.type == UNIT_ST_PC);
+   exec("say could you please do me a favor?",self);
+   pause;
+   exec("say I have been in this castle for so long now",self);
+   exec("say that I am really lost",self);
+   pause;
+   exec("say Could you please kill me?",self);
+   unsecure(pc);
+}
+dilend
+end
+
+lost_soul3
+
+names {"lost soul","soul","it"}
+title "the Lost Soul"
+descr "A tired looking soul crawls on the floor before you."
+extra {}
+"The lost soul has been in the maze for god-know-how-long. This is what
+you will end up as if you don't get out."
+alignment -200
+level 63
+sex SEX_NEUTRAL
+race RACE_GHOST
+attack WPN_FIST
+MSET_ABILITY(18,17,5,25,15,5,10,5)
+MSET_WEAPON(20,20,20,20,10,10)
+weight 109
+height 198
+special SFUN_RANDOM_ZONE_MOVE time 100 bits SFB_RANTIME
+special SFUN_AGGRESSIVE time PULSE_SEC*20 bits SFB_RANTIME
+special SFUN_COMBAT_MAGIC "cast icestorm"
+
+dilbegin lost3();
+var
+   pc : unitptr;
+
+code
+{
+   heartbeat := PULSE_SEC*10;
+   on_activation(self.position <= POSITION_SLEEPING,skip);
+   wait(SFB_CMD,activator.type == UNIT_ST_PC);
+   exec("say could you please do me a favor?",self);
+   pause;
+   exec("say I have been in this castle for so long now",self);
+   exec("say that I am really lost",self);
+   pause;
+   exec("say Could you please kill me?",self);
+   unsecure(pc);
+}
+dilend
+end
+
+lost_soul4
+
+names {"lost soul","soul","it"}
+title "the Lost Soul"
+descr "A tired looking soul crawls on the floor before you."
+extra {}
+"The lost soul has been in the maze for god-know-how-long. This is what
+you will end up as if you don't get out."
+alignment -200
+level 63
+sex SEX_NEUTRAL
+race RACE_GHOST
+attack WPN_FIST
+MSET_ABILITY(18,17,5,25,15,5,10,5)
+MSET_WEAPON(20,20,20,20,10,10)
+weight 109
+height 198
+special SFUN_RANDOM_ZONE_MOVE time 100 bits SFB_RANTIME
+special SFUN_AGGRESSIVE time PULSE_SEC*20 bits SFB_RANTIME
+special SFUN_COMBAT_MAGIC "cast acid ball"
+
+dilbegin lost4();
+var
+   pc : unitptr;
+
+code
+{
+   heartbeat := PULSE_SEC*10;
+   on_activation(self.position <= POSITION_SLEEPING,skip);
+   wait(SFB_CMD,activator.type == UNIT_ST_PC);
+   exec("say could you please do me a favor?",self);
+   pause;
+   exec("say I have been in this castle for so long now",self);
+   exec("say that I am really lost",self);
+   pause;
+   exec("say Could you please kill me?",self);
+   unsecure(pc);
+}
+dilend
+end
+
+lost_soul5
+
+names {"lost soul","soul","it"}
+title "the Lost Soul"
+descr "A tired looking soul crawls on the floor before you."
+extra {}
+"The lost soul has been in the maze for god-know-how-long. This is what
+you will end up as if you don't get out."
+alignment -200
+level 63
+sex SEX_NEUTRAL
+race RACE_GHOST
+attack WPN_FIST
+MSET_ABILITY(18,17,5,25,15,5,10,5)
+MSET_WEAPON(20,20,20,20,10,10)
+weight 109
+height 198
+special SFUN_RANDOM_ZONE_MOVE time 100 bits SFB_RANTIME
+special SFUN_AGGRESSIVE time PULSE_SEC*20 bits SFB_RANTIME
+special SFUN_COMBAT_MAGIC "cast lightning bolt"
+
+dilbegin lost5();
+var
+   pc : unitptr;
+
+code
+{
+   heartbeat := PULSE_SEC*10;
+   on_activation(self.position <= POSITION_SLEEPING,skip);
+   wait(SFB_CMD,activator.type == UNIT_ST_PC);
+   exec("say could you please do me a favor?",self);
+   pause;
+   exec("say I have been in this castle for so long now",self);
+   exec("say that I am really lost",self);
+   pause;
+   exec("say Could you please kill me?",self);
+   unsecure(pc);
+}
+dilend
+end
+
+guard
+
+names {"castle guard","guard","him"}
+title "the Castle Guard"
+descr "A huge guard stands before you."
+extra {}
+"This is a huge guard, which used to guard the castle against trespassers.
+In his face you can see that he has been in combat more than once defend
+the treasures of the castle."
+alignment -400
+level 64
+money 6 SILVER_PIECE
+sex SEX_MALE
+race RACE_ZOMBIE
+height 180
+weight 160
+attack WPN_FIST
+MSET_ABILITY(30,30,10,15,5,3,3,4)
+MSET_WEAPON(70,0,0,0,30,0)
+weight 309
+height 298
+special SFUN_RANDOM_ZONE_MOVE time 140 bits SFB_RANTIME
+end
+
+/*----------------------- The Quest Oracle -----------------------------*/
+
+demirza
+
+names {"demirza","ghost","her"}
+title "the ghost of Demirza"
+descr "The ghost of Demirza is here guarding the work of Maya and at the same
+time looking for her master."
+extra {}
+"She used to be a young and beautiful lady which died at the age of 18,
+not reaching her prime. She has long black hair, violet eyes and tanned
+skin. Dressed in a flowing robe of aqua silk, she looks almost like a queen."
+alignment 900
+level 80
+sex SEX_FEMALE
+race RACE_GHOST
+attack WPN_FIST
+MSET_ABILITY(10,10,10,30,10,5,5,20)
+MSET_WEAPON(0,40,0,0,20,0)
+MSET_SPELL(40,0,0,0,0,0,0,0,0,0,0)
+weight 209
+height 198
+special SFUN_COMBAT_MAGIC "cast harm"
+
+/* --------------------- Part 1 of "GHOST" Quest ------------------------*/
+/* ------------ The program acquires new loyal PC subjects. -------------*/
+
+dilbegin ghostq1();
+var
+   pcname : string;
+   item   : unitptr;
+   pc     : unitptr;
+   i      : integer;
+   exdp   : extraptr;
+
+code
+{
+
+ :init:
+   heartbeat := PULSE_SEC*15;
+   on_activation( (self.position <= POSITION_SLEEPING) or
+                (self.position == POSITION_FIGHTING), skip);
+
+ :start:
+   wait(SFB_CMD,(activator.type == UNIT_ST_PC) and (not command(CMD_GIVE)));
+
+   if (GHOST_COMPLETE in activator.quests)
+      goto waitawhile;
+
+   pc := activator;
+   secure(pc,lostpc);
+
+   if (not(GHOST_ONGOING in pc.quests))
+   {
+      pause;
+      exec("emote whispers '"+pc.name+" could you please help me?'",self);
+      pause;
+
+      exec("emote whispers 'I am trying to find my master Maya, but I "+
+           "need something to get to her.'",self);
+      pause;
+
+      exec("emote whispers 'I need a weapon from an eagle which is to be "+
+           "found in the sky.'",self);
+      pause;
+      exec("emote whispers 'I also need a ruby ring which is guarded by "+
+           "an evil creature in the maze.'",self);
+      pause;
+      exec("emote whispers 'To get in contact with the spirit of maya, "+
+           "I need some of her work.'",self);
+      pause;
+      exec("emote whispers 'And I also need a healing potion from the "+
+           "evil lands under a castle.'",self);
+      pause;
+      exec("emote whispers 'And finally I need some juicy food.'",self);
+      pause;
+      exec("emote whispers 'Will you bring me these items "+pc.name+"?'",self);
+
+      i := 0;
+      while (i < 5)
+      {
+         wait(SFB_CMD,activator #= pc);
+
+         if (command(CMD_NOD))
+            goto quest_accepted;
+         else if (command(CMD_SAY))
+         {
+            pause;
+            exec("emote whispers 'Please nod if you accept or "+
+                 "shake of you reject.'",self);
+         }
+         else if (command(CMD_SHAKE))
+            goto no_quest;
+
+         i := i+1;
+      }
+
+    :no_quest:
+      pause;
+      exec("emote whispers 'Very well, I will find someone who is brave "+
+           "enough then.'",self);
+      unsecure(pc);
+      goto waitawhile;
+
+    :quest_accepted:
+      pause;
+      exec("emote whispers 'That's very nice of you, please hurry so that "+
+           "I can find my master!'",self);
+      addextra(pc.quests,{GHOST_ONGOING},"");
+      unsecure(pc);
+      goto start;
+   }
+   else /* GHOST_ONGOING in pc.quests! */
+   {
+      exdp := GHOST_ONGOING in pc.quests;
+
+      if (("talon" in exdp.names) and
+          ("ruby" in exdp.names) and
+          ("pyramid" in exdp.names) and
+          ("fruit" in exdp.names) and
+          ("potion" in exdp.names))
+      {
+         pause;
+         subextra(pc.quests,GHOST_ONGOING);
+         addextra(pc.quests,{GHOST_COMPLETE},"");
+         item := load("ghost_helmet@gazha");
+         item.height := pc.height;
+         exec("give helmet to "+pc.name+"",self);
+         experience(6000,pc);
+         exec("emote whispers 'Please accept this helmet as a sign of "+
+              "my gratitude.",self);
+         pause;
+         exec("thank "+pc.name+"",self);
+         pause;
+         unsecure(pc);
+         exec("emote calls upon a cloud an enters hoping to find "+
+              "her master",self);
+         destroy(self);
+      }
+   }
+   unsecure(pc);
+   goto start;
+
+ :waitawhile:
+   heartbeat := PULSE_SEC*60;
+   pause;
+   goto init;
+
+ :lostpc:
+   exec("say How rude!",self);
+   goto start;
+
+}
+dilend
+
+/* --------------------- Part 2 of "GHOST" Quest ------------------------*/
+/* ------- The program tests if an "Ongoing" PC gives any quest. --------*/
+
+dilbegin ghostq2();
+var
+   pc   : unitptr;
+   item : unitptr;
+   exdp : extraptr;
+
+code
+{
+
+ :init:
+   heartbeat := PULSE_SEC*5;
+   on_activation( (self.position <= POSITION_SLEEPING) or
+                (self.position == POSITION_FIGHTING), skip);
+
+ :start:
+   wait(SFB_CMD,command(CMD_GIVE) and (activator.type == UNIT_ST_PC));
+
+ :give:
+   if (not(GHOST_ONGOING in activator.quests))
+   goto start;
+
+   pc := activator;
+   item := self.inside;
+   secure(pc,labsecure);
+   secure(item,labsecure);
+
+   wait(SFB_CMD | SFB_TICK,TRUE);
+
+   if (not(item #= self.inside))
+   {
+      unsecure(item);
+      exdp := GHOST_ONGOING in pc.quests;
+
+      if ("talon@asgaard"==(self.inside.nameidx+"@"+self.inside.zoneidx))
+      {
+         addstring(exdp.names,"talon");
+         exec("emote whispers 'Thank you "+pc.name+". I bet the eagle "+
+              "did not like this.'",self);
+         destroy(self.inside);
+      }
+
+      else if ("ruby_ring@tiamat"==(self.inside.nameidx+"@"+self.inside.zoneidx))
+      {
+         addstring(exdp.names,"ruby");
+         exec("emote whispers 'Thank you "+pc.name+". The dragon gave "+
+              "it to you freely?'",self);
+         destroy(self.inside);
+      }
+
+      else if ("pyramid@gazha"==(self.inside.nameidx+"@"+self.inside.zoneidx))
+      {
+         addstring(exdp.names,"pyramid");
+         exec("emote whispers 'Thank you "+pc.name+". I guess Maya "+
+              "would not mind this.'",self);
+         destroy(self.inside);
+      }
+
+      else if ("mana_fruit@lostlands"==(self.inside.nameidx+"@"+self.inside.zoneidx))
+      {
+         addstring(exdp.names,"fruit");
+         exec("emote whispers 'Thanks. I have not eaten for 1000 years.'",self);
+         destroy(self.inside);
+      }
+
+      else if ("brown_potion@ww1"==(self.inside.nameidx+"@"+self.inside.zoneidx))
+      {
+         addstring(exdp.names,"potion");
+         exec("emote whispers 'Thank you "+pc.name+". You have done "+
+              "the world a big favor.'",self);
+         destroy(self.inside);
+      }
+
+      else
+      {
+         exec("emote whispers 'This is not what I asked for, "+
+              "but I will keep the gift'",self);
+         /* Keeps the given item. Oh, how rude :) */
+         destroy(self.inside);
+      }
+   }
+   unsecure(pc);
+
+   if (command(CMD_GIVE) and (activator.type == UNIT_ST_PC))
+      goto give;
+   else
+      goto start;
+
+ :labsecure:
+   exec("emote whispers 'You have no respect for lost persons.'",self);
+   goto start;
+}
+dilend
+end
+
+
+%reset
+
+/*------------------------- Object Resets ------------------------------*/
+
+load csign into catacomb0                   max 1     zonemax 1
+load lvl3sign into lvl41                    max 1     zonemax 1
+load lvl2sign into lvl31                    max 1     zonemax 1
+load lvl1sign into lvl11center              max 1     zonemax 1
+load pyramid into gazha2_1                  max 1     zonemax 1
+load pyramid into maze12                    max 1     zonemax 1
+
+/*--------------------- Elemental Mobs Resets ---------------------------*/
+
+load zelstar into dung4                     max 1     zonemax 1
+{
+   equip torture_whip                       position WEAR_WIELD
+}
+
+load broshmir into dung7                    max 1     zonemax 1
+{
+   equip torture_dagger                     position WEAR_WIELD
+}
+
+load dr_guard into dung2                    max 1     zonemax 2
+{
+   equip grd_plate                          position WEAR_BODY
+   equip grd_sword                          position WEAR_WIELD
+   load wh_bottle
+}
+
+load dr_guard into dung8                    max 1     zonemax 2
+{
+   equip grd_plate                          position WEAR_BODY
+   equip grd_sword                          position WEAR_WIELD
+   load wh_bottle
+}
+
+load xegvina into air_tower                 max 1     zonemax 1
+{
+   equip ele_dagger                         position WEAR_WIELD
+   load diamond
+}
+
+load lifbuth into earth_tower               max 1     zonemax 1
+{
+   equip ele_dagger                         position WEAR_WIELD
+   load smaragd
+}
+
+load nehedali into fire_tower               max 1     zonemax 1
+{
+   equip ele_dagger                         position WEAR_WIELD
+   load ruby
+}
+
+load qentirol into water_tower              max 1     zonemax 1
+{
+   equip ele_dagger                         position WEAR_WIELD
+   load crystal
+}
+
+load air_element into air_tower             max 3     zonemax 3
+load ear_element into earth_tower           max 3     zonemax 3
+load fir_element into fire_tower            max 3     zonemax 3
+load wat_element into water_tower           max 3     zonemax 3
+
+load morvald into center_tower              max 1     zonemax 1
+{
+   equip ele_sh_sword                       position WEAR_WIELD
+}
+
+/*---------------------- Haon Dor Mobs Resets ---------------------------*/
+
+load trophy_boy into on_web@haon_dor        max 1     zonemax 1
+{
+   equip scalp                              position WEAR_NECK_1
+}
+
+/*---------------------- Gazha Mobs Resets -----------------------------*/
+
+load galeolamna into gazha0_1               max 1     zonemax 3
+load galeolamna into gazha0_4               max 1     zonemax 3
+
+load nafael into lvl12                      max 1     zonemax 1
+{
+   equip legacy_shield                      position WEAR_SHIELD
+   equip broadsword                         position WEAR_WIELD
+   equip legacy_bracer                      position WEAR_WRIST_L
+   equip legacy_ring                        position WEAR_FINGER_R
+}
+
+load nabar into lvl11                       max 1     zonemax 1
+{
+   equip legacy_shield                      position WEAR_SHIELD
+   equip broadsword                         position WEAR_WIELD
+   equip legacy_bracer                      position WEAR_WRIST_R
+   equip legacy_ring                        position WEAR_FINGER_R
+}
+
+load plendyna into lvl21                    max 1     zonemax 1
+{
+   equip legacy_shield                      position WEAR_SHIELD
+   equip broadsword                         position WEAR_WIELD
+   equip legacy_bracer                      position WEAR_WRIST_R
+   equip legacy_ring                        position WEAR_FINGER_R
+}
+
+load ithildis into lvl21                    max 1     zonemax 1
+{
+   equip legacy_shield                      position WEAR_SHIELD
+   equip broadsword                         position WEAR_WIELD
+   equip legacy_bracer                      position WEAR_WRIST_R
+   equip legacy_ring                        position WEAR_FINGER_R
+}
+
+load thema into maze4                       max 1     zonemax 1
+{
+   equip legacy_shield                      position WEAR_SHIELD
+   equip broadsword                         position WEAR_WIELD
+   equip legacy_bracer                      position WEAR_WRIST_R
+   equip legacy_ring                        position WEAR_FINGER_R
+}
+
+load zerberes into maze7                    max 1     zonemax 1
+{
+   equip legacy_shield                      position WEAR_SHIELD
+   equip broadsword                         position WEAR_WIELD
+   equip legacy_bracer                      position WEAR_WRIST_R
+   equip legacy_ring                        position WEAR_FINGER_R
+}
+
+load dilibis into maze10                    max 1     zonemax 1
+{
+   equip legacy_shield                      position WEAR_SHIELD
+   equip broadsword                         position WEAR_WIELD
+   equip legacy_bracer                      position WEAR_WRIST_R
+   equip legacy_ring                        position WEAR_FINGER_R
+}
+
+load palagin into maze2                     max 1     zonemax 1
+{
+   equip legacy_shield                      position WEAR_SHIELD
+   equip broadsword                         position WEAR_WIELD
+   equip legacy_bracer                      position WEAR_WRIST_R
+   equip legacy_ring                        position WEAR_FINGER_R
+}
+
+load orgeth into lvl41                      max 1     zonemax 1
+{
+   equip legacy_shield                      position WEAR_SHIELD
+   equip broadsword                         position WEAR_WIELD
+   equip legacy_bracer                      position WEAR_WRIST_R
+   equip legacy_ring                        position WEAR_FINGER_R
+}
+
+load mentreb into lvl46                     max 1     zonemax 1
+{
+   equip legacy_shield                      position WEAR_SHIELD
+   equip broadsword                         position WEAR_WIELD
+   equip legacy_bracer                      position WEAR_WRIST_R
+   equip legacy_ring                        position WEAR_FINGER_R
+}
+
+load kvendar into lvl412                    max 1     zonemax 1
+{
+   equip legacy_shield                      position WEAR_SHIELD
+   equip broadsword                         position WEAR_WIELD
+   equip legacy_bracer                      position WEAR_WRIST_R
+   equip legacy_ring                        position WEAR_FINGER_R
+}
+
+load trevald into maze6                     max 1     zonemax 1
+{
+   equip legacy_shield                      position WEAR_SHIELD
+   equip broadsword                         position WEAR_WIELD
+   equip legacy_bracer                      position WEAR_WRIST_R
+   equip legacy_ring                        position WEAR_FINGER_R
+}
+
+load fightmaster into lvl417                max 1     zonemax 1
+{
+   equip legacy_shield                      position WEAR_SHIELD
+   equip broadsword                         position WEAR_WIELD
+   equip legacy_bracer                      position WEAR_WRIST_L
+   equip legacy_ring                        position WEAR_FINGER_R
+   equip legacy_helmet                      position WEAR_HEAD
+}
+
+load vguard into gazha2_3                   max 2     zonemax 2
+{
+   equip ghost_sword                        position WEAR_WIELD
+}
+
+load lost_soul1 into catacomb2              max 1     zonemax 1
+{
+   equip lost_dagger                        position WEAR_WIELD
+}
+
+load lost_soul2 into catacomb4              max 1     zonemax 1
+{
+   equip lost_dagger                        position WEAR_WIELD
+}
+
+load lost_soul3 into catacomb5              max 1     zonemax 1
+{
+   equip lost_dagger                        position WEAR_WIELD
+}
+
+load lost_soul4 into catacomb8              max 1     zonemax 1
+{
+   equip lost_dagger                        position WEAR_WIELD
+}
+
+load lost_soul5 into catacomb5              max 1     zonemax 1
+{
+   equip lost_dagger                        position WEAR_WIELD
+}
+
+load guard into gazha1_1                    max 2     zonemax 4
+{
+   equip guard_axe                          position WEAR_WIELD
+}
+
+load guard into gazha1_1                    max 2     zonemax 4
+{
+   equip guard_axe                          position WEAR_WIELD
+}
+
+load guard into gazha1_2                    max 2     zonemax 4
+{
+   equip guard_axe                          position WEAR_WIELD
+}
+
+load guard into gazha1_2                    max 2     zonemax 4
+{
+   equip guard_axe                          position WEAR_WIELD
+}
+
+load demirza into gazha2_5                  max 1     zonemax 1
+{
+   equip ghost_sword                        position WEAR_WIELD
+   equip gb_plate                           position WEAR_BODY
+   equip mayas_ring                         position WEAR_FINGER_R
+}
+
+/*-------------------------- Door Resets --------------------------------*/
+
+door lvl11center DOWN  {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door lvl21       WEST  {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door lvl21       EAST  {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door lvl21       UP    {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door lvl43       SOUTH {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door lvl410      SOUTH {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door death       UP    {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door gazha1_1    NORTH {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door gazha2_3    WEST  {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door dung3       WEST  {EX_OPEN_CLOSE, EX_CLOSED}
+door dung4       NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door dung4       EAST  {EX_OPEN_CLOSE, EX_CLOSED}
+door dung5       SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door dung6       NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door dung6       SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door dung7       SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door dung7       EAST  {EX_OPEN_CLOSE, EX_CLOSED}
+door dung8       WEST  {EX_OPEN_CLOSE, EX_CLOSED}
+door dung13      NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door dung13      UP    {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door ground1     DOWN  {EX_OPEN_CLOSE, EX_CLOSED}
+
+
+%end
+

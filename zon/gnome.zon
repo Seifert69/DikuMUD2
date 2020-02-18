@@ -1,0 +1,4880 @@
+/*
+filename    gnome
+password    herm
+changedby   Rand
+EmailAdd     "Rand" <rand@thepoint.net>
+request     compile
+version     40
+END HEADER*/
+
+
+#include <composed.h>
+
+#define GNOME_QUEST_ONGOING "Gnome Quest Ongoing"
+#define GNOME_QUEST_COMPLETE "Gnome Quest Complete"
+#define DARKNESS_QUEST_ONGOING "Darkness Quest Ongoing"
+#define DARKNESS_QUEST_COMPLETE "Darkness Quest Complete"
+#define LIFE_SWORD_QUEST_ONGOING "Life Sword Quest Ongoing"
+#define LIFE_SWORD_QUEST_COMPLETE "Life Sword Quest Complete"
+#define SUN_QUEST "Sun Sword Quest Complete"
+
+%zone gnome
+title "Gnome Castle"
+lifespan 20
+reset RESET_ANYHOW
+creators {"rand"}
+
+notes
+"This is the land of the Gnomes. After destruction in the war the
+halflings left and the gnomes remained behind to rebuild. If I need to be
+reached for any reason I'm at rand@thepoint.com.
+
+11/03/96 - Jager added link to a clan"
+
+help
+"The land of the Gnomes is located to the southwest of Urland. It is a
+zone for high level players. It has a small village, a mine and a castle.
+It was one of the first attacked villages in the great war."
+
+%dil
+
+dilbegin blindaff(medi : unitptr, targ : unitptr, hm: integer);
+code
+{
+  act("The $1n suddenly covers your face, you cannot see!", A_ALWAYS, self,
+null, self.outside,
+    TO_VICT);
+  act("$1n's $2n suddenly covers his face, you realize that now he cannot
+see!", A_SOMEONE,
+    self, null, self.outside, TO_NOTVICT);
+  return;
+}
+dilend
+
+
+dilbegin  heal_aff(medi : unitptr, targ : unitptr, hm : integer);
+code
+{
+  act("&c+wYour Sword of Life shimmers and shines and makes you feel "+
+    "better!&cw", A_ALWAYS, self, null, null, TO_CHAR);
+  act("&c+w$1n's Sword of Life shimmers and shines!&cw", A_SOMEONE,
+    self, null, null, TO_ROOM);
+  return;
+}
+dilend
+
+dilbegin lifeslayaff(medi : unitptr, targ : unitptr, hm : integer);
+code
+{
+  act("&c+w$1n's Sword of Life steals $3n's lifeforce!&cw", A_SOMEONE, 
+    self, null, targ, TO_NOTVICT);
+  act("&c+gYour &c+w Sword of Life &c+gsteals $3n's lifeforce&cw!",
+    A_SOMEONE, self, null, targ, TO_CHAR);
+  act("&c+y$1n's &c+wSword of Life &c+ysteals your lifeforce!&cw", 
+    A_SOMEONE, self, null, targ, TO_VICT);
+  act("&c+rIt is time to move on to the next life.&cw", A_ALWAYS,
+    self, null, targ, TO_VICT);
+  return;
+}
+dilend
+
+dilbegin lifekillaff(medi : unitptr, targ : unitptr, hm : integer);
+code
+{
+  act("&c+gYour &c+wSword of Life &c+g shifts $3n's life!&cw", A_SOMEONE,
+    self, null, targ, TO_CHAR);
+  act("&c+y$1n's &c+wSword of Life &c+y shifts some of your life!
+OUCH!&cw",
+    A_SOMEONE, self, null, targ, TO_VICT);
+  act("&c+w$1n's Sword of Life shifts some of $3n's life! Ouch!&cw",
+    A_SOMEONE, self, null, targ, TO_NOTVICT);
+  return;
+}
+dilend
+
+
+
+
+dilbegin driprg();
+var
+   intg   : integer;
+code
+{
+      heartbeat := PULSE_SEC*8;
+      :init:
+      wait(SFB_TICK, TRUE);
+      intg := rnd(1,50);
+      if(intg > 25)
+      {
+        act("A large drop of water falls from the ceiling and lands right
+"+
+          "in your face!", A_ALWAYS, self.inside, null, null, TO_ALL);
+        goto waiting;
+      }
+      else if(intg < 25)
+      {
+        act("Water drips from the ceiling.", A_ALWAYS, self.inside, null,
+          null, TO_ALL);
+        goto waiting;
+      }
+      else
+        goto waiting;
+
+      :waiting:
+      goto init;
+}
+dilend
+
+dilbegin burnprg(medi : unitptr, targ : unitptr, hm : integer);
+code
+{
+  act("&c+gYour staff of death &c+rburns &c+g$3n badly!&cw", A_SOMEONE,
+    self, null, targ, TO_CHAR);
+  act("&c+c$1n's staff of death &c+rburns &c+c$3n badly!&cw", A_SOMEONE,
+    self, null, targ, TO_NOTVICT);
+  act("&c+y$1n's staff of death &c+rburns &c+yyou badly! OUCH!&cw",
+    A_SOMEONE, self, null, targ, TO_VICT);
+  return;
+}
+dilend
+
+dilbegin infoprg(medi : unitptr, targ : unitptr, hm : integer);
+code
+{
+  act("Some of your &c+blifeforce &cwenters $3n.", A_SOMEONE, self, null,
+    targ, TO_CHAR);
+  act("Some of $1n's &c+blifeforce &cwenters you.", A_SOMEONE, self, null,
+    targ, TO_VICT);
+  act("Some of $1n's &c+blifeforce &cwenters $3n.", A_SOMEONE, self, null,
+    targ, TO_NOTVICT);
+  return;
+}
+dilend
+%rooms
+
+              path_in1
+names{"gnome path1"}
+title "An overgrown path"
+descr "This path has obviously not been used in years. Trees and bushes
+have claimed most of it. The brush is so thick it is hard to continue.
+Back to the west to the Village of Urland. To the east is just thick
+plant growth."
+extra {"trees","tree"}
+"Large oak and pine trees line the path. Some of the oldest ones bear
+scars and burn marks that appear to be very old."
+extra {"bushes","bush"}
+"They are very large for being plain bushes. As you look closer you see
+that they are covered in thorns. Hopefully they are not poisonous."
+extra{"path"}
+"This is a small, barely visible path."
+extra{"brush"}
+"Thick brush wood."
+extra {"plant growth"}
+"This is very thick plants."
+movement SECT_FOREST
+west to vil_path10@urland descr "You see a small village path.";
+east to path_in2 descr "Thick brush is in this direction.";
+end
+
+             path_in2
+names{"gnome path2"}
+title "Thick in the brush"
+descr "You are now surrounded by the woods. Trees tower on all sides and
+the path is almost completely gone. The woods thin to the east and the
+west.
+To the east is seems you can barely make out voices and music."
+extra {"trees","tree"}
+"The trees here are almost all covered in scars and burnt places. They
+appear to have been made by something huge."
+extra {"path"}
+"This is a small, barely visible, path."
+movement SECT_FOREST
+west to path_in1 descr "An overgrown path lies in this direction.";
+east to path_in3 descr "The woods thin out on the edge of the hill.";
+end
+
+             path_in3
+names{"gnome path3"}
+title "The woods thin out"
+descr "The woods fall back toward the west and leave you standing on a
+grassy hill. The path continues down the hill into a valley. In the
+center of the valley is a small village. You can feel a light breeze
+bringing wonderful smells up from the valley. Though the village looks
+nice, you can see on the outskirts and on the sides of the surrounding
+hills large burnt patches and what appears to be the ruins of an even
+larger town."
+extra {"grassy hill","hill"}
+"You are standing on a short hill covered in grass."
+extra {"path"}
+"This is a small, dirt path."
+extra {"village"}
+"This village looks very small, literally! The building seem half as big
+as
+the ones in Urland."
+extra {"surrounding hills"}
+"These hills close in the valley. They make this hill the only exit."
+extra {"burnt patches","ruins","larger town"}
+"There appear to be large places where building have burnt to the ground.
+You wonder where they came from."
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_FIELD
+west to path_in2 descr "The trees become thick on the path in this
+direction.";
+down to path_in4 descr "The path continues down the hill, between two
+large boulders.";
+end
+
+             path_in4
+names{"gnome path4"}
+title "At the foot of the hill"
+descr "You are about 50 meters from the small village. From here you can
+see that it truly is small. The people who hustle about appear even
+shorter than dwarves and halflings. To your north and south are large
+boulders making travel in those directions impossible."
+extra {"village"}
+"The village appears to be very merry and alive. You can see that the
+people themselves are enjoying themselves even at this distance."
+extra {"boulders","boulder"}
+"Standing taller than a giant, these boulders force you to pass this way
+if you wish to continue."
+flags{UNIT_FL_NO_MOB,UNIT_FL_NO_TELEPORT}
+movement SECT_FIELD
+up to path_in3 descr "The path continues up the hill and into some
+trees.";
+east to path_in5 descr "The path continues toward the village.";
+end
+
+                   path_in5
+names {"gnome path5"}
+title "Before the village"
+descr "You are now approximately 10 meters from the village itself. The
+people are starting to take notice of you. You can now see another
+embellishment on the other side of the village, a large hole in the side
+of the opposite hill."
+extra {"village"}
+"The village is bustling with activity. People moving here and there as
+quickly as they can."
+extra {"large hole","hole","hill"}
+"On the side of the hill opposite where you are standing there is a very
+large hole in the ground. Some of these little people are moving to and
+from this hole."
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_FIELD
+west to path_in4 descr "There are two boulders next to the path that
+leads up the hill.";
+east to begin_vil descr "You see a small dirt road leading into the
+village.";
+end
+
+              begin_vil
+names{"gnome village start"}
+title "A small dirt road"
+descr "You are now standing on a small dirt road which looks like the
+main street for the village. You can leave the village to the west, and
+follow the path back up the hill or you can go east to the village
+square. The hole in the side of the hill looks large enough to hold one
+of the boulders that you saw on the sides of the path."
+extra {"small dirt road","dirt road","small road","road"}
+"This is a small road, made souly of dirt."
+extra {"path"}
+"A small dirt path leading to Urland."
+extra {"hill"}
+"Please specify which hill. The one to the east or the one to the west."
+extra {"east hill"}
+"This hill is very tall and seems to have a hole in it."
+extra {"west hill"}
+"This hill is the way back to Urland."
+extra {"hole"}
+"The hole looks to be braced, almost like a mine entrance....."
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+west to path_in5 descr "The path out of this valley begins there.";
+east to twn_sq descr "You can see the center of the village.";
+end
+
+               twn_sq
+names{"gnome village square"}
+title "Village square"
+descr "Standing in the center of the road is a large statue. It dominates
+this place. The small gnomes bustle about it drawing water from it for
+various things. The dirt has been trampled down and packed solid. There
+is another dirt road running north from here but it is even smaller than
+the main road, which isn't saying much considering the size of the main
+road."
+extra {"statue"}
+"As you look closer at the statue you see that it's actually a very ornate
+fountain."
+extra {"small gnomes"}
+"The gnomes are busily bustling about here."
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+west to begin_vil descr "A dirt road leads off in this direction.";
+east to end_vil descr "A dirt road leads off in this direction.";
+north to nor_vil descr "You can see the village marketplace.";
+south to sou_vil descr "You can see a path leading toward a very large
+dirt pile.";
+end
+
+        nor_vil
+names{"gnome north road"}
+title "North dirt road"
+descr "This is the northern end of the small village. There are shops on
+all sides save south which lead to the village square. The hustle and
+bustle is a little light here."
+extra {"shops"}
+"There are two shops here, one to the north and one to the west. To the
+east is an inn."
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+north to meat_shop descr "You can see the meat shop.";
+west to grocers descr "The grocers is in this direction.";
+east to inn descr "There is an inn this way.";
+south to twn_sq descr "You can see the center of the village in this
+direction.";
+end
+
+         sou_vil
+names{"gnome south road"}
+title "South dirt road"
+descr "This is the southern end of the small village. A path starts
+leading south toward what looks like a large dirt pile. There are
+building on the east and west sides so you cannot travel in those
+directions."
+extra {"path"}
+"There is a dirt path leading south toward a large pile of dirt."
+extra {"large dirt pile","large pile","dirt pile","pile"}
+"It appears to be simply a large pile of dirt, about three stories high."
+extra {"buildings","building"}
+"They are made of wood chinked with dirt. Rough made but massive in
+construction."
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+north to twn_sq descr "You can see the center of the village in this
+direction.";
+south to dirt_path1 descr "A small dirt road leads south.";
+end
+
+         end_vil
+names{"gnome village's end"}
+title "A small dirt road"
+descr "You stand at the end of the villages main street. The large hole
+is just 10 meters away. The village square is to you west. The people
+hustle about here but you can see others in the distance going to the
+hole and from it. There grassy field between the village and the hole has
+a well worn path through it's center."
+extra {"main street","street"}
+"The main street of the village is simply a dirt road."
+extra {"village square"}
+"You can see the statue rising in the center of the village."
+extra {"grassy field","field"}
+"This is a simple, grassy field."
+extra {"path"}
+"A simple dirt path winds its way through the center of the grassy field."
+extra {"large hole","hole"}
+"The hole is definitely large enough to hold a building and looks like it
+goes deep into the hill."
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+west to twn_sq descr "You can see the center of the village in this
+direction.";
+east to hole_path descr "There is a grassy field this way.";
+end
+
+            hole_path
+names{"grassy field"}
+title "A grassy field"
+descr "You stand in the middle of a grassy field. To your east is the
+large hole in the ground, to your west the small village. There is a
+branch in the path you are standing on. It leads north, toward large
+mounds and in the distance, you think you can see, a castle."
+extra {"large hole","hole"}
+"It seems to be an old mine shaft that has been just recently uncovered."
+extra {"village"}
+"To the west is the small village the gnomes have built."
+extra {"mounds"}
+"You are not sure what these mounds are but they appear to be very large."
+extra {"castle"}
+"The castle looks short and squat. You can see two towers on each side,
+but after them the castle looks buried within a hill."
+flags {UNIT_FL_NO_MOB,UNIT_FL_NO_TELEPORT}
+movement SECT_FIELD
+north to path_mound1 descr "You can see very large mounds in the
+distance.";
+west to end_vil descr "A dirt road in this way.";
+east to mount_ent descr "You can see a very large hole in the ground.";
+end
+
+                mount_ent
+names{"mine entrance"}
+title "Into the earth"
+descr "You stand within the gnome made cavern's entrance. The gnomes
+bustle about you, all but ignoring you. The beams supporting the ceiling
+are large and look sturdy.. You wonder if this is all new or if it is all
+old, the diggings look new but the entire place smells of oldness. To
+your west is the path back to the village or you can go down into the
+diggings."
+extra {"beams"}
+"The beams which support this hole are made of some kind of wood, you
+can't tell what kind because of the dirt covering them."
+extra {"diggings"}
+"Small places where the gnomes have been digging."
+extra {"path"}
+"A small dirt path."
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_FIELD
+west to hole_path descr "A grassy field is this way.";
+down to earth_bound descr "You are looking down into a large shaft.";
+end
+
+                earth_bound
+names{"mine down1"}
+title "Down in the earth"
+descr "All of the walls are lined by the same huge beams the line the
+rest of this place. The scaffolding on which you stand seems sturdy
+enough,
+you just hope the gnomes that are going up and down do not knock you off.
+It is lighter going up and becomes darker as you go down."
+extra {"beams"}
+"The beams which support this hole are made of some kind of wood, you
+can't tell what kind because of the dirt covering them."
+extra {"scaffolding"}
+"This is large plates, set into the beams which support this place."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_FIELD
+up to mount_ent descr "You can see the entrance to the mine.";
+down to earth_bound2 descr "You are looking deeper down into the mine.";
+end
+
+                earth_bound2
+names{"mine down2"}
+title "Further into the earth"
+descr "You are almost at the bottom of this shaft. It becomes darker the
+further you go. Up ahead you can hear the sound of pickaxes and gnomish
+chants, or should it be said Down ahead? The beams here are thicker than
+any you've seen so far, but you feel safe and secure."
+extra {"beams"}
+"The larges beams you've seen so far! They are almost as big around as
+the village square in udgaard! Now that's HUGE!"
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_MOB,UNIT_FL_NO_TELEPORT}
+movement SECT_FIELD
+up to earth_bound descr "The top of the shaft is in this direction.";
+down to mine_entrance descr "You can see the bottom of the shaft.";
+end
+
+           mine_entrance
+names{"bottom mine"}
+title "The bottom of the shaft"
+descr "You have reached the bottom of the shaft. Lanterns are placed at
+regular intervals along the walls and there are ruts from the
+wheelbarrows which the gnomes use to move the dirt they dig to the shaft
+for transport up. The tunnel which you are in continues to the east where
+you can hear the sound of the gnomish miners working hard."
+extra {"lanterns","lantern"}
+"Large mining lanterns hang at regular intervals along the walls. They
+are bolted in so that pesky adventurers cannot remove them."
+extra {"ruts"}
+"Holes in the ground from many wheelbarrows."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_FIELD
+up to earth_bound2 descr "The shaft that leads out is in this direction.";
+east to mine1 descr "The mine stretches out before you.";
+end
+
+              mine1
+names{"mine1"}
+title "Old diggings"
+descr "Maybe you were right in thinking that this was an old mine. The
+area you stand in now has not been dug in for many years. The lanterns
+are new but that seems to be the only thing that is new here. To the
+south is an entrance to another part of the mine as well as to your east.
+To the west is the way out."
+extra {"lanterns","lantern"}
+"Large mining lanterns hang at regular intervals along the walls. They
+are bolted in so that pesky adventurers cannot remove them."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_FIELD
+west to mine_entrance descr "You can see the beginning of the mine.";
+east to mine2 descr "The mine stretches out before you.";
+south to mine10 descr "It looks like some new digging.";
+end
+
+            mine2
+names{"mine2"}
+title "Tree roots"
+descr "This is another part of the mine which appears to have not been
+dug in, in many ages. From the ceiling, the roots of what must be a giant
+tree are poking through. Actually they are more than poking through,
+more
+like thrusting through. However the beams still hold and there's no sign
+that they will give way."
+extra {"roots","root"}
+"The roots of some ancient tree hang here."
+extra {"beams"}
+"The larges beams you've seen so far! They are almost as big around as
+the village square in udgaard! Now that's HUGE!"
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_FIELD
+west to mine1 descr "The mine stretches out before you.";
+east to mine3 descr "The mine stretches out before you.";
+end
+
+            mine3
+names{"mine3"}
+title "Gold vein"
+descr "Though this area, like many in the main passage, has not been dug
+in for what is probably decades. There is a large vein of gold running
+down it's north wall. You wonder why the gold has not been mined until
+you see that it is connected in some way to the beam which is holding up
+the roof in this area."
+extra {"north wall","wall","gold vein","gold"}
+"Pure gold. Lots of pure gold. Enough gold to sheath the temple in
+midgaard is in the wall here."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_FIELD
+west to mine2 descr "The mine stretches out before you.";
+east to mine4 descr "The tunnel looks like it splits ahead.";
+end
+
+            mine4
+names{"mine4"}
+title "A split in the tunnel"
+descr "The tunnel in which you've been traveling now splits. There are
+exits leading north, west, and east. The exit to the north appears old
+while the exit to the east look new. Other than the exits, this tunnel
+ports no embellishments, no interesting things like the gold vein or any
+thing of that kind."
+extra {"embellishments"}
+"There are NO embellishments here!"
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_FIELD
+north to mine6 descr "It looks like a place of eating in this direction.";
+west to mine3 descr "The mine stretches out before you.";
+east to mine5 descr "You can see a place where there is new digging.";
+end
+
+           mine5
+names{"mine5"}
+title "New diggings and a twist"
+descr "This is definitely fairly new. You can even see some of the places
+where the gnomes dug. There looks like there was only one problem in the
+digging, to the east is solid rock and the gnomes were forced to go
+around it. There are places on that rock that look like scratches from
+pickaxe or other mining tool."
+extra {"rock"}
+"The rock is hard, like granite. It is also impregnable."
+extra {"scratches","scratch"}
+"The rock sports some scratches where the gnomes obviously tried to split
+or crack it."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_FOREST
+west to mine4 descr "The tunnel branches in this direction.";
+south to mine11 descr "This is where the gnome have tried to go around
+the rock.";
+end
+
+             mine11
+names{"mine11"}
+title "More new diggings"
+descr "The gnomes are still working on this section of the mine. The rock
+looks much larger that you first though, it also looks larger than the
+gnomes first thought. This area doesn't look as stable as the rest of
+these mines. It would probably be best if you didn't hang around."
+extra {"rock"}
+"The rock looks like it's going to turn out to be huge. You feel sorry
+for the poor gnomes who will have to dig around it."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_FOREST
+north to mine5 descr "You can see a bend in the tunnel.";
+end
+
+             mine6
+names{"mine6"}
+title "Another vein"
+descr "This room of the mine has another vein running through it. This
+vein is different from the last though for it is made of quartz. The
+quartz touches the surface somewhere because of the light that is coming
+through it. This light makes lanterns unnecessary. It also hurts the
+eyes just a little. This is also the gnomes refractory. There are many
+benches and long tables here. Some gnomes are just finishing up there
+lunch while others are just sitting down to dine."
+extra {"vein of quartz","quartz vein","vein","quartz"}
+"This is pure quartz. It catches the light of the surface and brings it
+down to this subterranean area."
+extra {"benches","bench"}
+"Short, small benches. Made specifically for gnomes."
+extra {"tables","table"}
+"Short, small tables. Made specifically for gnomes."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_FIELD
+north to mine7 descr "Digging has begun in this direction.";
+south to mine4 descr "A branch in the tunnel is in this direction.";
+end
+
+             mine7
+names{"mine7"}
+title "New digging in an old mine"
+descr "Though the mine is old the gnomes have begun digging anew. The
+only thing you wonder about it is, why are they digging only to the east
+and not to the north as well? This is the gnomes business however and not
+yours, so don't try sticking you nose in where it doesn't belong."
+extra {"digging"}
+"The gnomes seem to digging as hard as they can here."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_FIELD
+south to mine6 descr "A place for eating is this way.";
+east to mine8 descr "More digging is this way.";
+end
+
+            mine8
+names{"mine8"}
+title "More new digging in an old mine"
+descr "The walls of this mine, especially the south one, are being dug at
+while you watch in wonder. The gnomes work almost feverishly are clearing
+away the dirt and rock. The north wall, while being dug at but little,
+seems to have lose dirt and rock, maybe there's something there?"
+extra {"lose dirt","dirt"}
+"The dirt on the north wall is very lose, seems like there's something
+behind it........."
+extra {"lose rocks","lose rock","rocks","rock"}
+"The rocks from the north wall come out easily."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_FIELD
+north to hidden_rm open {EX_OPEN_CLOSE,EX_CLOSED,EX_HIDDEN} keyword
+{"dirt","rock"} descr "Loose dirt is on this wall.";
+SECRET_DOOR_DIFFICULTY (NORTH,30)
+west to mine7 descr "You can see a turn in the tunnel.";
+east to mine9 descr "A strange place is in this direction.";
+end
+
+               hidden_rm
+names{"hidden room"}
+title "A lost room"
+descr "As you step into this room you are almost overwhelmed by the dust
+your feet knock up. This room is filled with a musty sent which is so
+strong it almost makes you gag. As you glance around you notice that this
+was once someones home. You can see the remains of a bed and table and
+some dishes. Not much else is left."
+extra {"bed"}
+"You would not like to try sleeping in that."
+extra {"table"}
+"It doesn't look very sturdy."
+extra {"dishes"}
+"It would probably be best if you didn't eat off these."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+south to mine8 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"opening"}
+descr "There is a small opening in this direction.";
+end
+
+               mine9
+names{"mine9"}
+title "Old diggings and a discovery"
+descr "The floor of this area has been cleared of all debris. The walls
+are all smooth and have not been worked for many, many years. Standing
+in the center of this room is a gigantic pillar. It dominates the room.
+The gnomes who are cleaning in this area stare at it in awe. The ceiling
+has been reinforced to prevent cave-ins and the walls have also been
+reinforced. You wonder what this pillar really is."
+extra {"floor"}
+"The floor is very clean."
+extra {"walls","wall"}
+"The walls of this room are very smooth."
+extra {"ceiling"}
+"It has been reinforced to keep it from collapsing."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+west to mine8 descr "Digging has begun in this direction.";
+end
+
+               mine10
+names{"mine10"}
+title "New digging"
+descr "The gnomes have started digging here recently. This was obviously
+an old mine shaft which the gnomes are now turning into a who knows what.
+Contemplation on this area leads you to think that there must be
+something special in this mine for the gnomes to be spending so much
+trouble on it. There can't be anything left for them to mine here, so why
+are they mining?"
+extra {"digging"}
+"This digging has been recent."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_FOREST
+north to mine1 descr "This way leads back to the main mine tunnel.";
+end
+
+
+                dirt_path1
+names{"dirt path"}
+title "A small dusty path"
+descr "The path you now stand on appears to have been made by
+wheelbarrows pushed by gnomes. The reason you think this is because that
+is who and what is traveling it now. The ruts are deep on both sides of
+the path. You must move quickly to keep from being run over by the zealous
+gnomes. They are taking wheelbarrows full of dirt to the large dirt pile
+to the south."
+extra {"ruts"}
+"Deep ruts made by wheelbarrows."
+extra {"dirt pile","dirt","pile"}
+"A large pile of dirt. Many times higher than you."
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_FIELD
+north to sou_vil descr "You can see the southern end of the village in
+this direction.";
+south to dirt_pile descr "There is a large dirt pile in this direction.";
+end
+
+             dirt_pile
+names{"dirt pile"}
+title "A large pile of dirt"
+descr "You are but a meter from the massive pile of dirt that rests here.
+It is bigger than a house, bigger than a barn, bigger than Udgaard! It is
+the dirt pile of the ages. You wonder if the gnomes are trying to make
+there own hill right here. That is possible but highly unlikely since a
+hill is just a couple of meters behind the dirt pile, you think. The
+gnomes pile dirt here all day, resting only for a few hours at night then
+they begin to pile dirt here again."
+extra {"dirt pile","dirt","pile"}
+"The dirt pile stands taller than you can see. It is barely possible for
+you to see around it."
+extra {"hill"}
+"This is a very large, green hill."
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_MOUNTAIN
+north to dirt_path1 descr "A path back to the village lies this way.";
+end
+
+          grocers
+names{"grocers"}
+title "The grocers"
+descr "The walls of this building are lined with vegetables and fruits.
+Small melons rest on the floor alongside other foods. This is where the
+gnomes get almost all their food."
+extra {"vegetables"}
+"Many, many different kinds of vegetables hang before you."
+extra {"fruits"}
+"Many, many different kings of fruits hang before you."
+extra {"melons"}
+"These melons look ripe and delicious."
+extra {"other foods"}
+"There are other foods, not melons."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+east to nor_vil descr "The center of the village marketplace is this
+way.";
+end
+
+           meat_shop
+names{"butchers"}
+title "The butchers"
+descr "This place smells of blood and slaughtered animals. Large slabs of
+meat (large for gnomes that is) hang on the walls and from the ceiling.
+This is the place where the gnomes get the meat they eat."
+extra {"large slabs of meat","large meat","slabs of meat","meat
+slabs","large
+slabs","slabs","meat"}
+"These slabs of meat could feed you easily."
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+south to nor_vil descr "The center of the village marketplace is this
+way.";
+end
+
+           inn
+names{"inn"}
+title "The entrance to the inn"
+descr "As you step into the inn you feel like this is a good place to
+rest. This is a very comfortable inn, there are cushioned chairs at each
+table and the fireplace emits a nice, warm, glow."
+extra {"cushioned chairs","cushioned chair","chairs","chair"}
+"This is a very comfortable looking chair. It is thickly cushioned."
+extra {"tables","table"}
+"The tables are always set and there is a sign on each saying that you
+are always welcome here."
+extra {"fireplace"}
+"The fireplace emits a nice warmth, and makes you feel even more
+comfortable."
+ALWAYS_LIGHT
+flags {UNIT_FL_SACRED}
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+west to nor_vil descr "The center of the village marketplace is this
+way.";
+up to loft descr "You can see the inn's loft.";
+end
+
+            loft
+names{"loft"}
+title "The inn's loft"
+descr "This is the inn's loft. It is where everyone who stays at the inn
+sleeps (yes everyone). The roof is high to accommodate tall visitors and
+there
+is a fresh smell about the place. The innkeeper surely does keep his inn
+clean."
+extra {"roof"}
+"The roof it very tall so that anyone staying in the inn will not have
+problems walking around."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+down to inn descr "You can see the first floor of the inn.";
+end
+
+            path_mound1
+names{"grassy path"}
+title "A grassy path"
+descr "You are traveling on a small dirt path surrounded by grass. To the
+north huge mounds are on the ground, and beyond them is the castle. To
+your east and west is just grass. There is a sign posted by the side of
+the path."
+extra {"mounts","mound"}
+"Very long and very tall, these stand not far from where you are."
+extra {"castle"}
+"The gnomish castle stands in the distance, it's towers are taller than
+the the hill the the castle is within."
+extra {"sign"}
+"&lThis is a small wooden sign written in rough hand.&n
+&n
+&s7       __________________________________&n
+&s7       \                                /&n
+&s7       /    Please do not walk on the   \&n
+&s7       \        grass.                  /&n
+&s7       /      Thank you,                \&n
+&s7       \          The lawnsmen          /&n
+&s7       /________________________________\&n
+"
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to path_mound2 descr "Large mounds stand near the roadside.";
+south to hole_path descr "There is a grassy field this way.";
+end
+
+             path_mound2
+names{"mound path"}
+title "Next to the mounds"
+descr "You stand next to the mounds which you saw in the distance
+before. Now that they are to both sides of you, you can see what they
+really are. Huge mounds of grass covered sludge, the remnants of the
+town that used to be here. Dirt, wood and stone are melted together into
+an unknown compound. The destruction continues to the north, where it
+finally ends at the castle. To the south it the path to the village."
+extra {"mounds","mound"}
+"Taller than you, these mounds of desolation show the evil that faced the
+world when the dark forces attacked."
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_FIELD
+south to path_mound1 descr "A grassy path lies in this direction.";
+north to path_mound3 descr "The large mounds continue beside the road.";
+end
+
+            path_mound3
+names{"mound center"}
+title "In the center of the destruction"
+descr "You are surrounded by the large masses of destruction. The path
+continues to the north and south but in all directions including those,
+the mounds rise from the ground. They are like standing monuments to the
+war and what was lost in it."
+extra {"mounds","mound"}
+"Standing tall and silent they watch you without making a sound."
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_FOREST
+north to path_mound6 descr "The road leading to the castle is this way.";
+south to path_mound2 descr "Large mounds line the path south.";
+west to path_mound4 descr "You can see a small path into the mounds.";
+east to path_mound5 descr "You can see a small path into the mounds.";
+end
+
+             path_mound4
+names{"mound west"}
+title "In the rubble"
+descr "As you pick your way through the rubble you see small items that
+have lasted through the years. Corroded pots and other metal items
+dropped here from the halfling and gnomish scavengers who pilfered the
+homes here as they were burning. You wonder if you'll ever have to face
+this much destruction."
+extra {"rubble"}
+"Half melted or charred beams and other things such as
+fallen in walls and doors which are mostly burnt away."
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_MOUNTAIN
+east to path_mound3 descr "The center of the destruction is this way.";
+end
+
+               path_mound5
+names{"mound east"}
+title "In the rubble"
+descr "As you pick your way through the rubble you see small items that
+have lasted through the years. Corroded pots and other metal items
+dropped here from the halfling and gnomish scavengers who pilfered the
+homes here as they were burning. You wonder if you'll ever have to face
+this much destruction."
+extra {"rubble"}
+"Half melted or charred beams and other things such as
+fallen in walls and doors which are mostly burnt away."
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_MOUNTAIN
+west to path_mound3 descr "The center of the destruction is this way.";
+
+SECRET_DOOR_DIFFICULTY(EAST, 100)
+east to clan_home_013@clans
+keyword {"rubble", "grave"} open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+descr
+"Something funny...";
+
+end
+
+                     path_mound6
+names{"before the castle"}
+title "Before the castle"
+descr "You stand in front of the gnomish castle. To your west and east
+is rubble and debris, to your south the path through the destruction. To
+your north is the castle gates. You can feel eyes watching you carefully
+as you approach the castle's gate."
+extra {"rubble","debris"}
+"This is the same junk you've been looking at as you approached that
+castle."
+flags{UNIT_FL_NO_MOB,UNIT_FL_NO_TELEPORT}
+movement SECT_FOREST
+north to cast_ent open {EX_OPEN_CLOSE,EX_CLOSED} descr "The gate is very
+large and made of wood, reinforced by iron bands." keyword {"gate"} descr
+"The gate to the castle looms before you.";
+south to path_mound3 descr "The center of the destruction is this way.";
+end
+
+                     cast_ent
+names{"castle gate"}
+title "The castle gate"
+descr "You stand within the castle's entrance. You can feel eyes one you
+here, watching your every move, it gives you the creeps. The walls are
+made of granite and the floor is as well. To the north is a courtyard
+with a fountain standing in it's center."
+extra {"walls","wall","floor"}
+"The blocks are made of solid, grey granite."
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+south to path_mound6 open {EX_OPEN_CLOSE,EX_CLOSED} descr "The castle
+gate is in this direction." keyword {"gate"} descr "The road through the
+mounds is this way.";
+north to courtyard2 descr "The castle courtyard is before you.";
+end
+
+               courtyard1
+names{"courtyard1"}
+title "Southwest corner of the courtyard"
+descr "You stand next to the entrance to one of the castles two towers.
+To your north and east the courtyard continues. To your west is the door
+to the tower."
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to courtyard4 descr "The castle courtyard is before you.";
+east to courtyard2 descr "The castle courtyard is before you.";
+west to tow_bottom1 open {EX_OPEN_CLOSE,EX_CLOSED} descr "There is a
+small wooden door in this direction." keyword {"wooden door","door"}
+descr "The entrance to the tower is in this direction.";
+end
+
+                 courtyard2
+names{"courtyard2"}
+title "One of the courtyard's exits"
+descr "You stand just north of the gate leading out of the castle. To
+your north is a large, ornate fountain. To your west and east are the
+entrances to the two towers. You can see decorative banners waving in
+the breeze on the north wall of the courtyard ."
+extra {"towers","tower"}
+"About three stories tall. Used to guard the castle's gate."
+extra {"banners","banner"}
+"Large festive banners each bearing the mark of a different king."
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to courtyard5 descr "The castle courtyard is before you.";
+south to cast_ent descr "The gates of the castle loom above you.";
+west to courtyard1 descr "The castle courtyard stretches out before you.";
+east to courtyard3 descr "The castle courtyard stretches out before you.";
+end
+
+              courtyard3
+names{"courtyard3"}
+title "Southeast corner of the courtyard"
+descr "You stand next to the entrance to one of the castles two towers.
+To your north and west the courtyard continues. To your east is the door
+to the tower."
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to courtyard6 descr "The castle courtyard stretches out before
+you.";
+west to courtyard2 descr "The castle courtyard stretches out before you.";
+east to tow_bottom2 open {EX_OPEN_CLOSE,EX_CLOSED} descr "There is a
+small wooden door in this direction." keyword {"wooden door","door"}
+descr "The entrance to the tower is in this direction.";
+end
+
+                    courtyard4
+names{"courtyard4"}
+title "West part of the courtyard"
+descr "You are on the west end of the courtyard. The north and south are
+the corners of the courtyard with the east being the center. From here
+you can see everything in the courtyard including the fountain, the
+gate, and doors to the towers, and the main door leading into the heart
+of the castle."
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to courtyard7 descr "The courtyard stretches out before you.";
+south to courtyard1 descr "The courtyard is before you.";
+east to courtyard5 descr "The courtyard is before you.";
+end
+
+                      courtyard5
+names{"courtyard5"}
+title "The center of the courtyard"
+descr "This is the center of the castle's courtyard.  In the center of
+this center is a fountain. You can see to the north the doors leading
+into the castle, and to the south the gate leading out of the castle. To
+the southwest and southeast are the doors of the towers."
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to courtyard8 descr "The doors to the castle are in this
+direction.";
+south to courtyard2 descr "The courtyard stretches out before you.";
+west to courtyard4 descr "The courtyard stretches out before you.";
+east to courtyard6 descr "The courtyard is before you.";
+end
+
+                    courtyard6
+names{"courtyard6"}
+title "The east side of the courtyard"
+descr "You are on the east end of the courtyard. The north and south are
+the corners of the courtyard with the west being the center. From here
+you can see everything in the courtyard including the fountain, the
+gate, and doors to the towers, and the main door leading into the heart
+of the castle."
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to courtyard9 descr "The courtyard is before you.";
+south to courtyard3 descr "The courtyard is before you.";
+west to courtyard5 descr "The courtyard stretches out before you.";
+end
+
+                 courtyard7
+names{"courtyard7"}
+title "Northwest corner of the courtyard"
+descr "You stand in the northwest corner of the castle's courtyard. You
+are shaded by the hill in which the castle is built. To the east is the
+entrance into the castle's underground, to the south, more courtyard.
+Above you banners ripple slightly in the breeze. To your southeast is
+the center of the courtyard."
+extra {"banners","banner"}
+"Large festive banners each bearing the mark of a different king."
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+east to courtyard8 descr "The doors to the castle are in this direction.";
+south to courtyard4 descr "The courtyard stretches out before you.";
+end
+
+                   courtyard8
+names{"courtyard8"}
+title "The castle's entrance"
+descr "Tall and massive best describe the doors leading into the castle.
+They are the only way into the castle itself that you can see. The
+stones on which you stand are worn by use. Obviously these door are used
+a great deal. To the south is the center of the courtyard with its large
+fountain."
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to cast_foy open {EX_OPEN_CLOSE,EX_CLOSED} descr "The massive
+doors into the castle stand here." keyword {"doors","door"} descr "The
+doors to the castle are in this direction.";
+south to courtyard5 descr "The courtyard stretches out before you.";
+west to courtyard7 descr "The courtyard is before you.";
+east to courtyard9 descr "The courtyard stretches out before you.";
+end
+
+                    courtyard9
+names{"courtyard9"}
+title "Northeast corner of the courtyard"
+descr "You stand in the northeast corner of the castle's courtyard. You
+are shaded by the hill in which the castle is built. To the west is the
+entrance into the castle's underground, to the south, more courtyard.
+Above you banners ripple slightly in the breeze. To your southeast is
+the center of the courtyard."
+extra {"banners","banner"}
+"Large festive banners each bearing the mark of a different king."
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+west to courtyard8 descr "The doors to the castle are in this direction.";
+south to courtyard6 descr "The courtyard stretches out before you.";
+end
+
+                  tow_bottom1
+names{"tower bottom west"}
+title "The bottom of the west tower"
+descr "You are standing in the bottom of the west tower. It appears to
+be a guard house. With cots and bunks and other things it is most
+definitely a guard house."
+extra {"cots","bunks","cot","bunk"}
+"These are the beds for the gnome guards."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+east to courtyard1 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"wooden
+door","door"} descr "The courtyard is in this direction.";
+up to tow_mid1 descr "The tower armory is this way.";
+end
+
+                  tow_bottom2
+names{"tower bottom east"}
+title "The bottom of the east tower"
+descr "You are standing in the bottom of the east tower. It appears to
+be a guard house. With cots and bunks and other things it is most
+definitely a guard house."
+extra {"cots","bunks","cot","bunk"}
+"These are the beds for the gnome guards."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+west to courtyard3 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"wooden
+door","door"} descr "The courtyard is this way.";
+up to tow_mid2 descr "The tower armory is this way.";
+end
+
+                 tow_mid1
+names{"tower mid west"}
+title "The guardhouse armory"
+descr "This room is full of weapons and armor of many different kinds.
+There are swords, and axes, and flails, and others. There are also
+plates, and jerkins, and bracers, and helmets, and more. You can go up,
+to the towers top, or down to the guard's bunkhouse."
+extra {"weapons"}
+"A great variety of weapon are stashed here."
+extra {"swords"}
+"Almost every kind of sword is hanging on the walls here."
+extra {"axes"}
+"Almost every kind of axe is resting agains the walls of this room."
+extra {"flails"}
+"Many different kinds of flails are piles together on the sides of this
+room."
+extra {"armor"}
+"Various kinds of armor are stacked here."
+extra {"plates"}
+"Strong looking plates are resting against the walls."
+extra {"jerkins"}
+"Many jerkins are piled on top of some of the other items here."
+extra {"bracers"}
+"Bracers made from different kinds of metal are strewn on the floor."
+extra {"helmets"}
+"Many types of helmets hang from hooks in the walls of this room."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+up to tow_top1 descr "The top of the tower is this way.";
+down to tow_bottom1 descr "The bottom of the tower is in this direction.";
+end
+
+                 tow_mid2
+names{"tower mid east"}
+title "The guardhouse armory"
+descr "This room is full of weapons and armor of many different kinds.
+There are swords, and axes, and flails, and others. There are also
+plates, and jerkins, and bracers, and helmets, and more. You can go up,
+to the towers top, or down to the guard's bunk house."
+extra {"weapons"}
+"A great variety of weapon are stashed here."
+extra {"swords"}
+"Almost every kind of sword is hanging on the walls here."
+extra {"axes"}
+"Almost every kind of axe is resting agains the walls of this room."
+extra {"flails"}
+"Many different kinds of flails are piles together on the sides of this
+room."
+extra {"armor"}
+"Various kinds of armor are stacked here."
+extra {"plates"}
+"Strong looking plates are resting against the walls."
+extra {"jerkins"}
+"Many jerkins are piled on top of some of the other items here."
+extra {"bracers"}
+"Bracers made from different kinds of metal are strewn on the floor."
+extra {"helmets"}
+"Many types of helmets hang from hooks in the walls of this room."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+up to tow_top2 descr "The top of the tower is in this direction.";
+down to tow_bottom2 descr "The bottom of the tower is this way.";
+end
+
+               tow_top1
+names{"tower top west"}
+title "Top of the west tower"
+descr "You stand on top of the west tower and can see the entire valley.
+A light breeze tugs at your hair as you look over the battlements.
+There is only one exit save jumping, and that is down into the tower's
+armory. Below you is the saddening sight of all the rubble and debris."
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+down to tow_mid1 descr "The tower's armory is this way.";
+end
+
+               tow_top2
+names {"tower top east"}
+title "Top of the east tower"
+descr "You stand on top of the east tower and can see the entire valley.
+A light breeze tugs at your hair as you look over the battlements.
+There is only one exit save jumping, and that is down into the tower's
+armory. Below you is the saddening sight of all the rubble and debris."
+flags{UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+down to tow_mid2 descr "The tower armory is this way.";
+end
+
+                  cast_foy
+names{"castle foyer"}
+title "The castle's foyer"
+descr "The mighty hall of the castle stretches before you. There is
+carpet on the floor and tapestries on the wall. Candles light the room.
+Unlike all the other places in the village and the castle's exterior,
+this hall would give a giant plenty of room to move around. You feel
+very peaceful here."
+extra {"carpet"}
+"Blue and red carpet covers the floor in the hall, thick and soft."
+extra {"tapestries"}
+"Out of the many tapestries hanging on the walls there isn't one about
+war, which is unusual."
+extra {"candles"}
+"Large wax candles fill this room with light."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to cast_hall descr "The hall of the castle stretches out before
+you.";
+south to courtyard8 open {EX_OPEN_CLOSE,EX_CLOSED} descr "There are
+large double door in this direction." keyword {"double doors",
+       "doors","door"} descr "The courtyard is this direction.";
+end
+
+                     cast_hall
+names{"castle hall"}
+title "The main hall in the castle"
+descr "Rich furnishing abound in this hall. There are many tapestries
+and pictures. Large comfortable chairs line the walls and candles
+abound. The carpet feels good under your travel worn feet. You begin to
+feel as though you're going to like this place."
+extra {"tapestries","pictures"}
+"These are images of peace and tranquillity."
+extra {"chairs"}
+"The chairs look a little small for humans but a little big for
+gnomes....about the right size from dwarves and halflings."
+extra {"candles"}
+"Large wax candles light this room"
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to cast_doors descr "The hall branches up ahead.";
+south to cast_foy descr "You can see the entrance to the castle.";
+east to light_rm descr "A small smoke filled room is this way.";
+end
+
+                cast_doors
+names{"castle doors"}
+title "Entrance to the throne room"
+descr "Like the rest of the castle, this room is decorated nicely. With
+paintings and tapestries this room is just a continuation of the main
+hall. There is only one difference, to the north are two very large
+doors. Each door has the royal symbol on it."
+extra {"tapestries","pictures"}
+"Images of peace and tranquillity."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to cast_throne open {EX_OPEN_CLOSE,EX_CLOSED} keyword
+   {"very large doors","large doors","doors", "door"} descr "The throne
+room is in this direction.";
+east to east_hall1 descr "A hallway stretches out to the east.";
+west to west_hall1 descr "A hallway stretches out to the west.";
+south to cast_hall descr "The hall stretches out before you.";
+end
+
+                  cast_throne
+names{"gnome throne"}
+title "The throne room"
+descr "You stand before the throne of the gnome king. He rests
+comfortably on a cushioned throne and watches you closely. This room is
+the most decorated so far. The floor is lined in gold and silver and the
+walls do not have tapestries or paintings on them they are covered in
+designs made of gold, silver, and bronze."
+extra {"throne"}
+"The throne is padded well and made of what looks like pure gold."
+extra {"tapestries","pictures"}
+"Yeah RIGHT! There are none of those here you dolt! Why don't you ever
+READ?"
+extra {"walls","designs","wall"}
+"These images are very beautiful and worth a fortune!"
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+south to cast_doors open {EX_OPEN_CLOSE,EX_CLOSED} keyword
+    {"very large doors","large doors","doors","door"} descr "The hall is
+to the south.";
+end
+
+                    east_hall1
+names{"east hall1"}
+title "The east hall"
+descr "You are standing in the east hall. It is very large compared to
+the gnomes.  As you look around you can see many pictures and
+tapestries.  There are candles in scones along the walls and chairs
+resting between the scones."
+extra {"pictures","picture"}
+"These are large pictures of past Gnomish kings."
+extra {"tapestries","tapestry"}
+"The tapestries hanging here are covered in pictures of fields and trees
+and other peaceful things."
+extra {"candles","candle"}
+"Short, squat candles set in iron scones."
+extra {"scones","scone"}
+"Metal scones which hold short, squat candles."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+west to cast_doors descr "The entrance to the throne room is this way.";
+east to east_hall2 descr "The east hall continues in this direction.";
+end
+
+            east_hall2
+names{"east hall2"}
+title "Center of the east hall"
+descr "You are standing in the center of the east hall. It continues to
+you west as well as to your east.  There are candles in scones here but
+the tapestries and pictures are gone.  To the south is a large door,
+inset in an alcove."
+extra {"candles","candle"}
+"Short, squat candles which rest in iron scones."
+extra {"scones","scone"}
+"Iron scones which hold short, squat candles."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+west to east_hall1 descr "The beginning of the east hall is this way.";
+east to east_hall3 descr "The end of the east hall is this way.";
+south to mage_room open {EX_OPEN_CLOSE,EX_CLOSED} keyword
+{"large door","door"}
+descr  "There is a large door set in an alcove in this direction.";
+end
+
+                   east_hall3
+names{"east hall3"}
+title "End of the east hall"
+descr "You are standing at the end of the east hall.  The walls are
+covered in pictures and tapestries, while the walls are lined with
+candles. You can go west to the center of the hall."
+extra {"pictures","picture"}
+"These are large pictures of the different Gnomish Noble Houses."
+extra {"tapestries","tapestry"}
+"They are large tapestries what depict seens of beauty."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+west to east_hall2 descr "The east all continues in this direction.";
+end
+
+                 west_hall1
+names{"west hall1"}
+title "Beginning of the west hall"
+descr "You are standing at the beginning of the west hall. It is lighted
+by candles and the walls have been painted with many types of pictures.
+The ceiling is vaulted. To your east are the doors to the throne room.
+To your west is the center of the hall."
+extra {"candles","candle"}
+"These are short, squat candles set in iron scones."
+extra {"scones","scone"}
+"These are iron scones in which candles have been set."
+extra {"walls","wall","pictures","picture"}
+"The walls have been painted with many pictures depicting battles and
+destruction."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+west to west_hall2 descr "The west hall continues this way.";
+east to cast_doors descr "The entrance to the throne room is this way.";
+end
+
+                    west_hall2
+names{"west hall2"}
+title "The center of the west hall"
+descr "The ceiling soars upward above you. Covering it are beautiful
+pictures. Candles in iron scones light the ceiling making it easy to
+see. There is a small door to your north."
+extra {"ceiling","pictures","picture"}
+"The ceiling is covered in pictures of beauty."
+extra {"candles","candle"}
+"These are short, squat candles set in iron scones."
+extra {"scones","scone"}
+"These are iron scones which hold short, squat candles."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to cleric_room open {EX_OPEN_CLOSE,EX_CLOSED} keyword
+{"small door","door"} descr "There is a small door here";
+west to west_hall3 descr "The end of the west hall is in this direction.";
+east to west_hall1 descr "The beginning of the west hall is this way.";
+end
+
+                     west_hall3
+names{"west hall3"}
+title "The end of the west hall"
+descr "You are standing at the end of the west hall. The ceiling descends
+from it's peak to the wall here. The walls are painted and, as usual,
+candles in iron scones light this area. There are no doors and you can
+only go east to the center of the hall."
+extra {"walls","wall","pictures","picture"}
+"The pictures on the walls here are of grassy fields and warm, fire lit
+caves."
+extra {"candles","candle"}
+"These are short, squat candles resting in iron scones."
+extra {"scones","scone"}
+"These are iron scones which hold short, squat candles."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+east to west_hall2 descr "The west hall continues in this direction.";
+end
+
+                     cleric_room
+names{"cleric room"}
+title "Shara's room"
+descr "This room is small but very clean. There is a small alter in the
+front and a small bed in the back. In between these are books and holy
+symbols and other such stuff. You feel at peace here."
+extra {"alter"}
+"This is Shara's personal alter. It is covered in small gems."
+extra {"bed"}
+"It look more like a cot. It must be Shara's bed."
+extra {"books","book"}
+"These look like books on holy things."
+extra {"holy symbols","symbols"}
+"These are just what they look like, holy symbols."
+extra {"other things"}
+"These are OTHER THINGS."
+ALWAYS_LIGHT
+flags {UNIT_FL_SACRED}
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+south to west_hall2 open {EX_OPEN_CLOSE,EX_CLOSED} keyword
+{"small door","door"} descr "There is a small door in this
+direction.";
+down to dungeon_begin open {EX_OPEN_CLOSE,EX_CLOSED,EX_HIDDEN} keyword
+{"trapdoor","hidden door","door"} descr "You can see a faint outline of
+something in the floor.";
+SECRET_DOOR_DIFFICULTY (DOWN,40)
+end
+
+                    mage_room
+names{"mage room"}
+title "Kracnash's room"
+descr "This room is small and full of clutter. There are tables, work
+benches, and shelves everywhere. Paper seem to be the dominate item in
+the room however, along with strange apparatus. You wonder how anyone
+can live in a room like this. There seems to be a small crack in the
+floor."
+extra {"tables","table"}
+"Large wooden tables, covered in papers and strange apparatus."
+extra {"work benches","work bench","benches","bench"}
+"Large work benches made of wood. They are covered in papers and strange
+apparatus."
+extra {"papers","paper"}
+"These look like notes of some kind. The handwriting is awful!"
+extra {"strange apparatus","apparatus"}"They look like what some
+mad scientist would use." ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to east_hall2 open {EX_OPEN_CLOSE,EX_CLOSED} keyword
+{"large door","door"} descr "There is a large door in this direction.";
+down to prison_rm open {EX_OPEN_CLOSE,EX_CLOSED,EX_HIDDEN} keyword
+{"crack","trapdoor"} descr "There is a small crack in the floor like what
+a trapdoor might make.";
+SECRET_DOOR_DIFFICULTY (DOWN,40)
+end
+
+                      prison_rm
+names{"prison room"}
+title "A small dungeon"
+descr "This small room looks like a small dungeon. The walls are cold wet
+stone and the floor is covered in moldy straw. There are chains and
+manacles attached to the walls and a small grate near the ceiling that
+lets light in."
+extra {"walls","wall"}
+"The walls are covered in moisture."
+extra {"floor"}
+"The floor is covered in moldy straw."
+extra {"moldy straw","straw"}
+"The straw that is on the floor is old and moldy."
+extra {"chains","chain","manacles","manacle"}
+"The chains and manacles are made of thick steel and are attached to the
+walls."
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+up to mage_room open {EX_OPEN_CLOSE,EX_CLOSED} keyword
+{"crack","trapdoor","door"} descr "A trapdoor is above you.";
+north to dungeon5 open {EX_OPEN_CLOSE,EX_CLOSED,EX_HIDDEN} keyword
+{"brick"} descr "There is a loose brick on this wall.";
+SECRET_DOOR_DIFFICULTY (NORTH,40)
+end
+
+
+                      light_rm
+names{"lighter's room"}
+title "The Lighter's Room"
+descr "This is a small, stuffy room.  The walls are covered in soot and
+the ceiling and floor are black from ash and smoke. There is a small bed
+and table and a large box sitting in one corner."
+extra {"bed"}
+"This bed looks like it has caught on fire a few times in the past."
+extra {"table"}
+"This is a common table."
+extra {"large box","box"}
+"The box contains various items for starting fires."
+extra{"walls"}
+"The walls are smudged with soot."
+extra {"ceiling"}
+"As you look up, some ash falls into your eye."
+extra {"floor"}
+"The floor is black as night from all of the ashes that have been ground
+into it."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+west to cast_hall descr "The main hall of the castle is this way.";
+end
+
+                      dungeon_begin
+names{"dungeon start","dungeon begin"}
+title "A musty hall"
+descr "You are standing at the beginning of a dank, musty old hallway.
+The walls are covered in moisture and the floor is slightly slick. The
+only light is from the trapdoor above you. The hall seems to extend to
+the east where strange sounds can be heard."
+extra {"walls","wall"}
+"The stones of the walls are covered in moisture."
+extra {"floor"}
+"The floor is slick from the water pooled on it."
+up to cleric_room open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"trapdoor",
+"door"};
+IN_ALWAYS_DARK
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+east to dungeon1 descr "The hallway continues east.";
+end
+
+                      dungeon1
+names{"dungeon hall 1","dungeon 1", "dungeon1"}
+title "A dank hallway"
+descr "The hallway continues east-west. The ceiling is dripping water and
+there are pools forming on the floor. There are bolted steel doors to the
+north and south and strange sounds can be heard coming from them."
+extra {"ceiling"}
+"Water drips continuously from the ceiling making pools on the floor."
+extra {"floor"}
+"The floor is covered in large pools of water."
+extra {"pools","pool"}
+"The water dripping from the ceiling has formed pools on the floor. You
+wouldn't want to drink from them."
+extra {"bolted steel door","bolted door","steel door","door"}
+"The door is made of strong steel and appears to be very thick."
+north to cell1 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"bolted steel
+door",
+ "bolted door","steel door","door"} descr "There is a bolted steel door
+in this direction.";
+south to cell2 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"bolted steel
+door",
+ "bolted door", "steel door", "door"} descr "There is a bolted steel door
+in this direction.";
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+west to dungeon_begin descr "The entrance to the dungeon is this way.";
+east to dungeon2 descr "There is a dry place in the hall in this
+direction.";
+IN_ALWAYS_DARK
+dilcopy driprg@gnome();
+end
+
+                      dungeon2
+names{"dungeon2"}
+title "A dry place"
+descr "You are directly under the gnome king's hall. There is no
+moisture here. The only dampness is what is running here from the
+east and west. There are bolted steel doors to the north and south
+and the hall continues east and west."
+extra {"floor"}
+"The floor is dry except for a few trickles of water from the east
+and west."
+extra {"bolted steel door","bolted door","steel door","door"}
+"The door is made of strong steel and appears to be very thick."
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to cell3 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"bolted steel
+door",
+ "bolted door","steel door","door"} descr "There is a bolted steel door
+in this direction.";
+south to cell4 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"bolted steel
+door",
+ "bolted door", "steel door", "door"} descr "There is a bolted steel door
+in this direction.";
+west to dungeon1 descr "The dungeon hall continues this way.";
+east to dungeon3 descr "The dungeon hall continues this way.";
+IN_ALWAYS_DARK
+end
+
+                      dungeon3
+names{"dungeon3"}
+title "A wet floor"
+descr "The floor here is very wet. It is almost like the ceiling is
+crying. The dripping is quite annoying. To the west the floor slopes
+downwards and the pool of water that has formed looks like it is
+a little deep. The steel doors to the north and south are rusted."
+extra {"floor"}
+"The floor is very slick and to the west a large pool is forming."
+extra {"bolted steel door","bolted door","steel door","door"}
+"The door is made of strong steel and appears to be very thick, but here
+they are pitted with rust."
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to cell5 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"bolted steel
+door",
+ "bolted door","steel door","door"} descr "There is a bolted steel door
+in this direction.";
+south to cell6 open {EX_OPEN_CLOSE,EX_CLOSED} keyword {"bolted steel
+door",
+ "bolted door", "steel door", "door"} descr "There is a bolted steel door
+in this direction.";
+west to dungeon2 descr "There is a dry spot in the dungeon hall this
+way.";
+east to dungeon4 descr "A large pool covers the floor in this direction.";
+IN_ALWAYS_DARK
+dilcopy driprg@gnome();
+end
+
+                      dungeon4
+names{"dungeon4","flooded room"}
+title "A flooded bend in the hall"
+descr "The hallway here has been completely flooded. You are standing in
+water that reaches about halfway up your legs. The water is a dirty brown
+and it looks like things are swimming around in it. The hall also turns
+south here."
+extra {"dirty brown water","dirty water","brown water","water","pool"}
+"The water has been stagnating here for a while. It is brown with dirt.
+It would not be a good idea to stay here to long. You might catch a
+disease."
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+west to dungeon3 descr "The dungeon hall continues this way.";
+south to dungeon5 descr "The dungeon hall ends in this direction.";
+IN_ALWAYS_DARK
+dilcopy driprg@gnome();
+end
+
+                      dungeon5
+names{"dungeon5"}
+title "Southern part of the hall"
+descr "This is the southern part of this hallway. The floor slopes up to
+the south and down into a large pool to the north. There doesn't appear
+to be any exits except north but to your east you can feel great evil.
+The south wall appears to be made of new bricks."
+extra {"south wall","new bricks","bricks","brick"}
+"One of the bricks looks like it's loose."
+extra {"east wall"}
+"This wall is made of ancient stones. You can feel great evil coming
+from it."
+north to dungeon4 descr "There is a large pool in the floor of the
+dungeon hall in this direction.";
+east to starting_rm open {EX_OPEN_CLOSE,EX_CLOSED,EX_HIDDEN} keyword
+{"door","evil","stones","stone"} descr "The wall seems very evil.";
+SECRET_DOOR_DIFFICULTY (EAST,40)
+south to prison_rm open {EX_OPEN_CLOSE,EX_CLOSED,EX_HIDDEN} keyword
+{"brick"} descr "There seems to be a loose brick on this wall.";
+SECRET_DOOR_DIFFICULTY (SOUTH,40)
+IN_ALWAYS_DARK
+dilcopy driprg@gnome();
+end
+
+                      starting_rm
+names{"starting room"}
+title "A room of evil"
+descr "You have stepped into a room of full of nothing. The walls, floor
+and ceiling are all void of anything. There are also no exits. The way
+you came in is gone."
+extra {"ceiling","floor","walls","wall"}
+"It is blank."
+IN_ALWAYS_DARK
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+special SFUN_FORCE_MOVE "gnome/middle_room!You are moved."
+end
+
+                       cell1
+names{"cell1"}
+title "A prison cell"
+descr "This is a small cell for holding prisoners. There is nothing in
+this cell at the moment. The walls are covered in moisture and water
+drips from the ceiling. There a puddles on the floor."
+extra {"walls","wall"}
+"The walls are covered in moisture and are very slick."
+extra {"ceiling"}
+"The ceiling continues to drip water. If you say long you will get very
+wet."
+extra {"floor","puddles"}
+"Large puddles have formed on the floor."
+IN_ALWAYS_DARK
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+south to dungeon1 open {EX_OPEN_CLOSE,EX_CLOSED} keyword
+{"bolted steel door","steel door","bolted door","door"} descr "There is a
+bolted steel door in this direction.";
+dilcopy driprg@gnome();
+end
+
+                      cell2
+names{"cell2"}
+title "A prison cell"
+descr "This is a small cell for holding prisoners. There is nothing in
+this cell at the moment. The walls are covered in moisture and water
+drips from the ceiling. There a puddles on the floor."
+extra {"walls","wall"}
+"The walls are covered in moisture and are very slick."
+extra {"ceiling"}
+"The ceiling continues to drip water. If you say long you will get very
+wet."
+extra {"floor","puddles"}
+"Large puddles have formed on the floor."
+IN_ALWAYS_DARK
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to dungeon1 open {EX_OPEN_CLOSE,EX_CLOSED} keyword
+{"bolted steel door","steel door","bolted door","door"} descr "There is a
+bolted steel door in this direction.";
+dilcopy driprg@gnome();
+end
+
+                      cell3
+names{"cell3"}
+title "A musty old cell"
+descr"Though this cell is not wet or even damp it is very old and the air
+is
+stale. There are chains attached to the walls and moldy straw on the
+floor. The walls, ceiling and floor are dry. This cell could be in use."
+extra {"chains","chain"}
+"These are chains for holding prisoners."
+extra{"moldy straw","straw"}
+"This is straw for prisoners to sleep on."
+IN_ALWAYS_DARK
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+south to dungeon2 open {EX_OPEN_CLOSE,EX_CLOSED} keyword
+{"bolted steel door","steel door","bolted door","door"} descr "There is a
+bolted steel door in this direction.";
+end
+
+                      cell4
+names{"cell4"}
+title "A prison cell"
+descr "This cell is dry and there is fresh straw on the floor. It is also
+inhabited. It is very surprising that there is anyone down here but there
+is.
+There are chains on the walls holding the poor prisoner here."
+extra {"fresh straw","straw"}
+"There is fresh straw on the floor for the prisoner to rest on."
+extra {"chains","chain"}
+"The chains in this cell are in use holding a prisoner."
+IN_ALWAYS_DARK
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to dungeon2 open {EX_OPEN_CLOSE,EX_CLOSED} keyword
+{"bolted steel door","steel door","bolted door","door"} descr "There is a
+bolted steel door in this direction.";
+end
+
+                     cell5
+names{"cell5"}
+title "A wet cell"
+descr "This cell is full of water. It runs from the walls in sheets. The
+ceiling doesn't drip water, it pours water. There isn't anything in this
+cell but water."
+extra {"walls","wall"}
+"The walls are obscured by the water running down them."
+extra {"ceiling"}
+"Water pours from the ceiling."
+extra {"floor"}
+"You cannot see the floor because it is covered in water."
+IN_ALWAYS_DARK
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+south to dungeon3 open {EX_OPEN_CLOSE,EX_CLOSED} keyword
+{"bolted steel door","steel door","bolted door","door"} descr "There is a
+bolted steel door in this direction.";
+dilcopy driprg@gnome();
+end
+
+                      cell6
+names{"cell6"}
+title "A damp cell"
+descr "You are standing in a small cell. The walls ceiling and floor are
+made of stone. There is a hint of moisture in the air. There are chains
+attached to the walls for holding prisoners. You would never know that
+the hallway right outside this cell is flooded."
+extra {"walls", "wall", "ceiling", "floor"}
+"It is made of very old stones."
+extra {"chains","chain"}
+"These are thick chains for holding prisoners."
+IN_ALWAYS_DARK
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to dungeon3 open {EX_OPEN_CLOSE,EX_CLOSED} keyword
+{"bolted steel door","steel door","bolted door","door"} descr "There is a
+bolted steel door in this direction.";
+end
+
+
+                      middle_room
+names{"middle room","waiting room"}
+title "A room of waiting"
+descr "This room is obviously designed for people to wait in. It is also
+obviously designed for people not to be comfortable while waiting. There
+is nothing to sit on and nothing to look at, the room is plain and
+unadorned."
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+special SFUN_FORCE_MOVE "gnome/master_room!You are summoned."
+end
+
+                      master_room
+names{"master room","room of evil","room of darkness"}
+title "A Room of Darkness"
+descr "You are standing in a room that is cloaked in darkness.  Evil
+fills this room. You can see nothing except a single figure standing
+in the distance."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+up to mage_room descr "A strange exit is this way.";
+end
+
+
+
+                      junk_hole
+names{"junk hole", "rand room"}
+title "The Junk Hole"
+descr "This is the DIRTIEST room you've EVER seen! There are papers
+scattered
+all over the floor and food wrappers and drink containers all over the
+place.
+This is obviously the home of someone who is VERY messy. The bed is the
+only
+thing that is clean, and even it is unmade. You wonder how ANYONE can
+live in such filth! There is a small sign on the wall over to one
+side...it is the only thing on the walls that hasn't been painted."
+extra {"papers","paper","floor"}
+"The floor is covered in many types of paper...some are from
+RPG's...others are drawings and sketches...and still more are just
+scribbled down ideas."
+extra {"food wrappers"}
+"You are looking at wrappers from many different types of food."
+extra {"drink containers","drink container"}
+"These are various cups and glasses and cans that used to hold
+drinks...they do not anymore."
+extra {"bed"}
+"This is the only place in the whole room that is not covered in junk. It
+does, however, appear to get LOTS of use."
+extra {"sign"}
+"&lThere is a sign on the wall, it reads......&n
+&n
+&s16                _____________________________________&n
+&s16                \                                   /&n
+&s16                /    This is the home of            \&n
+&s16                \       Rand al'Thor                /&n
+&s16                /         Dragon Reborn,            \&n
+&s16                \         Lord of the Dawn,         /&n
+&s16                /         Lord of the Morning,      \&n
+&s16                \         Lord of Chaos,            /&n
+&s16                /         Space/Time Anomaly,       \&n
+&s16                \    and overall Useless One!       /&n
+&s16                /___________________________________\&n
+"
+extra {"walls","wall","painting"}
+"The walls have all been painted with varying designs and images."
+ALWAYS_LIGHT
+flags{UNIT_FL_NO_WEATHER,UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+down to west_hall3 descr "It seems like you can just walk through the
+floor.";
+south to east_hall3 descr "It seems like you can just walk through this
+wall.";
+dilcopy safe_room@function();
+end
+
+
+%mobiles
+
+
+
+                   ghost_gnome
+names{"gnome prisoner","prisoner","gnome","spirit"}
+title "a gnome prisoner"
+descr "A prisoner is chained to the wall here."
+extra {}
+"This poor soul has been here for what must be ages."
+M_SPIRIT_GREATER(SEX_MALE)
+exp 100
+special SFUN_PAIN_INIT time WAIT_SEC*10 bits SFB_RANTIME
+"
+      110 Csay I have been here to long.@
+      120 Csay Why will they not let me go free?@
+      130 Csay I have done nothing!@
+      140 Csigh@
+      150 Csay So the drow attack was a success because of me.@
+      160 Cemote screams, 'PLEASE GODS! LET ME FREE!'@
+"
+end
+
+                    snake
+names{"water vyper","vyper","snake"}
+title "a water vyper"
+descr "A water vyper is hiding in the water."
+extra {}
+"This is a very large snake. It could easily eat a man. It is black with
+glowing green eyes and a long forked tongue."
+level 40
+sex SEX_MALE
+race RACE_SNAKE
+height 20
+weight 346
+exp 100
+alignment -800
+NATURAL_DEF(WPN_BITE,ARM_CLOTHES)
+MSET_ABILITY(20,20,10,10,10,10,0,20)
+MSET_WEAPON(0,0,0,0,70,0)
+MSET_SPELL(10,2,2,2,2,2,2,2,2,2,2)
+special SFUN_COMBAT_POISON
+dilbegin snakeprg();
+var
+    char   : unitptr;
+code
+{
+     heartbeat := PULSE_SEC*5;
+
+     :init:
+     self.minv := 220;
+     wait(SFB_CMD, (activator.type == UNIT_ST_PC) and (activator.level >
+       40));
+     char := activator;
+     secure(char, nochar);
+     self.minv := 0;
+     act("$3N lunges out of the water and attacks $1n!",A_SOMEONE, char,
+       null, self, TO_ROOM);
+     act("$3N lunges out of the water and attacks YOU!", A_ALWAYS, char,
+       null, self, TO_CHAR);
+     exec("kill "+char.name, self);
+     goto combat;
+
+     :combat:
+     if(self.position == POSITION_FIGHTING)
+     {
+       pause;
+       goto combat;
+     }
+     else
+       goto nochar;
+
+     :nochar:
+     unsecure(char);
+     goto init;
+}
+dilend
+end
+
+                    gnome_prisoner
+names{"gnome prisoner","prisoner","gnome"}
+title "a gnome prisoner"
+descr "A poor, bedraggled gnome is chained to the wall here."
+extra {}
+"This poor fellow has been chained to the wall with very thick chains,
+whoever chained him here does not want him to escape. He looks very
+pitiful."
+M_GNOME_WARRIOR_NATURAL(50,SEX_MALE)
+alignment 0
+exp 100
+special SFUN_PAIN_INIT time WAIT_SEC*10 bits SFB_RANTIME
+"
+        110 Csnivel@
+        120 Csay Why is he doing this to me?@
+        130 Csay I'm noone!@
+        140 Ccry@
+"
+end
+
+
+                    gnome_advent
+names {"gnome adventurer","gnome","adventurer"}
+title "a gnome adventurer"
+descr "An adventurous gnome stands here waiting for some adventuring to
+do."
+extra {}
+"He is young but well versed in the ways of the world. He watches you
+with a close eye, waiting for trouble."
+M_GNOME_WARRIOR_SWORD(42,SEX_MALE)
+alignment 106
+exp 100
+money 5 SILVER_PIECE
+special SFUN_RANDOM_ZONE_MOVE time WAIT_SEC*30 bits SFB_RANTIME
+special SFUN_PAIN_INIT time WAIT_SEC*8 bits SFB_RANTIME
+"
+   100 Cemote glances around.@
+   110 Csay Maybe I should go look for an adventure.@
+   120 Cponder@
+   130 Csay Uh, there MUST be something for me to do!@
+   140 Csigh@
+   150 Cshrug@
+"
+end
+
+                        gnome_sorceres
+names {"gnomeish sorceress","gnome","sorceress"}
+title "a gnomish sorceress"
+descr "A hooded gnome stands here."
+extra {}
+"She glances at you from under her hooded robe and frowns. There is
+something different about her, it makes you feel more than a little sick."
+M_GNOME_MAGE_FIRE(45,SEX_FEMALE,"cast firestorm")
+alignment 98
+exp 100
+money 3 SILVER_PIECE
+special SFUN_RANDOM_ZONE_MOVE time WAIT_SEC*40 bits SFB_RANTIME
+special SFUN_PAIN_INIT time WAIT_SEC*19 bits SFB_RANTIME
+"
+  110 S110@
+  120 Ggnome/inn@
+  150 Csigh@
+  160 Cemote mumbles something unintelligible.@
+"
+end
+
+                           gnome_thief
+names {"gnome thief","gnome","thief"}
+title "a gnome thief"
+descr "A young gnome stands here watching you closely."
+extra {}
+"She is very young but she looks like she can handle herself very well.
+You think it would be best if you left her alone."
+M_GNOME_THIEF_SWORD(45,SEX_FEMALE)
+alignment -140
+exp 100
+money 5 SILVER_PIECE
+special SFUN_RANDOM_ZONE_MOVE time WAIT_SEC*30 bits SFB_RANTIME
+special SFUN_PAIN_INIT time PULSE_SEC*5 bits SFB_RANTIME
+"
+      100 S100@
+      110 d100steal gold from %s@
+      120 Cgasp@
+      130 Cflee@
+      150 Cpeer@
+"
+end
+
+                      gnome_miner1
+names{"gnome miner","gnome","miner"}
+title "a gnome miner"
+descr "A gnome miner is kneeling here, digging."
+extra {}
+"He is strong built and seems sure of his skill. He wears dirty brown
+miners cloths and is carrying a pickaxe."
+M_GNOME_WARRIOR_AXE(47,SEX_MALE)
+alignment 200
+exp 100
+money 2 SILVER_PIECE
+special SFUN_RANDOM_ZONE_MOVE time WAIT_SEC*30 bits SFB_RANTIME
+special SFUN_PAIN_INIT time WAIT_SEC*10 bits SFB_RANTIME
+"
+      100 Cemote begins to dig with his pickaxe.@
+      110 Cemote makes a small dent in the wall.@
+      120 Csigh@
+      130 S100@
+      140 d100say What are you doing here %s, you're not allowed here!@
+      150 d100say You really should leave.@
+      160 Cwave %s@
+      170 Cemote goes back to his digging.@
+"
+end
+
+                          miner2
+names{"gnomish miner","miner","gnome"}
+title "a gnomish miner"
+descr "A gnomish miner is hard at work mining here."
+extra {}
+"To your surprise you realize that this miner is not a man but a woman.
+She is very dirty but looks very good at her job."
+M_GNOME_WARRIOR_AXE(47,SEX_FEMALE)
+alignment -349
+exp 100
+special SFUN_PAIN_INIT time WAIT_SEC*7 bits 89
+"
+      110 Cemote digs around in the dirt.@
+      120 Cemote sighs.@
+      130 Csay I never find anything!@
+      140 Cemote grumbles about her job.@
+      150 Cshrug.@
+      160 Csay Time for a break!@
+      170 Csit@
+      180 Cemote pulls out some food and begins to eat.@
+      190 Cemote finishes eating.@
+      200 Cburp@
+      210 Csay That was tasty.@
+      220 Cstand@
+      230 Csigh@
+      240 Cemote gets back to work.@
+"
+end
+
+                         gnome_guard1
+names{"gnome guard","gnome","guard"}
+title "a gnome guard"
+descr "A gnome guard is guarding here."
+extra {}
+"He appears to be a well trained individual. Well armed and somber he
+stands guard here, ever watchful, ever waiting."
+M_GNOME_WARRIOR_SWORD(50,SEX_MALE)
+alignment -600
+exp 100
+money 6 SILVER_PIECE
+special SFUN_RANDOM_ZONE_MOVE time WAIT_SEC*30 bits SFB_RANTIME
+special SFUN_PAIN_INIT time WAIT_SEC*15 bits SFB_RANTIME
+"
+      110 Cpeer@
+      120 S110@
+      130 d120look %s@
+      140 d120say I suppose you won't cause any harm, %s.@
+      150 d120pat %s@
+"
+end
+
+                          gnome_guard2
+names{"gnomish guard","gnome","guard"}
+title "a gnomish guard"
+descr "A gnomish guard stands here watching you closely."
+extra {}
+"This is a slight surprise. This guard is female and she looks like she
+could rip your eyes out and feed them to you."
+M_GNOME_WARRIOR_SWORD(50,SEX_FEMALE)
+alignment 600
+exp 100
+money 6 SILVER_PIECE
+special SFUN_RANDOM_ZONE_MOVE time WAIT_SEC*25 bits SFB_RANTIME
+special SFUN_PAIN_INIT time WAIT_SEC*12 bits SFB_RANTIME
+"
+     100 Cemote glances around looking for trouble.@
+     110 AYou shiver as $1n glares at you.@
+     120 S100@
+     130 d100say You'd better watch yourself while you are here, %s.@
+     140 *I think I need to think of more PAIN :)@
+"
+end
+
+                                  king_guard
+names {"king's guard","guard","gnome"}
+title "the king's guard"
+descr "One of Gloin Gemhide's guards is standing here."
+extra {}
+"This is probably the largest gnome you have ever seen. His entire life
+is devoted to protecting his king and he looks like he can do it."
+M_GNOME_WARRIOR_SWORD(51,SEX_MALE)
+exp 100
+special SFUN_PAIN_INIT time WAIT_SEC*90 bits SFB_RANTIME
+"
+     100 S130@
+     110 d100look %s@
+     120 d100tell %s Do not THINK of attacking the royal family!@
+     130 Cgrowl@
+     140 Cemote grumbles about the lack of security.@
+"
+end
+
+                                gnome_grocer
+names{"gnome grocer","grocer","gnome"}
+title "the gnome's grocer"
+descr "The gnome's grocer is standing here, waiting to fill your order."
+extra {}
+"He is an older gnome. He stands before you wearing a white smock and a
+smile."
+M_GNOME_WARRIOR_AXE(40,SEX_MALE)
+alignment 305
+exp 100
+money 30 SILVER_PIECE
+special SFUN_SHOP_INIT
+"Profit sell = 140
+Profit buy = 30
+Production = ~apple@gnome~ ~melon@gnome~ ~pear@gnome~
+Trade types = "+ITEM_FOOD+"
+Msg1 = ~$1n says, 'I'm sorry but I don't have that kind of food.'~
+Msg2 = ~$1n says, 'Um, you don't seem to have that, $3n.'~
+Msg3 = ~$1n says, 'Do you wish to make a purchase or not?'~
+Msg4 = ~$1n says, 'I don't need that at the moment $3n.'~
+Msg5 = ~$1n says, 'Herm...I can't give it away.'~
+Msg6 = ~$1n says, 'That will be %s for this fine $2n.'~
+Msg7 = ~$1n says, 'Here is %s for your $2n, $3n.'~
+Hours1 = 1 12
+Hours2 = 14 20"
+end
+
+                  gnome_meatman
+names{"gnome butcher","butcher","gnome"}
+title "the gnome butcher"
+descr "The gnome's butcher stands here preparing to cut some meat."
+extra {}
+"This is a hefty gnome, large of bone and muscle rather than fat.
+His white smock is covered in blood from the meat he sells."
+M_GNOME_WARRIOR_AXE(40,SEX_MALE)
+alignment 400
+exp 100
+money 30 SILVER_PIECE
+special SFUN_SHOP_INIT
+"Profit sell = 140
+Profit buy = 30
+Production = ~meat_chunk@gnome~ ~meat@gnome~
+Trade types = "+ITEM_FOOD+"
+Msg1 = ~$1n says, 'I'm sorry but I don't have that kind of food.'~
+Msg2 = ~$1n says, 'Um, you don't seem to have that, $3n.'~
+Msg3 = ~$1n says, 'Do you wish to make a purchase or not?'~
+Msg4 = ~$1n says, 'I don't need that at the moment $3n.'~
+Msg5 = ~$1n says, 'Herm...I can't give it away.'~
+Msg6 = ~$1n says, 'That will be %s for this fine $2n.'~
+Msg7 = ~$1n says, 'Here is %s for your $2n, $3n.'~
+Hours1 = 1 12
+Hours2 = 14 20"
+end
+
+                  scroll_seller
+names{"Aresin", "woman"}
+title "Aresin"
+descr "A cloaked woman is standing here."
+extra {}
+"She is an older woman and appears to know a great deal about things. She
+seems to be selling something."
+M_HUMAN_MAGE_FIRE(75, SEX_FEMALE, "cast firestorm")
+alignment -600
+money 10 GOLD_PIECE
+
+dilcopy shopkeeper@function(
+{"scroll1@gnome 50 50","scroll2@gnome 50 50","scroll3@gnome 50
+50","scroll4@gnome 50 50","scroll5@gnome 50 50","scroll6@gnome 50
+50","scroll7@gnome 50 50","scroll8@gnome 50 50","scroll9@gnome 50
+50","scroll10@gnome 50 50","scroll11@gnome 50 50"}, 
+{ 
+"$1n says, 'I've got no such item!'",
+ "$1n says, '$3n, you haven't even got it!'",
+ "$1n says, 'I don't trade with things such as $2n'",
+ "$1n says, '$3n, you can't afford $2n'",
+ "$1n says, 'Here you are.'",
+ "$1n says, 'This is a nice $2n, thank you.'",
+ "$1n says, 'I don't have that many in my stock'",
+ "$1n says, 'I'm not serving now, come back later.'"
+}, {"6","6"}, "-1", 150, 80,2*PLATINUM_MULT, "", "" );
+end
+
+
+                  king_gloin
+names{"gloin gemstone","gloin","gemstone","gnome king","king","gnome"}
+title "Gloin Gemstone"
+descr "The king of the gnomes sits on his throne here."
+extra {}
+"This is Gloin Gemstone, the king of the gnomes.
+He is wearing his state robes and crown, it makes
+his look very regal."
+M_GNOME_WARRIOR_SWORD(60,SEX_MALE)
+exp 100
+money 7 SILVER_PIECE
+dilbegin prg1();
+var
+pc            : unitptr;
+obj           : unitptr;
+pntr          : extraptr;
+pname         : string;
+intg          : integer;
+
+code
+{
+  :begin:
+  heartbeat := PULSE_SEC*4;
+  on_activation((self.position < POSITION_SITTING) or (self.position ==
+                POSITION_FIGHTING), skip);
+
+  :start:
+  wait(SFB_CMD, (activator.type == UNIT_ST_PC) and (not command(CMD_GIVE)));
+
+
+  if (GNOME_QUEST_COMPLETE in activator.quests)
+     goto later;
+
+  pc := activator;
+  secure(pc, nopc);
+
+  if(not (GNOME_QUEST_ONGOING in pc.quests))
+  {
+    pause;
+    exec("say Greetings, "+pc.name+".", self);
+    pause;
+    exec("say Great adventurer, "+pc.name+", I have a request for you.",
+      self);
+    pause;
+    exec("say I seem to have lost my scepter......", self);
+    pause;
+    exec("say and a precious dagger.......", self);
+    pause;
+    exec("whisper "+pc.name+" And I have need of a small pendant held by
+"+
+      "a innocent girl, it's for my wife.", self);
+    pause;
+    exec("grin "+pc.name, self);
+    pause;
+    exec("say If you would get these items for me you would be well "+
+      "rewarded.", self);
+    pause;
+    exec("say If you will fetch me these things, please nod.", self);
+
+intg := 0;
+while (intg < 6) {
+  wait(SFB_CMD, activator #= pc);
+  if(command (CMD_NOD))
+  {
+    goto yes_quest;
+  }
+  else if(command(CMD_SAY))
+  {
+    pause;
+    exec("say Did you not hear me? Nod if you wish to do this,
+otherwise,"+
+        " shake your head.", self);
+  }
+  else if(command (CMD_SHAKE))
+  {
+    goto no_quest;
+  }
+  intg := intg+1;
+}
+
+  :no_quest:
+  pause;
+  exec("say As you have decided, so it shall be.  Fair thee well
+adventurer"+
+       " I shall seek another.", self);
+  unsecure(pc);
+  goto later;
+
+  :yes_quest:
+  pause;
+  exec("say My thanks for your willingness to aid me. Now go and may the
+"+
+       "gods guide and strengthen you.", self);
+  addextra(pc.quests, {GNOME_QUEST_ONGOING}, "");
+  unsecure(pc);
+  goto start;
+}
+
+else
+{
+  pntr := GNOME_QUEST_ONGOING in pc.quests;
+
+  if(("scepter" in pntr.names) and ("dagger" in pntr.names) and ("pendant"
+         in pntr.names))
+  {
+
+    pause;
+    subextra(pc.quests, GNOME_QUEST_ONGOING);
+    addextra(pc.quests, {GNOME_QUEST_COMPLETE}, "");
+    exec("emote reaches within his robes...", self);
+    pause;
+    act(".....and draws forth.......", A_SOMEONE, pc, null, null,
+      TO_ALL);
+    pause;
+    act(".....the Sword of Mercy!", A_SOMEONE, pc, null, null, TO_ALL);
+    pause;
+    act("Gloin Gemhide hands you a Sword of Mercy!",A_SOMEONE, pc, null,
+      null, TO_CHAR);
+    act("Gloin Gemhide hands $1N a Sword of Mercy!",A_SOMEONE, pc, null,
+      null, TO_ROOM);
+    pause;
+    exec("say You have my thanks, "+pc.name+".", self);
+    obj := load("artifact_sword@gnome");
+    obj.height := pc.height;
+    link (obj, pc);
+    experience (900, pc);
+    exec("say This will allow you to aid those in need.", self);
+  }
+}
+
+unsecure(pc);
+goto start;
+
+  :later:
+  heartbeat := PULSE_SEC*70;
+  pause;
+  goto begin;
+
+  :nopc:
+  exec("say Most likely couldn't take it.....", self);
+  pause;
+   exec("sigh", self);
+  pause;
+  exec("say Oh well......", self);
+  goto start;
+}
+dilend
+
+dilbegin prg2();
+var
+  pc       :  unitptr;
+  obj      :  unitptr;
+  ptr      :  extraptr;
+
+code
+{
+    heartbeat := PULSE_SEC*8;
+    on_activation((self.position < POSITION_SITTING) or (self.position
+            == POSITION_FIGHTING), skip);
+
+  :start:
+  wait(SFB_CMD, command(CMD_GIVE) and (activator.type == UNIT_ST_PC));
+
+  :get:
+  if (not (GNOME_QUEST_ONGOING in activator.quests))
+    goto start;
+
+  pc := activator;
+  obj := self.inside;
+  secure(pc, nothing);
+  secure(obj, nothing);
+
+  wait(SFB_CMD | SFB_TICK, TRUE);
+
+  if (not (obj == self.inside))
+  {
+    unsecure(obj);
+    ptr := GNOME_QUEST_ONGOING in pc.quests;
+
+    if(("pendant" == self.inside.nameidx) and ("gnome" ==
+      self.inside.zoneidx))
+    {
+      addstring(ptr.names, "pendant");
+      exec("say Thank you for finding this for me....", self);
+      destroy(self.inside);
+    }
+    else if(("night_dagger" == self.inside.nameidx) and ("gnome" ==
+      self.inside.zoneidx))
+    {
+      addstring(ptr.names, "dagger");
+      exec("say The knight must have fought hard to keep that....", self);
+      destroy(self.inside);
+    }
+    else if(("king_scepter" == self.inside.nameidx) and ("gnome" ==
+      self.inside.zoneidx))
+    {
+      addstring(ptr.names, "scepter");
+      exec("say You have my thanks for retrieving my scepter.", self);
+      destroy(self.inside);
+    }
+    else
+    {
+      exec("say The though was nice....but this is not what I asked for "+
+        pc.name+".", self);
+      pause;
+      exec("say Here.", self);
+      link(self.inside, pc);
+    }
+   }
+   unsecure(pc);
+
+   if((command(CMD_GIVE)) and activator.type == UNIT_ST_PC)
+   {
+     goto get;
+   }
+   else
+     goto start;
+
+   :nothing:
+   exec("say Oh well.....", self);
+   goto start;
+}
+dilend
+end
+
+
+
+                  cleric
+names {"shara","cleric","woman"}
+title "Shara"
+descr "The gnome's cleric, Shara, stands here waiting to heal someone."
+extra {}
+"You are surprised to see that this is not a gnome but
+a human woman. She is dressed in a white gown and a
+Holy Symbol.  She smiles happily at you."
+M_HUMAN_CLERIC_HAMMER(53,SEX_FEMALE,"cast harm","cast heal")
+exp 130
+alignment 999
+dilbegin prg3();
+var
+             pc          : unitptr;
+             i           : integer;
+code
+{
+
+         heartbeat := PULSE_SEC*5;
+
+
+         wait(SFB_CMD,(command("beg")) and (activator.type == UNIT_ST_PC)
+and
+           (argument in self.names));
+         pc := activator;
+         secure(pc, later);
+         priority;
+         pause;
+         exec("say Ok, "+pc.name+". I'll tell you a secret!", self);
+         pause;
+         exec("say The king wants a pendant........", self);
+         pause;
+         exec("say I know where the pendant can be found..", self);
+         pause;
+         exec("say Would you like me to tell you?", self);
+         while (i < 5)
+         {
+           wait(SFB_CMD, activator == pc);
+           if(command(CMD_NOD))
+           {
+             exec("say Ok, I'll tell you.", self);
+             pause;
+             exec("whisper "+pc.name+" The girl who has the key is with "+
+               "gods, in their land.", self);
+             pause;
+             exec("smile "+pc.name, self);
+             goto later;
+           }
+           else if(command(CMD_SHAKE))
+           {
+             exec("say Fine...I won't tell you then!", self);
+             pause;
+             exec("pout", self);
+             pause;
+             goto later;
+           }
+           else
+           {
+             exec("say Please nod your head or shake your head.", self);
+           }
+           i := i+1;
+         }
+
+         :later:
+         pause;
+         unsecure(pc);
+         nopriority;
+
+
+}
+dilend
+dilbegin prg4();
+code
+{
+         heartbeat := PULSE_SEC*8;
+
+         act("$1n kneels down and begins to pray.", A_SOMEONE, self, null,
+           null, TO_ROOM);
+         pause;
+         act("You feel a powerful presence descend into the room.",
+           A_SOMEONE, self, null, null, TO_ROOM);
+         pause;
+         act("$1n stands up and smiles.", A_SOMEONE, self, null, null,
+           TO_ROOM);
+         pause;
+         act("You can feel the power surging through the room.", A_ALWAYS,
+           self, null, null, TO_ROOM);
+         pause;
+         act("$1n inhales deeply.", A_SOMEONE, self, null, null, TO_ROOM);
+         pause;
+         act("$1n sighs happily.", A_SOMEONE, self, null, null, TO_ROOM);
+         pause;
+}
+dilend
+end
+
+                  gnome_mage
+names{"kracnash","mage","gnome"}
+title "Kracnash"
+descr "The gnome mage, Kracnash, stand before you wrapped in shadow."
+extra {}
+"This gnome stands wrapped in evil looking shadows. He
+is a very mysterious figure, wearing a strange cloak and
+carrying a staff made of wood he watches you carefully."
+M_GNOME_MAGE_ACID(53,SEX_MALE,"cast acid ball")
+exp 130
+alignment -999
+dilbegin krprg();
+var
+             pc          : unitptr;
+code
+{
+
+       heartbeat := PULSE_SEC*5;
+
+       :init:
+       wait(SFB_CMD, (activator.type == UNIT_ST_PC) and (command("question")
+)
+         and (argument in self.name));
+       if(activator.alignment < -349)
+       {
+         pc := activator;
+         secure(pc, nopc);
+         block;
+         priority;
+         exec("emote grates, 'So, "+pc.name+" you wish to aid the side of
+"+
+           "evil!'", self);
+         pause;
+         exec("emote hisses, 'Ok then, I shall tell you.'", self);
+         pause;
+         exec("emote grumbles, 'You must see my master to do this!'",
+self);
+         pause;
+         exec("emote growls, 'He is hidden away below that accursed "+
+           "humans lair!'", self);
+         pause;
+         exec("emote grates, 'Go and seek him out, he shall tell you what
+"+
+           "you must do.'", self);
+         pause;
+         exec("emote grumbles, 'Now go and leave me to my work!'", self);
+         pause;
+         act("You are forced north!", A_ALWAYS, pc, null, null, TO_CHAR);
+         act("$1n is forced north!", A_SOMEONE, pc, null, null, TO_ROOM);
+         link(pc, findroom("east_hall2@gnome"));
+         act("$1n has been forced here from the south!", A_SOMEONE, pc,
+           null, pc.outside, TO_VICT);
+         nopriority;
+         goto init;
+
+         :nopc:
+         pause;
+         exec("growl", self);
+         pause;
+         exec("emote hisses, 'He will not live long for this!'", self);
+         unsecure(pc);
+         nopriority;
+         goto init;
+       }
+       goto init;
+}
+dilend
+dilbegin prg5();
+var
+             pc          : unitptr;
+             i           : integer;
+code
+{
+
+         heartbeat := PULSE_SEC*5;
+
+
+         wait(SFB_CMD,(command("beg")) and (activator.type == UNIT_ST_PC)
+and
+           (argument in self.names) and (activator.alignment < -350));
+         pc := activator;
+         secure(pc, later);
+         priority;
+         pause;
+         exec("emote grates, 'Will you not leave me be "+pc.name+"?'",
+self);
+         pause;
+         exec("emote hisses, 'Very well then.....'", self);
+         pause;
+         exec("emote growls in a awful voice, 'I know where the dagger "+
+           "which the king wants is located.'", self);
+         pause;
+         exec("emote snarls, 'Do you wish for me to tell you?'", self);
+         while (i < 5)
+         {
+           wait(SFB_CMD, activator == pc);
+           if(command(CMD_NOD))
+           {
+             exec("grin "+pc.name, self);
+             pause;
+             exec("emote hisses, 'It will cost you.....this!'", self);
+             pause;
+             exec("emote raises his hand..........", self);
+             pause;
+             act("A beam of darkness lances from $3n's hand and sears
+you.",
+               A_ALWAYS, pc, null, self, TO_CHAR);
+             act("A beam of darkness lances from $1n's hand and sears
+$3n.",
+               A_ALWAYS, self, null, pc, TO_NOTVICT);
+             pc.hp := pc.hp - 50;
+             position_update(pc);
+             pause;
+             exec("grin "+pc.name, self);
+             pause;
+             exec("emote snarls, 'The dagger can be obtained from a "+
+               "warrior who waits in a tower in the city.'", self);
+             goto later;
+           }
+           else if(command(CMD_SHAKE))
+           {
+             exec("emote snarls, 'Begone then!'", self);
+             pause;
+             exec("snarl "+pc.name, self);
+             pause;
+             goto later;
+           }
+           else
+           {
+             exec("emote grates in an awful voice, 'Nod or shake your"+
+               " stupid head, you moron!'", self);
+           }
+           i := i+1;
+         }
+
+         :later:
+         pause;
+         unsecure(pc);
+         nopriority;
+
+
+}
+dilend
+dilbegin prg6();
+code
+{
+            heartbeat := PULSE_SEC*10;
+
+            exec("emote shuffles around, rummaging through all his junk.",
+              self);
+            pause;
+            exec("emote grumbles in an awful voice, 'Where are those "+
+              "newt testicles?'", self);
+            pause;
+            exec("emote grabs a few things and throws them into a small "+
+              "vial.", self);
+            pause;
+            exec("emote begins to chant softly.", self);
+            pause;
+            act("You feel an evil presence enter the room.....",A_ALWAYS,
+              self, null, null, TO_ROOM);
+            pause;
+            exec("cackle", self);
+            pause;
+            exec("grin", self);
+            pause;
+            exec("emote whispers in a horrid voice, 'Soon my time will "+
+              "come. Then all shall see......", self);
+            pause;
+            exec("emote smiles broadly at nothing.", self);
+            pause;
+}
+dilend
+end
+
+                        gnome_queen
+names{"sarine","gnome queen","gnome","queen"}
+title "Sarine"
+descr "Sarine, the queen of the gnomes, is sitting on her throne here."
+extra {}
+"She is the most beautiful gnome you have ever seen."
+M_GNOME_MAGE_ELECTRICITY(47,SEX_FEMALE,"cast lightning bolt")
+exp 100
+money 6 SILVER_PIECE
+end
+
+                           thief
+names{"skittish young man","skittish man","young man","man"}
+title "a skittish young man"
+descr "A a young man stands here, he seems very skittish."
+extra {}
+"This young man seems very nervous about something. He is continuously
+glancing around and peering into corners. There is a slight tick in his
+left eye."
+alignment -723
+M_HUMAN_WARRIOR_NATURAL(45,SEX_MALE)
+exp 100
+special SFUN_PAIN_INIT time WAIT_SEC*10 bits 80
+"
+  110 Cpeer@
+  120 Cemote glances about the room.@
+  130 Cemote peers into the corner.@
+  140 Cemote glances at you.@
+  150 Cemote peers at you.@
+  160 Cemote glances around.@
+"
+end
+                       worker
+names{"tired worker","worker"}
+title "a tired worker"
+descr "A tired worker is sitting here sipping a cup of tea."
+extra {}
+"This man looks very tired."
+M_HUMAN_WARRIOR_SWORD(45,SEX_MALE)
+exp 100
+special SFUN_PAIN_INIT time WAIT_SEC*70 bits SFB_RANTIME
+"
+  100 S100@
+  110 d100say Hello, %s.@
+  120 d100ask %s How are you this fine day?@
+  130 d100emote stretchs.@
+  140 d100say You know...I've been working for such a long time.@
+  150 d100say Guess what I saw the other day!@
+  160 d100say I saw a boy in the mountains to the east of here....@
+  170 d100say He was carring a strange object....@
+  180 d100say It looked like a scepter for a small person....@
+  190 d100shrug@
+  200 d100say Well, it way nice talking to you, %s.@
+  210 d100wave %s@
+  220 Cemote sips his tea.@
+  230 Cemote looks around the room.@
+"
+end
+
+                       girl
+names{"beautiful girl","girl"}
+title "a beautiful girl"
+descr "Standing here is one of the most beautiful girls you have ever
+seen."
+extra {}
+"She is very young and beautiful. You can see why Odin lets her stay
+here. She seems very kind."
+M_HUMAN_CLERIC_HAMMER(45,SEX_FEMALE,"cast harm","cast heal")
+exp 100
+dilbegin girlprg();
+var
+pc        : unitptr;
+item      : unitptr;
+code
+{
+    heartbeat := PULSE_SEC*8;
+
+    :start:
+    wait(SFB_CMD, activator.type == UNIT_ST_PC);
+
+    pc := activator;
+    secure(pc, him_left);
+    exec("emote looks out upon the world.", self);
+    pause;
+    exec("sigh", self);
+    pause;
+    exec("emote murmurs 'So much fighting and war.'", self);
+    pause;
+    exec("say Oh, I didn't see you there "+pc.name+"!", self);
+    pause;
+    exec("say I am sorry.", self);
+    pause;
+    exec("say Doesn't the world seem so awful, it even touches here.",
+self);
+    pause;
+    exec("say Well, I wish I could do something about it......", self);
+    pause;
+    exec("say ....but I'm not that strong.", self);
+    pause;
+    exec("sigh", self);
+    pause;
+    exec("blink", self);
+    pause;
+    exec("say Do you want something.....I have a lot of these....", self);
+    pause;
+    item := load("pendant@gnome");
+    item.height := pc.height;
+    pause;
+    exec("give pendant "+pc.name, self);
+    pause;
+    exec("hug "+pc.name, self);
+    pause;
+    exec("say I hope you like it, "+pc.name, self);
+    goto start;
+
+    :him_left:
+    unsecure(pc);
+    goto start;
+}
+dilend
+end
+
+                          dark_warrior
+names{"warrior of darkness","dark warrior","warrior"}
+title "a warrior of darkness"
+descr "A warrior of darkness stands here."
+extra {}
+"He is a dark warrior!"
+M_HUMAN_WARRIOR_SWORD(50,SEX_MALE)
+alignment -850
+exp 100
+romflags{CHAR_HIDE}
+special SFUN_PAIN_INIT time WAIT_SEC*60 bits SFB_RANTIME
+"
+  100 S100@
+  110 AYou feel a slight breeze brush against the back of your neck.@
+  120 AThese seems to be some kind of whispering in the air.@
+  130 AThe whispering continues, maybe you are going insane.@
+  140 AThe whispering stills.@
+  150 AYou feel unnerved.@
+"
+end
+
+
+                    gnome_fool
+names{"gnome jester","jester","gnome fool","fool","gnome"}
+title "the gnome jester"
+descr "The kings jester is here making a fool of himself."
+extra {}
+"He is a short, fat little gnome. He is wearing a red-white checked
+outfit with pointed shoes. His face is painted to match his outfit and he
+is grinning a crooked grin. From the way he looks, he would probably do
+something amusing for you. There is a small sign hanging from his neck."
+extra {"small sign", "sign"}
+"The sign reads:&n
+&s10All you must do is issue the&n
+&s10command 'jester' and then the&n
+&s10command you wish him to do.&n
+&s10He will only do certain things&n
+&s10however, try 'jester commands'.&n
+&s10Please note that some of the&n
+&s10jesters commands will not work&n
+&s10is he cannot see you."
+M_GNOME_WARRIOR_NATURAL(4, SEX_MALE)
+exp 0
+dilbegin jesterprg();
+var
+     mast    : unitptr;
+code
+{
+      heartbeat := PULSE_SEC*3;
+
+      :init:
+      wait(SFB_CMD, TRUE);
+
+      if(command("jester"))
+      {
+        mast := activator;
+        act("You make a request of $2N.", A_ALWAYS, mast, self, null,
+          TO_CHAR);
+        act("$1n makes a request of $2N.", A_SOMEONE, mast, self, null,
+          TO_ROOM);
+        block;
+
+        if(argument == "dance")
+        {
+          act("$2N dances a crazy little dance just for you.", A_ALWAYS,
+            mast, self, null, TO_CHAR);
+          act("$2N dances a crazy little dance just for $1n.", A_SOMEONE,
+            mast, self, null, TO_ROOM);
+          goto waiting;
+        }
+        else if(argument == "juggle")
+        {
+          exec("emote pulls out some multicolor balls and begins to
+juggle.",
+            self);
+          pause;
+          exec("emote juggles for a while.", self);
+          pause;
+          exec("emote throws the balls up into the air and flips over "+
+            "and begins to stand on his hands.", self);
+          pause;
+          exec("emote catches the balls with his feet and juggles them "+
+            "for a while.", self);
+          pause;
+          exec("emote flips back onto his feet, catches the balls with "+
+            "his hands and puts them away.", self);
+          goto waiting;
+        }
+        else if(argument == "crazy")
+        {
+          exec("say So you want me to act like I'm crazy?", self);
+          pause;
+          exec("say I think I do enough of that already!", self);
+          pause;
+          exec("giggle", self);
+          goto waiting;
+        }
+        else if("emote" in argument)
+        {
+          exec(argument, self);
+        }
+        else if(argument == "fun")
+        {
+          exec("say Yeah, you ARE funny, "+mast.name+"!", self);
+          goto waiting;
+        }
+        else if(argument == "commands")
+        {
+          exec("tell "+mast.name+" My commands are juggle, dance, crazy, "
+            +"fun, and emote (text to emote).", self);
+          goto waiting;
+        }
+        else
+        {
+          exec("say What was that?", self);
+          goto waiting;
+        }
+        goto init;
+
+        :waiting:
+        pause;
+        unsecure(mast);
+        goto init;
+      }
+      goto init;
+
+      :nomast:
+      unsecure(mast);
+      goto init;
+}
+dilend
+end
+
+                    gnome_light
+names{"torch gnome","gnome torch lighter","gnome lighter","gnome"}
+title "a gnome torch lighter"
+descr "A gnome torch lighter is standing here with a lit torch in hand."
+extra {}
+"This gnome has the awful job of keeping everything in the gnome's land
+lit."
+M_GNOME_WARRIOR_SWORD(50, SEX_MALE)
+exp 100
+dilbegin prg9();
+var
+      homeroom   : unitptr;
+code
+{
+          :init:
+          heartbeat := PULSE_SEC*300;
+          priority;
+          :begin:
+          wait(SFB_TICK, TRUE);
+          if(mudhour == 6)
+          {
+            goto wanderer;
+          }
+          else if(mudhour == 20)
+          {
+            goto wanderer;
+          }
+          else
+            goto begin;
+
+          :wanderer:
+          nopriority;
+          pause;
+          homeroom := findroom("light_rm@gnome");
+          walkto(homeroom);
+          goto init;
+}
+dilend
+dilbegin prg10();
+code
+{
+           :init:
+           heartbeat := PULSE_SEC*300;
+           :start:
+           wait(SFB_TICK, TRUE);
+           if(mudhour == 6)
+           {
+             heartbeat := PULSE_SEC*5;
+             :lights_out:
+             exec("emote grumbles about his job.", self);
+             pause;
+             exec("emote reaches out and snuffs out the lights.", self);
+             pause;
+             exec("sigh", self);
+             pause;
+             goto lights_out;
+           }
+           else if(mudhour == 20)
+           {
+             heartbeat := PULSE_SEC*5;
+             :lights_on:
+             exec("emote grumbles about his job.", self);
+             pause;
+             exec("emote reaches out with his torch and lights the
+lights."
+               , self);
+             pause;
+             exec("sigh", self);
+             pause;
+             goto lights_on;
+           }
+           else
+            goto start;
+}
+dilend
+special SFUN_RANDOM_ZONE_MOVE time WAIT_SEC*40 bits SFB_RANTIME
+end
+
+                  evil_master
+names{"master of evil","evil master","master"}
+title "Evil Master"
+descr "An evil master stands here."
+extra {}
+"You can make out very little about this being except that he is very
+evil."
+M_GNOME_MAGE_ACID(60, SEX_MALE, "cast acid ball")
+alignment -1000
+exp 120
+money 7 SILVER_PIECE
+dilbegin masterprg();
+var
+pc            : unitptr;
+obj           : unitptr;
+pntr          : extraptr;
+pname         : string;
+intg          : integer;
+
+code
+{
+  :begin:
+  heartbeat := PULSE_SEC*4;
+  on_activation((self.position < POSITION_SITTING) or (self.position ==
+                POSITION_FIGHTING), skip);
+
+  :start:
+  wait(SFB_CMD, (activator.type == UNIT_ST_PC) and (not command(CMD_GIVE))
+    and (activator.alignment < -349));
+
+  if (DARKNESS_QUEST_COMPLETE in activator.quests)
+     goto later;
+
+  pc := activator;
+  secure(pc, nopc);
+
+  if(not (DARKNESS_QUEST_ONGOING in pc.quests))
+  {
+    pause;
+    exec("emote whispers, 'Greetings, "+pc.name+".'", self);
+    pause;
+    exec("emote whisper, 'So, you wish to aid me do you?'", self);
+    pause;
+    exec("emote whispers, 'Then you must get me a sword created for"+
+      " killing our dark brothers.'", self);
+    pause;
+    exec("emote whispers, 'And you must find me a tool for digging.'",
+self);
+    pause;
+    exec("emote whispers, 'And finally you must gain me the sword of the"+
+      " warriors of good, only then will I be able to aid you.'", self);
+    pause;
+    exec("look "+pc.name, self);
+    pause;
+    exec("emote whispers, 'I believe you can do this.'", self);
+    pause;
+    exec("emote whispers, ' If you will do these things, please nod.'",
+      self);
+
+intg := 0;
+while (intg < 6) {
+  wait(SFB_CMD, activator #= pc);
+  if(command (CMD_NOD))
+  {
+    goto yes_quest;
+  }
+  else if(command(CMD_SAY))
+  {
+    pause;
+    exec("emote whispers, 'You must nod you head or shake your head!",
+self);
+  }
+  else if(command (CMD_SHAKE))
+  {
+    goto no_quest;
+  }
+  intg := intg+1;
+}
+
+  :no_quest:
+  pause;
+  exec("emote whispers, 'So it shall be! Begone then!'", self);
+  unsecure(pc);
+  goto later;
+
+  :yes_quest:
+  pause;
+  exec("emote whispers, 'I though you would decide this.'", self);
+  addextra(pc.quests, {DARKNESS_QUEST_ONGOING}, "");
+  unsecure(pc);
+  goto start;
+}
+
+else
+{
+  pntr := DARKNESS_QUEST_ONGOING in pc.quests;
+
+  if(("hammer" in pntr.names) and ("shovel" in pntr.names) and ("tongue"
+         in pntr.names))
+  {
+
+    pause;
+    subextra(pc.quests, DARKNESS_QUEST_ONGOING);
+    addextra(pc.quests, {DARKNESS_QUEST_COMPLETE}, "");
+    exec("emote places the flame tongue on the ground.", self);
+    pause;
+    act("The flame tongue begins to pulse as the $3N starts to "+
+      "chant", A_SOMEONE, pc, null, self, TO_ALL);
+    pause;
+    act("The $3N raises his hand and...breaks the flame tongue!",
+A_SOMEONE,
+      pc, null, self, TO_ALL);
+    pause;
+    act("$3N then hands you a Staff of Darkness.",A_SOMEONE, pc, null,
+      self, TO_CHAR);
+    act("$3N then hands $1n a Staff of Darkness.",A_SOMEONE, pc, null,
+      self, TO_ROOM);
+    pause;
+    exec("emote whispers, 'There is your reward, "+pc.name+".'", self);
+    obj := load("dark_staff@gnome");
+    obj.height := pc.height;
+    link (obj, pc);
+    experience (900, pc);
+  }
+}
+
+unsecure(pc);
+goto start;
+
+  :later:
+  heartbeat := PULSE_SEC*70;
+  pause;
+  goto begin;
+
+  :nopc:
+  exec("emote whispers, 'He shall be found.'", self);
+  pause;
+  goto start;
+}
+dilend
+
+dilbegin masterprg2();
+var
+  pc       :  unitptr;
+  obj      :  unitptr;
+  ptr      :  extraptr;
+
+code
+{
+    heartbeat := PULSE_SEC*8;
+    on_activation((self.position < POSITION_SITTING) or (self.position
+            == POSITION_FIGHTING), skip);
+
+  :start:
+  wait(SFB_CMD, command(CMD_GIVE) and (activator.type == UNIT_ST_PC)
+    and (activator.alignment < -350));
+
+  :get:
+  if (not (DARKNESS_QUEST_ONGOING in activator.quests))
+    goto start;
+
+  pc := activator;
+  obj := self.inside;
+  secure(pc, nothing);
+  secure(obj, nothing);
+
+  wait(SFB_CMD | SFB_TICK, TRUE);
+
+  if (not (obj == self.inside))
+  {
+    unsecure(obj);
+    ptr := DARKNESS_QUEST_ONGOING in pc.quests;
+
+    if(("king_sword" == self.inside.nameidx) and ("gnome" ==
+      self.inside.zoneidx))
+    {
+      addstring(ptr.names, "hammer");
+      exec("emote whispers, 'There is one being who will trouble"+
+        " me no more.'", self);
+      destroy(self.inside);
+    }
+    else if(("shovel" == self.inside.nameidx) and ("halfzon" ==
+      self.inside.zoneidx))
+    {
+      addstring(ptr.names, "shovel");
+      exec("emote whisper, 'You have done well.'", self);
+      destroy(self.inside);
+    }
+    else if(("fl_tongue" == self.inside.nameidx) and ("paladin_guild" ==
+      self.inside.zoneidx))
+    {
+      addstring(ptr.names, "tongue");
+      exec("emote whispers, 'That shall teach them!'", self);
+      destroy(self.inside);
+    }
+    else
+    {
+      exec("emote whispers, 'I need not this thing!'", self);
+      pause;
+      exec("emote whispers, 'I want it not.'", self);
+      link(self.inside, pc);
+    }
+   }
+   unsecure(pc);
+
+   if((command(CMD_GIVE)) and activator.type == UNIT_ST_PC)
+   {
+     goto get;
+   }
+   else
+     goto start;
+
+   :nothing:
+   exec("emote breaths a dark sigh.", self);
+   goto start;
+}
+dilend
+end
+
+
+%objects
+
+
+
+            scroll1
+names{"a scroll of recall","scroll"}
+title "a small scroll"
+descr "A sheat of paper is lying in a roll on the ground here."
+extra {}
+"There are a few lines on this peice of paper."
+extra {"$identify"}
+"When recited this scroll will possibly take you to your home."
+extra {"$improved identify"}
+"When recited this scroll has the same affect as the Word of Recall
+spell."
+SCROLL_DEF(50, SPL_WORD_OF_RECALL, SPL_NONE, SPL_NONE)
+weight 1
+cost 5 SILVER_PIECE /*price upped*/
+end
+
+            scroll2
+names{"a scroll of healing", "scroll"}
+title "a scroll of healing"
+descr "A scroll has been left lying here."
+extra {}
+"This scroll has a few lines of writting on it."
+extra {"$identify"}
+"This scroll will heal you when recited."
+extra {"$improved identify"}
+"This scroll will heal you when recited."
+SCROLL_DEF(100, SPL_CURE_WOUNDS_1, SPL_NONE,SPL_NONE)
+weight 1
+cost 6 SILVER_PIECE  /*price upped*/
+end
+
+           scroll3
+names{"a scroll of cure poison", "scroll"}
+title "a scroll of poison cureing"
+extra {}
+"There are a few lines of text on this scroll."
+extra {"$identify"}
+"This scroll can cure you of poison."
+extra {"$improved identify"}
+"This scroll can cure you of poison when recited."
+SCROLL_DEF(100, SPL_REMOVE_POISON, SPL_NONE, SPL_NONE)
+weight 1
+cost 5 SILVER_PIECE  /*price upped*/
+end
+
+           scroll4
+names{"a scroll of cure disease", "scroll"}
+title "a scroll of disease cureing"
+extra {}
+"This scroll contains multiple lines of writting."
+extra {"$identify"}
+"This scroll can remove most diseases from your system."
+extra {"$improved identify"}
+"This scroll can remove a large amount of disease from your body."
+SCROLL_DEF(100, SPL_REM_DISEASE,SPL_NONE, SPL_NONE)
+weight 1
+cost 4 SILVER_PIECE  /*price upped*/
+end
+
+           scroll5
+names{"a scroll of invisiblility", "scroll"}
+title "a scroll of invisibility"
+descr "A small scroll has been left here."
+extra {}
+"This scroll has a single line written on it."
+extra {"$identify"}
+"This scroll will make you hard to see."
+extra {"$improved identify"}
+"This scroll has the same affect as the invisibility spell."
+SCROLL_DEF(100, SPL_INVISIBILITY, SPL_NONE, SPL_NONE)
+weight 1
+cost 4 SILVER_PIECE  /*price upped*/
+end
+
+           scroll6
+names {"a scroll of detection", "scroll"}
+title "a scroll of detection"
+descr "A scroll has been left here."
+extra {}
+"This scroll has many lines written on it."
+extra {"$identify"}
+"This scroll will allow you to detect a few things."
+extra {"$improved identify"}
+"This scroll has the affect of the following spells when recited:&ndetect
+invisible&ndetect alignment&ndetect magic"
+SCROLL_DEF(30, SPL_DET_INVISIBLE, SPL_DET_ALIGN, SPL_DET_MAGIC)
+weight 1
+cost 4 SILVER_PIECE  /*price upped*/
+end
+
+           scroll7
+names{"a scroll of food creating","scroll"}
+title "a scroll of food creation"
+descr "A scroll is rolled up on the ground here."
+extra {}
+"There is a line of writting on this scroll."
+extra {"$identify"}
+"This scroll will create food for you."
+extra {"$improved identify"}
+"This scroll has the same affect as the create food spell."
+SCROLL_DEF(100, SPL_CREATE_FOOD, SPL_NONE, SPL_NONE)
+weight 1
+cost 5 SILVER_PIECE  /*price upped*/
+end
+
+            scroll8
+names{"a scroll of water creating", "scroll"}
+title "a scroll of water creation"
+descr "A scroll is has been tossed aside here."
+extra {}
+"There is a single line written on this scroll."
+extra {"$identify"}
+"This scroll will create water for you."
+extra {"$improved identify"}
+"This scroll has the same affect as the create water spell."
+SCROLL_DEF(100, SPL_CREATE_WATER, SPL_NONE, SPL_NONE)
+weight 1
+cost 3 SILVER_PIECE  /*price upped*/
+end
+
+             scroll9
+names{"a strength boosting scroll", "scroll"}
+title "a scroll of strength boosting"
+descr "A scroll has been left here."
+extra {}
+"There are a few lines written on this scroll."
+extra {"$identify"}
+"This scroll will boost your strength."
+extra {"$improved identify"}
+"This scroll will raise your strength"
+SCROLL_DEF(100, SPL_RAISE_STR, SPL_NONE, SPL_NONE)
+weight 1
+cost 2 GOLD_PIECE  /*price upped*/ 
+end
+
+             scroll10
+names{"a scroll of dex boosting", "scroll"}
+title "a scroll of dex boosting"
+descr "A scroll has been left here."
+extra {}
+"There are a few lines written on this scroll."
+extra {"$identify"}
+"This scroll will boost your dex."
+extra {"$improved identify"}
+"This scroll will raise your dexterity,"
+SCROLL_DEF(100, SPL_RAISE_DEX, SPL_NONE, SPL_NONE)
+weight 1
+cost 2 GOLD_PIECE  /*price upped*/
+end
+             scroll11
+names{"a scroll of bless", "scroll"}
+title "a scroll of bless"
+descr "A scroll has been left here."
+extra {}
+"There are a few lines written on this scroll."
+extra {"$identify"}
+"This scroll will boost your abilities."
+extra {"$improved identify"}
+"This scroll will cast bless on you"
+SCROLL_DEF(100,SPL_BLESS, SPL_NONE, SPL_NONE)
+weight 1
+cost 2 GOLD_PIECE  /*price upped*/
+end
+
+
+/*                      combat_ring
+names{"ring of combat","combat ring","ring"}
+title "a ring of combat"
+descr "A fancy ring has been left in the dust here."
+extra {}
+"This ring is very unusual."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_FINGER}
+STR_TRANSFER(-1)
+STR_TRANSFER(-1)
+STR_TRANSFER(-1)
+STR_TRANSFER(-1)
+STR_TRANSFER(-1)
+STR_TRANSFER(-1)
+STR_TRANSFER(-1)
+STR_TRANSFER(-1)
+STR_TRANSFER(-1)
+STR_TRANSFER(-1)
+STR_TRANSFER(-1)
+STR_TRANSFER(-1)
+STR_TRANSFER(-1)
+STR_TRANSFER(-1)
+STR_TRANSFER(-1)
+STR_TRANSFER(-1)
+STR_TRANSFER(-1)
+STR_TRANSFER(-1)
+STR_TRANSFER(-1)
+STR_TRANSFER(-1)
+DEX_TRANSFER(-1)
+DEX_TRANSFER(-1)
+DEX_TRANSFER(-1)
+DEX_TRANSFER(-1)
+DEX_TRANSFER(-1)
+DEX_TRANSFER(-1)
+DEX_TRANSFER(-1)
+DEX_TRANSFER(-1)
+DEX_TRANSFER(-1)
+DEX_TRANSFER(-1)
+DEX_TRANSFER(-1)
+DEX_TRANSFER(-1)
+DEX_TRANSFER(-1)
+DEX_TRANSFER(-1)
+DEX_TRANSFER(-1)
+DEX_TRANSFER(-1)
+DEX_TRANSFER(-1)
+DEX_TRANSFER(-1)
+DEX_TRANSFER(-1)
+DEX_TRANSFER(-1)
+MAG_TRANSFER(-1)
+MAG_TRANSFER(-1)
+MAG_TRANSFER(-1)
+MAG_TRANSFER(-1)
+MAG_TRANSFER(-1)
+MAG_TRANSFER(-1)
+MAG_TRANSFER(-1)
+MAG_TRANSFER(-1)
+MAG_TRANSFER(-1)
+MAG_TRANSFER(-1)
+MAG_TRANSFER(-1)
+MAG_TRANSFER(-1)
+MAG_TRANSFER(-1)
+MAG_TRANSFER(-1)
+MAG_TRANSFER(-1)
+MAG_TRANSFER(-1)
+MAG_TRANSFER(-1)
+MAG_TRANSFER(-1)
+MAG_TRANSFER(-1)
+MAG_TRANSFER(-1)
+DIV_TRANSFER(-1)
+DIV_TRANSFER(-1)
+DIV_TRANSFER(-1)
+DIV_TRANSFER(-1)
+DIV_TRANSFER(-1)
+DIV_TRANSFER(-1)
+DIV_TRANSFER(-1)
+DIV_TRANSFER(-1)
+DIV_TRANSFER(-1)
+DIV_TRANSFER(-1)
+DIV_TRANSFER(-1)
+DIV_TRANSFER(-1)
+DIV_TRANSFER(-1)
+DIV_TRANSFER(-1)
+DIV_TRANSFER(-1)
+DIV_TRANSFER(-1)
+DIV_TRANSFER(-1)
+DIV_TRANSFER(-1)
+DIV_TRANSFER(-1)
+DIV_TRANSFER(-1)
+CURSED_OBJECT
+end
+
+                      head_bag
+names{"headband of holding","headband","band"}
+title "a headband of holding"
+descr "A rather strange looking headband has been left here."
+extra {}
+"This headband radiates magic, it looks really cool too!"
+CONTAINER_DEF(30000)
+weight 1
+cost 2 COPPER_PIECE
+manipulate{MANIPULATE_TAKE,MANIPULATE_WEAR_HEAD}
+spell 200
+dilbegin hbprg();
+var
+  spl : integer;
+code
+{
+ heartbeat  := PULSE_SEC*1;
+ :start:
+ wait(SFB_DONE, ((activator.type == UNIT_ST_PC) and (self == medium)));
+ if(self.outside.level >= IMMORTAL_LEVEL) goto start;
+ if(not(command(CMD_WEAR))) goto start;
+ spl := cast_spell(SPL_BLIND, self.outside, self, self.outside,
+"blindaff@gnome");
+ goto start;
+}
+dilend
+end                                                                        
+       */
+
+                      guard_shield
+names{"guard shield","small shield","shield"}
+title "guard shield"
+descr "A small shield is quietly rusting away here."
+extra {}
+"This shield was made especially for gnomes, only gnomes can use it."
+SHIELD_DEF(SHIELD_MEDIUM, 0, 0)
+cost 3 COPPER_PIECE
+rent 3 IRON_PIECE
+dilcopy race_restrict@function(RACE_GNOME, 0, 50, "");
+end
+
+
+                      pendant
+names{"small pendant","pendant"}
+title "a small pendant"
+descr "A small pendant has been left lying here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_NECK}
+extra {}
+"A small pendant made of simple metal."
+end
+
+                      miners_pick
+names{"miner's pick","miners pick","miner pick","pick"}
+title "a miner's pick"
+descr "A miner's pick is stuck in the ground here."
+extra {}
+"This is a small pick made of steel and used for mining."
+weight 20
+cost 15 COPPER_PIECE
+rent 10 IRON_PIECE
+manipulate{MANIPULATE_TAKE,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_BATTLE_AXE,0,0)
+end
+
+                              gnome_sword
+names{"gnome sword","sword"}
+title "a gnome's sword"
+descr "A sword created for a small person has been left lying here."
+extra {}
+"This is your simple, unadorned, short sword."
+manipulate{MANIPULATE_TAKE,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_SHORT_SWORD, 0, 0)
+cost 5 COPPER_PIECE
+rent 3 IRON_PIECE
+end
+
+                              gnome_dagger
+names{"gnome dagger","dagger"}
+title "a gnome's dagger"
+descr "A simple, small dagger is lying here."
+extra {}
+"Simply made, this is a good dagger."
+manipulate{MANIPULATE_TAKE,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_DAGGER, 0, 0)
+cost 5 COPPER_PIECE
+rent 3 IRON_PIECE
+end
+
+                              guard_sword
+names{"guard sword","sword"}
+title "a guard sword"
+descr "A guard's sword has been placed on the ground here."
+extra {}
+"This is a common, ordinary, garden variety, guard's sword. It is made
+of good strong metal and looks like it will not break."
+manipulate{MANIPULATE_TAKE,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_BROAD_SWORD,0,0)
+cost 18 COPPER_PIECE
+rent 15 IRON_PIECE
+end
+
+                                gnome_hammer
+names{"common hammer","hammer"}
+title "a common hammer"
+descr "There is a common hammer lying here."
+extra {}
+"This hammer looks like your run-of-the-mill hammer."
+manipulate{MANIPULATE_TAKE,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_WAR_HAMMER,0,0)
+weight 15
+cost 10 COPPER_PIECE
+rent 15 IRON_PIECE
+end
+
+                          glim_sword
+names{"glimmering sword","sword"}
+title "a glimmering sword"
+descr "A slightly shining sword is lying here."
+extra {}
+"This sword seem to glimmer with a light that it generates internally."
+manipulate{MANIPULATE_TAKE,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_KATANA,0,0)
+weight 15
+rent 18 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_STR, 85, 0, 50, "");
+end
+
+                              queen_dagger
+names {"jeweled dagger","dagger"}
+title "a jeweled dagger"
+descr "A dagger covered in fine jewels lies here."
+extra {}
+"This dagger is obviously the property of someone with a lot on money
+since it is covered in expensive jewels."
+manipulate{MANIPULATE_TAKE,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_DAGGER,0,0)
+weight 5
+cost 50 COPPER_PIECE
+rent 18 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_MAG, 80, 0, 50, "");
+end
+
+                                    mage_staff
+names{"staff of darkness","dark staff","staff"}
+title "Staff of Darkness"
+descr "A dark staff lies on the ground here, daring someone to pick it
+up."
+extra {}
+"As you hold this staff you get the feeling that it is PURE evil."
+manipulate{MANIPULATE_TAKE,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_QUARTERSTAFF,0,0)
+weight 8
+cost 40 COPPER_PIECE
+rent 20 IRON_PIECE
+dilcopy ali_restrict@function(-350, -1000, 0, 50, "");
+dilcopy abi_restrict@function(ABIL_MAG, 85, 0, 50, "");
+end
+
+                         cleric_hammer
+names{"hammer of light","light hammer","hammer"}
+title "Hammer of Light"
+descr "A light hammer is glowing on the ground here."
+extra {}
+"This hammer glows with holy light. It seems to pulse in your hands as
+you look at it."
+manipulate{MANIPULATE_TAKE,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_WAR_HAMMER,0,0)
+weight 15
+cost 20 COPPER_PIECE
+rent 20 IRON_PIECE
+dilcopy ali_restrict@function(1000, 350, 0, 50, "");
+dilcopy abi_restrict@function(ABIL_DIV, 80, 0, 50, "");
+end
+
+                              king_sword
+names{"drowslayer","king sword","sword"}
+title "Drowslayer"
+descr "The mighty king sword is thrust into the ground at this place."
+extra {}
+"This sword was made in the war to kill drow elves. It has been the
+weapon of the gnome kings for generations."
+manipulate{MANIPULATE_TAKE,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_BROAD_SWORD,2,0)
+WEAPON_SLAYER(RACE_DARK_ELF)
+weight 20
+cost 30 COPPER_PIECE
+rent 30 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_STR, 85, 0, 50, "");
+end
+
+                           fountain
+names{"ornate fountain","fountain","water"}
+title "an ornate fountain"
+descr "There is a very ornate fountain in the center of the road here."
+extra {}
+"This is a very ornate fountain."
+manipulate{MANIPULATE_ENTER}
+LIQ_DEF(LIQ_WATER,500,INFINITE_CAPACITY,200,0)
+end
+
+                     first_sign
+names{"wooden sign","first sign","sign"}
+title "a wooden sign"
+descr "A small wooden sign has been thrust into the ground here."
+weight 100
+type ITEM_NOTE
+extra {}
+"&lThis sign reads:&n
+&s12          _______________________________________________________&n
+&s12          |                                                      |&n
+&s12          | This is the land of then gnomes. Please have a care  |&n
+&s12          |            about what you do here.                   |&n
+&s12          |                                                      |&n
+&s12          |______________________________________________________|&n
+"
+end
+
+                      meat
+names{"meat"}
+title "meat"
+descr "A piece of meat has been left here to rot."
+extra {}
+"This is a large piece of meat."
+manipulate{MANIPULATE_TAKE}
+FOOD_DEF(15,0)
+weight 8
+cost 1 COPPER_PIECE
+end
+
+             meat_chunk
+names{"chunk of meat","meat chunk","meat"}
+title "a chunk of meat"
+descr "A chunk of meat has been left here to rot."
+extra {}
+"This is a large chunk of meat."
+manipulate{MANIPULATE_TAKE}
+FOOD_DEF(10,0)
+weight 6
+cost 2 IRON_PIECE
+end
+
+              apple
+names{"juicy apple","apple"}
+title "a juicy apple"
+descr "A juicy apple has been left here."
+extra{}
+"This is a juicy apple."
+manipulate{MANIPULATE_TAKE}
+FOOD_DEF(5,0)
+weight 1
+cost 1 IRON_PIECE
+end
+
+                 pear
+names{"pear"}
+title "a pear"
+descr "A plain pear is lying here."
+extra {}
+"This is a plain pear."
+manipulate{MANIPULATE_TAKE}
+FOOD_DEF(5,0)
+weight 1
+cost 1 IRON_PIECE
+end
+
+               melon
+names{"ripe melon","melon"}
+title "a ripe melon"
+descr "A ripe melon is lying here."
+extra {}
+"This is a ripe, delicious melon."
+manipulate{MANIPULATE_TAKE}
+FOOD_DEF(9,0)
+weight 10
+cost 4 IRON_PIECE
+end
+
+                  guard_armor
+names{"gnome guard plate","guard plate","gnome plate","plate"}
+title "a gnome guard plate"
+descr "A gnome's plate hate been left here."
+extra {}
+"This is made of simple metal and designed to be worn my gnomes."
+manipulate{MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+ARMOUR_PLATE(0,0)
+weight 10
+cost 4 COPPER_PIECE
+rent 12 IRON_PIECE
+end
+
+                 gnome_helmet
+names{"gnome guard helmet","guard helmet","gnome helmet","helmet"}
+title "a gnome guard helmet"
+descr "A gnome guard's helmet has been left here."
+extra {}
+"This is a simple helmet made for gnome guards."
+manipulate{MANIPULATE_TAKE,MANIPULATE_WEAR_HEAD}
+ARMOUR_PLATE(0,0)
+weight 5
+cost 4 COPPER_PIECE
+rent 9 IRON_PIECE
+end
+
+                 crystal_plate
+names{"crystal plate","breast plate","breastplate","plate"}
+title "a crystal plate"
+descr "Someone left a crystal plate here."
+extra {}
+"This is a breastplate made of crystal."
+manipulate{MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+ARMOUR_PLATE(0,0)
+weight 15
+rent 17 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_STR, 85, 0, 50, "");
+end
+
+                   crystal_helmet
+names {"crystal helmet","helmet"}
+title "a crystal helmet"
+descr "Someone has left a crystal helmet here."
+extra {}
+"This is a beautiful crystal helmet."
+manipulate{MANIPULATE_TAKE,MANIPULATE_WEAR_HEAD}
+ARMOUR_PLATE(0,0)
+CHAR_FLAG_TRANSFER(CHAR_DETECT_ALIGN)
+weight 5
+rent 18 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_STR, 90, 0, 50, "");
+end
+
+                   crystal_sleeves
+names{"crystal sleeves","sleeves"}
+title "some crystal sleeves"
+descr "Someone has left some crystal sleeves here."
+extra {}
+"These are a simple pair of crystal sleeves."
+manipulate{MANIPULATE_TAKE,MANIPULATE_WEAR_ARMS}
+ARMOUR_PLATE(0,0)
+weight 8
+rent 16 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_STR, 85, 0, 50, "");
+end
+
+                   crystal_pants
+names{"pair of crystal pants","pants"}
+title "a pair of crystal pants"
+descr "Someone has left a pair of crystal pants here."
+extra {}
+"This is a beautiful pair of crystal pants."
+manipulate{MANIPULATE_TAKE,MANIPULATE_WEAR_LEGS}
+ARMOUR_PLATE(0,0)
+weight 10
+rent 18 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_STR, 85, 0, 50, "");
+end
+
+                  queen_gown
+names{"blue silk gown","blue gown","silk gown","gown"}
+title "a blue silk gown"
+descr "Someone has left a blue silk gown here."
+extra {}
+"This gown is made of fine blue silk.  It is definitely for royalty."
+manipulate{MANIPULATE_TAKE,MANIPULATE_WEAR_ABOUT}
+ARMOUR_LEATHER(0,0)
+weight 3
+cost 5 IRON_PIECE
+rent 20 IRON_PIECE
+end
+
+                   king_robe
+names{"red robe","robe"}
+title "a red robe"
+descr "Someone has left a red robe here."
+extra {}
+"This is the kind of robe a king might wear."
+manipulate{MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+ARMOUR_LEATHER(0,0)
+weight 15
+cost 2 IRON_PIECE
+rent 20 IRON_PIECE
+end
+
+                  dark_cloak
+names{"cloak of darkness","dark cloak","cloak"}
+title "the Cloak of Darkness"
+descr "There is a cloak here that seems to be trying to hide in the
+shadows."
+extra {}
+"It is very hard to focus on this cloak. You are starting to get a
+headache."
+manipulate{MANIPULATE_TAKE,MANIPULATE_WEAR_ABOUT}
+ARMOUR_LEATHER(0,0)
+CHAR_FLAG_TRANSFER(CHAR_HIDE)
+weight 5
+cost 2 IRON_PIECE
+rent 21 IRON_PIECE
+dilcopy level_restrict@function(45, 0, 50, "");
+end
+
+                   light_robe
+names{"robe of light","light robe","robe"}
+title "the Robe of Light"
+descr "Someone has left a glowing robe here."
+extra {}
+"This robe glows very brightly as you look at it."
+manipulate{MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+ARMOUR_LEATHER(0,0)
+weight 9
+cost 2 IRON_PIECE
+rent 20 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_DIV, 80, 0, 50, "");
+end
+
+
+                       king_scepter
+names{"gnome's scepter","scepter"}
+title "a gnome's scepter"
+descr "A gnome has left a scepter here."
+extra {}
+"This looks like a royal scepter."
+type ITEM_OTHER
+manipulate{MANIPULATE_TAKE,MANIPULATE_HOLD}
+end
+
+
+
+                         night_dagger
+names{"night dagger","dark dagger","dagger"}
+title "a dark dagger"
+descr "Something is lying here."
+extra {}
+"This is a dagger. It is so dark you can barely look at it."
+manipulate{MANIPULATE_TAKE,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_DAGGER,0,0)
+weight 2
+cost 2 COPPER_PIECE
+rent 5 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_DEX, 85, 0, 50, "");
+end
+
+
+
+
+	   artifact_sword
+names{"Sword of Mercy","mercy sword","sword"}
+title "&c+bSword of &c+wMercy&cw"
+descr "An ancient sword has been left here."
+extra {}
+"This sword was created long ago my a mighty sorcerer.  He gave it the
+power
+to take some of it's wielder's life energy and transfer it into another.
+The
+cost, however, is greater that what the recipient get's, so many did not
+wish
+to use it. The use of it is simple the wielder needs only 'heal' the
+person
+whom he wishes to aid.."
+manipulate{MANIPULATE_TAKE,MANIPULATE_WIELD}
+WEAPON_DEF(WPN_BROAD_SWORD,9,5)
+STR_TRANSFER(1)
+DEX_TRANSFER(2)
+WEAPON_TRANSFER(WPN_BROAD_SWORD,5)
+spell 20
+dilbegin recall chrgeprg();
+code
+{
+  :start:
+  heartbeat := PULSE_SEC*SECS_PER_MUD_DAY/12;
+  wait(SFB_TICK, (self.equip == WEAR_WIELD));
+  heartbeat := PULSE_SEC*2;
+  act("Your $2N flickers.", A_ALWAYS, self.outside, self, null, TO_CHAR);
+  sendto("mercy", self);
+  goto start;
+}
+dilend
+dilbegin aware recall healprg();
+var
+      player  : unitptr;
+      pwr     : integer;
+      crge    : integer;
+      chrg    : integer;      
+code
+{
+   chrg := 5;
+   :init:
+   crge := interrupt(SFB_MSG, (argument == "mercy") and 
+     (activator == self), chrge);
+
+   :begin:
+   heartbeat := PULSE_SEC*1;
+   wait(SFB_CMD, (activator == self.outside) and
+     (GNOME_QUEST_COMPLETE in self.outside.quests) and
+     (self.equip == WEAR_WIELD));
+
+   :start:
+   wait(SFB_CMD, (command("heal")) and (activator == self.outside));
+   block;
+   player := findunit(self.outside, argument, FIND_UNIT_SURRO, null);
+   if(chrg <= 0)
+      goto fail;
+   if(player == null)
+   {
+     act("That person is &c+rNOT&cw here.", A_ALWAYS, self.outside,
+       null, null, TO_CHAR);
+     goto start;
+   }
+   else
+   {
+     self.outside.hp := self.outside.hp - 20;
+     position_update(self.outside);
+     pwr := cast_spell(SPL_CURE_WOUNDS_1, self.outside, self, player,
+       "infoprg@gnome");
+     chrg := chrg-1;
+     goto start;
+   }
+   goto start;
+
+  :fail:
+  act("You cannot do this at this time.", A_ALWAYS, self.outside, null,
+    null, TO_CHAR);
+  goto start;
+
+  :chrge:
+  clear(crge);
+  if(chrg <= 11)
+  {
+    chrg := chrg+1;
+    goto init;
+  }
+  else if (chrg >= 12)
+  {
+    chrg := 12;
+    goto init;
+  }
+  else  
+    goto init;
+    goto start;
+
+}
+dilend
+dilcopy level_restrict@function(30, 0, 50, "");
+dilcopy quest_restrict@function(GNOME_QUEST_COMPLETE, 0, 60, "");
+end
+
+                godtype_board
+names{"god board","non-mortal board","bulletin board","board"}
+title "a non-mortal board"
+descr "A board not for mortals hangs here."
+type ITEM_OTHER
+special SFUN_BULLETIN_BOARD "wiz L200"
+end
+
+                mortal_board
+names{"bulletin board","board"}
+title "a bulletin board"
+descr "A bulletin board has been left lying here."
+type ITEM_OTHER
+special SFUN_BULLETIN_BOARD "citizen"
+end
+
+               gnome_board
+names{"gnome board","bulletin board","board"}
+title "a gnome board"
+descr "A gnomish bulletin board has been hung on the wall here."
+type ITEM_OTHER
+special SFUN_BULLETIN_BOARD "gnome"
+end
+
+               pillar
+names{"stone pillar","pillar"}
+title "a stone pillar"
+descr "A stone pillar rises up out of the ground here."
+extra {}
+"This pillar is ancient.  It towers above almost everything you have ever
+seen.  It is covered in strange symbols and writing. There is one part of
+the writing you think you might be able to make out."
+extra {"writing","words","instructions"}
+"&lThe writing reads........&n
+&s16Instructions for using the pillar:&n
+&s16Touch the symbol using: touch symbol&n
+&s16It's that easy, and you will be sent&n
+&s16to another place, far away.&n
+"
+extra {"symbols","symbol"}
+"The symbols on this pillar are obscure and many are worn beyond
+recognition. Only one seems to be in good condition."
+type ITEM_OTHER
+dilbegin prg11();
+var
+     char      : unitptr;
+code
+{
+        :start:
+        wait(SFB_CMD, (activator.type == UNIT_ST_PC) and (command("touch")))
+;
+
+        if(argument == "symbol")
+        {
+           char := activator;
+           block;
+           cast_spell(SPL_RANDOM_TELEPORT, char, self, char);
+           goto start;
+         }
+         else
+          goto start;
+
+}
+dilend
+end
+
+                   curse_manacle
+names{"iron manacle","manacle","chain"}
+title "an iron manacle"
+descr "An iron manacle has been left here."
+extra {}
+"This manacle is used to hold prisoners. It seems very effective."
+manipulate{MANIPULATE_TAKE,MANIPULATE_WEAR_WRIST}
+DEX_TRANSFER(-2)
+CURSED_OBJECT
+end
+
+                 dark_staff
+names{"staff of death","death staff","staff"}
+title "&c+rStaff of Death&cw"
+descr "A strange staff has been left here."
+extra {}
+"This staff is made of an unknown material. It radiates evil and
+darkness."
+extra {"$identify"}
+"This staff raises your magic and brain. It also seems to do something...a
+bit more..."
+extra {"$improved identify"}
+"The Staff of Death does the following&n
+Raises mag by 1&n
+Raises bra by 2&n
+Can 'burn' your opponet."
+WEAPON_DEF(WPN_QUARTERSTAFF,9,5)
+MAG_TRANSFER(1)
+BRA_TRANSFER(2)
+spell 40
+dilbegin recall chargeprg();
+code
+{
+  :start:
+  heartbeat := PULSE_SEC*SECS_PER_MUD_DAY/5;
+  wait(SFB_TICK, ((self.equip == WEAR_WIELD)) 
+    and (DARKNESS_QUEST_COMPLETE in self.outside.quests));
+  act("You feel a &c+ystrange &c+bheat &cwfrom your $2N.", A_ALWAYS,
+    self.outside, self, null, TO_CHAR);
+  act("$1n's $2N emits a &c+ystrange &c+bheat&cw.", A_ALWAYS,
+    self.outside, self, null, TO_REST);
+  sendto("heated", self);
+  goto start;
+}
+dilend
+
+dilbegin recall aware staffprg();
+var
+
+  i      : integer;
+  enemy  : unitptr;
+  n      : integer;
+  charge : integer;
+  pwr    : integer;
+code
+{
+  pwr := 3;
+  :init:
+  heartbeat := PULSE_SEC*1;
+  charge := interrupt (SFB_MSG, ((self == activator) and
+    (argument == "heated")), charge);
+
+  :start:
+  wait(SFB_CMD, (command("burn")) and (self.equip == WEAR_WIELD) 
+    and (DARKNESS_QUEST_COMPLETE in activator.quests));
+  block;
+  pause;
+  enemy := self.outside.fighting;
+  if(enemy == null) goto no_person;
+  secure(enemy, start);
+  if(pwr <= 0) goto fail;
+  pwr := pwr-1;
+  i := rnd(45, 115);
+  if(I < self.outside.weapons[WPN_QUARTERSTAFF])
+  {
+    n := cast_spell(SPL_FIREBALL_1, self.outside, self,
+      self.outside.fighting, "burnprg@gnome");
+  }
+  else
+  {
+    act("Your staff heats up, but nothing happens.", A_ALWAYS,
+self.outside,
+      enemy, self, TO_CHAR);
+  }
+  goto start;
+
+  :fail:
+  act("&c+rYour $2N is not willing to harm anyone right now.&cw",
+A_ALWAYS,
+    self.outside, self, enemy, TO_CHAR);
+  goto start;
+
+  :charge:
+  clear(charge);
+  if(pwr < 12)
+   pwr := pwr+1;
+  else if(pwr >= 12)
+   pwr := 12;
+  goto init;
+   goto start;
+
+  :no_person:
+  act("&c+bYour $2N &c+rflares&c+b, heat washes over you and &c+ceveryone
+"+
+    "&c+bin the area!&cw", A_ALWAYS, self.outside, self, null, TO_CHAR);
+  act("&c+b$1n's $2N &c+rflares &c+band emmits a great heat!&cw",
+A_SOMEONE,
+self.outside,
+    self, null, TO_REST);
+  goto start;
+}
+dilend
+dilbegin staff_death();
+code
+{
+  heartbeat := PULSE_SEC*1;
+  :start:
+  wait(SFB_COM, command(CMD_AUTO_COMBAT) and
+    ((self.equip == WEAR_WIELD) or (self.equip == WEAR_HOLD)) 
+    and (self.outside.fighting.hp < 10) and 
+    (DARKNESS_QUEST_COMPLETE in self.outside.quests));
+  act("&c+gYour $2N &c+rflairs &c+gwith an intense heat and &c+rroasts "+
+    "&c+g$3n!&cw", A_SOMEONE, self.outside, self, self.outside.fighting,
+    TO_CHAR);
+  act("&c+y$1n's $2N &c+rflairs &c+ywith intense heat and &c+rroasts "+
+    "&c+yyou!&cw", A_SOMEONE, self.outside, self, self.outside.fighting,
+    TO_VICT);
+  act("&c+b$1n's $2N &c+rflairs &c+bwith intense heat and &c+rroasts "+
+    "&c+b$3n!&cw", A_SOMEONE, self.outside, self, self.outside.fighting,
+    TO_REST);
+  act("&c+rIt would be best if you died now.&cw", A_ALWAYS, self.outside,
+    self, self.outside.fighting, TO_VICT);
+  self.outside.fighting.hp := -7;
+  pause;
+  goto start;
+}
+dilend
+dilcopy ali_restrict@function(-350, -1000, 0, 50, "");
+dilcopy level_restrict@function(30, 0, 50, "");
+dilcopy quest_restrict@function(DARKNESS_QUEST_COMPLETE, 0, 60, "");
+end
+
+                skeleton
+names{"gnome skeleton", "moldy green skeleton", "old skeleton", "moldy
+skeleton", "green skeleton", "skeleton"}
+title "a old, moldy green skeleton"
+descr "The skeleton of a gnome is lying here."
+extra {}
+"This skeleton is very old.  It has mold growing all over it so it is now
+green in color.  It seems to be holding something."
+CONTAINER_DEF(10)
+end
+
+                book
+names{"old worn book", "old book", "worn book", "book"}
+title "an old worn book"
+descr "An old worn book is here gathering dust."
+extra {}
+"This book is very ancient. The pages are faded and some are missing. The
+cover is worn from time and much use. Most of the pages are unreadable
+but you think you can decipher some of them."
+extra {"pages"}
+"There isn't much that is legible but what is tells an awful story of
+being buried alive. This is obviously someones journal. From what you
+can read, whoever owned this book must have died an awful death."
+manipulate {MANIPULATE_TAKE}
+type ITEM_TRASH
+end
+
+
+
+%reset
+load gnome_advent into twn_sq zonemax 1
+{
+     equip gnome_sword position WEAR_WIELD
+}
+load gnome_sorceres into loft zonemax 1
+{
+     equip gnome_dagger position WEAR_WIELD
+}
+load gnome_thief into nor_vil zonemax 1
+{
+     equip gnome_sword position WEAR_WIELD
+}
+load king_gloin into cast_throne zonemax 1
+{
+     equip king_sword position WEAR_WIELD
+     equip king_robe position WEAR_BODY
+
+     follow king_guard zonemax 2
+     {
+       equip glim_sword position WEAR_WIELD
+       equip crystal_plate position WEAR_BODY
+       equip crystal_helmet position WEAR_HEAD
+       equip crystal_sleeves position WEAR_ARMS
+       equip crystal_pants position WEAR_LEGS
+       equip guard_shield position WEAR_SHIELD
+     }
+}
+load gnome_queen into cast_throne zonemax 1
+{
+     equip queen_dagger position WEAR_WIELD
+     equip queen_gown position WEAR_BODY
+
+     follow king_guard zonemax 2
+     {
+       equip glim_sword position WEAR_WIELD
+       equip crystal_plate position WEAR_BODY
+       equip crystal_helmet position WEAR_HEAD
+       equip crystal_sleeves position WEAR_ARMS
+       equip crystal_pants position WEAR_LEGS
+       equip guard_shield position WEAR_SHIELD
+     }
+}
+load cleric into cleric_room zonemax 1
+{
+     equip cleric_hammer position WEAR_WIELD
+     equip light_robe position WEAR_BODY
+}
+load gnome_mage into mage_room zonemax 1
+{
+     equip mage_staff position WEAR_WIELD
+     equip dark_cloak position WEAR_ABOUT
+}
+load gnome_guard1 into cast_ent zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard1 into cast_ent zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard1 into cast_ent zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard1 into cast_ent zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard1 into cast_ent zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard1 into cast_foy zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard1 into cast_foy zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard1 into cast_foy zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard1 into cast_foy zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard1 into cast_foy zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard1 into cast_foy zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard1 into cast_foy zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard1 into cast_foy zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard1 into cast_foy zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard1 into cast_foy zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard1 into cast_foy zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard1 into cast_foy zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard2 into tow_top2 zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard2 into tow_top2 zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard2 into tow_top2 zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard2 into tow_top2 zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard2 into tow_top2 zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard2 into tow_top2 zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard2 into tow_top2 zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard2 into tow_top2 zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard2 into tow_top2 zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard2 into tow_top2 zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard2 into tow_mid2 zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard2 into tow_mid2 zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard2 into tow_mid2 zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard2 into tow_mid2 zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard2 into tow_mid2 zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard2 into tow_mid2 zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard2 into tow_mid2 zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard2 into tow_mid2 zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard2 into tow_mid2 zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard2 into tow_mid2 zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard2 into tow_mid2 zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard2 into tow_mid2 zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard2 into tow_mid2 zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard2 into tow_mid2 zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_guard2 into tow_mid2 zonemax 20
+{
+     equip guard_sword position WEAR_WIELD
+     equip guard_armor position WEAR_BODY
+     equip gnome_helmet position WEAR_HEAD
+     equip guard_shield position WEAR_SHIELD
+}
+load gnome_grocer into grocers zonemax 1
+{
+     equip gnome_hammer position WEAR_WIELD
+     load apple
+     load melon
+     load pear
+}
+load scroll_seller into loft zonemax 1
+{
+      equip mage_staff position WEAR_WIELD
+}
+load gnome_meatman into meat_shop zonemax 1
+{
+     equip gnome_hammer position WEAR_WIELD
+     load meat
+     load meat_chunk
+}
+load gnome_miner1 into mine5 zonemax 10
+{
+     equip miners_pick position WEAR_WIELD
+}
+load gnome_miner1 into mine5 zonemax 10
+{
+     equip miners_pick position WEAR_WIELD
+}
+load gnome_miner1 into mine5 zonemax 10
+{
+     equip miners_pick position WEAR_WIELD
+}
+load gnome_miner1 into mine11 zonemax 10
+{
+     equip miners_pick position WEAR_WIELD
+}
+load gnome_miner1 into mine11 zonemax 10
+{
+     equip miners_pick position WEAR_WIELD
+}
+load gnome_miner1 into mine11 zonemax 10
+{
+     equip miners_pick position WEAR_WIELD
+}
+load miner2 into mine6 zonemax 10
+{	
+     equip miners_pick position WEAR_WIELD
+}
+load miner2 into mine6 zonemax 10
+{	
+     equip miners_pick position WEAR_WIELD
+}
+load miner2 into mine6 zonemax 10
+{	
+     equip miners_pick position WEAR_WIELD
+}
+load miner2 into mine8 zonemax 10
+{
+     equip miners_pick position WEAR_WIELD
+}
+load miner2 into mine8 zonemax 10
+{
+     equip miners_pick position WEAR_WIELD
+}
+load miner2 into mine8 zonemax 10
+{
+     equip miners_pick position WEAR_WIELD
+}
+load thief into icy_tr5@mount max 1
+{
+     load king_scepter
+     equip gnome_sword position WEAR_WIELD
+}
+load girl into tower_outlook@asgaard max 1
+{
+     equip gnome_hammer position WEAR_WIELD
+     equip pendant position WEAR_NECK_1
+}
+load dark_warrior into cth_se_tower@midgaard max 1
+{
+     equip night_dagger position WEAR_WIELD
+     equip crystal_plate position WEAR_BODY
+}
+load worker into park_cafe@midgaard max 1
+{
+     equip gnome_sword position WEAR_WIELD
+}
+load gnome_light into light_rm zonemax 1
+{
+     equip gnome_sword position WEAR_WIELD
+     equip combat_ring position WEAR_FINGER_L
+}
+load evil_master into master_room max 1
+load gnome_prisoner into prison_rm max 1
+{
+     equip curse_manacle position WEAR_WRIST_R
+     equip curse_manacle position WEAR_WRIST_L
+}
+load gnome_fool into cast_throne max 1
+load ghost_gnome into cell4 max 1
+load snake into dungeon4 max 1
+load fountain into twn_sq max 2
+load fountain into courtyard5 max 2
+load first_sign into path_in1 max 1
+load godtype_board into junk_hole max 1
+load mortal_board into west_hall3 max 1
+load gnome_board into east_hall3 max 1
+load pillar into mine9 max 1
+load skeleton into hidden_rm max 1
+{
+     load book
+}
+door mine8 NORTH {EX_OPEN_CLOSE,EX_CLOSED,EX_HIDDEN}
+door path_mound6 NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+door cast_ent SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door courtyard1 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+door courtyard3 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door courtyard8 NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+door tow_bottom1 EAST {EX_OPEN_CLOSE,EX_CLOSED}
+door tow_bottom2 WEST {EX_OPEN_CLOSE,EX_CLOSED}
+door cast_foy SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door cast_doors NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+door cast_throne SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door east_hall2 SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door west_hall2 NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+door cleric_room SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door cleric_room DOWN {EX_OPEN_CLOSE,EX_CLOSED,EX_HIDDEN}
+door dungeon_begin UP {EX_OPEN_CLOSE,EX_CLOSED}
+door dungeon1 NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+door dungeon1 SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door dungeon2 NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+door dungeon2 SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door dungeon3 NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+door dungeon3 SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door dungeon5 EAST {EX_OPEN_CLOSE,EX_CLOSED,EX_HIDDEN}
+door dungeon5 SOUTH {EX_OPEN_CLOSE,EX_CLOSED,EX_HIDDEN}
+door cell1 SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door cell2 NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+door cell3 SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door cell4 NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+door cell5 SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+door cell6 NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+door mage_room NORTH {EX_OPEN_CLOSE,EX_CLOSED}
+door mage_room DOWN {EX_OPEN_CLOSE,EX_CLOSED,EX_HIDDEN}
+door prison_rm UP {EX_OPEN_CLOSE,EX_CLOSED}
+door prison_rm NORTH {EX_OPEN_CLOSE,EX_CLOSED,EX_HIDDEN}
+door hidden_rm SOUTH {EX_OPEN_CLOSE,EX_CLOSED}
+
+%end
+
+
+

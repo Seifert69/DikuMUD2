@@ -1,0 +1,3926 @@
+/*
+filename    asgaard
+password    odin
+changedby   jager
+EmailAdd     Palio <palio@blinksoft.com>
+request     compile
+version     23
+END HEADER*/
+
+#define REPLACE_ONGOING  "$feather replacement"
+#define ASGAARD1_COMPLETE "Asgaard Feather Quest Complete"
+#define ASGAARD_COMPLETE "Asgaard Quest Complete"
+#define ASGAARD_ONGOING "Asgaard Quest Ongoing"
+#include <composed.h>
+
+/* Overview -
+	At Cabal's request the olympus zone has been translated
+	to Norse mythology instead. The layout of the zone has
+	remained unchanged, with several expansions incorporated.
+	The level range has been broken down as follows: level
+	90 for guardians of asgaard and other animals, level 100-120
+	for the norse gods themselves. PAIN code has been added
+	to give 'life' to the mobiles, and code for a quest written
+	in DIL will follow after zone completion.*/
+
+/* New Mobile Macro Definitions Section */
+
+%zone	asgaard
+title "Asgaard"
+lifespan 20
+reset RESET_ANYHOW
+creators {"icculus"}
+
+notes
+"may 14 changed the gods to use composed macros so they are not a mile tall
+they are supposed to be the size of humans maybe a little bigger.
+feb 24 1996  Whistler removed the sticke of bridging due to a decision
+by papi. Changed a Descr on the bridge to get rid of refrence to midgaard.
+April 19 Palio added a feather replacement quest&n
+12/11/96 jager added a clan link"
+
+%dil
+
+dilbegin one_feather();
+var
+item:unitptr;
+dest_item:unitptr;
+code
+{
+:start:
+wait (SFB_DONE, (((self.outside==activator) and
+(self.equip!=0)) and
+((medium.equip==WEAR_HOLD) or
+(medium.equip==WEAR_HEAD))));
+item:=activator.inside;
+while (item!=null)
+      {
+if ((item!=self) and (item.idx==self.idx))
+    {
+       if (item.equip!=0) unequip (item);
+           act("One of your jet black feather flies off in the wind.",
+                A_ALWAYS, self.outside,null, null, TO_CHAR);
+           act("One of $1n's $2N flies off in the wind. ", A_HIDEINV,
+              self.outside, self, null, TO_REST);
+	dest_item:=item;
+	item:=item.next;
+        destroy(dest_item);
+	}
+else item:=item.next;
+}
+goto start;
+}
+dilend
+
+
+
+
+
+dilbegin thor_aff (medi : unitptr, targ : unitptr, hm : integer);
+code
+{
+      act("You hear a large CRACK of thunder, your hammer " +
+	  "DEVASTATES $3n!",
+          A_ALWAYS, self, null, targ,TO_CHAR);
+      act("You hear a large CRACK of thunder, $1n's hammer "+
+          "DEVASTATES $3n!",
+          A_SOMEONE, self, null,targ,TO_NOTVICT);
+      act("You hear a large CRACK of thunder, $1n's hammer "+
+          "DEVASTATES you!",
+          A_SOMEONE, self, null,targ,TO_VICT);
+					return;
+}
+dilend
+
+%rooms
+
+			field_f1
+
+title "A Spacious Field"
+descr
+
+   "You stand in a large field comprised mostly of tall weeds nd unkempt
+grass. It is quite apparent nobody has taken the time o maintain this
+land, there is most likely no need in fact. Off n the distance you here
+faint sounds, shrill but so distant that he source as well as the sound
+itself is difficult to grasp. Your erves tingle however the more you
+listen, the sounds could very ell be those of screams of intense pain and
+suffering. Directly north of you stands the Golden Gates of Asgaard. Your
+eartbeat quickens as you realize your journey has almost come to an end,
+the astral plane has succeffully been traversed!"
+
+extra {"weeds", "grass"}
+"The grass is clearly neglected, looking dull and lifeless. You
+notice a nice odor rising from the weeds however, in fact it draws
+you in and slowly relaxes your nerves."
+extra {"golden gates of asgaard", "golden gates", "gates", "gate"}
+"It shines in all of its glory, a sign of triumph just in its very
+presence. The wonderful city can be seen beyond the gates."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_FIELD
+north to goldgate_in;
+east to field_f2;
+west to field_f3;
+south to field_f5;
+end
+
+                                field_f2
+
+title "A Spacious Field"
+descr
+"   You stand in a large field comprised mostly of tall weeds
+and unkempt grass. It is quite apparent nobody has taken the time
+to maintain this land, there is most likely no need in fact. Off
+in the distance you here faint sounds, shrill but so distant that
+the source as well as the sound itself is difficult to grasp. Your
+nerves tingle however the more you listen, the sounds could very
+well be those of screams of intense pain and suffering."
+extra {"weeds", "grass"}
+"The grass is clearly neglected, looking dull and lifeless. You
+notice a nice odor rising from the weeds however, in fact it draws
+you in and slowly relaxes your nerves."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_FIELD
+west to field_f1;
+south to field_f4;
+end
+
+                                field_f3
+
+title "A Spacious Field"
+descr
+"   You stand in a large field comprised mostly of tall weeds
+and unkempt grass. It is quite apparent nobody has taken the time
+to maintain this land, there is most likely no need in fact. Off
+in the distance you here faint sounds, shrill but so distant that
+the source as well as the sound itself is difficult to grasp. Your
+nerves tingle however the more you listen, the sounds could very
+well be those of screams of intense pain and suffering. Several decayed
+corpses are strewn about in a hapless fashion."
+ extra {"weeds", "grass"}
+"The grass is clearly neglected, looking dull and lifeless. You
+notice a nice odor rising from the weeds however, in fact it draws
+you in and slowly relaxes your nerves."
+extra {"corpses", "corpse", "decayed corpse", "decayed corpses"}
+"They are truly disgusting, and the pungent odor makes you sick
+beyond your worst sickness."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_FIELD
+east to field_f1;
+west to rickety_shack;
+south to field_f6;
+end
+
+/* ***************** Room for Vanyel's Geezer for Quest ****************** */
+
+                                rickety_shack
+names {"rickety shack"}
+title "A Rickety Shack"
+descr
+"   You have entered a room so small and weak looking, it is a wonder that
+it is even standing! you almost cover your head with your hands in reflex.
+you see an equally disgusting looking table in one corner with a single
+candle lit on it.  You see the remains of a meager dinner in a pan there
+also. The field is east of here."
+extra {"table"}
+" You see a table made out of old pieces of wood leaning against one wall of
+the shack, made of equal material."
+extra {"candle"}
+" You see a long candle supported by used wax which has build up at the base-
+making it unable to be removed from the table. "
+extra {"dinner", "pan"}
+" You see a glob of what you are sure is an indigestable substance, you can
+remember calking your house with something just like it earlier last week. "
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+east to field_f3;
+ALWAYS_LIGHT
+end
+
+/* ************************* End of Vanyel's Code ************************ */
+
+                                field_f4
+
+title "A Spacious Field"
+descr
+"   You stand in a large field comprised mostly of tall weeds
+and unkempt grass. It is quite apparent nobody has taken the time
+to maintain this land, there is most likely no need in fact. Off
+in the distance you here faint sounds, shrill but so distant that
+the source as well as the sound itself is difficult to grasp. Your
+nerves tingle however the more you listen, the sounds could very
+well be those of screams of intense pain and suffering."
+extra {"weeds", "grass"}
+"The grass is clearly neglected, looking dull and lifeless. You
+notice a nice odor rising from the weeds however, in fact it draws
+you in and slowly relaxes your nerves."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_FIELD
+north to field_f2;
+west to field_f5;
+south to field_f7;
+end
+
+                                field_f5
+
+title "A Spacious Field"
+descr
+"   You stand in a large field comprised mostly of tall weeds
+and unkempt grass. It is quite apparent nobody has taken the time
+to maintain this land, there is most likely no need in fact. Off
+in the distance you here faint sounds, shrill but so distant that
+the source as well as the sound itself is difficult to grasp. Your
+nerves tingle however the more you listen, the sounds could very
+well be those of screams of intense pain and suffering."
+extra {"weeds", "grass"}
+"The grass is clearly neglected, looking dull and lifeless. You
+notice a nice odor rising from the weeds however, in fact it draws
+you in and slowly relaxes your nerves."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_FIELD
+north to field_f1;
+east to field_f4;
+west to field_f6;
+south to field_f8;
+end
+
+                                field_f6
+
+title "A Spacious Field"
+descr
+"   You stand in a large field comprised mostly of tall weeds
+and unkempt grass. It is quite apparent nobody has taken the time
+to maintain this land, there is most likely no need in fact. Off
+in the distance you here faint sounds, shrill but so distant that
+the source as well as the sound itself is difficult to grasp. Your
+nerves tingle however the more you listen, the sounds could very
+well be those of screams of intense pain and suffering. At your feet a
+small flower seems to beckon your attention, its petals seemingly
+reaching out for you."
+extra {"weeds", "grass"}
+"The grass is clearly neglected, looking dull and lifeless. You
+notice a nice odor rising from the weeds however, in fact it draws
+you in and slowly relaxes your nerves."
+extra {"flower", "petal", "small flower"}
+"   The flower seems to resemble a child in some ways. As you bend
+down to examine it, a whispery voice tells you 'Come pay homage to
+your Gods! We are not far from here!'"
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_FIELD
+north to field_f3;
+east to field_f5;
+south to field_f9;
+end
+
+                                field_f7
+
+title "A Spacious Field"
+descr
+"   You stand in a large field comprised mostly of tall weeds
+and unkempt grass. It is quite apparent nobody has taken the time
+to maintain this land, there is most likely no need in fact. Off
+in the distance you here faint sounds, shrill but so distant that
+the source as well as the sound itself is difficult to grasp. Your
+nerves tingle however the more you listen, the sounds could very
+well be those of screams of intense pain and suffering."
+extra {"weeds", "grass"}
+"The grass is clearly neglected, looking dull and lifeless. You
+notice a nice odor rising from the weeds however, in fact it draws
+you in and slowly relaxes your nerves."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_FIELD
+north to field_f4;
+west to field_f8;
+south to field_f7;
+end
+
+                                field_f8
+
+title "A Spacious Field"
+descr
+"   You stand in a large field comprised mostly of tall weeds
+and unkempt grass. It is quite apparent nobody has taken the time
+to maintain this land, there is most likely no need in fact. Off
+in the distance you here faint sounds, shrill but so distant that
+the source as well as the sound itself is difficult to grasp. Your
+nerves tingle however the more you listen, the sounds could very
+well be those of screams of intense pain and suffering.
+    As you stand here, you can somehow make out the traces of what
+might have been a sign in the distant past."
+extra {"weeds", "grass"}
+"The grass is clearly neglected, looking dull and lifeless. You
+notice a nice odor rising from the weeds however, in fact it draws
+you in and slowly relaxes your nerves."
+extra {"sign"}
+"&l   The Old Dilapitated Sign reads:
+	Welc  e  w ary  tr vel ers! Your most be o ed Gods aw it!
+        Ple s   pro  ed  n r  h  to   he  Go d n  G tes  of  As ard."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_FIELD
+north to field_f5;
+east to field_f7;
+west to field_f9;
+south to bifrost_path1;
+end
+
+                                field_f9
+
+title "A Spacious Field"
+descr
+"   You stand in a large field comprised mostly of tall weeds
+and unkempt grass. It is quite apparent nobody has taken the time
+to maintain this land, there is most likely no need in fact. Off
+in the distance you here faint sounds, shrill but so distant that
+the source as well as the sound itself is difficult to grasp. Your
+nerves tingle however the more you listen, the sounds could very
+well be those of screams of intense pain and suffering."
+extra {"weeds", "grass"}
+"The grass is clearly neglected, looking dull and lifeless. You
+notice a nice odor rising from the weeds however, in fact it draws
+you in and slowly relaxes your nerves."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_FIELD
+north to field_f6;
+east to field_f8;
+south to field_f9;
+end
+
+                                bifrost_path1
+
+title "The Bifrost Path"
+descr
+"   You stand on the edge of a narrow path, connecting the rainbow
+bridge to the southernmost boundaries of the astral plane. The lands
+around you seem magical, and unlike any you have travelled. There is
+a large field north of here and further north you see the Golden Gates
+of Asgaard."
+extra {"field"}
+"The field off in the distance looks pretty much lifeless, not worth
+much inspection."
+extra {"path"}
+"It looks to have been recently repaired of old war wounds."
+extra {"rainbow bridge", "bridge"}
+"It shines with the beauty of nature. Beyond it lies the mortal
+realm, a mundane place indeed!"
+movement SECT_CITY
+south to bifrost_path2;
+north to field_f8;
+end
+
+                                bifrost_path2
+
+title "The Bifrost Path"
+descr
+"   You stand on the edge of a narrow path, connecting the rainbow
+bridge to the southernmost boundaries of the astral plane. The lands
+around you seem magical, and unlike any you have travelled. There is
+a large field a little ways north and further north you see the Golden
+Gates of Asgaard. To the south the path continues."
+extra {"field"}
+"The field off in the distance looks pretty much lifeless, not worth
+much inspection."
+extra {"path"}
+"It looks to have been recently repaired of old war wounds."
+extra {"bridge", "rainbow bridge"}
+"It shines with the beauty of nature. Beyond it lies the mortal
+realm, a mundane place indeed!"
+movement SECT_CITY
+south to bifrost_path3;
+north to bifrost_path1;
+end
+                                bifrost_path3
+
+title "The Bifrost Path"
+descr
+"   You stand on the edge of a narrow path, connecting the rainbow
+bridge to the southernmost boundaries of the astral plane. The lands
+around you seem magical, and unlike any you have travelled. There is
+a large field up north and further north you see the Golden Gates of
+Asgaard. To the south the path continues."
+extra {"field"}
+"The field off in the distance looks pretty much lifeless, not worth
+much inspection."
+extra {"path"}
+"It looks to have been recently repaired of old war wounds."
+extra {"bridge", "rainbow bridge"}
+"It shines with the beauty of nature. Beyond it lies the mortal
+realm, a mundane place indeed!"
+movement SECT_CITY
+south to bifrost_bridge;
+north to bifrost_path2;
+end
+
+				bifrost_bridge
+
+names {"bifrost bridge"}
+title "The Bifrost Bridge"
+descr
+"   You stand looking out over a tremendous bridge, graced with the
+beauty only nature can provide. The rainbow colors shimmer and dance
+in the light, reassuring you that your decision to visit the astral
+plane was a smart one. A smaller rainbow leads up from here or you can
+journey the narrow path to the north, leading to what you hope will be
+the Golden Palace of Asgaard."
+flags {UNIT_FL_NO_MOB}
+extra {"rainbow colors", "rainbow", "color", "colors"}
+"They shimmer and dance to a beat all their own. This is truly
+a spectacle, the astral plane has a beauty unimaginable to the
+mortal mind."
+extra {"bifrost bridge", "bridge"}
+"   Its beauty is unmatched, colors seem to dance and jump towards
+the sky, perhaps paying homage to the Sky Father Odin."
+movement SECT_CITY
+up to rainbow_5@midgaard;
+north to bifrost_path3;
+
+SECRET_DOOR_DIFFICULTY(DOWN, 100)
+down to clan_home_016@clans
+keyword {"portal", "bridge"} open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN} descr
+"Something funny...";
+
+flags {UNIT_FL_NO_MOB}
+ALWAYS_LIGHT
+end
+
+				goldgate_in
+
+title "The Golden Gates of Asgaard"
+descr
+"   You stand at the foot of large golden gates, blocking your way
+into the court of Asgaard. There is little you can see of the palace
+from here, but the assurance of its magnificence is evident all around
+you. There is little doubt in your mind you will find the gates unlocked,
+afterall, these gods are most beloved of the people. A sign is posted
+nearby with bright golden lettering."
+extra {"palace"}
+"You cannot see much but you can make out its definate beauty."
+extra {"sign"}
+"   The sign reads:&n
+	Welcome to all citizens of Midgaard. Feel free to wander about
+and take joy and celebrate in your gods. We are here to serve you.
+
+[Scribbled at the bottom you notice]:
+ This zone is not recommended for anyone below level 50 and without a friend."
+extra {"golden gates", "golden", "gates", "gate"}
+"   Two large golden gates block the way in to the palace court. These
+gates are quite tremendous, and you can only imagine the size of the
+inhabitants therein. The bolt seems to be drawn and it appears a shove
+would suffice to gain access to the court inside."
+flags {UNIT_FL_NO_MOB, UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+north to goldgate_out open {EX_OPEN_CLOSE, EX_CLOSED} descr
+      "You see a large golden gate." keyword {"golden gate", "gate"};
+south to field_f1;
+ALWAYS_LIGHT
+end
+
+                                goldgate_out
+
+title "Inside the Golden Gates"
+descr
+"   As the gates swing open, they create a very audible creaking
+noise which is most disturbing. The feeling of awkwardness soon
+fades however as you take in the view before you. A little ways
+north you see the golden palace of asgaard, tremendous in its own
+right and indeed a splendid sight. A seemingly endless row of
+beautiful flowers line the courts leading to and fro the palace
+entrance."
+extra {"flowers"}
+"   These are very beautiful and seem to capture every imaginable
+color of the rainbow and all its permutations. By the enormous
+size of the gardens themselves you realize it must take a small
+army to keep them healthy."
+extra {"golden gates", "golden", "gates", "gate"}
+"   Two large golden gates lead south from the palace court. Entrance
+and exit will not be a problem, they are most likely never locked."
+flags {UNIT_FL_NO_MOB, UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+north to gardens_g1;
+south to goldgate_in open {EX_OPEN_CLOSE, EX_CLOSED} descr
+      "You see a large golden gate." keyword {"golden gate", "gate"};
+ALWAYS_LIGHT
+end
+
+
+				gardens_g1
+
+names {"gardens"}
+title "The Gardens of Asgaard"
+descr
+"   This spacious garden stretches the length of your imagination,
+with every nuance possible. You notice a plethora of pretty Myrtle
+trees and some Cypress scattered here and there."
+extra {"cypress", "myrtle", "tree"}
+"   These trees are strange indeed, and so fittingly belong to this
+mystical garden. You can barely make out their tops which expand to
+look somewhat like an umbrella. The smaller myrtle trees offset the
+enormous size of the cypress nicely, giving a more symmetric look
+to the gardens."
+extra {"gardens", "flowers", "flower", "garden"}
+"   Every possible color has been laid out in some magnificent pattern
+only nature can make, with of course the human touch of arrangment that
+is. The beauty really makes you feel a warmth much needed in these trying
+days of combat and death."
+movement SECT_CITY
+north to gardens_g2;
+east to gardens_g6;
+west to gardens_g5;
+south to goldgate_out;
+end
+
+                                gardens_g2
+
+names {"gardens"}
+title "The Gardens of Asgaard"
+descr
+"   This spacious garden stretches the length of your imagination,
+with every nuance possible. You notice a plethora of pretty Myrtle
+trees and some Cypress scattered here and there."
+extra {"cypress", "myrtle", "tree"}
+"   These trees are strange indeed, and so fittingly belong to this
+mystical garden. You can barely make out their tops which expand to
+look somewhat like an umbrella. The smaller myrtle trees offset the
+enormous size of the cypress nicely, giving a more symmetric look
+to the gardens."
+extra {"gardens", "flowers", "flower", "garden"}
+"   Every possible color has been laid out in some magnificent pattern
+only nature can make, with of course the human touch of arrangment that
+is. The beauty really makes you feel a warmth much needed in these trying
+days of combat and death."
+movement SECT_CITY
+north to entcourt;
+east to gardens_g4;
+west to gardens_g3;
+south to gardens_g1;
+end
+
+		              gardens_g3
+
+names {"gardens"}
+title "The Gardens of Asgaard"
+descr
+"   This spacious garden stretches the length of your imagination,
+with every nuance possible. You notice a plethora of pretty Myrtle
+trees and some Cypress scattered here and there."
+extra {"cypress", "myrtle", "tree"}
+"   These trees are strange indeed, and so fittingly belong to this
+mystical garden. You can barely make out their tops which expand to
+look somewhat like an umbrella. The smaller myrtle trees offset the
+enormous size of the cypress nicely, giving a more symmetric look
+to the gardens."
+extra {"gardens", "flowers", "flower", "garden"}
+"   Every possible color has been laid out in some magnificent pattern
+only nature can make, with of course the human touch of arrangment that
+is. The beauty really makes you feel a warmth much needed in these trying
+days of combat and death."
+movement SECT_CITY
+east to gardens_g2;
+south to gardens_g5;
+end
+
+                                gardens_g4
+
+names {"gardens"}
+title "The Gardens of Asgaard"
+descr
+"   This spacious garden stretches the length of your imagination,
+with every nuance possible. You notice a plethora of pretty Myrtle
+trees and some Cypress scattered here and there."
+extra {"cypress", "myrtle", "tree"}
+"   These trees are strange indeed, and so fittingly belong to this
+mystical garden. You can barely make out their tops which expand to
+look somewhat like an umbrella. The smaller myrtle trees offset the
+enormous size of the cypress nicely, giving a more symmetric look
+to the gardens."
+extra {"gardens", "flowers", "flower", "garden"}
+"   Every possible color has been laid out in some magnificent pattern
+only nature can make, with of course the human touch of arrangment that
+is. The beauty really makes you feel a warmth much needed in these trying
+days of combat and death."
+movement SECT_CITY
+west to gardens_g2;
+south to gardens_g6;
+end
+
+                                gardens_g5
+
+names {"gardens"}
+title "The Gardens of Asgaard"
+descr
+"   This spacious garden stretches the length of your imagination,
+with every nuance possible. You notice a plethora of pretty Myrtle
+trees and some Cypress scattered here and there.
+    You notice a strange looking root sticking up out of the ground.
+It doesn't appear inconsistant with the bulk of its surrounds but
+its presense is definately noted on sight."
+extra {"root"}
+"The root writhes as you move closer to get a better look. It seems
+to mutate slowly, gradually growing a mouth. The root whispers to you
+'These gardens are sacred indeed, take care and precaution before making
+any act, especially one not looked on favorably by Odin.'"
+extra {"cypress", "myrtle", "tree"}
+"   These trees are strange indeed, and so fittingly belong to this
+mystical garden. You can barely make out their tops which expand to
+look somewhat like an umbrella. The smaller myrtle trees offset the
+enormous size of the cypress nicely, giving a more symmetric look
+to the gardens."
+extra {"gardens", "flowers", "flower", "garden"}
+"   Every possible color has been laid out in some magnificent pattern
+only nature can make, with of course the human touch of arrangment that
+is. The beauty really makes you feel a warmth much needed in these trying
+days of combat and death."
+movement SECT_CITY
+north to gardens_g3;
+east to gardens_g1;
+end
+
+                                gardens_g6
+
+names {"grdens"}
+title "The Gardens of Asgaard"
+descr
+"   This spacious garden stretches the length of your imagination,
+with every nuance possible. You notice a plethora of pretty Myrtle
+trees and some Cypress scattered here and there. A rather large
+brightly colored flower lies on the ground by your feet."
+extra {"flower", "brightly colored flower", "bright flower"}
+"The flower seems to be attached to the ground still, in fact
+I do not think its even dead."
+extra {"cypress", "myrtle", "tree"}
+"   These trees are strange indeed, and so fittingly belong to this
+mystical garden. You can barely make out their tops which expand to
+look somewhat like an umbrella. The smaller myrtle trees offset the
+enormous size of the cypress nicely, giving a more symmetric look
+to the gardens."
+extra {"gardens", "flowers", "garden"}
+"   Every possible color has been laid out in some magnificent pattern
+only nature can make, with of course the human touch of arrangment that
+is. The beauty really makes you feel a warmth much needed in these trying
+days of combat and death."
+movement SECT_CITY
+north to gardens_g4;
+west to gardens_g1;
+end
+
+				entcourt
+
+names {"court entrance", "entrance to the court"}
+title "The Entrance to the Court"
+descr
+"   You have entered a large court with many statues erected all
+about you. These figures seem familiar but somehow a little more
+grand than you had remembered. Your senses heighten and a brooding
+fear nibbles your soul. There is no formal doorway leading into the
+palace and it appears this entrance acts as such a doorway."
+extra {"figures", "figure", "statues", "statue"}
+"   These statues are made of the finest gold, perhaps the same gold
+as the large entrance gates of Asgaard. The one that captures your eye is
+obviously of Thor, an arrogant individual by the looks of his statue's
+proportions."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+south to gardens_g2;
+north to court_p1;
+ALWAYS_LIGHT
+end
+
+				court_p1
+
+names {"palace court", "court"}
+title "The Palace Court"
+descr
+"   You marvel at the sights all around. By the splendor, you realize
+this place must have seen many a fabulous affair. The remnants of a dozen
+or so pools can be seen in every direction, their gazebos look disarrayed
+however. Several fountains line the walls here, most look shattered and
+unkempt. Since learning of the prophetic day of doom, Odin has apparently
+let the inside of the palace get dilapitated."
+extra {"pools", "pool"}
+"These are not usable anymore, judging by the large cracks running the
+length of the surface. There was, however, a time when splendor was
+draped all around, and these pools were a glorified example of the
+magnificence of this palace."
+extra {"fountains", "fountain"}
+"   Looks to be inlaid of the same gold you have noticed all around.
+Several small cracks run the length of the once fine surface, giving it
+the appearance of many years of neglect. You notice a small puddle near
+the drain."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+north to court_p1a;
+south to entcourt;
+east to court_p2;
+west to court_p1b;
+ALWAYS_LIGHT
+end
+
+                                court_p1a
+
+names {"palace court", "court"}
+title "The Palace Court"
+descr
+"   You marvel at the sights all around. By the splendor, you realize
+this place must have seen many a fabulous affair. The remnants of a dozen
+or so pools can be seen in every direction, their gazebos look disarrayed
+however. Several fountains line the walls here, most look shattered and
+unkempt. Since learning of the prophetic day of doom, Odin has apparently
+let the inside of the palace get dilapitated."
+extra {"pools", "pool"}
+"These are not usable anymore, judging by the large cracks running the
+length of the surface. There was, however, a time when splendor was
+draped all around, and these pools were a glorified example of the
+magnificence of this palace."
+extra {"fountains", "fountain"}
+"   Looks to be inlaid of the same gold you have noticed all around.
+Several small cracks run the length of the once fine surface, giving it
+the appearance of many years of neglect. You notice a small puddle near
+the drain."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+south to court_p1;
+ALWAYS_LIGHT
+end
+
+                                court_p1b
+
+names {"court", "palace court"}
+title "The Palace Court"
+descr
+"   You marvel at the sights all around. By the splendor, you realize
+this place must have seen many a fabulous affair. The remnants of a dozen
+or so pools can be seen in every direction, their gazebos look disarrayed
+however. Several fountains line the walls here, most look shattered and
+unkempt. Since learning of the prophetic day of doom, Odin has apparently
+let the inside of the palace get dilapitated."
+extra {"pools", "pool"}
+"These are not usable anymore, judging by the large cracks running the
+length of the surface. There was, however, a time when splendor was
+draped all around, and these pools were a glorified example of the
+magnificence of this palace."
+extra {"fountains", "fountain"}
+"   Looks to be inlaid of the same gold you have noticed all around.
+Several small cracks run the length of the once fine surface, giving it
+the appearance of many years of neglect. You notice a small puddle near
+the drain."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+east to court_p1;
+ALWAYS_LIGHT
+end
+
+				court_p2
+
+names {"court", "palace court"}
+title "The Palace Court"
+descr
+"   You marvel at the sights all around. In its day, this place must
+have seen many a fabulous affair. The remnants of a dozen or so pools
+can be seen in every direction, their gazebos look disarrayed however.
+Several fountains line the walls here, most look shattered and unkempt."
+extra {"pools", "pool"}
+"These are not usable anymore, judging by the large cracks running the
+length of the surface. There was, however, a time when splendor was
+draped all around, and these pools were a glorified example of the
+magnificence of this palace."
+extra {"fountains", "fountain"}
+"   Looks to be made of the same marble you have found in every room.
+Several small cracks run the length of the once fine marble, giving it
+the appearance of many years of neglect. You notice a small puddle of
+water near the drain."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+east to court_p3;
+north to train_gnd1;
+west to court_p1;
+ALWAYS_LIGHT
+end
+
+				court_p3
+
+names {"court", "palace court"}
+title "The Palace Court"
+descr
+"   You marvel at the sights all around. In its day, this place must
+have seen many a fabulous affair. The remnants of a dozen or so pools
+can be seen in every direction, their gazebos look disarrayed however.
+Several fountains line the walls here, most look shattered and unkempt."
+extra {"pools", "pool"}
+"These are not usable anymore, judging by the large cracks running the
+length of the surface. There was, however, a time when splendor was
+draped all around, and these pools were a glorified example of the
+magnificence of this palace."
+extra {"fountains", "fountain"}
+"   Looks to be made of the same marble you have found in every room.
+Several small cracks run the length of the once fine marble, giving it
+the appearance of many years of neglect. You notice a small puddle of
+water near the drain."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+east to court_p4;
+west to court_p2;
+ALWAYS_LIGHT
+end
+
+                                court_p4
+
+names {"court", "palace court"}
+title "The Palace Court"
+descr
+"   You marvel at the sights all around. In its day, this place must
+have seen many a fabulous affair. The remnants of a dozen or so pools
+can be seen in every direction, their gazebos look disarrayed however.
+Several fountains line the walls here, most look shattered and unkempt."
+extra {"pools", "pool"}
+"These are not usable anymore, judging by the large cracks running the
+length of the surface. There was, however, a time when splendor was
+draped all around, and these pools were a glorified example of the
+magnificence of this palace."
+extra {"fountains", "fountain"}
+"   Looks to be made of the same marble you have found in every room.
+Several small cracks run the length of the once fine marble, giving it
+the appearance of many years of neglect. You notice a small puddle of
+water near the drain."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+north to warn_room open {EX_OPEN_CLOSE, EX_CLOSED} descr
+      "You see a doorway." keyword {"door"};
+east to stairs_s1 open {EX_OPEN_CLOSE, EX_CLOSED} descr
+     "You see a heavy stone door." keyword {"stone door", "door"};
+west to court_p3;
+ALWAYS_LIGHT
+end
+
+				warn_room
+
+names {"warning room", "room of warning", "warn room"}
+title "The Room of Warning"
+descr
+"   As you enter this room you can barely make out an audible murmur.
+Upon closer inspection it seems to be a word of warning. An eerie
+voice intones 'The time of your death is near, turn around before it
+is too late!'. You notice a golden crown bolted to the floor beside
+your feet."
+extra {"golden crown", "crown"}
+"   Much to your surprise the crown gradually mutates and grows a
+rather strange looking apendage, looks like a mouth. The crown speaks
+'I really wouldn't go north, you may find you regret that decision
+later!!'"
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to nasty_trap open {EX_OPEN_CLOSE, EX_CLOSED} descr
+      "A forbidding door, I wouldn't enter it." keyword {"door"};
+south to court_p4 open {EX_OPEN_CLOSE, EX_CLOSED} descr
+      "A doorway is there." keyword {"door"};
+ALWAYS_LIGHT
+end
+
+				nasty_trap
+
+names {"nasty trap", "trap"}
+title "The Nasty Trap"
+descr
+"   You cannot say you weren't warned. As you step foot in this
+room you immediately feel weaker! It is obvious your life's blood
+is draining away right under your nose, yet how do you stop it?"
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+south to warn_room open {EX_OPEN_CLOSE, EX_CLOSED} descr
+      "A door leading to safety." keyword {"door"};
+ALWAYS_LIGHT
+special SFUN_DEATH_ROOM "100" time WAIT_SEC*20
+end
+
+				stairs_s1
+
+names {"stairs", "staircase"}
+title "The Staircase"
+descr
+"   There is a set of stairs here, leading up. The air is musty
+and grows darker towards the top."
+extra {"stairs", "set of stairs"}
+"This staircase looks well used, in fact well abused is more like
+it. Almost as though a large parade recently trampled through."
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+west to court_p4 open {EX_OPEN_CLOSE, EX_CLOSED} descr
+     "You see a heavy stone door." keyword {"stone door", "door"};
+up to hearth;
+ALWAYS_LIGHT
+special SFUN_FORCE_MOVE
+"asgaard/court_p4!Return when ready!" time WAIT_SEC*30 bits SFB_RANTIME
+end
+
+				train_gnd1
+
+names {"training grounds", "grounds"}
+title "The Training Grounds"
+descr
+"   These grounds have been specially designed for Frigga's
+mares. It is quite apparent she takes special interest in
+riding by the immaculate condition of everything around you.
+It would just crush her if anything were to happen to one of
+her horses."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+north to train_gnd3;
+east to train_gnd5;
+west to train_gnd2;
+south to court_p2;
+end
+
+                                train_gnd2
+
+names {"training grounds", "grounds"}
+title "The Training Grounds"
+descr
+"   These grounds have been specially designed for Frigga's
+mares. It is quite apparent she takes special interest in
+riding by the immaculate condition of everything around you.
+It would just crush her if anything were to happen to one of
+her horses."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+east to train_gnd1;
+end
+
+                                train_gnd3
+
+names {"training grounds", "grounds"}
+title "The Training Grounds"
+descr
+"   These grounds have been specially designed for Frigga's
+mares. It is quite apparent she takes special interest in
+riding by the immaculate condition of everything around you.
+It would just crush her if anything were to happen to one of
+her horses."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+east to train_gnd4;
+south to train_gnd1;
+end
+
+                                train_gnd4
+
+names {"training grounds", "grounds"}
+title "The Training Grounds"
+descr
+"   These grounds have been specially designed for Frigga's
+mares. It is quite apparent she takes special interest in
+riding by the immaculate condition of everything around you.
+It would just crush her if anything were to happen to one of
+her horses."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+west to train_gnd3;
+south to train_gnd5;
+end
+
+                                train_gnd5
+
+names {"training grounds", "grounds"}
+title "The Training Grounds"
+descr
+"   These grounds have been specially designed for Frigga's
+mares. It is quite apparent she takes special interest in
+riding by the immaculate condition of everything around you.
+It would just crush her if anything were to happen to one of
+her horses."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+north to train_gnd4;
+west to train_gnd1;
+end
+
+
+				hearth
+
+names {"hearth"}
+title "The Hearth"
+descr
+"   The walls all around you are dismally black. Each wall
+acts like a mirror reflecting the large fire coming from
+the hearth in the center of the room. This is one of many
+fires of protection, supposedly keeping Asgaard safely guarded."
+extra {"walls", "wall"}
+"They are a shiny black, almost perfectly black if there were
+such a thing! You see your reflection in them."
+extra {"fire", "hearth"}
+"   The fire shoots forth many licks of flame in every direction.
+It burns with an intensity that seems uncontainable."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+west to dry_fount;
+up to tower_outlook;
+down to stairs_s1;
+ALWAYS_LIGHT
+end
+
+				tower_outlook
+
+names {"tower outlook", "outlook", "tower"}
+title "The Tower Outlook"
+descr
+"   You stand at the top of a small and narrow tower, designed to
+serve as an outlook upon the lands. Far below you can see all of
+Midgaard clearly, and in the distance barely make out the small
+town of Udgaard. You notice the ensuing battle between the Dragon's
+forces and those from Edhelamon and it angers you. Will there not be
+peace in the land afterall?"
+extra {"battle"}
+"You notice familiar forces gathered around Midgaard and Ratswarf
+far below you. This war has been all too real for you and you sigh
+in contempt."
+extra {"tower"}
+"It is fashioned of sturdy materials and looks to have been well
+maintained. This tower serves as an outlook upon the surrounding
+towns and villages far below the astral plane."
+extra {"lands", "land"}
+"The land below you seems far off and distant, almost in another
+life. The feeling of complacency sets in and you realize Asggard
+would be a nicer home then yours."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+down to hearth;
+end
+
+				dry_fount
+
+names {"fountain"}
+title "The Fountain"
+descr
+"   The only object here is a large, weathered fountain in the
+center of the room. There is an exit at each corner of the room.
+You get the feeling that resting here might do you some good
+and perhaps you'll explore those exits later on."
+extra {"exits", "exit"}
+"There is one at each wall of this room. They seem to surround
+the fountain in the middle of the room."
+extra {"fountain"}
+"   This fountain looks to be similar to the one in the courtyard.
+It has assuredly seen better days by the looks of the many cracks
+in the surface."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+flags {UNIT_FL_SACRED}
+movement SECT_INSIDE
+north to map_rm;
+east to hearth;
+south to slave_rm;
+west to statue_room;
+ALWAYS_LIGHT
+end
+
+				map_rm
+
+names {"map room"}
+title "The Map Room"
+descr
+"   It appears this room was built around the large map in the
+center. It looks familiar, in fact its a map of your home town
+of Midgaard and all of its surroundings. There are many figurines
+scattered about the map, looks like these gods were planning
+something."
+extra {"map"}
+"   It is very large, and spans the entire length of the room.
+There are many figurines scattered about its surface, they give
+ou a wierd sense of deja vu."
+extra {"figurines", "figurine", "figures", "figure"}
+"   They appear to be made of a metallic material, of the like
+you cannot tell. In particular you notice the one that looks very
+much like you and it rests on a space vaguely familiar. In fact,
+it looks like the room you are in right now...Very strange indeed."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+south to dry_fount;
+ALWAYS_LIGHT
+end
+
+				slave_rm
+
+names {"slave room"}
+title "The Slave Room"
+descr
+"   As you enter this sad excuse for a room, the word vile seems
+to stick to your brain. In actuality it is quite disgusting to look
+at but the smell could easily knock you down. How the inhabitants
+could stand the odor you have no clue."
+extra {"odor"}
+"Yes, strangely enough the odor is so strong you can actually see
+it!"
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to dry_fount;
+ALWAYS_LIGHT
+end
+
+				statue_room
+
+names {"statue room"}
+title "The Room of Statues"
+descr
+"   This is an ordinary enough looking room, so much so it doesn't
+seem to fit the rest of the Palace. It is furnished in a strange
+fashion however, each corner seems to emit a distinct tone, with a
+large statue as the centerpiece to a rather large collage. Your
+nerves jump as you catch movement from one of these statues, could
+it be?"
+extra {"walls", "wall"}
+"It is quite covered with various forms of artistic decoration.
+Standing upright to each wall is a rather Huge statue."
+extra {"statues", "statue"}
+"   They appear similar to those found earlier in the court, however
+those didn't breathe, and they also didn't attack you!!!"
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+east to dry_fount;
+west to corridor_c1;
+ALWAYS_LIGHT
+end
+
+                               	corridor_c1
+
+names {"corridor"}
+title "A Corridor"
+descr
+"   You stand in a medium sized corridor, well...medium compared to
+the enormous rooms you have seen so far. It leads east and west only."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+east to statue_room;
+west to torture_rm;
+ALWAYS_LIGHT
+end
+
+				torture_rm
+
+names {"torture room", "odin's torture room"}
+title "Odin's Torture Room"
+descr
+"   This torture chamber has it all for the executioner at heart.
+Iron Maidens, pendulums, many different sized racks...you name it!
+You think you are safe here, afterall Frigga has been quite busy
+torturing Loki for his crimes. You barely notice a square outline
+on the floor and what could possibly be hinges."
+extra {"square outline", "square", "outline"}
+"Hmmm, looks like it might be a secret trapdoor."
+extra {"rack"}
+"   You notice the half decayed corpse of a woman stretched beyond
+the realms of pain!"
+extra {"pendulum"}
+"   This corpse looks to be the freshest, and still has the pendulum
+stuck in its once living chest."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+east to corridor_c1;
+south to col_garden;
+down to cavern open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+     keyword {"trapdoor", "door", "square outline", "square", "outline"};
+SECRET_DOOR_DIFFICULTY(DOWN, 85)
+ALWAYS_LIGHT
+end
+
+                                cavern
+
+names {"cavern"}
+title "A Deep Cavern"
+descr
+"   You most likely were not supposed to find this place. This
+is a very tiny cavern where Frigga takes special interest in seeing
+Loki writhe in agony. You notice a place on the ceiling where small
+drops of a liquid substance fall onto the figure chained below."
+extra {"place on the ceiling", "place", "ceiling"}
+"It seems to be a small container of sorts, oozing a horrid
+liquid onto the figure chained below."
+extra {"figure"}
+"You instantly recognize the evil hero Loki, but you cannot tell whether
+he is alive or dead."
+extra {"liquid"}
+"   Most likely some form of poison from the looks of the figure
+standing below it. A truly horrible way to die."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+up to torture_rm open {EX_OPEN_CLOSE, EX_CLOSED} descr
+     "A door in the ceiling." keyword {"door"};
+ALWAYS_LIGHT
+end
+
+				col_garden
+
+names {"colossal gardens", "gardens"}
+title "The Colossal Gardens"
+descr
+"   The foliage here towers high above your head, what kind of
+creature could possibly plant these monsters? In the distance you
+hear a faint cry for help, and then a shrill blood-curtling scream."
+extra {"foliage"}
+"It is quite lush, with only a few sparse places noticable. In
+particular you notice how high up everything seems to be compared
+to you."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+north to torture_rm;
+west to balders_rm;
+end
+
+				balders_rm
+
+names {"balder's room"}
+title "Balders' Bedroom"
+descr
+"   This is a simple bedroom, everything about it normal except the
+size of course. The owner seems like a peaceful god, with a special
+liking to mankind. He has figures and trophies of great battles
+scattered about the room."
+extra {"bed"}
+"It is rather large, you wonder what might live in it?"
+extra {"chest of drawers", "dresser"}
+"It is very large and appears to be in immaculate condition."
+extra {"trophy", "trophies", "figures", "figure"}
+"   There are many arranged in various poses. In particular you notice
+a dragon head, and one which looks like the head of a hobgoblin. Could
+it belong to the hobgoblin captain reported missing since last year?!?"
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+east to col_garden;
+south to lounge_rm;
+west to vulture_rm;
+ALWAYS_LIGHT
+end
+
+			  	lounge_rm
+
+names {"lounge", "wargod lounge"}
+title "The WarGod Lounge"
+descr
+"   It appears the god of war is a lush, he has his own private
+bar/lounge. There is a beautiful plush looking sofa and some end
+tables within arms' reach. A half-filled glass rests on one of
+the tables. Actually this room can double as a bedroom, what a poor
+excuse for a souse! Oh yeah, you also feel like a tiny puppet
+being here, this place is HUGE."
+extra {"bar"}
+"Wow, the size of those liquer bottles is most impressive, and
+makes you quite thirsty."
+extra {"table", "glass"}
+"   There is a glass half-filled with some smelly fluid here. Beside
+it is a note which reads: 'I have been waiting for you, now die!'."
+extra {"sofa"}
+"   It appears to be made of a very rare fabric, and looks to be
+extremely comfortable. Truly a sofa made for a god."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to balders_rm;
+west to corridor_c2;
+ALWAYS_LIGHT
+end
+
+				corridor_c2
+
+names {"corridor"}
+title "A Corridor"
+descr
+"   You stand in a medium sized corridor, well...medium compared to
+the enormous rooms you have seen so far. It leads east and west only."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+east to lounge_rm;
+west to round_rm;
+ALWAYS_LIGHT
+end
+
+				round_rm
+
+names {"round room"}
+title "The Round Room"
+descr
+"   This is an interesting sort of place. There are no walls, just
+a smooth surface going around the perimeter. A turret in the middle
+of the room seems to be spinning, causing the entire room to spin."
+extra {"smooth surface", "surface"}
+"It is exactly as it looks, a smooth surface running the perimeter
+of the room."
+extra {"turret"}
+"It is pretty large and spins rapidly in the center of the room.
+Its force makes the room spin, which sort of makes you sick!"
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+east to corridor_c2;
+down to dark_hall;
+special SFUN_FORCE_MOVE
+"asgaard/corridor_c2!Centrifugal force throws you." time WAIT_SEC*15 bits
+SFB_RANTIME
+ALWAYS_LIGHT
+end
+
+
+				vulture_rm
+
+names {"vulture room"}
+title "The Room of Vultures"
+descr
+"   At first glance this appears to be some ancient aviary, but
+something isn't right here. A chill races up your spine as you
+notice the several corpses in the corner, and the hungry vultures
+making a nice lunch from the remains."
+extra {"corpses", "corpse"}
+"They are basically being used as food right now, so its not a
+pretty sight at all. Small pieces of entrails are being slurped
+up greedily!"
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+flags {UNIT_FL_SACRED}
+movement SECT_INSIDE
+north to cloud_stairs;
+east to balders_rm;
+south to round_rm;
+end
+
+				cloud_stairs
+
+names {"cloud stairs", "stairs of cloud"}
+title "Stairs of Cloud"
+descr
+"   This is fabulous, a staircase formed entirely of clouds. The
+sky father really has a way with his work. I would proceed very
+carefully, you never know when they may drop into emptiness! You
+notice many branches jutting from the cloudy surface below. In fact
+they look more like perches than branches."
+extra {"staircase", "stairs"}
+"Its unexplainable but they do appear solid enough to hold your
+weight, even though they are just clouds!"
+extra {"perches", "perch"}
+"   Looks like a small branch with several large scratch marks
+embedded within. The birds which rest here must be very large
+and their claws deadly."
+flags {UNIT_FL_NO_WEATHER, UNIT_FL_INDOORS, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+south to vulture_rm;
+up to clouds_s1 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_PICKPROOF}
+descr "A door made of clouds" key sky_key keyword {"cloud door", "door"};
+ALWAYS_LIGHT
+
+/* Dil routine to block all spell casting to avoid entry to cloud
+   sector unless proper key is had.
+*/
+dilbegin prg3();
+var
+  	pc	:	unitptr;
+
+code
+{
+   :start:
+   wait (SFB_CMD, TRUE);
+
+   if ((activator.type == UNIT_ST_PC) and command(CMD_CAST))
+   {
+	 /* Block the cast command */
+         act("Spells may not be cast in this room!",
+             A_ALWAYS, self.inside, null, null, TO_ALL);
+	 block;
+         goto start;
+   }
+   goto start;
+}
+dilend
+
+end
+
+				clouds_s1
+
+names {"cloudy room"}
+title "The Clouds"
+descr
+"   At the top of the stairs you emerge and stare out over the land
+far below. It seems you are standing on nothing but clouds and though
+this is peaceful, a deep sense of foreboding lurks here. The Sky Father
+uses this place quite frequently, his fabulous throne stands off in the
+distance."
+extra {"clouds"}
+"They are fluffy and white just as clouds should be."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+north to clouds_s6;
+west to clouds_s5;
+south to clouds_s8;
+down to cloud_stairs open {EX_OPEN_CLOSE, EX_CLOSED} descr
+     "A door made of clouds." keyword {"cloud door", "door"};
+ALWAYS_LIGHT
+end
+
+                                clouds_s2
+
+names {"cloudy room"}
+title "The Clouds"
+descr
+" It seems you are standing on nothing but clouds and though
+this is peaceful, a deep sense of foreboding lurks here. The Sky Father
+uses this place quite frequently, his fabulous throne stands off in the
+distance."
+extra {"clouds"}
+"They are fluffy and white just as clouds should be."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+east to clouds_s3;
+west to clouds_s7;
+south to clouds_s5;
+north to clouds_s8;
+end
+                                clouds_s3
+
+names {"cloudy room"}
+title "The Clouds"
+descr
+"   It seems you are standing on nothing but clouds and though
+this is peaceful, a deep sense of foreboding lurks here. The Sky Father
+uses this place quite frequently, his fabulous throne stands off in the
+distance."
+extra {"clouds"}
+"They are fluffy and white just as clouds should be."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+north to clouds_s9;
+south to clouds_s5;
+east to clouds_s7;
+west to clouds_s8;
+end
+                                clouds_s4
+
+names {"cloudy room"}
+title "The Clouds"
+descr
+"   It seems you are standing on nothing but clouds and though
+this is peaceful, a deep sense of foreboding lurks here. The Sky Father
+uses this place quite frequently, his fabulous throne stands off in the
+distance. You notice the clouds to the west a slightly different then the
+ones you are standing on." extra {"clouds"}
+"They are fluffy and white just as clouds should be."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+
+north to clouds_s1;
+east to clouds_s7;
+south to clouds_s5;
+
+
+
+dilbegin go_west(); var
+        pc : unitptr;
+        pc_name : string;
+        dir : integer;
+        fol_pc : unitptr;
+        dir_string : string;
+        leave_string :string;
+
+code
+{
+
+:init:
+heartbeat := PULSE_SEC*5;
+
+:start:
+        wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and
+        (command(CMD_WEST))));
+        block;
+        pc := activator;
+        secure(pc,losthim);
+
+
+  foreach( UNIT_ST_PC|UNIT_ST_NPC, fol_pc )
+   {
+         if( ( (fol_pc.master == pc) and (fol_pc != pc) ) )
+          {
+      act("You follow $2n west.",
+                    A_SOMEONE, fol_pc, pc, null, TO_CHAR);
+                if (fol_pc.minv < pc.level) {
+             act("$2n arrives from the east.",
+                      A_SOMEONE, pc, fol_pc, null, TO_CHAR);
+                }
+           link(fol_pc, findroom("east_sky@garden"));
+           exec("look", fol_pc);
+          } else if (fol_pc != pc) {
+            act("$2n leaves west.",
+       A_SOMEONE, fol_pc, pc, null, TO_CHAR);
+     }
+
+   }
+   link(pc, findroom("east_sky@garden"));
+   exec("look", pc);
+:losthim:
+goto start;
+}
+dilend
+
+end
+                                clouds_s5
+
+names {"cloudy room"}
+title "The Clouds"
+descr
+"   It seems you are standing on nothing but clouds and though
+this is peaceful, a deep sense of foreboding lurks here. The Sky Father
+uses this place quite frequently, his fabulous throne stands off in the
+distance."
+extra {"clouds"}
+"They are fluffy and white just as clouds should be."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+north to clouds_s8;
+south to clouds_s5;
+east to clouds_s2;
+west to clouds_s4;
+
+end
+                                clouds_s6
+
+names {"cloudy room"}
+title "The Clouds"
+descr
+"  It seems you are standing on nothing but clouds and though
+this is peaceful, a deep sense of foreboding lurks here. The Sky Father
+uses this place quite frequently, his fabulous throne stands off in the
+distance."
+extra {"clouds"}
+"They are fluffy and white just as clouds should be."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+north to clouds_s7;
+south to clouds_s3;
+east to clouds_s6;
+west to clouds_s8;
+end
+                                clouds_s7
+
+names {"cloudy room"}
+title "The Clouds"
+descr
+"  It seems you are standing on nothing but clouds and though
+this is peaceful, a deep sense of foreboding lurks here. The Sky Father
+uses this place quite frequently, his fabulous throne stands off in the
+distance."
+extra {"clouds"}
+"They are fluffy and white just as clouds should be."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+north to clouds_s1;
+south to clouds_s2;
+east to clouds_s7;
+west to clouds_s8;
+end
+                                clouds_s8
+
+names {"cloudy room"}
+title "The Clouds"
+descr
+" It seems you are standing on nothing but clouds and though
+this is peaceful, a deep sense of foreboding lurks here. The Sky Father
+uses this place quite frequently, his fabulous throne stands off in the
+distance."
+extra {"clouds"}
+"They are fluffy and white just as clouds should be."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+north to clouds_s1;
+south to clouds_s7;
+east to clouds_s8;
+west to clouds_s4;
+end
+                                clouds_s9
+
+names {"throne room"}
+title "The Clouds"
+descr
+"  It seems you are standing on nothing but clouds and though
+this is peaceful, a deep sense of foreboding lurks here. The Sky Father
+uses this place quite frequently, his fabulous throne stands off in the
+distance."
+extra {"clouds"}
+"They are fluffy and white just as clouds should be."
+extra {"throne"}
+"   This must belong to Odin you judge by the size of it. It seems
+the lord of the sky brings his work home with him, he can sit and
+ponder the future doom of the world for hours without flinching."
+flags {UNIT_FL_NO_TELEPORT}
+movement SECT_CITY
+north to clouds_s1;
+west to clouds_s1;
+west to clouds_s7;
+ALWAYS_LIGHT
+end
+                                clouds_s10
+
+
+names {"clouds"}
+title "Icculus' Cloud Kingdom"
+descr
+"   You stand on puffy white clouds, which surprisingly allow
+you a solid enough surface to do so. Everything around you is
+snow white, with little to no breaks in the surface, revealing
+the enchanted lands below. You must be here for a reason, perhaps
+you have been summoned to do the bidding of the Sky Father himself.
+You see a sign standing here."
+extra {"sign"}
+"&l                   House Rules for Reimbursements
+		--------------------------------------
+
+&fI will be more than happy to reimburse your lost equipment
+however there are some limitations. Only the first of any
+one item type is to be reimbursed, with the exception to
+items like rings or necklaces which you can have more than
+one of. So if you lost 2 thunder hammers, you will only get
+one back! I will not reimburse any items such as bread or
+barrels, paper or quills. Only items that you cannot get
+back yourself are elligible. These rules of course may change
+depending on the circumstances."
+extra {"lands below", "lands"}
+"Looks like your hometown of Midgaard directly below. In fact
+from here you don't even seem that far off the ground."
+extra {"clouds"}
+"They are fluffy and white just as clouds should be."
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_PRIVATE}
+movement SECT_CITY
+east to clouds_s11;
+
+/*west to wiz/chat;
+north to wiz/board_room;
+south to wiz/builders_bar;
+down to midgaard/market_sq;*/
+
+dilbegin prg4();
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*5;
+
+   :start:
+   wait(SFB_CMD,(activator.type == UNIT_ST_PC) and
+   (command(CMD_WEST) or command(CMD_NORTH) or command(CMD_SOUTH)));
+
+   if (activator.level <51 )
+   {
+       	block;   /* They cannot go there */
+        act(activator.name+" gets stopped from trying to exit!",
+            A_ALWAYS, self.inside, null, null, TO_REST);
+        act("You cannot go there, you are not an immortal!",
+            A_ALWAYS, self.inside, null, null, TO_CHAR);
+	goto start;
+   }
+   goto init;
+}
+dilend
+
+ALWAYS_LIGHT
+end
+
+                                clouds_s11
+
+names {"torture room"}
+title "Icculus' Torture Room"
+descr
+"   You stand on puffy white clouds, which surprisingly allow
+you a solid enough surface to do so. Everything around you is
+snow white, with little to no breaks in the surface, revealing
+the enchanted lands below. You must be here for a reason, perhaps
+you have been summoned to do the bidding of the Sky Father himself.
+    This must be where Icculus gets down to business with nasty
+mortals who have been naughty. You notice many instruments of death
+lying about, some look like they were used very recently."
+extra {"lands below", "lands"}
+"Looks like your hometown of Midgaard directly below. In fact
+from here you don't even seem that far off the ground."
+extra {"clouds"}
+"They are fluffy and white just as clouds should be."
+extra {"instruments"}
+"Man, this guy is sick! Run Away!"
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_PRIVATE}
+movement SECT_CITY
+west to clouds_s10;
+ALWAYS_LIGHT
+end
+
+				dark_hall
+
+title "A Dark Hallway"
+descr
+"   Even with the best light source you couldn't see a damned thing!"
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+up to vulture_rm;
+special SFUN_FORCE_MOVE
+"asgaard/gardens_g1!The floor drops!" time WAIT_SEC*30 bits SFB_RANTIME
+end
+
+%objects
+
+                                feath
+names {"jet black feather", "feather"}
+title "a jet black feather"
+descr "A jet black feather lies on the ground."
+
+flags {UNIT_FL_MAGIC}
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD,MANIPULATE_HOLD}
+type ITEM_TREASURE
+cost 2 GOLD_PIECE
+weight 0
+spell 100
+dilcopy one_feather@asgaard();
+
+
+extra {}
+"The feather is jet black and resembles a feather from a raven."
+
+extra {"$identify"}
+"This is the feather of Munin, one of Odin's ravens. It bears a powerful
+enchantment which allows teleportation four times per day."
+
+extra {"$improved identify"}
+"The feather of Munin must be worn on your head or held in your hand. It is
+activated by saying 'Munin raven of Odin take me to the mayor'."
+dilcopy quests_restrict@function ({ASGAARD1_COMPLETE,ASGAARD_COMPLETE},0,25,"");
+
+dilbegin recall feather_tele1();
+var
+   hour : integer;
+   i : integer;
+   s : string;
+   u : unitptr;
+code
+{
+   heartbeat := PULSE_SEC * 10;
+
+   hour := -24;
+
+   :start:
+   wait(SFB_DONE, (activator == self.outside) and command(CMD_SAY));
+
+   if (not ("munin raven of odin take me to " in argument))
+     goto start;
+
+   if (self.outside.position == POSITION_FIGHTING)
+   {
+      act("The $2N does not work in combat.",
+	  A_ALWAYS, self.outside, self, null, TO_CHAR);
+      goto start;
+   }
+
+   if (self.equip == 0)
+   {
+      act("The $2N must be worn for it to work.",
+	  A_ALWAYS, self.outside, self, null, TO_CHAR);
+      goto start;
+   }
+
+   i := hour - (mudhour + mudday * MUD_DAY);
+
+   if (i < 0)
+     i := -i;
+
+   if (i < 6)
+   {
+      act("The $2N has not charged enough power yet.",
+	  A_ALWAYS, self.outside, self, null, TO_CHAR);
+      goto start;
+   }
+
+   s := getword(argument);
+   while (s != "munin")
+      s := getword(argument);
+
+   s := getword(argument); /* raven */
+   s := getword(argument); /* of */
+   s := getword(argument); /* odin */
+   s := getword(argument); /* take */
+   s := getword(argument); /* me */
+   s := getword(argument); /* to */
+
+   u := findunit(self.outside, argument, FIND_UNIT_WORLD, null);
+
+   hour := mudhour + mudday * MUD_DAY;
+
+   if ( not u )
+   {
+      act("The power in $2N dissipates.",
+          A_ALWAYS, self.outside, self, null, TO_CHAR);
+      goto start;
+   }
+
+   act("Your $2N glows.",
+       A_ALWAYS, self.outside, self, null, TO_CHAR);
+   act("The $2N on $1n's finger glows brightly as $1e vanishes in a "+
+       "flash of light!", A_ALWAYS, self.outside, self, null, TO_REST);
+
+   i := cast_spell(SPL_CONTROL_TELEPORT, self.outside, self, u, "");
+
+   if ( i < 0 )
+   {
+      act("The $2N flashes brightly.",
+          A_ALWAYS, self.outside, self, null, TO_CHAR);
+      goto start;
+   }
+   goto start;
+}
+dilend
+end
+
+                                time_scroll
+
+names {"scroll of time reversal", "scroll"}
+title "a scroll of time reversal"
+descr
+"An ancient looking scroll lies here at your feet."
+extra {}
+"This scroll looks ancient indeed, its parchment looks
+like it could easily fall apart at any given moment. One
+look at the wording scribed on the surface tells you there
+is much you do not know. You cannot read it nor understand
+exactly how it works."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+rent 1 IRON_PIECE
+cost 2 IRON_PIECE
+end
+
+                                ancient_staff
+
+names {"staff of flesh to bone", "staff"}
+title "a staff of flesh to bone"
+descr
+"An ancient looking staff lies here at your feet."
+extra {}
+"The wood this staff is made from is probably many centuries
+old and it indeed looks withered. The grainy surface looks
+somewhat sanded down though, probably the toll of time. In
+its day this staff turned the tide of the war between good
+and evil and granted a second chance to the peoples living
+near Midgaard."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 3
+rent 1 IRON_PIECE
+cost 2 IRON_PIECE
+end
+
+				sky_key
+
+names {"sky key","key"}
+title "the Key to the Sky"
+descr "A very tiny cloud gray key lies here."
+type ITEM_KEY
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+extra {}
+"Undoubtadly this key will be very useful. Around here, anything that
+resembles the sky usually is!"
+end
+
+				gray_kirtle
+
+names {"gray kirtle", "kirtle"}
+title "Gray Kirtle"
+descr "Odin's Cloud-Gray Kirtle lies at your feet."
+extra {}
+"   This coat once belonged to the mighty Odin. Rumor has
+it he embedded a great magic within."
+extra {"$identify"}
+"When worn this cloud-gray kirtle will bestow the bearer
+with enhanced strength and brain capacity. The bearer's divine
+abilities will be lessened but the ability to sneak about
+unnoticed will be attained."
+flags {UNIT_FL_MAGIC}
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_PLATE(+17, +11)
+STR_TRANSFER(+3)
+BRA_TRANSFER(+3)
+CHAR_FLAG_TRANSFER(CHAR_SNEAK)
+SKILL_TRANSFER(SKI_SNEAK, +16)
+weight 10
+cost 1 PLATINUM_PIECE,4 GOLD_PIECE,2 SILVER_PIECE
+rent 391 IRON_PIECE
+dilcopy level_restrict@function (38,0,25,"");
+dilcopy abi_restrict@function (ABIL_STR,45,0,25,"");
+dilcopy abi_restrict@function (ABIL_MAG,35,0,25,"");
+dilcopy quests_restrict@function ({ASGAARD1_COMPLETE,ASGAARD_COMPLETE},0,25,"");
+end
+
+				thor_hammer
+
+names {"thunder hammer", "hammer"}
+title "the hammer of thunder"
+descr "A very powerful looking hammer lies here."
+extra {}
+"Forged of the finest tungsten, this weapon will do honor to all
+who wield it."
+extra {"$identify"}
+"When wielded, this powerful hammer will improve the owner's
+strength and dexterity. This magical hammer also has a blood
+lust for the taste of humans!"
+
+extra {"$improved identify"}
+"This hammer is said to be blessed by Thor himself and it is not rare to
+see him now and then while  wielding it.  Thor is both a kind and Jealous
+god when it comes to his Thunder hammer if you wield his weapon he will bless
+you if you don't the hammer will lose its powers.  When in trouble
+and you need a little extra power justsay 'I have the power' in combat and
+ifThor is willing he will bless your combat."
+flags {UNIT_FL_MAGIC}
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_WAR_MATTOCK, +8, +8)
+WEAPON_TRANSFER(WPN_WAR_MATTOCK, +6)
+weight 10
+cost 3 PLATINUM_PIECE
+rent 1 GOLD_PIECE
+dilcopy level_restrict@function (38,0,25,"");
+dilcopy abi_restrict@function (ABIL_STR,35,0,25,"");
+dilcopy abi_restrict@function (ABIL_DEX,35,0,25,"");
+spell 75
+
+/* Dil to add a bit to the hammer  */
+dilbegin recall charger();
+code
+{
+:start:
+heartbeat:=PULSE_SEC*SECS_PER_MUD_DAY/6;
+wait (SFB_TICK,(self.equip==WEAR_WIELD));
+heartbeat:=PULSE_SEC*5;
+act ("Thor Appears and Blesses your Thunder hammer.",
+A_ALWAYS,self.outside,self,null,TO_CHAR);
+act ("Thor appears and blesses $1n's Thunder hammer.",
+A_ALWAYS,self.outside,self,null,TO_REST);
+act ("Thor vanishes in a bolt of lightning!",
+A_ALWAYS,self.outside,null,null,TO_ALL);
+sendto ("add charge",self);
+goto start;
+}
+dilend
+
+dilbegin recall aware thor_lightning();
+var
+        i : integer;
+        enemy :unitptr;
+				n:integer;
+        charge:integer;
+				pwr:integer;
+code
+{
+pwr:=10;
+:init:
+        heartbeat := PULSE_SEC*3;
+charge:=interrupt (SFB_MSG,((self==activator) and
+	(argument=="add charge")), charge);
+:start:
+wait (SFB_DONE,(command (CMD_SAY)) and
+("i have the power" in argument) and
+			(self.equip==WEAR_WIELD));
+      pause;
+enemy:=self.outside.fighting;
+if (enemy==null) goto no_person;
+secure (enemy,start);
+if (pwr<=0) goto fail;
+pwr:=pwr-1;
+i := rnd (45,110);
+if (i < self.outside.abilities[ABIL_DEX])
+	 {
+		 n:= cast_spell (SPL_LIGHTNING_1,self.outside,self,self.outside.fighting,"thor_aff@asgaard");
+   }
+else
+ 	{
+	act ("You call on the power of thor but your Hammer doesn't respond.",
+		A_SOMEONE,self.outside,enemy,self,TO_CHAR);
+	}
+  goto start;
+
+	:fail:
+	act ("You try tocall on the power of Thor but your hammer seems to have "+
+	"lost its blessing.",
+		A_SOMEONE,self.outside,enemy,self,TO_CHAR);
+		goto start;
+
+:charge:
+clear (charge);
+if (pwr<12)
+ pwr:=pwr+5;
+ goto init;
+  goto start;
+:no_person:
+act ("Your Thunder Hammer Glows and a bolt of lightning strikes the ground.",
+A_ALWAYS,self.outside,null,null,TO_CHAR);
+act ("$1n's Thunder hammer glows and a bolt of lightning strikes the ground "+
+"at $1s feet.",
+A_SOMEONE,self.outside,null,null,TO_REST);
+goto start;
+}
+dilend
+dilbegin thor_death();
+code
+{
+        heartbeat := PULSE_SEC*3;
+        :start:
+        wait(SFB_COM, command(CMD_AUTO_COMBAT) and
+                (self.equip == WEAR_WIELD) and
+                (self.outside.fighting.hp < 10));
+      act("Your ThunderBolt ANNIHILATES $3n!",
+          A_ALWAYS, self.outside, null, self.outside.fighting, TO_CHAR);
+      act("$1n's ThunderBolt ANNIHILATES you.",
+          A_SOMEONE, self.outside, null, self.outside.fighting, TO_VICT);
+      act("$1n's ThunderBolt ANNIHILATES $3n",
+          A_SOMEONE, self.outside, null, self.outside.fighting, TO_NOTVICT);
+        self.outside.fighting.hp := -7;
+        pause;
+        goto start;
+}
+dilend
+
+end
+
+				dragon_slayer
+
+names {"dragon slayer", "slayer", "sword"}
+title "the dragon slayer"
+descr "A jet black sword is on the ground at your feet."
+extra {}
+"   A relic of the days when Ancalador reaked havok, only a few
+were fashioned with the lust for dragon blood. If the dragons
+were ever to return in great numbers seeking vengeance, these
+few remaining slayers would be a valuable necessity."
+extra {"$identify"}
+"When wielded, this powerful sword will seek her mark in the
+heart of her dragon foe."
+flags {UNIT_FL_MAGIC}
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_GREAT_SWORD, 0, 0)
+DEX_TRANSFER(+3)
+weight 10
+cost 7 GOLD_PIECE, 2 SILVER_PIECE
+rent 3 SILVER_PIECE,5 COPPER_PIECE
+dilcopy level_restrict@function (45,0,25,"");
+dilcopy abi_restrict@function (ABIL_DEX,40,0,25,"");
+dilcopy abi_restrict@function (ABIL_BRA,20,0,25,"");
+dilcopy ali_restrict@function (1000,200,0,25,"");
+/* Dil to make Dragon Slayer change its slaying race to that of the
+   dragon opponent being fought. */
+
+dilbegin prg13();
+code
+{
+wait(SFB_COM,(self.outside.fighting) and
+             (self.equip==WEAR_WIELD));
+if ((self.outside.fighting.race>=5010) and
+    (self.outside.fighting.race<=5019) and
+    (not(self.outside.fighting.race==self.value[4]))) {
+  self.value[4]:=self.outside.fighting.race;
+  act(self.outside.name+"'s Dragon-Slayer comes to life and shrieks 'Incoming!'",
+      A_SOMEONE,self.outside,null,null,TO_REST);
+  act("Your Dragon-Slayer screams INCOMING!",
+      A_ALWAYS,self.outside,null,null,TO_CHAR); }
+}
+dilend
+end
+
+				war_slv
+
+names {"sleeves of war", "war sleeves", "sleeves"}
+title "the Sleeves of War"
+descr "A dark set of sleeves lies on the ground."
+extra {}
+"They appear to look ordinary but somehow you know something
+is strange about them. The color is as dark as pitch, fitting
+for a God such as Tyr."
+extra {"$identify"}
+"When worn, these sleeves are very hard to remove, but they do allow
+the wearer to sense the presense of invisibility."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ARMS}
+ARMOUR_PLATE(0, 0)
+CHAR_FLAG_TRANSFER(CHAR_DETECT_INVISIBLE)
+CURSED_OBJECT
+
+weight 5
+cost 9 GOLD_PIECE, 4 SILVER_PIECE, 6 COPPER_PIECE
+rent 4 SILVER_PIECE, 6 COPPER_PIECE, 3 IRON_PIECE
+dilcopy level_restrict@function (35,0,25,"");
+dilcopy abi_restrict@function (ABIL_STR,40,0,25,"");
+dilcopy abi_restrict@function (ABIL_CON,20,0,25,"");
+end
+
+				freyan_leg
+
+names {"leggings", "freyan leggings"}
+title "the Freyan Leggings"
+descr "A set of Freyan Leggings lies here."
+extra {}
+"The Love Goddess has had much use of these leggings, and
+now that you have killed her, so shall you. That is, until
+someone kills you for them."
+extra {"$identify"}
+"When worn, these leggings will allow the wearer to hide easily."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+ARMOUR_PLATE(0,0)
+CHAR_FLAG_TRANSFER(CHAR_HIDE)
+
+weight 7
+cost 9 GOLD_PIECE, 5 SILVER_PIECE, 6 COPPER_PIECE
+rent 4 SILVER_PIECE, 7 COPPER_PIECE, 3 IRON_PIECE
+
+dilcopy level_restrict@function (34,0,25,"");
+dilcopy abi_restrict@function (ABIL_STR,25,0,25,"");
+dilcopy abi_restrict@function (ABIL_DEX,55,0,25,"");
+end
+
+	 		horn
+
+names {"golden horn", "horn", "golden"}
+title "a golden horn"
+descr "Hermod's Golden Horn lies here."
+extra {}
+"Made of gold, this is a fine horn which Hermod has frequently used
+to alert his forces of an upcoming battle."
+extra {"$identify"}
+"When held, this lyre will add charisma to the owner."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+CHA_TRANSFER(+3)
+weight 2
+cost 300 COPPER_PIECE
+rent 150 COPPER_PIECE
+dilcopy level_restrict@function (30,0,25,"");
+end
+
+				war_spear
+
+names {"spear of war", "spear"}
+title "the Spear of War"
+descr "The weapon of the War God lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_SPEAR, 0, 0)
+extra {}
+"This spear is as dark as night, and seems as light as a feather.
+The War God Tyr has disembowled many a victim with it, use it
+with pride"
+weight 5
+WEAPON_TRANSFER(WPN_SPEAR, +7)
+cost 256 COPPER_PIECE
+rent 128 IRON_PIECE
+dilcopy level_restrict@function (33,0,25,"");
+dilcopy abi_restrict@function (ABIL_STR,40,0,25,"");
+end
+
+
+				gauntlets_flm
+
+names {"gauntlets", "flaming gauntlets"}
+title "a pair of Flaming Gauntlets"
+descr "Some really HOT looking gauntlets are lying here."
+extra {}
+"These will keep your hands warm when the coldness of the
+winter gets unbearable."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HANDS}
+ARMOUR_PLATE(4, 0)
+weight 5
+cost 640 COPPER_PIECE
+rent 320 IRON_PIECE
+dilcopy level_restrict@function (33,0,25,"");
+dilcopy abi_restrict@function (ABIL_STR,20,0,25,"");
+dilcopy abi_restrict@function (ABIL_MAG,35,0,25,"");
+end
+
+				talon
+
+names {"eagle talon", "talon", "eagle"}
+title "an eagle talon"
+descr "The remains of an eagle's foot rests here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_CLAW,0,0)
+extra {}
+"There are some tattered strips of flesh still attatched from its
+latest victim."
+weight 5
+cost 112 COPPER_PIECE
+rent 	56 IRON_PIECE
+dilcopy level_restrict@function (14,0,25,"");
+end
+
+				blue_robe
+
+names {"blue robe", "robe"}
+title "a deep blue robe"
+descr "A deep Blue Robe lies here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+ARMOUR_PLATE(0, 0)
+extra {}
+"This robe is made of a very fine and delicate silken material.
+It seems to glisten when the sun shines its rays upon it."
+MAG_TRANSFER(-1)
+DIV_TRANSFER(+3)
+weight 8
+cost 610 COPPER_PIECE
+rent 305 IRON_PIECE
+dilcopy level_restrict@function (34,0,25,"");
+dilcopy abi_restrict@function (ABIL_DEX,40,0,25,"");
+dilcopy abi_restrict@function (ABIL_BRA,20,0,25,"");
+end
+
+/* ********************** Gauntlets by Vanyel ********************* */
+
+                           gauntlets_power
+
+names {"power gauntlets", "gauntlets", "power"}
+title "the gauntlets of power"
+descr "A pair of powerful looking gauntlets have been left here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HANDS}
+weight 9
+cost 410 COPPER_PIECE
+rent 2055 IRON_PIECE
+STR_TRANSFER(+3)
+extra {}
+"These gauntlets seem to radiate power.  And you sense that they will do you
+much good."
+ARMOUR_PLATE(0,0)
+DEX_TRANSFER(-1)
+dilcopy level_restrict@function (30,0,25,"");
+dilcopy abi_restrict@function (ABIL_DEX,40,0,25,"");
+dilcopy abi_restrict@function (ABIL_BRA,20,0,25,"");
+end
+
+/* *********************** End of Gauntlet Def ********************* */
+
+
+%mobiles
+
+				field_mouse
+
+names {"mouse", "field mouse"}
+title "a field mouse"
+descr "A field mouse is here hiding (unsuccessfuly) in the grass."
+extra {}
+"   It appears to be a normal field mouse, well, except for the strange
+glow eminating about its tiny body. I would take concern in treating it
+like an ordinary mouse, after all this is the astral plane!"
+alignment 50
+level 31
+sex SEX_MALE
+weight 803
+height 10
+race RACE_MOUSE
+NATURAL_DEF(WPN_BITE, ARM_CLOTHES)
+MSET_ABILITY(35,30,20,10,5,0,0,0)
+MSET_WEAPON(2,2,2,2,35,2)
+MSET_SPELL(4,4,4,5,5,5,5,5,6,6,6)
+position POSITION_STANDING
+default POSITION_STANDING
+
+/* Dil to renew Bridge Sticks and keys lost */
+dilbegin prg20();
+var
+	pc	:	unitptr;
+	item	:	unitptr;
+	item1	:	unitptr;
+	item2	:	unitptr;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*4;
+
+   :start:
+   wait(SFB_CMD, (activator.type == UNIT_ST_PC) and
+       (ASGAARD_COMPLETE in activator.quests));
+
+   if (activator.level > 34)
+   	goto begin;
+   else
+	goto start;
+
+   :begin:
+   item2 := findunit(activator, "sky key", FIND_UNIT_INVEN, null);
+
+   {
+      pc := activator;
+      secure(pc, lost_pc);
+      goto reimb2;
+   }
+
+
+   :reimb2:
+   item2 := findunit(pc, "sky key", FIND_UNIT_INVEN, null);
+   if (not(item2.nameidx $= "sky_key"))
+   {
+      exec("say Didn't the eagle tell you to keep the Sky Key?", self);
+      pause;
+      item := load("sky_key@asgaard");
+      link(item, pc);
+      exec("emote gives you a replacement key to the sky.", self);
+     pause;
+      exec("say Enjoy my friend.", self);
+      pause;
+      exec("wave "+pc.name, self);
+   }
+   unsecure(pc);
+   goto start;
+
+   :lost_pc:
+   pause;
+   goto start;
+}
+dilend
+end
+
+
+
+rat
+names {"hungry rat", "rat"}
+title "a hungry rat"
+descr "A hungry rat is foraging for food"
+extra {}
+"The rat looks normal in all aspects except for a deep purple glow that
+is being emitted from its body. As the rat forges for food he finds many
+items careless people have lost. He seems to have a collection of
+feathers. Maybe if you explain to him that you 'lost' your 'feather' he
+might be able to help you out."
+
+alignment 50
+level 31
+sex SEX_MALE
+weight 803
+height 10
+race RACE_MOUSE
+NATURAL_DEF(WPN_BITE, ARM_CLOTHES)
+MSET_ABILITY(35,30,20,10,5,0,0,0)
+MSET_WEAPON(2,2,2,2,35,2)
+MSET_SPELL(4,4,4,5,5,5,5,5,6,6,6)
+position POSITION_STANDING
+default POSITION_STANDING
+
+
+ dilbegin replace_dil();
+var
+  pcname : string;
+  item   : unitptr;
+  pc     : unitptr;
+  exdp   : extraptr;
+  i      : integer;
+
+code
+{
+       :init:
+        heartbeat := PULSE_SEC*9;
+
+   :start:
+          wait(SFB_CMD,(activator.type == UNIT_ST_PC) and
+         ((ASGAARD_COMPLETE in activator.quests) or
+         (ASGAARD1_COMPLETE in activator.quests))   and
+          (command (CMD_SAY)) and ("lost" in argument) and ("feather" in argument));
+          pc := activator;
+          secure(pc, lostpc);
+
+       if (REPLACE_ONGOING in pc.quests)
+          {
+           goto start;
+          }
+        else if (((ASGAARD_COMPLETE in pc.quests) or
+             (ASGAARD1_COMPLETE in pc.quests)) and
+          not(findunit(activator, "jet black feather", FIND_UNIT_INVEN, null)))
+     {
+           pause;
+           exec("say So you have lost your feather.",self);
+           pause;
+           exec("say I thought you where told to look after it?", self);
+           pause;
+           exec("say I happen to have some extra feathers the I have "+
+                 "found",self);
+           pause;
+           exec("say I would be more then happy to give you one. BUT first "+
+               "you must do something for me.",self);
+          pause;
+           exec("say You see I have a very large appetite. If you bring "+
+                "me  some of my favorite foods I will let you have one.",self);
+            pause;
+             exec("say I would like the pork chop from the "+
+                 "pig in valhalla, some disgusting stew from the gobblin "+
+                  "cook and a rotten apple. ",self);
+           pause;
+             exec("say will you get these for me?",self);
+
+
+  :accept_loop:
+  wait(SFB_CMD, activator #= pc);
+  if (command(CMD_NOD))
+     goto quest_accepted;
+  else if (command(CMD_SHAKE))
+     goto no_quest;
+  else
+  {
+    exec("say Nod if you agree to help, shake your head otherwise.", self);
+         goto accept_loop;
+  }
+
+     }
+ else if ((not(ASGAARD_COMPLETE in pc.quests)) or
+             (not(ASGAARD1_COMPLETE in pc.quests)) or
+            (findunit(activator, "jet black feather", FIND_UNIT_INVEN, null)))
+     {
+     exec("say Begone these feathers are mine!",self);
+     unsecure(pc);
+     goto start;
+     };
+
+      :no_quest:
+          pause;
+          exec("emote sighs and I was so hungry.", self);
+          unsecure(pc);
+          goto start;
+
+     :quest_accepted:
+           pause;
+           exec("say Thank you and please hurry", self);
+           addextra(pc.quests, {REPLACE_ONGOING}, "");
+           unsecure(pc);
+            goto start;
+
+
+
+
+   :lostpc:
+   exec("say Now where did they go?", self);
+   goto start;
+
+
+
+}
+dilend
+
+dilbegin getit_dil();
+var
+  pc     : unitptr;
+  item   : unitptr;
+  exdp   : extraptr;
+
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*5;
+   on_activation(self.position <= POSITION_SLEEPING, iamout);
+
+   :start:
+
+wait(SFB_DONE, command(CMD_GIVE) and
+              (target == self) and
+              (activator.type == UNIT_ST_PC) and
+                                  (REPLACE_ONGOING in activator.quests) );
+
+
+
+   pc := activator;
+   item := medium;
+   secure(pc, labsecure);
+
+      exdp := REPLACE_ONGOING in pc.quests;
+
+  if ("porkchop@basis" == (self.inside.nameidx + "@" + self.inside.zoneidx))
+      {
+        addstring(exdp.names, "pork chop");
+        exec("say Oh thank you. I hope it was not to difficult to get", self);
+        exec("snicker",self);
+        destroy(self.inside);
+        goto check;
+      }
+else if ("stew@goblin_cave" == (self.inside.nameidx + "@" + self.inside.zoneidx))
+      {
+         addstring(exdp.names, "disgusting stew");
+         exec("say That gobblin cook sure can make stew!", self);
+         destroy(self.inside);
+         goto check;
+      }
+
+else if ("rotten_apple@elfdom" == (self.inside.nameidx + "@" + self.inside.zoneidx))
+      {
+         addstring(exdp.names, "rotten apple");
+         exec("say My favorite fruit!", self);
+         destroy(self.inside);
+         goto check;
+      }
+
+else
+      {
+         exec("say I am not THAT hungry that I would eat this", self);
+         exec("emote hands it back to you",self);
+          link(item,pc);
+         goto check;
+      }
+
+unsecure(pc);
+goto start;
+
+
+
+ :labsecure:
+   exec("say I guess it was too much for them.", self);
+   goto start;
+
+   :iamout:
+   heartbeat := PULSE_SEC*60;
+   while (self.position <= POSITION_FIGHTING)
+     pause;
+   goto init;
+
+
+
+ :check:
+
+  exdp := REPLACE_ONGOING in pc.quests;
+
+       if (("pork chop" in exdp.names) and ("rotten apple" in exdp.names)
+          and ("disgusting stew" in exdp.names))
+       {
+         if (ASGAARD_COMPLETE in activator.quests)
+          {
+         pause;
+         subextra(pc.quests, REPLACE_ONGOING);
+         item := load("feath@asgaard");
+         item.height := pc.height;
+         link(item, pc);
+  exec("say Here is your feather try to hang onto it this time.",self);
+         pause;
+         unsecure(pc);
+         goto start;
+           }
+
+       else if (ASGAARD1_COMPLETE in activator.quests)
+          {
+         pause;
+         subextra(pc.quests, REPLACE_ONGOING);
+         item := load("feath@asgaard");
+         item.height := pc.height;
+         link(item, pc);
+         exec("say Here is your feather try to hang onto it this time.",self);
+         pause;
+         unsecure(pc);
+         goto start;
+         }
+      }
+
+}
+dilend
+end
+
+
+
+/* ****************** Geezer made by Vanyel ********************* */
+
+                                old_geezer
+names {"old geezer", "old", "geezer", "man" }
+title "an old geezer"
+descr "An old geezer sits here chewing his gums."
+extra {}
+"You see an old man sitting on a crate chewing tobacco and talking to
+himself."
+alignment 1000
+level 53
+money 6 SILVER_PIECE, 5 COPPER_PIECE, 1 IRON_PIECE
+sex SEX_MALE
+weight 1250
+height 210
+race RACE_HUMAN
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+MSET_ABILITY(45,25,10,15,5,0,0,0)
+MSET_WEAPON(2,2,2,2,15,2)
+MSET_SPELL(10,10,10,10,5,5,5,5,5,5,5)
+position POSITION_SITTING
+default POSITION_SITTING
+
+/* Dil for Vanyel's Quest */
+
+#define GEEZER_ONGOING  "Old Geezer Quest Ongoing"
+#define GEEZER_COMPLETE "Old Geezer Quest Complete"
+
+dilbegin prg14();
+var
+  item   : unitptr;
+  pc     : unitptr;
+  i      : integer;
+  exdp   : extraptr;
+
+code
+{
+
+   :init:
+   heartbeat := PULSE_SEC*4;
+   on_activation( (self.position <= POSITION_SLEEPING) or
+                (self.position == POSITION_FIGHTING), skip);
+
+
+   :start:
+   wait(SFB_CMD,(activator.type == UNIT_ST_PC) and (not command(CMD_GIVE)));
+
+   if (GEEZER_COMPLETE in activator.quests)
+      goto waitawhile;
+
+   pc := activator;
+   secure(pc, lostpc);
+
+   if (not (GEEZER_ONGOING in pc.quests))
+   {
+      pause;
+      exec("cough", self);
+      pause;
+      exec("spit", self);
+      pause;
+      exec("say In my old days, I used to be quite taken with the gods, you " +
+           "know.", self);
+      pause;
+      exec("think", self);
+      pause;
+      exec("say One god in particular-ahh, how I remember him, my old buddy " +
+           "Thor.", self);
+      pause;
+      exec("say You see, I served him faithfully for many a year... until " +
+            "the death, that is..., and then the sickness.", self);
+      pause;
+      exec("sigh", self);
+      pause;
+      exec("say Actually, I still have something of Thor's'... after he cast " +
+           "me out, I did not return them... and he forgot about them..", self);
+      pause;
+      exec("say Now, I know I'm not going to live forever... " +
+            "maybe it's time I gave them to someone worthy.", self);
+      pause;
+      exec("emote looks at you in a calculating way.", self);
+      pause;
+      exec("say Like you, perhaps?", self);
+      pause;
+      exec("say In order for me to live out my days in peace, I need a few " +
+           "... ahhh... amenities, shall we say...", self);
+      pause;
+      exec("emote smacks his lips while deep in thought.", self);
+      pause;
+      exec("say When I was a young man, I used to prospect- and oh, the fun " +
+           "I had.... Bring me a souvenir from a prospector, to remind  " +
+           "me of those wonderful days before the gods..", self);
+      pause;
+      exec("shiver", self);
+      pause;
+      exec("say Somewhere there is a not-man who holds a not-weapon of " +
+           "great fascination to me... I yearn to see it before my " +
+           "death.", self);
+      pause;
+      exec ("emote opens his eyes widely, and they appear to be aflame.", self);
+      pause;
+      exec (" say Prove yourself to be worthy of the gauntlets... bring me " +
+            " something out of the ordinary from the master of battle.", self);
+      pause;
+      exec("say Finally, bring me Thor's beloved... he no longer needs " +
+           "nor deserves her, and I love her dearly... ", self);
+      pause;
+      exec("say When I have what I need, so shall ye.",self);
+      pause;
+      exec("say If you want to get me these things, please nod your head. " +
+           "And if not - shake it, and make it quick! My eyes are failing " +
+           "me!", self);
+
+      i := 0;
+      while (i < 5)
+      {
+         wait(SFB_CMD, activator #= pc);
+
+         if (command(CMD_NOD))
+         {
+            goto quest_accepted; /* Goto the label if accepted */
+         }
+         else if (command(CMD_SAY))
+         {
+
+            pause;
+            exec("say Nod if you accept my challenge, shake your head " +
+                 "otherwise.", self);
+         }
+         else if (command(CMD_SHAKE))
+             goto no_quest;
+
+         i := i+1;
+      }
+
+      :no_quest:
+      pause;
+      exec("groan", self); pause;
+      exec("say Ok then, be like that - I'd love to give it to some other " +
+           "nice young person.", self);
+      unsecure(pc);
+      goto waitawhile;
+
+      :quest_accepted:
+      pause;
+      exec("say Then get on yer way! whats takin ye so long!", self);
+      addextra(pc.quests, {GEEZER_ONGOING}, "");
+      unsecure(pc);
+      goto start;
+   }
+   else
+   {
+      exdp := GEEZER_ONGOING in pc.quests;
+      if (("hammer" in exdp.names) and ("helmet" in exdp.names) and
+          ("sheark" in exdp.names) and ("warhelmet" in exdp.names))
+      {          /* This would explain helmet above... - Saor */
+         pause;
+         subextra(pc.quests, GEEZER_ONGOING);
+         addextra(pc.quests, {GEEZER_COMPLETE}, "");
+         pause;
+         exec("emote clutches the helmet to himself.", self);
+         pause;           /* Can this be working right?! - Saor */
+         exec("emote looks at Sheark in wonderment", self);
+         pause;
+         exec("emote gives you the Gauntlets of Power.", self);
+         item := load("gauntlets_power@asgaard");
+         item.height := pc.height;
+         link(item, pc);
+         exec("say These will help you, wear them in good health!", self);
+         pause;
+         exec("say You have also earned some experience I think.", self);
+         experience(600, pc);
+         pause;
+         exec("say Our business is done now, it has been a pleasure!", self);
+         pause;
+         exec("wave "+pc.name, self); pause;
+      }
+   }
+
+   unsecure(pc);
+   goto start;
+
+   :waitawhile:
+   heartbeat := PULSE_SEC*60;
+   pause;
+   goto init;
+
+   :lostpc:
+   pause;
+   exec("say These younguns, they need a proper talkin to!", self);
+   pause;
+   exec("sigh", self);
+   goto start;
+
+}
+dilend
+
+/* Part 2 of Vanyel's Geezer quest */
+dilbegin prg15();
+var
+  pc     : unitptr;
+  item   : unitptr;
+  exdp   : extraptr;
+
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*5;
+   on_activation( (self.position <= POSITION_SLEEPING) or
+                (self.position == POSITION_FIGHTING), skip);
+
+   :start:
+   wait(SFB_CMD, command(CMD_GIVE) and (activator.type == UNIT_ST_PC));
+
+   :give:
+   if (not (GEEZER_ONGOING in activator.quests))
+       goto start;
+
+   pc := activator;
+   item := self.inside;
+   secure(pc, labsecure);
+   secure(item, labsecure);
+
+   wait(SFB_CMD | SFB_TICK, TRUE);
+
+   if (not (item #= self.inside))
+   {
+      unsecure(item);
+      exdp := GEEZER_ONGOING in pc.quests;
+
+
+      if ("thunder hammer" in self.inside.names)
+      {
+         addstring(exdp.names, "hammer");
+         pause;
+         exec("say Hmm, always wanted this..", self);
+         pause;
+         destroy(self.inside);
+      }
+      else if ("miner's helmet" in self.inside.names)
+      {
+         addstring(exdp.names, "helmet");
+         pause;
+         exec("say Hmmm... I had one just like it!", self);
+         pause;
+         destroy(self.inside);
+      }
+      else if ("sheark" in self.inside.names)
+      {
+         addstring(exdp.names, "sheark");
+         pause;
+         exec("say Interesting... yet oh so pretty!", self);
+         pause;
+         destroy(self.inside);
+      }
+      else if ("helmet" in self.inside.names)
+      {
+         addstring(exdp.names, "warhelmet");
+         pause;
+         exec("say Now this is fancy!! Did he hurt you?", self);
+         pause;
+         exec("giggle", self);
+         pause;
+         destroy(self.inside);
+      }
+      else
+      {
+         pause;
+         exec("say Did I ask for this, "+pc.name +"?!", self);
+         pause;
+         exec("say I think not. Take it back!", self);
+         /* Return the item to the player */
+         link(self.inside, pc);
+      }
+   }
+   unsecure(pc);
+
+   if ((command(CMD_GIVE)) and (activator.type == UNIT_ST_PC))
+   {
+      goto give;
+   }
+   else
+      goto start;
+
+   :labsecure:
+   pause;
+   exec("say They won't get far!", self);
+   goto start;
+}
+dilend
+
+end
+
+/* ******************* End of Vanyel's Geezer ******************* */
+
+/* ******************* Aaronwolf teacher definition ************* */
+
+                                aaronwolf
+names {"aaronwolf", "teacher"}
+title "the dark warlock Aaronwolf"
+descr
+"The evil Aaronwolf waits here in the shadows."
+extra {}
+"This man radiates with the true evil he embodies. A
+sinister grin stretches his face as his gaze meets yours.
+The dark warlock Aaronwolf will teach only those who
+loyally follow Asmodeus."
+ level	30
+alignment -850
+flags {UNIT_FL_NO_TELEPORT}
+romflags {CHAR_DETECT_INVISIBLE}
+MSET_ABILITY(9,4,1,28,20,5,25,8)
+MSET_WEAPON(7,7,2,12,2,2)
+MSET_SPELL(10,0,0,5,0,10,10,5,5,15,8)
+NATURAL_DEF(WPN_FIST, ARM_CHAIN)
+race RACE_HUMAN
+
+sex SEX_MALE
+height 258
+weight 1300
+special SFUN_COMBAT_MAGIC "cast stinking cloud"
+
+/* Dil to prevent this teacher from dying! */
+
+dilbegin prg16();
+code
+{
+   :start:
+   wait(SFB_COM, activator.type == UNIT_ST_PC);
+
+   if (self.hp < self.max_hp)
+   {
+      act("Aaronwolf glows, his master Asmodeus heals him.",
+          A_ALWAYS, activator, null, null, TO_ALL);
+      self.hp := self.max_hp;
+   }
+   goto start;
+}
+dilend
+
+/* Dil to prevent some players from learning! */
+
+dilbegin prg17();
+var
+        pc      :       unitptr;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*5;
+
+   :start:
+   wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and
+       (command(CMD_INFO) or command(CMD_PRACTICE))));
+
+   pc := activator;
+   secure(pc, lost_pc);
+   if (pc.alignment > -100)
+   {
+        block;
+        exec("say Ahh! But you are not evil enough for me to " +
+             "waste Asmodeus' time with! Begone at once.", self);
+        exec("smirk", self);
+        unsecure(pc);
+        goto start;
+   }
+   if (pc.level < 20)
+   {
+        block;
+        exec("cac", self);
+        pause;
+        exec("say You are too LOW a level for me to bother with.", self);
+        pause;
+        exec("wave "+pc.name, self);
+        unsecure(pc);
+        goto start;
+   }
+   unsecure(pc);
+   goto start;
+
+   :lost_pc:
+   pause;
+   goto start;
+}
+dilend
+
+
+#ifdef SUSPEKT
+
+/* NOTE BY PAPI: This is outrageous! 1) Teaching abilities will really
+   mess things up, 2) IF one should teach abilities, it should be just ONE
+   ability, not 3, and the cost should be no less than a "C" i.e. 10, and
+   no more than once per level!
+
+   I suggest that this rouge teacher teaches some spell, weapon or skill
+   to a max of 100 at a rate of 1 per level, cost 10.
+
+*/
+
+special SFUN_TEACH_INIT
+"abilities;
+$1n tells you, 'I know this ability, but I do not teach it to you.';
+$1n tells you, 'You think I know of an ability such as this?';
+$1n tells you, 'Perhaps if you had the %s for me! Now begone!';
+$1n tells you, 'You have not got %d skill points. How can you practice ?';
+$1n tells you, 'You have tapped me of my resources, time to move on.';
+$1n tells you, 'I sense magical affects, I cannot teach until they are gone.';
+$1n tells you, 'Remove all equipment, please.';
+
+85; 175; strength;       2200; 5; 10; 20; 30; 0;
+80; 180; charisma;       1825; 8; 16; 24; 32; 40; 48; 56; 0;
+90; 175; hitpoints;      2000; 8; 16; 24; 32; 40; 48; 0;"
+#endif
+end
+
+/* ******************* End of Aaronwolf def ********************* */
+
+			 	odin
+
+names {"odin", "father", "sky father"}
+title "Odin the Sky Father"
+descr "The Sky Father sits here, pondering the doomsday to come."
+extra {}
+"This is by far the largest of the Norse Gods, and most certainly the
+greatest. Unlike some gods, he genuinely cares for the well-being of
+his followers, and is sick to death that he cannot prevent their or
+his demise."
+
+romflags {CHAR_DETECT_INVISIBLE}
+M_NORSE_ODIN
+level 125
+money 2 GOLD_PIECE,7 SILVER_PIECE,3 COPPER_PIECE
+position POSITION_SITTING
+default POSITION_SITTING
+
+special SFUN_SCAVENGER time 100 bits SFB_RANTIME
+special SFUN_PAIN_INIT time WAIT_SEC*25 bits SFB_RANTIME
+"  100 Csay Please be quiet, I have important matters to ponder?!?@
+   110 Csay Sorry to be so rude, I hope you are doing well.@
+   120 Cponder@
+   130 Cemote Odin is consumed by the foreboding doom which lies ahead.@
+   140 Cemote Odin mutters 'and not a damned thing I can do about it...'@
+   150 Csigh@
+   160 Cemote Odin holds his head in his hands, with a look of dismay@
+   170 Csay That Loki will surely pay for his intolerance, poor poor Balder!@
+"
+end
+
+				hela
+
+names {"hela", "goddess"}
+title "Hela, Goddess of the Dead"
+descr "Hela, the Ruler of the Kingdom of Death, is here."
+extra {}
+"This Goddess is awful indeed. She lacks any form of mercy and
+without hesitation will take what life she can. She alone rules
+the kingdom of death, and even Odin has no power in her world!"
+
+romflags {CHAR_DETECT_INVISIBLE}
+M_NORSE_HELA
+level 123
+money 2 GOLD_PIECE,7 SILVER_PIECE,1 COPPER_PIECE
+
+position POSITION_STANDING
+default POSITION_STANDING
+
+special SFUN_SCAVENGER time 100 bits SFB_RANTIME
+special SFUN_PAIN_INIT time WAIT_SEC*20 bits SFB_RANTIME
+"  100 Cemote Hela sends a hateful glare in your direction.@
+   110 Csay You have no business here, begone lest I render you lifeless.@
+   120 AHela makes a move in your direction, she grins a lifeless grin.@
+"
+end
+
+				frigga
+
+names {"frigga", "goddess"}
+title "Frigga the wife of Odin"
+descr "Frigga, Goddess and wife of Odin, is here torturing Loki."
+extra {}
+"Her attitude tells you to beware, since the loss of her beloved
+Balder, this Goddess has not been the same. The days of her joviality
+are long gone, she hardly resembles the Goddess for which the day Friday
+was named."
+
+romflags {CHAR_DETECT_INVISIBLE, CHAR_HIDE}
+M_NORSE_FRIGGA
+level 124
+money 2 GOLD_PIECE,7 SILVER_PIECE,2 COPPER_PIECE
+
+position POSITION_STANDING
+default POSITION_STANDING
+
+special SFUN_PAIN_INIT time WAIT_SEC*20 bits SFB_RANTIME
+"  100 Ccry@
+   110 Csay Why oh why Loki? What did Balder ever do to you?!?@
+   120 Csigh@
+   130 Csay Everything in life had sworn to me no harm would come to my son.@
+   140 Csay It is all I can do now to ensure you suffer an eternity of horrors.@
+   145 AFrigga's attitude seems to change, her face turns a twisted snarl@
+   150 Cgrin@
+   160 AFrigga turns to Loki and spits in his face.@
+"
+end
+
+                                freya
+
+names {"freya", "goddess"}
+title "Freya the Goddess"
+descr "Freya, Goddess of Love stands before you."
+extra {}
+"   As her name suggests she is very beautiful and you have
+most likely been touched by her charm at some point in your
+life. She would be in a peppy mood now, however she still
+mourns the loss of Balder."
+romflags {CHAR_DETECT_INVISIBLE, CHAR_HIDE}
+M_NORSE_FREYA
+level 121
+money 2 GOLD_PIECE,7 SILVER_PIECE
+
+position POSITION_STANDING
+default POSITION_STANDING
+alignment +1000 /* Now if she aint ultimately good, who is? :) */
+
+special SFUN_PAIN_INIT time WAIT_SEC*35 bits SFB_RANTIME
+"  100 Ccry@
+   120 Csigh@
+   130 AFreya, the Goddess of Love, silently weeps for Balder.@
+"
+end
+
+
+				tyr
+
+names {"tyr", "god", "wargod"}
+title "Tyr the God of War"
+descr "Tyr the God of War is here, kicking your ass around the room!"
+extra {}
+"Here stands the God of War who seems in a rush to plan his share
+of the bloodshed found throughout the realms."
+
+romflags {CHAR_DETECT_INVISIBLE}
+M_NORSE_TYR
+level 123
+
+money 2 GOLD_PIECE,7 SILVER_PIECE,2 COPPER_PIECE
+
+position POSITION_STANDING
+default POSITION_STANDING
+
+special SFUN_PAIN_INIT time WAIT_SEC*15 bits SFB_RANTIME
+"  100 Csay Ahhhh, this battle will suit me just fine...@
+   110 Cgrin@
+   120 Csay Now for a drink before the battle begins.@
+   130 Csmile@
+   140 Gasgaard/lounge_rm@
+   150 ATyr grabs the nearest bottle of vodka with an evil grin.@
+   160 AWith a swift movement the vodka vanishes into Tyr's mouth.@
+   170 Csmile@
+   180 Csay Ahh, back to my lovely war... *grin*@
+   190 Gasgaard/map_rm@
+   200 Ccackle@
+"
+end
+
+			 	thor
+
+names {"thor", "god", "thunder god"}
+title "Thor the Thunder God"
+descr "Thor the Thunder God and strongest of the Aesir stands before you."
+extra {}
+"   Known for his awesome strength, this god has seen his fair share
+of blood and carnage. The rage he feels for the death of Balder causes
+the sky to churn and shriek his horror throughout the land."
+M_NORSE_THOR
+level 123
+money 2 GOLD_PIECE,7 SILVER_PIECE,1 COPPER_PIECE, 15 IRON_PIECE
+
+position POSITION_RESTING
+default POSITION_RESTING
+
+special SFUN_SCAVENGER time 100 bits SFB_RANTIME
+special SFUN_PAIN_INIT time WAIT_SEC*25 bits SFB_RANTIME
+"  100 Cscream@
+   110 Csay The world will pay for my loss!@
+   120 Csay YOU! You had better hope I cannot tie you in with Loki!@
+   130 AThor strikes his hammer to the ground, and wails with rage.@
+   140 Cgrowl@
+"
+end
+
+				hermod
+
+names {"hermod", "god"}
+title "Hermod the God"
+
+descr "Hermod is here, preparing his departure to the kingdom of death."
+extra {}
+"   This God seems preoccupied with arrangements for his departure. Better
+to just stay out of the way and not get underfoot."
+M_NORSE_HERMOD
+level 119
+money 2 GOLD_PIECE,6 SILVER_PIECE
+
+position POSITION_STANDING
+default POSITION_STANDING
+
+special SFUN_SCAVENGER time 100 bits SFB_RANTIME
+special SFUN_PAIN_INIT time WAIT_SEC*20 bits SFB_RANTIME
+"  100 AHermod mutters 'How shall I convince the Death Goddess...?'@
+   110 Csigh@
+   120 AHermod stops hustling about and stares at the ground.@
+   125 AHermod sheds a tear for the loss of his brother.@
+   130 Csay Well, best to just be on my way then.@
+   140 Gasgaard/entcourt@
+   150 Csay Oh drat! I knew I was forgetting something!@
+   160 Gasgaard/col_garden@
+"
+end
+
+			 	loki
+
+names {"loki", "prick"}
+title "Loki"
+descr "Loki is here, chained to his death for eternity."
+extra {}
+"   This human once held the brotherhood to Odin in his hands. His
+treachery is as is suffering will be forever, at the hands to Frigga.
+Maybe he nows regrets plotting the death of Balder."
+romflags {CHAR_DETECT_INVISIBLE}
+level 13
+race RACE_HUMAN
+alignment -700
+height 100
+weight 1155
+MSET_ABILITY(15,20,20,10,5,30,0,0)
+MSET_WEAPON(6,6,6,6,15,6)
+MSET_SPELL(4,4,4,5,5,5,5,5,6,6,6)
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+position POSITION_STANDING
+default POSITION_STANDING
+
+special SFUN_PAIN_INIT time WAIT_SEC*25 bits SFB_RANTIME
+"  100 ALoki shrieks!@
+   110 Csay Please have mercy, Frigga, please!!!@
+   120 Csay You! Unchain me and I shall make you rich!@
+   130 ALoki screams with the ensuing agony he must face for all eternity.@
+   140 Ccry@
+   150 ALoki screams 'The pain! *arggghh* the paaaiiinnn...'@
+"
+end
+
+				hoder
+
+names {"hoder", "god"}
+title "Hoder the God"
+descr "Hoder the God is here."
+extra {}
+"   This God still agonizes over his brother's untimely death. He
+seems at a loss, and pretty much a basket case at the moment."
+M_NORSE_HODER
+level 120
+money 2 GOLD_PIECE,6 SILVER_PIECE,7 COPPER_PIECE
+
+position POSITION_RESTING
+default POSITION_RESTING
+
+special SFUN_SCAVENGER time 100 bits SFB_RANTIME
+special SFUN_PAIN_INIT time WAIT_SEC*25 bits SFB_RANTIME
+"  100 Ccry@
+   110 Csay I will miss you my brother, you will remain in my heart.@
+   120 Csigh@
+"
+end
+
+                                heimdall
+
+names {"heimdall", "god"}
+title "Heimdall the God"
+descr "Heimdall, the warder of the bifrost, is here."
+extra {}
+"   He keeps a constant watch over the rainbow bridge, bifrost,
+making sure only the truely loyal pass over. The only path to
+Asgaard is sure to be safe from intrusion."
+M_NORSE_HEIMDALL
+level 119
+money 2 GOLD_PIECE,5 SILVER_PIECE,6 COPPER_PIECE
+
+position POSITION_RESTING
+default POSITION_RESTING
+
+special SFUN_SCAVENGER time 100 bits SFB_RANTIME
+special SFUN_PAIN_INIT time WAIT_SEC*20 bits SFB_RANTIME
+"  100 AHeimdall surveys the land, and more importantly the Bifrost.@
+   110 Csay Odin has warned me, I know the day will come....@
+   120 Csigh@
+   130 Csay You however may enter, you are no threat to Asgaard.@
+"
+end
+
+				eagle
+
+names {"giant eagle", "giant", "eagle"}
+title "a giant eagle"
+descr "A giant eagle is here."
+extra {}
+"One of the few remaining in Asgaard, Odin enjoys watching them enjoy
+their freedom. "
+alignment -250
+level 55
+money 6 SILVER_PIECE,3 COPPER_PIECE
+
+sex SEX_NEUTRAL
+weight 150
+height 1210
+race RACE_EAGLE
+NATURAL_DEF(WPN_CLAW, ARM_PLATE)
+MSET_ABILITY(35,30,20,10,5,0,0,0)
+MSET_WEAPON(2,2,2,2,35,2)
+MSET_SPELL(4,4,4,5,5,5,5,5,6,6,6)
+position POSITION_STANDING
+default POSITION_STANDING
+
+dilbegin prg18();
+var
+  pcname : string;
+  item   : unitptr;
+  pc     : unitptr;
+  i      : integer;
+  exdp   : extraptr;
+
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*5;
+
+   :start:
+   wait(SFB_CMD,(activator.type == UNIT_ST_PC)    
+and  ((not(ASGAARD_COMPLETE in activator.quests)) and
+(not(ASGAARD1_COMPLETE in activator.quests))) 
+and (not command(CMD_GIVE)));
+   pc := activator;
+   secure(pc, lostpc);
+
+ if (not (ASGAARD_ONGOING in pc.quests))
+   {
+      pause;
+      exec("say You seek the Sky Father Odin do you "+pc.name+"?", self);
+
+      pause;
+      exec("say The only way in requires my aid, I'm afraid!", self);
+      pause;
+
+      exec("say You see, you seek the key, and only I can give it to " +
+           "thee.", self);
+      pause;
+
+      exec("laugh", self);
+      pause;
+      exec("say and don't think about my death, a crazy idea like" +
+           " that is as foul as your breath!", self);
+      pause;
+
+      exec("say Now, this is what you must bring me. Upon success " +
+            "I will get you the key.", self);
+      pause;
+      exec("say To get the key, bring these things three.", self);
+      pause;
+      exec("say In the run down village of Ratswarf is an object " +
+           "crafted in the image of a skull.", self);
+      pause;
+      exec("say This you shall bring me. But that's not all!", self);
+      pause;
+      exec("say In a small room near the gates of hell, a blood red" +
+           "trident can be found. This you shall also bring..", self);
+      pause;
+      exec("say Nearby where the ninjas practice, a sword made for " +
+           "guards can be found. Bring this to me as well...", self);
+      pause;
+      exec("say When I have all three, you'll have the key.",self);
+      pause;
+      exec("say "+pc.name+", is such a key worth all of the bloodshed to " +
+           "surely follow? Please nod if you think so.", self);
+
+      i := 0;
+      while (i < 5)
+      {
+         wait(SFB_CMD, activator #= pc);
+
+         if (command(CMD_NOD))
+         {
+            goto quest_accepted;
+         }
+         else if (command(CMD_SAY))
+         {
+            pause;
+            exec("say Nod if you accept my challenge, shake your head" +
+                 "otherwise.", self);
+         }
+         else if (command(CMD_SHAKE))
+           goto no_quest;
+
+         i := i+1;
+      }
+
+      :no_quest:
+      pause;
+      exec("say So be it "+pc.name+"! It is most unlikely you will ever " +
+           "meet the Sky Father.", self);
+      unsecure(pc);
+      goto waitawhile;
+
+      :quest_accepted:
+      pause;
+      exec("say Begone then "+pc.name+", do not return until you have all " +
+           "you need!", self);
+      addextra(pc.quests, {ASGAARD_ONGOING}, "");
+      unsecure(pc);
+      goto start;
+   }
+   else /* ASGAARD_ONGOING in pc.quests! */
+   {
+      exdp := ASGAARD_ONGOING in pc.quests;
+
+      if (("skull key" in exdp.names) and ("trident" in exdp.names) and
+          ("imperial sword" in exdp.names))
+      {
+         pause;
+         subextra(pc.quests, ASGAARD_ONGOING);
+         addextra(pc.quests, {ASGAARD1_COMPLETE}, "");
+         exec("emote sets the skull key down before him.", self);
+         pause;
+         exec("emote magically transforms the skull key into a " +
+              "cloud-gray key.", self);
+         pause;
+         exec("emote gives you the cloud-gray key.", self);
+         item := load("sky_key@asgaard");
+         link(item, pc);
+         experience(900, pc);
+         exec("say This will gain you entrance into the planes " +
+              "of sky.", self); pause;
+         exec("pat "+pc.name, self); pause;
+         exec("say I also have for you a gift!", self); pause;
+         exec("emote gives you a feather.", self);
+         item := load("feath@asgaard");
+         item.height := pc.height;
+         link(item, pc);
+         pause;
+         exec("say That will help in your efforts to get around " +
+	     "in this world.", self); pause;
+       exec ("say Just wear it and say 'Munin raven of Odin take me to the "+
+       "<place>",self);pause;
+         exec("wave", self);
+
+      }
+   }
+
+   unsecure(pc);
+   goto start;
+
+   :waitawhile:
+   heartbeat := PULSE_SEC*60;
+   pause;
+   goto init;
+
+   :lostpc:
+   exec("say Too much to handle I suppose.", self);
+   pause;
+   exec("shrug", self);
+   goto start;
+
+   :ohno_combat:
+   heartbeat := PULSE_SEC*5;
+   exec("say Ok then, so it shall be this way with you...", self);
+   pause;
+   exec("say Die nerf herder.", self);
+   pause;
+   goto start;
+}
+dilend
+
+dilbegin prg19();
+var
+  pc     : unitptr;
+  item   : unitptr;
+  exdp   : extraptr;
+
+code
+{
+   heartbeat := PULSE_SEC*5;
+
+   :start:
+   wait(SFB_CMD, command(CMD_GIVE) and (activator.type == UNIT_ST_PC));
+
+   :give:
+   if (not (ASGAARD_ONGOING in activator.quests))
+     goto start;
+
+   pc := activator;
+   item := self.inside;
+   secure(pc, labsecure);
+   secure(item, labsecure);
+
+   wait(SFB_CMD | SFB_TICK, TRUE);
+
+   if (not (item #= self.inside))
+   {
+      unsecure(item);
+      exdp := ASGAARD_ONGOING in pc.quests;
+
+      if ("Skull key" in self.inside.name)
+      {
+         addstring(exdp.names, "skull key");
+         exec("say Heh, the old slaver suffered I reckon *grin*...",
+              self);
+         destroy(self.inside);
+      }
+      else if ("Trident" in self.inside.name)
+      {
+         addstring(exdp.names, "trident");
+         exec("say I gather the Guardian Devil didn't take to your " +
+              "insolence?", self);
+         destroy(self.inside);
+      }
+      else if ("Imperial sword" in self.inside.name)
+      {
+         addstring(exdp.names, "imperial sword");
+         exec("say Ahh yes, a fine imperial sword, " +
+	      "a most devastating weapon indeed!", self);
+         destroy(self.inside);
+      }
+      else
+      {
+         exec("say Did I ask for this, "+pc.name +"?", self);
+         pause;
+         exec("say I think not.", self);
+         /* Return the item to the player */
+         link(self.inside, pc);
+      }
+   }
+   unsecure(pc);
+
+   if ((command(CMD_GIVE)) and (activator.type == UNIT_ST_PC))
+   {
+      goto give;
+   }
+   else
+     goto start;
+
+   :labsecure:
+   exec("say They won't get far!", self);
+   goto start;
+}
+dilend
+
+end
+
+                                eagle_servant
+
+names {"giant eagle servant", "giant eagle", "giant", "eagle", "servant"}
+title "a giant eagle servant"
+descr "A giant eagle servant is here."
+extra {}
+"One of the few remaining in Asgaard, Odin has taken a special liking
+to this bird. Do not underestimate this eagle, he can defend himself
+pretty well. This one seems very in tune with his master Odin."
+alignment -450
+level 45
+money 5 SILVER_PIECE,3 COPPER_PIECE
+
+sex SEX_NEUTRAL
+weight 150
+height 1210
+race RACE_EAGLE
+NATURAL_DEF(WPN_CLAW, ARM_PLATE)
+MSET_ABILITY(35,30,20,10,5,0,0,0)
+MSET_WEAPON(2,2,2,2,35,2)
+MSET_SPELL(4,4,4,5,5,5,5,5,6,6,6)
+special SFUN_RESCUE "odin"
+special SFUN_PAIN_INIT time WAIT_SEC*20 bits SFB_RANTIME
+"  100 Cgrowl@
+   200 Cemote flutters his powerful wings angrily.@
+   300 Csnarl@
+"
+position POSITION_STANDING
+default POSITION_STANDING
+end
+
+				vulture
+
+names {"vulture", "bird"}
+title "a horrible vulture"
+descr "A disgusting vulture is here."
+extra {}
+"One of the lowest creatures you have ever gazed upon, this vulture
+is horrid indeed. You get the added bonus of noticing some chewed
+flesh hanging from its beak."
+alignment -50
+level 40
+money 5 SILVER_PIECE
+
+sex SEX_NEUTRAL
+weight 1035
+height 60
+race RACE_BIRD
+NATURAL_DEF(WPN_CLAW, ARM_CHAIN)
+MSET_ABILITY(15,20,20,10,5,10,10,10)
+MSET_WEAPON(2,2,2,2,35,2)
+MSET_SPELL(4,4,4,5,5,5,5,5,6,6,6)
+position POSITION_STANDING
+default POSITION_STANDING
+
+special SFUN_AGGRESSIVE time WAIT_SEC*10  bits SFB_RANTIME
+special SFUN_RANDOM_ZONE_MOVE time 40 bits SFB_RANTIME
+end
+
+                               	giant_raven
+
+names {"raven", "giant raven"}
+title "a rather large raven"
+descr "A Large Raven is here."
+extra {}
+"   These birds are more than they seem. They are also in tune
+with Odin, helping to keep a watch on his lands below."
+alignment -50
+level 40
+money 5 SILVER_PIECE
+sex SEX_NEUTRAL
+weight 1035
+height 60
+race RACE_BIRD
+NATURAL_DEF(WPN_CLAW, ARM_CHAIN)
+MSET_ABILITY(10,15,20,20,5,10,10,10)
+MSET_WEAPON(2,2,2,2,35,2)
+MSET_SPELL(4,4,4,5,5,5,5,5,6,6,6)
+position POSITION_STANDING
+default POSITION_STANDING
+
+
+special SFUN_RANDOM_ZONE_MOVE time 40 bits SFB_RANTIME
+end
+
+				hugin_raven
+names {"hugin", "raven", "thought"}
+title "hugin the raven of thought"
+descr "Hugin is here."
+extra {}
+"   This bird is quite more than just a bird, it is the eyes and ears
+of Odin, reporting all it hears and sees back to the Sky Father."
+alignment 0
+level 45
+money 5 SILVER_PIECE,3 COPPER_PIECE
+sex SEX_NEUTRAL
+weight 1535
+height 60
+race RACE_BIRD
+NATURAL_DEF(WPN_CLAW, ARM_PLATE)
+MSET_ABILITY(35,30,10,10,5,0,5,5)
+MSET_WEAPON(0,0,0,0,10,0)
+MSET_SPELL(0,0,0,90,0,0,0,0,0,0,0)
+position POSITION_STANDING
+default POSITION_STANDING
+
+special SFUN_PAIN_INIT time WAIT_SEC*7 bits SFB_RANTIME
+"  100 AHugin squawks and flutters its powerful wings.@
+   110 AHugin mutters 'thy bidding will be done Odin...'@
+   112 AHugin bows its head to Odin.@
+   114 Gasgaard/bifrost_bridge@
+   120 AHugin spreads its wings and chants a prayer for transportation.@
+   130 Ccast controlled tele colin@
+   140 Gudgaard/square@
+   150 AHugin mutters 'all is well throughout the land Odin...'@
+   160 AHugin spreads its wings and chants a prayer for transportation.@
+   170 AHugin squawks loudly.@
+   180 Ccast controlled tele bifrost bridge@
+   190 AHugin squawks loudly.@
+   200 Gasgaard/cloud_stairs@
+   210 AHugin mutters 'The lands still prosper my lord..'@
+"
+end
+
+                                munin_raven
+names {"munin", "raven", "memory"}
+title "munin the raven of memory"
+descr "Munin is here."
+extra {}
+"   This bird is quite more than just a bird, it is the eyes and ears
+of Odin, reporting all it hears and sees back to the Sky Father."
+alignment 0
+level 48
+money 5 SILVER_PIECE,5 COPPER_PIECE
+
+sex SEX_NEUTRAL
+weight 1535
+height 60
+race RACE_BIRD
+NATURAL_DEF(WPN_CLAW, ARM_PLATE)
+MSET_ABILITY(35,30,10,10,5,0,5,5)
+MSET_WEAPON(0,0,0,0,10,0)
+MSET_SPELL(0,0,0,90,0,0,0,0,0,0,0)
+position POSITION_STANDING
+default POSITION_STANDING
+
+special SFUN_PAIN_INIT time WAIT_SEC*9 bits SFB_RANTIME
+"  100 AMunin squawks and flutters its powerful wings.@
+   110 AMunin mutters 'thy bidding will be done Odin...'@
+   112 AMunin bows its head to Odin.@
+   114 Gasgaard/bifrost_bridge@
+   120 AMunin spreads its wings and chants a prayer for transportation.@
+   130 Ccast controlled adolf@
+   140 Gmidgaard/market_sq@
+   150 AMunin mutters 'all is well throughout the land Odin...'@
+   160 AMunin spreads its wings and chants a prayer for transportation.@
+   170 AMunin squawks loudly.@
+   180 Ccast controlled tele bifrost bridge@
+   190 AMunin squawks loudly.@
+   200 Gasgaard/cloud_stairs@
+   210 AMugin mutters 'Enter my mind and learn what I have my lord'.@
+"
+end
+
+				frigga_horse
+
+names {"horse", "mare"}
+title "a horse"
+descr "A horse is grazing here."
+extra {}
+"A fine specimen indeed. Frigga has worked this mare to the peak of its
+abilities."
+alignment 50
+level 40
+sex SEX_FEMALE
+weight 2365
+height 120
+race RACE_HORSE
+NATURAL_DEF(WPN_KICK, ARM_HLEATHER)
+MSET_ABILITY(35,30,20,10,5,0,0,0)
+MSET_WEAPON(2,2,2,2,35,2)
+MSET_SPELL(4,4,4,5,5,5,5,5,6,6,6)
+position POSITION_STANDING
+default POSITION_STANDING
+
+special SFUN_PAIN_INIT time WAIT_SEC*15 bits SFB_RANTIME
+"  100 Cemote neighs.@
+   110 AFrigga's mare snorts disgust at your presense.@
+"
+end
+
+				o_statue
+
+names {"statue"}
+title "a statue of odin"
+descr "A Statue of Odin is here."
+extra {}
+"This is a large statue which greatly resembles Odin. If you stare
+closely enough you can vaguely make out its eyes move towards you."
+romflags {CHAR_DETECT_INVISIBLE}
+alignment 0
+level 45
+sex SEX_NEUTRAL
+weight 2600
+height 800
+race RACE_NORSE_GOD
+NATURAL_DEF(WPN_FIST, ARM_CHAIN)
+MSET_ABILITY(25,20,15,10,10,10,10,0)
+MSET_WEAPON(20,20,10,15,20,15)
+MSET_SPELL(0,0,0,0,0,0,0,0,0,0,0)
+position POSITION_STANDING
+default POSITION_STANDING
+end
+
+
+				f_statue
+
+names {"statue"}
+title "a statue of frigga"
+descr "A Statue of Frigga is here."
+extra {}
+"This is a large statue which greatly resembles Frigga. If you stare
+closely enough you can vaguely make out its eyes move towards you."
+romflags {CHAR_DETECT_INVISIBLE}
+alignment 0
+level 43
+sex SEX_NEUTRAL
+weight 2000
+height 800
+race RACE_NORSE_GOD
+NATURAL_DEF(WPN_FIST, ARM_CHAIN)
+MSET_ABILITY(25,20,15,10,10,10,10,0)
+MSET_WEAPON(25,25,10,5,20,15)
+MSET_SPELL(0,0,0,0,0,0,0,0,0,0,0)
+position POSITION_STANDING
+default POSITION_STANDING
+end
+
+
+                                t_statue
+
+names {"statue"}
+title "a statue of tyr"
+descr "A Statue of Tyr is here."
+extra {}
+"This is a large statue which greatly resembles Tyr. If you stare
+closely enough you can vaguely make out its eyes move towards you."
+romflags {CHAR_DETECT_INVISIBLE}
+alignment 0
+level 43
+sex SEX_NEUTRAL
+weight 2600
+height 800
+race RACE_NORSE_GOD
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+MSET_ABILITY(25,20,15,10,10,10,10,0)
+MSET_WEAPON(30,20,10,5,20,15)
+MSET_SPELL(0,0,0,0,0,0,0,0,0,0,0)
+position POSITION_STANDING
+default POSITION_STANDING
+end
+
+%reset
+
+/* Door settings */
+
+door cloud_stairs UP {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_PICKPROOF}
+door clouds_s1 DOWN {EX_OPEN_CLOSE, EX_CLOSED}
+door goldgate_in NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door goldgate_out SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door court_p4 NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door court_p4 EAST {EX_OPEN_CLOSE, EX_CLOSED}
+door warn_room NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door warn_room SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door stairs_s1 WEST {EX_OPEN_CLOSE, EX_CLOSED}
+door nasty_trap SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door torture_rm DOWN {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door cavern UP {EX_OPEN_CLOSE, EX_CLOSED}
+
+/* End of Door Settings */
+
+/* Reset for Geezer quest */
+
+load old_geezer into rickety_shack max 1
+
+/* Reset for Aaronwolf the teacher */
+/*
+load aaronwolf into tiamat/moun_cav15 max 1
+*/
+/* Back to Asgaard Reset info */
+
+/* Reset Information for Mobiles and objects */
+
+load wiz/wiz_board into clouds_s10
+load udgaard/bull_board into clouds_s11
+load wiz/wiz_board into wiz/board_room
+
+load hugin_raven into cloud_stairs max 1
+
+load munin_raven into cloud_stairs max 1
+load hela into torture_rm max 1
+
+
+load field_mouse into field_f3 max 1
+load field_mouse into field_f5 max 1
+load field_mouse into field_f7 max 1
+load rat into field_f4 max 1
+
+
+load odin into clouds_s9 max 1
+{
+	equip gray_kirtle position WEAR_BODY
+        equip dragon_slayer position WEAR_WIELD
+}
+
+load heimdall into bifrost_bridge max 1
+
+load hermod into col_garden max 1
+{
+        equip gauntlets_flm position WEAR_HANDS
+}
+
+load frigga into cavern max 1
+{
+        equip blue_robe position WEAR_NECK_1
+}
+
+load tyr into map_rm max 1
+{
+        equip war_spear position WEAR_WIELD
+        equip war_slv position WEAR_ARMS
+        load horn
+}
+
+load freya into train_gnd2 max 1
+{
+        equip freyan_leg position WEAR_LEGS
+}
+
+load loki into cavern max 1
+{
+	load time_scroll
+}
+
+load thor into vulture_rm max 1
+{
+        equip thor_hammer position WEAR_WIELD
+}
+
+load hoder into gardens_g4 max 1
+	/* XXX load donate_cap */
+
+load eagle into cloud_stairs local 1
+{
+	equip talon position WEAR_WIELD
+}
+
+load eagle into clouds_s1 local 1
+{
+        equip talon position WEAR_WIELD
+}
+
+load eagle into clouds_s3 local 1
+{
+        equip talon position WEAR_WIELD
+}
+
+load eagle into clouds_s5 local 1
+{
+        equip talon position WEAR_WIELD
+}
+
+load eagle into clouds_s8 local 1
+{
+        equip talon position WEAR_WIELD
+}
+
+load eagle_servant into clouds_s9 local 2
+{
+        equip talon position WEAR_WIELD
+}
+
+load vulture into entcourt max 8 local 1
+load vulture into court_p1 max 8 local 1
+load vulture into court_p2 max 8 local 1
+load vulture into warn_room max 8 local 1
+load vulture into vulture_rm max 8 local 2
+load vulture into slave_rm max 8 local 1
+
+load giant_raven into clouds_s2 max 3 local 1
+load giant_raven into slave_rm max 3 local 1
+load giant_raven into gardens_g5 max 3 local 1
+
+load frigga_horse into train_gnd1 max 4 local 1
+load frigga_horse into train_gnd4 max 4 local 1
+load frigga_horse into train_gnd2 max 4 local 2
+
+load o_statue into statue_room max 1
+load f_statue into statue_room max 1
+load t_statue into statue_room max 1
+
+%end
+
+
+
+
+
+
+
+
+
+

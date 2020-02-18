@@ -1,0 +1,4001 @@
+/*
+filename    torsbay
+password    redcrab
+changedby   Papi
+EmailAdd    
+request     compile
+version     17
+END HEADER*/
+
+
+#include "values.h"
+#include "wmacros.h"
+#include "composed.h"
+
+#define SEA_LEGS "Sea Legs"
+
+%zone torsbay
+title "Torsbay"
+
+lifespan 20
+reset RESET_ANYHOW
+creators {"cabal", "thesar", "zig"}
+notes
+"TORSBAY is a port town for levels 20-30. It will also serve as a major
+port to interconnect the Midgaard area with distant lands via DIL-run
+sailing ships. These serve as the gateways to the FORIEGN LANDS (those
+zones that don't fit in directly with the Midgaard history/plot/style)."
+
+
+
+#define FISH_PROD				\
+{"catfish@torsbay 10 20",		\
+ "small_bass@torsbay 10 20",	\
+ "large_bass@torsbay 10 20",	\
+ "flounder@torsbay 10 20",		\
+ "red_herring@torsbay 10 20",	\
+ "cod@torsbay 10 20",			\
+ "salmon@torsbay 10 20"}
+
+#define FISH_MSG                                                \
+{"$1n says 'I dont think I sell those, $3n.'",                  \
+ "$1n says 'I cannot buy what you do not have $3n'",            \
+ "$1n says 'I dont delve into trading $2n, my apologies.'",     \
+ "$1n says 'You cannot afford my $2n.'",                        \
+ "$1n says 'Enjoy the $2n, I hope it feeds you well.'",         \
+ "$1n says 'Thank you for your buisness.'",                     \
+ "$1n says 'Im all out of $2ns, my apologies.'",                \
+ "$1n says 'Im taking a break to rest my bones.'",              \
+ "$1n says 'I dont have any use for that $2n.'",                \
+ "$1n says 'It looks like you cannot afford that the $2n, $3n'"}
+
+#define FISH_OPEN_TIMES {"1"}
+
+#define FISH_ITEM_TYPE "19"
+
+#define FISH_MAX_CASH 409600
+
+#define FISH_SELL_PROFIT 115
+
+#define FISH_BUY_PROFIT 75
+
+
+#define MAGIC_PROD			\
+{"scroll_1@torsbay 5 10",       \
+ "scroll_2@torsbay 5 10",       \
+ "scroll_3@torsbay 5 10",       \
+ "potion_1@torsbay 5 10",       \
+ "potion_2@torsbay 5 10",       \
+ "potion_3@torsbay 5 10"}
+
+#define MAGIC_MSG                                               \
+{"$1n says 'I dont think I sell those, $3n.'",                  \
+ "$1n says 'I cannot buy what you do not have $3n'",            \
+ "$1n says 'I dont delve into trading $2n, my apologies.'",     \
+ "$1n says 'You cannot afford my $2n.'",                        \
+ "$1n says 'Enjoy the $2n, I hope it aids in your journeys'.",  \
+ "$1n says 'Thank you for your buisness.'",                     \
+ "$1n says 'Im all out of $2ns, my apologies.'",                \
+ "$1n says 'Im taking a break to produce some new items.'",     \
+ "$1n says 'I dont have any use for that $2n.'",                \
+ "$1n says 'It looks like you cannot afford that the $2n, $3n"}
+
+#define MAGIC_OPEN_TIMES {"1"}
+
+#define MAGIC_ITEM_TYPE "2 3 10"
+
+#define MAGIC_MAX_CASH 409600
+
+#define MAGIC_SELL_PROFIT 115
+
+#define MAGIC_BUY_PROFIT 75
+
+#define BOAT_PROD			\
+{"canoe@midgaard 5 10",		\
+ "raft@midgaard 5 10",		\
+ "kayak@torsbay 10 20"}
+
+#define BOAT_MSG                                                \
+{"$1n says 'I dont think I sell those, $3n.'",                  \
+ "$1n says 'I cannot buy what you do not have $3n'",            \
+ "$1n says 'I dont delve into trading $2n, my apologies.'",     \
+ "$1n says 'You cannot afford my $2n.'",                        \
+ "$1n says 'Enjoy the $2n, I hope it sails well for you'.",     \
+ "$1n says 'Thank you for your buisness.'",                     \
+ "$1n says 'Im all out of $2ns, my apologies.'",                \
+ "$1n says 'Im taking a break to produce some new items.'",     \
+ "$1n says 'I dont have any use for that $2n.'",                \
+ "$1n says 'It looks like you cannot afford that the $2n, $3n"}
+
+#define BOAT_OPEN_TIMES {"1"}
+
+#define BOAT_ITEM_TYPE "22"
+
+#define BOAT_MAX_CASH 409600
+
+#define BOAT_SELL_PROFIT 115
+
+#define BOAT_BUY_PROFIT 75
+
+#define SUPP_PROD					\
+{"bamboo_rod@torsbay 10 15",		\
+ "metal_rod@torsbay  5 10",			\
+ "pg_rod@torsbay 1 2",				\
+ "small_bait_box@torsbay 10 20",	\
+ "medium_bait_box@torsbay 10 20",	\
+ "large_bait_box@torsbay 10 20"}
+
+#define SUPP_MSG														\
+{"$1n says 'I dont think I sell those, $3n.'",							\
+ "$1n says 'I cannot buy what you do not have $3n'",					\
+ "$1n says 'I dont delve into trading $2n, my apologies.'",				\
+ "$1n says 'You cannot afford my $2n.'",								\
+ "$1n says 'Enjoy the $2n, I hope it helps you catch many fish!'",		\
+ "$1n says 'Thank you for your buisness.'",								\
+ "$1n says 'Im all out of $2ns, my apologies.'",						\
+ "$1n says 'Im taking a break to produce some new items.'",				\
+ "$1n says 'I dont have any use for that $2n.'",						\
+ "$1n says 'It looks like you cannot afford that the $2n, $3n"}
+
+#define SUPP_OPEN_TIMES {"1"}
+
+#define SUPP_ITEM_TYPE "12"
+
+#define SUPP_MAX_CASH 409600
+
+#define SUPP_SELL_PROFIT 115
+
+#define SUPP_BUY_PROFIT 75
+
+
+
+/* -+-+-+-+-+-+-+-+- MAJOR MOB DEFINITIONS -+-+-+-+-+-+-+-+-+-+ */
+
+/* GENERIC PORT GUARD */
+#define M_PORT_GUARD\
+     race RACE_HUMAN \
+     height 180 \
+     weight 100 \
+     NATURAL_DEF(WPN_FIST, ARM_CLOTHES) \
+     alignment 400 \
+     MSET_ABILITY(15,20,20,10,5,30,0,0) \
+     MSET_WEAPON(6,13,6,6,6,6) \
+     MSET_SPELL(4,4,4,5,5,5,6,5,7,6,6)
+
+
+%dil
+
+/*
+Port name
+Cost
+Trip Length
+Symbolic room name
+*/
+
+
+dilbegin shipseller(workroom:string, passdest:stringlist);
+var
+  aDest : stringlist;
+  aCost : stringlist;
+  aLength : stringlist;
+  aRoom : stringlist;
+  buyer : unitptr;
+  fol   : unitptr;
+  gcost : integer;
+  scost  : string;
+  ship : unitptr;
+  xtr : extraptr;
+  x : integer;
+  i : integer;
+  selfname : string;
+  whereto : string;
+code
+{
+  :init:
+  heartbeat := 5;
+  i := 0;
+
+  while(i <= length(passdest)) {
+    addstring(aDest, passdest.[i]);
+	 addstring(aCost, passdest.[i+1]);
+	 addstring(aLength, passdest.[i+2]);
+	 addstring(aRoom, passdest.[i+3]);
+	 i:=i+4;
+  }
+  addextra(self.extra, {"$numofships"}, itoa(length(aDest)));
+  dilcopy("shipcounter@torsbay()", self);
+
+  :begin:
+
+  wait(SFB_CMD, TRUE);
+  buyer := activator;
+  secure(buyer, begin);
+  if (self.outside != findroom(workroom))
+    goto begin;
+  if (command("list")) {
+    block;
+    i:=0;
+	 act("Ships are available for the following destinations:",
+	     A_SOMEONE, buyer, null, null, TO_CHAR);
+	 act("---------------------------------------------------",
+	     A_SOMEONE, buyer, null, null, TO_CHAR);
+  	 while(i <= length(aDest)) {
+   	 scost := moneystring(atoi(aCost.[i]), FALSE);
+	    act("$2t : $3t per person : " + aLength.[i] + " hour trip.",
+	       A_SOMEONE, buyer, aDest.[i], scost, TO_CHAR);
+	    i:=i+1;
+	 }
+	 goto begin;
+  } else if (command("hire")) {
+    block;
+	 whereto := argument;
+	 if (not(whereto in aDest)) {
+	   exec("say Eh?  Where did you say you wanted to go?  Don't think I " +
+		    "have heard of that place.", self);
+      goto begin;
+	 }
+    xtr := "$numofships" in self.extra;
+	 if ( atoi(xtr.descr) <= 0 ) {
+	   exec("say Sorry, All the ships are out to sea..  One should be "+
+		     "arriving back at port anytime.  Try again later.", self);
+	   goto begin;
+	 }
+	 i := ((whereto in aDest)-1);
+	 x := 1;
+	 foreach (UNIT_ST_PC|UNIT_ST_NPC, fol)
+	 {
+	   if ((fol != buyer) and (fol.master == buyer))
+		   x:=x+1;
+	 }
+
+	 gcost := x*(atoi(aCost.[i]));
+    scost := moneystring(gcost, FALSE);
+   act("That will be $2t for your party of "+itoa(x)+" to $3t.",
+	        A_SOMEONE, buyer, scost, aDest.[i], TO_CHAR);
+	act("To accept these charges nod, otherwise shake.",
+	     A_SOMEONE, buyer, null, null, TO_CHAR);
+
+   wait(SFB_CMD, ( (activator == buyer) and
+	              ( (command(CMD_NOD)) or (command(CMD_SHAKE)))) );
+
+   if (command(CMD_SHAKE)) {
+	   exec("Say Quit wasting my time then. Be off!", self);
+		goto begin;
+	}
+   pause;
+   if (transfermoney(buyer, null, gcost)) {
+	   act("Thank you for the $2t for your party of "+itoa(x)+" to $3t.",
+	        A_SOMEONE, buyer, scost, aDest.[i], TO_CHAR);
+	   act("$1n books passage for $1sself and $1s party to $3t.",
+	        A_SOMEONE, buyer, null, aDest.[i], TO_REST);
+   } else {
+	   act("What are you a beggar?  Get out of here!",
+	        A_SOMEONE, buyer, null, null, TO_CHAR);
+	   goto begin;
+	}
+	xtr := "$numofships" in self.extra;
+   xtr.descr := itoa(atoi(xtr.descr)-1);
+
+	ship := load("ship@torsbay");
+	secure(ship, begin);
+
+	foreach (UNIT_ST_PC|UNIT_ST_NPC, fol)
+	 {
+	   if ((fol == buyer) or (fol.master == buyer))
+		{
+		   act("You follow the captain to his ship.",
+				  A_SOMEONE, fol, null, null, TO_CHAR );
+		   act("$1 follows the captain to the ship.",
+				  A_SOMEONE, fol, null, null, TO_REST );
+		   link(fol, ship);
+		}
+	 }
+	selfname := self.nameidx + "@" + self.zoneidx;
+	dilcopy("sail@torsbay("+aDest.[i]+","+aRoom.[i]+","+aLength.[i]+
+	                      ","+selfname+")", ship);
+   link(ship, findroom("ocean@torsbay"));
+   unsecure(ship);
+	goto begin;
+ }
+  goto begin;
+}
+dilend
+
+dilbegin sail(dest:string, sroom:string, time:string, sellername:string);
+var
+  x : integer;
+  i : integer;
+  actions : stringlist;
+  u : unitptr;
+code
+{
+  :init:
+  x := 1;
+  actions := {"The ship rocks back and forth gently upon the waves.",
+              "You hear faint cracking sounds comming from the ship.",
+              "A seagull flying overhead delivers a nice package to the top
+of your head",
+				  "A wave crashes over the ship drenching you to the bone."};
+   heartbeat:=15;
+	pause;
+	act("The captain utters a few arcane words and the boat is set a drift "+
+	    "speeding its way toward its destination of $2t.",
+	    A_ALWAYS, self.inside, dest, null, TO_ALL);
+	pause;
+	act("Suddenly the captain disappears into thin air and you only hope that
+"+
+	    "you are going to make it to shore alive.",
+	    A_ALWAYS, self.inside, null, null, TO_ALL);
+
+  heartbeat := PULSE_SEC*60;
+
+  while (x < ( (atoi(time))*5 ) ) {
+    i := (rnd(1, length(actions)) -1);
+	 act(actions.[i], A_SOMEONE, self.inside, null, null, TO_ALL);
+	 pause;
+	 x := x+1;
+  }
+  heartbeat := PULSE_SEC*30;
+  act("Land Ho!  Off in the distance you can see the port of $2t.",
+      A_SOMEONE, self.inside, dest, null, TO_ALL);
+  act("Your stomach relaxes as you relize you are going to again be "+
+      "on solid ground in a few minutes.",
+      A_SOMEONE, self, dest, null, TO_ALL);
+  pause;
+  heartbeat := 4;
+  act("You here a solid thud as the boat docks at the port of $2t.",
+      A_SOMEONE, self.inside, dest, null, TO_ALL);
+  pause;
+  act("The captain appears out of thin air and ushers you off the ship.",
+      A_SOMEONE, self.inside, null, null, TO_ALL);
+  while(self.inside) {
+    u := self.inside;
+	 secure(u, loop);
+    link(u, findroom(sroom));
+	 exec("look", u);
+	 act("$2n exits a long slender ship.",
+	      A_SOMEONE, u, null, null, TO_REST);
+	 :loop:
+	 unsecure(u);
+  }
+  sendtoall("add", sellername);
+  destroy(self);
+}
+dilend
+
+dilbegin shipcounter();
+var
+  x : integer;
+ xtr : extraptr;
+code
+{
+:init:
+heartbeat :=4;
+
+:begin:
+wait(SFB_MSG, "add" in argument);
+  xtr := "$numofships" in self.extra;
+  xtr.descr := itoa(atoi(xtr.descr)+1);
+goto begin;
+}
+dilend
+
+
+
+dilbegin bait_look_dil();
+
+code {
+
+:start:
+   wait(SFB_DONE,command(CMD_LOOK) and (self == target));
+   if (self.value[1] > 0)
+   {
+      sendtext("There is enough bait left to bait your hook "
+         +itoa(self.value[1])+" times.&n",activator);
+      goto start;
+   }
+   else
+   {
+      sendtext("The box of bait is empty!&n",activator);
+      goto start;
+   }
+
+}
+dilend /* bait_look_dil */
+
+
+dilbegin rod_look_dil();
+
+code {
+
+:start:
+   wait(SFB_DONE,command(CMD_LOOK) and
+                (self == target));
+   if (self.value[1] > 0)
+   {
+      sendtext("The hook on your fishing rod is baited.&n",activator);
+      goto start;
+   }
+   else
+   {
+      sendtext("There is no bait on your hook!&n",activator);
+      goto start;
+   }
+
+}
+dilend /* rod_look_dil */
+
+
+dilbegin rod_bait_dil();
+
+var
+   pc		: unitptr;
+   fishrod	: unitptr;
+   cig		: unitptr;
+   cigname	: string;
+
+code {
+
+:start:
+   wait(SFB_CMD,command("bait") and
+                (argument in {"hook","pole","rod"}) and
+                (self.outside == activator));
+   pc := activator;
+   secure(pc,lost_pc);
+   block;
+   fishrod := findunit(pc,"fishing rod",FIND_UNIT_IN_ME,pc);
+   if (fishrod == null)
+   {
+      sendtext("You don't have a fishing rod!&n",pc);
+      goto start;
+   }
+   if (self.value[1] < 1)
+   {
+       sendtext("You are unfortunately out of bait.&n",pc);
+       goto start;
+   }
+   if (fishrod.value[1] > 0)
+   {
+       sendtext("Your fishing rod is already baited.&n",pc);
+       goto start;
+   }
+   self.value[1] := self.value[1] - 1; /* one bait less */
+   fishrod.value[1] := self.value[2];  /* bait the hook */
+   sendtext("You skillfully bait your fishing rod's hook.&n",pc);
+   act("$1n skillfully baits the hook on $1s fishing rod.",
+      A_SOMEONE,pc,null,null,TO_REST);
+   goto start;
+
+:lost_pc:
+   unsecure(pc);
+   goto start;
+
+}
+dilend /* rod_bait_dil */
+
+
+dilbegin rod_unbait_dil();
+
+var
+   pc		: unitptr;
+   fishrod	: unitptr;
+   cig		: unitptr;
+   cigname	: string;
+
+code {
+
+:start:
+   wait(SFB_CMD,command("unbait") and
+                (argument in {"hook","pole","rod"}) and
+                (self.outside == activator));
+   pc := activator;
+   secure(pc,lost_pc);
+   block;
+   if (self.value[1] < 1)
+   {
+       sendtext("Your fishing rod is not baited!&n",pc);
+       goto start;
+   }
+   self.value[1] := 0;  /* unbait the hook, bait is lost */
+   sendtext("You skillfully remove the bait from your fishing rod's
+hook.&n",pc);
+   act("$1n skillfully removes the bait from the hook on $1s fishing rod.",
+      A_SOMEONE,pc,null,null,TO_REST);
+   goto start;
+
+:lost_pc:
+   unsecure(pc);
+   goto start;
+
+}
+dilend /* rod_unbait_dil */
+
+/*
+fish_dil goes on the fishing rod
+value[0] is the rod's quality (1 is lowerst, 3 is highest)
+value[1] is a flag indicating if the hook is baited. 1 = baited, 0 = no
+bait
+value[2] indictates a number of things.
+         0 = line is not cast
+         1 = line is cast
+         2 = line is cast and a fish has taken the bait, we can jerk now
+         3 = we got the fish with the jerk, time to reel in
+*/
+
+dilbegin fish_dil();
+
+var
+   pc	: unitptr;
+   h	: integer;
+   i	: integer;
+   j	: integer;
+   k	: integer;
+   l	: integer;
+   fish : unitptr;
+   here : unitptr;
+   m	: integer;
+   n	: integer;
+   wt	: integer;
+
+code {
+
+:init:
+   heartbeat := PULSE_SEC*3;
+   self.value[2] := 0;
+   h := interrupt(SFB_DONE,(command(CMD_REMOVE)) and
+                           (medium == self),lost_pc);
+   i := interrupt(SFB_CMD,(command("jerk")) and
+                          (self.value[2] == 2) and
+                          (activator == self.outside),jerk);
+   j := interrupt(SFB_CMD,(command("jerk")) and
+                          (self.value[2] == 1) and
+                          (activator == self.outside),jerk_empty);
+   k := interrupt(SFB_CMD,(command("reel")) and
+                          (self.value[2] == 3) and
+                          (activator == self.outside),reel);
+   l := interrupt(SFB_CMD,(command("reel")) and
+                          (self.value[2] < 3) and
+                          (self.value[2] > 0) and
+                          (activator == self.outside),reel_empty);
+:start:
+   self.value[2] := 0;
+   wait(SFB_CMD,(command("cast")) and
+                (argument == "line") and
+                (activator == self.outside));
+   block;
+   pc := activator;
+   secure(pc,lost_pc);
+   if (self.equip != WEAR_HOLD)
+   {
+      sendtext("You must hold your fishing rod to use it.&n",activator);
+      goto start;
+   }
+   if (self.value[1] < 1)
+   {
+      sendtext("Maybe you should bait your hook first?&n",activator);
+      goto start;
+   }
+   here := pc.outside;
+   if (here.type != UNIT_ST_ROOM) /* maybe in a boat? */
+      here := here.outside;
+   if (here.type != UNIT_ST_ROOM)
+   {
+      sendtext("You are not near water!&n",pc);
+      goto start; /* sod it, no fishing from inside boats in boats etc */
+   }
+   if ((here.movement == SECT_WATER_SWIM) or
+       (here.movement == SECT_WATER_SAIL) or
+       (here.movement == SECT_UNDER_WATER))
+      goto go_fish;
+   n := 0;
+   while (n < 6)
+   {
+         if ((here.exit_to[n].movement == SECT_WATER_SWIM) or
+             (here.exit_to[n].movement == SECT_WATER_SAIL) or
+             (here.exit_to[n].movement == SECT_UNDER_WATER))
+            goto go_fish;
+         else
+            n := n + 1;
+   }
+   sendtext("You are not near water!&n",pc);
+   goto start; /* We are not anywhere near water */
+
+
+:go_fish:
+   self.value[2] := 1; /* line cast */
+   sendtext("You cast your line into the water.&n",pc);
+   act("$1n casts $1s line into the water and starts waiting for a fish.",
+      A_SOMEONE,pc,null,null,TO_REST);
+   sendtext("Your bobber gently bobs on the water.&n",pc);
+   act("$1n's bobber gently bobs on the water.",
+      A_SOMEONE,pc,null,null,TO_REST);
+   wt := rnd(10,15); /* determine waiting time */
+   heartbeat := PULSE_SEC*wt;
+   wait(SFB_TICK,TRUE);
+   m := rnd(1,3);
+   n := 0;
+   while (n != m)
+   {
+      wait(SFB_TICK,TRUE);
+      on rnd(0,4) goto bob1,bob2,bob3,bob4,bob5;
+   :bob1:
+      sendtext("Your bobber gently bobs on the water.&n",pc);
+      act("$1n's bobber gently bobs on the water.",
+         A_SOMEONE,pc,null,null,TO_REST);
+      goto bobend;
+   :bob2:
+      sendtext("Something is disturbing your bobber.&n",pc);
+      act("$1n's bobber is disturbed by something unseen.",
+         A_SOMEONE,pc,null,null,TO_REST);
+      goto bobend;
+   :bob3:
+      sendtext("Your bobber disappears below the water surface for a "+
+         "split second.&n",pc);
+      act("$1n's bobber dissapears below the water surface for a split "+
+         "second.",A_SOMEONE,pc,null,null,TO_REST);
+      goto bobend;
+   :bob4:
+      sendtext("Your bobber dances a little on the currents in the water "+
+         ".&n",pc);
+      act("$1n's bobber dances a little on the currents in the water.",
+         A_SOMEONE,pc,null,null,TO_REST);
+      goto bobend;
+   :bob5:
+      sendtext("It looks like something is nipping at your bait.&n",pc);
+      act("It looks like something is nipping at the bait on $1n's "+
+         "fishing rod.",
+         A_SOMEONE,pc,null,null,TO_REST);
+   :bobend:
+      n := n + 1;
+   }
+   wait(SFB_TICK,TRUE);
+   self.value[2] := 2;
+   sendtext("Your bobber disappears under the water surface!&n",pc);
+   act("$1n's bobber disappears under the water surface!",
+      A_SOMEONE,pc,null,null,TO_REST);
+   heartbeat := PULSE_SEC*5; /* set time allowed to jerk */
+   wait(SFB_TICK,TRUE);
+   wait(SFB_TICK,TRUE);
+   n := (self.value[0]*4) + (self.value[1]*4); /* bonus for good gear */
+   n := rnd(n,100) ;
+   if (n < 50) /* did we lose our bait? */
+   {
+      self.value[1] := 0; /* bait is gone  */
+      self.value[2] := 0; /* line not cast */
+      sendtext("The bait was eaten off your hook!&n",pc);
+      sendtext("Better put on some bait and cast your line again.&n",pc);
+      act("A fish has eaten the bait off the hook of $1n's fishing rod.",
+         A_SOMEONE,pc,null,null,TO_REST);
+      goto start;
+   }
+   else
+   {
+      self.value[1] := 1; /* bait not gone      */
+      self.value[2] := 1; /* line is still cast */
+      heartbeat := PULSE_SEC*3;
+      sendtext("Your bobber surfaces again, you missed your catch!&n",pc);
+      act("$1n's bobber surfaces again, $1e missed $1s catch.",
+         A_SOMEONE,pc,null,null,TO_REST);
+      pause;
+      goto go_fish;
+   }
+
+:jerk:
+   pc := activator;
+   secure(pc,lost_pc);
+   block;
+   if (self.value[2] != 2) log("fishing rod : heh, here and nada on
+hook?");
+   self.value[2] := 1; /* jerk done, set to 1 so no more interrupts */
+   n := (self.value[0]*4) + (self.value[1]*4); /* bonus for good gear */
+   n := rnd(n,100); /* 50/50 chance of catching fish with worst eq */
+   sendtext("You firmly jerk your fishing rod back.&n",pc);
+   act("$1n jerks back $1s fishing rod.",
+      A_SOMEONE,pc,null,null,TO_REST);
+   if (n <= 39) /* did we lose our bait? */
+   {
+      self.value[1] := 0; /* line no longer in the water */
+      self.value[2] := 0; /* bait is gone                */
+      sendtext("The fish has escaped and has eaten the bait off your "+
+         "hook!&n",pc);
+      sendtext("Better put on some bait and cast your line again.&n",pc);
+      act("A fish has eaten the bait off the hook of $1n's fishing rod.",
+         A_SOMEONE,pc,null,null,TO_REST);
+      goto start;
+   }
+   else if (n <= 54) /* still have bait but fish escaped */
+   {
+      self.value[2] := 1; /* line still in water with bait */
+      heartbeat := PULSE_SEC*3;
+      sendtext("The fish has escaped!&n",pc);
+      act("The fish has escaped escaped from $1n's hook!",
+         A_SOMEONE,pc,null,null,TO_REST);
+      pause;
+      goto go_fish;
+   }
+   else
+   {
+      self.value[2] := 3; /* we got a fish! */
+      self.value[1] := 0; /* bait is gone   */
+      sendtext("You got a fish on your hook!&n",pc);
+      sendtext("It is time to reel it in.&n",pc);
+      act("$1n has a fish caught on $1s hook!",
+         A_SOMEONE,pc,null,null,TO_REST);
+      heartbeat := PULSE_SEC*10; /* set time allowed before reel */
+      wait(SFB_TICK,TRUE);
+      wait(SFB_TICK,TRUE);
+      wait(SFB_TICK,TRUE); /* should have reeled before this is over */
+      self.value[1] := 0; /* line no longer in the water */
+      self.value[2] := 0; /* bait is gone                */
+      sendtext("The fish managed to free itself, taking the bait
+too!&n",pc);
+      sendtext("Better put on some bait and cast your line again.&n",pc);
+      act("The fish has managed to free itself and has eaten the bait off
+"+
+         "the hook of $1n's fishing rod.",A_SOMEONE,pc,null,null,TO_REST);
+      goto start;
+   }
+
+:reel:
+   pc := activator;
+   secure(pc,lost_pc);
+   block;
+   if (self.value[2] != 3) log("fishing rod : heh, here and no catch?");
+   self.value[2] := 1; /* no more interrupts from jerk or reel */
+   sendtext("You reel in, fighting the struggling fish.&n",pc);
+   act("$1n reels in, fighting a struggling fish!",
+      A_SOMEONE,pc,null,null,TO_REST);
+   on rnd(0,9) goto f1,f2,f3,f4,f5,f6,f7,f8,f9,f10;
+:f1:
+   fish := load("red_herring@torsbay");
+   link(fish,self.outside);
+   goto finish;
+:f2:
+   fish := load("rainbow_trout@torsbay");
+   link(fish,self.outside);
+   goto finish;
+:f3:
+   fish := load("bluefish@torsbay");
+   link(fish,self.outside);
+   goto finish;
+:f4:
+   fish := load("catfish@torsbay");
+   link(fish,self.outside);
+   goto finish;
+:f5:
+   fish := load("salmon@torsbay");
+   link(fish,self.outside);
+   goto finish;
+:f6:
+   fish := load("flounder@torsbay");
+   link(fish,self.outside);
+   goto finish;
+:f7:
+   fish := load("large_bass@torsbay");
+   link(fish,self.outside);
+   goto finish;
+:f8:
+   fish := load("small_bass@torsbay");
+   link(fish,self.outside);
+   goto finish;
+:f9:
+   fish := load("boot@torsbay");
+   link(fish,self.outside);
+   goto finish;
+:f10:
+   fish := load("cod@torsbay");
+   link(fish,self.outside);
+:finish:
+   sendtext("You have cought a "+fish.name+"!&n",pc);
+   act("$1n has caught a "+fish.name+"!",
+      A_SOMEONE,pc,null,null,TO_REST);
+   goto start;
+
+:jerk_empty:
+   pc := activator;
+   secure(pc,lost_pc);
+   block;
+   heartbeat := PULSE_SEC*3;
+   sendtext("You jerked on your fishing rod back too early.&n",pc);
+   act("$1n jerked on $1s fishing rod back too early, no catch this time.",
+      A_SOMEONE,pc,null,null,TO_REST);
+   pause;
+   goto go_fish;
+
+:reel_empty:
+   pc := activator;
+   secure(pc,lost_pc);
+   block;
+   sendtext("You reel in your line.&n",pc);
+   act("$1n reels in $1s line.",
+      A_SOMEONE,pc,null,null,TO_REST);
+   self.value[2] := 0;
+   goto start;
+
+:lost_pc:
+    unsecure(pc);
+    self.value[1] := 0; /* bait is gone */
+    self.value[2] := 0; /* line not cast */
+    goto start;
+
+}
+dilend /* fish_dil */
+
+%rooms
+
+/*---------------------- THE SAILING SHIPS --------------------*/
+
+
+#define SHIP_NAME "Weatherby"
+#define SHIP_MAIN "whb_mid@torsbay"
+#define SHIP_OCEAN "ocean_void@basis"
+#define SHIP_NUMBER 12
+#define SHIP_PORTNAMES \
+   {"Torsbay", "Khorsabad", "Torsbay", "Khorsabad"}
+#define SHIP_PORTS \
+  {"dock1@torsbay", "pier_1@arabian", "dock1@torsbay", "pier_1@arabian",\
+   "dock1@torsbay", "pier_1@arabian", "dock1@torsbay", "pier_1@arabian",\
+   "dock1@torsbay", "pier_1@arabian", "dock1@torsbay", "pier_1@arabian"}
+/*
+ {"dock1@torsbay", "pier_four@torsbay", "dock1@torsbay",
+"pier_four@torsbay",\
+ "dock1@torsbay", "pier_four@torsbay", "dock1@torsbay",
+"pier_four@torsbay",\
+ "dock1@torsbay", "pier_four@torsbay", "dock1@torsbay",
+"pier_four@torsbay"}
+*/
+
+#define SHIP_DEPARTS \
+   {"2", "4", "6", "8", "10", "12", "14", "16", "18", "20", "22", "0"}
+#define SHIP_ARRIVES \
+   {"3", "5", "7", "9", "11", "13", "15", "17", "19", "21", "23", "1"}
+
+ocean
+
+title "The Great Ocean"
+descr
+"   You drifting around in the great ocean."
+movement SECT_WATER_SAIL
+flags {UNIT_FL_NO_WEATHER}
+light 5
+end
+
+			whb_bow
+
+title "The Bow of the Weatherby"
+descr
+"   Standing on the bow of the merchant ship affords a fine view
+of the water and of the great carved prow of the sturdy vessel.  To
+the south lies the the midship with it's great mast and billowing
+square sails."
+
+movement SECT_INSIDE
+south to whb_mid;
+end
+
+			whb_mid
+
+names {"weatherby","ship"}
+title "Midship on the Weatherby"
+descr
+"   You are standing on the upper deck directly under the great reinforced
+mast of the fine sailing vessel.  A network of ropes and pulleys are
+attached to the mast, and might allow you to climb up to a crow's nest
+high above the sails. The massive holds of the Weatherby are just below
+you,
+and you can easily move north to the bow and south to the stern. Strong
+gangplanks are installed on both the port and starboard sides."
+
+extra {"water"}
+"The tall sides of the merchant ship don't let you see the water from here
+at midship. Maybe if you moved to the bow you could get a glimpse of the
+water."
+movement SECT_INSIDE
+north to whb_bow;
+south to whb_stern;
+
+outside_descr "The merchant ship Weatherby is docked here."
+
+down to whb_holds1 open {EX_OPEN_CLOSE, EX_CLOSED} keyword {"holds",
+"hold"};
+
+up to whb_crow_nest keyword {"mast"} descr
+"As you look up you see the Crow's Nest at the top of the mast. You decide
+that it would probably require some climbing skill to reach the nest
+safely.";
+
+/* up to the crow's nest */
+dilcopy climb@basis("whb_mid@torsbay", 10, 15, CMD_UP);
+
+in ocean_void@basis
+
+dilbegin prg2();
+var
+   u      : unitptr;
+
+code
+{
+   :wait_destination_msg:
+   wait(SFB_MSG, TRUE);
+
+   u := findroom(argument);
+   if (u #= null)
+   {
+      log(self.nameidx+"@"+self.zoneidx+" got unknown room "+
+          "command." + argument);
+      goto wait_destination_msg;
+   }
+
+   link(self, u);
+   goto wait_destination_msg;
+}
+dilend
+
+end
+
+			whb_stern
+
+title "The Stern of the Weatherby"
+descr
+"   You are standing on the elevated poop deck of the Weatherby.  The
+perimeter of the deck is fenced by wooden planks up to waist level
+still enabling a good view of the sea.  On either sides of the deck
+are rigging ropes extending up to the mast in midship to the north.
+A trap door leads down to the crew quarters."
+
+movement SECT_INSIDE
+north to whb_mid;
+down to whb_quarters open {EX_OPEN_CLOSE, EX_CLOSED}
+                     keyword {"trap door", "door"};
+end
+
+			whb_quarters
+
+title "The Crew's Quarters on the Weatherby"
+descr
+"   A cosy quarters with a table in the centre and a few chairs.  On
+either sides are neatly-made double-decker beds for the seamen to take
+their rest.  A ladder leads up to the trap door."
+movement SECT_INSIDE
+up to whb_stern open {EX_OPEN_CLOSE, EX_CLOSED}
+                keyword {"trap door", "door"};
+end
+
+			whb_crow_nest
+
+title "The Crow's Nest of the Weatherby"
+descr
+"   You are standing high up in the crow's nest which appears nothing
+more than a large basket.  From here, you have a bird's eye view of
+the sea and your surroundings.  The mast continues extending a few
+yards skywards and flying the ship flag near the top."
+movement SECT_INSIDE
+down to whb_mid keyword {"mast"} descr
+"The view is magnificent and you see all that is going on at the deck
+below.
+As you look down you realize that it could be quite dangerous to take a
+fall
+from up here.";
+
+/* down to the deck */
+dilcopy climb@basis("whb_mid@torsbay", 10, 30, CMD_DOWN);
+end
+
+			whb_holds1
+
+title "The Holds of the Weatherby"
+descr
+"   You are standing in the cargo holds of the Weatherby.  Numerous
+wooden chests and boxes are stacked up in an orderly fashion.  You also
+see some barrels standing among ballast rocks.  The holds continue
+northwards.  A ladder leads up to the upper deck."
+movement SECT_INSIDE
+up to whb_mid open {EX_OPEN_CLOSE, EX_CLOSED}
+              keyword {"holds", "hold", "door"};
+north to whb_holds2;
+end
+
+			whb_holds2
+
+title "The Holds of the Weatherby"
+descr
+"   You are standing in the cargo holds of the Weatherby.  Numerous
+wooden chests and boxes are stacked up in an orderly fashion.  You also
+see some barrels standing among ballast rocks.  The holds continue
+southwards."
+movement SECT_INSIDE
+south to whb_holds1;
+end
+
+/*---------------------- THE PORT --------------------*/
+
+			pier_one
+names {"pier one", "pier"}
+title "The Torsbay docks - Pier One"
+descr
+"     You are at the far western edge of the Torsbay piers, just under the
+high tower of the Harbor Master. To the north, a large cargo entrance leads
+into the pier's warehouse. The docks, crowded with boats, lead to the east
+back towards the village."
+
+movement SECT_INSIDE
+extra {"cargo entrance", "entrance", "warehouse"}
+"     This huge building, you assume, acts as a transfer point for cargo
+being loaded and unloaded from the mighty merchant ships that line the
+pier."
+extra {"tower", "Harbor Master", "harbor"}
+"     A tall tower rises out of a short, squat building to the west. From
+that tower, you would have a great a view of both the harbor and the
+Torsbay
+passage itself."
+extra {"ships", "sailing ships", "boats"}
+"     These vessels are the largest ships you have ever seen, their masts
+stretching to dizzying heights above the harbor. Most of the boats look
+like
+merchant ships, with deep holds for transfering cargo, but among the boats
+you also see slave galleys with mighty rows of oars and sleek warships,
+their
+hulls carved to look like fearsome dragons. The fierce chop of the Torsbay
+rocks to the mighty ships to and fro."
+extra {"docks", "dock", "pier"}
+"     While the wharf at Midgaard might have been impressive, these docks
+are
+obviously designed for the massive ships of the sea, and not river craft.
+The
+wooden pier is nearly 15 meters above the surface of the bay, which would
+allow easy access to any ships moored here, but impossible to launch a
+canoe
+or raft. One particularly sturdy dock leads to the south."
+extra {"bay", "torsbay", "water"}
+"     The dangerous waters of the Torsbay chop and froth, forming large
+whitecaps that lap against the steep walls of the valley. You are suddenly
+struck by the impressive skill it must take to navigate out the Torsbay to
+reach the sea beyond."
+east to pier_two;
+west to harborm1;
+north to warehouse2;
+south to dock1;
+end
+
+
+			pier_two
+names {"pier two", "pier"}
+title "The Torsbay docks - Pier Two"
+descr
+"     The mighty docks continue here, standing high above the choppy waters
+of the Torsbay to the south. A mighty building, part of the Torsbay
+warehouse,
+continues along the north edge of the pier, although you see no entrances
+at
+this point. You do notice a large cargo entrance to the building to the
+west
+near the tower of the Harbor Master, and another door lies further to the
+east along the pier."
+
+movement SECT_INSIDE
+extra {"ships", "sailing ships", "boats"}
+"     These vessels are the largest ships you have ever seen, their masts
+stretching to dizzying heights above the harbor. Most of the boats look
+like
+merchant ships, with deep holds for transfering cargo, but amoung the boats
+you also see slave galleys with mighty rows of oars and sleek warships,
+their
+hulls carved to look like fearsome dragons. The fierce chop of the Torsbay
+rocks to the mighty ships to and fro."
+extra {"docks", "dock", "pier"}
+"     While the wharf at Midgaard might have been impressive, these docks
+are
+obviously designed for the massive ships of the sea, and not river craft.
+The
+wooden pier is nearly 15 meters above the surface of the bay, which would
+allow easy access to any ships moored here, but impossible to launch a
+canoe
+or raft."
+extra {"bay", "torsbay", "coast"}
+"     The dangerous waters of the Torsbay chop and froth, forming large
+whitecaps that lap against the steep walls of the valley. You are suddenly
+struck by the impressive skill it must take to navigate out the Torsbay to
+reach the sea beyond."
+east to pier_three;
+west to pier_one;
+end
+
+			pier_three
+names {"pier three", "pier"}
+title "The Torsbay docks - Pier Three"
+descr
+"     The Torsbay docks stretch out before you to the east and west,
+running
+along the north edge of the massive clearing on the rocky cost. Huge ocean
+going ships, the pride of the fleet of Midgaard, are tied to the docks. To
+the north of the pier lies the entrance to a massive building. A sign hangs
+over the door."
+
+movement SECT_INSIDE
+extra {"sign"}
+"     The sign reads: 'The Baldwin Import Group'."
+extra {"building", "door"}
+"     Most of the building, which stretches further down the pier, appears
+to be warehouse, but the door here looks to lead to some kind of office."
+extra {"ships", "sailing ships", "boats"}
+"     These vessels are the largest ships you have ever seen, their masts
+stretching to dizzying heights above the harbor. Most of the boats look
+like
+merchant ships, with deep holds for transfering cargo, but amoung the boats
+you also see slave galleys with mighty rows of oars and sleek warships,
+their
+hulls carved to look like fearsome dragons. The fierce chop of the Torsbay
+rocks to the mighty ships to and fro."
+extra {"docks", "dock", "pier"}
+"     While the wharf at Midgaard might have been impressive, these docks
+are
+obviously designed for the massive ships of the sea, and not river craft.
+The
+wooden pier is nearly 15 meters above the surface of the bay, which would
+allow easy access to any ships moored here, but impossible to launch a
+canoe
+or raft. You notice a rope hanging over the edge."
+extra {"rope"}
+"     A thick wet rope tied to edge of the docks leads back underneath the
+pier. Knots along the rope would make it easy to climb down."
+extra {"bay", "torsbay", "water"}
+"     The dangerous waters of the Torsbay chop and froth, forming large
+whitecaps that lap against the steep walls of the valley. You are suddenly
+struck by the impressive skill it must take to navigate out the Torsbay to
+reach the sea beyond."
+east to pier_four;
+west to pier_two;
+north to merch1;
+down to under_pier;
+end
+
+
+			pier_four
+names {"pier four", "pier"}
+title "The Torsbay docks - Pier Four"
+descr
+"    The great piers, built upon the narrow canyon-like Torsbay, stretch
+out
+before you to the west. Many mighty sailing ships, much larger than their
+river boat cousins, are moored at the docks here.  A large wooden ramp the
+width of the pier descends to the east to a muddy lot. To the north you see
+the main doors of a seedy tavern, a huge wooden crab hanging over the
+entrance."
+
+movement SECT_INSIDE
+
+
+extra {"ramp"}
+"     You could get a wagon up that ramp easily, and you suppose that it
+makes unloading the cargo from the pier all the easier."
+extra {"tavern"}
+"     You can't see much from outside... you wonder if you should go in and
+take a look around."
+extra {"wooden crab", "crab"}
+"     The crab is carved from a piece of wood, it's legs spread out in the
+parady of some strange dance.. The red paint is peeling off in several
+places."
+extra {"docks", "dock", "pier"}
+"     While the wharf at Midgaard might have been impressive, these docks
+are
+obviously designed for the massive ships of the sea, and not river craft.
+The
+wooden pier is nearly 15 meters above the surface of the bay, which would
+allow easy access to any ships moored here, but impossible to launch a
+canoe
+or raft."
+extra {"ships", "sailing ships", "boats"}
+"     These vessels are the largest ships you have ever seen, their masts
+stretching to dizzying heights above the harbor. Most of the boats look
+like
+merchant ships, with deep holds for transfering cargo, but amoung the boats
+you also see slave galleys with mighty rows of oars and sleek warships,
+their
+hulls carved to look like fearsome dragons. The fierce chop of the Torsbay
+rocks to the mighty ships to and fro."
+extra {"bay", "torsbay", "water"}
+"     The dangerous waters of the Torsbay chop and froth, forming large
+whitecaps that lap against the steep walls of the valley. You are suddenly
+struck by the impressive skill it must take to navigate out the Torsbay to
+reach the sea beyond."
+east to mud_lot;
+west to pier_three;
+north to dance_crab;
+south to dock4;
+end
+
+/* AS SHIPS ARE ADDED, DOCKS should be linked to the PIERS above */
+
+			dock1
+names {"dock one", "dock"}
+title "A sturdy dock on the Torsbay"
+descr
+"     You are standing upon a sturdy dock which rocks on the rough waves
+of the Torsbay. The massive piers of the shipyards lie just to the north,
+this dock obviously having been constructed to service a large merchant
+craft. You get an impressive view of the boats, although your stomach
+complains a bit at the rocking."
+
+movement SECT_INSIDE
+
+
+extra {"ships", "sailing ships", "boats"}
+"     These vessels are the largest ships you have ever seen, their masts
+stretching to dizzying heights above the harbor. Most of the boats look
+like
+merchant ships, with deep holds for transfering cargo, but amoung the boats
+you also see slave galleys with mighty rows of oars and sleek warships,
+their
+hulls carved to look like fearsome dragons. The fierce chop of the Torsbay
+rocks to the mighty ships to and fro."
+extra {"docks", "dock", "pier"}
+"     While the wharf at Midgaard might have been impressive, these docks
+are
+obviously designed for the massive ships of the sea, and not river craft.
+The
+wooden pier is nearly 15 meters above the surface of the bay, which would
+allow easy access to any ships moored here, but impossible to launch a
+canoe
+or raft. The rest of the shipyard's pier lies to the north."
+extra {"bay", "torsbay", "coast"}
+"     The dangerous waters of the Torsbay chop and froth, forming large
+whitecaps that lap against the steep walls of the valley. You are suddenly
+struck by the impressive skill it must take to navigate out the Torsbay to
+reach the sea beyond."
+north to pier_one;
+
+/* This is the docking point for the Weatherby (Pier One, Dock One) */
+
+end
+
+			dock4
+names {"dock four", "dock"}
+title "A sturdy dock on the Torsbay"
+descr
+"     You are standing upon a sturdy dock which rocks on the rough waves
+of the Torsbay. The massive piers of the shipyards lie just to the north,
+this dock obviously having been constructed to service a large merchant
+craft. You get an impressive view of the boats, although your stomach
+complains a bit at the rocking.  There's something hazy just off the dock."
+
+movement SECT_INSIDE
+
+
+extra {"ships", "sailing ships", "boats"}
+"     These vessels are the largest ships you have ever seen, their masts
+stretching to dizzying heights above the harbor. Most of the boats look
+like
+merchant ships, with deep holds for transfering cargo, but amoung the boats
+you also see slave galleys with mighty rows of oars and sleek warships,
+their
+hulls carved to look like fearsome dragons. The fierce chop of the Torsbay
+rocks to the mighty ships to and fro."
+extra {"docks", "dock", "pier"}
+"     While the wharf at Midgaard might have been impressive, these docks
+are
+obviously designed for the massive ships of the sea, and not river craft.
+The
+wooden pier is nearly 15 meters above the surface of the bay, which would
+allow easy access to any ships moored here, but impossible to launch a
+canoe
+or raft. The rest of the shipyard's pier lies to the north."
+extra {"bay", "torsbay", "coast"}
+"     The dangerous waters of the Torsbay chop and froth, forming large
+whitecaps that lap against the steep walls of the valley. You are suddenly
+struck by the impressive skill it must take to navigate out the Torsbay to
+reach the sea beyond."
+north to pier_one;
+
+north to pier_four;
+
+SECRET_DOOR_DIFFICULTY(EAST, 100)
+east to clan_home_005@clans
+keyword {"door", "ship", "fog"} open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN,
+EX_LOCKED} descr
+"Something funny...";
+
+/* This is the docking point for the viking clan's ship (Pier Four, Dock
+Four) */
+
+end
+
+
+			harborm1
+names {"harbor master"}
+title "The Harbor Master's tower"
+descr
+"     You are inside the public office of the Harbor Master. This small,
+crowded room looks like a hurricane has swept through it. Manifests, tide
+and
+weather reports, docking schedules and navigational charts are affixed to
+every surface of the room, including the back of the door leading out onto
+the pier to the east and on the rickety wooden staircase leading up into
+harbor tower."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+extra {"manifest", "manifests"}
+"     You pick out one manifest at random and scan over it. It appears to
+be
+a list of trade goods brought back from some exotic land call Xiyang,
+although
+you have difficulty pronouncing even the simplest name on the list. You get
+the feeling though that most of it is alcohol, since a less than neat hand
+has written 'wine' next to almost every entry."
+extra {"tide report", "weather report", "report", "reports"}
+"     Each one of these reports bears the seal of the royal Astrologer in
+Midgaard... I guess they post these to aid the captains in their planning.
+You try to find the most recent one, and notice that it predicts 'continued
+storms and rough tides' for Torsbay. In curiousity, you check out some
+older
+ones and notice that they are almost all the same!"
+extra {"docking schedules", "schedule", "schedules"}
+"     Long lists of arrival schedules and pier assignments are posted near
+the stairwell. Scanning down the list, you see such unusually named destin-
+ations as the Lost Islands, Cosna and Khorsbad. Your mind races with the
+thought of travelling to such far off lands."
+extra {"chart", "charts", "navigational charts"}
+"     You try to make some sense out of one of the posted navigational
+charts
+for the Torsbay passage, but the intricacies of wind blocks, undertows and
+depth soundings seem as impossible as calculus.  You realize what a
+difficult
+task it would be to navigate the harbor. The map does note, however, that
+there are several rough rocky coves and a system of sea caves in passage."
+east to pier_one;
+up to harborm2;
+end
+
+			harborm2
+names {"harbor master"}
+title "The Harbor View"
+descr
+"     After ascending the rickety spiral staircase up to a dizzying height,
+you are suddenly in the small circular room of the Harbor View.  Windows
+face
+every direction, offering a breathtaking view from above even the highest
+masts of the sailing ships.  To the south, you look out over the docks and
+rough waters of the Torsbay as it snakes away between narrow cliffs to the
+south-west.  To the east of the docks lies the small port village and the
+new road alongside the wide river upstream to Midgaard, hidden somewhere
+to the north through rolling forested hills. "
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+extra {"windows", "window"}
+"     They are made from sturdy glass, somewhat weather beaten, but still
+quite transparant, allowing you to focus easily on any of the features of
+the surrounding landscape."
+extra {"south", "ships", "docks"}
+"     The docks, sprawling along the recently escavated landing on the
+rough
+Torsbay, is a mass of activity. Just navigating away from the teeming mass
+of ships, rocking constantly in the rough water, looks like a nerve-racking
+adventure."
+extra {"torsbay", "bay", "water"}
+"     The Torsbay is a deep twisting bay emptying somewhere to the
+south-west
+into the ocean. It's rough waters form white caps, and many large waves
+tumble constantly across the jutting rock walls of the passage."
+extra {"cliffs"}
+"     The high cliffs on either side of the Torsbay rise like walls of
+broken
+rock, huge waves of brackish water splashing against their base. If a ship
+was not careful while navigating the bay, it would surely be smashed to
+pieces."
+extra {"port village", "village", "port"}
+"     You marvel at the enginnering wonder of the the port village on the
+Torsbay, remembering how many years it took Midgaard engineers to clear out
+the hills to provide access to the water.  A wide road leads from the
+village
+north into the forested hills."
+extra {"new road", "road"}
+"     The New Road, dug from the surrounding hills along the bank of the
+river
+to provide an even road for merchant caravans heading to Midgaard from the
+bay, slices a nearly straight line north from the shoreline.  The thick
+pine
+forest rises up to obscure the view of the road after a short distance."
+extra {"forest", "Midgaard", "forested hills", "hills"}
+"     You can see why they chose to build the port where they did. Massive
+hills, covered with pine forest, spread out to the north from here, but
+these
+hills look much more accessible than the sheer cliffs lining the rest of
+the
+Torsbay.  Somewhere through the forest to the north, if your internal
+compass
+serves you right, must be Midgaard, but even the high towers of the
+Welmar's
+Castle do not show above the tree line."
+extra {"wide river", "river"}
+"     The river drops into the Torsbay somewhere to the east of the port
+village. The New Road from Midgaard runs along it's banks until it veers
+away from the village."
+down to harborm1;
+end
+
+			merch1
+names {"import service"}
+title "The Offices of Baldwin Imports"
+descr
+"     This end of the Torsbay warehouse has been turned into the stately
+offices of the Baldwin Imports. At the north end of the room is a large
+raised podium with a counter facing the pier to the south. A small door
+leads into the warehouse storage area to the west. The walls are adorned
+with all matter of strange goods from far away lands, the spoils of the
+expanding range of Midgaard's Merchant Fleet. There is a small official-
+looking sign hanging on the wall."
+extra {"raised podium", "podium"}
+"You can imagine that whoever is standing on that podium could see right
+over
+the heads of any crowd. Perhaps they use it for auctions as well."
+extra {"strange goods", "goods"}
+"Strange suits of armor are attached to the walls, surrounded by strange
+weapons. Most of what is displayed, however, are trade goods... useful
+items
+such as dried food stuffs, foriegn drinks and native craftsmanship. The
+only
+bear spot on the walls leaves room for a small official-looking sign."
+extra {"small official-looking sign", "small sign", "official sign",
+"sign"}
+"       Welcome to Baldwin Imports
+      Your patronage is appreciated
+    All private importers, please use
+     the cargo entrance at Pier One."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+south to pier_three;
+west to warehouse1;
+end
+
+			warehouse1
+names {"warehouse"}
+title "The Torsbay Warehouse"
+descr
+"     You are in the dusty warehouse of the Torsbay port. Some small amount
+of light comes piercing in from windows high in the vaulted ceiling,
+casting
+glistening rays through the haze of dust. The warehouse continues to the
+west near loading the area and the small office of Baldwin Import sits to
+the east."
+extra {"light", "windows"}
+"The light pours in from windows high out of reach."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+west to warehouse2;
+east to merch1;
+end
+
+			warehouse2
+names {"warehouse"}
+title "The Torsbay Warehouse"
+descr
+"     Here at the west end of the dusty warehouse, massive doors face out
+on
+the piers.  This end of the warehouse is obviously used for loading cargo
+onto wagons for shipment back to Midgaard. The warehouse continues to the
+east. A number of piles of recently purchased goods (with hefty bills of
+sale still attached) litter the floor. Obviously this is the area for their
+incoming purchases."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+east to warehouse1;
+south to pier_one;
+end
+
+			under_pier
+names {"under pier"}
+title "Under the Pier"
+descr
+"     You under the mighty pier on the Torsbay. Great wooden posts stretch
+up from the gravelly beach to the support the pier. As you scan along the
+coast, you see nowhere else you could jump to without getting drenched in
+choppy waters of the bay. A knotted wooden rope leads back up to the pier."
+
+
+extra {"bay", "water"}
+"The water is very rough and choppy - and occasional wave even soaks you
+from the waist down! This little patch of beach seems to be all there is
+..
+it slopes quickly back under the surface of the water and you wonder what
+kind of undertows there might be."
+extra {"rope"}
+"     A thick wet rope tied to edge of the docks hangs down, dangling in
+the
+choopy waves of the bay. Knots along the rope would make it easy to climb
+up."
+
+movement SECT_FIELD
+up to pier_three;
+end
+
+			dance_crab
+names {"dancing crab"}
+title "The Dancing Crab"
+descr
+"     You are in a dark and smokey pub just off the pier at Torsbay. The
+tavern is raised up on wooden pilings to be at the same level as the piers
+themselves, which lie to the south. A stairwell leads east down to the
+village
+square. The walls of this pub are covered with fishing nets and bits of
+nautical gear."
+extra {"fishing nets"}
+"These have obviously seen a lot of work, and have gaping holes in many
+places. They would serve you no use."
+extra {"bits", "nautical gear"}
+"Some old bouys, some small signal sails and even an old harpoon adorn the
+walls of the pub."
+extra {"harpoon"}
+"Zounds! It's been glued to the wall with some kind of strong epoxy. It
+looks
+like a hefty weapon, but you'd have take the whole with you!"
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+south to pier_four;
+east to square;
+end
+
+			mud_lot
+names {"muddy lot"}
+title "A muddy lot"
+descr
+"     You are on a barren lot of ground just north of a gravel beach on the
+Torsbay. This area obviously gets a lot of traffic ... the combination of
+too much traffic and the constant moisture in the air have turned this lot
+into a muddy mess.  A wide ramp leads up to the piers to the west and you
+can spy the village square to the north. A large archway to the east draws
+your attention, a sign rests on top of the archway."
+extra {"sign","archway","arch way"}
+"The sign atop the archway reads:&n
+Happy Harry's Harbor Market&n"
+extra {"ramp", "pier"}
+"The mighty pier of Torsbay stretches off to the west at the top of a wide
+ramp. Sailing ships are spread out across the bay."
+extra {"ships", "sailing ships"}
+"You would have a better view of them from the pier."
+extra {"beach", "gravel beach"}
+"To the south you see a patch of gravel beach. The choppy waters of the bay
+pound it with fierce whitecaps."
+
+movement SECT_SWAMP
+west to pier_four;
+south to gravel_beach;
+north to square;
+east to market_ent;
+end
+
+			gravel_beach
+names {"gravel beach"}
+title "A gravel beach"
+descr
+"     The fierce waves of the Torsbay plummet this small patch of gravel
+beach with a brackish spray. The coarse gravel surface slips quickly
+beneath
+the surface of the bay. A large pile of boulders, left over from the
+excavation of the New Road lie to the west, blocking the view of most of
+ships moored in the harbor. A muddy lot stretches north back towards the
+village and the pier."
+
+
+extra {"waves", "torsbay", "bay", "spray"}
+"Although you could gain entrance to the bay with a canoe or raft here, the
+fierce waters and your lack of serious nautical training make you
+reconsider."
+extra {"boulders"}
+"The large boulders block the view of the ships moored at pier. Huge waves
+cascade against them, making them far to slippery to try and climb."
+extra {"new road", "road"}
+"You can't see the road from here, but you seem to remember it being to the
+north."
+
+movement SECT_FIELD
+north to mud_lot;
+end
+
+
+			square
+names {"square"}
+title "Torsbay Square"
+descr
+"You have entered the fine square of Tor's Bay. To the west you see the
+dingy drinking established named 'The Dancing Crab' and to the east
+is the guard's tower. Looking south a finely trodden path leads to a muddy
+lot Tor's Gate and the New Road lie to the north.  A muddy lot to the south
+sit sat the bottom of a ramp leading up onto the pier."
+
+movement SECT_FIELD
+north to tor_gate;
+west to dance_crab;
+east to guard_tower;
+south to mud_lot;
+end
+
+			guard_tower
+names {"guard post"}
+title "Port Guard post"
+descr
+"     This small squat stone building serves as the offices for the Port
+Guard authority. A stone doorway leads out onto the square to the west."
+flags {UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+west to square;
+end
+
+			tor_gate
+names {"gate", "tor gate"}
+title "Tor's Gate"
+descr
+"     You are at the end of the New Road, passing under Tor's Gate. The
+port
+village of Torsbay lies to the south. In fact, you can smell the
+brackishness
+of the bay waters in the air. The New Road stretches into the forest to the
+north."
+extra {"tor's gate", "gate"}
+"This massive free-standing arch is carved from white marble to appear like
+a giant stroke of forked lightning piercing the ground. It stratles the New
+Road like the legs of a giant. You remember the legend that says the
+Torsbay
+was cut from the face of the land by the mighty Thunder God while fighting
+the giants, and shiver at the power that could carve a channel all the way
+to the distant sea."
+
+movement SECT_FIELD
+south to square;
+north to new_road6;
+end
+
+
+/*------------------------ THE NEW ROAD -------------------------*/
+
+			new_road1
+names {"new road"}
+title "The New Road"
+descr
+"     You are traveling along the New Road, leading south from the
+crossroads
+towards the bay. The road is an engineering marvel, recently completed by
+the best Midgaard engineers. You can see down a reinforced embankment to
+where the great river flows out from under the Midgaard walls. The road
+seems
+to run parallel to the river for a distance before crossing over it further
+into the wooded hills."
+
+movement SECT_FIELD
+north to turning_point@ratswarf;
+south to new_road2;
+end
+
+			new_road2
+names {"new road"}
+title "The New Road"
+descr
+"     You are on the New Road, running north and south from Torsbay to
+Midgaard. This engineering marvel cuts a straight line through the wooded
+hills, running on an embankment above the river."
+
+movement SECT_FIELD
+north to new_road1;
+south to new_road3;
+end
+
+			new_road3
+names {"new road"}
+title "The New Road"
+descr
+"     The trees become thicker here, and the hills more steep as the New
+Road
+cuts a swath through the forest. To the south, the river curves around to
+the
+east under a wooden bridge while a path leads off to the west."
+
+movement SECT_FIELD
+north to new_road2;
+south to bridge;
+west to trail_1@farm descr
+"A small dirt path lies to the west.";
+
+
+end
+
+			bridge
+names {"new road"}
+title "The New Bridge"
+descr
+"     This massive wooden bridge, suspended some 20 meters above the swift
+moving river, allows the New Road to head due south to Torsbay from
+Midgaard
+to the north.  Although the banks of the river are very muddy, they have
+been graded by the engineers who built the New Road to a slope much too
+steep
+to allow access from the bridge down."
+movement SECT_FIELD
+north to new_road3;
+south to new_road4;
+end
+
+			new_road4
+names {"new road"}
+title "The New Road"
+descr
+"     You are on the New Road just south of a wooden bridge over the river.
+Despite the thick tree cover and the meandering hills, the road cuts a
+nearly
+perfect line north and south - a true testament to the skills of the
+engineering crews that built it."
+
+movement SECT_FIELD
+north to bridge;
+south to new_road5;
+end
+
+			new_road5
+names {"new road"}
+title "The New Road"
+descr
+"     Traveling the New Road, a straight passage north and south through
+the hilly forest, you can spy the gates of the Torsbay lying a short
+distance
+to the south. You can smell the faintest hint of the smell of brackish
+water
+on the air. An old path, overgrown and unkept, leads away from the main
+road
+to the east."
+
+movement SECT_FIELD
+north to new_road4;
+south to new_road6;
+/* EVENTUALLY WEST ON A NEW PATH to Hero's Village */
+east to old_path1;
+end
+
+			new_road6
+names {"new road"}
+title "The New Road"
+descr
+"     You are at the south end of the New Road, just north of the mighty
+free-
+standing Tor's Gate. To the south, through the gate, you can see the port
+village on the bay, and the road continues north to Midgaard."
+
+movement SECT_FIELD
+north to new_road5;
+south to tor_gate;
+end
+
+			old_path1
+names {"old path"}
+title "A Worn Path"
+descr
+"     Traveling this small overgrown path makes you appreciate the New Road
+all the more. It meanders a torturous path around the muddy hills, emerging
+from the forest on the banks of a river outside an abandoned lighthouse.
+The
+path leads back to the New Road to the west."
+
+movement SECT_SWAMP
+east to out_light;
+west to new_road5;
+end
+
+			out_light
+names {"outside lighthouse"}
+title "Outside the Lighthouse"
+descr
+"     You are on a small beach on the mighty river, just before it topples
+into the mighty churning Torsbay. To the south stands the old lighthouse, a
+symbol of Midgaard people, now abanonded by the order of King Welmar. You
+could easily enter the river to the east here, but you worry that you would
+be almost immediately swept out into the rough bay. A small overgrown path
+leads through the hills to the west, and another to the north."
+
+movement SECT_FIELD
+west to old_path1;
+east to river8;
+south to ent_light;
+north to old_path2;
+end
+
+			old_path2
+title "An overgrown trail"
+descr
+"     This overgrown path leads north toward what looks like an ancient hut
+of some sort.  The thick brush has long since erased any chance of going
+east
+or west but you can head back south to the lighthouse."
+
+movement SECT_FIELD
+south to out_light;
+north to old_hut;
+end
+
+			old_hut
+title "An overgrown trail"
+descr
+"     The hut is old and does nothing to shield you from the weather
+outside.
+You guess it was at one time the home of the lighthouse keeper, but all
+that
+remains now is dirt.  There are some scuff marks on the ground here."
+
+movement SECT_FIELD
+south to old_path2;
+
+SECRET_DOOR_DIFFICULTY(DOWN, 100)
+down to mcdroog_0@houses
+keyword {"dirt", "ground"} open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN,
+EX_LOCKED} descr
+"Something funny...";
+
+end
+
+			ent_light
+names {"lighthouse"}
+title "The Abandonded Lighthouse"
+descr
+"    It is quite eerie standing in the deserted lighthouse. Light pours in
+the
+broken stones of walls, revealing some rotting furnature and a stairway
+leading up to the now dark light. You remember the stories your parents
+used
+to tell of this lighthouse that guided sailors through the dangerous river
+passage into the bay. But with the completion of the port on the Torsbay,
+King Welmar decreed this passage too dangerous, and ordered the lighthouse
+abandonded."
+
+movement SECT_INSIDE
+north to out_light;
+up to top_light;
+end
+
+			top_light
+names {"lighthouse top"}
+title "The Abandonded Beacon"
+descr
+"     You are at the top of the abandonded lighthouse, and are actually a
+little worried about the stability of the building. The high cliffs carved
+by the river bed limit your view of the surrounding country side, although
+you have a good view of the river as it winds back north, where it is
+joined
+by a small stream.  The brackets for the massive oil lamp light of beacon
+have tarnished and rusted."
+
+movement SECT_INSIDE
+down to ent_light;
+end
+
+
+/*---------------------- THE GREAT RIVER ------------------------*/
+
+			river1
+names {"river"}
+title "Floating Under the City Walls"
+descr
+"     You are floating on a river as it passes under the eastern city wall
+of
+Midgaard. A large archway has been built in the wall to allow the river to
+pass through. You notice that strong metal grates have been installed, but
+seem to be open. The river flows out of the city to the east."
+movement SECT_WATER_SAIL
+special SFUN_FORCE_MOVE
+"torsbay/river2!The river's currents pull you down stream." time
+WAIT_SEC*90 bits SFB_RANTIME
+east to river2;
+west to midgaard/river1;
+end
+
+			river2
+names {"river"}
+title "The River Bend"
+descr
+"     You are at a bend in the river, when it flows from under the Midgaard
+city walls to the west and bends to the south towards the bay. Ahead, you
+can
+see the New Road leading south to the port on the Torsbay, but it has been
+built higher than river on a steep slope to prevent flooding, making it
+impossible to reach from the river."
+movement SECT_WATER_SAIL
+special SFUN_FORCE_MOVE
+"torsbay/river3!The river's currents pull you down stream." time
+WAIT_SEC*90 bits SFB_RANTIME
+south to river3;
+west to river1;
+end
+
+			river3
+names {"river"}
+title "The River Through the Hills"
+descr
+"     You are on a relatively swift portion of the river, as it builds up
+speed from the north heading south into rolling hills, where it looks like
+it bends sharply east. The wooded hills surround you are beautiful, and you
+can spy the New Road built on a high dirt embankment to the east."
+movement SECT_WATER_SAIL
+special SFUN_FORCE_MOVE
+"torsbay/river4!The river's currents pull you down stream." time
+WAIT_SEC*90 bits SFB_RANTIME
+south to river4;
+north to river2;
+end
+
+			river4
+names {"river"}
+title "The River Through the Hills"
+descr
+"    The river runs a snake-like course around these wooded hills, heading
+generally from the north towards the east. Downstream, where the river
+passes
+between two hills, you can see a wooden bridge, allowing the New Road to
+cross
+over the river."
+movement SECT_WATER_SAIL
+special SFUN_FORCE_MOVE
+"torsbay/under_bridge!The river's currents pull you down stream." time
+WAIT_SEC*90 bits SFB_RANTIME
+east to under_bridge;
+north to river3;
+end
+
+			under_bridge
+names {"river"}
+title "Under the Bridge"
+descr
+"     You are under a wooden bridge where the New Road passes over the
+river.
+The muddy banks of the river have been extended by engineers from Midgaard
+to
+allow for the supports of the bridge. You could climb up the soggy banks of
+the hills to gain access to the road.  The river flows on to the east."
+movement SECT_WATER_SAIL
+special SFUN_FORCE_MOVE
+"torsbay/river5!The river's currents pull you down stream." time
+WAIT_SEC*90 bits SFB_RANTIME
+east to river5;
+west to river4;
+up to bridge;
+end
+
+			river5
+names {"river"}
+title "The River Through the Hills"
+descr
+"     You are on a swiftly moving river through the wooded hills. Just up-
+stream to the west, a bridge passes over the river for the New Road leading
+due south into the port on the Torsbay. Downstream to the east, the river
+joins with a slow moving stream as it turns south and heads towards the
+bay."
+movement SECT_WATER_SAIL
+special SFUN_FORCE_MOVE
+"torsbay/river6!The river's currents pull you down stream." time
+WAIT_SEC*90 bits SFB_RANTIME
+west to under_bridge;
+east to river6;
+end
+
+			river6
+names {"river"}
+title "The River Juncture"
+descr
+"     You have floated into a small delta, where a river flowing from the
+west
+and a deep stream flowing from the east join to tumble south towards the
+mighty Torsbay. The current begins to strengthen here as it rolls south
+through increasily rough terrain."
+movement SECT_WATER_SAIL
+special SFUN_FORCE_MOVE
+"torsbay/river7!The river's currents pull you down stream." time
+WAIT_SEC*60 bits SFB_RANTIME
+west to river5;
+east to stream1;
+south to river7;
+end
+
+			river7
+names {"river"}
+title "The Rocky River"
+descr
+"     You are on a rough section of river, fed by the juncture of two
+streams
+from the north tumbling through the steep hills heading south. The water
+has carved a deep ravine through the hills, stark cliffs reaching up to
+both
+sides. Downstream to the south, the river passes by a small lighthouse
+before
+tumbling into the rough brackish waters of the Torsbay."
+movement SECT_WATER_SAIL
+special SFUN_FORCE_MOVE
+"torsbay/river8!The river's currents pull you down stream." time
+WAIT_SEC*60 bits SFB_RANTIME
+south to river8;
+north to river6;
+end
+
+			river8
+names {"river"}
+title "The Torsbay Passage"
+descr
+"     You are on the rough river passage leading south into the Torsbay
+thru
+steep cliffs carved by the water. Just to the west, off a small landing,
+stands a lighthouse, it's tower dark.  Looking ahead into the bay you see
+the
+rough waves of the Torsbay and wonder if your ship can survive the
+buffeting."
+movement SECT_WATER_SAIL
+/* special SFUN_FORCE_MOVE
+"torsbay/ent_bay!The river's swift currents sweep you out into the bay."
+time WAIT_SEC*40 bits SFB_RANTIME
+south to ent_bay;
+*/
+west to out_light;
+north to river7;
+end
+
+			stream1
+names {"stream"}
+title "The Deep Stream"
+descr
+"     You are on a deep stream which flows from the east to the west
+through
+forested hills. Downstream to the west, you see a much wider and faster
+flowing river, which this stream empties into."
+movement SECT_WATER_SAIL
+special SFUN_FORCE_MOVE
+"torsbay/river6!The stream's current draws you west." time WAIT_SEC*120
+bits SFB_RANTIME
+west to river6;
+east to stream2;
+end
+
+			stream2
+names {"stream"}
+title "The Deep Stream"
+descr
+"     You are floating on a deep, slow moving stream from the north,
+leading
+west into the forested hills. Somewhere down stream, you can hear the sound
+of faster moving water."
+movement SECT_WATER_SAIL
+special SFUN_FORCE_MOVE
+"torsbay/stream1!The stream's current draws you west." time WAIT_SEC*120
+bits SFB_RANTIME
+west to stream1;
+north to ratswarf/stream4;
+end
+
+
+/* ----------------- HAPPY HARRY'S HARBOR MARKET ----------------------- */
+
+market_ent
+names {"Happy Harry's Harbor Market"}
+title "Happy Harry's Harbor Market"
+descr
+"    As you enter the Harbor Market, you notice that this market is
+the true center of all activity for the harbor of Torsbay. All sorts
+of vendors sell products that they have accumulated during various
+journeys and travels about the world. You can exit the market to the
+west, or enter shops to the north or south, or continue through the market
+to the east."
+extra {"shops","shop"}
+"Looking north, you see what appears to be some sort of fishing supplies
+shop,
+and to the south lies a fishery, where you can purchase fresh fish."
+north to fish_shop;
+south to fish2_shop;
+west to mud_lot;
+east to market_2;
+end
+
+fish_shop
+names {"Fancy Fred's Fishing Supply Store"}
+title "Fancy Fred's Fishing Supply Store"
+descr
+"  You enter Fred's fishing supply store. Looking around the room, you
+can see all sorts of fishing rods mounted on the walls, and in display
+cases about the room, Fred shows off his fancy collection of lures and
+flies for fishing. You can exit this building to the market to the south.
+A sign is posted on the far wall."
+extra {"rods","flies","fly","lures","lure"}
+"All these fishing supplies can be bought for your use."
+extra {"sign","wall"}
+"The sign reads:&n
+- Use 'list' to see the items you can purchase.&n
+- Use 'buy <item>' to purchase an item.&n
+- Use 'sell <item>' to try and sell an item.&n
+- Use 'request <item>' to see how much an item will cost.&n
+- Use 'value <item>' to see how much the shopkeeper will pay for an
+item.&n"
+movement SECT_CITY
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+ALWAYS_LIGHT
+south to market_ent;
+end
+
+fish2_shop
+names {"Sly Sally's Special Seafood"}
+title "Sly Sally's Special Seafood"
+descr
+"    Out in crates packed with ice, and some barrels of fresh water, you
+observe dozens of types of fish, and various aquatic creatures. The room
+has quite the intresting smell to it. As much as you enjoy the sea, you
+wish Sally would find some sort of incense to replace the malodorous funk
+this room creates. You can exit Sally's Seafood store to the north, back
+into the market. A sign hangs on the wall."
+extra {"sign","wall"}
+"The sign reads:&n
+- Use 'list' to see the items you can purchase.&n
+- Use 'buy <item>' to purchase an item.&n
+- Use 'sell <item>' to try and sell an item.&n
+- Use 'request <item>' to see how much an item will cost.&n
+- Use 'value <item>' to see how much the shopkeeper will pay for an
+item.&n"
+movement SECT_CITY
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+ALWAYS_LIGHT
+north to market_ent;
+end
+
+market_2
+names {"Happy Harry's Harbor Market"}
+title "Happy Harry's Harbor Market"
+descr
+"    As you enter the Harbor Market, you notice that this market is
+the true center of all activity for the harbor of Torsbay. All sorts
+of vendors sell products that they have accumulated during various
+journeys and travels about the world. You can exit the market to the
+east, to some sort of beach or enter shops to the north or south, or
+continue through the market to the west."
+extra {"shops"}
+"Masterful Mike's Magic Store lies to the north, and Big Bobbie's Boat Shop
+lies to the south."
+movement SECT_CITY
+west to market_ent;
+east to beach_1;
+north to magic_shop;
+south to boat_shop;
+end
+
+magic_shop
+names {"Masterful Mike's Magic Shop"}
+title "Masterful Mike's Magic Shop"
+descr
+"    You enter into the magic shop noticing that this room is considerably
+spartan. Only one display case is placed along the western wall. By looking
+at the amount of dirt on the floor, its safe to assume that this store
+probably doesnt do much buisness. There is a sign neatly hung on the
+wall."
+extra {"display case","case"}
+"The case is filled with magical scrolls and potions."
+extra {"sign","wall"}
+"The sign reads:&n
+- Use 'list' to see the items you can purchase.&n
+- Use 'buy <item>' to purchase an item.&n
+- Use 'sell <item>' to try and sell an item.&n
+- Use 'request <item>' to see how much an item will cost.&n
+- Use 'value <item>' to see how much the shopkeeper will pay for an
+item.&n"
+movement SECT_CITY
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+ALWAYS_LIGHT
+south to market_2;
+end
+
+boat_shop
+names {"Big Bobbie's Boat Shop"}
+title "Big Bobbie's Boat Shop"
+descr
+"    You enter the store, looking about you see some of the finest small
+watercraft you have ever seen.  Wood shavings litter the floor around you,
+apparently from some of the newer boats created. You can exit this store
+by proceeding back to the north. A plaque is mounted on the wall."
+extra {"plaque","wall"}
+"The sign reads:&n
+- Use 'list' to see the items you can purchase.&n
+- Use 'buy <item>' to purchase an item.&n
+- Use 'sell <item>' to try and sell an item.&n
+- Use 'request <item>' to see how much an item will cost.&n
+- Use 'value <item>' to see how much the shopkeeper will pay for an
+item.&n"
+movement SECT_CITY
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+ALWAYS_LIGHT
+north to market_2;
+end
+
+beach_1
+names {"sandy beach","beach"}
+title "A sandy beach"
+descr
+"    You stand here on the edge of a shallow body of water. The water
+is shallow enough that boats cannot travel upon this water, however this is
+an area of many water sports, including fishing and swimming. You can
+travel
+north along this beach, or head west, into some sort of market place."
+movement SECT_FIELD
+east to water_1;
+west to market_2;
+north to beach_2;
+end
+
+beach_2
+names {"sandy beach","beach"}
+title "A sandy beach"
+descr
+"    You stand here on the edge of a shallow body of water. The water
+is shallow enough that boats cannot travel upon this water, however this is
+an area of many water sports, including fishing and swimming. You can
+travel
+north and south along the beach, while travel west is blocked by a dense
+forest."
+movement SECT_FIELD
+east to water_2;
+north to beach_3;
+south to beach_1;
+end
+
+beach_3
+names {"sandy beach","beach"}
+title "A sandy beach"
+descr
+"    You are staning here on the edge of a body of water. The water is
+shallow and prevents boats from traveling upon this water, however this is
+an area of many water sports, including fishing and swimming. You can
+travel
+north and south along the beach, while travel west is blocked by a dense
+forest. Looking to the far north, you believe you see a wrecked ship."
+movement SECT_FIELD
+east to water_3;
+north to beach_4;
+south to beach_2;
+end
+
+beach_4
+names {"sandy beach","peninsula","beach"}
+title "A peninsula in the sandy beach"
+descr
+"  Here you are surrounded on all three sides by the shallow waters.
+The water is much too shallow to consider sailing a boat upon, yet it
+would seem, someone had once made an attempt to sail these waters, for
+lying directly to your north is a large ship, which has been stranded
+for years dug into the sandy bottom, a gang plank connects the ship
+and the beach to the north."
+movement SECT_FIELD
+east to water_4;
+north to gang_plank;
+south to beach_3;
+end
+
+water_1
+names {"water"}
+title "Sailing in Shallow Waters"
+descr
+" The water here is extemley shallow, your boat continually scrapes
+the bottom. Looking into the crystal clear water, you can see a plethora
+of fish swimming along the sandy bottom. You can sail north, or land
+on a beach to the west."
+movement SECT_WATER_SAIL
+west to beach_1;
+north to water_2;
+end
+
+water_2
+names {"water"}
+title "Sailing in Shallow Waters"
+descr
+" The water here is extemley shallow, your boat continually scrapes
+the bottom. Looking into the crystal clear water, you can see a plethora
+of fish swimming along the sandy bottom. You can sail north or south or
+land on a beach to the west."
+movement SECT_WATER_SAIL
+west to beach_2;
+north to water_3;
+south to water_1;
+end
+
+water_3
+names {"water"}
+title "Sailing in Shallow Waters"
+descr
+" The water here is extemley shallow, your boat continually scrapes
+the bottom. Looking into the crystal clear water, you can see a plethora
+of fish swimming along the sandy bottom. You can sail north or south
+or land on a beach to the west."
+movement SECT_WATER_SAIL
+west to beach_3;
+north to water_4;
+south to water_2;
+end
+
+water_4
+names {"water"}
+title "Sailing in Shallow Waters"
+descr
+" The water here is extemley shallow, your boat continually scrapes
+the bottom. Looking into the crystal clear water, you can see a plethora
+of fish swimming along the sandy bottom. You can sail south, or land
+on a beach to the west."
+movement SECT_WATER_SAIL
+west to beach_4;
+south to water_3;
+end
+
+gang_plank
+names {"gang plank"}
+title "A rotting, wooden gang plank"
+descr
+"  The gang plank stretches 10 feet between the ship and the dry land, as
+you slowly ease up the gang plank, it groans in protest, and you can hear
+the wood beginning to crack and give way. You can travel north onto the
+shipwreck, or south onto a beach."
+movement SECT_INSIDE
+
+
+north to ship_1;
+south to beach_4;
+end
+
+ship_1
+names {"shipwreck","ship"}
+title "Aboard the rotting ship"
+descr
+"   This boat has apparently been shipwrecked for several years. The salty
+water has finally begun to take its toll upon the ship. Every step you take
+you can hear the wood creak in protest, and looking around, you can see
+large
+holes in the wood. You can proceed north and south onto a gang plank."
+extra {"holes","hole"}
+"Apparently, some adventurer was far too careless, and fell through the
+weaker boards"
+movement SECT_INSIDE
+north to ship_2;
+south to gang_plank;
+end
+
+ship_2
+names {"shipwreck","ship"}
+title "Aboard the rotting ship"
+descr
+"  You stand on the edge of a gaping hole  in the middle of the ship. As
+you
+look into the hole you can see down into the ship's hulls. Looking at the
+sides of the hole, you see wreckage and debris which landed in a pile. You
+could easily climb down into the hull, you can also travel north and south
+on the ships deck."
+movement SECT_INSIDE
+north to ship_3;
+down to hull_1;
+south to ship_1;
+end
+
+ship_3
+names {"shipwreck","ship"}
+title "Aboard the shipwreck"
+descr
+"   At this point. You decide that continuing in this direction is far
+too perilous. The wood is beginning to crack, and you can hear debris
+dislodging and falling on the ground below you. You worry you may be the
+next to go."
+movement SECT_INSIDE
+south to ship_2;
+end
+
+hull_1
+names {"hull","shipwreck","ship"}
+title "The hull of the rotting ship"
+descr
+"    You carefully pick your way through lots of debris, making sure each
+step you take is a safe one. Examining the remains of the ship makes you
+think that originally this ship was carrying some sort of weapons, but
+the ship has been picked clean. You can continue through the hull north
+and south."
+movement SECT_INSIDE
+north to hull_2;
+south to hull_3;
+up to ship_2;
+end
+
+hull_3
+names {"hull","shipwreck","ship"}
+title "The hull of the rotting ship"
+descr
+"  The walls are extremley damp here, and as you carefully examine them,
+you
+see that the ship is leaking water, which explains the large puddle of
+water
+to your north. The hull has been picked clean of anything worthwhile, all
+that is left now is rotting wood. You can continue through the hull to the
+south."
+movement SECT_INSIDE
+north to hull_1;
+end
+
+hull_2
+names {"hull","shipwreck","ship"}
+title "The hull of the rotting ship"
+descr
+"  The ship here is extremley unstable, the wood creaks and cracks
+dangerously
+with every step you take. Looking around you can see a wicked rock jutting
+up from the surface of the boat, apparently, this was the demise of this
+fine sailing vessel. You can travel south through the hull."
+extra {"rock"}
+"This rock is shaped like a tooth. Practically razor sharp on all the
+sides,
+seemingly coming from the mouth of the devil himself."
+south to hull_1;
+end
+
+
+
+
+
+/*------------------------ OBJECTS ------------------------------*/
+%objects
+
+/*------------------------ New Eq (added by Zig)
+--------------------------*/
+
+nightmare_shirt
+names {"shirt"}
+title "an 'I survived a trip to Nightmare' tee-shirt"
+descr "an 'I survived a trip to Nightmare' tee-shirt is laying here"
+extra {}
+"A nice white cotton T-shirt with the words I SURVIVED A TRIP TO NIGHTMARE
+across the front of it."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_LEATHER(0,0)
+weight 1
+end
+
+
+golden_dagger
+names {"golden dagger","dagger"}
+title "a golden dagger"
+descr "a golden dagger is thrust into the ground here"
+extra {}
+"This dagger is golden. You suspect it'll assist you with your magical
+abilities."
+WEAPON_DEF(WPN_DAGGER, 0, 0)
+cost 4 SILVER_PIECE
+rent 74 COPPER_PIECE
+weight 2
+end
+
+bloody_mace
+names {"bloody mace","mace"}
+title "a bloody mace"
+descr "a mace lies in a puddle of blood here"
+extra {}
+" This mace has large quantities of blood on it, as if recently used in
+combat."
+WEAPON_DEF(WPN_MACE, 0, 0)
+cost 4 SILVER_PIECE
+rent 74 COPPER_PIECE
+weight 10
+end
+
+iron_sword
+names {"an iron longsword","iron longsword","longsword","sword"}
+title "an iron longsword"
+descr "an iron longsword is here, rusting before your eyes"
+extra {}
+" This iron longsword is fine in craftsmanship. Yet faulty in material.
+You find it awkward to have a sword that would rust so easily"
+WEAPON_DEF(WPN_LONG_SWORD, 0, 0)
+rent 74 COPPER_PIECE
+cost 5 SILVER_PIECE
+weight 10
+end
+
+lth_boots
+names {"boots"}
+title "a pair of black leather boots"
+descr "A pair of black leather boots has been left here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+ARMOUR_LEATHER(0, 0)
+cost 3 SILVER_PIECE
+rent 1 COPPER_PIECE
+dilcopy abi_restrict@function (ABIL_DEX,20,0,0,"");
+weight 10
+end
+
+
+lth_leggings
+names {"leggings"}
+title "a pair of black leather leggings"
+descr "A pair of black leather leggings has been left here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+ARMOUR_LEATHER(0,0)
+dilcopy abi_restrict@function (ABIL_STR,30,0,0,"");
+cost 3 SILVER_PIECE
+rent 1 COPPER_PIECE
+weight 10
+end
+
+
+lth_plate
+names {"plate"}
+title "a black leather breast plate"
+descr "A black leather breast plate has been left here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_LEATHER(0,0)
+dilcopy abi_restrict@function (ABIL_BRA,30,0,0,"");
+cost 3 SILVER_PIECE
+rent 1 COPPER_PIECE
+weight 25
+end
+
+lth_sleeves
+names {"sleeves"}
+title "a pair of black leather sleeves"
+descr "A pair of black leather sleeves has been left here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ARMS}
+ARMOUR_LEATHER(0,0)
+dilcopy abi_restrict@function (ABIL_STR,20,0,0,"");
+cost 3 SILVER_PIECE
+rent 1 COPPER_PIECE
+weight 20
+end
+
+lth_helmet
+names {"helmet"}
+title "a black leather helmet"
+descr "A supreme helmet has been left here."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+ARMOUR_LEATHER(0,0)
+dilcopy abi_restrict@function (ABIL_BRA,20,0,0,"");
+cost 3 SILVER_PIECE
+rent 1 COPPER_PIECE
+weight 10
+end
+
+silver_hoop
+names {"earring"}
+title "a silver hoop earring"
+descr "a silver hoop earring catches light on the ground"
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_EAR}
+HIT_TRANSFER(+1)
+rent 25 COPPER_PIECE
+end
+
+chain_bracelet
+names {"chain bracelet","bracelet"}
+title "a chain bracelet"
+descr "a chain bracelet is on the ground here"
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_WRIST}
+rent 25 COPPER_PIECE
+end
+
+ruby_anklet
+names {"ruby anklet","anklet"}
+title "a ruby anklet"
+descr "a ruby anklet is on the ground here"
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ANKLE}
+rent 25 COPPER_PIECE
+end
+
+
+/* ----------------------- Potions & Scrolls -------------------- */
+potion_1
+names {"potion of serious healing","potion"}
+title "a potion of serious healing"
+descr "a blueish potion is resting here"
+POTION_DEF(50,SPL_CURE_WOUNDS_2,SPL_NONE,SPL_NONE)
+cost 5 GOLD_PIECE
+end
+
+potion_2
+names {"potion of speed","potion"}
+title "a potion of speed"
+descr "a purpleish potion is lying here"
+POTION_DEF(50,SPL_QUICKEN,SPL_NONE,SPL_NONE)
+cost 3 GOLD_PIECE
+end
+
+potion_3
+names {"a potion of detection","potion"}
+title "a potion of detection"
+descr "a grayish potion is here"
+POTION_DEF(50,SPL_DET_INVISIBLE,SPL_SENSE_LIFE,SPL_DET_ALIGN)
+cost 4 GOLD_PIECE
+end
+
+scroll_1
+names {"a scroll of increased spell capacity","scroll"}
+title "a scroll of increased spell capacity"
+descr "a tattered scroll lies on the ground"
+SCROLL_DEF(50,SPL_RAISE_MAG,SPL_RAISE_DIV,SPL_RAISE_BRA)
+cost 9 GOLD_PIECE
+end
+
+scroll_2
+names {"a scroll of random teleport","scroll"}
+title "a scroll of random teleport"
+descr "a battered scroll rests here"
+SCROLL_DEF(20,SPL_RANDOM_TELEPORT,SPL_NONE,SPL_NONE)
+cost 2 GOLD_PIECE
+end
+
+scroll_3
+names {"a scroll of cure blind","scroll"}
+title "a scroll of cure blind"
+descr "a beaten scroll sits here"
+SCROLL_DEF(50,SPL_CURE_BLIND,SPL_NONE,SPL_NONE)
+cost 4 GOLD_PIECE
+end
+
+/* ----------------------- Fishing Supplies --------------------- */
+bamboo_rod
+names {"bamboo fishing rod","fishing rod","rod"}
+title "a bamboo fishing rod"
+descr "a bamboo fishing rod is lying here"
+extra {}
+"Equipped with a reel and fishing line, this fishing pole was made by
+the finest craftsman in Torsbay. To use this pole you need a box with bait
+and you have to hold the rod. After you have baited your hook, you need to
+CAST your LINE, then wait for the bobber to disappear below the water's
+surface  (to indicate a bite). Then you need to JERK the fishing pole back,
+if you have hooked a fish, you will need to REEL the fish in."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+cost 4 GOLD_PIECE
+type ITEM_OTHER
+value[0] 1 /* quality of the rod. 1 is lowest, 3 is highest */
+dilcopy rod_look_dil@torsbay();
+dilcopy rod_unbait_dil@torsbay();
+dilcopy fish_dil@torsbay();
+end
+
+metal_rod
+names {"metal fishing rod","fishing rod","rod"}
+title "a metal fishing rod"
+descr "a metal fishing rod has been tossed aside here."
+extra {}
+"Equipped with a reel and fishing line, this fishing pole was made by
+the finest craftsman in Torsbay. To use this pole you need a box with bait
+and you have to hold the rod. After you have baited your hook, you need to
+CAST your LINE, then wait for the bobber to disappear below the water's
+surface  (to indicate a bite). Then you need to JERK the fishing pole back,
+if you have hooked a fish, you will need to REEL the fish in."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+cost 8 GOLD_PIECE
+type ITEM_OTHER
+value[0] 2
+dilcopy rod_look_dil@torsbay();
+dilcopy rod_unbait_dil@torsbay();
+dilcopy fish_dil@torsbay();
+end
+
+pg_rod
+names {"gold fishing rod","fishing rod","rod"}
+title "a gold fishing rod"
+descr "A golden fishing rod has been discarded here"
+extra {}
+"Equipped with a reel and fishing line, this fishing pole was made by
+the finest craftsman in Torsbay. To use this pole you need a box with bait
+and you have to hold the rod. After you have baited your hook, you need to
+CAST your LINE, then wait for the bobber to disappear below the water's
+surface  (to indicate a bite). Then you need to JERK the fishing pole back,
+if you have hooked a fish, you will need to REEL the fish in."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+cost 15 GOLD_PIECE
+type ITEM_OTHER
+value[0] 3
+dilcopy rod_look_dil@torsbay();
+dilcopy rod_unbait_dil@torsbay();
+dilcopy fish_dil@torsbay();
+end
+
+
+small_bait_box
+names {"small bait box","bait box","box"}
+title "a small bait box"
+descr "a small bait box is lying on the ground here"
+extra {}
+"Looking inside, you can see various types of bait, best used for catching
+fish. To use this you need to have a fishing rod and type &cbbait hook&cw."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+cost 5 SILVER_PIECE
+type ITEM_OTHER
+value[1] 10 /* amount of bait in a new box */
+value[2] 1  /* quality of the bait 1 is lowest, 3 is highest */
+dilcopy bait_look_dil@torsbay();
+dilcopy rod_bait_dil@torsbay();
+end
+
+medium_bait_box
+names {"medium bait box","bait box","box"}
+title "a medium bait box"
+descr "a medium bait box is lying on the ground here"
+extra {}
+"Looking inside, you can see various types of bait, best used for catching
+fish. To use this you need to have a fishing rod and type &cbbait hook&cw."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+type ITEM_OTHER
+cost 10 SILVER_PIECE
+value[1] 20 /* amount of bait in a new box */
+value[2] 1  /* quality of the bait 1 is lowest, 3 is highest */
+dilcopy bait_look_dil@torsbay();
+dilcopy rod_bait_dil@torsbay();
+end
+
+large_bait_box
+names {"large bait box","bait box","box"}
+title "a large bait box"
+descr "a large bait box is lying on the ground here"
+extra {}
+"Looking inside, you can see various types of bait, best used for catching
+fish. To use this you need to have a fishing rod and type &cbbait hook&cw."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+type ITEM_OTHER
+cost 15 SILVER_PIECE
+value[1] 30 /* amount of bait in a new box */
+value[2] 1  /* quality of the bait 1 is lowest, 3 is highest */
+dilcopy bait_look_dil@torsbay();
+dilcopy rod_bait_dil@torsbay();
+end
+
+red_herring
+names {"red herring","herring","fish"}
+title "a &crred herring&cw"
+descr "a &crred herring&cw lies here."
+extra {}
+"It's a &crred herring&cw!"
+weight 1
+FOOD_DEF(20,0)
+cost 5 COPPER_PIECE
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+end
+
+rainbow_trout
+names {"rainbow trout","trout","fish"}
+title "a &c+rr&c+ga&c+yi&c+bn&c+mb&c+co&c+ww &cwtrout"
+descr "a &c+rr&c+ga&c+yi&c+bn&c+mb&c+co&c+ww &cwtrout is lying here"
+extra {}
+"Its a &c+rr&c+ga&c+yi&c+bn&c+mb&c+co&c+ww &cwtrout, about 11 inches
+in length, this freshwater fish shall make a tasty treat."
+weight 1
+FOOD_DEF(20,0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+cost 5 COPPER_PIECE
+end
+
+bluefish
+names {"bluefish","fish"}
+title "a &c+bbluefish&cw"
+extra {}
+"This is a bluefish, quite large for its species. You look at your catch
+with pride."
+weight 1
+FOOD_DEF(20,0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+cost 5 COPPER_PIECE
+end
+
+catfish
+names {"catfish","fish"}
+title "a catfish"
+descr "a large catfish has been discarded here"
+extra {}
+"This large fish is quite ugly in appearance. It spent most of its natural
+time dwelling the bottoms of large bodies of water, feeding on the waste
+that had settled there. However if prepared correctly, Catfish will provide
+quite the meal."
+weight 5
+FOOD_DEF(25,0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+cost 1 SILVER_PIECE
+end
+
+salmon
+names {"king salmon","salmon","fish"}
+title "a king salmon"
+descr "a large salmon is lying on the ground here"
+extra {}
+"This is the finest of fish, the king salmon. Its meat will provide quite
+the meal for  you. The fish is close to two feet long, and worhty of
+a trophy on your wall."
+weight 5
+FOOD_DEF(30,0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+cost 9 COPPER_PIECE
+end
+
+flounder
+names {"flounder","fish"}
+title "a flounder"
+descr "a flounder lies here"
+extra {}
+"A largish flounder, fully equipped with scales, fins and gills. And a hook
+mark in its mouth."
+weight 1
+FOOD_DEF(20,0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+cost 6 COPPER_PIECE
+end
+
+large_bass
+names {"large mouth bass","bass","fish"}
+title "a large mouth bass"
+descr "a large mouth bass is lying here"
+extra {}
+"This fish is quite normal in appearance, however one feature does
+leap out at you, it has a large mouth, you think you could cram your
+whole arm in it."
+weight 1
+FOOD_DEF(30,0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+cost 16 COPPER_PIECE
+end
+
+small_bass
+names {"small mouth bass","bass","fish"}
+title "a small mouth bass"
+descr "a small mouth bass is lying here"
+extra {}
+"Almost identical to its relative, but with a considerably smaller
+mouth."
+weight 1
+FOOD_DEF(20,0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+cost 6 COPPER_PIECE
+end
+
+boot
+names {"an old waterlogged boot","boot"}
+title "an old waterlogged boot"
+descr "an old waterlogged boot"
+extra {}
+"This is a boot, long discarded, thrown into the water, or perhaps the
+remains of the last person from who tried to brave the waters and swim
+them. The boot is completley useless, and is best off thrown back into
+the water."
+type ITEM_TRASH
+manipulate {MANIPULATE_TAKE}
+weight 10
+end
+
+cod
+names {"cod","fish"}
+title "a cod"
+descr "a cod"
+extra {}
+"The cod is a greyish fish, examining closley you find that their are
+3 dorsal fins upon this cod. And a little barbel coming down from its
+chin."
+weight 1
+FOOD_DEF(20,0)
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+cost 6 COPPER_PIECE
+end
+
+
+/* ANCHORS and GANGPLANKS: these are the keys (besides the captain)
+to making the ship concept work. Each has two ANCHORS (one at each
+port) and one GANGPLANK (on the ship).. ANCHORS have two DIL modules:
+the first obeys SFB_MSG commands to switch from "docked" and
+"undocked" mode, the second traps for the movement command and
+replaces it with a relink of the player. This is required by a
+technical problem in the DIL, which does not allow the creation of
+new exits (Read-Only status), so while the PC does not get the
+ANCHORED exit direction by typing DIRECTIONS, we CAN turn them on
+and off. The second DIL is blocked by a priority call when the
+ship is unlocked.
+
+GANGPLANKS take care of the links from the ship back out to shore
+and are essentially a more advanced form of the ANCHOR, being able
+to handle three states: DOCKED AT HOME, DOCKED ABROAD and TRAVELING. */
+
+
+ship
+
+names {"ship"}
+title "a slender sailing ship"
+descr "A slender sailing ship is here."
+inside_descr
+"You are in a slender sailing ship."
+type ITEM_BOAT
+manipulate {MANIPULATE_ENTER}
+capacity 30000
+weight 20000
+
+end
+
+		whb_anchor_home
+names {"weatherbyhomeanchor"}
+title "the Weatherby's Home Anchor"
+
+/* Note: the description of the anchor is modified by it's DIL upon
+   loading, so the following description should be seldom if ever seen ...
+   so we'll have fun with it.*/
+
+descr
+"There is a strange fog hanging over the dock. This is the kind of weather
+that brings the ocean zombies up from their watery graves. You shiver at
+the thought."
+type ITEM_TRASH
+weight 10000
+cost 5 IRON_PIECE
+
+/* FIRST ANCHOR DIL: This DIL responds to SFB_MSG commands... presumably
+from the appropriate captain, but I left the base code open so that another
+NPC could also trigger it... don't know if we'll ever use it, but could be
+interesting for certain scenarios: like a pirate ship boarding! When it
+recieves an "undock" message, it creates descriptions and extras for no
+ship and blocks the second DIL with a priority statement. When it recieves
+a "dodock" message, it unblocks the second DIL and creates new descriptions
+and extras. */
+
+dilbegin prg3();
+
+var
+  location:       unitptr;
+  views:          extraptr;
+
+code
+{
+   :startup:
+   location := findroom("torsbay/dock1");
+   if ( not (location.title $= self.outside.title) ) destroy (self);
+   /* The above line destroys the anchor if it is loaded into a room
+      other than where it is supposed to be :) */
+   views := self.extra;
+
+   /* default load status is that the ship is NOT here... so we skip
+      over the logic and hit the :undocked: subroutine for initialization
+*/
+   goto undocked;
+
+   :brains:
+   wait (SFB_MSG, (activator.type == UNIT_ST_NPC));
+   if ("undock" in argument) goto undocked;
+   if ("dodock" in argument) goto dodocked;
+   goto brains;
+
+   :undocked:
+   priority;            /* this priority call disengages the second DIL */
+
+   act ("The Weatherby pulls away from the dock in a flurry of red sails.
+"+
+	"You feel proud as you spy the crest of the Midgaard Merchant "+
+	"Fleet emblazoned upon the sails of the massive ship.", A_SOMEONE,
+	self, null, null, TO_ALL);
+   /* CUSTOMIZE THE ABOVE LINE FOR EACH ANCHOR */
+
+   self.inside_descr := "Whatever vessel moors here at this dock must be at
+sail.";
+   subextra (self.extra, "merchant vessel");
+   subextra (self.extra, "vessel");
+   subextra (self.extra, "gangway");
+   subextra (self.extra, "west");
+   subextra (self.extra, "w");
+   goto brains;
+
+
+   :dodocked:
+   nopriority;
+
+   act ("A proud merchant vessel pulls gracefully towards the dock, its "+
+	"billowing red sails rustling about the great wooden prow carved "+
+	"like a spirit of the wind.", A_SOMEONE, self, null, null, TO_ALL);
+
+   self.outside_descr := "A proud tall merchant vessel is moored to the
+west "+
+		 "end of the dock. A gangway leads aboard the tall ship.";
+   addextra (self.extra, {"merchant vessel", "vessel", "gangway"},
+	     "The tall merchant vessel bears a plaque near the gangway "+
+	     "proclaiming it 'The Weatherby'. The gangway leads west onto "+
+	     "the vessel at midship.");
+   addextra (self.extra, {"west", "w"},
+	     "West leads across a gangway onto the Weatherby, a massive "+
+	     "merchant vessel.");
+   goto brains;
+}
+dilend
+
+
+
+/* SECOND ANCHOR DIL: This one (which can be blocked by the previous DIL),
+checks for a direction movement (in this cast WEST) and then re-links the
+player to the Weatherby. Unfortunately, this will not let followers aboard
+-
+single file aboard!! */
+
+dilbegin prg4();
+
+var
+  passanger:          unitptr;
+  ship:        unitptr;
+  location:    unitptr;
+
+code
+{
+
+   ship := findroom("torsbay/whb_mid");
+   heartbeat := PULSE_SEC*10;
+
+   :loop:
+   wait (SFB_CMD, (((activator.type == UNIT_ST_PC) or
+		    (activator.type == UNIT_ST_NPC)) and
+		   (command (CMD_WEST)) ));
+   /* AHA!! A PC or an NPC just tried to go west where the ship is!!
+      So let's put them there!! */
+
+   passanger := activator;
+   block;        /* Keeps them from getting "You cannot go that way" */
+
+   secure (passanger, loop);
+   act ("$3n climbs the gangplank and boards the Weatherby, leaving "+
+	"west.", A_SOMEONE, self, null, passanger, TO_NOTVICT);
+   act ("You climb the gangplank and board the Weatherby, leaving "+
+	"west.", A_SOMEONE, self, null, passanger, TO_VICT);
+
+   link (passanger, ship);           /* I think this DIL might actually
+					abort at this point because of the
+					secure... I wonder if the position
+					update is even reached... well, just
+					in case... */
+   position_update (passanger);
+   unsecure (passanger);
+   goto loop;
+}
+dilend
+
+end
+
+
+
+		whb_anchor_away
+names {"weatherbyawayanchor"}
+title "the Weatherby's Away Anchor"
+descr
+"There is a strange fog hanging over the pier. This is the kind of weather
+that brings the ocean zombies up from their watery graves. You shiver at
+the thought."
+type ITEM_TRASH
+weight 10000
+cost 5 IRON_PIECE
+
+/* FIRST ANCHOR DIL */
+dilbegin prg5();
+
+var
+  location:       unitptr;
+  views:          extraptr;
+
+code
+{
+
+   :startup:
+   location := findroom("arabian/pier_2");
+   if ( not (location.title $= self.outside.title) ) destroy (self);
+   views := self.extra;
+
+   goto undocked;
+
+   :brains:
+   wait (SFB_MSG, (activator.type == UNIT_ST_NPC));
+   if ("undock" in argument) goto undocked;
+   if ("dodock" in argument) goto dodocked;
+   goto brains;
+
+   :undocked:
+   priority;            /* this priority call disengages the second DIL */
+
+   act ("The Weatherby pulls away from the dock in a flurry of red sails.
+"+
+	"You feel proud as you spy the crest of the Midgaard Merchant "+
+	"Fleet emblazoned upon the sails of the massive ship, "+
+	"especially when so far from home.", A_SOMEONE,
+	self, null, null, TO_ALL);
+   /* CUSTOMIZE THE ABOVE LINE FOR EACH ANCHOR */
+
+   self.outside_descr := "Whatever vessel moors here at this dock must be
+at sail.";
+   subextra (self.extra, "merchant vessel");
+   subextra (self.extra, "vessel");
+   subextra (self.extra, "gangway");
+   subextra (self.extra, "east");
+   subextra (self.extra, "e");
+   goto brains;
+
+
+   :dodocked:
+   nopriority;
+
+   act ("A proud merchant vessel pulls gracefully towards the dock, its "+
+	"billowing red sails rustling about the great wooden prow carved "+
+	"like a spirit of the wind. It looks to be a merchant ship from "+
+	"the lands of King Welmar!", A_SOMEONE, self, null, null, TO_ALL);
+
+   self.outside_descr := "A proud tall merchant vessel is moored to the
+east "+
+		 "end of the dock. A gangway leads aboard the tall ship.";
+   addextra (self.extra, {"merchant vessel", "vessel", "gangway"},
+	     "The tall merchant vessel bears a plaque near the gangway "+
+	     "proclaiming it 'The Weatherby'. The gangway leads east onto "+
+	     "the vessel at midship.");
+   addextra (self.extra, {"east", "e"},
+	     "West leads across a gangway onto the Weatherby, a massive "+
+	     "merchant vessel.");
+   goto brains;
+
+
+}
+dilend
+
+
+/* SECOND DIL */
+
+dilbegin prg6();
+
+var
+  passanger:          unitptr;
+  ship:        unitptr;
+  location:    unitptr;
+
+code
+{
+
+   ship := findroom("torsbay/whb_mid");
+   heartbeat := PULSE_SEC*10;
+
+   :loop:
+   wait (SFB_CMD, (((activator.type == UNIT_ST_PC) or
+		    (activator.type == UNIT_ST_NPC)) and
+		   (command (CMD_EAST)) ));
+
+   passanger := activator;
+   block;        /* Keeps them from getting "You cannot go that way" */
+
+   secure (passanger, loop);
+   act ("$3n climbs the gangplank and boards the Weatherby, leaving "+
+	"east.", A_SOMEONE, self, null, passanger, TO_NOTVICT);
+   act ("You climb the gangplank and board the Weatherby, leaving "+
+	"east.", A_SOMEONE, self, null, passanger, TO_VICT);
+
+   link (passanger, ship);
+   position_update (passanger);
+   unsecure (passanger);
+   goto loop;
+}
+dilend
+
+end
+
+             great_sword
+
+names {"great sword"}
+title "a great sword"
+descr "A great sword has been left here."
+extra {}
+"This is a fine-looking great sword, bestowed upon Captain Krain of
+the Weatherby by King Welmar in recognition of his efforts against
+the menacing pirates off Torsbay harbour."
+WEAPON_DEF(WPN_GREAT_SWORD, 0, 0)
+cost 4 GOLD_PIECE
+weight 12
+end
+
+
+             scimitar
+
+names {"scimitar"}
+title "a scimitar"
+descr "A scimitar has been left here."
+extra {}
+"An ordinary-looking scimitar, nothing much can be said about it"
+WEAPON_DEF(WPN_SCIMITAR, 0, 0)
+cost 4 SILVER_PIECE
+weight 6
+end
+
+kayak
+names {"kayak"}
+title "a kayak"
+descr "a kayak has been left here"
+extra {}
+"The kayak is fairly light, and quite sea worthy."
+cost 5 GOLD_PIECE
+type ITEM_BOAT
+manipulate {MANIPULATE_TAKE, MANIPULATE_ENTER}
+weight 50
+CONTAINER_DEF(400)
+MATERIAL_WOOD("A lightweight poplar wood")
+end
+
+
+
+%mobiles
+
+/*--------------------- TORSBAY SHOPKEEPERS --------------------*/
+mike
+names {"Masterful Mike","mike","shopkeeper"}
+title "Masterful Mike"
+descr "Masterful Mike, the magic shopkeeper is standing here"
+extra {}
+"Mike is an average man, later on in his years. It would seem Mike
+used to do some adventuring, but now would rather use his scribing
+and alchemy skills to provide to younger adventurers."
+M_AVG_HUMAN(30, SEX_MALE, RACE_HUMAN)
+dilcopy shopkeeper@function(MAGIC_PROD, MAGIC_MSG, MAGIC_OPEN_TIMES,
+						    MAGIC_ITEM_TYPE, MAGIC_SELL_PROFIT,
+						    MAGIC_BUY_PROFIT, MAGIC_MAX_CASH, "", "");
+dilcopy combat_mag@function("fireball","",0,3);
+money 5 COPPER_PIECE
+end
+
+bobbie
+names {"Big Bobbie","bobbie","shopkeeper"}
+title "Big Bobbie"
+descr "Big Bobbie is standing next to a kayak here."
+extra {}
+"Bobbie is quite big indeed, she stands close 6 feet tall, and weighs in
+around 200 lbs. Bobbies hand's are calloused from making her fine kayaks,
+she also sells other boats found around the world."
+M_HUMAN_WARRIOR_CLUB(30, SEX_FEMALE)
+dilcopy shopkeeper@function(BOAT_PROD, BOAT_MSG, BOAT_OPEN_TIMES,
+							BOAT_ITEM_TYPE, BOAT_SELL_PROFIT,
+							BOAT_BUY_PROFIT, BOAT_MAX_CASH, "", "");
+money 5 COPPER_PIECE
+end
+
+fred
+names {"Fancy Fred","Fred","shopkeeper"}
+title "Fred the shopkeeper"
+descr "Fred the fishing supply shopkeeper is standing here."
+extra {}
+"Looking at Fred you see quite the experienced fisherman, Fred proudly
+stands right next to his fine  fishing rods, and fine lures. Fred
+is about average height and size."
+M_HUMAN_WARRIOR_SWORD(30, SEX_MALE)
+money 5 COPPER_PIECE
+dilcopy shopkeeper@function(SUPP_PROD, SUPP_MSG, SUPP_OPEN_TIMES,
+							SUPP_ITEM_TYPE, SUPP_SELL_PROFIT,
+							SUPP_BUY_PROFIT, SUPP_MAX_CASH, "", "");
+end
+
+sally
+names {"Sly Sally","Sally","shopkeeper"}
+title "Sly Sally"
+descr "Sly Sally patiently awaits to sell you some fish."
+extra {}
+"Sally certainly is sly, she has managed to corner the fish market in this
+harbor. Certainly that takes a certain bit of guile. Sally is an average
+woman, average in looks. She smells a little fishy, but considering her
+trade, you're not quite suprised."
+M_HUMAN_WARRIOR_SWORD(30, SEX_FEMALE)
+money 5 COPPER_PIECE
+dilcopy shopkeeper@function(FISH_PROD, FISH_MSG, FISH_OPEN_TIMES,
+							FISH_ITEM_TYPE, FISH_SELL_PROFIT,
+							FISH_BUY_PROFIT, FISH_MAX_CASH, "", "");
+end
+
+/*--------------------- TORSBAY MOBILES -------------------------*/
+
+
+                      oldman
+
+names {"sailor", "drunk", "roath"}
+title "Roath the drunken sailor"
+descr "A totally pissed sailor is sitting at the bar."
+extra {}
+"It has been a long time since you have seen anyone as pissed as this old
+buggar. He is fat with greasy gray hair and a filthy beard. When you look
+at him you notice that his eyes are unable to focus on anything but his
+mug of beer."
+money 5 COPPER_PIECE
+M_AVG_HUMAN(25, SEX_MALE, RACE_HUMAN)
+
+default POSITION_SITTING
+
+dilbegin ship_story();
+
+var
+   pc : unitptr;
+   ale  : unitptr;
+   sexstr : string;
+
+code
+{
+   on_activation(self.position <= POSITION_SLEEPING, skip);
+
+   :loop:
+   nopriority;
+   wait(SFB_DONE, command(CMD_GIVE) and (target == self));
+   pc := activator;
+
+   heartbeat := PULSE_SEC * 7;
+
+   ale := medium;
+
+   secure(ale, loop);
+   secure(pc, heleft);
+
+   priority;
+
+   if (pc.sex == SEX_MALE)
+     sexstr := "laddie";
+   else
+     sexstr := "lass";
+
+   if ((ale.objecttype == ITEM_DRINKCON) and (ale.value[1] > 0) and
+	(ale.value[3] == 0) and ((ale.value[2] == LIQ_BEER) or
+        (ale.value[2] == LIQ_ALE) or (ale.value[2] == LIQ_DARKALE) or
+        (ale.value[2] == LIQ_WHISKY)))
+   {
+      pause;
+      exec("drink "+ale.name, self);
+      pause;
+      exec("burp "+pc.name, self);
+      pause;
+      exec("say Last summerh me wass down at the beacsh.", self);
+      pause;
+      exec("say I was at the Duhncing Crab as usual but on my way home,"+
+           " I decided to lie down and relax in the sand on da beacsh "+
+           "since everything was spinning around...", self);
+      pause;
+      exec("burp", self);
+      pause;
+      exec("say Suddenlyh I felt cold to me old bones, and as rapidly as I
+"+
+           "have ever seen, a mist came from the sea. Along with the mist
+"+
+           "came an old longboat.", self);
+      pause;
+      exec("shiver", self);
+      pause;
+      exec("say Tis the worst and most unnatural thing me have ever seen!"+
+           " I will never set foot on the beach again at nighttime.",
+		 self);
+   }
+   else
+   {
+      exec("say What is thiss? Ya' traying to poison me "+sexstr+"?",
+           self);
+   }
+   goto loop;
+
+   :heleft:
+   exec("say Too scary for ya, home to mama, eh "+sexstr+"?",
+        self);
+   pause;
+   exec("grin", self);
+
+   :longpause:
+   heartbeat := PULSE_SEC * 300;
+   pause;
+   goto loop;
+}
+dilend
+
+
+dilbegin talk_start();
+var
+   u  : unitptr;
+   pc : unitptr;
+   sexstr : string;
+
+code
+{
+   on_activation(self.position <= POSITION_SLEEPING, skip);
+
+   :start:
+   heartbeat := PULSE_SEC * 3;
+   wait(SFB_CMD, activator.type == UNIT_ST_PC);
+
+   pc := activator;
+   secure(pc, waitawhile);
+
+   if (pc.sex == SEX_MALE)
+     sexstr := "laddie";
+   else
+     sexstr := "lass";
+
+   pause;
+
+   exec("say Aye there "+sexstr+", old Roath here knows of strange
+events.",
+	 self);
+   pause;
+   exec("say Ya wanna hear more? My throat is dry as biscuit, "+
+        "buy an old man some ale, "+sexstr+"?", self);
+
+  :waitawhile:
+  heartbeat := PULSE_SEC * 60 * 5;
+  pause;
+  goto start;
+}
+dilend
+end
+
+
+			temparrot
+names {"parrot"}
+title "a scruffy parrot"
+descr "A scruffy parrot is hopping around squawking here."
+position POSITION_STANDING
+default POSITION_STANDING
+alignment 0
+M_BIRD_TINY (SEX_FEMALE)
+romflags CHAR_WIMPY
+extra {}
+"This colorful bird looks like it has seen better days. About half of it's
+feathers have fallen out and it looks like it has caught a beak disease of
+some sort."
+
+/* DIL Behavior - just a cute signature piece... recites Arial's song from
+Shakespeares _The_Tempest_ . */
+dilbegin prg7();
+
+var
+  pc:    unitptr;
+
+code
+{
+ :init:
+ if (self.position <= POSITION_SLEEPING)
+   goto skaip;
+ heartbeat := PULSE_SEC*12;
+
+ :start:
+ wait (SFB_CMD, (activator.type == UNIT_ST_PC));
+ pc := activator;
+ secure (pc, init);
+
+ :tempest:
+ exec ("emote recites 'Full fathom five thy father lies'.", self);
+ pause;
+ exec ("emote recites 'Of his bones are coral made'.", self);
+ pause;
+ exec ("emote recites 'Those are pearls that were his eyes'.", self);
+ pause;
+ exec ("emote recites 'Nothing of him that doth fade'.", self);
+ pause;
+ exec ("emote recites 'But doth suffer a sea change'.", self);
+ pause;
+ exec ("emote recites 'Into something rich and strange'.", self);
+ pause;
+ exec ("emote squaks loadly, ruffling it's mangey look feathers.", self);
+
+ :waitawhile:
+ heartbeat := PULSE_SEC*120;
+ pause;
+ exec ("emote nervously prunes his few remaining feathers, watching you
+cautiously.", self);
+ goto waitawhile;
+
+ :skaip:
+ heartbeat := PULSE_SEC*120;
+ pause;
+ goto init;
+
+}
+dilend
+end
+
+
+harbor_master
+names {"harbor master", "master"}
+title "the Harbor Master"
+descr "The Harbor Master is here waiting to sell you passage to other
+exciting places."
+extra {}
+"The Harbor Master looks very tired and underpaid."
+M_PORT_GUARD
+sex SEX_MALE
+level 50
+exp -100
+alignment 800
+money 1 COPPER_PIECE
+
+dilcopy shipseller@torsbay("harborm1@torsbay",\
+{"Khorsabad", "8000", "1", "pier_1@arabian", \
+ "Alantis", "9000", "1", "pier@atl_beach", \
+ "Xyiang", "14000", "2", "dock7@xiyang2" });
+
+end
+
+
+/*--------------------- TORSBAY LAW --------------------- */
+
+		commander
+names {"commander"}
+title "the Commander"
+descr "The Commander of the Port Guard is reviewing his paperwork."
+extra {}
+"The Commander looks overworked and underpaid."
+M_PORT_GUARD
+sex SEX_MALE
+level 32
+alignment 800
+money 5 COPPER_PIECE
+special SFUN_RESCUE "port guard"
+special SFUN_TEAMWORK "port guard"
+
+end
+
+		port_guard
+names {"port guard", "guard"}
+title "a Port Guard"
+descr "A Port Guard has stopped here briefly on his patrol route."
+extra {}
+"The guards look a little tougher than the ones in Midgaard. You guess this
+must be a hazardous beat."
+M_PORT_GUARD
+sex SEX_MALE
+level 30
+money 5 COPPER_PIECE
+special SFUN_RESCUE "port guard/commander"
+special SFUN_TEAMWORK "port guard/commander"
+/* A Guard Patrol Route - Randomized to avoid Guard Ganging */
+dilbegin prg8();
+
+var
+  i :   integer;
+
+code
+{
+  :start:
+  i := rnd (1, 12);
+  heartbeat := PULSE_SEC*30;
+  if (i == 1)
+    walkto (findroom ("torsbay/pier_one"));
+  else if (i == 2)
+    walkto (findroom ("torsbay/pier_two"));
+  else if (i == 3)
+    walkto (findroom ("torsbay/pier_three"));
+  else if (i == 4)
+    walkto (findroom ("torsbay/pier_four"));
+  else if (i == 5)
+    walkto (findroom ("torsbay/harborm1"));
+  else if (i == 6)
+    walkto (findroom ("torsbay/harborm2"));
+  else if (i == 7)
+    walkto (findroom ("torsbay/merch1"));
+  else if (i == 8)
+    walkto (findroom ("torsbay/gravel_beach"));
+  else if (i == 9)
+    walkto (findroom ("torsbay/dance_crab"));
+  else if (i == 10)
+    walkto (findroom ("torsbay/tor_gate"));
+  else if (i >= 11)
+    walkto (findroom ("torsbay/guard_tower"));
+    /* They are slightly more likely to hang out in their tower */
+  pause;
+  goto start;
+}
+dilend
+
+end
+
+
+/*-----------------------TORSBAY PERSONALITIES--------------------*/
+
+
+		helga
+names {"helga", "old barmaid", "barmaid"}
+title "Helga the barmaid"
+descr
+"Helga, a salty old barmaid, is serving drinks."
+extra {}
+"You don't imagine that Helga was any more attractive in her youth,
+but her advancing age, weathered skin and poor oral hygiene make her
+almost terrifying!"
+M_SHOP_KEEPER (27, SEX_FEMALE, RACE_HUMAN)
+alignment 200
+money 5 COPPER_PIECE
+
+/* Barmaid at the Dancing Crab -------- */
+special SFUN_SHOP_INIT
+"&lProfit sell = 120
+Profit buy = 30
+Production = ~beer_bottle@midgaard~ ~ale_bottle@midgaard~
+             ~firebreather@midgaard~ ~tuborg@udgaard~ ~speciality@midgaard~
+             ~coffe_cup@midgaard~ ~brandy_bottle@midgaard~
+Trade types = "+ITEM_DRINKCON+"
+Msg1 = ~$1n croaks, 'I don't carry that drink, sailor...'~
+Msg2 = ~$1n exclaims, 'Trying to fool an old woman... eh, $3n?'~
+Msg3 = ~$1n cackles, 'I've no use for that piece of trash!'~
+Msg4 = ~$1n sighs, 'Do you want to buy a drink or what?'~
+Msg5 = ~$1n slyly chuckles, 'You're too poor, $3n, to enjoy $2n.'~
+Msg6 = ~$1n croaks, 'That's %s for a $2n, $3n.'~
+Msg7 = ~$1n agrees, 'That's %s for your $2n, $3n.'~
+Hours1 = 3 12
+Hours2 = 13 23"
+
+end
+
+                          krain
+
+names {"captain krain", "captain", "krain"}
+title "Captain Krain"
+descr "Captain Krain of the Weatherby stands here."
+extra {}
+"A stout seaman whose scars tell the tale of many a danger that he
+braved during his voyage at sea."
+money 5 COPPER_PIECE
+M_HUMAN_WARRIOR_SWORD(25, SEX_MALE)
+
+dilbegin prg9();
+var
+   portname: stringlist;
+   ports   : stringlist;
+   departs : stringlist;
+   arrives : stringlist;
+   time    : string;
+   nidx     : integer;
+   counter : integer;
+   shipname: string;
+
+code
+{
+   portname := SHIP_PORTNAMES;
+   ports    := SHIP_PORTS;
+   departs  := SHIP_DEPARTS;
+   arrives  := SHIP_ARRIVES;
+   shipname := SHIP_NAME;
+
+   nidx := 0;
+   counter := 0;
+   while (counter < SHIP_NUMBER)
+   {
+      if (mudhour > atoi(departs.[counter]))
+      {
+         nidx := nidx + 1;
+      }
+      counter := counter+1;
+   }
+   link(self, findroom(ports.[nidx]));
+   sendto(ports.[nidx], findroom(SHIP_MAIN));
+
+   :loop:
+
+   heartbeat := SECS_PER_MUD_HOUR * PULSE_SEC / 5;
+
+   if (atoi(departs.[nidx]) > 12)
+      time := itoa(atoi(departs.[nidx]) - 12) + " o'clock after Noon.";
+   else
+      time := departs.[nidx] + " o'clock after Midnight.";
+
+   while (mudhour != atoi(departs.[nidx]))
+   {
+      exec("say Departing for the port of " +
+	   portname.[(nidx+1) % SHIP_NUMBER] + " at " + time, self);
+      pause;
+   }
+
+   heartbeat := PULSE_SEC * 20;
+   exec("say All aboard! Ship now leaving for " +
+	portname.[(nidx+1) % SHIP_NUMBER], self);
+
+   walkto(findroom(portname.[nidx]));
+   exec("enter weatherby", self);
+   pause;
+
+   act("The $3t sails away into the horizon.",
+       A_HIDEINV, self.outside, null, shipname, TO_ROOM);
+
+   act("The $3t leaves the dock and sails into the great ocean.",
+       A_HIDEINV, self, self.outside, shipname, TO_ALL);
+
+   sendto(SHIP_OCEAN, self.outside);
+
+   pause;
+   walkto(findroom("whb_bow@torsbay"));
+
+   heartbeat := PULSE_SEC * SECS_PER_MUD_HOUR / 5;
+
+   if (atoi(arrives.[nidx]) > 12)
+      time := itoa(atoi(arrives.[nidx]) - 12) + " o'clock after Noon.";
+   else
+      time := arrives.[nidx] + " o'clock after Midnight.";
+
+   while (mudhour != atoi(arrives.[nidx]))
+   {
+      exec("say We should be arriving at the port of " +
+	   portname.[(nidx+1) % SHIP_NUMBER] + " at " + time, self);
+      pause;
+   }
+
+   /* Lets arrive */
+   heartbeat := PULSE_SEC * 3;
+
+   walkto(findroom(SHIP_MAIN)); /* make sure we are on the deck */
+   sendto(ports.[(nidx+1) % SHIP_NUMBER], findroom(SHIP_MAIN));
+
+   heartbeat := PULSE_SEC * 10;
+   act("The $3t arrives at the dock.",
+       A_HIDEINV, self.outside, null, shipname, TO_ROOM);
+
+   act("The $3t leaves the dock and heads into the great ocean.",
+       A_HIDEINV, self, self.outside, shipname, TO_ALL);
+
+   pause;
+
+   exec("say We are now safely at the port of " +
+         portname.[(nidx+1) % SHIP_NUMBER], self);
+
+   pause;
+   exec("exit", self);
+   pause;
+   nidx := (nidx + 1) % SHIP_NUMBER;
+   goto loop;
+
+
+}
+dilend
+end
+
+               sailor
+
+names {"sailor"}
+title "a sailor"
+descr "A sailor is here."
+extra {}
+"A skinny but strong seaman, he has probably gone through many
+a hardship during his voyages at sea."
+M_HUMAN_WARRIOR_SWORD(31, SEX_MALE)
+special SFUN_RANDOM_ZONE_MOVE time 120 bits SFB_RANTIME
+money 5 COPPER_PIECE
+end
+
+/* Fisherman */
+fisherman
+names {"fisherman","man"}
+title "a fisherman"
+descr "a fisherman is here, patiently waiting to catch a fish"
+extra {}
+"This man stands at the edge of the beach, seemingly complacent in
+his hobby."
+M_HUMAN_WARRIOR_SWORD(31, SEX_MALE)
+alignment 800
+money 5 COPPER_PIECE
+dilbegin fisherman();
+var
+        pc : unitptr;
+code
+{
+        heartbeat := PULSE_SEC * 6;
+        interrupt(SFB_COM, self.position == POSITION_FIGHTING, combat);
+
+        :start:
+        wait(SFB_CMD, ((activator.type == UNIT_ST_PC) and (self.position !=
+POSITION_FIGHTING)));
+        pc := activator;
+	  secure(pc, lost);
+          exec("emote casts his line out into the water.",self);
+          pause;
+
+
+        :twait:
+        pause;
+        goto twait;
+
+        :lost:
+        pause;
+        unsecure(pc);
+        goto start;
+
+        :combat:
+        heartbeat := PULSE_SEC*3;
+        while (self.position == POSITION_FIGHTING) pause;
+        heartbeat := PULSE_SEC*10;
+        pause;
+        pause;
+        pause;
+        goto start;
+
+}
+dilend
+end
+
+/* Scavenger */
+scavenger
+names {"scavenger","man"}
+title "a scavenger"
+descr "a scavenger is here, digging through the remains of the ship"
+extra {}
+"This man is average sized, and quite filthy."
+M_HUMAN_WARRIOR_SWORD(31, SEX_MALE)
+alignment -800
+money 5 COPPER_PIECE
+end
+
+/* Adventurer */
+adventurer
+names {"adventurer","man"}
+title "a adventurer"
+descr "an adventurer is here, patiently waiting for a ship"
+extra {}
+"This man is quite large, and apparently he is waiting for a ship to
+take to foreign lands to find new adventures."
+M_HUMAN_WARRIOR_SWORD(31, SEX_MALE)
+alignment 0
+money 5 COPPER_PIECE
+special SFUN_RANDOM_ZONE_MOVE time 120 bits SFB_RANTIME
+end
+
+/* Smuggler */
+
+smuggler
+names {"smuggler","man"}
+title "a smuggler"
+descr "a smuggler is here trying to peddle his goods"
+extra {}
+"This man makes his living off smuggling goods from foreign lands, and
+selling them for ludicrously high prices."
+M_HUMAN_WARRIOR_SWORD(31, SEX_MALE)
+alignment -800
+money 5 COPPER_PIECE
+special SFUN_RANDOM_ZONE_MOVE time 120 bits SFB_RANTIME
+end
+
+/* Beggar */
+beggar
+names {"beggar","man"}
+title "a beggar"
+descr "a beggar despratley tries to squeeze coins from you"
+extra {}
+"This man wears nothing but tattered robes, and reeks of body odor"
+M_HUMAN_WARRIOR_SWORD(31, SEX_MALE)
+end
+
+/*------------------------- RESET CODE ---------------------------*/
+%reset
+/* Reset Mobs added by Zig */
+load adventurer into square@torsbay  local 1
+{
+equip lth_helmet position WEAR_HEAD
+equip lth_boots position WEAR_FEET
+equip lth_leggings position WEAR_LEGS
+equip lth_plate position WEAR_BODY
+equip lth_sleeves position WEAR_ARMS
+equip iron_sword position WEAR_WIELD
+equip silver_hoop position WEAR_EAR_L
+}
+
+load adventurer into beach_1@torsbay local 1
+{
+equip lth_helmet position WEAR_HEAD
+equip lth_boots position WEAR_FEET
+equip lth_leggings position WEAR_LEGS
+equip lth_plate position WEAR_BODY
+equip lth_sleeves position WEAR_ARMS
+equip bloody_mace position WEAR_WIELD
+equip ruby_anklet position WEAR_ANKLE_L
+}
+
+load adventurer into gang_plank local 1
+{
+equip lth_helmet position WEAR_HEAD
+equip lth_boots position WEAR_FEET
+equip lth_leggings position WEAR_LEGS
+equip lth_plate position WEAR_BODY
+equip lth_sleeves position WEAR_ARMS
+equip golden_dagger position WEAR_WIELD
+equip chain_bracelet position WEAR_WRIST_L
+equip chain_bracelet position WEAR_WRIST_R
+}
+
+load fisherman into beach_1 local 1
+{ equip bamboo_rod position WEAR_HOLD}
+load fisherman into beach_2 local 1
+{ equip bamboo_rod position WEAR_HOLD}
+load fisherman into beach_3 local 1
+{
+equip chain_bracelet WEAR_WRIST_L
+equip bamboo_rod position WEAR_HOLD
+}
+load fisherman into beach_4 local 1
+{
+load small_bait_box@torsbay
+equip bamboo_rod position WEAR_HOLD
+}
+load scavenger into hull_1 local 1
+load scavenger into hull_2 local 1
+load scavenger into hull_3 local 1
+load beggar into  market_ent@torsbay
+load beggar into dance_crab local 1
+load smuggler into market_ent@torsbay local 1
+{ equip silver_hoop WEAR_EAR_L }
+load smuggler into market_2@torsbay local 1
+{ equip silver_hoop WEAR_EAR_L }
+/*RESET SHOPKEEPERS*/
+load sally into fish2_shop local 1
+{equip scimitar position WEAR_WIELD}
+load bobbie into boat_shop local 1
+{equip oar@xiyang2 position WEAR_WIELD}
+load fred into fish_shop local 1
+{equip great_sword position WEAR_WIELD}
+load mike into magic_shop local 1
+{equip scimitar position WEAR_WIELD}
+load krain into whb_bow
+{ equip great_sword position WEAR_WIELD }
+load sailor into whb_bow max 4
+{ equip scimitar position WEAR_WIELD }
+load sailor into whb_holds1 max 4
+{ equip scimitar position WEAR_WIELD }
+load sailor into whb_stern max 4
+{ equip scimitar position WEAR_WIELD }
+load sailor into whb_mid max 4
+{ equip scimitar position WEAR_WIELD }
+
+/* RESET THE TORSBAY PERSONAS */
+load temparrot into pier_two max 1
+
+load helga into dance_crab max 1
+  { load midgaard/beer_bottle max 4
+    load midgaard/ale_bottle max 4
+    load midgaard/firebreather max 3
+    load udgaard/tuborg max 3
+    load midgaard/speciality max 3
+    load midgaard/coffe_cup max 5 }
+
+load oldman into dance_crab max 1
+
+load harbor_master into harborm1 max 1
+  { equip kingc/guards_skirt position WEAR_LEGS
+    equip kingc/guards_sleeves position WEAR_ARMS
+    equip kingc/guards_jerkin position WEAR_BODY
+    equip kingc/guards_coif position WEAR_HEAD
+    equip kingc/guards_sword position WEAR_WIELD }
+
+/* RESET THE LAW */
+load commander into guard_tower max 1
+  { equip kingc/guards_skirt position WEAR_LEGS
+    equip kingc/guards_sleeves position WEAR_ARMS
+    equip kingc/guards_jerkin position WEAR_BODY
+    equip kingc/guards_coif position WEAR_HEAD
+    equip kingc/guards_sword position WEAR_WIELD }
+load port_guard into guard_tower max 10
+  { equip kingc/guards_skirt position WEAR_LEGS
+    equip kingc/guards_sleeves position WEAR_ARMS
+    equip kingc/guards_jerkin position WEAR_BODY
+    equip kingc/guards_coif position WEAR_HEAD
+    equip kingc/guards_sword position WEAR_WIELD }
+load port_guard into guard_tower max 10
+  { equip kingc/guards_skirt position WEAR_LEGS
+    equip kingc/guards_sleeves position WEAR_ARMS
+    equip kingc/guards_jerkin position WEAR_BODY
+    equip kingc/guards_coif position WEAR_HEAD
+    equip kingc/guards_sword position WEAR_WIELD }
+load port_guard into guard_tower max 10
+  { equip kingc/guards_skirt position WEAR_LEGS
+    equip kingc/guards_sleeves position WEAR_ARMS
+    equip kingc/guards_jerkin position WEAR_BODY
+    equip kingc/guards_coif position WEAR_HEAD
+    equip kingc/guards_sword position WEAR_WIELD }
+load port_guard into guard_tower max 10
+  { equip kingc/guards_skirt position WEAR_LEGS
+    equip kingc/guards_sleeves position WEAR_ARMS
+    equip kingc/guards_jerkin position WEAR_BODY
+    equip kingc/guards_coif position WEAR_HEAD
+    equip kingc/guards_sword position WEAR_WIELD }
+load port_guard into guard_tower max 10
+  { equip kingc/guards_skirt position WEAR_LEGS
+    equip kingc/guards_sleeves position WEAR_ARMS
+    equip kingc/guards_jerkin position WEAR_BODY
+    equip kingc/guards_coif position WEAR_HEAD
+    equip kingc/guards_sword position WEAR_WIELD }
+
+
+/* RESET the Weatherby */
+door whb_mid DOWN {EX_OPEN_CLOSE, EX_CLOSED}
+door whb_holds1 UP {EX_OPEN_CLOSE, EX_CLOSED}
+door whb_stern DOWN {EX_OPEN_CLOSE, EX_CLOSED}
+door whb_quarters UP {EX_OPEN_CLOSE, EX_CLOSED}
+
+door mcdroog_0@houses UP {EX_OPEN_CLOSE, EX_CLOSED}
+door old_hut DOWN {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+
+%end
+
+
+
+
+
+

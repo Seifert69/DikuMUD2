@@ -1,0 +1,1637 @@
+/*
+filename    hades2
+password    2wsl5
+changedby   Whistler
+EmailAdd     Palio <palio@blinksoft.com>
+request     compile
+version     7
+END HEADER*/
+
+#include <composed.h>
+
+%zone hades2
+title ""
+lifespan 20
+reset RESET_NOT
+creators {"whistler"}
+
+#define SHIFTROOM 4
+#define LOADMOB 3
+
+
+#define LAVALOAD \
+dilcopy monsterload@hades2("lava_beast@hades2", 3, "lavamessages@hades2");
+
+#define TARLOAD \
+dilcopy monsterload@hades2("tar_beast@hades2", 3, "tarmessages@hades2");
+
+
+%dil
+
+dilbegin lavamessages();
+code
+{
+   heartbeat := PULSE_SEC * 3;
+
+   pause;
+
+   act(
+"Your clammering causes a shift...  The floor cracks open and an awful " +\
+"stench rises from the depths of hell.  Lava pours from the crack, slowley " +\
+"changing form into god only knows what.  The form becomes more solid "+ \
+"and you can't believe your eyes as a half beast half lava creature begins "+\
+"moving towards you. ",
+A_ALWAYS, self.inside, null, null, TO_ALL);
+
+   return;
+}
+dilend
+
+
+dilbegin tarmessages();
+code
+{
+   heartbeat := PULSE_SEC * 3;
+
+   pause;
+
+   act(
+"As you fumble around in the dark you stomp on a large blob of tar and " +
+"shake your foot madly to get it off.",
+       A_ALWAYS, self.inside, null, null, TO_ALL);
+
+   pause;
+
+   act("The tar flies across the cave and lands in a larger blob.",
+       A_ALWAYS, self.inside, null, null, TO_ALL);
+   pause;
+
+   act(
+"You gasp in horror as the tar takes a more human form and begins moving "+
+"in your direction", A_ALWAYS, self.inside, null, null, TO_ALL);
+
+   return;
+}
+dilend
+
+/*
+
+   Args is in format "unit,prob,msgfunc"... example:
+
+   monsterload("firedaemon@hades2",3,"lavamessages@hades2");
+
+*/
+
+dilbegin monsterload(mobname : string, prob : integer, procname : string);
+var
+	pc : unitptr;
+	mob : unitptr;
+code
+{
+   :start:
+   heartbeat := PULSE_SEC * 3;
+
+   wait(SFB_CMD,  (activator.type == UNIT_ST_PC) and
+	(not (activator.position == POSITION_FIGHTING)));
+
+   if (rnd(1,LOADMOB) != 1)
+     goto start;
+
+   pc := activator;
+   secure(pc, start);
+
+   procname(); /* Call the message routine specified in procname */
+
+   mob := load(mobname);
+   link(mob, self);
+   secure(mob, longpause);
+
+   exec("kill " + pc.name , mob);
+   unsecure(pc);
+
+   heartbeat := PULSE_SEC * 60 * 60;
+
+   while (TRUE)
+     pause;  /* Endless loop until mob secure is violated! */
+
+
+   :longpause:
+   heartbeat := PULSE_SEC * 60 * 20;
+   pause;
+   goto start;
+}
+dilend
+
+
+
+dilbegin moltshift(roomname : string);
+var
+   pc : unitptr;
+
+code
+{
+   heartbeat := 3 * PULSE_SEC;
+
+   :start:
+
+   wait(SFB_CMD,  (activator.type == UNIT_ST_PC) and
+	          (not (activator.position == POSITION_FIGHTING))  );
+
+   pc := activator;
+   secure(pc, start);
+
+   if ((rnd(1,SHIFTROOM)  == 1) or command(CMD_DIG) or command(CMD_BURY) )
+   {
+      priority;
+      pause;
+      act(
+"You feel a severe rise in the heat of the room and the walls begin to flow " +
+"like red water.  You gasp in horrer as you watch openings in the floor " +
+"open and close.  You pray to the gods that this will stop in your favor. " +
+"A large hole opens in the floor and you fall in face first.",
+	  A_SOMEONE, pc, null, null, TO_CHAR);
+
+      act("A large hole opens in the floor and $1n falls in face first.",
+	  A_SOMEONE, pc, null, null, TO_REST);\
+
+      pause;
+
+      act ("After a short fall you land face first in a blob of tar.",
+	   A_ALWAYS, pc, null, null, TO_CHAR);
+
+      link (pc, findroom(roomname) );
+      exec("look", pc);
+      pause;
+   }
+}
+dilend
+
+
+
+dilbegin tarshift(roomname : string);
+var
+   pc : unitptr;
+
+code
+{
+   heartbeat := 3 * PULSE_SEC;
+
+   :start:
+   wait(SFB_CMD,  (activator.type == UNIT_ST_PC) and
+	          (not (activator.position == POSITION_FIGHTING)));
+
+   pc := activator;
+   secure(pc, start);
+
+   if ((rnd(1, SHIFTROOM) == 1) or command(CMD_DIG) or command(CMD_BURY))
+   {
+      pause;
+      act (
+"Suddenly the floor begins to shake violently and starts rising towards "+
+"the top of the cave at an alarming rate.  You dive for the floor and hope " +
+"there will be room for your bulky body when the floor stops, if it stops. ",
+	   A_SOMEONE, pc, null, null, TO_CHAR);
+
+      pause;
+      act (
+"Amazingly the floor smashes you through the top of the cave and then leaves "+
+"you suspended in mid air watching the floor descend.",
+	   A_ALWAYS, pc, null, null, TO_CHAR);
+
+      act (
+"$1n is pressed upward at an alarming rate, you gasp as $1e smashes through the top of the cave.",
+     A_ALWAYS, pc, null, null, TO_REST);
+      pause;
+
+act (
+"Just before you begin to fall a sheet of lava rushes under you and forms "+\
+"a semi-stable floor and the lower cave is no longer visible.",\
+     A_ALWAYS, pc, null, null, TO_CHAR);
+
+      link (pc, findroom(roomname) );
+      exec("look", pc);
+      pause;
+   }
+}
+dilend
+
+
+
+%rooms
+
+molt_entrance
+
+title "The Molting Cave."
+names {"molt_entrance"}
+descr
+"As you slowly climb to your feet after the fall and regain your sence of
+direction.  You scan the cave like room and feel an unbarable heat begin
+to overcome you.  You see a old skeleton slumped over a large dagger.  On
+a rock in front of the skeleton is a large stone that has some writings
+scratched on it you might want to read before doing anything else.  In
+the west corner of the cave there is a large glowing door with a sign on it.
+There is a hole in the ground that might be safe enough to go down through."
+
+movement SECT_DESERT
+ALWAYS_LIGHT
+
+
+down to molt_1;
+west to spark_room keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+
+extra {"scratchings","carvings","rock"}
+"This is a warning to all who may come after me..  I was a mage who tryed
+to help Loki in his assassination attempt.  Thor caught me and put me here
+as a punishment.  He told me if I was strong willed I could make my way
+out but my will is not strong enough.  As I wandered through these caves
+I found if I made enough noise the caves would shift and I would lose all
+sence of direction.  Even worse sometimes my noise woke the beasts that
+dwell here.  I can take this no more if you have the power you should leave
+now before you have no chance."
+
+extra {"sign"}
+"I have placed this door here for your safe escape. to prove I am not an
+evil god.  As you can see my rath on this sorry excuse for a mage is
+complete.  You may leave now and suffer not.  If you continue down however,
+your fait is not in my hands.  Explore carefully for this hell was not
+made for pleasure but for confusion and pain.
+
+Thor The Thunder God"
+end
+
+molt_1
+
+title "The Molting Cave."
+names {"molt_1"}
+descr
+"The heat in this room is almost unbarable.  The walls glow red and move
+hipnotically.  The floor is bubbling and does not look safe to walk on, yet
+it holds your weight just fine.  You might want to keep moving this place
+doesn't look to stable.  There is a small opening to the north that looks
+something like an exit."
+
+movement SECT_DESERT
+ALWAYS_LIGHT
+
+north to molt_5;
+
+dilcopy moltshift@hades2("tar_1@hades2");
+end
+
+molt_2
+
+title "The Molting Cave."
+names {"molt_2"}
+descr
+"The heat in this room is almost unbarable.  The walls glow red and move
+hipnotically.  The floor is bubbling and does not look safe to walk on, yet
+it holds your weight just fine.  You might want to keep moving this place
+doesn't look to stable.  There is a small opening that looks something like
+an exit to the east."
+movement SECT_DESERT
+ALWAYS_LIGHT
+
+east to molt_3;
+dilcopy moltshift@hades2("tar_2@hades2");
+LAVALOAD
+end
+
+molt_3
+
+title "The Molting Cave."
+names {"molt_3"}
+descr
+"The heat in this room is almost unbarable.  The walls glow red and move
+hipnotically.  The floor is bubbling and does not look safe to walk on, yet
+it holds your weight just fine.  You might want to keep moving this place
+doesn't look to stable.  There is a small opening to the west that looks
+something like an exit."
+
+movement SECT_DESERT
+ALWAYS_LIGHT
+
+west to molt_2;
+dilcopy moltshift@hades2("tar_3@hades2");
+LAVALOAD
+end
+
+molt_4
+
+title "The Molting Cave."
+names {"molt_4"}
+descr
+"The heat in this room is almost unbarable.  The walls glow red and move
+hipnotically.  The floor is bubbling and does not look safe to walk on, yet
+it holds your weight just fine.  You might want to keep moving this place
+doesn't look to stable.  There is a small opening to the north that looks
+something like an exit."
+
+movement SECT_DESERT
+ALWAYS_LIGHT
+
+north to molt_8;
+dilcopy moltshift@hades2("tar_4@hades2");
+LAVALOAD
+
+end
+
+molt_5
+
+title "The Molting Cave."
+names {"molt_5"}
+descr
+"The heat in this room is almost unbarable.  The walls glow red and move
+hipnotically.  The floor is bubbling and does not look safe to walk on, yet
+it holds your weight just fine.  You might want to keep moving this place
+doesn't look to stable.  There are exits to both the south and the north."
+
+movement SECT_DESERT
+ALWAYS_LIGHT
+
+south to molt_1;
+north to molt_9;
+dilcopy moltshift@hades2("tar_5@hades2");
+LAVALOAD
+end
+
+molt_6
+
+title "The Molting Cave."
+names {"molt_6"}
+descr
+"The heat in this room is almost unbarable.  The walls glow red and move
+hipnotically.  The floor is bubbling and does not look safe to walk on, yet
+it holds your weight just fine.  You might want to keep moving this place
+doesn't look to stable.  There is only one exit to the north."
+
+movement SECT_DESERT
+ALWAYS_LIGHT
+
+north to molt_10;
+
+dilcopy moltshift@hades2("tar_6@hades2");
+end
+
+molt_7
+
+title "The Molting Cave."
+names {"molt_7"}
+descr
+"The heat in this room is almost unbarable.  The walls glow red and move
+hipnotically.  The floor is bubbling and does not look safe to walk on, yet
+it holds your weight just fine.  You might want to keep moving this place
+doesn't look to stable.  There is only one exit to the north."
+
+movement SECT_DESERT
+ALWAYS_LIGHT
+
+north to molt_11;
+dilcopy moltshift@hades2("tar_7@hades2");
+TARLOAD
+end
+
+molt_8
+
+title "The Molting Cave."
+names {"molt_8"}
+descr
+"The heat in this room is almost unbarable.  The walls glow red and move
+hipnotically.  The floor is bubbling and does not look safe to walk on, yet
+it holds your weight just fine.  You might want to keep moving this place
+doesn't look to stable.  There is something that looks like an exit to
+the south."
+
+movement SECT_DESERT
+ALWAYS_LIGHT
+
+south to molt_4;
+dilcopy moltshift@hades2("tar_8@hades2");
+end
+
+molt_9
+
+title "The Molting Cave."
+names {"molt_9"}
+descr
+"The heat in this room is almost unbarable.  The walls glow red and move
+hipnotically.  The floor is bubbling and does not look safe to walk on, yet
+it holds your weight just fine.  You might want to keep moving this place
+doesn't look to stable.  There are exits to the north, south, and the
+east."
+
+movement SECT_DESERT
+ALWAYS_LIGHT
+
+south to molt_5;
+north to molt_13;
+east to molt_10;
+dilcopy moltshift@hades2("tar_9@hades2");
+
+LAVALOAD
+
+end
+
+molt_10
+
+title "The Molting Cave."
+names {"molt_9"}
+descr
+"The heat in this room is almost unbarable.  The walls glow red and move
+hipnotically.  The floor is bubbling and does not look safe to walk on, yet
+it holds your weight just fine.  You might want to keep moving this place
+doesn't look to stable.  There are exits to the south and the west."
+
+movement SECT_DESERT
+ALWAYS_LIGHT
+
+south to molt_6;
+west to molt_9;
+dilcopy moltshift@hades2("tar_10@hades2");
+end
+
+molt_11
+
+title "The Molting Cave."
+names {"molt_11"}
+descr
+"The heat in this room is almost unbarable.  The walls glow red and move
+hipnotically.  The floor is bubbling and does not look safe to walk on, yet
+it holds your weight just fine.  You might want to keep moving this place
+doesn't look to stable.  There is a small opening to the east and to
+the south."
+
+movement SECT_DESERT
+ALWAYS_LIGHT
+
+south to molt_7;
+east to molt_12;
+dilcopy moltshift@hades2("tar_11@hades2");
+end
+
+molt_12
+
+title "The Molting Cave."
+names {"molt_12"}
+descr
+"The heat in this room is almost unbarable.  The walls glow red and move
+hipnotically.  The floor is bubbling and does not look safe to walk on, yet
+it holds your weight just fine.  There is a cool breeze coming from a hole in
+the ground and there are openings in the west and north walls."
+
+movement SECT_DESERT
+ALWAYS_LIGHT
+
+west to molt_11;
+north to molt_16;
+down to hell2_tel;
+end
+
+molt_13
+
+title "The Molting Cave."
+names {"molt_13"}
+descr
+"The heat in this room is almost unbarable.  The walls glow red and move
+hipnotically.  The floor is bubbling and does not look safe to walk on, yet
+it holds your weight just fine.  You might want to keep moving this place
+doesn't look to stable.  There is a small opening to the east and to
+the south."
+
+movement SECT_DESERT
+ALWAYS_LIGHT
+
+south to molt_9;
+east to molt_14;
+dilcopy moltshift@hades2("tar_13@hades2");
+end
+
+molt_14
+
+title "The Molting Cave."
+names {"molt_14"}
+descr
+"The heat in this room is almost unbarable.  The walls glow red and move
+hipnotically.  The floor is bubbling and does not look safe to walk on, yet
+it holds your weight just fine.  You might want to keep moving this place
+doesn't look to stable.  There is only one exit to the west."
+
+movement SECT_DESERT
+ALWAYS_LIGHT
+
+west to molt_13;
+dilcopy moltshift@hades2("tar_8@hades2");
+end
+
+
+molt_16
+
+title "The Molting Cave."
+names {"molt_16"}
+descr
+"The heat in this room is almost unbarable.  The walls glow red and move
+hipnotically.  The floor is bubbling and does not look safe to walk on, yet
+it holds your weight just fine.  You might want to keep moving this place
+doesn't look to stable.  There is only one exit to the south."
+
+movement SECT_DESERT
+ALWAYS_LIGHT
+
+south to molt_12;
+dilcopy moltshift@hades2("tar_16@hades2");
+LAVALOAD
+end
+
+
+tar_1
+
+title "Tar pits"
+names {"tar_1"}
+descr
+"It is very dark in this room.  You can see slow moving blobs of nasty
+tar.  The floor is sticky and not very stable, so as hard as it is to move
+you might want to be doing just that.  There is an opening that looks
+something like an exit to the east."
+
+movement SECT_DESERT
+IN_ALWAYS_DARK
+
+east to tar_2;
+
+extra {"blob","tar"}
+"It's tar!  Nasty Sticky Tar!"
+
+dilcopy tarshift@hades2("molt_entrance@hades2");
+end
+
+tar_2
+
+title "Tar pits"
+names {"tar_2"}
+descr
+"It is very dark in this room.  You can see slow moving blobs of nasty
+tar.  The floor is sticky and not very stable, so as hard as it is to move
+you might want to be doing just that.  there are openings that look like
+exits to the north, west, and east."
+
+movement SECT_DESERT
+IN_ALWAYS_DARK
+
+north to tar_6;
+west to tar_1;
+east to tar_3;
+
+extra {"blob","tar"}
+"It's tar!  Nasty Sticky Tar!"
+
+dilcopy tarshift@hades2("molt_2@hades2");
+TARLOAD
+end
+
+tar_3
+
+title "Tar pits"
+names {"tar_3"}
+descr
+"It is very dark in this room.  You can see slow moving blobs of nasty
+tar.  The floor is sticky and not very stable, so as hard as it is to move
+you might want to be doing just that.  There are small openings to the
+west and east that look something like an exit."
+
+movement SECT_DESERT
+IN_ALWAYS_DARK
+
+west to tar_2;
+east to tar_4;
+
+extra {"blob","tar"}
+"It's tar!  Nasty Sticky Tar!"
+
+dilcopy tarshift@hades2("molt_3@hades2");
+end
+
+tar_4
+
+title "Tar pits"
+names {"tar_4"}
+descr
+"It is very dark in this room.  You can see slow moving blobs of nasty
+tar.  The floor is sticky and not very stable, so as hard as it is to move
+you might want to be doing just that.  There are exits to the south and
+to the west."
+
+movement SECT_DESERT
+IN_ALWAYS_DARK
+
+west to tar_3;
+south to minotaur_h2;
+
+extra {"blob","tar"}
+"It's tar!  Nasty Sticky Tar!"
+
+dilcopy tarshift@hades2("molt_4@hades2");
+TARLOAD
+end
+
+tar_5
+
+title "Tar pits"
+names {"tar_5"}
+descr
+"It is very dark in this room.  You can see slow moving blobs of nasty
+tar.  The floor is sticky and not very stable, so as hard as it is to move
+you might want to be doing just that.  There are small openings to the
+north and south that look something like an exit."
+
+movement SECT_DESERT
+IN_ALWAYS_DARK
+
+north to tar_9;
+south to tar_1;
+
+extra {"blob","tar"}
+"It's tar!  Nasty Sticky Tar!"
+
+dilcopy tarshift@hades2("molt_5@hades2");
+
+TARLOAD
+
+end
+
+
+tar_6
+
+title "Tar pits"
+names {"tar_6"}
+descr
+"It is very dark in this room.  You can see slow moving blobs of nasty
+tar.  The floor is sticky and not very stable, so as hard as it is to move
+you might want to be doing just that.  There is a small opening to the
+south that looks something like an exit."
+
+movement SECT_DESERT
+IN_ALWAYS_DARK
+
+south to tar_2;
+
+extra {"blob","tar"}
+"It's tar!  Nasty Sticky Tar!"
+dilcopy tarshift@hades2("molt_6@hades2");
+end
+
+tar_7
+
+title "Tar pits"
+names {"tar_7"}
+descr
+"It is very dark in this room.  You can see slow moving blobs of nasty
+tar.  The floor is sticky and not very stable, so as hard as it is to move
+you might want to be doing just that.  There is a small opening to the
+east that looks something like an exit."
+
+movement SECT_DESERT
+IN_ALWAYS_DARK
+
+east to tar_8;
+
+extra {"blob","tar"}
+"It's tar!  Nasty Sticky Tar!"
+dilcopy tarshift@hades2("molt_7@hades2");
+TARLOAD
+
+end
+
+tar_8
+
+title "Tar pits"
+names {"tar_8"}
+descr
+"It is very dark in this room.  You can see slow moving blobs of nasty
+tar.  The floor is sticky and not very stable, so as hard as it is to move
+you might want to be doing just that.  There is a small opening to the
+west that looks something like an exit."
+
+movement SECT_DESERT
+IN_ALWAYS_DARK
+
+west to tar_7;
+
+extra {"blob","tar"}
+"It's tar!  Nasty Sticky Tar!"
+
+dilcopy tarshift@hades2("molt_8@hades2");
+end
+
+tar_9
+
+title "Tar pits"
+names {"tar_9"}
+descr
+"It is very dark in this room.  You can see slow moving blobs of nasty
+tar.  The floor is sticky and not very stable, so as hard as it is to move
+you might want to be doing just that.  There is a small opening to the
+south that looks something like an exit."
+
+movement SECT_DESERT
+IN_ALWAYS_DARK
+
+south to tar_5;
+
+extra {"blob","tar"}
+"It's tar!  Nasty Sticky Tar!"
+
+dilcopy tarshift@hades2("molt_9@hades2");
+end
+
+
+tar_10
+
+title "Tar pits"
+names {"tar_10"}
+descr
+"It is very dark in this room.  You can see slow moving blobs of nasty
+tar.  The floor is sticky and not very stable, so as hard as it is to move
+you might want to be doing just that.  There are small openings to the
+north and east that look something like an exit."
+
+movement SECT_DESERT
+IN_ALWAYS_DARK
+
+east to tar_11;
+north to tar_14;
+
+extra {"blob","tar"}
+"It's tar!  Nasty Sticky Tar!"
+
+dilcopy tarshift@hades2("molt_10@hades2");
+end
+
+tar_11
+
+title "Tar pits"
+names {"tar_4"}
+descr
+"It is very dark in this room.  You can see slow moving blobs of nasty
+tar.  The floor is sticky and not very stable, so as hard as it is to move
+you might want to be doing just that.  There is a small opening to the
+west that looks something like an exit."
+
+movement SECT_DESERT
+IN_ALWAYS_DARK
+
+west to tar_10;
+/* XXX south to hide_h2; */
+
+extra {"blob","tar"}
+"It's tar!  Nasty Sticky Tar!"
+dilcopy tarshift@hades2("molt_12@hades2");
+end
+
+minotaur_h2
+
+names {"minotaur_h2"}
+title "Minotaur dwelling."
+descr
+"This cave looks to be one of the more stable rooms you have come across.
+You see sleeping areas for several beasts of some kind.  Bits of bones and
+hair line the cave and the smell is not very good in here.  I am sure the
+Minotaurs do not want you invading there space.  There is an exit to the
+north that heads back into the less inviting caves."
+
+movement SECT_DESERT
+IN_ALWAYS_DARK
+
+north to tar_4;
+end
+
+
+
+tar_13
+
+title "Tar pits"
+names {"tar_13"}
+descr
+"It is very dark in this room.  You can see slow moving blobs of nasty
+tar.  The floor is sticky and not very stable, so as hard as it is to move
+you might want to be doing just that.  There is an opening that looks
+something like an exit to the east."
+
+movement SECT_DESERT
+IN_ALWAYS_DARK
+
+east to tar_14;
+
+extra {"blob","tar"}
+"It's tar!  Nasty Sticky Tar!"
+
+dilcopy tarshift@hades2("molt_13@hades2");
+
+end
+
+tar_14
+
+title "Tar pits"
+names {"tar_2"}
+descr
+"It is very dark in this room.  You can see slow moving blobs of nasty
+tar.  The floor is sticky and not very stable, so as hard as it is to move
+you might want to be doing just that.  there are openings that look like
+exits to the south, west, and east."
+
+movement SECT_DESERT
+IN_ALWAYS_DARK
+
+south to tar_10;
+west to tar_13;
+east to tar_15;
+
+extra {"blob","tar"}
+"It's tar!  Nasty Sticky Tar!"
+
+dilcopy tarshift@hades2("molt_14@hades2");
+end
+
+tar_15
+
+title "Tar pits"
+names {"tar_15"}
+descr
+"It is very dark in this room.  You can see slow moving blobs of nasty
+tar.  The floor is sticky and not very stable, so as hard as it is to move
+you might want to be doing just that.  There is a small opening to the
+west that looks something like an exit."
+
+movement SECT_DESERT
+IN_ALWAYS_DARK
+
+west to tar_14;
+
+extra {"blob","tar"}
+"It's tar!  Nasty Sticky Tar!"
+
+dilcopy tarshift@hades2("molt_4@hades2");
+end
+
+tar_16
+
+title "Tar pits"
+names {"tar_16"}
+descr
+"It is very dark in this room.  You can see slow moving blobs of nasty
+tar.  The floor is sticky and not very stable, so as hard as it is to move
+you might want to be doing just that.  There are small openings to both
+the west and the north that look something like an exit."
+
+movement SECT_DESERT
+IN_ALWAYS_DARK
+
+west to hell2_exit;
+north to minotaur_h1;
+
+extra {"blob","tar"}
+"It's tar!  Nasty Sticky Tar!"
+end
+
+hell2_exit
+
+title "The Drain"
+names {"hell2_exit"}
+descr
+"You've done it now I hope you wrote out your will.  The tar in this room
+is quickly spinning twards a large hole in the middle of the floor.  You
+better hold your breath this doesn't look like it is going to be fun!!!"
+
+movement SECT_DESERT
+IN_ALWAYS_DARK
+south to tar_2;
+
+special SFUN_FORCE_MOVE "plane3_rm1@hades3!Before you could get your breath you are sucked deaper into hell."  time 14 bits SFB_RANTIME
+
+end
+
+minotaur_h1
+
+names {"minotaur_h1"}
+title "Minotaur dwelling."
+descr
+"This cave looks to be one of the more stable rooms you have come across.
+You see sleeping areas for several beasts of some kind.  Bits of bones and
+hair line the cave and the smell is not very good in here.  I am sure the
+Minotaurs do not want you invading there space.  There is an exit to the
+south that heads back into the less inviting caves."
+
+movement SECT_DESERT
+IN_ALWAYS_DARK
+
+south to tar_16;
+end
+
+hell2_tel
+
+title "The Lemonade Stop."
+names {"hell2_tel"}
+descr
+"After a long day in hell all adventures should come and have a tall mug
+of lemonade.  So as a cruel joke the gods placed this fountain here for
+you to have a good drink before returning to hell.  Cool air drifts down from
+small holes in the ceiling, helping your armor and body return to a
+more solid and comfortable form.  There is a door to the east, with a sign
+over it, and a hole in the top of the cave back into that hot place."
+
+movement SECT_CITY
+ALWAYS_LIGHT
+
+up to molt_12;
+east to spark_room keyword {"door"} open {EX_OPEN_CLOSE, EX_CLOSED};
+
+extra {"hole","holes"}
+"These look to be some kind of Air conditioning tunnels that seem to brin
+the cold air down from the surface.  To bad they are to small for your big
+butt to fit in."
+
+extra {"sign","writings"}
+"The sign reads, 'Don't dare go through this door'"
+
+
+end
+
+spark_room
+title "Mistic Room"
+names {"spark_room"}
+descr
+"As you enter this room your body is totally frozen and you feel a strong
+wave of magic surge through your body.  As you stare in wonder at the
+blank white room, large blue sparks begin exploding around you until they
+fill the room entirely.  You begin feeling the sparks shoot through your
+soul and wonder if you should have went through that door."
+
+movement SECT_DESERT
+ALWAYS_LIGHT
+
+special SFUN_FORCE_MOVE "market_sq@midgaard!Suddenly your body shifts and is transfered."  time 14 bits SFB_RANTIME
+
+end
+
+whistler_room
+
+title "Crystal Heaven"
+names {"heaven"}
+descr
+"A feeling of Peace sweeps your soul as you notice you are no longer in
+the mortal world.  You are suspended in a misty air and seem to be
+surrounded by a large Crystal ball.  This is obviously the ledgendary home
+of Whistler.  Through the mist you can see the world of Valhalla far
+below you.  There seems to be an exit down to the Village of Tassel Grove,
+which is the home of the halflings that this god loves dearly.  A dark
+passage leads south and a vortex of cascading lights draws you upwards in
+a feeling of heavenly pleasure."
+
+movement SECT_CITY
+flags {UNIT_FL_NO_TELEPORT,UNIT_FL_NO_WEATHER,UNIT_FL_PRIVATE}
+
+ALWAYS_LIGHT
+
+extra {"valhalla","world"}
+"You see the small world of Valhalla and notice it growing and changing
+slowly.  You see small beams of light that seem to come from other spots
+in heaven, these must be the links of the gods to there mortals."
+end
+
+
+
+
+%mobiles
+lava_beast
+title "the lava beast"
+names {"lava beast", "beast", "lava"}
+descr
+"A half lava half beast is pulsing here!"
+extra {}
+"If this thing had features it might be called a life form.  As you gaze
+into the mass of lava you can almost see a trapped soul reaching out."
+race RACE_OTHER_UNDEAD
+alignment -1000
+sex SEX_NEUTRAL
+level 41
+flags {UNIT_FL_NO_TELEPORT}
+
+height 200
+weight 300
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+exp 140
+/*(str,dex,con,hpp,bra,cha,mag,div)*/
+MSET_ABILITY(20, 12, 12, 12, 12, 12, 20, 0)
+/*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+MSET_WEAPON(10, 5, 5, 5, 30, 5)
+/*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+MSET_SPELL(5,0,0,0,0,5,30,0,0,0,0)
+special SFUN_COMBAT_MAGIC "cast fireball"
+money 5 SILVER_PIECE,1 COPPER_PIECE
+
+dilbegin prg1();
+var
+	ext : extraptr;
+	m : integer;
+	s : string;
+code
+{
+heartbeat := 60;
+wait(SFB_TICK, ( not(self.position <= 7)) );
+	ext := "mobsloaded" in self.outside.extra;
+	m := atoi(ext.descr);
+	m := m-1;
+	s := itoa(m);
+	ext.descr := s;
+	act ("$1n molts back into the floor.", A_ALWAYS, self, null, null, TO_ALL);
+	destroy(self);
+}
+dilend
+
+special SFUN_AGGRESSIVE	time 12
+special SFUN_TEAMWORK "tar beast/lava beast"
+end
+
+lava2_beast
+title "the lava beast"
+names {"lava beast", "beast", "lava"}
+descr
+"A half lava half beast is pulsing here!"
+extra {}
+"If this thing had features it might be called a life form.  As you gaze
+into the mass of lava you can almost see a trapped soul reaching out."
+race RACE_OTHER_UNDEAD
+alignment -1000
+sex SEX_NEUTRAL
+level 41
+flags {UNIT_FL_NO_TELEPORT}
+
+height 200
+weight 300
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+exp 135
+/*(str,dex,con,hpp,bra,cha,mag,div)*/
+MSET_ABILITY(20, 12, 12, 12, 12, 12, 20, 0)
+/*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+MSET_WEAPON(10, 5, 5, 5, 30, 5)
+/*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+MSET_SPELL(5,0,0,0,0,5,30,0,0,0,0)
+special SFUN_COMBAT_MAGIC "cast fireball"
+money 5 SILVER_PIECE,1 COPPER_PIECE
+special SFUN_TEAMWORK "tar beast/lava beast"
+special SFUN_RANDOM_ZONE_MOVE time 130 bits SFB_RANTIME
+end
+
+tar_beast
+title "the Tar beast"
+names {"tar beast", "beast", "tar"}
+descr
+"A nasty sticky Tar Beast is oozing here."
+extra {}
+"Yuk!!  It has no form!  All you see is a black sticky mass of goo and
+something that might be called hands."
+race RACE_OTHER_UNDEAD
+alignment -1000
+sex SEX_NEUTRAL
+level 43
+flags {UNIT_FL_NO_TELEPORT}
+
+height 200
+weight 300
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+exp 140
+/*(str,dex,con,hpp,bra,cha,mag,div)*/
+MSET_ABILITY(20, 12, 12, 12, 12, 12, 20, 0)
+/*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+MSET_WEAPON(10, 5, 5, 5, 30, 5)
+/*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+MSET_SPELL(0,0,0,0,0,5,5,0,0,30,0)
+special SFUN_COMBAT_MAGIC "cast acid drop"
+money 5 SILVER_PIECE,7 COPPER_PIECE
+
+
+dilbegin prg2();
+var
+	ext : extraptr;
+	m : integer;
+	s : string;
+code
+{
+heartbeat := 60;
+wait(SFB_TICK, not(self.position <= 7));
+	ext := "mobsloaded" in self.outside.extra;
+	m := atoi(ext.descr);
+	m := m-1;
+	s := itoa(m);
+	ext.descr := s;
+	act ("$1n oozes back into the pits.", A_ALWAYS, self, null, null, TO_ALL);
+	destroy(self);
+}
+dilend
+special SFUN_AGGRESSIVE	time 12
+special SFUN_TEAMWORK "tar beast/lava beast"
+end
+
+tar2_beast
+title "the Tar beast"
+names {"tar beast", "beast", "tar"}
+descr
+"A nasty sticky Tar Beast is oozing here."
+extra {}
+"Yuk!!  It has no form!  All you see is a black sticky mass of goo and
+something that might be called hands."
+race RACE_OTHER_UNDEAD
+alignment -1000
+sex SEX_NEUTRAL
+level 43
+flags {UNIT_FL_NO_TELEPORT}
+
+height 200
+weight 300
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+exp 135
+/*(str,dex,con,hpp,bra,cha,mag,div)*/
+MSET_ABILITY(20, 12, 12, 12, 12, 12, 20, 0)
+/*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+MSET_WEAPON(10, 5, 5, 5, 30, 5)
+/*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+MSET_SPELL(0,0,0,0,0,5,5,0,0,30,0)
+special SFUN_COMBAT_MAGIC "cast acid drop"
+money 5 SILVER_PIECE,7 COPPER_PIECE
+
+special SFUN_TEAMWORK "tar beast/lava beast"
+special SFUN_RANDOM_ZONE_MOVE time 130 bits SFB_RANTIME
+end
+
+minotaur
+title "the Minotaur"
+
+names {"minotaur"}
+descr
+"A Minotaur is scavenging here."
+extra {}
+"Your eyes are drawn to the glowing red eyes of this bull-headed humaniod.
+He has very sharp horns and a body of a human.  He doesn't look happy
+about you stairing at him."
+race RACE_MINOTAUR
+alignment -1000
+sex SEX_MALE
+level 44
+flags {UNIT_FL_NO_TELEPORT}
+
+height 200
+weight 300
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+exp 130
+/*(str,dex,con,hpp,bra,cha,mag,div)*/
+MSET_ABILITY(20, 12, 12, 22, 12, 12, 10, 0)
+/*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+MSET_WEAPON(45, 5, 10, 5, 5, 5)
+/*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+MSET_SPELL(5,0,0,0,5,0,5,0,0,5,5)
+special SFUN_COMBAT_MAGIC "cast madness"
+money 6 SILVER_PIECE
+end
+
+minotaur2
+title "the Minotaur"
+
+names {"minotaur"}
+descr
+"A Minotaur is scavenging here."
+extra {}
+"Your eyes are drawn to the glowing red eyes of this bull-headed humaniod.
+He has very sharp horns and a body of a human.  He doesn't look happy
+about you stairing at him."
+race RACE_MINOTAUR
+alignment -1000
+sex SEX_MALE
+level 45
+flags {UNIT_FL_NO_TELEPORT}
+
+height 200
+weight 400
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+exp 110
+/*(str,dex,con,hpp,bra,cha,mag,div)*/
+MSET_ABILITY(20, 12, 12, 22, 12, 12, 10, 0)
+/*(axe_ham, sword, club_mace, flail_pole, unarmed, special)*/
+MSET_WEAPON(45, 5, 10, 5, 5, 5)
+/*(div, pro, det, sum, cre, min, hea, col, cel, int, ext) */
+MSET_SPELL(5,0,0,0,5,0,5,0,0,5,5)
+special SFUN_COMBAT_MAGIC "cast madness"
+money 6 SILVER_PIECE
+special SFUN_AGGRESSIVE	time 12
+
+end
+
+%objects
+
+gem_box
+names {"jewelry box", "box"}
+title "jewelry box"
+descr "An ornate jewlery box has been left here."
+
+extra{}
+"The is a very ornate jewelry box covered in gold leaf.  It almost
+pulses with life as you stare at your reflection in the brightly polished
+gold leaf.   You notice that there is a small opening on the top of the box."
+
+extra{"small opening", "lock"}
+"This looks like a very complex locking system that will be a challenge for
+any thief.  There alot of little gears and levers that seem to rotate around
+in an almost magical motion."
+
+extra{"$identify"}
+"This looks like a very complex locking system that will be a challenge for
+any thief.  There alot of little gears and levers that seem to rotate around
+in an almost magical motion."
+
+
+flags {UNIT_FL_MAGIC}
+manipulate {MANIPULATE_ENTER, MANIPULATE_TAKE}
+open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_PICKPROOF}
+CONTAINER_DEF(5)
+weight 10
+spell 200
+
+dilbegin prg3();
+var
+	pc : unitptr;
+code
+{
+	heartbeat := 3;
+
+	:start:
+
+	wait(SFB_CMD, (command(CMD_CAST) or command(CMD_PICK)) and ("box" in argument) );
+	pc := activator;
+	secure(pc, lost);
+	if (command(CMD_CAST) and ("un" in argument))
+	{
+	  block;
+      act("You hear a faint click. *click* ",
+          A_ALWAYS, pc, null, null, TO_ALL);
+	  goto trap;
+    }
+    else if (command(CMD_PICK))
+    {
+    	if (pc.skills[SKI_PICK_LOCK] == 0 ) goto start;
+    	if ((pc.level > 51) and (pc.level < 221))
+    	{
+      		act("You are not allowed to intervene in this mortal matter.",
+        	  A_ALWAYS, pc, null, null, TO_CHAR);
+        	goto start;
+        }
+		block;
+	    if (pc.skills[SKI_PICK_LOCK] <= 15 )
+	    {
+      		act("Your pick slides into the opening *click* *click*",
+        	  A_ALWAYS, pc, null, null, TO_CHAR);
+      		act("You gasp as you relize that you mistakenly set off a trap.",
+        	  A_ALWAYS, pc, null, null, TO_CHAR);
+      		act("Maybe you should have practiced better.",
+        	  A_ALWAYS, pc, null, null, TO_CHAR);
+    		exec("gasp", pc);
+    		goto trap;
+    	}
+    	if (pc.skills[SKI_PICK_LOCK] > 15 )
+    	{
+      		act("Your pick slides into the opening *click*",
+        	  A_ALWAYS, pc, null, null, TO_CHAR);
+      		exec("curse", pc);
+      		act("*cluck* Apperently this is a multi lock system.",
+        	  A_ALWAYS, pc, null, null, TO_CHAR);
+    		if (pc.skills[SKI_PICK_LOCK] <= 30 )
+    		{
+	      	   	 act("You slide your pick in for the second time. *click* *click*",
+	           	   A_ALWAYS, pc, null, null, TO_CHAR);
+	      	   	 act("You gasp as you relize that you mistakenly set off a trap.",
+	           	   A_ALWAYS, pc, null, null, TO_CHAR);
+	      	   	 act("Maybe you should have practiced better.",
+	           	   A_ALWAYS, pc, null, null, TO_CHAR);
+	    	   	 exec("gasp", pc);
+	    	   	 goto trap;
+			}
+		}
+    	if (pc.skills[SKI_PICK_LOCK] > 30 )
+    	{
+	 	  	act("You slide your pick in for the second time. *click*",
+           	   A_ALWAYS, pc, null, null, TO_CHAR);
+      		act("*cluck* You scream in disbelief, three locks?  Could it be?",
+        	  A_ALWAYS, pc, null, null, TO_CHAR);
+			exec("scream", pc);
+    		if (pc.skills[SKI_PICK_LOCK] <= 40 )
+    		{
+	      	   	 act("You steady you hand, and reinsert the pick for a third time. *click* *click*",
+	           	   A_ALWAYS, pc, null, null, TO_CHAR);
+	      	   	 act("You gasp as you relize that you mistakenly set off a trap.",
+	           	   A_ALWAYS, pc, null, null, TO_CHAR);
+	      	   	 act("Maybe you should have practiced better.",
+	           	   A_ALWAYS, pc, null, null, TO_CHAR);
+	    	   	 exec("gasp", pc);
+	    	   	 goto trap;
+			}
+		}
+    	if (pc.skills[SKI_PICK_LOCK] > 40 )
+    		{
+	      	act("You steady you hand, and reinsert the pick for a third time. *click*",
+	           	   A_ALWAYS, pc, null, null, TO_CHAR);
+	      	act("A faint whiring can be heard coming from the box.",
+	           	   A_ALWAYS, pc, null, null, TO_CHAR);
+	        pause;
+	      	act("*click* *click* *click* *click* ",
+	           	   A_ALWAYS, pc, null, null, TO_CHAR);
+			pause;
+			act("*POOF* This box disinagrates into dust, leaving only the contents behind.",
+	           	   A_ALWAYS, pc, null, null, TO_CHAR);
+			act("Some dust blows away in the wind.",
+	           	   A_ALWAYS, pc, null, null, TO_ALL);
+			link(self.inside, self.outside);
+			destroy(self);
+			goto start;
+			}
+
+    }
+:lost:
+unsecure(pc);
+goto start;
+
+:trap:
+      act("*tick*  *tick*  *tick*",
+          A_ALWAYS, pc, null, null, TO_ALL);
+      pause;
+      act("*BOOM!* The jewlery box explodes into a ball of flames.",
+          A_ALWAYS, pc, null, null, TO_ALL);
+      exec("scream", pc);
+      pc.hp := 0;
+      act("You scream in agony as your flesh is melted from your body.",
+          A_ALWAYS, pc, null, null, TO_CHAR);
+      act("$1n screams in agony as $1s flesh is melted away.",
+          A_ALWAYS, pc, null, null, TO_REST);
+      pc.position := POSITION_STUNNED;
+      act("You fall to the gound unable to move.",
+          A_ALWAYS, pc, null, null, TO_CHAR);
+      act("$1n falls to the ground, motionless.",
+          A_ALWAYS, pc, null, null, TO_REST);
+      destroy(self);
+      goto start;
+
+}
+dilend
+
+end
+
+
+                                amber_gem
+names {"amber gem", "gem"}
+title "an Amber Gem"
+descr "A dull Amber Gem is here."
+extra {}
+"It seems like an ordinary stone, maybe less than ordinary by the
+looks of the cut. You can tell this stone was never set in any sort
+of surface, it must not have been intended for decoration."
+extra {"$identify"}
+"When held this gem will boost the wearer's strength by a considerable
+amount, however the constitution will suffer as well."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+flags {UNIT_FL_MAGIC}
+type ITEM_TREASURE
+STR_TRANSFER(+1)
+CON_TRANSFER(-1)
+weight 2
+cost 100 COPPER_PIECE
+rent 50 IRON_PIECE
+special SFUN_RESTRICT_OBJ "Level = 40"
+
+/* Dil to show player the gem is sacred */
+dilbegin prg4();
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*4;
+
+   :start:
+   wait(SFB_CMD, command(CMD_HOLD));
+
+   if ((self.outside.name $= activator.name) and
+      ("amber gem" in argument))
+   {
+      act("The Amber Gem glows brightly, you know it is Sacred!",
+          A_ALWAYS, activator, null, null, TO_CHAR);
+      act("The Amber Gem glows brightly in "+activator.name+"'s hand.",
+          A_SOMEONE, activator, null, null, TO_REST);
+   }
+}
+dilend
+
+end
+
+                                cyan_gem
+names {"cyan gem", "gem"}
+title "a Cyan Gem"
+descr "A shiny Cyan Gem is here."
+extra {}
+"It seems like an ordinary stone, maybe less than ordinary by the
+looks of the cut. You can tell this stone was never set in any sort
+of surface, it must not have been intended for decoration. There is
+a scuff along the side greatly reducing the beauty of this stone."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+flags {UNIT_FL_MAGIC}
+type ITEM_TREASURE
+STR_TRANSFER(-1)
+CON_TRANSFER(-1)
+weight 1
+cost 4 COPPER_PIECE
+rent 2 IRON_PIECE
+end
+
+skeleton
+
+names {"pile of bones","skeleton","dagger","bones","bone"}
+title "an old skeleton."
+descr
+"A pile of bones that resemble a skeleton is slumped here."
+
+extra {}
+"The skeleton seems to have been wearing some kind of robe but it has sence
+burnt into small carbon strips hanging on chard bones.  Judging from the
+looks of the skeleton the person it once was killed himself with a dagger
+and fell over face first."
+
+extra {"dagger"}
+"It looks like a normal mages dagger."
+end
+
+
+lem_fount
+names {"fountain", "lemonade"}
+title "a Lemonade fountain"
+descr "A lemonade fountain is softly trickling here."
+extra {}
+"Free lemonade!!!!  Oh, Boy!  does this look good or what?"
+LIQ_DEF (LIQ_LEMONADE, 20000, 20000, 20000, 0)
+end
+
+crusty_boots
+names {"crusty boots","boots"}
+title "a pair of old crusty boots"
+descr "A pair of crusty boots have been left here."
+extra {}
+"This armor was not crafted it just formed from the molted rock and tar
+and seems to contain bits of hair, bone and just about all the elements."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FEET}
+ARMOUR_HRD_LEATHER(0, 0)
+cost 15 COPPER_PIECE
+special SFUN_RESTRICT_OBJ "str =40"
+weight 20
+end
+
+crusty_leggings
+names {"crusty leggings","leggings"}
+title "a pair of Crusty leggings"
+descr "A pair of old crusty leggings has been left here"
+extra {}
+"This armor was not crafted it just formed from the molted rock and tar
+and seems to contain bits of hair, bone and just about all the elements."
+
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+ARMOUR_HRD_LEATHER(0, 0)
+cost 15 COPPER_PIECE
+
+special SFUN_RESTRICT_OBJ "str = 40"
+weight 20
+end
+
+
+bone_plate
+names {"bone plate","plate"}
+title "a Bone Breast Plate"
+descr "A scary old bone plate has been left here."
+extra {}
+"Each bone looks well placed.  The bones don't seem to have anything holding
+them together, as you look it over you decide it must be bonded with some kind
+of magic."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_BODY}
+ARMOUR_CHAIN(0,0)
+special SFUN_RESTRICT_OBJ "str = 40"
+STR_TRANSFER(+1)
+BRA_TRANSFER(-1)
+cost 100 COPPER_PIECE
+rent 50 IRON_PIECE
+
+
+weight 25
+end
+
+bone_bracers
+names {"bone bracers","bracers"}
+title "a pair of bone bracers"
+descr "A pair of old scary looking bone bracers has been left here."
+
+extra {}
+"Each bone looks well placed.  The bones don't seem to have anything holding
+them together, as you look it over you decide it must be bonded with some kind
+of magic."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ARMS}
+ARMOUR_CHAIN(0,0)
+special SFUN_RESTRICT_OBJ "str = 40"
+BRA_TRANSFER(-1)
+cost 100 COPPER_PIECE
+rent 50 IRON_PIECE
+
+weight 20
+end
+
+w_axe
+
+names {"shining axe","axe"}
+title "a Shining Axe"
+
+descr "A Shining Axe with the mark of Thor has been left here."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_BATTLE_AXE,9 , 1 )
+weight 12
+
+DEX_TRANSFER(-2)
+cost 116 COPPER_PIECE
+rent 58 IRON_PIECE
+
+special SFUN_RESTRICT_OBJ "str =55"
+extra {}
+"This Axe shines with a godly light and was obviously forged from divine
+metals.  As you look at this Axe you can almost see Thor's Thunder hammer
+hitting the molting steel."
+
+end
+
+%reset
+load skeleton into molt_entrance
+load lem_fount into hell2_tel
+
+load lava2_beast into molt_13	zonemax 6
+load lava2_beast into molt_5	zonemax 6
+load tar2_beast into tar_3	zonemax 3
+load tar2_beast into tar_14	zonemax 3
+
+load minotaur into minotaur_h2
+{
+equip w_axe position WEAR_WIELD
+equip crusty_boots position WEAR_FEET
+equip crusty_leggings position WEAR_LEGS
+equip bone_plate position WEAR_BODY
+equip bone_bracers position WEAR_ARMS
+load gem_box
+	{
+	load cyan_gem
+	}
+}
+
+load minotaur into molt_14
+{
+equip w_axe position WEAR_WIELD
+equip crusty_boots position WEAR_FEET
+equip crusty_leggings position WEAR_LEGS
+equip bone_plate position WEAR_BODY
+equip bone_bracers position WEAR_ARMS
+load gem_box
+	{
+	load cyan_gem
+	}
+}
+
+load minotaur2 into minotaur_h1
+{
+equip w_axe position WEAR_WIELD
+equip crusty_boots position WEAR_FEET
+equip crusty_leggings position WEAR_LEGS
+equip bone_plate position WEAR_BODY
+equip bone_bracers position WEAR_ARMS
+load gem_box
+	{
+	load amber_gem
+	}
+}
+
+load minotaur into tar_6
+{
+equip w_axe position WEAR_WIELD
+equip crusty_boots position WEAR_FEET
+equip crusty_leggings position WEAR_LEGS
+equip bone_plate position WEAR_BODY
+equip bone_bracers position WEAR_ARMS
+load gem_box
+	{
+	load cyan_gem
+	}
+}
+door hell2_tel EAST {EX_OPEN_CLOSE, EX_CLOSED}
+door molt_entrance WEST {EX_OPEN_CLOSE, EX_CLOSED}
+
+
+%end
+
+

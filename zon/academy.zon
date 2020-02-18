@@ -1,0 +1,4597 @@
+/*
+filename    academy
+password    babylon
+changedby   Drevar
+EmailAdd     Palio <palio@blinksoft.com>
+request     
+version     7
+END HEADER*/
+
+#include <composed.h>
+#define RACE_WIZARD 6555
+#define RACE_MUTANT_ABOM 6655
+#define RACE_MUTANT_REPTILE 6656
+#define RACE_WIZARD_GUARDIAN 6557
+#define RACE_WIZARD_FAMILIAR 6556
+#define DARKSTAR_ONGOING  "Darkstar Quest Ongoing"
+#define DARKSTAR_COMPLETE "Darkstar Quest Complete"
+#define HOMEFIRE_ONGOING  "Homefire Quest Ongoing"
+#define HOMEFIRE_COMPLETE "Homefire Quest Complete"
+#define FORTRESS_TRAVEL "Fortress Travel"
+#define EXIT_TRAVEL "Exit Travel"
+#define LIGHT_TRAVEL "Light Travel"
+#define DARKNESS_TRAVEL "Darkness Travel"
+#define REALM_TRAVEL "Realm Travel"
+
+%zone academy
+lifespan 20
+reset RESET_ANYHOW
+title "Magic Academy"
+
+creators {"enoch"}
+
+notes "This is the Fortress of High Wizardry at Arcanus.  It is home to the
+        four wings of wizardry.  The Paths of Pain, The Elements, Mind,
+        and Conjuring.  There is a quest in the lower levels.  There
+        is going to be a hidden portion that will contain a lich lord
+        and the Path of Darkness but that will come later.
+        Any bugs and/or suggestions to <Enoch> at jas39@po.cwru.edu."
+
+%dil
+dilbegin stop_act (pc:unitptr,direction:integer);
+code
+{
+act ("$3n stops you and says, 'Your not allowed in There!'",
+	   A_ALWAYS,pc,null,self,TO_CHAR);
+      act ("$3n stops $1n, and says, 'Your not allowed in there!'",
+	   A_SOMEONE,pc,null,self,TO_REST);
+}
+dilend
+
+
+%rooms
+
+                                     nwg1
+names {"elemental council chamber"}
+title "Path of the Elements Council Chamber"
+descr
+"      The room is furnished with four chairs and a desk with a chair.  The
+desk sits in the far corner and the chairs are in a semi-circle around the
+room's perimeter.  On the wall hangs a picture.  The room pulses with magic
+and a static charge hangs in the air."
+
+extra {"chairs", "desk"}
+"The chairs are made of a clear substance that shimmers in the light of
+the room.  The desk is formed from the same substance and looks very solid."
+
+extra {"picture"}
+"The picture is of a large warrior in a full set of sparkling plate mail.
+He has the look of a truly noble and honest knight.  Underneath is a name
+plate."
+
+extra {"name plate", "plate", "name"}
+"The name plate reads : Corwell, noble defender of Vulkroy Hawkeye and Knight
+of the Shining Sword."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to nwg2 open {EX_OPEN_CLOSE, EX_CLOSED}
+        keyword {"door"};
+south to maing open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+        keyword {"door"};
+
+end
+                               nwg2
+names {"elemental lounge"}
+title "Elemental Lounge"
+descr
+"       This is the waiting lounge for visitors of the Elemental Master.
+The room is without decoration save for a few chairs.  You imagine that
+many an apprentice has sat here waiting for an interview with the Master."
+
+extra {"chairs"}
+"The chairs are made of the same clear substance that the rest of the
+furniture in this wings seems to be made of."
+
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to nwg3 open {EX_OPEN_CLOSE, EX_CLOSED}
+        keyword {"door"};
+south to nwg1 open {EX_OPEN_CLOSE, EX_CLOSED}
+        keyword {"door"};
+
+end
+                                nwg3
+names {"elemental administration"}
+title " Room of Elemental Administration"
+descr
+"       A large desk sits in the corner of the room and a chair sits in front
+of the desk.  There is a pile of papers on the desk.  A stairwell leads up."
+
+extra {"papers", "pile"}
+"The pile of papers clutters the desk with seemingly no order."
+
+extra {"desk", "chair"}
+"The desk and chairs are made of the same clear substance.  They reflect the
+light in shimmering colors and patterns."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+
+up to nws3;
+south to nwg2 open {EX_OPEN_CLOSE, EX_CLOSED}
+               keyword {"door"};
+end
+
+                                 nws3
+names {"elemental dorms"}
+title "Elemental Dorms"
+descr
+"       A bed is up against the wall in the north corner and a desk and chair
+sit off to the left.  There is a shelf on the wall, full of books and scrolls.
+A strange light eminates from the ceiling yet you can see no source for the
+light."
+
+extra {"bed", "desk", "chair"}
+"The bed, desk, and chair are all formed from a clear material."
+
+extra {"shelf", "books", "scrolls"}
+"The shelf is full of books on the arcane arts of elemental studies.  The
+scrolls appear to be covered in runes and symbols."
+
+extra {"light", "ceiling"}
+"The light seems to come from the ceiling itself.  You guess that it must
+be magical in nature."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+down to nwg3;
+up to nwt3;
+south to nws2;
+
+end
+
+                                 nws2
+names {"elemental dorms"}
+title "Elemental Dorms"
+descr
+"       A bed is up against the wall in the north corner and a desk and chair
+sit off to the left.  There is a shelf on the wall, full of books and scrolls.
+A strange light eminates from the ceiling yet you can see no souce for the
+light."
+
+extra {"bed", "desk", "chair"}
+"The bed, desk, and chair are all formed from a clear material."
+
+extra {"shelf", "books", "scrolls"}
+"The shelf is full of books on the arcane arts of elemental studies.  The
+scrolls appear to be covered in runes and symbols."
+
+extra {"light", "ceiling"}
+"The light seems to come from the ceiling itself.  You guess that it must
+be magical in nature."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+north to nws3;
+south to nws1;
+
+end
+                                nws1
+names {"elemental recreation"}
+title "Elemental Recreation Room"
+descr
+"       The walls of the room are covered with tapestries and the floor has
+a large rug on it.  There are couches and a table in the center of the room
+and a bench in the far corner."
+
+extra {"tapestries", "rug"}
+"The wall hangings are of a man standing in the middle of a tempest of rain
+and wind.  As you look around the room at the hangings you get the idea
+that the man has called the tempest and is reveling in the fury of the
+elements.  The rug is black with a large fire emblazoned on it.  In the
+center of the fire is a lightning bolt crossed with a spear of ice."
+
+extra {"bench", "couches", "table"}
+"You are not surprised to see that the furniture is formed from the same
+clear material as everything else."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+north to nws2;
+
+end
+                               nwt3
+names {"elemental training room"}
+title "Elemental Training Room"
+descr
+"       The room is bare of all decoration and a lone lecturn stands in the
+middle of the room.  There are blast marks on the north wall.  The room seems
+to radiate an aura of powerful magic mingled with power that has raged out
+of control."
+
+extra {"lecturn"}
+"Unlike everything else in the north wing the lecturn is made of solid marble
+and is in perfect condition."
+
+extra {"blast marks", "marks", "wall"}
+"The marks on the wall appear to be the effects of one too many offensive
+spells.  The wall is blackened and flecks of ash fall from the wall to the
+floor."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+
+down to nws3;
+south to nwt2;
+
+end
+                                 nwt2
+names {"elemental laboratory"}
+title "Elemental Laboratory"
+descr
+"       There is a large table covered with vials, beakers, and other insundry
+experimental equipment.  There is a large puddle of something on the table.
+Papers are scattered about the room in a rather chaotic fashion."
+
+extra {"vials", "beakers", "equipment"}
+"The equipment appears to be used for experimenting with matters of the
+arcane.  Your feeble mind reels as you try to comprehend what it could be
+used for."
+
+extra {"table", "puddle"}
+"The table is covered in a gelatinous ooze that seems to be leaking from
+a cracked beaker.  The ooze is clear and gives off an odor of charred
+meat."
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+north to nwt3;
+up to nwf2;
+
+end
+                                nwf3
+names {"room of the elements", "elemental room"}
+title "Room of the Elements"
+descr
+"       You are standing in a room that radiates elemental power.  You can
+feel waves of heat and cold flow over you like sheets of wind.  The air is
+static filled and your hair stands on end underneath your helm.  You realize
+that you must be in the presence of an extraordinary individual."
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+up to emaster;
+south to nwf2;
+
+end
+
+                              nwf2
+names {"elemental library"}
+title "The Elemental Library"
+descr
+"       You stand in a room overflowing with books, pamphlets, scrolls and
+parchment.  The room has a musty odor.  Just looking at all of this knowledge
+makes your head hurt.  It must have taken decades to retrieve and record this
+much information."
+
+extra {"books", "pamphlets", "scrolls", "parchment"}
+"The various paper materials are all covered in writing that is foreign to
+you.  The glyphs engraved on the covers of the books make your head spin
+as you look upon them.  The scrolls are piled in the corner in a wooden case."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+
+down to nwt2;
+north to nwf3;
+
+end
+                                 emaster
+names {"elemental masters chambers", "chamber of the elemental master"}
+title "Chamber of the Elemental Master"
+descr
+"       As you enter the room you feel humbled by the power of the elements.
+The walls are all transparent and give you the feeling that you are no longer
+in a place of safety."
+
+extra {"walls", "transparent walls"}
+"The walls are all transparent yet they do not show the scenery you were
+expecting.  Through them you can see the planes of earth, air, fire and
+water."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+
+down to nwf3;
+
+end
+
+/*   *************** END NORTH WING ***************** */
+
+                                swg1
+names {"pain council chamber"}
+title "Path of Pain's Council Chamber"
+descr
+"       You stand in the council chamber for the members of the Path of Pain.
+There are five stone chunks embedded in the floor.  On the walls hang a
+number of grotesque looking body parts.  They hang next to devices you are
+sure you would not want to have tried on you."
+
+extra {"stones", "stone chunks"}
+"The stone chunks look as if they are meant to be chairs although you can
+not imagine that sitting on them would be anything but painful."
+
+extra {"parts", "body parts", "devices"}
+"The walls are covered with evicerated organs and bloody skins, not all of
+which are animals.  The devices look to be something you would find in
+Whistler and Palio's Your Worst Nightmare."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+north to maing open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+        keyword {"door"};
+south to swg2 open {EX_OPEN_CLOSE, EX_CLOSED}
+        keyword {"door"};
+
+end
+                              swg2
+names {"pain lounge"}
+title "The Lounge of Pain"
+descr
+"       The waiting lounge is a stoic cold room.  There is only one stone
+chunk in the floor and a large flat table.  The walls are void of decor and
+the floor is chillingly cold even through your boots."
+
+extra {"stone chunk", "chunk", "table"}
+"The furniture is plain stone that looks to have been torn right from the
+ground.  The table has dry red flakes on it."
+
+extra {"floor"}
+"The floor is stone cold.  The chill that eminates from it causes your heart
+to ice over with the thought of what lies ahead."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+south to swg3 open {EX_OPEN_CLOSE, EX_CLOSED}
+        keyword {"door"};
+north to swg1 open {EX_OPEN_CLOSE, EX_CLOSED}
+        keyword {"door"};
+
+end
+                                   swg3
+names {"administration of pain"}
+title "The Administration of Pain"
+descr
+"       The room has a pallor of cold that hangs like a curtain.  Occasionally
+you get hit by a hot flash that sears your spine, causing extreme pain. There
+is a large stone table in the corner of the room and a large curtain hanging
+over the wall in the south most region of the room."
+
+extra {"table", "stone table"}
+"The table is obviously not meant for writing.  There are dry red flakes of
+blood covering the table and floor."
+
+extra {"south wall", "curtain"}
+"The curtain hangs in front of a stairwell."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+north to swg2 open {EX_OPEN_CLOSE, EX_CLOSED}
+        keyword {"door"};
+up to sws3;
+
+end
+
+                                sws3
+names {"pain dorms"}
+title "Pain Dorms"
+descr
+"       A large stone slab is up against the wall in the south corner and
+a stone chunk sits off to the left.  There is a portion of the wall that has
+been torn out.  It is full of books and scrolls.  A strange light eminates
+from the ceiling yet you can see no source for the light."
+
+extra {"stone slab", "slab", "chunk"}
+"The stone slab looks as if it could be used for a desk and the chunk is
+obviously meant to be a chair."
+
+extra {"shelf", "books", "scrolls"}
+"The shelf is full of books on the arcane arts of pain and torture.  The
+scrolls appear to be covered in runes and symbols."
+
+extra {"light", "ceiling"}
+"The light seems to come from the ceiling itself.  You guess that it must
+be magical in nature."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+down to swg3;
+up to swt3;
+north to sws2;
+
+end
+
+                                sws2
+names {"pain dorms"}
+title "Pain Dorms"
+descr
+"       A large stone slab is up against the wall in the south corner and
+a stone chunk sits off to the left.  There is a portion of the wall that has
+been torn out.  It is full of books and scrolls.  A strange light eminates
+from the ceiling yet you can see no source for the light."
+
+extra {"stone slab", "slab", "chunk"}
+"The stone slab looks as if it could be used for a desk and the chunk is
+obviously meant to be a chair."
+
+extra {"shelf", "books", "scrolls"}
+"The shelf is full of books on the arcane arts of pain and torture.  The
+scrolls appear to be covered in runes and symbols."
+
+extra {"light", "ceiling"}
+"The light seems to come from the ceiling itself.  You guess that it must
+be magical in nature."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+south to sws3;
+north to sws1;
+
+end
+
+                              sws1
+names {"pain recreation"}
+title "Painful Pursuits of Pleasure"
+descr
+"       One look at the room causes you to choke.  The walls are lined with
+torture devices, entrails, and decapitated heads.  The floor is covered in
+blood and gore."
+
+extra {"walls", "devices"}
+"The walls are covered with thumb screws, needles, branding irons, and other
+devious devices."
+
+extra {"entrails", "heads"}
+"Obviously someone who no longer lives was the latest victim.  The entrails
+are strung around like streamers, and the heads hang from them like bulbs
+on a christmas tree."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+south to sws2;
+
+end
+                                   swt3
+names {"pain practice room"}
+title "Room of Painful Practices"
+descr
+"       If the recreation room made you choke then this room brings bile to
+your mouth.  In the center of the room is a large sacrificial altar with the
+remains of a grime-covered corpse on top of it."
+
+extra {"altar", "sacrificial altar"}
+"The altar was rent of stone and looks very sturdy.  The sides of the table
+slope down into funnels meant for the blood of victims."
+
+extra {"corpse", "grime covered corpse"}
+"The corpse is a truly revolting site.  The head has been cut from the
+shoulders and you can't find it in the room.  The stomach has been torn open
+and blood flows from the still pumping heart out of the corpse.  The blood
+flows in rivulets down the body and into the funnels.  As you look at the
+hands you realize that they have no nails left and there is a nail through
+each of the palms.
+You turn your head just in time to vomit into the large funnel."
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+down to sws3;
+north to swt2;
+
+end
+                                 swt2
+names {"laboratory of pain"}
+title "The Laboratory of Pain"
+descr
+"       As you enter the room you realize where the head and intestines of
+the corpse on the altar went.  They float in a green fluid in large jars
+that are sitting on a table in the corner of the room.  On the table is
+also a gnomish leg."
+
+extra {"head", "intestines", "jars", "green fluid", "fluid", "table"}
+"The head and intestines have been hacked into pieces and preserved in a
+green fluid much like formaldhyde.  The jars give off a strange green
+light and you feel very much ill at ease."
+
+extra {"leg", "gnomish leg"}
+"The leg obviously belonged to a gnome.  It has been cut down the side and
+the muscles and tendons removed and layed out next to it.  The skin is
+flayed back and layed open being held in place by the shin and femur."
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+up to swf2;
+south to swt3;
+
+end
+
+                              swf2
+names {"pain library"}
+title "The Library of Pain"
+descr
+"       You stand in a room overflowing with books, pamphlets, scrolls and
+parchment.  The room has the odor of carrion.  Just looking at all of this
+knowledge makes your head hurt.  It must have taken decades to retrieve and
+record this much information."
+
+extra {"books", "pamphlets", "scrolls", "parchment"}
+"The various paper materials are all covered in writing that is foreign to
+you.  The glyphs engraved on the covers of the books make your head spin
+as you look upon them.  The scrolls are piled in the corner in a wooden case."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+
+down to swt2;
+north to swf3;
+
+end
+                                  swf3
+names {"pain chamber"}
+title "Chamber of Pain"
+descr
+"       You step into the room and fall to the floor.  The pain you feel is
+indescribeable and unbearable.  The walls bleed and the floor is a squishy
+feeling organic mass.  The ceiling is black and there appear to be insects
+crawling on it."
+
+extra {"walls", "floor", "ceiling"}
+"The walls constantly bleed a sickly yellowish blood.  Puss flows freely from
+the cracks in the wall and onto the floor.  The floor is made of some type
+of organic substance.  It feels like you are walking on squished body parts.
+The ceiling is covered in black crawling insects that drop down onto you."
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+up to pmaster;
+north to swf2;
+
+end
+
+                                pmaster
+names {"chamber of the master of pain"}
+title "The Chamber of the Master of Pain"
+descr
+"       As you step up through the floor you stomach revolts.  On one wall
+hangs an iron maiden.  The wall directly opposite it has a rack suspended
+on it.  There is a loud buzzing sound in your ears and you feel your body
+begining to buckle.  Then you look at the third wall.  It is a mirror that
+draws your attention."
+
+extra {"iron maiden", "rack"}
+"The iron maiden and the rack are used for torture and punishment.  Both of
+the devices induce a great deal of PAIN."
+
+extra {"third wall", "mirror"}
+"As you look into the mirror you see yourself reflected back...WITH NO SKIN !
+You see you organs pumping and beating and the blood flowing through your
+veins.  You turn your head quickly from the picture, though you doubt that
+you will ever get the gruesome image out of your mind."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+
+down to swf3;
+
+end
+
+/* ****************** END SOUTH WING ****************** */
+
+                             ewg1
+names {"conjuring council chamber"}
+title "Chamber of the Council of Conjuring"
+descr
+"       The chamber is totally devoid of anything in the way of decorations.
+On the walls are large pentagrams.  The pentagrams are inscribed inside a
+circle and outlined in glowing light."
+
+extra {"wall", "pentagram" ,"pentagrams"}
+"The walls are adorned with pentagrams that appear to be used in summoning
+magic.  You wonder if that is where they store the chairs."
+
+extra {"light", "glowing light"}
+"The light is luminescent and glows with a mystical aura of protection."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+west to maing open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+        keyword {"door"};
+east to ewg2 open {EX_OPEN_CLOSE, EX_CLOSED}
+        keyword {"door"};
+
+end
+
+                                 ewg2
+names {"conjuering lounge"}
+title "Conjurer's Lounge"
+descr
+"       The lounge is much like the previous room.  There is no visible
+furniture, and pentagrams are once again inscribed on the walls.  These
+pentagrams you notice, lack the glowing light."
+
+extra {"wall", "pentagram" ,"pentagrams"}
+"The walls are adorned with pentagrams that appear to be used in summoning
+magic.  You wonder if that is where they store the chairs."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+west to ewg1 open {EX_OPEN_CLOSE, EX_CLOSED}
+        keyword {"door"};
+east to ewg3 open {EX_OPEN_CLOSE, EX_CLOSED}
+        keyword {"door"};
+
+end
+                                ewg3
+names {"conjuring administration"}
+title "Adminstration Room of the Path of Conjurers"
+descr
+"       This room has a large table in the center.  Like the other rooms
+there are pentagrams on all the walls.  These pentagrams do glow with an
+inner light.  There is a stairwell in the far east corner."
+
+extra {"wall", "pentagram" ,"pentagrams"}
+"The walls are adorned with pentagrams that appear to be used in summoning
+magic.  You wonder if that is where they store the chairs."
+
+extra {"light", "glowing light"}
+"The light is luminescent and glows with a mystical aura of protection."
+
+extra {"stairwell"}
+"The stairs lead up through the ceiling."
+
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+
+west to ewg2 open {EX_OPEN_CLOSE, EX_CLOSED}
+        keyword {"door"};
+up to ews3;
+
+end
+
+                                 ews3
+names {"conjuring dorms"}
+title "Conjuring Dorms"
+descr
+"       A bed is up against the wall in the north corner and a desk and chair
+sit off to the left.  There is a shelf on the wall full of books and scrolls.
+A strange light eminates from the ceiling yet you can see no source for the
+light."
+
+extra {"bed", "desk", "chair"}
+"The bed, desk, and chair are made from mismatched pieces of wood, stone, and
+metal.  They appear to be made from whatever was summoned in."
+
+extra {"shelf", "books", "scrolls"}
+"The shelf is full of books on the arcane arts of conjurational magic.  The
+scrolls appear to be covered in runes and symbols."
+
+extra {"light", "ceiling"}
+"The light seems to come from the ceiling itself.  You guess that it must
+be magical in nature."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+down to ewg3;
+up to ewt3;
+west to ews2;
+
+end
+
+                                 ews2
+names {"conjuring dorms"}
+title "Conjuring Dorms"
+descr
+"       A bed is up against the wall in the north corner and a desk and chair
+sit off to the left.  There is a shelf on the wall full of books and scrolls.
+A strange light eminates from the ceiling yet you can see no source for the
+light."
+
+extra {"bed", "desk", "chair"}
+"The bed, desk, and chair are made from mismatched pieces of wood, stone, and
+metal.  They appear to be made from whatever was summoned in."
+
+extra {"shelf", "books", "scrolls"}
+"The shelf is full of books on the arcane arts of conjurationl magic.  The
+scrolls appear to be covered in runes and symbols."
+
+extra {"light", "ceiling"}
+"The light seems to come from the ceiling itself.  You guess that it must
+be magical in nature."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+east to ews3;
+west to ews1;
+
+end
+
+                            ews1
+names {"conjuring recreation room"}
+title "The Conjuring Recreation Room"
+descr
+"       The room is plain except for the large pentagram on the ceiling.
+There are a number of smashed wooden pieces and crushed glass pieces on the
+floor directly underneath the pentagram."
+
+extra {"pentagram", "ceiling"}
+"The pentagram is used for conjuring."
+
+extra {"glass pieces", "pieces", "wooden pieces", "glass", "wood"}
+"The glass and wooden debris looks as if it fell from a height and smashed
+into pieces."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+east to ews2;
+
+end
+
+                               ewt3
+names {"conjuring practice room"}
+title "The Practice Room of the Conjurers"
+descr
+"       The room is totally bare.  All that is here are the four stone walls
+and the floor and ceiling.  The room seems to be more than it appears though."
+
+extra {"walls", "ceiling", "floor"}
+"The walls, ceiling and floor are all made of the same stone.  The stone
+gives you funny feelings when you walk on it."
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+down to ews3;
+west to ewt2;
+
+end
+
+                                ewt2
+names {"conjuring laboratory"}
+title "The Laboratory of the Conjurers"
+descr
+"       The laboratory has a large table that is suspended ABOVE the floor
+three feet.  The area under the table shimmers with a blue light.  The rest
+of the room contains various experimental equipment."
+
+extra {"table", "area under table", "light", "blue light"}
+"The table is somehow suspended above the floor.  It seems to be hovering
+on the blue light which radiates out from under the table."
+
+extra {"equipment", "experimental equipment"}
+"The equipment is what you would expect for carrying out experiments."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+
+up to ewf2;
+east to ewt3;
+
+end
+
+                              ewf2
+names {"conjuring library"}
+title "The Library of Conjuring"
+descr
+"       You stand in a room overflowing with books, pamphlets, scrolls, and
+parchment.  The room has the odor of carrion.  Just looking at all of this
+knowledge makes your head hurt.  It must have taken decades to retrieve and
+record this much information."
+
+extra {"books", "pamphlets", "scrolls", "parchment"}
+"The various paper materials are all covered in writing that is foreign to
+you.  The glyphs engraved on the covers of the books make your head spin
+as you look upon them.  The scrolls are piled in the corner in a wooden case."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+
+down to ewt2;
+east to ewf3;
+
+end
+
+                                 ewf3
+names {"conjuring chamber"}
+title "The Conjuring Chamber"
+descr
+"       As you enter, it seems that the room disappears from your view.  Your
+senses reel as a shadow falls over you."
+
+extra {"shadow"}
+"The shadow does not appear to have a source.  It seems to be coming from
+above you."
+
+extra {"above"}
+"There is a winged being floating high above you, it dives down at you with
+a gleam in its eyes."
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+up to cmaster;
+west to ewf2;
+
+end
+
+                            cmaster
+names {"chamber of the conjurer master"}
+title "The Chamber of the Master of Conjuring"
+descr
+"       On every wall there is a pentagram and the ceiling is covered by
+a very odd looking mural of a variety of monsters.  The floor is covered
+with another mural with a variety of objects.  You wonder what they are for."
+
+extra {"walls", "pentagrams", "pentagram"}
+"The pentagrams are obviously made for aid in conjuring and maintaining
+control of summoned beasts."
+
+extra {"ceiling", "mural of monsters", "monsters"}
+"The ceiling is covered with a giant picture of very real looking creatures,
+you notice darkelfs, gnomes, imperial soldiers, orcs and a plethora of other
+nasty little beasties."
+
+extra {"floor", "mural of objects", "objects"}
+"The floor is covered entirely with very life like drawings of various
+objects of use.  There is rope, a barrel of water, pieces of beef, the
+Thunder Hammer of Thor and a spattering of other useful items."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+
+down to ewf3;
+
+end
+
+/* ********************* END EAST WING ******************* */
+
+
+                                   wwg1
+names {"mind council room"}
+title "The Council Room of the Path of the Mind"
+descr
+"       The room has five light purple disks floating two feet over the
+floor.  There is a buzzing sound coming from somewhere indescernable.  The
+walls seem to interchange and flood over on one another.  Your mind must be
+playing with you."
+
+extra {"disks", "light purple disks", "purple disks"}
+"The disks seem to be for sitting, although you wonder how they would support
+any weight.  They glow a light purple color and just hover over the floor."
+
+extra {"walls"}
+"The walls themselves seem to move and rotate. The picture that was hanging
+on the west wall now seems to be on the north wall.  You realize that you
+did not even notice the picture when you first walked in."
+
+extra {"picture"}
+"The picture frame holds a blank canvas.  As you stare at it your eyes begin
+to hurt and your head aches."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+east to maing open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+        keyword {"door"};
+west to wwg2 open {EX_OPEN_CLOSE, EX_CLOSED}
+        keyword {"door"};
+
+end
+
+                                  wwg2
+names {"waiting room of the mind"}
+title "The Waiting Room of the Mind"
+descr
+"       The room MUST be playing tricks with your head.  You would swear you
+were standing against the other wall just a second ago.  You glance around
+and notice two more of the glowing, light purple, disks."
+
+extra {"disks", "light purple disks", "purple disks"}
+"The disks seem to be for sitting, although you wonder how they would support
+any weight.  They glow a light purple color and just hover over the floor."
+
+extra {"walls", "wall"}
+"This time you are sure the walls moved.  You were leaning against the north
+wall and now you are standing in the middle of the room."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+east to wwg1 open {EX_OPEN_CLOSE, EX_CLOSED}
+        keyword {"door"};
+west to wwg3 open {EX_OPEN_CLOSE, EX_CLOSED}
+        keyword {"door"};
+
+end
+                                wwg3
+names {"mind administration"}
+title "Administration Room for the Path of the Mind"
+descr
+"       This room seems to be normal.  Your senses no longer reel, but once
+again you can hear a soft buzzing sound coming from somewhere.  There are
+no more of the glow disks in this room and that also puzzles you.  There is
+a stairwell in the back corner of the room."
+
+extra {"stairwell"}
+"The stairs lead up into the floor, you would assume to another level.  There
+is a small plaque with engravings on it, mounted at the base of the stairs."
+
+extra {"plaque", "engravings"}
+"&l    The plaque reads :
+
+         As I was walking up the stair,
+         I met a man who wasn't there.
+         He wasn't there again today,
+         I wish, I wish he'd go away.
+                        -Hugh Mearns"
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+
+east to wwg2 open {EX_OPEN_CLOSE, EX_CLOSED}
+        keyword {"door"};
+up to wws3;
+
+end
+
+                                 wws3
+names {"mind dorms"}
+title "Mind Dorms"
+descr
+"       A bed is up against the wall in the north corner and a desk and chair
+sit off to the left.  There is a shelf on the wall full of books and scrolls.
+A strange purple light eminates from the ceiling yet you can see no source for
+the light."
+
+extra {"bed", "desk", "chair"}
+"The bed, desk, and chair are made from mismatched pieces of wood, stone, and
+metal.  They appear to be made from whatever was summoned in."
+
+extra {"shelf", "books", "scrolls"}
+"The shelf is full of books on the arcane arts of conjurational magic.  The
+scrolls appear to be covered in runes and symbols."
+
+extra {"purple light", "ceiling"}
+"The purple light seems to come from the ceiling itself.  You guess that
+it must be magical in nature."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+down to wwg3;
+up to wwt3;
+east to wws2;
+
+end
+
+                                 wws2
+names {"mind dorms"}
+title "Mind Dorms"
+descr
+"       A bed is up against the wall in the north corner and a desk and chair
+sit off to the left.  There is a shelf on the wall full of books and scrolls.
+A strange purple light eminates from the ceiling yet you can see no source
+for the light."
+
+extra {"bed", "desk", "chair"}
+"The bed, desk, and chair are made from mismatched pieces of wood, stone, and
+metal.  They appear to be made from whatever was summoned in."
+
+extra {"shelf", "books", "scrolls"}
+"The shelf is full of books on the arcane arts of conjurational magic.  The
+scrolls appear to be covered in runes and symbols."
+
+extra {"purple light", "ceiling"}
+"The purple light seems to come from the ceiling itself.  You guess that
+it must be magical in nature."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+east to wws1;
+west to wws3;
+
+end
+
+                               wws1
+names {"mind recreation room"}
+title "Room of Mental Recreation"
+descr
+"       The room seems to constantly changing.  One second it is a playground
+with laughing children and the next it is a morgue with corpses piled up on
+the floor.  There seems to be no reason for the changes other than to give
+you a headache.  You think to yourself that if this is the Path of the Mind's
+idea of recreation, then they have some serious problems."
+
+extra {"children", "playground"}
+"There are many small children swinging and jumping through hoops on a green
+grassy field.  The colors seem vibrant and you can hear the happiness in the
+children's voices."
+
+extra {"corpses", "morgue"}
+"The stench of death immediatly assaults your nostrils as the room shifts to
+the morgue scene.  The corpses are stacked hip deep on the floor.  There is
+a prevalent mood of sadness that overcomes you."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+west to wws2;
+
+end
+                                    wwt3
+names {"mind practice room"}
+title "Practice Room for the Path of the Mind"
+descr
+"       The room is barren save a small fuzz ball lying in the corner."
+
+extra {"fuzz ball", "fuzz"}
+"The ball of fuzz is just lying there.  What else do you want it to do ???"
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+down to wws3;
+east to wwt2;
+
+end
+                                   wwt2
+names {"mind laboratory"}
+title "Nowhere"
+descr
+"     You do not see that here."
+
+extra {"room"}
+"The room does not exist.  Go away."
+
+extra {"kyt", "zex", "denathor", "dax"}
+"You get a vision.  Kyt, Zex, Denathor and Dax are all sitting in room 405
+programming and listening to Zex jam on the guitar."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+
+west to wwt3;
+up to wwf2;
+
+end
+                                  wwf2
+names {"mind library"}
+title "Library of the Path of the Mind"
+descr
+"       You stand in a room overflowing with books, pamphlets, scrolls, and
+parchment.  The room has the odor of saltwater.  Just looking at all of this
+knowledge makes your head hurt.  It must have taken decades to retrieve and
+record this much information."
+
+extra {"books", "pamphlets", "scrolls", "parchment"}
+"The various paper materials are all covered in writing that is foreign to
+you.  The glyphs engraved on the covers of the books make your head spin
+as you look upon them.  The scrolls are piled in the corner in a wooden case."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+
+down to wwt2;
+west to wwf3;
+
+IN_ALWAYS_DARK
+
+end
+
+                                 wwf3
+names {"mind chamber"}
+title "The Chamber of Mental Duress"
+descr
+"       Just being in this room makes you ill.  The walls swirl in
+scintilating color and the floor pulses in time with your heartbeat.  You
+feel very uneasy in this room, almost as if you feel you are being watched."
+
+extra {"walls", "wall"}
+"The walls flow through every conceivable color and hue.  It reminds you
+of staring at tie-dye while tripping."
+
+extra {"floor", "pulse"}
+"The floor throbs in time with your heartbeat and you can feel it surge
+beneath
+your feet."
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+up to mmaster;
+east to wwf2;
+
+end
+
+                                 mmaster
+names {"chamber of the mind master"}
+title "The Chamber of the Master of Mentality"
+descr
+"       You are in the abode of someone very strange.  It looks like a bad
+Salvador Dali painting.  The ceiling drips down onto the floor and the walls
+rain sideways at each other.  There are large green sombreros on top of puce
+colored grandfather clocks.  In the middle of the room is a small fuzz ball."
+
+extra {"ceiling", "floor", "walls", "wall"}
+"The ceiling seems to be dripping portions of itself onto the floor, which
+in turn is crawling up the walls back to the ceiling.  There is a steady
+stream of rain pouring from each of the walls.  The rain is flowing straight
+across the room into the wall directly opposite it."
+
+extra {"green sombreros", "sombreros", "puce grandfather clock",
+"grandfather clock"}
+"You just shake your head in amazement at the absurdity of the rooms decor."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+
+down to wwf3;
+
+end
+
+/* **************** END WEST WING ******************* */
+
+                               maing
+names {"entrance to high council"}
+title "The Entrance to the Room of High Council"
+descr
+"       You stand in a room that is much larger than you would have expected
+from looking at the outside of the building.  The ceiling is shrouded in
+darkness, but there appears to be something strange about it.  There are a
+number of comfortable looking chairs and couches.  The walls are hung with
+tapestries and drapes.  There is a stone stair well leading down."
+
+extra {"ceiling"}
+"The ceiling looks more like the bottom of a floor not the top of a room.
+You wonder why there would be a room above here ?? Hmmm...."
+
+extra {"chairs", "couches"}
+"The furniture is plush and well built. It looks very inviting and you long
+to sit down."
+
+extra {"tapestries", "drapes"}
+"The tapestries and drapes all have various mages involved in some type of
+magical encounter."
+
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+north to nwg1 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+        keyword {"door"};
+south to swg1 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+        keyword {"door"};
+east to ewg1 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+        keyword {"door"};
+west to wwg1 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+        keyword {"door"};
+down to mainbase;
+up to main2 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_HIDDEN}
+        keyword {"hatch", "ceiling"};
+SECRET_DOOR_DIFFICULTY(UP, 35)
+
+
+/*Dil to transport from the Fortress of High Wizardry */
+dilbegin light_trans();
+var
+        pc      :       unitptr;
+code
+{
+   :init:
+   heartbeat :=PULSE_SEC*5;
+
+   :start:
+   wait(SFB_CMD, (activator.type == UNIT_ST_PC) and
+       (command(CMD_ENTER)));
+
+
+   if (not("light" in argument))
+   {
+        act("You do not see that here!",
+        A_ALWAYS, self.outside, null, null, TO_CHAR);
+        goto start;
+   }
+
+/* Enter transfer routine */
+
+        pc := activator;
+        secure(pc, lost_pc);
+        block;   /* Would look dumb so its blokced */
+        act("You step into the heavenly realm of transit.",
+            A_ALWAYS, pc, null, null, TO_CHAR);
+        act(pc.name+" steps forward and enters the heavenly realm of
+transit.",
+            A_SOMEONE, pc, null, null, TO_REST);
+        pause;
+        act("You feel the force of space and time collide into " +
+        "an all encompasing bright white light.",
+            A_ALWAYS, pc, null, null, TO_CHAR);
+        act("The blinding light parts and you are in Market Square.",
+            A_ALWAYS, self.outside, null, null, TO_CHAR);
+
+
+
+          link(pc, findroom("midgaard/market_sq"));
+          act("You have arrived in Market Square.",
+            A_ALWAYS, pc, null, null, TO_CHAR);
+          subextra(pc.quests, LIGHT_TRAVEL);
+
+
+        act("Suddenly "+pc.name+" exits from the heavenly realm of transit.",
+            A_SOMEONE, pc, null, null, TO_REST);
+
+        exec("look", pc);
+        unsecure(pc);
+        goto start;
+
+/* End of transfer Routine */
+
+        :lost_pc:
+   pause;
+   goto start;
+}
+dilend
+
+end
+
+
+                                  main2
+names {"library of knowledge"}
+title "Library of Knowledge"
+descr
+"       As you enter the library your jaw drops in awe.  You estimate at
+least five shelves of books on each wall.  The shelves are overflowing with
+books and pamphlets of all kinds.  In the middle of the room is a large
+shelf containing scrolls and stone tablets.  There is an air of peace and
+calm radiating through the room, and you feel very comfortable and relaxed."
+
+extra {"shelves", "books", "walls", "wall"}
+"All of the walls are exploding with books, tomes, and pamphlets.  The books
+range from small to gigantic and have colors and bindings of all varieties."
+
+extra {"shelf", "scrolls", "tablets", "stone tablets"}
+"The shelf is made of dark solid wood and holds hundreds of scrolls and
+tablets.  There are strange mystical runes on the shelves and you fear the
+consequences of taking any of the scrolls or tablets."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+
+down to maing open {EX_OPEN_CLOSE, EX_CLOSED}
+        keyword {"hatch", "floor"};
+up to main3;
+
+ALWAYS_LIGHT
+end
+
+                                  main3
+names {"library of knowledge"}
+title "Library of Knowledge"
+descr
+"       The second floor of the library looks much like the first.  There are
+five shelves of books on each wall.  The shelves are overflowing with books
+and pamphlets of all kinds.  In the middle of the room is a large shelf
+containing scrolls and stone tablets.  There is an air of peace and calm
+radiating through the room, and you feel very comfortable and relaxed."
+
+extra {"shelves", "books", "walls", "wall"}
+"All of the walls are exploding with books, tomes, and pamphlets.  The books
+range from small to gigantic and have colors and bindings of all varieties."
+
+extra {"shelf", "scrolls", "tablets", "stone tablets"}
+"The shelf is made of dark solid wood and holds hundreds of scrolls and
+tablets.  There are strange mystical runes on the shelves and you fear the
+consequences of taking any of the scrolls or tablets."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+
+down to main2;
+up to main4;
+
+ALWAYS_LIGHT
+
+end
+
+
+                                 main4
+names {"archmage study"}
+title "Study of the Archmage"
+descr
+"       A large pleasant looking room is spread out before you.  A leather
+covered chair sits in front of a fireplace.  A table is next to the chair.
+A window covers most of the north wall and drapes hang in front of it.  The
+room is warm and relaxing, the perfect enviroment for a little reading."
+
+extra {"leather covered chair", "chair"}
+"The chair is large, puffy, and very comfortable looking.  A pipe rest is
+carved into the arm of the chair."
+
+extra {"pipe rest", "chair arm"}
+"It looks perfect for setting a pipe down in while you sip a drink.  There is
+no pipe here presently, thought the odor of pipe tobacco is present."
+
+extra {"fireplace"}
+"The fireplace has a fire burning in it.  There is no wood or other fuel
+source, yet warmth radiates from the fire."
+
+extra {"table"}
+"The table is just large enough for a book to be set on it."
+
+extra {"window", "drapes"}
+"The view from the window is blocked by the large, creme colored, drapes that
+hang in front of the window."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT,
+UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+
+down to main3;
+up to main5;
+
+end
+                                  main5
+names {"Chamber of the Archmage"}
+title "The Chamber of The Archmage"
+descr
+"       A large stone table occupies the southern end of the room.  There are
+bottles and vials lined up on shelves in neat rows. There is a large curtain
+hanging on the southern wall."
+
+extra {"stone table", "table"}
+"The table is enscribed with arcane symbols and pictures.  There is a large
+ammount of dried blood caked onto the table."
+
+extra {"dried blood", "blood"}
+"The blood is black and dried up.  It appears to have been here for a while."
+
+extra {"bottles", "vials", "shelves"}
+"The bottles seem to be filled with strange liquids that catch the light and
+reflect it back at wierd angles.  The vials contain clear liquid."
+
+extra {"curtain", "southern wall", "south wall"}
+"The curtain is hanging in front on what looks to be a portal. There is a
+small sign pinned to the curtain."
+
+extra {"small sign", "sign"}
+"&l      The sign reads :
+
+             This is a portal to the Abyss.  It is not yet active.
+             Soon it will lead into the Netherworld and to your
+             death.
+                                -Enoch, Ruler of the First City
+"
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+down to main4;
+
+end
+
+                                  reneg
+title "Lair of the Renegade Mage"
+descr
+"       You stand in a room that is literally divided in half.  One half of
+the room is plain in color and decor.  The other half is showered in a myriad
+of colors covering everything in sight.  The furniture is spattered with
+constantly shifting colors as are the floor and walls."
+
+extra {"myriad of colors", "colors"}
+"The colors range through every possibility of the spectrum and are in a
+continuously varying state.  It seems to induce a state of hypnosis on you
+and you begin to feel tired and weary."
+
+extra {"furniture"}
+"The furniture is the same type as is present on the other side of the room
+but it seems to be alive with the colors vibrating across it."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+
+IN_ALWAYS_DARK
+
+
+/*Dil to transport from the Renegades Realm */
+dilbegin dark_trans();
+var
+        pc      :       unitptr;
+code
+{
+   :init:
+   heartbeat :=PULSE_SEC*5;
+
+   :start:
+   wait(SFB_CMD, (activator.type == UNIT_ST_PC) and
+       (command(CMD_ENTER)));
+
+
+   if (not("the darkness" in argument))
+
+   {
+        act("You do not see that here!",
+        A_ALWAYS, self.outside, null, null, TO_CHAR);
+        goto start;
+   }
+
+/* Enter transfer routine */
+
+        pc := activator;
+        secure(pc, lost_pc);
+        block;   /* Would look dumb so its blokced */
+        act("You step into the nether realm of the darkness.",
+            A_ALWAYS, pc, null, null, TO_CHAR);
+        act(pc.name+" steps forward and enters the nether realm of the
+darkness.",
+            A_SOMEONE, pc, null, null, TO_REST);
+        pause;
+        act("You feel the force of space and time collide into " +
+        "an all encompasing darkness.",
+            A_ALWAYS, pc, null, null, TO_CHAR);
+        act("The darkness parts and you are in the Main Hall.",
+            A_ALWAYS, self.outside, null, null, TO_CHAR);
+
+          link(pc, findroom("academy/maing"));
+          act("You have arrived in the Main Hall.",
+            A_ALWAYS, pc, null, null, TO_CHAR);
+          subextra(pc.quests, DARKNESS_TRAVEL);
+
+        act("Suddenly "+pc.name+" exits from the nether realm of the
+darkness.",
+            A_SOMEONE, pc, null, null, TO_REST);
+
+        exec("look", pc);
+        unsecure(pc);
+        goto start;
+
+/* End of transfer Routine */
+
+        :lost_pc:
+   pause;
+   goto start;
+}
+dilend
+
+
+
+end
+
+/* **************** END ARCHMAGE QUARTERS ***************** */
+
+/*
+                                      _
+names {""}
+title ""
+descr
+"       "
+
+extra {"", ""}
+""
+
+extra {"", ""}
+""
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+
+down to
+
+IN_ALWAYS_DARK
+
+end
+                                      _
+names {""}
+title ""
+descr
+"       "
+
+extra {"", ""}
+""
+
+extra {"", ""}
+""
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+down to     open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+        keyword {"", ""};
+SECRET_DOOR_DIFFICULTY(DOWN, 35)
+
+end
+*/
+
+                                  mainbase
+names {"chamber of the high council"}
+title "The Chamber of the High Council"
+descr
+"       You stand in the chamber of the high council.  There are five large
+stone chairs in a circle with a dias in the middle.  The room radiates power
+and you feel very insignificant standing here.  There is a large rug on the
+floor."
+
+extra {"chairs", "dias"}
+"The chairs and dias are all of solid stone, the type of stone you cannot
+determine."
+
+extra {"floor", "rug"}
+"The floor is covered with a large rug.  There is an unusual lump in the
+middle of the rug.  It seems rather peculiar."
+
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER,
+UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+
+down to basestair open {EX_LOCKED, EX_HIDDEN, EX_OPEN_CLOSE, EX_CLOSED}
+        keyword {"trapdoor", "floor", "rug"};
+SECRET_DOOR_DIFFICULTY(DOWN, 35)
+up to maing;
+
+end
+
+                               basestair
+names {"stone stairs", "stairs", "basement stairs"}
+title "The Basement Stairs"
+descr
+"       The stairs seems to have been hollowed out of the stone.  You do
+not notice any scratches or nicks in the stone.  The stair well is dank and
+cool to the touch.  The stairs lead up to a secret door beneath the High
+Council Chamber.  Tunnels branch off to the north, south, west and east."
+
+extra {"stone", "hallway"}
+"The stone seems to have been excavated by magical means."
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+up to mainbase open {EX_OPEN_CLOSE, EX_CLOSED}
+        keyword {"trapdoor"};
+north to nbase1;
+south to sbase1;
+east to ebase1;
+west to wbase1;
+
+end
+
+
+                               nbase1
+names {"stone hallway", "hallway", "basement hallway"}
+title "The Northern Basement Hallway"
+descr
+"       The hallway seems to have been hollowed out of the stone.  You do
+not notice any scratches or nicks in the stone.  The hallway is dank and
+cool to the touch.  The hall leads north, and south are the Basement Stairs."
+
+extra {"stone", "hallway"}
+"The stone seems to have been excavated by magical means."
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+north to nbase2;
+south to basestair;
+
+end
+                               nbase2
+names {"stone hallway", "hallway", "basement hallway"}
+title "The Northern Basement Hallway"
+descr
+"       The hallway seems to have been hollowed out of the stone.  You do
+not notice any scratches or nicks in the stone.  The hallway is dank and
+cool to the touch.  The hall leads north and south."
+
+extra {"stone", "hallway"}
+"The stone seems to have been excavated by magical means."
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+north to nbase3;
+south to nbase1;
+
+end
+                               nbase3
+names {"stone hallway", "hallway", "basement hallway"}
+title "An End in the Northern Basement Hallway"
+descr
+"       The hallway seems to have been hollowed out of the stone.  You do
+not notice any scratches or nicks in the stone.  The hallway is dank and
+cool to the touch.  The hall ends here, the only exit is south.  The dirt
+on the floor seems to have been disturbed recently."
+
+extra {"stone", "hallway"}
+"The stone seems to have been excavated by magical means."
+
+extra {"dirt", "floor"}
+"The dirt looks as if it has been disturbed recently, you wonder why ?"
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+south to nbase2;
+down to submain open {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN, EX_PICKPROOF,
+EX_LOCKED}
+        keyword {"dirt pannel", "floor", "dirt"};
+SECRET_DOOR_DIFFICULTY(DOWN, 35)
+
+end
+
+                               sbase1
+names {"stone hallway", "hallway", "basement hallway"}
+title "The Southern Basement Hallway"
+descr
+"       The hallway seems to have been hollowed out of the stone.  You do
+not notice any scratches or nicks in the stone.  The hallway is dank and
+cool to the touch.  The hall leads south, and to the north are the Basement
+Stairs."
+
+extra {"stone", "hallway"}
+"The stone seems to have been excavated by magical means."
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+north to basestair;
+south to sbase2;
+
+end
+                               sbase2
+names {"stone hallway", "hallway", "basement hallway"}
+title "The Southern Basement Hallway"
+descr
+"       The hallway seems to have been hollowed out of the stone.  You do
+not notice any scratches or nicks in the stone.  The hallway is dank and
+cool to the touch.  The hall leads north and south."
+
+extra {"stone", "hallway"}
+"The stone seems to have been excavated by magical means."
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+north to sbase1;
+south to sbase3;
+
+end
+                               sbase3
+names {"stone hallway", "hallway", "basement hallway"}
+title "An End in the Southern Basement Hallway"
+descr
+"       The hallway seems to have been hollowed out of the stone.  You do
+not notice any scratches or nicks in the stone.  The hallway is dank and
+cool to the touch.  The hallway ends here and the only exit is north."
+
+extra {"stone", "hallway"}
+"The stone seems to have been excavated by magical means."
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+north to sbase2;
+
+end
+
+                               ebase1
+names {"stone hallway", "hallway", "basement hallway"}
+title "The Eastern Basement Hallway"
+descr
+"       The hallway seems to have been hollowed out of the stone.  You do
+not notice any scratches or nicks in the stone.  The hallway is dank and
+cool to the touch.  The hall leads east, and to the west are the Basement
+Stairs."
+
+extra {"stone", "hallway"}
+"The stone seems to have been excavated by magical means."
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+west to basestair;
+east to ebase2;
+
+end
+                               ebase2
+names {"stone hallway", "hallway", "basement hallway"}
+title "The Eastern Basement Hallway"
+descr
+"       The hallway seems to have been hollowed out of the stone.  You do
+not notice any scratches or nicks in the stone.  The hallway is dank and
+cool to the touch.  The hallway leads east and west."
+
+extra {"stone", "hallway"}
+"The stone seems to have been excavated by magical means."
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+east to ebase3;
+west to ebase1;
+
+end
+                               ebase3
+names {"stone hallway", "hallway", "basement hallway"}
+title "An End in the Eastern Basement Hallway"
+descr
+"       The hallway seems to have been hollowed out of the stone.  You do
+not notice any scratches or nicks in the stone.  The hallway is dank and
+cool to the touch.  The hallway ends here, the only exit is west."
+
+extra {"stone", "hallway"}
+"The stone seems to have been excavated by magical means."
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+west to ebase2;
+
+end
+
+                               wbase1
+names {"stone hallway", "hallway", "basement hallway"}
+title "The Western Basement Hallway"
+descr
+"       The hallway seems to have been hollowed out of the stone.  You do
+not notice any scratches or nicks in the stone.  The hallway is dank and
+cool to the touch.  The hall leads west, and to the east are the Basement
+Stairs."
+
+extra {"stone", "hallway"}
+"The stone seems to have been excavated by magical means."
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+east to basestair;
+west to wbase2;
+
+end
+                               wbase2
+names {"stone hallway", "hallway", "basement hallway"}
+title "The Western Basement Hallway"
+descr
+"       The hallway seems to have been hollowed out of the stone.  You do
+not notice any scratches or nicks in the stone.  The hallway is dank and
+cool to the touch.  The hall leads east and west."
+
+extra {"stone", "hallway"}
+"The stone seems to have been excavated by magical means."
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+east to wbase1;
+west to wbase3;
+
+end
+                               wbase3
+names {"stone hallway", "hallway", "basement hallway"}
+title "An End in the Western Basement Hallway"
+descr
+"       The hallway seems to have been hollowed out of the stone.  You do
+not notice any scratches or nicks in the stone.  The hallway is dank and
+cool to the touch.  The hallway ends here, the only exit is east."
+
+extra {"stone", "hallway"}
+"The stone seems to have been excavated by magical means."
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+
+east to wbase2;
+
+end
+
+/* *************** END BASEMENT ****************** */
+
+
+                                 submain
+title "Below the Academy"
+descr
+"       You are standing in a dirt passageway that leads straight down.  You
+are going to have to climb down a large, black hole in the ground.  You begin
+to question your sanity."
+
+extra {"black hole", "large hole", "hole"}
+"The hole leads straight down in to darkness.  You can see nothing."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT,
+UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+
+down to submain2;
+up to nbase3 open {EX_OPEN_CLOSE, EX_CLOSED}
+        keyword {"trapdoor"};
+
+IN_ALWAYS_DARK
+
+end
+
+                               submain2
+title "In The Hole"
+descr
+"       The dirt scrapes your shoulders as you try to make your way down
+through the hole.  You can still see nothing beneath you and you wonder if
+there is a bottom to this hole."
+
+extra {"dirt"}
+"The dirt is damp and sticks to you and everything you are wearing."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+
+down to submain3;
+up to submain;
+
+IN_ALWAYS_DARK
+
+end
+
+                               submain3
+title "In The Hole"
+descr
+"       The dirt scrapes your shoulders as you try to make your way down
+through the hole.  You can still see nothing beneath you and you wonder if
+there is a bottom to this hole."
+
+extra {"dirt"}
+"The dirt is damp and sticks to you and everything you are wearing."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+
+down to submain4;
+up to submain2;
+
+IN_ALWAYS_DARK
+
+end
+
+                                submain4
+title "The Bottom of the Hole"
+descr
+"       You emerge into a tight cramped cavern.  Above you the dark hole
+stretches into the darkness, reaching for the surface.  You get the feeling
+that maybe you should climb right back up.  The thought is augmented by the
+sound of raspy breathing coming from the south."
+
+extra {"dark hole", "hole"}
+"The dark hole is nearly indescernable from the blackness of underground."
+
+extra {"south"}
+"You can see nothing to the south, though the raspy breathing can be heard
+quite clearly."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+
+up to submain3;
+south to submains4;
+
+IN_ALWAYS_DARK
+
+end
+
+                                submains4
+title "Dirt Chamber"
+descr
+"       You stand in yet another tight cramped chamber carved from the dirt.
+The breathing sound is very prominent now, but you can see no source for it.
+To the north, the chamber is shrouded in black.  As you look to the south you
+think you catch a flash of light glint off of something metal."
+
+extra {"dirt"}
+"The dirt is damp and sticks to you and everything you are wearing."
+
+extra {"north", "chamber"}
+"The darkness is thick like ink and just as dark.  You can barely discern
+the opening of the chamber."
+
+extra {"glint", "light"}
+"For a second you thought you saw a flash of light but then it was gone.
+Either you are getting extremely paranoid or there is something to the south
+that is trying not to be seen."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+
+north to submain4;
+south to prechamber;
+
+IN_ALWAYS_DARK
+
+end
+                                   prechamber
+title "A Strange Dirt Chamber"
+descr
+"       As you enter the room you instantly look for the source of the light.
+You can find it no where in the room.  The dirt seems to be the same and
+there seems to be nothing out of place.  You find this all very peculiar
+and have a hard time convincing yourself that you were just seeing things."
+
+extra {"dirt"}
+"The dirt looks just like all the other dirt you have seen in this hole."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+
+north to submains4;
+
+IN_ALWAYS_DARK
+
+/*Dil to transport to Renegades Realm */
+dilbegin realm_trans();
+var
+        pc      :       unitptr;
+code
+{
+   :init:
+   heartbeat :=PULSE_SEC*5;
+
+   :start:
+   wait(SFB_CMD, (activator.type == UNIT_ST_PC) and
+       (command(CMD_ENTER)));
+
+
+   if (not("realm" in argument))
+   {
+        act("You do not see that here!",
+        A_ALWAYS, self.outside, null, null, TO_CHAR);
+        goto start;
+   }
+
+/* Enter transfer routine */
+
+        pc := activator;
+        secure(pc, lost_pc);
+        block;   /* Would look dumb so its blokced */
+        act("You step into the nether realm of transit.",
+            A_ALWAYS, pc, null, null, TO_CHAR);
+        act(pc.name+" steps forward and enters the nether realm of transit.",
+            A_SOMEONE, pc, null, null, TO_REST);
+        pause;
+        act("You feel the force of space and time collide into " +
+        "an all encompasing darkness.",
+            A_ALWAYS, pc, null, null, TO_CHAR);
+        act("The darkness parts and you are in the Realm of the Renegade.",
+            A_ALWAYS, self.outside, null, null, TO_CHAR);
+
+          link(pc, findroom("academy/reneg"));
+          act("You have arrived in the Realm of the Renegade.",
+            A_ALWAYS, pc, null, null, TO_CHAR);
+          subextra(pc.quests, REALM_TRAVEL);
+
+        act("Suddenly "+pc.name+" exits from the nether realm of transit.",
+            A_SOMEONE, pc, null, null, TO_REST);
+
+        exec("look", pc);
+        unsecure(pc);
+        goto start;
+
+/* End of transfer Routine */
+
+        :lost_pc:
+   pause;
+   goto start;
+}
+dilend
+
+
+
+end
+
+                                      ethrone
+names {"throne room"}
+title "Throne Room of the First City"
+descr
+"&l       The room is misted over with an inky shadow and the smoke of
+inscense.  A light wind blows through the chamber, swirling the atmosphere.
+The scent of nightshade mingled with the salty tang of blood hangs in the
+air.  You catch glimpses of movement in the darker corners of the room, but
+decide it best that you remain ignorant of their origins.  Black obsidian
+walls stretch in all directions for hundreds of yards, spotted with heads
+mounted on plaques.  Placed around the room are platinum stands, on which
+incense burns eternally.  At the northern end of the room two enormous onyx
+pillars extend up to the ceiling.
+Between these pillars is a throne of ungodly magnitude."
+
+extra {"shadow", "smoke"}
+"The shadows seem alive as they reach out and curl around you, enveloping
+you in darkness and cold.  The smoke from the incense intermingles with
+the shadow giving you a rather uncomfortable feeling.  Almost as if the smoke
+has a mind of its own."
+
+extra {" dark corners", "corners"}
+"You glance quickly at the movement in the corner and catch the fleeting image
+of a wraith like figure, floating on the wind."
+
+extra {"walls", "wall"}
+"The walls are carved from dark black obsidian.  They are not polished, but
+have been left rough and harsh.  There are plaques mounted on each of the
+walls."
+
+extra {"plaques", "heads"}
+"The heads are all mounted on red, blood-stained, wood plaques.  Some of the
+heads are human looking.  Many of them look as if they came from monstrously
+huge wolves.  There are name plates underneath each of the heads."
+
+extra {"platinum stands", "stands", "stand"}
+"The stands are medium sized platinum bowls balanced on a thin platinum
+pole.  The bowls are filled with water, and on the water floats a platinum
+inscense tray.  The tray has a stick of incense burning in it.  You find
+it strange that no matter how long they burn, they never seem to extinguish."
+
+extra {"onyx pillars", "pillars", "pillar"}
+"The pillars must have been carved from giant blocks of onyx.  They reach all
+the way to the ceiling, though they do not seem to be there for support. Each
+of the pillars have a ten foot diameter.  Between them rests the throne of
+Enoch, Ruler of the First City."
+
+extra {"enoch's throne", "throne"}
+"This is the throne of Enoch, Ruler of the First City.  The throne is
+composed of charred and blackened bones of varying sizes.  There are human
+sized bones, smaller frail looking bones, and massive bones that must have
+come from a creature at least ten feet tall.  The throne looks archaic.
+You guess it has been around from near the beginning of time."
+
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+movement SECT_INSIDE
+IN_ALWAYS_DARK
+
+/*  Dil for Enoch's throne */
+dilbegin throne();
+
+var
+  wordlist     : stringlist;
+  pc           : unitptr;
+code
+{
+  :start:
+    unsecure (pc);
+    heartbeat := PULSE_SEC * 5;
+    wait (SFB_CMD, command("sit"));
+    pc := activator;
+    secure (pc,lostpc);
+    wordlist := getwords(argument);
+    if (("in throne"  in
+         argument) and (pc.name == "enoch"))
+
+     {
+      act ("Greetings my son, I welcome you home childe...i am pleased " +
+         "that you have returned to my dark fold.", A_SOMEONE, pc, null,
+null, TO_CHAR);
+      act ("$1n sits down upon a throne of bones and flesh.  Smoke and "+
+         "blood pour from the eye socket of the skulls and a voice echos "+
+         "in your head 'Bow before my first childe...the ruler of Nod.'"
+,A_SOMEONE, pc, null, null, TO_REST);
+
+      pc.hp := 600;
+      position_update (pc);
+     }
+
+    else
+     {
+      act ("As you sit in the throne of Enoch you feel a dark presence " +
+         "surround you.  A voice echos in your head 'This is the throne "+
+         "of my first childe and only he may sit therein, now you know "+
+         "the wrath of Caine.", A_SOMEONE, pc, null, null, TO_CHAR);
+      act ("$1n sits down upon a throne of bones and flesh.  $1n screams "+
+         "in shear agony and falls to the ground writhing in pain.  A voice "+
+         "echos in your head 'This is the price of insolence, none may sit "+
+         "in Enoch's Throne save he himself.'" ,A_SOMEONE, pc, null, null,
+TO_REST);
+
+      pc.hp := 0;
+      position_update (pc);
+      link(pc, findroom("midgaard/market_sq"));
+      act("You now pay the price of your insolence.",
+      A_ALWAYS, pc, null, null, TO_CHAR);
+
+     }
+
+  :lostpc:
+    pause;
+    goto start;
+}
+dilend
+end
+
+
+                              bag_room
+title "A trash filled room"
+descr
+"&l     The room is overflowing with trash and debris.  There is a sloshing
+liquid on the floor which seems to have seeped out of a bag in the far right
+corner.  You wonder why a room like this is inside a mage's laboratory.
+You see a small pile of clothes thrown in the corner."
+
+extra {"trash", "debris"}
+"The floor is covered in rubbish.  Empty mugs, shredded papers, rotting food,
+and crawling bugs are scattered around the room."
+
+extra {"liquid", "bag"}
+"The bag has a large hole in the side, it looks as if something chewed a
+portion of the bag away.  From the hole a greenish liquid is seeping out."
+
+extra {"pile of clothes", "pile", "clothes"}
+"The pile of clothes seems to rise and fall with regular frequency.  As you
+watch you notice that there is a PERSON underneath all the clothes."
+
+extra {"bag lady", "lady"}
+"The bag lady is ancient to say the least.  She is covered in tattered
+clothes and rags, and a stench eminates from the clothes.  Beyond that
+you can determine very little about the person."
+
+extra {"black shroud", "shroud"}
+"The black shroud looks as if it might have once been a part of a wedding
+gown.  Now it is no more than a tattered and dirty piece of cloth, hung over
+the frame of an even older woman."
+
+extra {"leather bag", "bag"}
+"The leather bag is cracked and well used.  The opening seems rather funny to
+you as it constantly seems to be a different size than before."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+
+
+IN_ALWAYS_DARK
+
+/*  Dil to bring bag_room to life */
+dilbegin bagroom_talk();
+var
+     pc : unitptr;
+code {
+  :init:
+    heartbeat := PULSE_SEC*5;
+
+  :start:
+   unsecure(pc);
+   wait((SFB_CMD),((activator.type == UNIT_ST_PC) and
+not(command(CMD_ENTER))));
+
+   pc := activator;
+   secure(pc,lostem);
+{
+      act ("The pile of clothes begin to rustle.", A_SOMEONE, pc, null,
+null, TO_ALL);
+      pause;
+      act ("A figure emerges from within the pile of clothes.", A_SOMEONE,
+pc, null, null, TO_ALL);
+      pause;
+      act ("A small, dirty bag lady grins at you through missing teeth.",
+A_SOMEONE, pc, null, null, TO_ALL);
+      pause;
+      act ("The bag lady says 'You come in search of the wizards do you not
+?"+
+           " The wizards of the Fortress of High Wizardry ?'", A_SOMEONE,
+pc, null, null, TO_ALL);
+      pause;
+      act ("The bag lady says 'I have been placed here as your guide, you
+enterance into the "+
+           "fabeled fortress of magic.'", A_SOMEONE, pc, null, null, TO_ALL);
+      pause;
+      act ("The bag lady says 'If you wish to enter the Fortress and
+confront the mages there in, "+
+           "you must enter my black shroud.'", A_SOMEONE, pc, null, null,
+TO_ALL);
+      pause;
+      act ("The bag lady opens her black shroud and motions for you to
+enter.", A_SOMEONE, pc, null, null, TO_ALL);
+      pause;
+      act ("The bag lady says 'If you fear the powerful mages and wish to "+
+           "return to your easy life then enter the leather bag at my feet
+and "+
+           "you shall be returned to the outside.'", A_SOMEONE, pc, null,
+null, TO_ALL);
+      pause;
+      act ("The bag points at the leather bag at her feet.", A_SOMEONE, pc,
+null, null, TO_ALL);
+      pause;
+      act ("The bag lady says 'The choice is yours, it is your furture you
+must "+
+           "decide upon.  But i will not wait long...so either enter the
+black "+
+           "shroud and walk the halls of Magic, or enter the leather bag
+and "+
+           "return to your safe, pathetic world.'", A_SOMEONE, pc, null,
+null, TO_ALL);
+      pause;
+      act ("The bag lady gives you an evil grin that chills your spine.",
+A_SOMEONE, pc, null, null, TO_ALL);
+
+
+}
+    :lostem:
+    goto init;
+}
+dilend
+
+
+/*Dil to transport to the Fortress of High Wizardry */
+dilbegin fort_transfer();
+var
+        pc      :       unitptr;
+code
+{
+   :init:
+   heartbeat :=PULSE_SEC*5;
+
+   :start:
+   wait(SFB_CMD, (activator.type == UNIT_ST_PC) and
+       (command(CMD_ENTER)));
+
+   if ("black shroud" in argument)
+   {
+        addextra(activator.quests, {FORTRESS_TRAVEL}, "");
+   }
+   else if ("leather bag" in argument)
+   {
+        addextra(activator.quests, {EXIT_TRAVEL}, "");
+   }
+   else
+   {
+        act("You do not see that here!",
+        A_ALWAYS, self.outside, null, null, TO_CHAR);
+        goto start;
+   }
+
+/* Enter transfer routine */
+
+        pc := activator;
+        secure(pc, lost_pc);
+        block;
+        act("You step into the nether realm of transit.",
+            A_ALWAYS, pc, null, null, TO_CHAR);
+        act(pc.name+" steps forward and enters the nether realm of transit.",
+            A_SOMEONE, pc, null, null, TO_REST);
+        pause;
+        act("You feel the force of space and time collide into " +
+        "an all encompasing darkness.",
+            A_ALWAYS, pc, null, null, TO_CHAR);
+        act("The darkness parts and you see your destination",
+            A_ALWAYS, self.outside, null, null, TO_CHAR);
+
+        if (FORTRESS_TRAVEL in pc.quests)
+        {
+          link(pc, findroom("academy/maing"));
+          act("You have arrived at the Fortress of High Wizardry.",
+            A_ALWAYS, pc, null, null, TO_CHAR);
+          subextra(pc.quests, FORTRESS_TRAVEL);
+        }
+        else if (EXIT_TRAVEL in pc.quests)
+        {
+          link(pc, findroom("midgaard/market_sq"));
+          act("You have arrived at the Market Square in Midgaard.",
+            A_ALWAYS, pc, null, null, TO_CHAR);
+          subextra(pc.quests, EXIT_TRAVEL);
+        }
+
+        act("Suddenly "+pc.name+" exits from the nether realm of transit.",
+            A_SOMEONE, pc, null, null, TO_REST);
+
+       exec("look", pc);
+       unsecure(pc);
+        goto start;
+
+/* End of transfer Routine */
+
+        :lost_pc:
+   pause;
+   goto start;
+}
+dilend
+
+end
+
+
+
+%mobiles
+
+
+                                 emage1
+names {"mage", "elemental mage"}
+title "an Elemental Mage"
+descr "An Elemental Mage is wandering about with his hair standing on end."
+extra {}
+"This male mage is cloaked in an off yellow robe and he is wearing leather
+boots.  His hair is standing on end and he looks like he was just shocked
+by electricity.  There is a somewhat puzzled look on his face and he seems
+to be engrosed in thought."
+
+level 41
+alignment 0
+race RACE_WIZARD
+sex SEX_MALE
+height 175
+weight 159
+money 5 SILVER_PIECE
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY(15,15,0,25,20,0,25,0)
+MSET_WEAPON(10,10,5,10,5,5)
+MSET_SPELL(5,0,0,0,0,5,25,5,5,5,5)
+dilcopy combat_mag@function ("fireball","",0,1);
+special SFUN_RANDOM_ZONE_MOVE
+romflags {CHAR_DETECT_INVISIBLE}
+exp 120
+end
+
+                                 emage2
+names {"mage", "elemental mage"}
+title "an Elemental Mage"
+descr "An Elemental Mage is wandering about, chanting arcane phrases."
+extra {}
+"The female mage seems to be saying something rather important as there is a
+cloud of cold air revolving around her head.  The air seems to be turning
+into solid the longer she chants.  She is wearing a light blue robe and dark
+grey boots."
+
+level 41
+alignment 0
+race RACE_WIZARD
+sex SEX_FEMALE
+height 175
+weight 159
+money 5 SILVER_PIECE
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY(15,15,0,25,20,0,25,0)
+MSET_WEAPON(10,10,5,10,5,5)
+MSET_SPELL(5,0,0,0,0,5,5,25,5,5,5)
+dilcopy combat_mag@function ("frostball","",0,1);
+special SFUN_RANDOM_ZONE_MOVE
+romflags {CHAR_DETECT_INVISIBLE}
+exp 120
+end
+
+
+
+
+                                   pmage1
+names {"mage", "pain mage"}
+title "a Pain Mage"
+descr "A Mage of Pain is standing here flipping a branding iron over and over
+        in his hand."
+extra {}
+"He is wearing a jet black robe spattered with red.  In his hand is a hot
+branding iron.  He is grining at you evily and you can imagine him thinking
+of you as nothing more than cattle in need of branding."
+
+level 41
+alignment -500
+race RACE_WIZARD
+sex SEX_MALE
+height 175
+weight 159
+money 1 IRON_PIECE
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY(15,15,0,25,20,0,25,0)
+MSET_WEAPON(10,10,10,5,5,5)
+MSET_SPELL(5,0,0,0,0,5,5,5,5,25,5)
+dilcopy combat_mag@function ("plague","",0,1);
+special SFUN_RANDOM_ZONE_MOVE
+romflags {CHAR_DETECT_INVISIBLE}
+exp 120
+end
+
+                                   pmage2
+names {"mage", "pain mage"}
+title "a Pain Mage"
+descr "A female Mage of Pain is glaring at you maniacly as she pets her whip."
+extra {}
+"She is wearing a black robe with a large green teardrop embroidered on the
+left side.  She has a matching tatoo on her right cheek.  Her whip is black,
+barbed and has the head of a snake.  She looks well trained in its use."
+
+level 41
+alignment -500
+race RACE_WIZARD
+sex SEX_FEMALE
+height 175
+weight 159
+money 10 IRON_PIECE
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY(15,15,0,25,20,0,25,0)
+MSET_WEAPON(10,10,5,5,5,10)
+MSET_SPELL(5,0,0,0,0,5,5,5,5,25,5)
+dilcopy combat_mag@function ("bad breath","",0,1);
+special SFUN_RANDOM_ZONE_MOVE
+romflags {CHAR_DETECT_INVISIBLE}
+exp 120
+end
+
+
+                                cmage1
+names {"mage", "conjuring mage"}
+title "a Mage of Conjuring"
+descr "A Mage of Conjuring is standing here, staring intently at the wall. "
+extra {}
+"The mage looks exceptionally dishelved.  His hair is all awry and his robes
+are all wrinkled and dirty.  You surmise from the stench that he hasn't taken
+a shower in a while."
+
+level 41
+alignment 0
+race RACE_WIZARD
+sex SEX_MALE
+height 175
+weight 159
+money 5 SILVER_PIECE
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY(15,15,0,25,20,0,25,0)
+MSET_WEAPON(10,15,5,5,5,5)
+MSET_SPELL(5,0,0,0,0,5,25,5,5,5,5)
+dilcopy combat_mag@function ("fireball","",0,1);
+special SFUN_RANDOM_ZONE_MOVE
+romflags {CHAR_DETECT_INVISIBLE}
+exp 120
+end
+
+                                cmage2
+names {"mage", "conjuring mage"}
+title "a Mage of Conjuring"
+descr "A female Mage of Conjuring is talking to the air, or someone you can't
+        see."
+extra {}
+"A well kept female mage stands before you, garbed in resplendent silver
+robes.  The robes have concentric rings embroidered on them.  She wears
+brown sandals and has here long blond hair swept back behind her shoulders."
+
+level 41
+alignment 200
+race RACE_WIZARD
+sex SEX_FEMALE
+height 175
+weight 159
+money 5 SILVER_PIECE
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY(15,15,0,25,20,0,25,0)
+MSET_WEAPON(10,15,5,5,5,5)
+MSET_SPELL(5,0,0,0,0,5,5,5,5,25,5)
+dilcopy combat_mag@function ("energy drain","",0,1);
+special SFUN_RANDOM_ZONE_MOVE
+romflags {CHAR_DETECT_INVISIBLE}
+exp 120
+end
+
+
+                                mmage1
+names {"mage", "mind mage"}
+title "a Mage of the Mind"
+descr "A Mage of the Path of the Mind stands before smiling kindly."
+extra {}
+"A young man stands before you.  He has a broad smile on his face and is
+radiating kindness and warmth.  He is wearing a stark white cloak over a
+grey shirt and black pants."
+
+level 41
+alignment 500
+race RACE_WIZARD
+sex SEX_MALE
+height 175
+weight 159
+money 3 SILVER_PIECE
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY(15,15,0,25,20,0,0,25)
+MSET_WEAPON(10,15,5,5,5,5)
+MSET_SPELL(5,0,0,0,0,25,5,5,5,5,5)
+dilcopy combat_mag@function ("colour beam","",0,1);
+special SFUN_RANDOM_ZONE_MOVE
+romflags {CHAR_DETECT_INVISIBLE}
+exp 120
+end
+
+
+                               mmage2
+names {"mage", "mind mage"}
+title "a Mage of the Mind"
+descr "A female Mage of the Path of the Mind is sitting on the floor
+drooling."
+extra {}
+"She looks really out of it.  Mumbling and drooling, jumping at shadows, she
+seems quite a wreck.  You wonder if she realizes that she has no clothes on."
+
+level 41
+alignment 0
+race RACE_WIZARD
+sex SEX_FEMALE
+height 175
+weight 159
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY(15,15,0,25,20,0,25,0)
+MSET_WEAPON(10,15,5,5,5,5)
+MSET_SPELL(5,0,0,0,0,5,5,5,5,25,5)
+dilcopy combat_mag@function ("toxicate","",0,1);
+special SFUN_RANDOM_ZONE_MOVE
+romflags {CHAR_DETECT_INVISIBLE}
+exp 120
+end
+
+                              elemaster
+names {"elemental master", "master", "vulkroy hawkeye", "vulkroy"}
+title "the Elemental Master"
+descr "Vulkroy Hawkeye, the Master of the Path of the Elements, stands
+before you cackling with insane glee as lightning flashes around his head."
+extra {}
+"The Elemental Master is quite an imposing figure.  He is surrounded by an
+aura of lightning.  His robes are bright red with dark blue trim and he holds
+a staff from which the lightning seems to come.  His hair is dark and pulled
+back in a long braid. His crystal blue eyes burn through your soul, sparkling
+mischieviously."
+
+level 45
+alignment 0
+race RACE_WIZARD
+sex SEX_MALE
+height 175
+weight 180
+money 6 SILVER_PIECE
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY(15,15,0,25,20,0,25,0)
+MSET_WEAPON(10,5,5,15,5,5)
+MSET_SPELL(5,0,0,0,0,5,5,5,25,5,5)
+dilcopy combat_mag@function ("lightning bolt","",0,1);
+romflags {CHAR_DETECT_INVISIBLE}
+exp 130
+end
+
+
+                            painmaster
+names {"pain master", "master", "torandus blackmoon", "torandus"}
+title "the Master of Pain"
+descr "Torandus Blackmoon, the Master of Pain, glares at you as he sharpens
+his scythe on a goblin femur."
+extra {}
+"You can tell that the man before you is evil through and through.  His robes
+are black all over and his hood is pulled.  All you see are two green orbs
+glaring at you from beneath the hood."
+
+level 45
+alignment -1000
+race RACE_WIZARD
+sex SEX_MALE
+height 175
+weight 180
+money 100 IRON_PIECE
+NATURAL_DEF(WPN_CLAW, ARM_CLOTHES)
+MSET_ABILITY(15,15,0,25,20,0,0,25)
+MSET_WEAPON(10,5,5,5,5,15)
+MSET_SPELL(25,0,0,0,0,5,5,5,5,5,5)
+dilcopy combat_mag@function ("harm","",0,1);
+romflags {CHAR_DETECT_INVISIBLE}
+exp 130
+end
+
+
+                               conmaster
+names {"conjuring master", "master", "xad"}
+title "the Master of Conjuring"
+descr "Xad, the Master of Conjuring stands in a pentagram chanting softly."
+extra {}
+"She wears plain garb, a brown terry-cloth robe and dusty sandals.  She seems
+very intent on her work and does not appear to notice your entrance.  She
+does not look like she wishes to be disturbed."
+
+level 45
+alignment 0
+race RACE_WIZARD
+sex SEX_FEMALE
+height 175
+weight 180
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+MSET_ABILITY(15,15,0,25,20,0,25,0)
+MSET_WEAPON(10,15,5,5,5,5)
+MSET_SPELL(5,0,0,0,0,5,5,5,5,25,5)
+dilcopy combat_mag@function ("acid ball","",0,1);
+romflags {CHAR_DETECT_INVISIBLE}
+exp 130
+end
+
+                                  minmaster
+names {"mind master", "master", "dariakan uhr", "dariakan"}
+title "the Master of the Mind"
+descr "Dariakan Uhr, the Master of the Path of the Mind, is floating about
+two feet above the ground, hovering in place and staring off into space."
+extra {}
+"This ancnient man has long flowing white hair and look of wisdom on his
+face.  You can tell he is not a physicaly oriented man, but from the gleam
+in his eyes you can tell he is not unprotected."
+
+level 45
+alignment 1000
+race RACE_WIZARD
+sex SEX_MALE
+height 175
+weight 180
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY(15,15,0,25,20,0,0,25)
+MSET_WEAPON(5,5,5,10,5,5)
+MSET_SPELL(5,0,0,0,0,35,5,5,5,5,5)
+dilcopy combat_mag@function ("colourspray","",0,1);
+romflags {CHAR_DETECT_INVISIBLE}
+exp 130
+end
+
+                              mutant_abom
+names {"mutant abomination", "abomination", "mutant"}
+title "a Mutant Abonation"
+descr "A Mutant Abomination is scurrying around, leaving a trail of slime."
+extra {}
+"The creature is a mesh of body parts smashed together.  It has the head of
+an elf, the body of a giant with lobster like pincers for hands and the legs
+of a goat.  It makes bizarre whining noises and occasionaly grunts like a
+gorilla.  It is quite a hideous site."
+
+level 38
+alignment 400
+race RACE_MUTANT_ABOM
+sex SEX_NEUTRAL
+height 230
+weight 220
+NATURAL_DEF(WPN_CLAW, ARM_CHAIN)
+MSET_ABILITY(25,25,5,25,0,0,20,0)
+MSET_WEAPON(10,10,10,5,25,5)
+MSET_SPELL(5,0,0,0,0,5,5,5,5,5,5)
+special SFUN_RANDOM_ZONE_MOVE
+romflags {CHAR_DETECT_INVISIBLE}
+
+/*  Dil to bring mutant abomination to life */
+dilbegin abom_talk();
+code {
+  :init:
+    heartbeat := PULSE_SEC*5;
+    on_activation((self.position <= POSITION_SLEEPING) or
+         (self.position == POSITION_FIGHTING), skip);
+  :start:
+    exec("emote looks at you.", self); pause;
+    exec("emote seems to be questioning what you are doing down here.", self);
+         pause;
+    exec("say Do you seek my Master? The Creator?", self); pause;
+    exec("say He runs with the Fae, mainly the Satyr.", self); pause;
+    exec("emote giggles.", self); pause;
+    exec("say Underground his Realm doth dwell.", self); pause;
+    exec("say The chamber kept warm by the fires of Hell.", self); pause;
+    exec("emote waves you on.", self); pause;
+    exec("say Go on now, i must keep my watch.", self); pause;
+         pause;
+         pause;
+    goto init;
+}
+dilend
+
+
+end
+
+                               mutant_reptile
+names {"mutant reptile", "reptile", "mutant"}
+title "a Mutant Reptile"
+descr "A scaly Mutant Reptile slithers across the floor, looking directly
+at you."
+extra {}
+"This mutant is composed of various reptile parts.  It has the body of an
+anaconda and the head of a draconian.  Two scaly arms protrude from the sides
+of the torso, and though they don't look like they are used for fighting they
+end in wicked looking claws."
+
+level 39
+alignment -400
+race RACE_MUTANT_REPTILE
+sex SEX_NEUTRAL
+height 230
+weight 220
+NATURAL_DEF(WPN_CRUSH, ARM_PLATE)
+MSET_ABILITY(25,25,5,25,0,0,20,0)
+MSET_WEAPON(10,10,10,5,25,5)
+MSET_SPELL(5,0,0,0,0,5,5,5,5,5,5)
+romflags {CHAR_DETECT_INVISIBLE}
+special SFUN_RANDOM_ZONE_MOVE
+exp 110
+
+/*  Dil to bring mutant reptile to life */
+dilbegin reptile_talk();
+code {
+  :init:
+    heartbeat := PULSE_SEC*5;
+    on_activation((self.position <= POSITION_SLEEPING) or
+         (self.position == POSITION_FIGHTING), skip);
+  :start:
+    exec("emote slithers into a semi-standing position.", self); pause;
+    exec("emote blinks it's reptilian eyes.", self); pause;
+    exec("emote folds it's arms and bows.", self); pause;
+    exec("emote hisses 'We were created by him who you seek.'", self); pause;
+    exec("emote hisses 'Guards we are, and safe will we keep.'", self); pause;
+    exec("emote twitches it's tail.", self); pause;
+    exec("emote hisses 'If it's with him you wish to talk.'", self); pause;
+    exec("emote hisses 'Enter his dwelling you must, for you cannot
+walk,'", self);
+         pause;
+    exec("emote unfolds it's arms and uncoils it's body.", self); pause;
+    exec("emote slithers away, into the shadows.", self); pause;
+         pause;
+         pause;
+    goto init;
+}
+dilend
+
+end
+
+                               eguardian
+names {"elemental warrior", "warrior"}
+title "the Elemental Warrior"
+descr "An Elemental Warrior stands before you, defying you entrance to the
+room above him."
+extra {}
+"The figure is truly an awesome sight.  Hair and eyes of flame, it glares at
+you with animosity.  His body is forged of solid crystaline ice and lightning
+surges over the clear surface, as if ravaging him."
+
+level 42
+alignment 600
+race RACE_WIZARD_GUARDIAN
+sex SEX_MALE
+height 200
+weight 200
+money 5 SILVER_PIECE
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+MSET_ABILITY(20,20,0,25,15,0,20,0)
+MSET_WEAPON(5,5,5,5,15,5)
+MSET_SPELL(0,0,0,0,0,0,20,20,20,0,0)
+dilcopy combat_mag@function ("jolt","",0,1);
+dilcopy guard_dir@function (CMD_UP, {},{},"stop_act@academy");
+romflags {CHAR_DETECT_INVISIBLE}
+exp 110
+end
+
+                               pguardian
+names {"pain shade", "shade"}
+title "the Pain Shade"
+descr "A Pain Shade lurks in the darkness, waiting for you to move."
+extra {}
+"You catch glimpses of this ethereal creature through the darkness.  It is
+naked and gaunt.  The skin is rotted and bones gleam white through decaying
+flesh.  The creature looks to be in extreme pain."
+
+level 42
+alignment -600
+race RACE_WIZARD_GUARDIAN
+sex SEX_NEUTRAL
+height 200
+weight 120
+NATURAL_DEF(WPN_CLAW, ARM_CHAIN)
+MSET_ABILITY(10,20,0,20,20,0,0,30)
+MSET_WEAPON(5,5,5,5,15,5)
+MSET_SPELL(40,0,0,0,0,0,10,5,5,0,0)
+dilcopy combat_mag@function ("cause serious","",0,1);
+dilcopy guard_dir@function (CMD_UP, {}, {},"stop_act@academy");
+romflags {CHAR_DETECT_INVISIBLE}
+exp 120
+end
+
+                               cguardian
+names {"angel of war", "war angel", "angel"}
+title "the Angel of War"
+descr "An Angel of War hovers in the air, prepared to defend its master at
+all costs."
+extra {}
+"She is a beautiful creature.  Giant golden wings slowly flap keeping her
+hovering in the air.  Her golden hair flows down her back and shoulders.  She
+is garbed in a long white robe and is holding a glowing spear."
+
+level 42
+alignment 0
+race RACE_WIZARD_GUARDIAN
+sex SEX_FEMALE
+height 200
+weight 150
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+MSET_ABILITY(25,25,0,25,10,0,0,15)
+MSET_WEAPON(15,15,5,30,5,5)
+MSET_SPELL(25,0,0,0,0,0,0,0,0,0,0)
+dilcopy combat_mag@function ("cause serious","heal",0,1);
+dilcopy guard_dir@function (CMD_UP, {}, {},"stop_act@academy");
+romflags {CHAR_DETECT_INVISIBLE}
+exp 120
+end
+
+                               mguardian
+names {"invisible stalker", "stalker"}
+title "the Invisible Stalker"
+extra {}
+"You do not see that here."
+
+level 42
+alignment 0
+race RACE_WIZARD_GUARDIAN
+sex SEX_NEUTRAL
+height 200
+weight 200
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+MSET_ABILITY(30,40,0,25,5,0,0,0)
+MSET_WEAPON(15,35,5,5,5,5)
+MSET_SPELL(0,0,0,0,0,0,10,10,10,0,0)
+dilcopy guard_dir@function (CMD_UP, {}, {},"stop_act@academy");
+romflags {CHAR_DETECT_INVISIBLE}
+exp 120
+
+    dilbegin backstab();
+    var
+        pc           : unitptr;
+
+    code
+    {
+      :start:
+        unsecure (pc);
+
+      heartbeat := PULSE_SEC * 10;
+      on_activation((self.position <= POSITION_SLEEPING) or
+                (self.position == POSITION_FIGHTING), skip);
+
+
+      wait(SFB_CMD, activator.type == UNIT_ST_PC);
+      pc := activator;
+      secure (pc,lostpc);
+
+
+    if (pc.level > 200) goto fail;
+
+{
+    act("You suddenly notice a shadow appear out of thin air, but not in " +
+         "time to avoid a piercing pain in your back.", A_SOMEONE, pc,
+null, null, TO_CHAR);
+         act("$1n screams in agony as you suddenly notice a shadow behind " +
+             "him." ,A_SOMEONE, pc, null, null, TO_REST);
+
+       pc.hp := (pc.hp - 135);
+       position_update (pc);
+
+     exec("kill"+pc.name, self);
+}
+
+    :fail:
+    exec("bow"+pc.name, self);
+
+    :lostpc:
+    pause;
+    goto start;
+
+    }
+    dilend
+
+end
+
+                               wiz_familiar
+names {"wizard's familiar", "familiar"}
+title "a Wizard's Familiar"
+descr "A small Wizard's Familiar is here rummaging through things it is not
+supposed to."
+extra {}
+"This tiny little beast is very magical in nature.  It looks very curious
+and you think it might be time to check and make sure you still are in
+possesion of all your belongings."
+
+level 35
+alignment 200
+race RACE_WIZARD_FAMILIAR
+sex SEX_NEUTRAL
+height 90
+weight 75
+money 2 SILVER_PIECE
+NATURAL_DEF(WPN_CLAW, ARM_LEATHER)
+MSET_ABILITY(15,15,0,20,25,0,25,0)
+MSET_WEAPON(0,5,0,5,10,0)
+MSET_SPELL(0,0,0,0,0,15,15,15,15,5,15)
+dilcopy combat_mag@function ("fireball","",0,1);
+special SFUN_RESCUE "wizard's familiar"
+special SFUN_RANDOM_ZONE_MOVE
+romflags {CHAR_DETECT_INVISIBLE}
+exp 115
+
+/*  Dil to bring familiars to life */
+dilbegin fam_talk();
+code {
+  :init:
+    heartbeat := PULSE_SEC*8;
+    on_activation((self.position <= POSITION_SLEEPING) or
+         (self.position == POSITION_FIGHTING), skip);
+  :start:
+    exec("emote looks around mischieviously.", self); pause;
+    exec("say Hehehehehe, I know something you don't know.", self); pause;
+    exec("say I know something you don't know.", self); pause;
+    exec("emote sticks it's tongue out at you.", self); pause;
+    exec("emote does a little dance.", self); pause;
+    exec("emote whispers to you 'I know where the Renegade hides.'", self);
+         pause;
+    exec("emote whispers to you 'All these dumb mages can't find him, but "+
+         "i know where he is...'", self); pause;
+    exec("say I dont know if I should tell you.", self); pause;
+    exec("emote sits down and ponders.", self); pause;
+    exec("emote suddenly jumps up and declares 'I will tell you.'", self);
+         pause;
+    exec("emote looks very happy with itself.", self); pause;
+    exec("emote whispers to you 'He lives underground.'", self); pause;
+    exec("emote whispers to you 'DEEP underground...right beneath the "+
+         "dumb mages noses.'", self); pause;
+    exec("say They are SOOOOOOO stupid.", self); pause;
+    exec("emote giggles with a happiness you have never known.", self); pause;
+    goto init;
+}
+dilend
+
+
+end
+
+                              arch_familiar
+names {"wizard's familiar", "familiar"}
+title "a Wizard's Familiar"
+descr "The Archmage's Familiar is here waiting attentively for its orders."
+extra {}
+"This tiny little beast is very magical in nature.  It looks very curious
+and you think it might be time to check and make sure you still are in
+possesion of all your belongings."
+
+level 38
+alignment 200
+race RACE_WIZARD_FAMILIAR
+sex SEX_NEUTRAL
+height 90
+weight 75
+money 3 SILVER_PIECE
+NATURAL_DEF(WPN_CLAW, ARM_LEATHER)
+MSET_ABILITY(15,15,0,20,25,0,25,0)
+MSET_WEAPON(0,5,0,5,10,0)
+MSET_SPELL(0,0,0,0,0,15,15,15,15,5,15)
+dilcopy combat_mag@function ("frostball","",0,1);
+romflags {CHAR_DETECT_INVISIBLE}
+exp 115
+end
+
+
+
+
+                                 archmage
+names {"archmage", "ancious", "elder"}
+title "the Archmage of Wizardry"
+descr "Before you stands a figure who demands respect, Ancious the Elder,
+Archmage of Wizardry."
+extra {}
+"The Archamge is an older man, you would guess near his eighties.  He
+has long black hair and a black beard that hangs down near his waist.  His
+robes are grey with dark grey trim.  He is holding himself up on a staff that
+is carved from a deep red wood.  The staff has the head of a hawk, and there
+are feathers tied to the end."
+
+level 46
+alignment 0
+race RACE_WIZARD
+sex SEX_MALE
+height 190
+weight 130
+NATURAL_DEF(WPN_FIST, ARM_LEATHER)
+MSET_ABILITY(10,15,0,20,30,0,25,0)
+MSET_WEAPON(5,5,5,5,5,5)
+MSET_SPELL(0,0,0,0,0,10,10,10,10,0,30)
+dilcopy combat_mag@function ("acid ball","",0,1);
+special SFUN_RESCUE "wizard's familiar"
+romflags {CHAR_DETECT_INVISIBLE}
+exp 130
+
+/*  Dil to bring archmage to life */
+dilbegin archmage_talk();
+code {
+  :init:
+    heartbeat := PULSE_SEC*8;
+    on_activation((self.position <= POSITION_SLEEPING) or
+         (self.position == POSITION_FIGHTING), skip);
+  :start:
+    exec("emote strikes a haughty and arrogant pose.", self); pause;
+    exec("emote looks down his nose at you.", self); pause;
+    exec("say I see that you have found my private lair...it is about time "+
+         "someone had enough intelligence to find me.", self); pause;
+    exec("say If you found me then maybe you can help me find someone I "+
+         "am looking for.", self); pause;
+    exec("emote begins to pace.", self); pause;
+    exec("say There is a Renegade mage who was once a member of our
+order.", self);
+         pause;
+    exec("say He now thinks he can walk outside of our law.", self); pause;
+    exec("say I know not where he hides, and my magic fails when I search "+
+         "for him.", self); pause;
+    exec("say There are rumors that he hides in the old Wizard's Mansion..."+
+         "there are even rumors that he hides under our very noses.", self);
+         pause;
+    exec("emote snorts.", self); pause;
+    exec("say What a preposterous thought.", self); pause;
+    exec("say As if he could hide here and me not know.", self); pause;
+    exec("say Anyway go find him and tell him that we will dispense our "+
+         "brand of justice in due time.", self); pause;
+    exec("emote shakes his head in disgust.", self); pause;
+    exec("say Go find him will you ? I dont have an eternity...", self);
+pause;
+    pause;
+    pause;
+    goto init;
+}
+dilend
+
+end
+
+                                 quest_mage
+names {"corthalas darkstar", "corthalas", "renegade", "mage"}
+title "Corthalas Darkstar, Renegade Mage "
+descr "Corthalas Darkstar, Renegade Mage from the Fortress of High Wizardry,
+stands before you gloating."
+extra {}
+"Corthalas is an young elf.  He has dark hair that is pulled back in a long
+braid.  His robe is half white and half covered in swirling colors.  He holds
+a long black staff with a silver six-pointed cross on the top.  He has the
+look of youth and vigor."
+
+level 199
+alignment 0
+race RACE_WIZARD
+sex SEX_MALE
+height 190
+weight 190
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+MSET_ABILITY(20,20,0,20,20,0,20,0)
+MSET_WEAPON(5,5,5,5,5,5)
+MSET_SPELL(8,0,0,0,0,12,14,12,12,0,12)
+dilcopy combat_mag@function ("acid ball","",0,1);
+romflags {CHAR_DETECT_INVISIBLE}
+exp -500
+
+dilbegin mage_quest1();
+var
+  pcname : string;
+  item   : unitptr;
+  pc     : unitptr;
+  i      : integer;
+  exdp   : extraptr;
+
+code
+{
+
+   :init:
+   heartbeat := PULSE_SEC*5;
+   on_activation((self.position <= POSITION_SLEEPING) or
+                (self.position == POSITION_FIGHTING), skip);
+
+
+
+   :start:
+   wait(SFB_CMD,(activator.type == UNIT_ST_PC) and (not command(CMD_GIVE)));
+
+
+   if (DARKSTAR_COMPLETE in activator.quests)
+     goto waitawhile;
+
+
+   pc := activator;
+   secure(pc, lostpc);
+
+
+   if (not (DARKSTAR_ONGOING in pc.quests))
+   {
+      pause;
+      exec("say I see that you have found a way into my Realm.", self); pause;
+      exec("say I congratulate you on your wit and intelligence...that is "+
+            "why I made it so difficult to get here, to ensure that only "+
+            "the most intelligent would arive.", self); pause;
+      exec("say I assume that you come seeking my knowledge ?", self); pause;
+      exec("say Well I shall give you not only that, but if you chose to "+
+           "bring me a few paltry items I will award you a mighty item.",
+self);
+           pause;
+      exec("say The choice is yours, but I guarantee that you will not be " +
+           " disappointed in the least.", self); pause;
+      exec("say I require a few items to finish my experiment, and to prove
+" +
+            "your skill you must aquire them for me", self); pause;
+      exec("say I need the fires from my original home, they should be "+
+           "kept burning in the first guild.", self); pause;
+      exec("say I also need a gelatinous material with which to solidify "+
+           "the arcane nature of the Discs.", self); pause;
+      exec("say And finally, I need an object I once held very dear.", self);
+      pause;
+      exec("say It was stolen from me by a thief who has run and ferreted "+
+           "himself away in the old run down remnants of his ancient
+guild.", self);
+      pause;
+      exec("say When you bring me these objects I will craft for you a
+mighty "+
+           " weapon indeed.", self); pause;
+      exec("say The Discs of Michael I will create for you.",self); pause;
+      exec("say If you wish the awesome might of magical powers to craft
+for " +
+           "you this item, nod now.", self);
+
+
+
+      i := 0;
+      while (i < 5)
+      {
+         wait(SFB_CMD, activator #= pc);
+
+         if (command(CMD_NOD))
+         {
+            goto quest_accepted; /* Goto the label if accepted */
+         }
+         else if (command(CMD_SAY))
+         {
+            pause;
+            exec("say Nod if you accept my conditions, if not shake your
+head" +
+                 " and begone from me forever.", self);
+         }
+         else if (command(CMD_SHAKE))
+           goto no_quest;
+
+         i := i+1;
+      }
+
+
+      :no_quest:
+      pause;
+      exec("say It is your choice.  Now leave me, I have grown tired of
+your " +
+           "pathetic presence.", self);
+      unsecure(pc);
+      goto waitawhile;
+
+
+      :quest_accepted:
+      pause;
+      exec("say Then GO, do not stand here slack jaw.", self);
+      addextra(pc.quests, {DARKSTAR_ONGOING}, "");
+      unsecure(pc);
+      goto start;
+   }
+
+
+   else /* DARKSTAR_ONGOING in pc.quests! */
+   {
+      exdp := DARKSTAR_ONGOING in pc.quests;
+
+      if (("home fires" in exdp.names) and ("bucket of ooze" in exdp.names)
+and
+          ("onyx ferret figurine" in exdp.names))
+      {
+         pause;
+         subextra(pc.quests, DARKSTAR_ONGOING);
+         addextra(pc.quests, {DARKSTAR_COMPLETE}, "");
+         exec("emote chants 'divrkal misyrn dut karna shuk'.", self);
+         pause;
+         exec("emote traces a pentagram on the floor and places the bucket " +
+              "in the center.", self); pause;
+         exec("emote takes the fire and casts it into the bucket.", self);
+              pause;
+         exec("emote traces arcane symbols in the air and three discs
+descend"+
+              " from the ceiling into the bucket.", self); pause;
+         exec("emote cackles with an evil pleasure.", self); pause;
+         exec("emote gives you three of the fabeled Discs of Michael.", self);
+         item := load("mdiscs@academy"); /* Loads the item */
+         link(item, pc);
+
+         item := load("mdiscs@academy"); /* Loads the item */
+         link(item, pc);
+
+         item := load("mdiscs@academy"); /* Loads the item */
+         link(item, pc);
+
+
+
+
+/*         exec("say If you use all of these, come back to me and I shall " +
+              "give you more, but never more than three at a time.", self);
+pause;
+*/
+         exec("grin "+pc.name, self); pause;
+         exec("say Don't get the foolish idea of handing these out.",
+self); pause;
+         exec("say The receiver will not like the results,", self); pause;
+         exec("say Now be off and enjoy.  I thank you for the return of my " +
+              "pet.", self); pause;
+         exec("say And if you see that old fool Ancious, cackle at him for
+me!", self);
+
+      }
+   }
+
+
+   unsecure(pc);
+   goto start;
+
+
+   :waitawhile:
+   heartbeat := PULSE_SEC*60;
+   pause;
+   goto init;
+
+
+   :lostpc:
+   exec("say I wait for you no longer.", self); pause;
+   exec("say Leave my Realm before you anger me further.", self);
+   goto start;
+
+
+}
+dilend
+
+
+
+dilbegin mage_quest2();
+var
+  pc     : unitptr;
+  item   : unitptr;
+  exdp   : extraptr;
+
+code
+{
+   heartbeat := PULSE_SEC*5;
+   on_activation((self.position <= POSITION_SLEEPING) or
+                (self.position == POSITION_FIGHTING), skip);
+
+
+   :start:
+   wait(SFB_CMD, command(CMD_GIVE) and (activator.type == UNIT_ST_PC));
+
+
+   :give:
+   if (not (DARKSTAR_ONGOING in activator.quests))
+     goto start;
+
+
+   pc := activator;
+   item := self.inside;
+   secure(pc, labsecure);
+   secure(item, labsecure);
+
+   wait(SFB_CMD | SFB_TICK, TRUE);
+
+ if (not (item #= self.inside))
+   {
+      unsecure(item);
+      exdp := DARKSTAR_ONGOING in pc.quests;
+
+
+      if ("Home fires" in self.inside.name)
+      {
+         addstring(exdp.names, "home fires");
+         exec("say I see that you have found my associate, I hope he got "+
+              "something for his troubles.", self);
+         destroy(self.inside);
+      }
+      else if ("Bucket of ooze" in self.inside.name)
+      {
+         addstring(exdp.names, "bucket of ooze");
+         exec("say Not bad...I would have chosen differently but this will
+suit " +
+              "my purpose.", self);
+         destroy(self.inside);
+      }
+      else if ("Onyx ferret figurine" in self.inside.name)
+      {
+         addstring(exdp.names, "onyx ferret figurine");
+         exec("say I thank you immensly and hope that you suffered the
+thief to " +
+              "an immense ammount of pain.", self);
+         destroy(self.inside);
+      }
+      else
+      {
+         exec("say Insolent cur, do you really think this will work ?", self);
+              pause;
+         exec("say I think not.", self);
+         link(self.inside, pc);
+      }
+   }
+   unsecure(pc);
+
+
+   if ((command(CMD_GIVE)) and (activator.type == UNIT_ST_PC))
+   {
+      goto give;
+   }
+   else
+     goto start;
+
+
+   :labsecure:
+   exec("say Heh, they will be back in short order, begging me for another "+
+        "chance at it.", self);
+   goto start;
+}
+dilend
+
+end
+
+                               fire_mage
+names {"disciple", "randorax"}
+title "Randorax the Disciple"
+descr "Randorax, the disciple of the Renegade Mage, is here tending the fire."
+extra {}
+"Randorax is a young man.  He has short cut green hair and a nose ring.  He
+wears a heavy blue traveling cloak and bright yellow pants.  Quite a
+rebelious looking youth."
+
+level 45
+alignment -200
+race RACE_WIZARD
+sex SEX_MALE
+height 180
+weight 160
+money 3 COPPER_PIECE
+exp - 300
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY(15,15,0,25,20,0,25,0)
+MSET_WEAPON(10,10,5,5,5,10)
+MSET_SPELL(5,0,0,0,0,5,5,5,5,25,5)
+dilcopy combat_mag@function ("stinking cloud","",0,1);
+romflags {CHAR_DETECT_INVISIBLE}
+
+dilbegin fire_quest1();
+var
+  pcname : string;
+  item   : unitptr;
+  pc     : unitptr;
+  i      : integer;
+  exdp   : extraptr;
+
+code
+{
+
+   :init:
+   heartbeat := PULSE_SEC*5;
+   on_activation((self.position <= POSITION_SLEEPING) or
+                (self.position == POSITION_FIGHTING), skip);
+
+
+
+   :start:
+   wait(SFB_CMD,(activator.type == UNIT_ST_PC) and (not command(CMD_GIVE)));
+
+
+   if (HOMEFIRE_COMPLETE in activator.quests)
+     goto waitawhile;
+
+
+   pc := activator;
+   secure(pc, lostpc);
+
+
+   if (not (HOMEFIRE_ONGOING in pc.quests))
+   {
+      pause;
+      exec("emote giggles uncontrolably.", self); pause;
+      exec("say Hey hey hey...look who showed up here today.", self); pause;
+      exec("say I really hope that you were sent by my Master.", self); pause;
+      exec("say Lord Darkstar better have sent you or you might as well go "+
+           "away now, cuz I really don't wanna deal with you otherwise.",
+self);
+           pause;
+      exec("say But if the Lord Mage did send you then have a seat and we " +
+           "can talk about what you are here for.", self); pause;
+      exec("say I know what it is that you want, but it dont come cheap " +
+            "if ya know what I mean.", self); pause;
+      exec("say I hold the fires which you seek, but there are things that "+
+           "I...erm the Master seeks.", self); pause;
+      exec("say If you bring me these things I will consider parting with " +
+           "a small portion of the Homefire.", self); pause;
+      exec("say You must bring me the staff that was Ancalador's bane.",
+self);
+      pause;
+      exec("say And there is the little matter of that blasted King Welmar " +
+           "and his pathetic bodyguards.", self); pause;
+      exec("say Bring me something from one of the guards...preferably "+
+           "something that will leave them less protection, less shielded "+
+           "from my attack.", self); pause;
+      exec("say Bring me these two items and we will talk.",self); pause;
+      exec("say That is unless you are too pathetic to get 'em, in which " +
+           "case just leave now, if not nod and begone.", self);
+
+
+
+      i := 0;
+      while (i < 5)
+      {
+         wait(SFB_CMD, activator #= pc);
+
+         if (command(CMD_NOD))
+         {
+            goto quest_accepted; /* Goto the label if accepted */
+         }
+         else if (command(CMD_SAY))
+         {
+            pause;
+            exec("say Nod if you arent a wuss, other wise just shake yer "+
+                 "bloody 'ead an' LEAVE.", self);
+         }
+         else if (command(CMD_SHAKE))
+           goto no_quest;
+
+         i := i+1;
+      }
+
+
+      :no_quest:
+      pause;
+      exec("say I thought you were a slotting bleeder...pathetic whelp.",
+self);
+      unsecure(pc);
+      goto waitawhile;
+
+
+      :quest_accepted:
+      pause;
+      exec("say Outta here then ya bleeder, I ain't got all slotting day.",
+self);
+      addextra(pc.quests, {HOMEFIRE_ONGOING}, "");
+      unsecure(pc);
+      goto start;
+   }
+
+
+   else /* HOMEFIRE_ONGOING in pc.quests! */
+   {
+      exdp := HOMEFIRE_ONGOING in pc.quests;
+
+      if (("staff of flesh to bone" in exdp.names) and
+      ("guard's shield" in exdp.names))
+      {
+         pause;
+         subextra(pc.quests, HOMEFIRE_ONGOING);
+         addextra(pc.quests, {HOMEFIRE_COMPLETE}, "");
+         exec("emote pokes at the fire with a stick.", self); pause;
+         exec("emote looks up at you with a gleam in his eye.", self); pause;
+         exec("say Guess you ain't such a bleeder after all.", self);
+              pause;
+         exec("emote grins wickedly at you..", self); pause;
+         exec("say Well I suppose you earned it.", self); pause;
+         exec("emote grabs a hot coal, still on fire, from the flames.",
+self);
+              pause;
+         exec("emote throws it at you, cackling hideously the whole time.",
+self);
+         item := load("home_fire@academy"); /* Loads the item */
+         link(item, pc);
+
+         exec("say Now get outta here an' leave me alone huh ?", self); pause;
+
+      }
+   }
+
+
+   unsecure(pc);
+   goto start;
+
+
+   :waitawhile:
+   heartbeat := PULSE_SEC*60;
+   pause;
+   goto init;
+
+
+   :lostpc:
+   exec("say He he he I knew you were a gimp.", self); pause;
+   exec("say Pathetic slotting, drek-eating punk.", self);
+   goto start;
+
+
+}
+dilend
+
+
+
+dilbegin fire_quest2();
+var
+  pc     : unitptr;
+  item   : unitptr;
+  exdp   : extraptr;
+
+code
+{
+   heartbeat := PULSE_SEC*5;
+   on_activation((self.position <= POSITION_SLEEPING) or
+                (self.position == POSITION_FIGHTING), skip);
+
+
+   :start:
+   wait(SFB_CMD, command(CMD_GIVE) and (activator.type == UNIT_ST_PC));
+
+
+   :give:
+   if (not (HOMEFIRE_ONGOING in activator.quests))
+     goto start;
+
+
+   pc := activator;
+   item := self.inside;
+   secure(pc, labsecure);
+   secure(item, labsecure);
+
+   wait(SFB_CMD | SFB_TICK, TRUE);
+
+ if (not (item #= self.inside))
+   {
+      unsecure(item);
+      exdp := HOMEFIRE_ONGOING in pc.quests;
+
+
+      if ("Staff of flesh to bone" in self.inside.name)
+      {
+         addstring(exdp.names, "staff of flesh to bone");
+         exec("say Heh, the hobgoblins will pay well for this.", self);
+         destroy(self.inside);
+      }
+      else if ("Guard's shield" in self.inside.name)
+      {
+         addstring(exdp.names, "guard's shield");
+         exec("say ALRIGHT !!! Now i can knock off those piss ants.", self);
+         destroy(self.inside);
+      }
+      else
+      {
+         exec("say Not only are you a bleeder, you brought the wrong "+
+              "damn thing!", self);
+              pause;
+         exec("say Go get me what I want you MORON.", self);
+         link(self.inside, pc);
+      }
+   }
+   unsecure(pc);
+
+
+   if ((command(CMD_GIVE)) and (activator.type == UNIT_ST_PC))
+   {
+      goto give;
+   }
+   else
+     goto start;
+
+
+   :labsecure:
+   exec("say Gone for now...but they'll be back in short order no doubt.",
+self);
+   goto start;
+}
+dilend
+
+
+
+
+end
+
+                              arcane_thief
+names {"thief", "grill"}
+title "Grill the thief"
+descr "Grill the thief is attempting not to be noticed."
+extra {}
+"The slovenly looking man is obviously a thief.  He has small beedy eyes, a
+rat like nose and long greasy hair.  He looks very guilty and is always
+glancing arround nervously."
+
+level 45
+alignment -400
+race RACE_WIZARD
+sex SEX_MALE
+height 130
+weight 140
+exp -300
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY(20,25,5,30,0,0,20,0)
+MSET_WEAPON(15,25,15,15,15,15)
+MSET_SPELL(0,0,0,0,0,0,0,0,0,0,0)
+special SFUN_HIDEAWAY
+romflags {CHAR_DETECT_INVISIBLE}
+
+/*  Dil to bring thief to life */
+dilbegin thief_talk();
+code {
+  :init:
+    heartbeat := PULSE_SEC*8;
+    on_activation((self.position <= POSITION_SLEEPING) or
+         (self.position == POSITION_FIGHTING), skip);
+  :start:
+    exec("emote glances over at you.", self); pause;
+    exec("emote screams 'Ack...how did you find me here?", self); pause;
+    exec("say Please tell me you were sent by Ancious.", self); pause;
+    exec("emote cringes and his eyes get wide with fear.", self); pause;
+    exec("say The Renegade sent you didn't he ?", self); pause;
+    exec("emote looks like his is getting ready to rabbit.", self); pause;
+    exec("say He has sent you for his figurine hasn't he?", self); pause;
+    exec("emote sighs with exasperation.", self); pause;
+    exec("say If you are going to kill me then get it over with...", self);
+         pause;
+    exec("say It will be better than living in constant fear like this.",
+self);
+         pause;
+    exec("say But I have hidden the figurine...believe me it's really
+nothing "+
+         "important...nothing at all.", self); pause;
+    exec("emote closes his eyes in anticipation of the killing blow.", self);
+         pause;
+    goto init;
+}
+dilend
+
+
+end
+
+
+/*
+                                     _
+names {""}
+title ""
+descr ""
+extra {}
+""
+
+level
+alignment
+race
+sex
+height
+weight
+money
+exp
+NATURAL_DEF(,)
+MSET_ABILITY(,,,,,,,)
+MSET_WEAPON(,,,,)
+MSET_SPELL(,,,,,,,,,,)
+special SFUN_COMBAT_MAGIC "cast "
+romflags {}
+end
+
+*/
+
+
+%objects
+
+                                 wiz_staff
+names {"staff of wizardry", "wizard staff", "staff"}
+title "the Staff of Wizardry"
+descr "A long wooden staff is propped up in the corner."
+extra {}
+"This six foot staff is made of a plain dark brown wood.  It has intricate
+runes carved into the side.  It is obviously a staff made for combat."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_QUARTERSTAFF, 0, 0)
+weight 15
+cost 1 PLATINUM_PIECE
+rent 4 	SILVER_PIECE
+dilcopy abi_restrict@function (ABIL_BRA,30,0,25,"");
+dilcopy abi_restrict@function (ABIL_MAG,30,0,25,"");
+end
+
+                                 lig_staff
+names {"staff of lightning", "lightning staff", "staff"}
+title "the Staff of Lightning"
+descr "A crooked, twisted staff of solid oak-heartwood lies on the ground."
+extra {}
+"The staff is forged of the solid heartwood of an oak tree that was blasted
+by a bolt of lightning."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_QUARTERSTAFF, 0, 0)
+SPELL_TRANSFER(SPL_CELL, 5)
+weight 15
+cost 1 PLATINUM_PIECE
+rent 4 SILVER_PIECE
+dilcopy abi_restrict@function (ABIL_BRA,30,0,25,"");
+dilcopy abi_restrict@function (ABIL_MAG,30,0,25,"");
+end
+
+                                 hawk_staff
+names {"staff of the hawk", "hawk staff", "staff"}
+title "the Staff of the Hawk"
+descr "A long redwood staff, with the tail feathers of a hawk, is standing
+in the corner."
+extra {}
+"The staff has the head of a hawk and carved feathers protruding from the
+sides just below the head.  There are a number of a hawk's tail feathers
+tied to the end of the staff.  As you look at the staff you hear the scream
+of a hawk echo through your head."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_QUARTERSTAFF, 0, 0)
+weight 15
+cost 1 PLATINUM_PIECE
+rent 4 SILVER_PIECE
+dilcopy abi_restrict@function (ABIL_BRA,30,0,25,"");
+end
+
+                                wiz_dagger
+names {"dagger of wizardry", "wizard dagger", "dagger"}
+title "the Dagger of Wizardry"
+descr "A small thin bladed dagger lies in the shadows."
+extra {}
+"The dagger is thin bladed and has a black leather wrapped hilt.  There is a
+small gem in the pommel that sparkles in the light.  The dagger is
+exceptionally light, weighing little more than a feather."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_DAGGER, 0, 0)
+weight 3
+cost 1 PLATINUM_PIECE
+rent 4 SILVER_PIECE
+dilcopy abi_restrict@function (ABIL_MAG,30,0,25,"");
+end
+
+                                sulucci
+names {"sulucci", "dagger"}
+title "the Dagger Sulucci"
+descr "A long, wide-bladed dagger catches your eye."
+extra {}
+"The Dagger Sulucci is an ancient weapon of great power.  There is an
+inscription on the hilt."
+extra {"inscription", "hilt"}
+"&l The inscription reads :
+
+                  I am one of the ancients, yet i am no longer
+                  known.  Long did i rule but now all that is
+                  left is my lonely avatar.
+"
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_DAGGER, 0, 0)
+weight 6
+cost 1 PLATINUM_PIECE
+rent 4 SILVER_PIECE
+dilcopy abi_restrict@function (ABIL_BRA,35,0,25,"");
+dilcopy abi_restrict@function (ABIL_MAG,30,0,25,"");
+end
+
+                                wiz_whip
+names {"whip of wizardry", "wizard whip", "whip"}
+title "the Whip of Wizardry"
+descr "A long, black, snake-headed whip is coiled on the floor."
+extra {}
+"The whip is long, black and has nasty looking barbs all down the length.
+The whip ends in a grinning snake head."
+extra {"$identify"}
+"This whip does nothing...dont waste any more mana."
+extra {"$improved identify"}
+"Dumb ass."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_WHIP, +0, +0)
+DIV_TRANSFER(-10)
+CHA_TRANSFER(-10)
+weight 50
+cost 1 PLATINUM_PIECE
+rent 4 SILVER_PIECE
+CURSED_OBJECT
+end
+
+                                pain_whip
+names {"whip of wizardry", "pain whip", "whip"}
+title "a Pain Whip"
+descr "A three headed whip is tossed in a heap."
+extra {}
+"The whip is long, black and has three heads, all 2 feet in length.  As you
+get closer to it, you feel your bones begin to ache."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_WHIP, 0, 0)
+weight 5
+cost 1 PLATINUM_PIECE
+rent 4 SILVER_PIECE
+dilcopy abi_restrict@function (ABIL_DEX,30,0,25,"");
+end
+
+                                brand_iron
+names {"branding iron", "club", "iron"}
+title "a Branding Iron"
+descr "A hot branding iron is waiting for you to burn yourself on it."
+extra {}
+"The 4 foot long branding iron is forged of raw steel.  The end is burning
+hot and covered in ash and blood."
+extra {"$identify"}
+"The branding iron gives no bonuses."
+extra {"$improved identify"}
+"Give it up."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_CLUB, 0, 0)
+weight 15
+cost 4 GOLD_PIECE
+rent 1 SILVER_PIECE
+end
+
+                                glow_spear
+names {"glowing war spear", "glowing spear", "spear"}
+title "a Glowing Spear of War"
+descr "A huge glowing spear is lying on the floor, throbbing with power."
+extra {}
+"A weapon of truly impressive stature, the spear is forged of an unusual
+metal, one you have never seen before."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_SPEAR, 0, 0)
+weight 20
+cost 1 PLATINUM_PIECE
+rent 4 SILVER_PIECE
+dilcopy abi_restrict@function (ABIL_STR,30,0,25,"");
+end
+
+                               inv_short
+names {"short sword of invisibility", "short sword", "sword", "short"}
+title "a Short Sword of Invisibility"
+descr "The outline of a short sword can barely be discerned from the shadows."
+extra {}
+"The sword is very hard to see.  It is almost invisible save for its
+outline.  The blade is gleaming and looks exceptionaly sharp."
+extra {"$identify"}
+"The sword gives a bonus to dexterity and the invisibility spell."
+extra {"$improved identify"}
+"A bonus of +2 dexterity and +5% in invisibility."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_SHORT_SWORD, +4, +4)
+DEX_TRANSFER(+2)
+SPELL_TRANSFER(SPL_INVISIBILITY, 5)
+weight 10
+cost 1 PLATINUM_PIECE
+rent 4 SILVER_PIECE
+dilcopy abi_restrict@function (ABIL_DEX,30,0,25,"");
+end
+
+                                 dark_staff
+names {"staff of the darknight", "staff"}
+title "the Staff of the Darknight"
+descr "A long black staff is hovering above the ground surrounded in a silver
+glow..."
+extra {}
+"This six foot staff is made of a dark, shining material.  There is a six
+pointed silver cross attached to the top of it.  This is the staff of the
+Renegade Mage, Corthalas Darkstar.  It is not meant for mortal use."
+extra {"$identify"}
+"This staff is not meant for the use of mortals."
+extra {"$improved identify"}
+"This staff has a level restiction of 200."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_QUARTERSTAFF, +5, +5)
+MAG_TRANSFER(+5)
+BRA_TRANSFER(+5)
+WEAPON_TRANSFER(WPN_QUARTERSTAFF, 5)
+SPELL_TRANSFER(SPL_EXTERNAL, 5)
+weight 15
+cost 10 PLATINUM_PIECE
+rent 50 SILVER_PIECE
+
+dilcopy level_restrict@function (200,0,25,"");
+end
+
+                                   wiz_robe
+names {"robe of wizardry", "wizard robe", "robe"}
+title "a Robe of Wizardry"
+descr "A crumpled robe lies here, in a heap."
+extra {}
+"A long flowing robe with a large hood.  There are runes down the border and
+on the hem of the hood.  There is a rope belt around the waist, there are
+places to hang spell components on the belt."
+extra {"$identify"}
+"The robe gives a bonus to magic and brain."
+extra {"$improved identify"}
+"A bonus of +1 magic and +1 brain is attained."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+ARMOUR_CHAIN(0, 0)
+MAG_TRANSFER(+1)
+BRA_TRANSFER(+1)
+weight 12
+cost 1 PLATINUM_PIECE
+rent 4 SILVER_PIECE
+dilcopy abi_restrict@function (ABIL_BRA,30,0,25,"");
+dilcopy abi_restrict@function (ABIL_MAG,30,0,25,"");
+end
+
+                                ment_ring
+names {"ring of mentality", "mentality ring", "ring"}
+title "the Ring of Mentality"
+descr "A small, plain silver ring is on the floor."
+extra {}
+"A small silver band with a small insrciption on the inside."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_FINGER}
+weight 1
+cost 1 PLATINUM_PIECE
+rent 4 SILVER_PIECE
+dilcopy level_restrict@function (30,0,25,"");
+dilcopy abi_restrict@function (ABIL_BRA,30,0,25,"");
+end
+
+
+                               conj_medallion
+names {"medallion of conjuring", "conjuring medallion", "medallion"}
+title "a Medallion of Conjuring"
+descr "A large, gaudy medallion lies on the floor."
+extra {}
+"The medallion is large and made of a blur tinted metal.  There is a large
+clear stone in the top, and in the stone is a pentagram surrounded by glyphs
+of warding."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_WRIST}
+weight 2
+cost 1 PLATINUM_PIECE
+rent 4 SILVER_PIECE
+dilcopy level_restrict@function (20,0,25,"");
+dilcopy abi_restrict@function (ABIL_BRA,30,0,25,"");
+end
+
+                                ele_broche
+names {"broche of the elements", "elemental broche", "broche"}
+title "a Broche of the Elements"
+descr "A small blue broche lies on the ground."
+extra {}
+"The broche is about the size of a platinum piece. It has gold trim and the
+face of the stone is blue.  There is a gold lightning bolt flashing across
+the stone."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_NECK}
+weight 1
+cost 1 PLATINUM_PIECE
+rent 4 SILVER_PIECE
+dilcopy level_restrict@function (25,0,25,"");
+dilcopy abi_restrict@function (ABIL_BRA,30,0,25,"");
+end
+
+                                thorn_circ
+names {"circlet of thorns", "thorn circlet", "circlet"}
+title "a Circlet of Thorns"
+descr "A thin circlet made of thorns lies on the ground."
+extra {}
+"The circlet is made of thorns woven into a circle.  It is the headpiece
+of the Path of Pain and you don't wonder why.  It looks painful to wear."
+extra {"$improved identify"}
+"Heh."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HEAD}
+ARMOUR_CLOTHES(+0, +0)
+CON_TRANSFER(-5)
+DEX_TRANSFER(-5)
+weight 15
+cost 1 PLATINUM_PIECE
+rent 1 SILVER_PIECE
+CURSED_OBJECT
+end
+
+/*                                    ele_wand
+names {"wand of the elements", "elemental wand", "wand"}
+title "a Wand of the Elements"
+descr "A thin, blue and red swirled wand lies on the ground."
+extra {}
+"This blue and red wand is thin and long.  There is an inscription on the
+side."
+extra {"inscription"}
+"&l The inscription reads :
+
+        Ariancare muldovitu triandre kclaatk duruuf
+"
+extra {"$identify"}
+"The wand cast spells from the fire and ice spheres."
+extra {"$improved identify"}
+"The wand casts fireball and frostball."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+WAND_DEF(50,60,SPL_FIREBALL_2,SPL_FROSTBALL_2)
+flags {UNIT_FL_MAGIC}
+weight 4
+cost 1 PLATINUM_PIECE
+rent 4 SILVER_PIECE
+dilcopy level_restrict@function (30,0,25,"");
+dilcopy abi_restrict@function (ABIL_BRA,60,0,25,"");
+end
+
+                                    del_wand
+names {"wand of delusions", "wand"}
+title "the Wand of Delusions"
+descr "A fat straight stick lies on the ground."
+extra {}
+"The stick shines in the light.  You wonder what it is for.  There are odd
+markings on the bottom of the stick."
+extra {"markings", "bottom"}
+"&l The markings read :
+
+        Hold me, Thrill me, Kiss me, Kill me !!!!!!
+        Once i get a hold of you...you will never be
+        the same again.
+"
+extra {"$identify"}
+"You are holding a wand of delusions."
+extra {"$improved identify"}
+"The wand casts madness and blind."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+WAND_DEF(50,60,SPL_BLIND,SPL_DISEASE_2)
+flags {UNIT_FL_MAGIC}
+weight 4
+cost 1 PLATINUM_PIECE
+rent 4 SILVER_PIECE
+dilcopy abi_restrict@function (ABIL_BRA,50,0,25,"");
+end
+*/
+/*                               sus_potion
+names {"potion of sustenance", "sustenance potion", "potion"}
+title "a Potion of Sustenance"
+descr "A gold potion is here."
+extra {}
+"A gold colored liquid is corked in a vial."
+extra {"$identify"}
+"This potion will cure your hunger and thirst.  It may give you slight heart
+burn."
+extra {"$improved identify"}
+"The potion casts sustain on you.  It may cause slight heartburn."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+POTION_DEF(40,SPL_SUSTAIN,SPL_SUSTAIN,SPL_SUSTAIN)
+weight 2
+cost 1 PLATINUM_PIECE
+rent 4 SILVER_PIECE
+
+
+dilbegin sus_pot();
+var
+  wordlist     : stringlist;
+  a            : unitptr;
+code
+{
+  :start:
+    unsecure (a);
+    heartbeat := PULSE_SEC * 10;
+    wait (SFB_CMD, command("quaff"));
+    a := activator;
+    secure (a,losta);
+    wordlist := getwords(argument);
+    if (("potion of sustenance" in argument) or ("sustenance potion"  in
+         argument) or ("potion" in argument)) {
+      act ("As you throw back your head and quaff the potion of Sustenance " +
+         "you feel refreshed.  Then suddenly you have a burning senation "+
+         "in your stomach.  Then your insides explode.  You fall over "+
+         "as your body cramps.", A_SOMEONE, a, null, null, TO_CHAR);
+      act ("$1n throws back his head and quaff a gold colored potion. " +
+         "He look healthier, and then suddenly his face contorts in  "+
+         "pain and he falls to the ground clutching his stomach "+
+         "and screaming in pain." ,A_SOMEONE, a, null, null, TO_REST);
+      a.hp := a.hp - 50;
+      position_update (a);
+      act ("
+
+         You feel a trembling in your stomach as if the golden liquid wants
+" +
+         "back out.  Your body twitches and you begin to wretch.  You "+
+         "vomit flames and golden liquid.", A_SOMEONE, a, null, null,
+TO_CHAR);
+      act ("$1n begins to tremble and spasm as his face looses all color. " +
+         "$1n's eyes begin to water and he vomits flames and golden "+
+         "liquid." ,A_SOMEONE, a, null, null, TO_REST);
+      a.hp := a.hp - 30;
+      position_update (a);
+      act ("
+
+         You let out a small burp, and smoke escapes your lips.  You feel
+MUCH " +
+         "better now.", A_SOMEONE, a, null, null, TO_CHAR);
+      act ("$1n lets out a small burp, and then smoke escapes his lips. " +
+         "$1n looks like he feels MUCH better." ,A_SOMEONE, a, null, null,
+TO_REST);
+    }
+  :losta:
+    pause;
+    goto start;
+}
+dilend
+end
+*/
+
+
+                                home_fire
+names {"home fires", "home fire", "fire"}
+title "a small flame from the home fire"
+descr "A small blue flame is burning here."
+extra {}
+"This flame is not hot to the touch, yet it gives off heat.  It ranges through
+different shades of blue and white as it burns continuously."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+end
+
+                              mag_figure
+names {"onyx ferret figurine", "onyx figurine", "onyx ferret", "ferret
+figurine", "ferret", "figurine"}
+title "a tiny onyx ferret figurine"
+descr "A small Onyx figurine has been dropped on the ground."
+extra {}
+"The tiny figurine is of a ferret.  It has been cut from a solid block of
+onyx and perfectly proportioned."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 3
+end
+
+                                nbag
+names {"nothing", "bag"}
+title "Nothing"
+descr "Nothing is lying here."
+extra {}
+"A small bag that does not look capable of holding very much.  Looks more
+like a change purse."
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+CONTAINER_DEF(5)
+weight 1
+end
+
+                                ooze_bucket
+names {"bucket of ooze", "bucket", "ooze"}
+title "a Bucket of Ooze"
+descr "A bucket is on the floor, under the table."
+extra {}
+"It is a metal bucket that is filled with a green gelatinous ooze."
+
+manipulate {MANIPULATE_TAKE}
+weight 6
+end
+/*
+                                mdiscs
+names {"disc of michael", "disc"}
+title "a Disc of Michael"
+descr "A small glass disc, with a purple flame on it, is on the floor."
+extra {}
+"This is one of the legendary Discs of Michael.  It is rumored to contain a
+portion of the Archangel's essence.  The small glass disc shines clear and
+pure, and the purple flame that rests on it gives off an intense heat."
+extra {"$identify"}
+"The discs were meant to be used as thrown weapons.  They will inflict burn
+damage to their target for multiple rounds."
+extra {"$improved identify"}
+"The discs will explode when they are succesfuly thrown at an opponent.  They
+do damage for three rounds."
+
+type ITEM_OTHER
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+cost 4 PLATINUM_PIECE
+rent 2 GOLD_PIECE
+
+    dilbegin mdisc();
+    var
+        wordlist     : stringlist;
+        a            : unitptr;
+        enemy        : unitptr;
+        i            : integer;
+        dex          : integer;
+
+    code
+    {
+      :start:
+        unsecure (a);
+        unsecure ( enemy);
+      heartbeat := PULSE_SEC * 10;
+      wait(SFB_CMD, command("throw") and (self.equip == WEAR_HOLD));
+      block;
+      dex := self.outside.abilities[ABIL_DEX];
+      a := activator;
+      i:= ((dex + 50) - rnd(1,150));
+        secure (a,losta);
+      wordlist := getwords(argument);
+      if (wordlist.[0] == "disc")
+      {
+         enemy := findunit(a,wordlist.[2],FIND_UNIT_SURRO,null);
+         if (enemy == null) {
+            act("I see no " + wordlist.[2] + " here!",
+                 A_SOMEONE, a, null, null, TO_CHAR);
+            goto start;
+         }
+
+    secure (enemy,lostenemy);
+    if (enemy.level > 200) goto gfail;
+
+    if (not (DARKSTAR_COMPLETE in a.quests)){
+
+    act("The Disc of Michael explodes in your hands.  You are engulfed in " +
+         "purple fire which sears your skin.  You might want to finish "+
+         "the right quest.", A_SOMEONE, a, null, enemy, TO_CHAR);
+         act("$1n explodes in a blinding purple light as a Disc of " +
+             "Michael punishes one who has not gained the right to  "+
+              "possess it." ,A_SOMEONE, a, null, enemy, TO_REST);
+
+         if (a.hp < 50) {
+            a.hp := a.hp - 40;
+            position_update (a);
+         }
+         else {
+           a.hp := a.hp - (a.hp / 6);
+           position_update (a);
+        }
+
+    act("
+
+    The flames surge up and once again surround you.  You are covered " +
+         " in purple fire which sears your skin.", A_SOMEONE, a, null,
+enemy, TO_CHAR);
+         act("$1n is once again engulfed in a blinding purple light as " +
+             "the purple flames rage over $1n's body buring severly."
+,A_SOMEONE, a, null, enemy, TO_REST);
+
+         if (a.hp < 50) {
+            a.hp := a.hp - 20;
+            position_update (a);
+         }
+         else {
+           a.hp := a.hp - (a.hp / 7);
+           position_update (a);
+        }
+    act("
+
+    The flames surge up and once again surround you.  You are covered " +
+         " in purple fire which sears your skin.  The flames burn bright "+
+         "and extinguish themselves in a cloud of purple smoke.",
+A_SOMEONE, a, null, enemy, TO_CHAR);
+         act("$1n is once again engulfed in a blinding purple light as " +
+             "the purple flames rage over $1n's body buring severly.  The "+
+             "flames extinguish in a cloud of purple smoke." ,A_SOMEONE, a,
+null, enemy, TO_REST);
+
+         if (a.hp < 50) {
+            a.hp := a.hp - 20;
+            position_update (a);
+         }
+         else {
+           a.hp := a.hp - (a.hp / 7);
+           position_update (a);
+        }
+      destroy(self);
+
+      goto start;
+    }
+
+    else
+    {
+
+      if ( i > 50 )
+    {
+    act("You hurl the Disc of Michael at $3n.  $3n screams in agony as " +
+         "they burst into purple flames.", A_SOMEONE, a, null, enemy,
+TO_CHAR);
+         act("$1n hurls a purple flaming disc at $3n.  The disc explodes " +
+             "on $3n engulfing them in purple flame.  $3n screams in agony  "+
+              "as the flames sear him." ,A_SOMEONE, a, null, enemy, TO_REST);
+
+         if (enemy.hp < 50) {
+            enemy.hp := enemy.hp - 40;
+            position_update (enemy);
+         }
+         else {
+           enemy.hp := enemy.hp - (enemy.hp / 6);
+           position_update (enemy);
+        }
+
+    act("
+
+    The flames surge up and once again and surround $3n.  $3n is covered " +
+         " in purple fire which sears the skin.", A_SOMEONE, a, null,
+enemy, TO_CHAR);
+         act("$3n is once again engulfed in a blinding purple light as " +
+             "the purple flames rage over $3n's body buring severly."
+,A_SOMEONE, a, null, enemy, TO_REST);
+
+         if (enemy.hp < 50) {
+            enemy.hp := enemy.hp - 20;
+            position_update (enemy);
+         }
+         else {
+           enemy.hp := enemy.hp - (enemy.hp / 7);
+           position_update (enemy);
+        }
+
+    act("
+
+    The flames surge up and once again and surround $3n.  $3n is covered " +
+         " in purple fire which sears the skin.  The flames burn bright "+
+         "and extinguish themselves in a cloud of purple smoke.",
+A_SOMEONE, a, null, enemy, TO_CHAR);
+         act("$3n is once again engulfed in a blinding purple light as " +
+             "the purple flames rage over $3n's body buring severly.  The "+
+             "flames extinguish in a cloud of purple smoke." ,A_SOMEONE, a,
+null, enemy, TO_REST);
+
+         if (enemy.hp < 50) {
+            enemy.hp := enemy.hp - 20;
+            position_update (enemy);
+         }
+         else {
+           enemy.hp := enemy.hp - (enemy.hp / 7);
+           position_update (enemy);
+        }
+
+      destroy(self);
+
+      goto start;
+    }
+    }
+    if ( i < 50 )
+    {
+        act("You hurl the Disc at $3n. "+
+             "The Disc wings past them exploding on the ground in a  "+
+              "flash of purple flames.",  A_SOMEONE, a,
+    null, enemy, TO_CHAR);
+         act("$1n hurls a Disc at $3n, but "+
+    "the Disc wings past $3n and explodes in a flash of purple flame that "+
+    "chars the ground." ,A_SOMEONE, a, null, enemy, TO_REST);
+    destroy(self);
+    block;
+    goto start;
+    }
+    }
+    :gfail:
+    act("You reconsider you course of action, immortals are best left
+alone.",A_SOMEONE, a, null, null, TO_CHAR);
+    act("$1n decided NOT to throw a Disc at you. *grin*", A_SOMEONE,
+a,null, null, TO_VICT);
+    goto start;
+
+
+    :losta:
+    pause;
+    goto start;
+
+    :lostenemy:
+    pause;
+    goto start;
+    }
+    dilend
+    end
+*/
+                                rsign
+names {"black sign", "sign"}
+title "a small black sign"
+descr "A small black sign is mounted on the wall."
+extra {}
+"&l     The sign reads as follows :
+
+          To exit the Realm of the Renegade you must enter
+          the darkness and you will be transferred to the
+          main hall of the Fortress.
+"
+type ITEM_NOTE
+weight 1
+end
+
+                                msign
+names {"black sign", "sign"}
+title "a small black sign"
+descr "A small black sign is mounted on the wall."
+extra {}
+"&l     The sign reads as follows :
+
+          To exit the Fortress of High Wizardry you must
+          'enter the light' and you will be transferred to
+          Market Square in Midgaard.
+"
+type ITEM_NOTE
+weight 1
+end
+
+                                hsign
+names {"wooden sign", "sign"}
+title "a rotted wooden sign"
+descr "A rotted wooden sign is somehow hanging on the wall."
+extra {}
+"&l     The sign reads as follows :
+
+          We have had to abandon our beloved fortress.  The
+          people of Midgaard have grown angered at our tower
+          and our presence here.  We have left and bulit a
+          new Fortress of High Wizardry.  It is in a land of
+          magic, unreachable by normal means.  There is a
+          guardian left to transport all those who seek the
+          knowledge of our mastery.
+
+                        -Ancious, Archmage of the Fortress
+
+"
+type ITEM_NOTE
+weight 1
+end
+
+/*
+                                _
+names {"", "", ""}
+title ""
+descr ""
+extra {}
+""
+extra {"$identify"}
+""
+extra {"$improved identify"}
+""
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_}
+WEAPON_DEF(WPN_, +, +)
+_TRANSFER()
+weight
+cost
+rent
+special SFUN_RESTRICT_OBJ ""
+end
+
+*/
+
+
+%reset
+
+door nwg1 SOUTH {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+door nwg1 NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door nwg2 SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door nwg2 NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door nwg3 SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door swg1 NORTH {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+door swg1 SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door swg2 SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door swg2 NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door swg3 NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door ewg1 WEST {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+door ewg1 EAST {EX_OPEN_CLOSE, EX_CLOSED}
+door ewg2 WEST {EX_OPEN_CLOSE, EX_CLOSED}
+door ewg2 EAST {EX_OPEN_CLOSE, EX_CLOSED}
+door ewg3 WEST {EX_OPEN_CLOSE, EX_CLOSED}
+door wwg1 EAST {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+door wwg1 WEST {EX_OPEN_CLOSE, EX_CLOSED}
+door wwg2 EAST {EX_OPEN_CLOSE, EX_CLOSED}
+door wwg2 WEST {EX_OPEN_CLOSE, EX_CLOSED}
+door wwg3 EAST {EX_OPEN_CLOSE, EX_CLOSED}
+door maing NORTH {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+door maing SOUTH {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+door maing EAST {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+door maing WEST {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+door mainbase DOWN {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_HIDDEN}
+door maing UP {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_HIDDEN}
+door main2 DOWN {EX_OPEN_CLOSE, EX_CLOSED}
+door basestair UP {EX_OPEN_CLOSE, EX_CLOSED}
+door nbase3 DOWN {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_HIDDEN,
+EX_PICKPROOF}
+door submain UP {EX_OPEN_CLOSE, EX_CLOSED}
+
+load emage1 into nws2 max 1
+{
+        equip wiz_staff position WEAR_WIELD
+        equip wiz_robe position WEAR_ABOUT
+}
+load emage2 into nwt3 max 1
+{
+        equip wiz_staff position WEAR_WIELD
+        equip wiz_robe position WEAR_ABOUT
+}
+load pmage1 into sws2 max 1
+{
+        equip brand_iron position WEAR_WIELD
+        equip wiz_robe position WEAR_ABOUT
+        /* load sus_potion */
+}
+load pmage2 into swt3 max 1
+{
+        equip wiz_whip position WEAR_WIELD
+        equip wiz_robe position WEAR_ABOUT
+        /* load sus_potion */
+}
+load cmage1 into ews2 max 1
+{
+        equip wiz_dagger position WEAR_WIELD
+        equip wiz_robe position WEAR_ABOUT
+}
+load cmage2 into ewt3 max 1
+{
+        equip wiz_dagger position WEAR_WIELD
+        equip wiz_robe position WEAR_ABOUT
+}
+load mmage1 into wws2 max 1
+{
+        equip wiz_dagger position WEAR_WIELD
+        equip wiz_robe position WEAR_ABOUT
+}
+load mmage2 into wwt3 max 1
+{
+        equip wiz_dagger position WEAR_WIELD
+        equip wiz_robe position WEAR_ABOUT
+}
+load elemaster into emaster max 1
+{
+        equip lig_staff position WEAR_WIELD
+        equip wiz_robe position WEAR_ABOUT
+        equip ele_broche position WEAR_NECK_1
+}
+load painmaster into pmaster max 1
+{
+        equip pain_whip position WEAR_WIELD
+        equip wiz_robe position WEAR_ABOUT
+        equip thorn_circ position WEAR_HEAD
+        /* load sus_potion */
+}
+load conmaster into cmaster max 1
+{
+        equip sulucci position WEAR_WIELD
+        equip wiz_robe position WEAR_ABOUT
+        equip conj_medallion position WEAR_WRIST_R
+}
+load minmaster into mmaster max 1
+{
+        equip wiz_staff position WEAR_WIELD
+        equip wiz_robe position WEAR_ABOUT
+        equip ment_ring position WEAR_FINGER_R
+}
+load mutant_abom into nbase3 zonemax 4
+load mutant_abom into sbase3 zonemax 4
+load mutant_abom into ebase3 zonemax 4
+load mutant_abom into wbase3 zonemax 4
+load mutant_reptile into nbase2 zonemax 4
+load mutant_reptile into sbase2 zonemax 4
+load mutant_reptile into ebase2 zonemax 4
+load mutant_reptile into wbase2 zonemax 4
+load eguardian into nwf3 max 1
+load pguardian into swf3 max 1
+load cguardian into ewf3 max 1
+{
+        equip glow_spear position WEAR_WIELD
+}
+load mguardian into wwf3 max 1
+{
+        equip inv_short position WEAR_WIELD
+}
+load archmage into main5 max 1
+{
+        equip hawk_staff position WEAR_WIELD
+        equip wiz_robe position WEAR_ABOUT
+        equip ele_broche position WEAR_NECK_1
+        equip ment_ring position WEAR_FINGER_L
+        /* load ele_wand */
+}
+load arch_familiar into main5 max 1
+/* { load del_wand } */
+load wiz_familiar into nws1 zonemax 8
+load wiz_familiar into nwt2 zonemax 8
+load wiz_familiar into sws1 zonemax 8
+load wiz_familiar into swt2 zonemax 8
+load wiz_familiar into ews1 zonemax 8
+load wiz_familiar into ewt2 zonemax 8
+load wiz_familiar into wws1 zonemax 8
+load wiz_familiar into wwt2 zonemax 8
+/*load quest_mage into reneg max 1
+{
+        equip dark_staff position WEAR_WIELD
+}       */
+load fire_mage into mag_dormitory@midgaard max 1
+load arcane_thief into thief_guild@midgaard max 1
+{
+        load nbag
+        {       load mag_figure
+        }
+}
+
+load ooze_bucket into swt2 max 1
+load rsign into reneg max 1
+load msign into maing max 1
+load hsign into wiz_entrance@midgaard max 1
+%end
+
+

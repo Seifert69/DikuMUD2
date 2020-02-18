@@ -1,0 +1,703 @@
+/*
+filename    atlantis
+password    tritium
+changedby   Saor
+EmailAdd     saor@Maestro.COM (Morgan Schafer)
+request     compile
+version     7
+END HEADER*/
+
+/* The lost city of Atlantis....and environs */
+
+#include <composed.h>
+
+%zone atlantis
+title "Atlantis"
+lifespan 30
+reset RESET_ANYHOW
+creators {"anubis"}
+
+notes
+"A zone created by Anubis (marzano.usup.uk22.bull.co.uk!paulh)
+to implement the actual lost city. It is for lvl 160-190
+players."
+
+#define ZONE_DEBUG 1
+
+#ifdef ZONE_DEBUG
+#define DEBUG(msg) \
+sendto(msg,findsymbolic("debug_object@atlantis"));
+
+#define SDEBUG(varname, string) \
+sendto(varname+" value is "+string,findsymbolic("debug_object@atlantis"));
+
+#define IDEBUG(varname, int) \
+sendto(varname+" value is "+itoa(int),findsymbolic("debug_object@atlantis"));
+
+#define UDEBUG(varname, ptr) \
+if (ptr) { \
+sendto(varname+" points to "+ptr.names.[0], findsymbolic("debug_object@atlantis
+")); \
+} \
+else { \
+sendto(varname+" points to nothing", findsymbolic("debug_object@atlantis")); \
+}
+#else
+#define DEBUG(msg)
+#define SDEBUG(varname,string)
+#define IDEBUG(varname,int)
+#define UDEBUG(varname,ptr)
+#endif
+
+
+%rooms
+
+    throne_room
+title "The throne room of the God-King"
+descr
+"  A huge throne room opens up before your eyes and you marvel at
+this cornucopia of wonder; delicate alabaster statues line the walls,
+precious jewels twinkle in the marble inlays and crowning it all
+is the imposing throne of the God-King himself. It must be over
+10 feet high and carved from one perfect ruby! Its worth alone could
+buy all the known kingdoms of Valhalla."
+
+movement SECT_INSIDE
+ALWAYS_LIGHT
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_NO_WEATHER}
+end
+
+%mobiles
+
+       magic_key
+names {"magic key", "strange key", "key"}
+title "a strange key"
+descr "A small strange looking key lies here."
+extra {}
+"As you gaze at this strange looking key your eyes cannot actually focus
+on what shape it is supposed to be. It twists and writhes before your
+eyes and almost appears to poke randomly into other dimensions as it
+does so.
+You get a strange feeling that you should drop this key near a locked
+door and do a 'unlock door' (or whatever it is you are trying to unlock)
+ to get something to happen."
+level 25
+race RACE_LESSER_DEMON
+alignment 0
+sex SEX_NEUTRAL
+manipulate {MANIPULATE_TAKE}
+MSET_ABILITY(0,0,0,0,30,30,40,0)
+MSET_WEAPON(0,0,0,0,0,0)
+MSET_SPELL(0,100,0,0,0,0,0,0,0,0,0)
+
+dilbegin prg1();
+var
+  activations  : integer;
+  a            : unitptr;
+code
+{
+  activations := 0;
+  :start:
+  wait(SFB_CMD, TRUE);
+  a := activator;
+  if (command(CMD_UNLOCK)) {
+     act("As you utter 'unlock "+argument+"', the key jumps three feet off " +
+         "the floor and starts to vibrate. A deep thrumming noise emanates " +
+         "from it and your eyes strain as it flickers in and out of reality." +
+         " Iridescent streamers of magical essence corruscate from it and " +
+         "hit the " + argument,
+         A_SOMEONE, a, null, null, TO_CHAR);
+     act("As $1n utters 'unlock "+argument+"', the key jumps three feet off " +
+         "the floor and starts to vibrate. A deep thrumming noise emanates " +
+         "from it and your eyes strain as it flickers in and out of reality." +
+         " Iridescent streamers of magical essence corruscate from it and " +
+         "hit the " + argument,
+         A_SOMEONE, a, null, null, TO_ROOM);
+     exec("cast unlock "+argument, self);
+     activations := activations + 1;
+     block;
+  }
+  if (activations == 6) {
+     act("Suddenly the strange key seems to implode from its " +
+         "pan-dimensional state and solidly exist in this one place " +
+         "As you stare at it its form writhes and you gasp in horror " +
+         "as the key expands outwards and takes the form of a 10-foot " +
+         "demon!.",
+         A_SOMEONE, self, null, null, TO_ALL);
+     act("free....Free....FREE...at LAST! bellows the demon and, with " +
+         "a very rude gesture to you, disappears!",
+         A_SOMEONE, self,null,null,TO_ALL);
+     destroy(self);
+  }
+  goto start;
+}
+dilend
+end
+
+
+
+%objects
+
+        tardis
+names {"large blue box", "large box", "blue box", "police box", "box", "tardis"
+}
+title "the large blue box"
+descr "A large blue box incongruously stands here. It is big enough for you to
+fit inside."
+extra {}
+"This large blue box is about 7 feet high, and about 4 feet square. It appears
+to be made of wood, but idly chipping at it with your weapon seems to make no
+impression. There is a strange-looking blue lamp on the top and two
+sturdy looking doors on one side."
+extra{"door"}
+"There are two sturdy looking doors on one side of the box. A small
+slot is to the right of one of the doors. You scratch your head as you
+realise that the only thing that would fit in the slot would be about
+the size of a playing card!"
+extra{"blue lamp", "lamp"}
+"The lamp has a blue shielding over it. Why anybody would want to stick
+a blue lamp on top of this box is totally beyond you."
+extra{"hexagonal panel", "panel"}
+"The panel is stuffed full of strange looking devices. You notice
+a sign which is above a small grill. The sign says :
+'Enter the command teleport <wherever> and the machine will attempt to
+take you there.'"
+
+capacity 6000
+manipulate {MANIPULATE_ENTER}
+weight 1000
+
+dilbegin prg3();
+var
+    a         : unitptr;
+    room      : unitptr;
+    owner     : string;
+    count     : integer;
+    locked    : integer;
+    closed    : integer;
+    loc       : unitptr;
+    thingptr  : unitptr;
+code
+{
+    owner := " ";
+    count := 0;
+    closed := 1;
+    locked := 1;
+
+    :start:
+    heartbeat := PULSE_SEC*5;
+    wait(SFB_CMD,TRUE);
+    a := activator;
+    if (a.outside #= self) {
+       loc := self.inside;
+    }
+    else {
+       loc := self;
+    }
+    secure(a,lostpc);
+    if (command(CMD_MOUNT)) {
+       act("You cannot do that.",
+           A_SOMEONE, a, null, null, TO_CHAR);
+       block;
+       goto start;
+    }
+
+    if (command(CMD_LEAVE)) {
+       if (not(a.outside #= self)) {
+          goto start;
+       }
+       if (closed == 1) {
+          act("The door is closed!",
+              A_SOMEONE, a, null, null, TO_CHAR);
+          block;
+          goto start;
+       }
+       act("You warily exit the mysterious blue box.",
+           A_SOMEONE, a, null, null, TO_CHAR);
+       act("$1n warily exits the mysterious blue box.",
+           A_SOMEONE, a, null, null, TO_ROOM);
+       link(a,self.outside);
+       act("$1n warily exits the mysterious blue box.",
+           A_SOMEONE, a, null, null, TO_ROOM);
+       block;
+       goto start;
+    }
+
+    if (command(CMD_ENTER)) {
+       if (argument in self.names) {
+          if (closed == 1) {
+             act("The door appears to be closed.",
+                 A_SOMEONE, a, null, null, TO_CHAR);
+             block;
+             goto start;
+          }
+          if (a.position == POSITION_FIGHTING) {
+             act("Not while your fighting!",
+                  A_SOMEONE, a, null, null, TO_CHAR);
+             block;
+             goto start;
+          }
+          if (a.position < POSITION_STANDING) {
+             act("I'd get up first!",
+                 A_SOMEONE, a, null, null, TO_CHAR);
+             block;
+             goto start;
+          }
+          if (a.outside #= self) {
+             act("But you are already in the blue box!",
+                 A_SOMEONE, a, null, null, TO_CHAR);
+             block;
+             goto start;
+          }
+          DEBUG(a.names.[0]+" entering the Tardis");
+          act("You bravely enter this mysterious blue box.",
+              A_SOMEONE, a, null, null, TO_CHAR);
+          act("$1n bravely enters the mysterious blue box.",
+               A_SOMEONE, a, null, null, TO_ROOM);
+          act("You gasp as you enter the blue box...it is many times " +
+              "bigger on the inside than the outside...how can this be? " +
+              "You eyes are drawn to a peculiar hexagonal panel in the " +
+              "centre of the room.",
+              A_SOMEONE, a, null, null, TO_CHAR);
+          link(a,self);
+          act("$1n bravely enters the mysterious blue box.",
+               A_SOMEONE, a, null, null, TO_ROOM);
+          block;
+       }
+          goto start;
+    }  /* endif of command(CMD_ENTER) */
+
+    if (command(CMD_UNLOCK)) {
+      if (not(argument $= "door")) {
+         goto start;
+      }
+      if (locked == 0) {
+         act("But is already unlocked!",
+             A_SOMEONE, a, null, null, TO_CHAR);
+         block;
+         goto start;
+      }
+
+      if (findunit(a,"plastic key",FIND_UNIT_IN_ME,null)) {
+         SDEBUG("owner",owner)
+         if (owner $= " ") { /* Has no owner yet */
+           owner := a.names.[0];
+         }
+
+         if (owner $= a.names.[0]) {
+            act("You slip the plastic key into the thin slot in the door. " +
+                "You hear a satisfying click.",
+                A_SOMEONE, a, null, null, TO_CHAR);
+            act("$1n slips the plastic key into the thin slot in the door. " +
+                "You hear a satisfying click.",
+                A_SOMEONE, a, null, null, TO_ROOM);
+            locked := 0;
+            block;
+            goto start;
+         }
+         else {
+            act("You slip the plastic key into the thin slot in the door. " +
+                "An alarm sounds and a mechanical voices booms " +
+                "'Intruder Alert! Intruder Alert!'",
+                A_SOMEONE, a, null, null, TO_CHAR);
+            act("$1n slips the plastic key into the thin slot in the door. " +
+                 "An alarm sounds and a mechanical voice booms " +
+                 "'Intruder Alert! Intruder Alert!'",
+                A_SOMEONE, a, null, null, TO_ROOM);
+            block;
+            goto start;
+         }
+      }  /* endif of findunit */
+      else {
+         act("You do not appear to have the correct key.",
+             A_SOMEONE, a, null, null, TO_CHAR);
+         block;
+         goto start;
+      }
+    } /* endif of command(CMD_UNLOCK) */
+
+    if (command(CMD_OPEN)) {
+       if (not(argument $= "door")) {
+          goto start;
+       }
+       if (closed == 0) {
+          act("But it is already open!",
+              A_SOMEONE, a, null, null, TO_CHAR);
+          block;
+          goto start;
+       }
+       if (locked == 1) {
+          act("It appears to be locked.",
+              A_SOMEONE, a, null, null, TO_CHAR);
+          block;
+          goto start;
+       }
+       closed := 0;
+       act("You gingerly open the door.",
+           A_SOMEONE, a, null, null, TO_CHAR);
+       act("$1n gingerly opens the door.",
+           A_SOMEONE, a, null, null, TO_ROOM);
+       block;
+       goto start;
+    }
+
+    if (command(CMD_CLOSE)) {
+       if (not(argument $= "door")) {
+          goto start;
+       }
+       if (closed == 1) {
+          act("But it is already closed!",
+              A_SOMEONE, a, null, null, TO_CHAR);
+          block;
+          goto start;
+       }
+       closed := 1;
+       act("The door swings shut and closes with a soft click.",
+           A_SOMEONE,self,null,null,TO_ALL);
+       act("The door swings shut and closes with a soft click.",
+           A_SOMEONE,self.inside,null,null,TO_ALL);
+       locked := 1;
+       block;
+       goto start;
+    }
+
+    if (command("teleport")) {
+       SDEBUG("Argument value ",argument)
+       if (not(a.outside #= self)) {
+          goto start;
+       }
+       if (closed == 0) {
+          act("It's a good idea to close the door before " +
+              "attempting space-time travel!",
+              A_SOMEONE, a, null, null, TO_CHAR);
+          block;
+          goto start;
+       }
+       thingptr := findunit(a,argument,FIND_UNIT_WORLD,null);
+       secure(thingptr, lostthing);
+       if (thingptr == null) {
+       act("The panel in the centre glows mysteriously and " +
+           "a strange transparent cylinder in the middle raises " +
+           "itself. An ear-piercing ululation starts and the " +
+           "cylinder goes up and down like a crazed thing! " +
+           "A graunching noise starts to come from the " +
+           "cylinder and you have a strange feeling that you got " +
+           "nowhere.",
+           A_SOMEONE,self.inside,null,null,TO_ALL);
+       act("You jump in surprise as the mysterious blue box emits " +
+           "a noise like a castrated dinosaur. The blue lamp on " +
+           "the box flashes fitfully, but a graunching noise comes " +
+           "from the box and nothing happens.",
+           A_SOMEONE,self,null,null,TO_ALL);
+          block;
+          goto start;
+       }
+       while (thingptr.type != UNIT_ST_ROOM) {
+         thingptr := thingptr.outside;
+       }
+       UDEBUG("thingptr",thingptr);
+       act("The panel in the centre glows mysteriously and " +
+           "a strange transparent cylinder in the middle raises " +
+           "itself. An ear-piercing ululation starts and the " +
+           "cylinder goes up and down like a crazed thing! " +
+           "You feel your molecules being stretched through " +
+           "a most peculiar angle to the normal ones. Suddenly " +
+           "the cylinder stops and all is quiet.",
+           A_SOMEONE,self.inside,null,null,TO_ALL);
+       act("You jump in surprise as the mysterious blue box emits " +
+           "a noise like a castrated dinosaur. The blue lamp on " +
+           "the box flashes fitfully, and slowly the box begins " +
+           "to fade.",
+           A_SOMEONE,self,null,null,TO_ALL);
+       link(self,thingptr);
+       act("You look round in surprise as an ear-splitting noise " +
+           "from nowhere assaults your eardrums. Slowly a " +
+           "mysterious blue box with a flashing blue light " +
+           "starts to materialise into view.",
+           A_SOMEONE,self,null,null,TO_ALL);
+       block;
+       goto start;
+   }
+
+
+:lostpc:
+  goto start;
+:lostthing:
+  goto start;
+
+}
+dilend
+end
+       remains
+names {"remains"}
+title "the remains of the archeaologists"
+descr "Some scattered remains of human bodies are strewn here."
+extra{}
+"You feel nauseous as you stare at the remains. What kind of monster
+could have so thoroughly ripped so many humans into such tiny pieces?
+>From the markings on some of the tattered uniforms you realise that
+this is all that is left of King Welmar's archeological party."
+
+type ITEM_OTHER
+end
+
+        croc_mattock
+names {"crocodile mattock", "war mattock", "mattock"}
+title "a crocodile mattock"
+descr "A huge scale-covered war mattock lies here."
+extra{}
+"A huge war mattock covered in crocodiles scales. Its weight
+and general feel lead you to believe it is one deadly weapon!"
+extra{"$identify"}
+"This war mattock will improve strength, but reduce intelligence."
+extra{"$improved identify"}
+"This war mattock will increase strength by +4 and reduce brain by -4"
+
+flags {UNIT_FL_MAGIC}
+special SFUN_RESTRICT_OBJ "Level = 28"
+
+WEAPON_DEF(WPN_WAR_MATTOCK,3,0)
+romflags OBJ_TWO_HANDS
+weight 200
+cost 13 SILVER_PIECE
+rent 80 IRON_PIECE
+STR_TRANSFER(+2)
+BRA_TRANSFER(-4)
+end
+
+
+        mana_sucker
+names {"mana sucker", "strange coin", "coin"}
+title "a strange looking coin"
+descr "A strange coin is pertially buried in the dirt here."
+extra{}
+"A most peculiar looking coin, it has some strange runes drawn round
+the edge and for some reason or another you get a distinct impression that
+it is hungry! You wonder what would happen if you spin the coin?"
+type ITEM_OTHER
+manipulate {MANIPULATE_TAKE}
+
+dilbegin prg4();
+var
+  objptr    : unitptr;
+  a         : unitptr;
+code
+{
+   :start:
+   heartbeat := PULSE_SEC * 10;
+   wait(SFB_CMD, command("spin"));
+   a := activator;
+   secure(a,lostpc);
+   if ((argument == "the coin") or (argument == "coin")) {
+     act("As you spin the coin you gasp as it remains in mid-air! " +
+         "Faster and faster it spins, an ear-screeching noise starting " +
+         "to come from it as it hits supersonic velocity. As it spins " +
+         "you feel a most peculiar sensation as the spinning coin " +
+         "starts to absorb all the magic in the area.",
+         A_SOMEONE, a, null, null, TO_CHAR);
+     act("$1n spins a strange coin. You gasp as it remains in mid-air! " +
+         "Faster and faster it spins, an ear-screeching noise starting " +
+         "to come from it as it hits supersonic velocity. As it spins " +
+         "you feel a most peculiar sensation as the spinning coin " +
+         "starts to absorb all the magic in the area.",
+         A_SOMEONE, a, null, null, TO_ROOM);
+     objptr := a.outside.inside;
+     while (objptr != null) {
+       if (objptr != a) {
+         objptr.mana := objptr.mana - (objptr.mana/2);
+         objptr := objptr.next;
+       }
+     }
+     block;
+     pause;
+     act("The supersonic screech from the coin dies down as the " +
+         "speed is now so high that the sound is above your " +
+         "hearing range. You feel faint as the last vestiges " +
+         "of magic are sucked from everything in the room.",
+         A_SOMEONE, a, null, null, TO_ALL);
+     objptr := a.outside.inside;
+     while (objptr != null) {
+       if (objptr != a) {
+         objptr.mana := 0;
+         objptr := objptr.next;
+       }
+     }
+     act("The coin explodes in a violent flash. When you can see again " +
+         "the coin has vanished.",
+         A_SOMEONE, a, null, null, TO_ALL);
+     destroy(self);
+     block;
+   }
+   else {
+     goto start;
+   }
+
+:lostpc:
+    block;
+    goto start;
+}
+dilend
+end
+
+        pentagram
+names {"pentagram"}
+title "a large pentagram"
+descr "A large pentagram with evil flickering runes has been drawn here."
+extra{}
+"As you gaze at the runes, you get a distinct impression that by entering
+the command 'summon <whoever>' the person will appear in the pentagram."
+type ITEM_OTHER
+
+dilbegin  prg5();
+var
+  a          : unitptr;
+  person     : unitptr;
+code
+{
+    :start:
+    wait(SFB_CMD,command("summon"));
+    a := activator;
+       act("You step back quickly as the pentagram flashes a brilliant " +
+           "yellow and the runes start to writhe like mad things. A deep " +
+           "sonorous thrumming sound flows from the middle. With a " +
+           "shocking rending sound, a rent in the space-time fabric " +
+           "briefly forms in the centre.",
+           A_SOMEONE,a,null,null,TO_ALL);
+       person := findunit(a,argument,FIND_UNIT_WORLD,null);
+       secure(person,lostperson);
+       if ((person.type != UNIT_ST_PC) and (person.type != UNIT_ST_NPC)
+            or (person == null)) {
+          act("A faint raspberry noise tells you that the summoning " +
+              "has failed.",
+              A_SOMEONE, a, null, null, TO_ALL);
+          goto despenta;
+       }
+       act("You feel a most peculiar tugging at your body. Everything " +
+           "goes dim for a moment, and then you see....",
+           A_SOMEONE, person, null, null, TO_CHAR);
+       link(person,self.outside);
+       act("$1n, looking very surprised, has appeared in the middle " +
+           "of the pentagram",
+           A_SOMEONE, person, null, null, TO_ROOM);
+
+ :despenta:
+       act("The pentagram slowly fades from view.",
+           A_SOMEONE,a,null,null,TO_ALL);
+       destroy(self);
+       block;
+       goto start;
+
+:lostpc:
+  goto start;
+
+:lostperson:
+  act("A faint raspberry noise tells you that the summoning " +
+      "has failed.",
+      A_SOMEONE, self, null, null, TO_ALL);
+  goto start;
+
+}
+dilend
+end
+
+
+        chalk
+names {"large piece of chalk","piece of chalk","chalk"}
+title "a large piece of chalk"
+descr "A large piece of chalk has been carelessly discarded in a corner."
+extra{}
+"You have a strange feeling that this piece of chalk is exactly the kind
+of chalk that is used to draw pentagrams."
+type ITEM_OTHER
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+cost 1 IRON_PIECE
+rent 10 COPPER_PIECE
+
+dilbegin prg6();
+var
+    amount_left : integer;
+    a           : unitptr;
+    penta       : unitptr;
+code
+{
+    amount_left := 4;
+    :start:
+    wait(SFB_CMD,command("draw"));
+    a := activator;
+    secure(a,lostpc);
+    SDEBUG("Argument value is",argument)
+    if (not(self.equip == WEAR_HOLD)) {
+       act("You must hold the chalk to be able to draw with it!",
+           A_SOMEONE, a, null, null, TO_CHAR);
+       block;
+       goto start;
+    }
+    if (argument $= "pentagram") {
+      act("As you try to draw a pentagram, it seems as if the chalk " +
+          "takes on a life of its own and guides your hand! You draw " +
+          "a geometrically perfect pentagram. On each side of it you " +
+          "place exotic runes from an unknown dark language. The runes " +
+          "flicker slightly and seem to shift shape when you look at " +
+          "them from the corner of your eye.",
+          A_SOMEONE, a, null, null, TO_CHAR);
+      act("$1n draws " +
+          "a geometrically perfect pentagram. On each side of it $1n " +
+          "places exotic runes from an unknown dark language. The runes " +
+          "flicker slightly and seem to shift shape when you look at " +
+          "them from the corner of your eye.",
+          A_SOMEONE,self.outside,null,null,TO_ROOM);
+
+      penta := load("pentagram@atlantis");
+      link(penta,self.outside.outside);
+      amount_left := amount_left - 1;
+      if (amount_left == 3) {
+        self.outside_descr := "A medium sized piece of chalk lies discarded in
+a corner";
+         self.title := "a medium sized piece of chalk";
+      }
+      if (amount_left == 2) {
+         self.outside_descr := "A small piece of chalk has been thrown in a cor
+ner.";
+         self.title := "a small piece of chalk";
+      }
+      if (amount_left == 1) {
+         self.outside_descr := "A tiny stub of chalk has been left forlornly in
+ a corner.";
+         self.title := "a small stub of chalk";
+      }
+      if (amount_left == 0) {
+         act("You use up the last of the chalk.",
+             A_SOMEONE, a, null, null, TO_CHAR);
+         destroy(self);
+      }
+    block;
+    }
+
+    goto start;
+
+:lostpc:
+      goto start;
+}
+dilend
+end
+
+
+
+        plastic_key
+names {"plastic key", "key"}
+title "a plastic key"
+descr "A small thin plastic key lies here."
+extra {}
+"This is probably the strangest key you have ever seen. Made from a
+plastic-like material and shaped like a playing-card."
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+type ITEM_KEY
+weight 1
+end
+
+%end
+
+
+
+

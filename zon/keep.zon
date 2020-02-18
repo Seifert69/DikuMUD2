@@ -1,0 +1,5911 @@
+/*
+filename    keep
+password    thelady
+changedby   Zig
+EmailAdd     Morgan Schafer <saor@maestro.com>
+request     compile
+version     12
+END HEADER*/
+ 
+#include <composed.h>
+#define MIDGAARD_HERO "Midgaard Hero"
+#define M_ZOMBIE_GUARD BASE_ZOMBIE(12, SEX_NEUTRAL)
+#define M_ZOMBIE_WARRIOR BASE_ZOMBIE(15, SEX_NEUTRAL)
+#define ROOM_INSIDE movement SECT_INSIDE \
+                    flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER} \
+                    IN_ALWAYS_DARK
+
+%zone keep
+title "The Keep"
+lifespan 45
+reset RESET_ANYHOW
+creators {"thesar", "ladyhawk"}
+notes
+"This is an ancient keep inhabited by the undead.  Urgnak the Black Lich
+rules over all his minions through absolute power and authority.  Beneath
+the keep lies a labyrinth, accessible beyond a hidden door somewhere around
+the prison cellar.  The keep is full of dangers, the inhabitants are mostly
+aggressive, but the rewards are great.&n&n
+
+The mobiles in this zone range from levels 42 to 50.&n&n
+
+(Version date: 4 Jan 97)"
+
+help
+"Death Keep Zone&n
+---------------&n
+You are in a mid-level zone known as the death keep. Within this keep lies
+hordes of undead, with levels ranging from  42 to 50. Watch out for a labyrinth
+somewhere in the keep. Good Luck!"
+
+%dil
+dilbegin swordaffect (medi : unitptr, targ : unitptr, hm : integer);
+code
+{
+         act("Your sword of vengeance screams loudly!", A_ALWAYS, self, null, targ, TO_CHAR);
+         act("$1n's sword of vengeance screams loudly!", A_SOMEONE, self, null, targ, TO_NOTVICT);
+         act("$3N's sword of vengeance screams loudly!", A_SOMEONE, self, null, targ, TO_VICT);
+                return;
+
+}
+dilend
+
+dilbegin crumble_outdrs();
+code
+{
+    heartbeat := PULSE_SEC*4;
+
+    :start:
+    wait(SFB_TICK, not(isset(self.outside.flags,UNIT_FL_INDOORS)) and
+                   (self.outside.nameidx != "vampire_coffin"));
+    act("$1n crumbles into dust!",A_SOMEONE,self,null,null,TO_ROOM);
+    destroy(self);
+    goto start;
+}
+dilend
+
+dilbegin crumble_light();
+code
+{
+    :init:
+    heartbeat := PULSE_SEC * 5;
+    on_activation((mudhour > 5) and (mudhour < 20), skip);
+
+    :start:
+    wait(SFB_TICK, TRUE);
+    act("$1n crumbles into dust!", A_SOMEONE,
+         self, null, null, TO_ROOM);
+    destroy(self);
+    goto start;
+}
+dilend
+
+dilbegin swd_blkmagic();
+var
+   chance  : integer;
+   enemy   : unitptr;
+   swd_ptr : unitptr;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC * 2;
+   on_activation((self.position != POSITION_FIGHTING), skip);
+
+   :start:
+   wait(SFB_PRE, command(CMD_CAST) and (activator == self.fighting)
+                 and (target == self));
+   swd_ptr := equipment(self, WEAR_WIELD);
+   if ((swd_ptr.nameidx != "swd_hero") and
+       (swd_ptr.zoneidx != "keep")) {
+
+      goto removefunc; 
+   }
+   enemy := self.fighting;
+   chance := self.abilities[ABIL_DIV] / 5;
+   if /*(rnd(1,100) <= chance)*/ (TRUE)
+   {
+     power := 0;
+     act("The aura from $1n's $2t protects $1m from your spell!", A_ALWAYS,
+          self, "Sword of Heroes", enemy, TO_VICT);
+     act("Your $2N emits an aura protecting you from $3n's spell.",
+          A_ALWAYS, self, "Sword of Heroes", enemy, TO_CHAR);
+     act("The aura from $1n's $2t protects $1m from $3n's spell!", A_HIDEINV,
+          self, null, enemy, TO_NOTVICT);
+   }
+   goto start;
+
+   :removefunc:
+   quit;
+}
+dilend
+
+dilbegin zombie_attack(low_limit: integer, up_limit: integer);
+
+/* up_limit and low_limit specify the range of
+   level of the enemy that the zombie will attack */
+
+var
+    found         : integer;
+    this_ptr      : unitptr;
+    counter       : integer;
+
+code
+{
+    :init:
+    heartbeat := PULSE_SEC * 2;
+    on_activation(self.position <= POSITION_FIGHTING, skip);
+
+    :start:
+    found := FALSE;
+    wait(SFB_TICK, TRUE);
+
+    :findmob:
+    this_ptr := findrndunit( self, FIND_UNIT_SURRO, UNIT_ST_PC | UNIT_ST_NPC);
+    if ((this_ptr.level > up_limit) or not(visible(self, this_ptr))) goto start;
+    if (((this_ptr.race < RACE_ZOMBIE) or
+        (this_ptr.race > RACE_OTHER_UNDEAD)) and
+       ((this_ptr.race < RACE_LESSER_DEMON) or
+        (this_ptr.race > RACE_GREATER_DEVIL)))
+    {
+         found := TRUE;
+    }
+    if ((this_ptr.type == UNIT_ST_PC) and
+       (not(isaff(this_ptr, ID_SANCTUARY))))
+    {
+      if (this_ptr.level > low_limit) 
+         found := TRUE;
+    }
+    if (found == TRUE)
+    {
+      if ((this_ptr.type == UNIT_ST_NPC) and
+          (isset(this_ptr.charflags, CHAR_PROTECTED)))
+      {
+       counter := rnd(1,3);
+       if (counter == 1) exec("shout Help! A zombie is after me!", this_ptr);
+       if (counter == 2) exec("shout Eeek! Zombies coming for me!", this_ptr);
+       if (counter == 3) exec("shout Argh! Zombies! Whelp!", this_ptr);
+      }
+      set_fighting(self, this_ptr);
+    }
+    goto start;
+}
+dilend
+
+dilbegin aware block_guard();
+
+/* program to freeze the cityguard when vampire is sucking his blood */
+   
+code
+{
+    :start:
+    wait(SFB_CMD, activator == self);
+    if (findunit(self, "blood-sucking vampire", FIND_UNIT_SURRO, null) == null)
+       goto removefunc;
+    block;
+    goto start;
+
+    :removefunc:
+    quit;
+}
+dilend
+
+dilbegin attack_guard();
+var
+   npc_ptr : unitptr;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC * 2;
+   on_activation(self.position <= POSITION_FIGHTING, skip);
+
+   :start:
+   wait(SFB_TICK, TRUE);
+   npc_ptr := findrndunit(self, FIND_UNIT_SURRO, UNIT_ST_NPC);
+   if (("cityguard" in npc_ptr.names) or ("captain" in npc_ptr.names))
+      set_fighting(self, npc_ptr); 
+   goto start;
+}
+dilend
+
+dilbegin noeffmsg(medi : unitptr, targ : unitptr, hm : integer);
+code
+{
+    quit;
+}
+dilend
+
+
+%rooms
+
+                        keep_entrance
+
+names {"death keep"}
+title "The Entrance to Death Keep"
+descr
+"Here lies the entrance to the ancient Death Keep. The Keep is so old that it
+is almost in ruins. It is dead quiet around you, giving you an errie feeling
+that sends a chill down your spine. Legend has it that many a brave adventurers
+have ventured into the Keep, but few have returned to tell their tale."
+extra {"ancient keep", "keep"}
+"The whole structure is weather-worn and covered almost entirely by creepers.
+The keep looks like it is over 1,000 years old."
+extra {"iron gate", "gate"}
+"The huge iron gate is as rusty as it can get.  It rises 14 feet up the ground."
+flags {UNIT_FL_NO_MOB}
+movement SECT_FIELD
+north to passage_to_hall open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+         descr "A huge iron gate stands to the north."
+         key death_keep_key keyword {"iron gate", "gate"};
+west to de_swamp13@deadl1 descr "The way leads into the death swamps.";
+end
+
+                        passage_to_hall
+
+title "A Large Passageway leading to Main Hall"
+descr
+"You are along a north-south passageway leading to the main hall. On either
+side of the stone walls are rows of torches which strangely seem to shed
+darkness. Some skeletal remains of humanoid creatures litter this passage. A
+sentry post is east."
+extra {"torch","torches"}
+"These are black ivory torches secured onto the walls. You suspect that they
+are causing your light source to be dimmer than usual."
+extra {"skeletal remains","remains","skeletons","skeleton"}
+"They appear to be the remains of humans who have died long ago. You see one
+particular skull that is crushed almost beyond recognition. You are convinced
+that he died a horrible death."
+extra {"skull"}
+"The skull suffered a severe impact. You wonder if it is the doing of some
+powerful and benign creatures."
+extra {"sentry post", "post"}
+"It was used to station the gate guards a long time ago. You can go east to
+take a closer look."
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+south to keep_entrance open {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+         descr "There is a huge iron gate here."
+         key death_keep_key keyword {"iron gate", "gate"};
+north to main_hall_s descr "The path continues into the main hall.";
+east to sentry_post descr "You see the sentry post to the east.";
+IN_ALWAYS_DARK
+end
+
+                        sentry_post
+
+title "The Sentry Post"
+descr
+"A small slit on the wall allows you to peep outside the keep. This must be
+used by the guards to keep a watch on visitors outside the gate. Exits leads
+ west into a passageway and east to the guards dormitory."
+extra {"small slit","slit"}
+"It is just large enough for an eye to peep through. Visitors outside are
+unlikely to notice that they are being watched from here."
+ROOM_INSIDE
+west to passage_to_hall descr "The way leads into a large passageway.";
+east to guards_dorm descr "You see the guards dormitory to the east.";
+end
+
+                        guards_dorm
+
+title "Inside the Guards' Dormitory"
+descr
+"This room is in quite a disarray. A section of the ceiling has collapsed
+resulting in rocks being strewn everywhere. There are no beds nor cabinets here.
+Perhaps they have been removed long ago. The only exit leads west to the
+sentry post."
+extra {"ceiling"}
+"It looks like it can collapse on you. Perhaps it is wiser to leave now."
+extra {"rocks", "rock"}
+"They are fragments of what was used to be the ceiling."
+ROOM_INSIDE
+west to sentry_post descr "You see the sentry post to the west.";
+end
+
+                        main_hall_s
+
+title "In the Main Hall"
+descr
+"You are inside the southern end of the main hall.  This hall is very spacious,
+with its ceiling towering into the darkness. A hall of this size should be very
+well ventilated. But strange enough, the air is so stale that breathing becomes
+difficult. The hall continues in all direction except to south, to which 
+there is a passageway." 
+extra {"ceiling"}
+"You can vaguely make out some glowing symbols traced on the ceiling. Although
+the symbols appear totally alien to you, even a fool will know that the glow is
+of a magical origin."
+extra {"symbols","markings"}
+"The symbols are glowing and magical. That is all you can tell."
+extra {"dining table","table"}
+"From here you can only see that the dining table is very large. Perhaps you
+should go north and take a closer look."
+extra {"air"}
+"The air is very stale.  You have a strange feeling that any beings staying in
+this keep do not need air to survive."
+ROOM_INSIDE
+north to main_hall_c descr "The way continues inside the main hall.";
+south to passage_to_hall descr "You see a passageway to the south.";
+east to main_hall_se descr "The way continues inside the main hall.";
+west to main_hall_sw descr "The way continues inside the main hall.";
+end
+
+                        main_hall_sw
+
+title "In the Main Hall"
+descr
+"A large tapestry hangs on the west wall. It shows of a brave knight riding on
+a golden dragon fighting an aerial battle against two red dragons. A run-down
+village lies below them. The hall continues north and east."
+extra {"tapestry"}
+"You are already looking at it. It is too large to be missed."
+extra {"wall"}
+"There is nothing else on the wall other than the tapestry."
+extra {"knight"}
+"He is truly a knight-in-shining-armor. The insignia on his shield depicts a
+hawk."
+extra {"golden dragon","gold dragon"}
+"Spanning more than 60 feet long, the golden dragon is indeed a majestic
+creature. Its scales sparkles brightly under the Sun."
+extra {"red dragons","red dragon"}
+"They are ferociously battling with the knight. Foul evil creatures indeed!"
+extra {"dragons","dragon"}
+"Which?  Golden dragon or red dragons?"
+extra {"run-down village","village"}
+"It appears to be the village of Hermgaard."
+ROOM_INSIDE
+east to main_hall_s descr "The way continues inside the main hall.";
+north to main_hall_w descr "The way continues inside the main hall.";
+end
+
+                        main_hall_w
+
+title "In the Main Hall"
+descr
+"A stone statue of a knight in full plate armor stands here against the wall.
+His shield bears the insignia of a hawk. He is holding a stone replica of a
+lance longer than twice his height. Some red substance stains the statue around
+the neck. The hall continues in all directions except west."
+extra {"stone statue","statue","knight"}
+"You are already looking at it."
+extra {"wall"} "There is nothing on the wall."
+extra {"shield","lance","weapon"}
+"The shield and lance are part of the statue."
+extra {"red substance","stain","stains","substance"}
+"It appears to be dried blood stains."
+extra {"insignia"} "It shows a hawk."
+ROOM_INSIDE
+east to main_hall_c descr "The way continues inside the main hall.";
+south to main_hall_sw descr "The way continues inside the main hall.";
+north to main_hall_nw descr "The way continues inside the main hall.";
+end
+
+                        main_hall_se
+
+title "In the Main Hall"
+descr
+"A large tapestry hangs on the east wall. It shows an evil Black Lich riding on
+a demon horse commanding a horde of skeletons and zombies in the Last Battle of
+Azhrgan. This ill-fated war saw the forces of good being driven out from
+Azhrgan ten centuries ago. The hall continues north and west."
+extra {"tapestry"} "You are already looking at the tapestry."
+extra {"east wall","wall"}
+"There is nothing else on the wall other than the tapestry."
+extra {"black lich","lich"}
+"He is dressed in a black robe holding a red sceptre in his right hand."
+extra {"red sceptre","sceptre"}
+"It must be some item of great power and enchantment."
+extra {"demon horse","horse","nightmare"}
+"It is totally black and three times larger than a war horse with manes
+that burst in flames. Some sages call it a `nightmare'."
+extra {"azhrgan"}
+"It looks like a big city. In fact, historians recorded Azhrgan as a large,
+prosperous city completely annihilated during the Last Battle."
+ROOM_INSIDE
+west to main_hall_s descr "The way continues inside the main hall.";
+north to main_hall_e descr "The way continues inside the main hall.";
+end
+
+                        main_hall_e
+
+title "In the Main Hall"
+descr
+"You see a stone statue of a lich standing here against the east wall. It is
+holding a sceptre on its right hand, and its left hand raised up into the air.
+Looks like it is casting some kind of spell. This statue looks so real. You
+wonder if it is a petrified form of the real thing. The hall continues in all
+directions except east."
+extra {"stone statue","statue","lich"}
+"You are already looking at it. The statue is standing so prominently here that
+even a blind will not miss it."
+extra {"sceptre"}
+"It is a stone replica of a sceptre with elaborate design. Perhaps an item fit
+for a King."
+ROOM_INSIDE
+west to main_hall_c descr "The way continues inside the main hall.";
+south to main_hall_se descr "The way continues inside the main hall.";
+north to main_hall_ne descr "The way continues inside the main hall.";
+end
+
+                        main_hall_nw
+
+title "In the Main Hall"
+descr
+"On the north wall hangs a bright red tapestry. It shows a portrait of what
+seems to be an ancient vampire. Blood from a recent victim drips from his
+vicious fangs. The hall continues east and south. There is a doorway here to
+the west."
+extra {"ancient vampire","vampire"}
+"His eyes seem to stare at you. It makes you feel sick. Perhaps it is not a
+good idea to look at it any longer."
+extra {"tapestry"} "It shows a portrait of a vampire."
+extra {"blood"}
+"It is the thing that flows inside your body. You are thankful that you still
+have plenty of it inside you, at least for now."
+extra {"fangs","fang"}
+"Sharp, long and deadly. Not a good idea having it inside your neck."
+extra {"doorway"} "It is an arched doorway leading into a passageway."
+ROOM_INSIDE
+west to passageway_w_c descr "You see a passageway to the west.";
+east to throne descr "You see a throne to the east.";
+south to main_hall_w descr "The way continues inside the main hall.";
+end
+
+                        main_hall_ne
+
+title "In the Main Hall"
+descr
+"You see yet another portrait hanging on the north wall. It shows a grossly fat
+creature with a goat-like head having horns similar to those of a ram. Vast bat
+wings extend from its back, and a whip-like tail looks to mete out punishment
+to all who opposes it. The hall continues west and south. A doorway is to the
+east."
+extra {"fat creature","creature","demon"}
+"It appears to be a powerful demon. No question about it."
+extra {"tapestry"} "It is portrait of some creature."
+extra {"bat wings","bat wing","wing","wings"}
+"The creature is so fat that you wonder if these wings can make it fly."
+extra {"whip-like tail","tail","whip"}
+"The tail is very long and entirely black. Its end drips with some liquid you
+believe is poisonous."
+extra {"goat-like head","head"}
+"It looks very much like an ordinary goat head except for its horns and eyes."
+extra {"horn","horns"} "Curly horns typical of ram horns."
+extra {"eyes","eye"} "Blood red eyes. They seem to be staring at you."
+extra {"doorway"} "It is an arched doorway leading to the east corridor."
+ROOM_INSIDE
+west to throne descr "You see a throne to the west.";
+east to corridor_e_c descr "You see a corridor to the east.";
+south to main_hall_e descr "The way continues inside the main hall.";
+end
+
+                        main_hall_c
+
+title "In the Main Hall"
+descr
+"You have come to the centre of the main hall. A large, oblong dining table
+sits here surrounded by some thirty stone chairs. Candlesticks are arranged on
+the table in an orderly fashion. A chandelier hangs from the ceiling. The hall
+continues in all directions."
+extra {"dining table","table"}
+"This sturdy table is made from oak wood. It is easily spans 40 feet long."
+extra {"stone chair","stone chairs","chair","chairs"}
+"The chairs are apparently carved out from very large rocks. It must have taken
+a very long time just to make one such chair."
+extra {"candlesticks","candlestick"}
+"These are bronze candlesticks. They are unlit as they do not have candles on
+them. Strange, these candlesticks are rooted onto the table."
+extra {"chandelier"}
+"The chandelier is indeed one of the more beautiful ones that you have seen.
+Pity, there are no candles on it."
+ROOM_INSIDE
+north to throne descr "You see a throne to the north.";
+east to main_hall_e descr "The way continues in the main hall.";
+west to main_hall_w descr "The way continues in the main hall.";
+south to main_hall_s descr "The way continues in the main hall.";
+end
+
+                        throne
+
+title "At the Throne"
+descr
+"If there is anything new about this ancient place, it must be this throne.
+Decorated with carvings of a dragon and phoenix, its bronze surface is still as
+polished as ever. Immaculate as it is, you can see no speck of dust on it. The
+hall continues in all directions except north."
+extra {"throne"}
+"It is made of bronze. Though not as grand as King Welmar's throne, it
+nevertheless must have been used by some respectable lord or lady."
+ROOM_INSIDE
+west to main_hall_nw descr "The way continues inside the main hall.";
+east to main_hall_ne descr "The way continues inside the main hall.";
+south to main_hall_c descr "The way continues inside the main hall.";
+end
+
+                        corridor_e_c
+
+title "Along a Wide Corridor"
+descr
+"You are along a wide corridor with ceiling covered almost entirely by cobwebs.
+The main hall is to the west. The corridor continues eastwards."
+extra {"wide corridor","corridor"}
+"There is nothing special about this corridor except that it is full of spider
+webs on the ceiling and small spiders running around on these webs."
+extra {"spider web","spider webs","web","webs"}
+"These webs are made by ordinary spiders."
+extra {"spider","spiders"}
+"These are small spiders, harmless according to your standards."
+ROOM_INSIDE
+west to main_hall_ne descr "You see the main hall to the west.";
+east to cor_e_junction descr "You see a junction in the corridor.";
+end
+
+                        cor_e_junction
+
+title "At a T-junction"
+descr
+"You have come to a T-junction. Corridors continue along the north, south and
+west directions."
+ROOM_INSIDE
+west to corridor_e_c descr "The corridor continues west.";
+north to corridor_e_n descr "The corridor continues north.";
+south to stairs_e_d descr "You see a spiral stairway to the south.";
+end
+
+                        corridor_e_n
+
+title "Along a Corridor"
+descr
+"You are along a north-south corridor. The stone wall on the west are lined
+with large cracks. This section of the keep looks like it is about to give way
+soon. On the floor are splinters of wood, the remnants of what used to be a
+door to the east."
+extra {"corridor"}
+"You see nothing in particular about this corridor except for the cracks on the
+west wall."
+extra {"west wall","wall","cracks"}
+"The cracks are ideal homes for lizards but pose a safety problem to the keep's
+inhabitants."
+extra {"splinters","wood","door"}
+"The door probably fell victim to a colony of termites."
+ROOM_INSIDE
+east to storeroom descr "You see a storeroom to the east.";
+north to corridor_e_end descr "The corridor ends to the north.";
+south to cor_e_junction descr "The corridor continues on.";
+end
+
+                        corridor_e_end
+
+title "End of Corridor"
+descr
+"You are at a junction of rooms. To the north lies the servants'
+quarters, while to the east is a kitchen. The corridor leads off to the 
+south." 
+
+extra {"corridor"} "There is nothing special about this corridor."
+extra {"kitchen"} "You cannot see much of the kitchen from here."
+extra {"servants' quarters","servants quarters","quarters"}
+"It is to the north.  Go north if you want to take a closer look."
+ROOM_INSIDE
+east to kitchen descr "You see a kitchen with charred walls.";
+north to servants_qtrs descr "You see the servants' quarters.";
+south to corridor_e_n descr "The corridor continues on.";
+end
+
+                        storeroom
+
+title "In a Storeroom"
+descr
+"The storeroom is empty except for a few broken shelves and some empty sacks
+thrown around. This room must have been used to store food and rations
+previously. At the corner you see a ladder leading down through an opening in
+the floor. The other exit leads west."
+extra {"broken shelves","shelves","shelf"}
+"They are wooden, broken beyond repair."
+extra {"empty sacks","empty sack","sacks","sack"}
+"These sacks are full of holes probably gnawed by rats."
+ROOM_INSIDE
+west to corridor_e_n descr "The way leads out into a corridor.";
+down to cellar_1 descr "A ladder leads down the wine cellar.";
+end
+
+                        kitchen
+
+title "In a Kitchen"
+descr
+"This place looks like it was burnt before. The walls and ceiling are charred
+with soot. You are quite amazed that it survived such severe burning. In the
+kitchen are a fireplace, a stove and a small dried-up well. The only exit leads
+west."
+extra {"wall","ceiling","walls"} "Black with soot, burnt very badly."
+extra {"fireplace"}
+"It looks like any ordinary fireplace but without any traces of ash. You
+deduce that the fireplace must have been left idling for a long time."
+extra {"stove"} "It is obviously used for cooking."
+extra {"dried-up well","well"}
+"A small but deep well. It has dried up long ago."
+ROOM_INSIDE
+west to corridor_e_end descr "The way leads out into the corridor.";
+end
+
+                        servants_qtrs
+
+title "In the Servants' Quarters"
+descr
+"A rotten stench invades the air. Looking ahead you see a mangled corpse lying
+in the corner. Evidently, some creatures have made a sumptious meal out of it.
+The disgusting sight of it makes you vomit. Exit leads south."
+extra {"mangled corpse","corpse"}
+"Half flesh, half bones and spilling blood all over the floor."
+ROOM_INSIDE
+south to corridor_e_end descr "The way leads out into the corridor.";
+end
+
+                        stairs_e_d
+
+title "At the Bottom of a Spiral Stairway"
+descr
+"You have come to the bottom of a spiral stairway leading up to the next
+storey. The wooden stairs look really fragile and unsafe for use."
+extra {"wooden stairs","wooden stair","stairs","stair"}
+"You are pretty sure that you will not want to use them if given a choice."
+extra {"spiral stairway","stairway"}
+"Old and rusty. It is made of iron railings and wooden planks."
+ROOM_INSIDE
+north to cor_e_junction descr "You see a junction in the corridor.";
+up to stairs_e_u descr "The stairway leads up to the top.";
+end
+
+                        stairs_e_u
+
+title "At the Top of a Spiral Stairway"
+descr
+"You are at the top of the spiral stairway. You can either go down to the first
+floor of the keep or north leading to a corridor."
+extra {"spiral stairway","stairway"}
+"Old and rusty.  It is made of iron railings and wooden planks."
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+north to corridor_e2_s descr "A corridor is north.";
+down to stairs_e_d descr "The stairway leads down to the first storey.";
+IN_ALWAYS_DARK
+end
+
+                        corridor_e2_s
+
+title "Along a Corridor"
+descr
+"You are along a dusty corridor. There are bedrooms to the east and west. The
+stairway is south. The corridor continues northwards."
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to corridor_e2_end descr "You see the corridor ends to the north.";
+south to stairs_e_u descr "You see stairway leading down.";
+east to bedroom_1 descr "You a small bedroom.";
+west to bedroom_2 descr "A medium-sized bedroom lies to the west.";
+IN_ALWAYS_DARK
+end
+
+                        corridor_e2_end
+
+title "At the End of Corridor"
+descr
+"You have come to the end of the corridor. A blood-stained door lies north.
+Standing from here you can feel an overpowering sense of evil emanating from
+behind this door. A pile of bones is lying in the corner, perhaps leftover from
+an unfortunate victim. The other exit leads south."
+extra {"blood-stained door","stained door","door"}
+"A large patch of dried blood stains this oak wood door. Otherwise the door
+appears ordinary."
+extra {"pile of bones","pile","bones"}
+"They are bones.  You fail to tell what type of bones are they."
+extra {"blood"} "It has already dried up."
+ROOM_INSIDE
+north to bedroom_3 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+         descr "A blood stained door is here."
+         key bedroom_3_key keyword {"blood-stained door", "door"};
+south to corridor_e2_s descr "The way leads along the corridor.";
+end
+
+                        bedroom_1
+
+title "In a Small Bedroom"
+descr
+"You are in a small bedroom. The room is bare except for a window. Wooden
+planks are nailed onto the window completely shutting it off. You see a small
+circular depression in the middle of the room. Directly on top is a crack in
+the ceiling. The only exit leads west."
+extra {"window"} "It is completely sealed off by wooden planks."
+extra {"wooden planks","planks"}
+"There is nothing special about these wooden planks."
+extra {"circular depression","depression"}
+"On rainy days, water must have leaked from the ceiling and dripped on here. It
+must have taken ages for rain water to create this depression."
+extra {"crack","ceiling"}
+"The crack on the ceiling leaks in water during rainy days."
+ROOM_INSIDE
+west to corridor_e2_s descr "The way leads out to a corridor.";
+end
+
+                        bedroom_2
+
+title "In a Medium-Sized Bedroom"
+descr
+"You are in a medium-sized bedroom. There is a bookshelf here full of ancient
+tomes. The only window here is being sealed off by wooden planks nailed onto
+it. The only exit leads east from here."
+extra {"bookshelf","shelf"} "The bookshelf is full of ancient tomes"
+extra {"tome","tomes","books","book"}
+"All the tomes are written in a language beyond your understanding."
+extra {"window"} "It is completely sealed off by wooden planks."
+extra {"wooden planks","planks"}
+"There is nothing special about these wooden planks."
+ROOM_INSIDE
+east to corridor_e2_s descr "The way leads out to the corridor.";
+end
+
+                        bedroom_3
+
+title "In a Large Bedroom"
+descr
+"This place does not look like a bedroom at all!  There are neither beds nor
+cabinets; it is completely devoid of furniture. Instead, you see a diamond-laid
+outline of a large pentagram engraved onto the floor. A large altar sits at the
+far end. On the altar you see the statue of a demon. It is obvious that the
+inhabitants of this room worship it."
+extra {"demon"}
+"It has a goat-like head with horns of a ram.  Large bat wings sprout from
+its grossly fat body. It holds a wand in its left hand."
+extra {"altar"} "This is where worshippers place their sacrifices."
+extra {"pentagram","floor"}
+"The pentagram has lots of strange inscriptions on it.  Perhaps it is used
+to work some magic."
+ROOM_INSIDE
+south to corridor_e2_end open {EX_OPEN_CLOSE,EX_CLOSED,EX_LOCKED}
+         descr "A blood stained door is here."
+         key bedroom_3_key keyword {"blood-stained door","door"};
+/*
+dilbegin recall aware invasion();
+var
+    item : unitptr;
+code
+{
+    :init:
+    heartbeat := PULSE_SEC * SECS_PER_REAL_DAY;
+
+    :start:
+    wait(SFB_TICK, (findunit(self, "portal", FIND_UNIT_IN_ME, null) == null)); 
+    if (rnd(1,10) == 1) {
+       item := load("portal@keep");
+    }
+    goto start;
+}
+dilend
+*/
+end
+
+                        passageway_w_c
+
+title "Along a Passageway"
+descr
+"You are along a north-south passageway on the western side of the keep. On one
+side of the wall you see some large claw marks. You know for sure the thing
+that left its impression on the stone wall here must be extremely strong. It
+could easily rip through your armor."
+extra {"claw marks","claw mark","marks","mark"}
+"The marks are at least six inches long and a quarter inch deep."
+extra {"stone wall","wall"} "There are claw marks on the stone wall."
+ROOM_INSIDE
+north to passageway_w_n descr "The passageway continues on.";
+east to main_hall_nw descr "You see the main hall to the east.";
+south to passageway_w_s descr "The passageway continues on.";
+end
+
+                        passageway_w_n
+
+title "Along a Passageway"
+descr
+"You are along a north-south passageway. To your far north you can see a
+stairway leading up."
+extra {"stairway"} "It seems to be leading up to a tower of sorts."
+ROOM_INSIDE
+north to tower_bottom descr "You see a stairway leading up a tower.";
+south to passageway_w_c descr "The passageway continues on.";
+end
+
+                        passageway_w_s
+
+title "End of Passageway"
+descr
+"You at the end of a north-south passageway. A heavy iron door
+stands to the south while the passageway leads off to the north."
+extra {"iron door","door"}
+"A sturdy door typically used for prisons to deny criminals of a chance to
+escape."
+ROOM_INSIDE
+north to passageway_w_c descr "The passageway continues on.";
+south to prison_post open {EX_OPEN_CLOSE,EX_CLOSED}
+         descr "A heavy iron door stands here."
+         keyword {"iron door","door"};
+end
+
+                        prison_post
+
+title "In a Prison Post"
+descr
+"This is a rather small room with some graffiti on the walls. A rusty iron
+table has collapsed at the far corner. Obviously so, as rust has devoured it
+from inside out. A ladder leads down the hole on the ground into pitch
+darkness. For a change, you hear some soft squeaking sounds typical of rats
+coming from beneath. It is rather difficult to believe that even rats can find
+food to survive in a place like this."
+extra {"rusty table","table"}
+"Metal-turned-metallic-oxide. No magic in this world can bring it back."
+extra {"ladder"} "Not quite in the condition you would like to climb with."
+extra {"hole","darkness","pitch darkness"}
+"From here it is impossible to tell what is beneath."
+extra {"graffiti"} "Written by blood in a language unknown to you."
+flags {UNIT_FL_INDOORS,UNIT_FL_NO_WEATHER,UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+north to passageway_w_s open {EX_OPEN_CLOSE,EX_CLOSED}
+         descr "A heavy iron door stands here."
+         keyword {"iron door","door"};
+down to drkcorr_start descr "A ladder leads down into the pitch darkness.";
+IN_ALWAYS_DARK
+end
+
+                        drkcorr_start
+
+title "Start of Dark Corridor"
+descr
+"The corridor here is uncannily dim even with your light source. The darkness
+seems to overpower whatever your light can offer you. This corridor is
+unusually wide, but the ceiling is a little low that you need to bend your head
+down. This is more like a tunnel than a proper corridor. It continues
+southwards. You may also climb up the ladder."
+extra {"ceiling"}
+"The ceiling is only about five and a half feet high. Watch out your head."
+extra {"corridor"} "Wide but low, you need to watch out your head."
+ROOM_INSIDE
+south to drkcorr_1 descr "The corridor continues on.";
+up to prison_post descr "A ladder leads up to the prison post.";
+end
+
+                        drkcorr_1
+
+title "The Dark Corridor"
+descr
+"You make your way through this dark corridor. To the east and west you see
+small prison cells with steel bars so badly damaged that they can no longer
+serve any purpose. As a result, you can walk freely in and out of these cells
+here. The corridor continues north and south."
+extra {"corridor"} "Wide but low, you need to watch out your head."
+extra {"prison cells","prison cell","cells","cell"}
+"It will be a tragic episode in your life to get locked in one of these."
+ROOM_INSIDE
+south to drkcorr_turn descr "You see a turning in the corridor.";
+east to prison_1 descr "You see a large prison cell.";
+north to drkcorr_start descr "The corridor ends to the north.";
+west to prison_2 descr "You see a large prison cell.";
+end
+
+                        drkcorr_turn
+
+title "A Turning in The Dark Corridor"
+descr
+"You have come to a turning in the dark corridor. There are broken down prison
+cells to the south and west. The corridor continues north and east."
+extra {"corridor"} "Dark, low and wide.  It gives you the creeps."
+extra {"prison cells","prison cell","cells","cell"}
+"The steel bars have almost completely rusted. At this state it will not
+be able even to lock a child in."
+ROOM_INSIDE
+north to drkcorr_1 descr "The dark corridor continues on.";
+east to drkcorr_2 descr "The dark corridor continues on.";
+west to prison_3 descr "You see a large prison cell.";
+south to prison_4 descr "You see a large prison cell.";
+end
+
+                        drkcorr_2
+
+title "The Dark Corridor"
+descr
+"You are along an east-west corridor. Movement is slowed a little by some
+cobwebs extending down from the ceiling and blocking your vision. This part of
+the corridor is damp due to underground water seeping in through the cracks on
+the walls. Another prison cell is south."
+extra {"cobwebs","cobweb","webs","web"}
+"These cobwebs do nothing but irritate you a bit. You do not see any traces of
+spiders on them."
+extra {"corridor"}
+"Dark, low but wide. You can appreciate now that being short has its
+advantages."
+extra {"prison cell","cell"} "Not surprisingly, this cell has no steel bars."
+ROOM_INSIDE
+east to drkcorr_end descr "You see the end of the dark corridor.";
+west to drkcorr_turn descr "You see a turning in the dark corridor.";
+south to prison_5 descr "You see a large prison cell.";
+end
+
+                        drkcorr_end
+
+title "End of Dark Corridor"
+descr
+"Here lies the end of the dark corridor. On the east wall is a shape of a skull
+carved out from stone. It does not appear to be a human skull as it has fangs
+much like a vampire. This skull seems a bit strange and out of place, as if
+moveable. The last prison cell is south."
+extra {"skull"}
+"Looking at it again you can spot some faint red glow coming from its eye
+sockets."
+extra {"eye sockets","eye socket","sockets","socket"}
+"The eye sockets are empty.  They seem to emit a faint red glow."
+extra {"fangs","fang"}
+"Long, sharp and vicious looking.  Not a good idea to leave your neck
+unprotected."
+ROOM_INSIDE
+east to laby_1 open {EX_OPEN_CLOSE,EX_CLOSED,EX_HIDDEN}
+        keyword {"door","wall","skull"};
+west to drkcorr_2 descr "The dark corridor continues on.";
+south to prison_6 descr "You see a large prison cell.";
+SECRET_DOOR_DIFFICULTY(EAST, 50)
+end
+
+                        prison_1
+
+title "In a Large Prison Cell"
+descr
+"You are in a large prison cell. This room is so large and spacious that it
+makes you feel tiny. It does appear that this prison was used to lock up
+something very huge. The only exit leads west."
+ROOM_INSIDE
+west to drkcorr_1 descr "The way leads out into a dark corridor.";
+end
+
+                        prison_2
+
+title "In a Large Prison Cell"
+descr
+"You are in a large prison cell. This room is so large and spacious that is
+makes you feel tiny. It does appear that this prison was used to lock up
+something very huge. The only exit leads east."
+ROOM_INSIDE
+east to drkcorr_1 descr "The way leads out into a dark corridor.";
+end
+
+                        prison_3
+
+title "In a Large Prison Cell"
+descr
+"   You are in a large prison cell.  This room is so large and spacious
+that it makes you feel tiny.  It does appear that this prison was used
+to lock up something very huge.  The only exit leads east."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+east to drkcorr_turn
+     descr "The way leads out into a turning in the dark corridor.";
+IN_ALWAYS_DARK
+end
+
+                        prison_4
+
+title "In a Large Prison Cell"
+descr
+"   You are in a large prison cell.  This room is so large and spacious
+that it makes you feel tiny.  It does appear that this prison was used
+to lock up something very huge.  The only exit leads north."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to drkcorr_turn
+      descr "The way leads out into a turning in the dark corridor.";
+IN_ALWAYS_DARK
+end
+
+                        prison_5
+
+title "In a Large Prison Cell"
+descr
+"   You are in a large prison cell.  This room is so large and spacious
+that it makes you feel tiny.  It does appear that this prison was used
+to lock up something very huge.  The only exit leads north."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to drkcorr_2 descr "The dark corridor continues on.";
+IN_ALWAYS_DARK
+end
+
+                        prison_6
+
+title "In a Large Prison Cell"
+descr
+"   You are in a large prison cell.  This room is so large and spacious
+that it makes you feel tiny.  It does appear that this prison was used
+to lock up something very huge.  The only exit leads north."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to drkcorr_end descr "The way leads out into a dark corridor.";
+IN_ALWAYS_DARK
+end
+
+                        tower_bottom
+
+title "At the Bottom of Tower Stairway"
+descr
+"   The stone stairway here spirals up a tower into the darkness.  As you
+can see from here the tower is big and spacious.  Every step you take
+seems to send an echo up the tower.  You wonder what evil awaits you at
+the top.  The passageway continues to the north."
+
+extra {"stairway", "stair", "stairs"}
+"Made from stone; as solid as a rock.  This is the only stairway in this keep
+that appears to be safe for use."
+extra {"tower"}
+"It leads all the way up into the darkness."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+up to tower_mid descr "You see the mid-point of the tower.";
+north to passageway_end descr "You see the end of the passageway.";
+south to passageway_w_n descr "The passageway continues on.";
+IN_ALWAYS_DARK
+end
+
+                        tower_mid
+
+title "Halfway up the Tower"
+descr
+"   You have come to the midpoint of the tower.  Somehow you feel that the
+darkness all around you is unnatural, everything seems unreal.  You place
+your every step cautiously and quietly not wanting to disturb the deathly
+silence.  Indeed, you have the feeling that you are being watched by a
+pair of glowing red eyes.  You can continue upwards or go down."
+
+extra {"eyes", "red eyes"}
+"It is just a feeling that you are being watched."
+extra {"stairway", "stairs", "stair"}
+"Made from stone; as solid as a rock.  This is the only stairway in this keep
+that appears to be safe for use."
+extra {"tower"}
+"You are at its midpoint."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+up to tower_top descr "The stairway continues up to the tower top.";
+down to tower_bottom descr "The stairway leads down the tower.";
+IN_ALWAYS_DARK
+end
+
+                        tower_top
+
+title "Top of Tower"
+descr
+"   You have come to the top of the tower.  All the four windows are sealed
+completely by wooden planks nailed onto them blocking off even the slightest
+trace of sunlight.  For no reason you feel very cold in here, as if frost
+is biting into your flesh.  The only exit leads down."
+
+extra {"wooden planks", "wooden plank", "planks", "plank", "window", "windows"}
+"The dwellers of this keep must surely detest sunshine so much as to do this."
+extra {"tower"}
+"You have already reached the top."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+down to tower_mid descr "You see the mid-point of the tower.";
+IN_ALWAYS_DARK
+end
+
+                        passageway_end
+
+title "End of Passageway"
+descr
+"   You are at the end of a long passageway that leads off to the south. 
+To the west is a light that shines out from a doorway, with a wooden sign
+hanging on the top.  To the north is a wooden door that leads out to the
+back yard." 
+
+extra {"doorway"}
+"A sign hangs on top of the doorway."
+extra {"wooden sign", "sign"}
+"The sign reads:  'Boney's Magic Scroll Shop'"
+extra {"wooden door", "door"}
+"The door leads outside the keep to the back yard."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+north to backyard_1 open {EX_OPEN_CLOSE, EX_CLOSED}
+                    descr "A wooden door is here."
+                    keyword {"wooden door", "door"};
+south to tower_bottom descr "You see the bottom of the tower.";
+west to scroll_shop descr "You see Boney's Scroll Shop.";
+IN_ALWAYS_DARK
+end
+
+                        scroll_shop
+
+title "Boney's Scroll Shop"
+descr
+"   This place is full of bookshelves and cabinets.  There is certainly
+a huge collection of books, scrolls and scriptures here enough to call
+this a library.  A counter stands here with a sign placed on the top.
+The only exit leads to the east."
+
+extra {"bookshelves", "shelves", "bookshelf", "shelf"}
+"They are packed with different kinds of books."
+extra {"cabinets", "cabinet"}
+"They are used for storing Boney's collection of scrolls."
+extra {"books", "book"}
+"Many of those books are written in an arcane language unknown to you."
+extra {"scriptures"}
+"They record the history of this keep."
+extra {"scrolls"}
+"The scrolls are waiting to be sold."
+extra {"counter"}
+"This is a wooden counter used by Boney for his transactions."
+extra {"sign"}
+"The sign reads:&l
+
+          buy <item>    to purchase a scroll
+          sell <item>   to sell a scroll
+          value <item>  to find out the amount you get for selling an item
+          list          to get a list of what is on sale here
+
+&fTo buy a scroll of identify you can use the command 'buy identify' etc.
+You can also use the 'buy #.scroll' convention. E.g to buy the 3rd scroll
+on the list, you can use 'buy 3.scroll'."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+east to passageway_end descr "The way leads out into the passageway.";
+ALWAYS_LIGHT
+end
+
+                        backyard_1
+
+title "In the Back Yard"
+descr
+"   You are standing in the back yard.  Covering the ground are dead and dried
+up grasses and creepers, with broken twigs scattered all around.  The soil
+appears completely dehydrated causing the ground to crack.  A stone wall runs
+along the west.  The backyard continues to the north and east, while the 
+door into building is to the south."
+
+extra {"ground", "floor"}
+"The ground is covered by dead grasses and creepers that dried up long ago.
+You can see cracks running on the ground, due to lack of water content in
+the soil."
+extra {"grasses", "creepers", "twigs"}
+"They are dried up, dead beyond revival."
+extra {"soil"}
+"The soil is dehydrated causing cracks to form.  Perhaps it has not rained
+for a long time here, but it does not seem so.  It may be due to some other
+reasons unknown to you."
+extra {"wall", "west wall", "stone wall"}
+"This is the wall that fences up the back yard from the outside."
+extra {"building"}
+"That is the keep."
+extra {"wooden door","door"}
+"The wooden door leads into the keep's passageway."
+
+flags {UNIT_FL_NO_MOB}
+movement SECT_CITY
+south to passageway_end open {EX_OPEN_CLOSE, EX_CLOSED}
+                        descr "A wooden door is here."
+                        keyword {"wooden door", "door"};
+north to backyard_3 descr "The backyard continues on.";
+east to backyard_2 descr "The backyard continues on.";
+end
+
+                        backyard_2
+
+title "In the Back Yard"
+descr
+"   You are standing in the back yard.  Covering the ground are dead and dried
+up grasses and creepers, with broken twigs scattered all around.  On the south
+is the weather-worn building lined with cracks on its outside, while on the 
+east is a stone wall.  The backyrd continues to the north and west."
+
+extra {"ground", "floor"}
+"The ground is covered by dead grasses and creepers that dried up long ago.
+You can see cracks running on the ground, due to lack of water content in
+the soil."
+extra {"grasses", "creepers", "twigs"}
+"They are dried up, dead beyond revival."
+extra {"soil"}
+"The soil is dehydrated causing cracks to form.  Perhaps it has not rained
+for a long time here, but it does not seem so.  It may be due to some other
+reasons unknown to you."
+extra {"wall", "east wall", "stone wall"}
+"This is the wall that fences up the back yard from the outside."
+extra {"building"}
+"That is the keep.  You can see from here that is really old and weather-
+worn.  You really wonder why it is still standing."
+
+movement SECT_CITY
+north to backyard_4 descr "The backyard continues on.";
+west to backyard_1 descr "The backyard continues on.";
+end
+
+                        backyard_3
+
+title "In the Back Yard"
+descr
+"   You are standing in the back yard.  The ground in this part of the yard
+appears to have suffered some erosion as if something has trampled on it.
+There is nothing but barren, yellow soil on the ground.  To the north stands
+a large stable.  A stone wall blocks your way to the west. The yard 
+continues to south and east."
+
+extra {"ground", "floor"}
+"This part of the ground is barren and eroded.  From your knowledge such
+is a sign that the ground is frequently walked or trampled on."
+extra {"soil"}
+"The soil here is yellow and eroded.  You are convinced that you will not
+find a single trace of water even if you dig fifty feet down."
+extra {"wall", "west wall", "stone wall"}
+"This is the wall that fences up the back yard from the outside."
+extra {"stable"}
+"In front of the stable is a wooden stable door."
+extra {"door", "stable door"}
+"Wooden.  Why not open it?"
+
+movement SECT_CITY
+north to stable_1 open {EX_OPEN_CLOSE, EX_CLOSED}
+                  descr "A stable is to the north."
+                  keyword {"stable door", "door"};
+east to backyard_4 descr "The backyard continues on.";
+south to backyard_1 descr "The backyard continues on.";
+end
+
+                        backyard_4
+
+title "In the Back Yard"
+descr
+"   You are standing in the back yard.  Dried up grasses and creepers cover
+the barren ground, and you see some traces of dried hay littering the place.
+To the north stands a large stable.  On the eastern stone wall is a rusty
+iron door perhaps leading to the outside of the keep.  You may continue south
+or east around the yard."
+
+extra {"ground", "floor"}
+"The ground is covered by dead grasses and creepers that dried up long ago.
+You can see cracks running on the ground, due to lack of water content in
+the soil."
+extra {"grasses", "creepers"}
+"They are dried up, dead beyond revival."
+extra {"soil"}
+"The soil is dehydrated causing cracks to form.  Perhaps it has not rained
+for a long time here, but it does not seem so.  It may be due to some other
+reasons unknown to you."
+extra {"wall", "east wall"}
+"This is the wall that fences up the back yard from the outside.  You see
+a rusty iron door on the wall here."
+extra {"stable door"}
+"Wooden.  Why not open it?"
+extra {"stable"}
+"In front of the stable is a wooden door."
+extra {"door", "rusty door"}
+"The iron door is badly rusty and appears to be jammed.  Looks like it may
+not be opened anymore."
+
+movement SECT_CITY
+north to stable_2 open {EX_OPEN_CLOSE, EX_CLOSED}
+                  descr "A stable is to the north."
+                  keyword {"stable door", "door"};
+east to backyard_4 open {EX_CLOSED, EX_PICKPROOF}
+                   descr "A rusty door blocks the way out."
+                   keyword {"rusty door", "door"};
+west to backyard_3 descr "The backyard continues on.";
+south to backyard_2 descr "The backyard continues on.";
+end
+
+                        stable_1
+
+title "Inside a Large Stable"
+descr
+"   You are inside a large and dark stable.  The first thing that catches
+your attention is a overpowering rotten stench filling this place.  In this
+stable are scattered bones of humaniods seemingly victims of a large
+carnivorous diet."
+
+extra {"stable"}
+"Large, dark and errie-looking.  You really do not suppose any horses will
+want to stay here."
+extra {"bones"}
+"Chewed-up bones of humaniods.  What a meal!"
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+south to backyard_3 open {EX_OPEN_CLOSE, EX_CLOSED}
+                    descr "The path leads out of the stable."
+                    keyword {"stable door", "door"};
+end
+
+                        stable_2
+
+title "Inside a Large Stable"
+descr
+"   You are inside a large and dark stable.  The first thing that catches
+your attention is a overpowering rotten stench filling this place.  In this
+stable are scattered bones of humaniods seemingly victims of a large
+carnivorous diet."
+
+extra {"stable"}
+"Large, dark and errie-looking.  You really do not suppose any horses will
+want to stay here."
+extra {"bones"}
+"Chewed-up bones of humaniods.  What a meal!"
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_CITY
+south to backyard_4 open {EX_OPEN_CLOSE, EX_CLOSED}
+                    descr "The path leads out of the stables."
+                    keyword {"stable door", "door"};
+end
+
+                        cellar_1
+
+title "In a Wine Cellar"
+descr
+"   You are inside an underground wine cellar.  On either sides of the cellar
+are stacked with wooden wine barrels almost reaching the ceiling.  A cool
+sense of feeling surrounds this place.  The cellar continues eastwards, 
+while a ladder leads up to the store room."
+
+extra {"cellar"}
+"This is indeed a good place to store wine."
+extra {"barrel", "barrels"}
+"The barrels are all empty, much to your disappointment."
+extra {"ladder"}
+"The ladder is old but still usable."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+up to storeroom descr "A ladder leads up to the storeroom.";
+east to cellar_2 descr "The cellar continues further into the east.";
+IN_ALWAYS_DARK
+end
+
+                        cellar_2
+
+title "In a Wine Cellar"
+descr
+"   You are inside an underground wine cellar.  On either sides of the cellar
+are stacked with wooden wine barrels almost reaching the ceiling.  A cool
+sense of feeling surrounds this place.  The cellar continues to the west."
+
+extra {"cellar"}
+"This is indeed a good place to store wine."
+extra {"barrel", "barrels"}
+"The barrels are all empty, much to your disappointment."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+west to cellar_1 descr "The cellar continues to the west.";
+IN_ALWAYS_DARK
+end
+
+/*
+                 -=+ Map of the Death Labyrinth +=-
+
+                                8
+                                |
+                 2 -- 3    6 -- 7              22 --23
+entrance    }    |    |    |    |               |
+from        > -- 1    4 -- 5 -- 9 -- 10   20 --21 --31
+drkcorr_end }              |          |    |
+                     16 --15 --14    11 --19        29
+                           |    |     |    |         |
+                     18 --17   13 -- 12   24 --25 --28 --30
+                                                |         |
+                                          27 --26     to treasure
+                                                         room!    */
+
+                        laby_1
+
+title "Entrance to the Labyrinth"
+descr
+"   Here lies the entrance to the Death Labyrinth.  A quiet, errie feeling
+fills the air as mist seems to invade from all directions.  You see a faint
+tint of green lingers around, appearing to follow you where ever you go.  As
+you hesitate, you feel some strange force urging you northwards into the
+depths of the labyrinth.  A stone door is west."
+
+extra {"air"}
+"On a closer examination you see tiny, luminous particles suspended in the
+air giving the air a faint green tint."
+extra {"force"}
+"Powerful as you are, you fail to see the force with your eyes.  You can
+only sense it."
+extra {"depth", "depths", "labyrinth"}
+"The labyrinth continues into the darkness, as if completely lost
+in the mist."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_MOB}
+movement SECT_INSIDE
+north to laby_2;
+west to drkcorr_end open {EX_OPEN_CLOSE, EX_CLOSED}
+        descr "A stone door is here."
+        keyword {"stone door", "door"};
+IN_ALWAYS_DARK
+end
+
+                        laby_2
+
+title "In the Death Labyrinth"
+descr
+"   You stand inside the Death Labyrinth.  The first thing you notice is
+a strange, pungent smell that fills the place bringing you to the brink of
+throwing up.  Mosses carpet the ground making it very slippery thus slowing
+down your movement.  You hear a faint sound of dripping water ringing
+throughout the labyrinth.  In this darkness, visibility is barely ten yards.
+You may continue east or south."
+
+extra {"smell"}
+"Hmmmm....if smell can be looked at, why would you need a nose?"
+extra {"moss", "mosses"}
+"The mosses are green as with ordinary mosses.  But one thing catches your
+attention:  mosses need sunlight to thrive, do they not?"
+extra {"labyrinth"}
+"It continues on into the darkness."
+extra {"darkness"}
+"It really gives you the creeps, a sense of death and despair."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+east to laby_3;
+south to laby_1;
+IN_ALWAYS_DARK
+end
+
+                        laby_3
+
+title "In the Death Labyrinth"
+descr
+"   You stand inside the Death Labyrinth.  The first thing you notice is
+a strange, pungent smell that fills the place bringing you to the brink of
+throwing up.  Mosses carpet the ground making it very slippery thus slowing
+down your movement.  You hear a faint sound of dripping water ringing
+throughout the labyrinth.  In this darkness, visibility is barely ten yards.
+You may continue west or south."
+
+extra {"smell"}
+"Hmmmm....if smell can be looked at, why would you need a nose?"
+extra {"moss", "mosses"}
+"The mosses are green as with ordinary mosses.  But one thing catches your
+attention:  mosses need sunlight to thrive, do they not?"
+extra {"labyrinth"}
+"It continues on into the darkness."
+extra {"darkness"}
+"It really gives you the creeps, a sense of death and despair."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+west to laby_2;
+south to laby_4;
+IN_ALWAYS_DARK
+end
+
+                        laby_4
+
+title "In the Death Labyrinth"
+descr
+"   You stand inside the Death Labyrinth.  The first thing you notice is
+a strange, pungent smell that fills the place bringing you to the brink of
+throwing up.  Mosses carpet the ground making it very slippery thus slowing
+down your movement.  You hear a faint sound of dripping water ringing
+throughout the labyrinth.  In this darkness, visibility is barely ten yards.
+You may continue north or east."
+
+extra {"smell"}
+"Hmmmm....if smell can be looked at, why would you need a nose?"
+extra {"moss", "mosses"}
+"The mosses are green as with ordinary mosses.  But one thing catches your
+attention:  mosses need sunlight to thrive, do they not?"
+extra {"labyrinth"}
+"It continues on into the darkness."
+extra {"darkness"}
+"It really gives you the creeps, a sense of death and despair."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+east to laby_5;
+north to laby_3;
+IN_ALWAYS_DARK
+end
+                        laby_5
+
+title "In the Death Labyrinth"
+descr
+"   You stand inside the Death Labyrinth.  The first thing you notice is
+a strange, pungent smell that fills the place bringing you to the brink of
+throwing up.  Mosses carpet the ground making it very slippery thus slowing
+down your movement.  You hear a faint sound of dripping water ringing
+throughout the labyrinth.  In this darkness, visibility is barely ten yards.
+The labyrinth continues in all directions."
+
+extra {"smell"}
+"Hmmmm....if smell can be looked at, why would you need a nose?"
+extra {"moss", "mosses"}
+"The mosses are green as with ordinary mosses.  But one thing catches your
+attention:  mosses need sunlight to thrive, do they not?"
+extra {"labyrinth"}
+"It continues on into the darkness."
+extra {"darkness"}
+"It really gives you the creeps, a sense of death and despair."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to laby_6;
+east to laby_9;
+south to laby_15;
+west to laby_4;
+IN_ALWAYS_DARK
+end
+                        laby_6
+
+title "In the Death Labyrinth"
+descr
+"   You stand inside the Death Labyrinth.  The first thing you notice is
+a strange, pungent smell that fills the place bringing you to the brink of
+throwing up.  Mosses carpet the ground making it very slippery thus slowing
+down your movement.  You hear a faint sound of dripping water ringing
+throughout the labyrinth.  In this darkness, visibility is barely ten yards.
+You may continue east or south."
+
+extra {"smell"}
+"Hmmmm....if smell can be looked at, why would you need a nose?"
+extra {"moss", "mosses"}
+"The mosses are green as with ordinary mosses.  But one thing catches your
+attention:  mosses need sunlight to thrive, do they not?"
+extra {"labyrinth"}
+"It continues on into the darkness."
+extra {"darkness"}
+"It really gives you the creeps, a sense of death and despair."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+east to laby_7;
+south to laby_5;
+IN_ALWAYS_DARK
+end
+                        laby_7
+
+title "In the Death Labyrinth"
+descr
+"   You stand inside the Death Labyrinth.  The first thing you notice is
+a strange, pungent smell that fills the place bringing you to the brink of
+throwing up.  Mosses carpet the ground making it very slippery thus slowing
+down your movement.  You hear a faint sound of dripping water ringing
+throughout the labyrinth.  In this darkness, visibility is barely ten yards.
+You may continue north, west or south."
+
+extra {"smell"}
+"Hmmmm....if smell can be looked at, why would you need a nose?"
+extra {"moss", "mosses"}
+"The mosses are green as with ordinary mosses.  But one thing catches your
+attention:  mosses need sunlight to thrive, do they not?"
+extra {"labyrinth"}
+"It continues on into the darkness."
+extra {"darkness"}
+"It really gives you the creeps, a sense of death and despair."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to laby_8;
+west to laby_6;
+south to laby_9;
+IN_ALWAYS_DARK
+end
+
+                        laby_8
+
+title "Dead End in the Labyrinth"
+descr
+"   Directly in front of you is a dead end.  You see moss-covered boulders
+piling up from what seems to be a cave-in, blocking your way further
+northwards.  The only possible exit is to the south where you came from."
+
+extra {"dead end"}
+"You are sure that this was not a dead end before the cave-in.  But
+now it is, to your disappointment."
+extra {"boulders", "boulder", "cave-in"}
+"Completely covered by mosses, these boulders were once part of the ceiling."
+extra {"moss", "mosses"}
+"Ordinary-looking mosses that thrives without sunshine making them
+not-so-ordinary."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+south to laby_7;
+IN_ALWAYS_DARK
+end
+
+                        laby_9
+
+title "In the Death Labyrinth"
+descr
+"   You stand inside the Death Labyrinth.  The first thing you notice is
+a strange, pungent smell that fills the place bringing you to the brink of
+throwing up.  Mosses carpet the ground making it very slippery thus slowing
+down your movement.  You hear a faint sound of dripping water ringing
+throughout the labyrinth.  In this darkness, visibility is barely ten yards.
+You may continue north, east or west."
+
+extra {"smell"}
+"Hmmmm....if smell can be looked at, why would you need a nose?"
+extra {"moss", "mosses"}
+"The mosses are green as with ordinary mosses.  But one thing catches your
+attention:  mosses need sunlight to thrive, do they not?"
+extra {"labyrinth"}
+"It continues on into the darkness."
+extra {"darkness"}
+"It really gives you the creeps, a sense of death and despair."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to laby_7;
+east to laby_10;
+west to laby_5;
+IN_ALWAYS_DARK
+end
+
+                        laby_10
+
+title "In the Death Labyrinth"
+descr
+"   You stand inside the Death Labyrinth.  The first thing you notice is
+a strange, pungent smell that fills the place bringing you to the brink of
+throwing up.  Mosses carpet the ground making it very slippery thus slowing
+down your movement.  You hear a faint sound of dripping water ringing
+throughout the labyrinth.  In this darkness, visibility is barely ten yards.
+You may continue west or south."
+
+extra {"smell"}
+"Hmmmm....if smell can be looked at, why would you need a nose?"
+extra {"moss", "mosses"}
+"The mosses are green as with ordinary mosses.  But one thing catches your
+attention:  mosses need sunlight to thrive, do they not?"
+extra {"labyrinth"}
+"It continues on into the darkness."
+extra {"darkness"}
+"It really gives you the creeps, a sense of death and despair."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+west to laby_9;
+south to laby_11;
+IN_ALWAYS_DARK
+end
+
+                        laby_11
+
+title "In the Death Labyrinth"
+descr
+"   You stand inside the Death Labyrinth.  The first thing you notice is
+a strange, pungent smell that fills the place bringing you to the brink of
+throwing up.  Mosses carpet the ground making it very slippery thus slowing
+down your movement.  You hear a faint sound of dripping water ringing
+throughout the labyrinth.  In this darkness, visibility is barely ten yards.
+You may continue north, east or south."
+
+extra {"smell"}
+"Hmmmm....if smell can be looked at, why would you need a nose?"
+extra {"moss", "mosses"}
+"The mosses are green as with ordinary mosses.  But one thing catches your
+attention:  mosses need sunlight to thrive, do they not?"
+extra {"labyrinth"}
+"It continues on into the darkness."
+extra {"darkness"}
+"It really gives you the creeps, a sense of death and despair."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to laby_10;
+east to laby_19;
+south to laby_12;
+IN_ALWAYS_DARK
+end
+
+                        laby_12
+
+title "In the Death Labyrinth"
+descr
+"   You stand inside the Death Labyrinth.  The first thing you notice is
+a strange, pungent smell that fills the place bringing you to the brink of
+throwing up.  Mosses carpet the ground making it very slippery thus slowing
+down your movement.  You hear a faint sound of dripping water ringing
+throughout the labyrinth.  In this darkness, visibility is barely ten yards.
+You may continue north or west."
+
+extra {"smell"}
+"Hmmmm....if smell can be looked at, why would you need a nose?"
+extra {"moss", "mosses"}
+"The mosses are green as with ordinary mosses.  But one thing catches your
+attention:  mosses need sunlight to thrive, do they not?"
+extra {"labyrinth"}
+"It continues on into the darkness."
+extra {"darkness"}
+"It really gives you the creeps, a sense of death and despair."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to laby_11;
+west to laby_13;
+IN_ALWAYS_DARK
+end
+
+                        laby_13
+
+title "In the Death Labyrinth"
+descr
+"   You stand inside the Death Labyrinth.  The first thing you notice is
+a strange, pungent smell that fills the place bringing you to the brink of
+throwing up.  Mosses carpet the ground making it very slippery thus slowing
+down your movement.  You hear a faint sound of dripping water ringing
+throughout the labyrinth.  In this darkness, visibility is barely ten yards.
+You may continue north or east."
+
+extra {"smell"}
+"Hmmmm....if smell can be looked at, why would you need a nose?"
+extra {"moss", "mosses"}
+"The mosses are green as with ordinary mosses.  But one thing catches your
+attention:  mosses need sunlight to thrive, do they not?"
+extra {"labyrinth"}
+"It continues on into the darkness."
+extra {"darkness"}
+"It really gives you the creeps, a sense of death and despair."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to laby_14;
+east to laby_12;
+IN_ALWAYS_DARK
+end
+
+                        laby_14
+
+title "In the Death Labyrinth"
+descr
+"   You stand inside the Death Labyrinth.  The first thing you notice is
+a strange, pungent smell that fills the place bringing you to the brink of
+throwing up.  Mosses carpet the ground making it very slippery thus slowing
+down your movement.  You hear a faint sound of dripping water ringing
+throughout the labyrinth.  In this darkness, visibility is barely ten yards.
+You may continue west or south."
+
+extra {"smell"}
+"Hmmmm....if smell can be looked at, why would you need a nose?"
+extra {"moss", "mosses"}
+"The mosses are green as with ordinary mosses.  But one thing catches your
+attention:  mosses need sunlight to thrive, do they not?"
+extra {"labyrinth"}
+"It continues on into the darkness."
+extra {"darkness"}
+"It really gives you the creeps, a sense of death and despair."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+west to laby_15;
+south to laby_13;
+IN_ALWAYS_DARK
+end
+
+                        laby_15
+
+title "In the Death Labyrinth"
+descr
+"   You stand inside the Death Labyrinth.  The first thing you notice is
+a strange, pungent smell that fills the place bringing you to the brink of
+throwing up.  Mosses carpet the ground making it very slippery thus slowing
+down your movement.  You hear a faint sound of dripping water ringing
+throughout the labyrinth.  In this darkness, visibility is barely ten yards.
+The labyrinth continues in all directions."
+
+extra {"smell"}
+"Hmmmm....if smell can be looked at, why would you need a nose?"
+extra {"moss", "mosses"}
+"The mosses are green as with ordinary mosses.  But one thing catches your
+attention:  mosses need sunlight to thrive, do they not?"
+extra {"labyrinth"}
+"It continues on into the darkness."
+extra {"darkness"}
+"It really gives you the creeps, a sense of death and despair."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to laby_5;
+east to laby_14;
+south to laby_17;
+west to laby_16;
+IN_ALWAYS_DARK
+end
+
+                        laby_16
+
+title "Dead End in the Labyrinth"
+descr
+"   Directly in front of you is a dead end.  You see moss-covered boulders
+piling up from what seems to be a cave-in, blocking your way further
+westwards.  The only possible exit is to the east where you came from."
+
+extra {"dead end"}
+"You are sure that this was not a dead end before the cave-in.  But
+now it is, to your disappointment."
+extra {"boulders", "boulder", "cave-in"}
+"Completely covered by mosses, these boulders were once part of the ceiling."
+extra {"moss", "mosses"}
+"Ordinary-looking mosses that thrives without sunshine making them
+not-so-ordinary."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+east to laby_15;
+IN_ALWAYS_DARK
+end
+
+                        laby_17
+
+title "In the Death Labyrinth"
+descr
+"   You stand inside the Death Labyrinth.  The first thing you notice is
+a strange, pungent smell that fills the place bringing you to the brink of
+throwing up.  Mosses carpet the ground making it very slippery thus slowing
+down your movement.  You hear a faint sound of dripping water ringing
+throughout the labyrinth.  In this darkness, visibility is barely ten yards.
+You may continue north or west."
+
+extra {"smell"}
+"Hmmmm....if smell can be looked at, why would you need a nose?"
+extra {"moss", "mosses"}
+"The mosses are green as with ordinary mosses.  But one thing catches your
+attention:  mosses need sunlight to thrive, do they not?"
+extra {"labyrinth"}
+"It continues on into the darkness."
+extra {"darkness"}
+"It really gives you the creeps, a sense of death and despair."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to laby_15;
+west to laby_18;
+IN_ALWAYS_DARK
+end
+
+                        laby_18
+
+title "Dead End in the Labyrinth"
+descr
+"   Directly in front of you is a dead end.  You see moss-covered boulders
+piling up from what seems to be a cave-in, blocking your way further
+westwards.  The only possible exit is to the east where you came from."
+
+extra {"dead end"}
+"You are sure that this was not a dead end before the cave-in.  But
+now it is, to your disappointment."
+extra {"boulders", "boulder", "cave-in"}
+"Completely covered by mosses, these boulders were once part of the ceiling."
+extra {"moss", "mosses"}
+"Ordinary-looking mosses that thrives without sunshine making them
+not-so-ordinary."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+east to laby_17;
+IN_ALWAYS_DARK
+end
+
+                        laby_19
+
+title "In the Death Labyrinth"
+descr
+"   You stand inside the Death Labyrinth.  The first thing you notice is
+a strange, pungent smell that fills the place bringing you to the brink of
+throwing up.  Mosses carpet the ground making it very slippery thus slowing
+down your movement.  You hear a faint sound of dripping water ringing
+throughout the labyrinth.  In this darkness, visibility is barely ten yards.
+You may continue north, west or south."
+
+extra {"smell"}
+"Hmmmm....if smell can be looked at, why would you need a nose?"
+extra {"moss", "mosses"}
+"The mosses are green as with ordinary mosses.  But one thing catches your
+attention:  mosses need sunlight to thrive, do they not?"
+extra {"labyrinth"}
+"It continues on into the darkness."
+extra {"darkness"}
+"It really gives you the creeps, a sense of death and despair."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to laby_20;
+west to laby_11;
+south to laby_24;
+IN_ALWAYS_DARK
+end
+
+                        laby_20
+
+title "In the Death Labyrinth"
+descr
+"   You stand inside the Death Labyrinth.  The first thing you notice is
+a strange, pungent smell that fills the place bringing you to the brink of
+throwing up.  Mosses carpet the ground making it very slippery thus slowing
+down your movement.  You hear a faint sound of dripping water ringing
+throughout the labyrinth.  In this darkness, visibility is barely ten yards.
+You may continue east or south."
+
+extra {"smell"}
+"Hmmmm....if smell can be looked at, why would you need a nose?"
+extra {"moss", "mosses"}
+"The mosses are green as with ordinary mosses.  But one thing catches your
+attention:  mosses need sunlight to thrive, do they not?"
+extra {"labyrinth"}
+"It continues on into the darkness."
+extra {"darkness"}
+"It really gives you the creeps, a sense of death and despair."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+east to laby_21;
+south to laby_19;
+IN_ALWAYS_DARK
+end
+
+                        laby_21
+
+title "In the Death Labyrinth"
+descr
+"   You stand inside the Death Labyrinth.  The first thing you notice is
+a strange, pungent smell that fills the place bringing you to the brink of
+throwing up.  Mosses carpet the ground making it very slippery thus slowing
+down your movement.  You hear a faint sound of dripping water ringing
+throughout the labyrinth.  In this darkness, visibility is barely ten yards.
+You may continue north, east or west."
+
+extra {"smell"}
+"Hmmmm....if smell can be looked at, why would you need a nose?"
+extra {"moss", "mosses"}
+"The mosses are green as with ordinary mosses.  But one thing catches your
+attention:  mosses need sunlight to thrive, do they not?"
+extra {"labyrinth"}
+"It continues on into the darkness."
+extra {"darkness"}
+"It really gives you the creeps, a sense of death and despair."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to laby_22;
+east to laby_31;
+west to laby_20;
+IN_ALWAYS_DARK
+end
+
+                        laby_22
+
+title "In the Death Labyrinth"
+descr
+"   You stand inside the Death Labyrinth.  The first thing you notice is
+a strange, pungent smell that fills the place bringing you to the brink of
+throwing up.  Mosses carpet the ground making it very slippery thus slowing
+down your movement.  You hear a faint sound of dripping water ringing
+throughout the labyrinth.  In this darkness, visibility is barely ten yards.
+You may continue east or south."
+
+extra {"smell"}
+"Hmmmm....if smell can be looked at, why would you need a nose?"
+extra {"moss", "mosses"}
+"The mosses are green as with ordinary mosses.  But one thing catches your
+attention:  mosses need sunlight to thrive, do they not?"
+extra {"labyrinth"}
+"It continues on into the darkness."
+extra {"darkness"}
+"It really gives you the creeps, a sense of death and despair."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+east to laby_23;
+south to laby_21;
+IN_ALWAYS_DARK
+end
+
+                        laby_23
+
+title "Dead End in the Labyrinth"
+descr
+"   Directly in front of you is a dead end.  You see moss-covered boulders
+piling up from what seems to be a cave-in, blocking your way further
+eastwards.  The only possible exit is to the west where you came from."
+
+extra {"dead end"}
+"You are sure that this was not a dead end before the cave-in.  But
+now it is, to your disappointment."
+extra {"boulders", "boulder", "cave-in"}
+"Completely covered by mosses, these boulders were once part of the ceiling."
+extra {"moss", "mosses"}
+"Ordinary-looking mosses that thrives without sunshine making them
+not-so-ordinary."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+west to laby_22;
+IN_ALWAYS_DARK
+end
+
+                        laby_24
+
+title "In the Death Labyrinth"
+descr
+"   You stand inside the Death Labyrinth.  The first thing you notice is
+a strange, pungent smell that fills the place bringing you to the brink of
+throwing up.  Mosses carpet the ground making it very slippery thus slowing
+down your movement.  You hear a faint sound of dripping water ringing
+throughout the labyrinth.  In this darkness, visibility is barely five yards.
+You may continue north or east."
+
+extra {"smell"}
+"Hmmmm....if smell can be looked at, why would you need a nose?"
+extra {"moss", "mosses"}
+"The mosses are green as with ordinary mosses.  But one thing catches your
+attention:  mosses need sunlight to thrive, do they not?"
+extra {"labyrinth"}
+"It continues on into the darkness."
+extra {"darkness"}
+"It really gives you the creeps, a sense of death and despair."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to laby_19;
+east to laby_25;
+IN_ALWAYS_DARK
+end
+
+                        laby_25
+
+title "In the Death Labyrinth"
+descr
+"   You stand inside the Death Labyrinth.  The first thing you notice is
+a strange, pungent smell that fills the place bringing you to the brink of
+throwing up.  Mosses carpet the ground making it very slippery thus slowing
+down your movement.  You hear a faint sound of dripping water ringing
+throughout the labyrinth.  In this darkness, visibility is barely ten yards.
+You may continue east, west or south."
+
+extra {"smell"}
+"Hmmmm....if smell can be looked at, why would you need a nose?"
+extra {"moss", "mosses"}
+"The mosses are green as with ordinary mosses.  But one thing catches your
+attention:  mosses need sunlight to thrive, do they not?"
+extra {"labyrinth"}
+"It continues on into the darkness."
+extra {"darkness"}
+"It really gives you the creeps, a sense of death and despair."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+east to laby_28;
+west to laby_24;
+south to laby_26;
+IN_ALWAYS_DARK
+end
+
+                        laby_26
+
+title "In the Death Labyrinth"
+descr
+"   You stand inside the Death Labyrinth.  The first thing you notice is
+a strange, pungent smell that fills the place bringing you to the brink of
+throwing up.  Mosses carpet the ground making it very slippery thus slowing
+down your movement.  You hear a faint sound of dripping water ringing
+throughout the labyrinth.  In this darkness, visibility is barely ten yards.
+You may continue north or west."
+
+extra {"smell"}
+"Hmmmm....if smell can be looked at, why would you need a nose?"
+extra {"moss", "mosses"}
+"The mosses are green as with ordinary mosses.  But one thing catches your
+attention:  mosses need sunlight to thrive, do they not?"
+extra {"labyrinth"}
+"It continues on into the darkness."
+extra {"darkness"}
+"It really gives you the creeps, a sense of death and despair."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+north to laby_25;
+west to laby_27;
+IN_ALWAYS_DARK
+end
+
+                        laby_27
+
+title "Dead End in the Labyrinth"
+descr
+"   Directly in front of you is a dead end.  You see moss-covered boulders
+piling up from what seems to be a cave-in, blocking your way further
+westwards.  The only possible exit is to the east where you came from."
+
+extra {"dead end"}
+"You are sure that this was not a dead end before the cave-in.  But
+now it is, to your disappointment."
+extra {"boulders", "boulder", "cave-in"}
+"Completely covered by mosses, these boulders were once part of the ceiling."
+extra {"moss", "mosses"}
+"Ordinary-looking mosses that thrives without sunshine making them
+not-so-ordinary."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+east to laby_26;
+IN_ALWAYS_DARK
+end
+
+                        laby_28
+
+title "In the Death Labyrinth"
+descr
+"   You stand inside the Death Labyrinth.  The first thing you notice is
+a strange, pungent smell that fills the place bringing you to the brink of
+throwing up.  Mosses carpet the ground making it very slippery thus slowing
+down your movement.  You hear a faint sound of dripping water ringing
+throughout the labyrinth.  In this darkness, visibility is barely ten yards.
+You may continue north, east or west."
+
+extra {"smell"}
+"Hmmmm....if smell can be looked at, why would you need a nose?"
+extra {"moss", "mosses"}
+"The mosses are green as with ordinary mosses.  But one thing catches your
+attention:  mosses need sunlight to thrive, do they not?"
+extra {"labyrinth"}
+"It continues on into the darkness."
+extra {"darkness"}
+"It really gives you the creeps, a sense of death and despair."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+east to laby_30;
+west to laby_25;
+north to laby_29;
+IN_ALWAYS_DARK
+end
+
+                        laby_29
+
+title "Dead End in the Labyrinth"
+descr
+"   Directly in front of you is a dead end.  You see moss-covered boulders
+piling up from what seems to be a cave-in, blocking your way further
+northwards.  The only possible exit is to the south where you came from."
+
+extra {"dead end"}
+"You are sure that this was not a dead end before the cave-in.  But
+now it is, to your disappointment."
+extra {"boulders", "boulder", "cave-in"}
+"Completely covered by mosses, these boulders were once part of the ceiling."
+extra {"moss", "mosses"}
+"Ordinary-looking mosses that thrives without sunshine making them
+not-so-ordinary."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+south to laby_28;
+IN_ALWAYS_DARK
+end
+
+                        laby_30
+
+title "Dead End in the Labyrinth"
+descr
+"   Directly in front of you is a dead end.  You see moss-covered boulders
+piling up from what seems to be a cave-in, blocking your way further
+eastwards.  The south wall bears an inscription of a giant bat.  The only
+possible exit is to the west where you came from."
+
+extra {"dead end"}
+"You are sure that this was not a dead end before the cave-in.  But
+now it is, to your disappointment."
+extra {"boulders", "boulder", "cave-in"}
+"Completely covered by mosses, these boulders were once part of the ceiling."
+extra {"moss", "mosses"}
+"Ordinary-looking mosses that thrives without sunshine making them
+not-so-ordinary."
+extra {"south wall", "wall"}
+"You see an inscription of a large bat."
+extra {"giant bat", "bat"}
+"Vicious-looking eyes and fangs.  You do not like the looks of it."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+south to cavern open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_HIDDEN}
+         key tr_rm_key keyword {"secret door", "door"};
+west to laby_28;
+SECRET_DOOR_DIFFICULTY(SOUTH, 80)
+IN_ALWAYS_DARK
+end
+
+                        laby_31
+
+title "Dead End in the Labyrinth"
+descr
+"   Directly in front of you is a dead end.  You see moss-covered boulders
+piling up from what seems to be a cave-in, blocking your way further
+eastwards.  The only possible exit is to the west where you came from."
+
+extra {"dead end"}
+"You are sure that this was not a dead end before the cave-in.  But
+now it is, to your disappointment."
+extra {"boulders", "boulder", "cave-in"}
+"Completely covered by mosses, these boulders were once part of the ceiling."
+extra {"moss", "mosses"}
+"Ordinary-looking mosses that thrives without sunshine making them
+not-so-ordinary."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+west to laby_21;
+IN_ALWAYS_DARK
+end
+
+                        cavern
+
+title "A Large Cavern"
+descr
+"   You are standing in a large cavern.  This place is very dark; from
+where you are you can only peer into the darkness around you.  Nothing
+can be heard in here, except the rhythm of your own breathing softly echoing
+the cavern.  You feel a strong sense of evil overwhelming this place."
+
+extra {"cavern", "cave"}
+"It is very dark and very large, making you feel lost in here."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+north to laby_30 open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+         key tr_rm_key keyword {"secret door", "door"};
+west to t_vault open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_HIDDEN}
+        key vault_key keyword {"vault door", "door"};
+SECRET_DOOR_DIFFICULTY(WEST, 80)
+IN_ALWAYS_DARK
+end
+
+                        t_vault
+
+title "The Treasure Vault"
+descr
+"   You are inside the treasure vault.  The walls are beautifully decorated
+with intricate carvings and designs, a masterpiece in its own.  Precious
+stones are inlaid along the walls in a particular manner.  A beam of light
+emits from the hole in the ceiling towards a gem, which in turn reflects
+to another thus forming an array of beams in a myriad of colors.  You are
+refreshed by this sparkling sight, so different it is from the death and
+gloominess of the keep."
+
+extra {"walls", "wall", "carving", "carvings", "design", "designs"}
+"The decorations on the walls are hand-crafted, beautiful beyond words to
+describe them."
+extra {"stones", "stone", "gems", "gem"}
+"There are hundreds of such precious stones on the wall sparkling with
+magnificence and charm."
+extra {"beam", "light"}
+"It is a narrow beam of light coming from a hole in the ceiling.  You
+wonder where this it originates."
+extra {"hole"}
+"It is a small hole in the ceiling, you cannot really see what is beyond."
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER, UNIT_FL_NO_TELEPORT}
+movement SECT_INSIDE
+east to cavern open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+        key vault_key keyword {"vault door", "door"};
+ALWAYS_LIGHT
+end
+
+%mobiles
+
+boney
+names {"boney","shopkeeper"}
+title "Boney the skeletal shopkeeper"
+descr "Boney the skeletal shopkeeper is here selling his scrolls."
+extra {}
+"He is a short, skeletal figure befitting his name. Boney spends his time
+researching the mysteries of arcane scroll enchantment. Most of the scrolls he
+sells are made personally by him."
+level 44
+alignment -700
+race RACE_SKELETON
+sex SEX_MALE
+height 165
+weight 160
+NATURAL_DEF(WPN_FIST,ARM_CHAIN)
+MSET_ABILITY(10,20,10,20,12,8,0,20)
+MSET_WEAPON(7,7,6,6,18,6)
+MSET_SPELL(0,0,0,0,0,15,7,7,7,7,7)
+romflags {CHAR_DETECT_INVISIBLE}
+money 5 SILVER_PIECE, 4 COPPER_PIECE
+
+dilcopy combat_mag@function("colourspray","",25,2);
+
+dilcopy crumble_outdrs@keep();
+
+dilbegin bon_ctlundead();
+var
+   item : unitptr;
+   s    : string;
+   splno: integer;
+code
+{
+   :start:
+   wait(SFB_PRE, (command(CMD_CAST)) and (target == self));
+
+   s := getword(argument);
+   splno := atoi(s);
+
+   if (splno == SPL_CONTROL_UNDEAD)
+
+   /* destroy inventories */
+   item := self.inside;
+   while (not(item == null)) {
+      destroy(item);
+      item := self.inside;
+   }
+   goto start;
+}
+dilend
+
+dilbegin bon_destryinv();
+var
+    item : unitptr;
+code
+{
+   :start:
+   wait(SFB_DEAD, activator == self);
+
+   item := self.inside;
+   while (not(item == null)) {
+      destroy(item);
+      item := self.inside;
+   }
+   goto start;
+}
+dilend
+
+dilbegin bon_blksteal();
+code
+{
+   :start:
+   wait( SFB_CMD, command(CMD_STEAL) or command(CMD_FILCH) );
+   block;
+   act("Boney exclaims, 'No stealing in here please, $1n!'",
+        A_ALWAYS,activator,null,null,TO_ALL);
+   goto start;
+}
+dilend
+
+dilbegin bon_rtrntoshop();
+code
+{
+   on_activation(self.outside.nameidx=="scroll_shop",skip);
+   heartbeat:=PULSE_SEC*6;
+
+   :start:
+   nopriority;
+   wait(SFB_TICK,TRUE);
+   priority;
+   walkto(findroom("scroll_shop@keep"));
+   goto start;
+
+}
+dilend
+
+special SFUN_SHOP_INIT
+"&lProfit sell = 110
+Profit buy = 30
+Production = ~sc_sleep@keep~ ~sc_heal@keep~ ~sc_rem_curse@keep~
+             ~sc_inv@keep~ ~sc_gascloud@keep~ ~sc_det_inv@keep~
+             ~sc_identify@keep~ ~sc_fear@keep~ ~sc_sanctuary@keep~
+             ~sc_cold_resist@keep~ ~sc_heat_resist@keep~
+Trade types = "+ITEM_SCROLL+"
+Msg1 = ~Boney says, 'I've got no such rattling scroll, $3n!'~
+Msg2 = ~Boney says, 'Bones! You have no such thing $3n!'~
+Msg3 = ~Boney says, 'Sorry, I don't trade with items such as $2n, $3n.'~
+Msg4 = ~Boney says, '$3n, I can't afford that sorry!'~
+Msg5 = ~Boney says, '$3n, you can't afford $2n.'~
+Msg6 = ~Boney says, 'That's %s for $2n, $3n.  Thank you!'~
+Msg7 = ~Boney says, 'Thank you, $3n! Here are %s for $2n.'~
+Hours1 = 0 12
+Hours2 = 13 23"
+end
+
+iron_golem
+names {"iron golem","golem"}
+title "an iron golem"
+descr "An iron golem stands here guarding the entrance to the keep."
+extra {}
+"A magically animated guard, the golem stands 18 feet tall. To any ordinary
+folk this golem looks nothing more than a statue, but a cautious adventurer
+will spot the telling faint red glow of its eyes. You realise that to penetrate
+its armor with your weapon may prove to be a difficult task."
+level 43
+alignment 0
+race RACE_GOLEM
+sex SEX_NEUTRAL
+height 540
+weight 1800
+NATURAL_DEF(WPN_CRUSH,ARM_CHAIN)
+MSET_ABILITY(15,15,20,25,15,10,0,0)
+MSET_WEAPON(5,13,5,5,12,5)
+MSET_SPELL(5,5,5,5,5,5,5,5,5,5,5)
+romflags (CHAR_DETECT_INVISIBLE)
+special SFUN_GUARD_DOOR "keep_entrance@iron gate@@$1n stops you.@@$1n stops $3n from opening he gate."
+end
+
+jaw
+names {"clattering jaw","jaw"}
+title "a clattering jaw"
+descr "A clattering jaw hovers here in search for things to munch up."
+extra {}
+"You see a huge skeletal jaw hovering inches above the ground searching for
+items to eat. Its teeth clatters noisily as it tries to take a bite of every
+object it comes across."
+level 43
+alignment -730
+race RACE_SKELETON
+sex SEX_NEUTRAL
+height 100
+weight 330
+NATURAL_DEF(WPN_BITE,ARM_CHAIN)
+MSET_ABILITY(15,15,15,20,10,15,0,10)
+MSET_WEAPON(7,7,7,7,17,7)
+MSET_SPELL(0,0,0,0,0,7,7,7,7,13,7)
+romflags {CHAR_DETECT_INVISIBLE}
+
+dilcopy combat_mag@function("stinking cloud","",25,2);
+
+dilcopy crumble_outdrs@keep();
+
+dilbegin jaw_munch();
+var
+   item :unitptr;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC*3;
+   on_activation(self.position != POSITION_STANDING, skip);
+
+   :start:
+   nopriority;
+   wait(SFB_TICK,TRUE);
+   priority;
+
+   item := self.outside.inside;
+
+   while ( not(item == null)) {
+     if ((item.type == UNIT_ST_OBJ) and
+         (isset(item.manipulate, MANIPULATE_TAKE)) and
+         (not("corpse" in item.name)))  {
+       secure(item, start);
+       exec("say Ahhhhh.... Fooooood!",self);
+       pause;
+       exec("get "+item.name,self);
+       pause;
+       unsecure(item);
+       if (not(self.inside==null)) {
+         act("$1n munches on $2n into pieces.",
+              A_SOMEONE,self,self.inside,null,TO_REST);
+         destroy(self.inside);
+       }
+       pause;
+       item := null;
+     } else {
+       item:=item.next;
+     }
+   }
+}
+dilend
+special SFUN_RANDOM_GLOBAL_MOVE time 60 bits SFB_RANTIME
+end
+
+ghoul
+names {"giant ghoul","ghoul"}
+title "a giant ghoul"
+descr "A giant ghoul is here glaring menacingly at you."
+extra {}
+"You see a huge creature with filthy nails and fangs. Its long, dangling tongue
+drools in slime as it looks for prey."
+level 42
+alignment -920
+race RACE_GHOUL
+sex SEX_MALE
+height 300
+weight 410
+NATURAL_DEF(WPN_CLAW,ARM_CHAIN)
+MSET_ABILITY(20,15,20,20,15,10,0,0)
+MSET_WEAPON(7,7,7,7,14,7)
+MSET_SPELL(0,0,0,0,0,13,7,10,7,7,7)
+romflags {CHAR_DETECT_INVISIBLE}
+
+dilcopy crumble_outdrs@keep();
+
+dilbegin ghoul_attack();
+var
+    this_ptr      : unitptr;
+
+code
+{
+   :init:
+   on_activation(self.position != POSITION_STANDING, skip);
+
+   :start:
+   nopriority;
+   heartbeat := PULSE_SEC * 8;
+
+   :findmob:
+   wait(SFB_TICK, TRUE);
+   heartbeat := PULSE_SEC * 3;
+   this_ptr := findrndunit( self, FIND_UNIT_SURRO, UNIT_ST_PC|UNIT_ST_NPC );
+   if ( this_ptr == null ) goto start;
+
+   if ( (isaff(this_ptr, ID_SANCTUARY)) or
+        ((this_ptr.race >= RACE_ZOMBIE) and
+         (this_ptr.race <= RACE_OTHER_UNDEAD)) or
+         (this_ptr.level >= IMMORTAL_LEVEL) or
+         (this_ptr.minv >= self.level) ) {
+
+      goto findmob;
+
+   }
+
+   priority;
+   secure(this_ptr, start);
+   pause;
+
+   act("$1n snarls at you!", A_SOMEONE, self, null,
+        this_ptr, TO_VICT);
+   act("$1n snarls at $3n!", A_SOMEONE, self, null,
+        this_ptr, TO_NOTVICT);
+   pause;
+   set_fighting(self, this_ptr);
+   unsecure(this_ptr);
+
+   goto start;
+}
+dilend
+
+special SFUN_RANDOM_GLOBAL_MOVE time WAIT_SEC*40 bits SFB_RANTIME
+end
+
+stallion
+names {"death stallion","stallion","horse"}
+title "a death stallion"
+descr "A death stallion stands here majestically awaiting its prey."
+extra {}
+"You see a large majestic creature having a dull black skin green eyes. Though
+a being of foul evil, you cannot help admiring its beauty and build. It is
+indeed a mount that any evil knight will dream of."
+level 44
+alignment -910
+race RACE_OTHER_UNDEAD
+sex SEX_NEUTRAL
+height 210
+weight 725
+NATURAL_DEF(WPN_KICK,ARM_CHAIN)
+MSET_ABILITY(20,15,20,20,10,15,0,0)
+MSET_WEAPON(10,10,10,10,15,10)
+MSET_SPELL(0,0,0,0,0,10,5,5,5,5,5)
+special SFUN_AGGRESSIVE time WAIT_SEC*20 bits SFB_RANTIME
+romflags {CHAR_DETECT_INVISIBLE}
+
+dilcopy crumble_outdrs@keep();
+
+end
+
+scarecrow
+names {"giant scarecrow","scarecrow"}
+title "a giant scarecrow"
+descr "A giant scarecrow stands here as still as a statue."
+extra {}
+"A huge creature towering 12 feet tall entirely made from hay and twigs. It
+looks just like any ordinary scarecrow, except that this one is huge."
+level 44
+alignment 0
+race RACE_GOLEM
+sex SEX_NEUTRAL
+height 400
+weight 690
+NATURAL_DEF(WPN_CLAW,ARM_HLEATHER)
+MSET_ABILITY(15,15,20,20,10,20,0,0)
+MSET_WEAPON(2,2,2,2,15,2)
+MSET_SPELL(0,0,0,0,0,15,0,15,15,15,15)
+end
+
+ghast
+names {"giant ghast","ghast"}
+title "a giant ghast"
+descr "A deathly giant ghast roams around the labyrinth scavenging for food."
+extra {}
+"A pale, hideous-looking undead with long nails and fangs.  Its blood-shot
+eyes are constantly scanning around for human or other corpses to chew on."
+level 44
+alignment -900
+race RACE_GHOUL
+sex SEX_MALE
+height 310
+weight 505
+NATURAL_DEF(WPN_CLAW,ARM_CHAIN)
+MSET_ABILITY(20,15,15,20,15,15,0,0)
+MSET_WEAPON(6,6,6,6,15,6)
+MSET_SPELL(0,0,0,0,0,13,8,10,8,8,8)
+special SFUN_AGGRESSIVE time WAIT_SEC*60 bits SFB_RANTIME
+special SFUN_RANDOM_GLOBAL_MOVE time WAIT_SEC*60 bits SFB_RANTIME
+romflags {CHAR_DETECT_INVISIBLE}
+
+dilcopy crumble_outdrs@keep();
+
+end
+
+skel_guard
+names {"huge skeletal guard","skeletal guard","guard"}
+title "a huge skeletal guard"
+descr "A huge skeletal guard stands here protecting the keep from intruders."
+extra {}
+"A lifeless figure standing as still as a statue, this huge undead guards the
+keep with unquestionable loyalty."
+level 45
+alignment -800
+race RACE_SKELETON
+sex SEX_NEUTRAL
+height 300
+weight 510
+NATURAL_DEF(WPN_CLAW,ARM_CHAIN)
+MSET_ABILITY(20,15,20,20,15,10,0,0)
+MSET_WEAPON(11,11,15,11,11,11)
+MSET_SPELL(0,0,0,0,0,5,5,5,5,5,5)
+romflags {CHAR_DETECT_INVISIBLE}
+
+dilcopy crumble_outdrs@keep();
+
+end
+
+death_rodent
+names {"death rodent","rodent"}
+title "a death rodent"
+descr "A huge death rodent is here foraging for food and blood."
+extra {}
+"This is a huge rodent with glowing green eyes and sharp teeth that can gnaw
+anything to shreds.  It looks like it is very hungry and blood-thirsty."
+level 42
+alignment -900
+race RACE_OTHER_UNDEAD
+sex SEX_NEUTRAL
+height 120
+weight 530
+money 5 SILVER_PIECE, 2 COPPER_PIECE
+NATURAL_DEF(WPN_BITE,ARM_HLEATHER)
+MSET_ABILITY(20,15,20,20,10,15,0,0)
+MSET_WEAPON(7,7,7,7,15,7)
+MSET_SPELL(0,0,0,0,0,10,5,10,10,10,5)
+special SFUN_AGGRESSIVE time WAIT_SEC*60 bits SFB_RANTIME
+special SFUN_RANDOM_GLOBAL_MOVE time 60 bits SFB_RANTIME
+romflags {CHAR_DETECT_INVISIBLE}
+
+dilcopy crumble_outdrs@keep();
+
+end
+
+hikas
+names {"hikas","ghost"}
+title "Hikas"
+descr "Hikas, the drunken ghost is here looking for wine."
+extra {}
+"You see a transparent creature holding a Vodka barrel. Hikas appears severely
+intoxicated due to overdose of Vodka. He has been drinking for centuries and
+nothing in this world can make him sober again."
+level 46
+alignment -900
+race RACE_GHOST
+sex SEX_MALE
+height 180
+weight 200
+NATURAL_DEF(WPN_FIST,ARM_CHAIN)
+MSET_ABILITY(7,15,10,20,20,8,5,15)
+MSET_WEAPON(8,8,8,8,10,8)
+MSET_SPELL(0,0,0,0,0,7,7,7,7,15,7)
+money 5 SILVER_PIECE, 6 COPPER_PIECE
+romflags {CHAR_DETECT_INVISIBLE}
+
+dilcopy combat_mag@function("stinking cloud","",25,2);
+dilcopy crumble_outdrs@keep();
+
+dilbegin hikas_spill();
+var
+  chance : integer;
+code
+{
+    on_activation(self.position != POSITION_FIGHTING,skip);
+    :start:
+
+    wait(SFB_COM,activator == self.fighting);
+    if (rnd(1,100)>=30) goto start;
+
+    act("$1n spills vodka on you!",
+         A_SOMEONE, self, null, self.fighting, TO_VICT);
+    act("$1n spills vodka on $3n!",
+         A_SOMEONE, self, null, self.fighting, TO_NOTVICT);
+
+    if (rnd(1,120)>(self.fighting.level+self.fighting.abilities[ABIL_CON])) {
+ 
+       act("You feel drunk.", A_ALWAYS, self, null, self.fighting, TO_VICT);
+
+       if (self.fighting.type == UNIT_ST_PC) {
+
+          self.fighting.drunk := self.fighting.drunk + 3;
+
+       }
+    }
+
+    goto start;
+
+}
+dilend
+
+dilbegin hikas_act();
+code
+{
+    heartbeat := PULSE_SEC*5;
+    on_activation((self.position != POSITION_STANDING), skip);
+
+    :start:
+    priority;
+    wait(SFB_CMD, activator.type == UNIT_ST_PC);
+    pause;
+    exec("emote says 'fwhhine ... *HIC* ... I kneed fwhhine ...", self);
+    pause;
+    exec("emote raises his barrel to his mouth.", self);
+    pause;
+    exec("emote gulps vodka down his throat.", self);
+    pause;
+    exec("emote exclaims 'Ahhhh ... *HIC* I lrove Vodkah!'", self);
+    pause;
+    exec("emote drools.", self);
+    pause;
+    exec("emote exclaims 'Coome *HIC* drink Vodkah *HIC* whith mee!'", self);
+    pause; nopriority;
+    pause; pause;
+    goto start;
+
+}
+dilend
+end
+
+mummy
+names {"ancient mummy","mummy"}
+title "an ancient mummy"
+descr "An ancient, rotting mummy is here seething with disease."
+extra {}
+"You see a creature almost completely wrapped in torn rags. Evil red glow
+emanates from its eyes as it stares into you. Formerly a human, it has risen
+from its tomb to further its evil ways."
+level 46
+alignment -930
+race RACE_MUMMIE
+sex SEX_NEUTRAL
+height 190
+weight 210
+NATURAL_DEF(WPN_FIST,ARM_CHAIN)
+MSET_ABILITY(20,15,20,20,10,15,0,0)
+MSET_WEAPON(9,9,9,9,15,9)
+MSET_SPELL(0,0,0,0,0,10,5,10,5,5,5)
+romflags {CHAR_DETECT_INVISIBLE}
+
+dilcopy crumble_outdrs();
+
+dilbegin mummy_touch();
+var
+   n    : integer;
+code
+{
+    :init:
+    on_activation(self.position!=POSITION_FIGHTING,skip);
+
+    :start:
+    wait(SFB_COM, activator == self.fighting);
+    act("$1n touches you!", A_SOMEONE,self,null,self.fighting,TO_VICT);
+    act("$1n touches $3n!",A_SOMEONE,self,null,self.fighting,TO_NOTVICT);
+    n := cast_spell(SPL_DISEASE_2,self,self,self.fighting,"");
+    goto start;
+}
+dilend
+special SFUN_AGGRESSIVE time 40 bits SFB_RANTIME
+end
+
+spectre
+names {"translucent spectre","spectre"}
+title "a translucent spectre"
+descr "A translucent spectre is here floating aimlessly about."
+extra {}
+"A creature almost entirely in green, it is semi-translucent everywhere except
+for his glowing red eyes. It floats in the air, lamenting about its eternal
+unlife."
+level 46
+alignment -930
+race RACE_GHOST
+sex SEX_NEUTRAL
+height 185
+weight 200
+NATURAL_DEF(WPN_CLAW,ARM_CHAIN)
+MSET_ABILITY(16,18,10,20,12,12,12,0)
+MSET_WEAPON(5,5,5,5,15,5)
+MSET_SPELL(4,4,4,4,4,6,6,6,10,6,6)
+special SFUN_AGGRESSIVE time WAIT_SEC*60 bits SFB_RANTIME
+special SFUN_RANDOM_GLOBAL_MOVE time 60 bits SFB_RANTIME
+romflags {CHAR_DETECT_INVISIBLE}
+
+dilcopy combat_mag@function("lightning bolt","",25,2);
+
+dilcopy crumble_outdrs@keep();
+
+end
+
+tarsha
+names {"tarsha","ghost"}
+title "Tarsha"
+descr "Tarsha the lonely ghost is waiting for someone to share her fate."
+extra {}
+"What you see is a horrid sight. Tarsha has her eyeballs dangling out of the
+her sockets, and a blood-red tongue extending from her mouth to her waist. She
+floats in an air of anger and despair."
+level 47
+alignment -960
+race RACE_GHOST
+sex SEX_FEMALE
+height 190
+weight 240
+NATURAL_DEF(WPN_FIST,ARM_PLATE)
+MSET_ABILITY(20,20,10,20,10,8,0,12)
+MSET_WEAPON(8,15,8,8,8,8)
+MSET_SPELL(0,0,0,0,0,6,6,6,6,15,6)
+money 5 SILVER_PIECE, 7 COPPER_PIECE
+romflags {CHAR_DETECT_INVISIBLE}
+flags {UNIT_FL_NO_TELEPORT}
+
+dilcopy crumble_outdrs@keep();
+
+dilbegin tarsha_wail();
+var
+  u_ptr :unitptr;
+code
+{
+    on_activation(self.position != POSITION_FIGHTING, skip);
+
+    :start:
+    wait(SFB_COM, activator == self.fighting);
+
+    if (rnd(1,100) <= 25) {
+      act("$1n wails out in melancholy!",A_SOMEONE,self,null,null,TO_REST);
+
+      foreach(UNIT_ST_PC|UNIT_ST_NPC, u_ptr) {
+
+        if ( (not(u_ptr == self)) and (u_ptr.level < IMMORTAL_LEVEL) and
+             (u_ptr.minv == 0) and (u_ptr.hp > 0 ) ) {
+
+          u_ptr.hp := u_ptr.hp * 3 / 4;
+          act("You feel a sharp pain in your head!", A_SOMEONE, u_ptr,
+               null, null, TO_CHAR);
+          act("$1N clutches his head in pain!", A_HIDEINV, u_ptr,
+               null, null, TO_REST);
+          position_update(u_ptr);
+        }
+      }
+    }
+}
+dilend
+
+dilbegin tarsha_act();
+code
+{
+    :init:
+    heartbeat := PULSE_SEC * 5;
+    on_activation((self.position != POSITION_STANDING), skip);
+
+    :start:
+    priority;
+    wait(SFB_CMD, activator.type == UNIT_ST_PC);
+    pause; exec("emote wails in sorrow.", self);
+    pause; exec("emote cries out, 'Please help me .... please!'", self);
+    pause; exec("emote weeps, 'I have been alone for years!'", self);
+    pause; exec("emote extends out her hands.", self);
+    pause; exec("emote exclaims hysterically, 'Join me! JOIN ME!!'", self);
+    nopriority; pause;
+    pause; pause;
+    goto start;
+}
+dilend
+dilcopy combat_mag@function("plague","",25,2);
+special SFUN_AGGRESSIVE time WAIT_SEC*4
+end
+
+wight
+names {"wight"}
+title "a wight"
+descr "A hateful wight is here hissing viciously at you."
+extra {}
+"You see a foul rotting creature with long, vicious nails and completely white
+eyes. Maggots tunnel in and out of its flesh making it one of the most horrid
+creatures you have ever seen."
+level 46
+alignment -955
+race RACE_GHOUL
+sex SEX_NEUTRAL
+height 190
+weight 200
+NATURAL_DEF(WPN_CLAW,ARM_CHAIN)
+MSET_ABILITY(25,15,15,20,15,10,0,0)
+MSET_WEAPON(10,10,10,10,15,10)
+MSET_SPELL(1,1,1,1,1,10,4,4,4,4,4)
+money 5 SILVER_PIECE, 6 COPPER_PIECE
+special SFUN_AGGRESSIVE time WAIT_SEC*40 bits SFB_RANTIME
+romflags {CHAR_DETECT_INVISIBLE}
+dilcopy crumble_outdrs@keep();
+
+dilbegin wight_touch();
+var
+  enemy : unitptr;
+  n     : integer;
+code
+{
+    :combat:
+    wait(SFB_COM, (self.position == POSITION_FIGHTING) and 
+         (activator == self.fighting));
+    enemy := self.fighting;
+    secure(enemy, combat);
+    if(rnd(1,100)<=30) {
+
+       act("$1n lays its hands on $3N!",A_HIDEINV,self,null,enemy,TO_NOTVICT);
+       act("$1n lays its hands on you!",A_SOMEONE,self,null,enemy,TO_VICT);
+       n := cast_spell(SPL_FEAR,self,self,enemy,"");
+    }
+    goto combat;
+}
+dilend
+end
+
+nasnder
+names {"nasnder","master thief","thief"}
+title "Nasnder"
+descr "Nasnder the undead master thief sneaks here ready his next crime."
+extra {}
+"He was once a master thief being punished by death for his crimes.
+Unfortunately, he is so unrepentantly evil that he escaped from the tortures of
+Hades. Now a living undead, he aspires to bring misfortune and sorrow to any
+living being."
+level 47
+alignment -950
+race RACE_LICH
+sex SEX_MALE
+height 175
+weight 170
+NATURAL_DEF(WPN_FIST,ARM_CHAIN)
+MSET_ABILITY(20,27,16,20,17,0,0,0)
+MSET_WEAPON(8,15,8,8,8,8)
+MSET_SPELL(0,0,0,0,0,10,7,7,7,7,7)
+romflags {CHAR_HIDE,CHAR_SNEAK,CHAR_DETECT_INVISIBLE}
+money 5 SILVER_PIECE, 7 COPPER_PIECE
+
+dilcopy crumble_outdrs@keep();
+
+dilbegin nasnder_back();
+var
+        target_pc : unitptr;
+code
+{
+        :init:
+        on_activation((self.position != POSITION_STANDING), skip);
+
+        :start:
+        heartbeat := PULSE_SEC*10;
+        wait(SFB_TICK, TRUE);
+
+        heartbeat := PULSE_SEC*3;
+        target_pc := findrndunit(self, FIND_UNIT_SURRO, UNIT_ST_PC);
+        if (target_pc == null) goto start;
+        if (not(visible(self, target_pc)) ) goto start;
+        if (not(isaff(target_pc, ID_SANCTUARY)) and
+            (target_pc.level < IMMORTAL_LEVEL)) {
+
+             exec("backstab "+target_pc.name, self);
+        }
+        goto start;
+}
+dilend
+special SFUN_RANDOM_GLOBAL_MOVE time WAIT_SEC*30 bits SFB_RANTIME
+end
+
+duernor
+names {"duernor","champion"}
+title "Duernor"
+descr "Duernor the champion of Urgnak is here contemplating his next kill."
+extra {}
+"This undead must have been a knight avatar transformed by some arcane magic
+into a living undead. Now, he exists only upon the desire to destroy all living
+beings that crosses his path."
+level 47
+alignment -970
+race RACE_LICH
+sex SEX_MALE
+height 190
+weight 205
+NATURAL_DEF(WPN_FIST,ARM_PLATE)
+MSET_ABILITY(20,20,10,20,10,8,12,0)
+MSET_WEAPON(10,15,10,10,10,10)
+MSET_SPELL(0,0,0,0,0,10,5,5,5,5,5)
+money 5 SILVER_PIECE, 7 COPPER_PIECE
+exp 100
+romflags {CHAR_DETECT_INVISIBLE}
+flags {UNIT_FL_NO_TELEPORT}
+
+dilcopy combat_mag@function("icestorm","",25,4);
+dilcopy crumble_outdrs@keep();
+
+dilbegin duernor_act();
+
+code
+{
+    heartbeat := PULSE_SEC*5;
+    on_activation(self.position != POSITION_STANDING, skip);
+
+    :start:
+    priority;
+    wait(SFB_CMD, activator.type == UNIT_ST_PC);
+    pause; exec("emote raises his sword up in the air.", self);
+    pause; exec("emote gives you a sinister look.", self);
+    pause; exec("emote exclaims 'YOU! You shall die by my sword!'", self);
+    pause;
+    exec("emote exclaims 'In the name of Urgnak I challenge you, coward!!'",
+          self);
+    pause; exec("emote hisses angrily.", self);
+    pause; exec("emote exclaims 'Do not flee! Death is with thee!'", self);
+    pause; exec("cackle", self);
+    nopriority;
+    pause; pause;
+    goto start;
+}
+dilend
+special SFUN_AGGRESSIVE time WAIT_SEC*6
+end
+
+vlad_teres
+names {"vlad teres","vlad","vampire"}
+title "Vlad Teres"
+descr "Vlad Teres the Arch-Vampire is here showing off his dreaded fangs."
+extra {}
+"He is truly an arch vampire - one of the most feared creatures of the night.
+His blood-shot eyes contrasts the deathly palor of his face, and the sight of
+his dreaded fangs alone injects terror into the bravest of warriors."
+level 47
+alignment -1000
+race RACE_VAMPIRE
+sex SEX_MALE
+height 190
+weight 230
+NATURAL_DEF(WPN_FIST,ARM_CHAIN)
+MSET_ABILITY(15,20,10,20,13,8,14,0)
+MSET_WEAPON(6,6,6,16,6,6)
+MSET_SPELL(3,3,3,3,3,5,5,5,14,5,5)
+money 5 SILVER_PIECE, 7 COPPER_PIECE
+romflags {CHAR_DETECT_INVISIBLE}
+flags {UNIT_FL_NO_TELEPORT}
+
+dilcopy combat_mag@function("lightning bolt","",25,2);
+
+dilcopy crumble_outdrs@keep();
+
+dilbegin vlad_attack();
+var
+    char_name : string;
+    char_ptr : unitptr;
+code
+{
+    :init:
+    heartbeat := PULSE_SEC * 3;
+    on_activation((self.position == POSITION_FIGHTING) or
+                  (self.position < POSITION_SLEEPING), skip);
+
+    :start:
+    nopriority;
+    wait(SFB_MSG, ((activator.nameidx == "vampire_coffin") and
+                   (self.outside.nameidx == "vampire_coffin")));
+    char_name := argument;
+    priority;
+    exec("wake", self);
+    pause;
+    exec("stand", self);
+    pause;
+    exec("open coffin", self);
+    pause;
+    exec("exit", self);
+    char_ptr := findunit(self, char_name, FIND_UNIT_SURRO, null);
+    if (char_ptr == null) goto abort;
+    secure(char_ptr, abort);
+    pause;
+    exec("emote exclaims 'Fool! How dare you disturb my rest!'", self);
+    pause;
+    exec("emote exclaims 'You shall pay for your folly!'", self);
+    pause;
+    set_fighting(self, char_ptr);
+    unsecure(char_ptr);
+    goto start;
+
+    :abort:
+    pause;
+    exec("emote hisses angrily.", self);
+    goto start;
+}
+dilend
+
+dilbegin vlad_rtrnroom();
+code
+{
+    :init:
+    heartbeat := PULSE_SEC*2;
+    on_activation((self.position < POSITION_SLEEPING), skip);
+
+    :start:
+    nopriority;
+    wait(SFB_TICK, (not(self.outside.nameidx $= "bedroom_2"))
+                   and (not(self.outside.nameidx $= "vampire_coffin")));
+    priority;
+    if (self.position == POSITION_SLEEPING)
+    {
+        exec("wake", self);
+        pause;
+        exec("stand", self);
+        pause;
+    }
+    walkto(findroom("bedroom_2@keep"));
+    goto start;
+}
+dilend
+
+dilbegin vlad_entrcoff();
+var
+    coffin : unitptr;
+code
+{
+    :init:
+    if (self.outside.nameidx == "vampire_coffin")
+         exec("sleep", self);
+    heartbeat := PULSE_SEC*4;
+    on_activation((self.position == POSITION_FIGHTING) or
+                  (self.position <= POSITION_SLEEPING) or
+                  ((self.outside.nameidx != "bedroom_2") and
+                   (self.outside.nameidx != "vampire_coffin")), skip);
+
+    :start:
+    wait(SFB_TICK, (findunit(self, "vampire's coffin",
+                    FIND_UNIT_SURRO, null) != null));
+    exec("wake", self);
+    exec("stand", self);
+    coffin := findunit(self, "vampire's coffin", FIND_UNIT_SURRO, null);
+    if (isset(coffin.openflags, EX_CLOSED))
+    {
+       exec("open vampire's coffin", self);
+       pause;
+    }
+    exec("enter vampire's coffin", self);
+    pause;
+    exec("close coffin", self);
+    pause;
+    exec("sleep", self);
+    goto start;
+}
+dilend
+end
+
+skel_dragon
+names{"skeletal dragon","dragon"}
+title "a skeletal dragon"
+descr "A massive skeletal dragon is here."
+extra {}
+"This undead dragon represents the epitome of the arcane magic of undead
+creation. It is surely the work of some powerful evil immortals and it stands
+here for a purpose."
+level 49
+alignment -1000
+race RACE_DRAGON_WHITE
+sex SEX_NEUTRAL
+height 2000
+weight 4500
+NATURAL_DEF(WPN_CLAW,ARM_PLATE)
+MSET_ABILITY(15,15,10,15,15,15,15,0)
+MSET_WEAPON(10,10,10,10,15,10)
+MSET_SPELL(0,0,0,0,0,4,4,15,4,4,4)
+special SFUN_GUARD_WAY "3@@$1n stops you.@$1n prevents $3n from going west."
+flags {UNIT_FL_NO_TELEPORT}
+romflags {CHAR_DETECT_INVISIBLE}
+
+dilcopy combat_mag@function("frost breath","",25,2);
+dilcopy crumble_outdrs@keep();
+end
+
+bodyguard
+names{"skeletal bodyguard","bodyguard","guard"}
+title "a skeletal bodyguard of Urgnak"
+descr "A skeletal bodyguard of Urgnak is here protecting its master."
+extra {}
+"He is hand-picked by Urgnak to protect his master from harm. A loyal subject
+that performs without questioning."
+level 45
+alignment -850
+race RACE_SKELETON
+sex SEX_NEUTRAL
+height 200
+weight 210
+NATURAL_DEF(WPN_CLAW,ARM_PLATE)
+MSET_ABILITY(20,20,20,25,15,0,0,0)
+MSET_WEAPON(10,15,10,10,10,10)
+MSET_SPELL(0,0,0,0,0,10,5,5,5,5,5)
+special SFUN_RESCUE "urgnak/bodyguard"
+special SFUN_TEAMWORK "urgnak/bodyguard"
+romflags {CHAR_DETECT_INVISIBLE}
+
+dilcopy crumble_outdrs@keep();
+
+dilbegin bgrd_rtrnroom();
+code
+{
+    on_activation(self.outside.nameidx == "bedroom_3", skip);
+
+    :start:
+    heartbeat := WAIT_SEC*10;
+    wait(SFB_TICK, TRUE);
+    heartbeat := PULSE_SEC;
+    walkto(findroom("bedroom_3@keep"));
+    goto start;
+}
+dilend
+end
+
+urgnak
+names {"urgnak","black lich","lich"}
+title "Urgnak"
+descr "Urgnak the Black Lich is here boasting his evil ways."
+extra {}
+"A towering skeletal figure, Urgnak controls his horde of undead within this
+keep. He has for quite some time harbored evil designs on the properous city of
+Midgaard, planning to turn it into a city of the living dead."
+level 50
+alignment -1000
+race RACE_LICH
+sex SEX_MALE
+height 240
+weight 300
+NATURAL_DEF(WPN_CLAW,ARM_PLATE)
+MSET_ABILITY(15,15,10,22,10,10,18,0)
+MSET_WEAPON(10,10,10,15,10,10)
+MSET_SPELL(0,0,0,0,0,4,4,4,15,4,4)
+money 6 SILVER_PIECE, 2 COPPER_PIECE
+romflags {CHAR_DETECT_INVISIBLE}
+
+dilcopy combat_mag@function("lightning bolt","",25,2);
+
+dilcopy crumble_outdrs@keep();
+
+dilbegin urg_rtrnroom();
+code
+{
+    on_activation(self.outside.nameidx == "bedroom_3", skip);
+
+    :start:
+    nopriority;
+    heartbeat := WAIT_SEC*10;
+    wait(SFB_TICK, TRUE);
+    priority;
+    heartbeat := PULSE_SEC;
+    walkto(findroom("bedroom_3@keep"));
+    goto start;
+}
+dilend
+
+dilbegin urg_act();
+code
+{
+    heartbeat := PULSE_SEC*5;
+    on_activation((self.position != POSITION_STANDING), skip);
+
+    :start:
+    wait(SFB_CMD,activator.type == UNIT_ST_PC);
+    pause;
+    exec("emote exclaims 'The entire city of Midgaard will be mine!'", self);
+    pause; exec("cackle", self);
+    pause;
+    exec("emote raises up his hands into the air as sparks begins to form.",
+          self);
+    pause;
+    exec("emote exclaims 'With my magic, I will plague the entire city into darkness!",self);
+    pause;
+    exec("emote exclaims 'With my might, I will turn the city into chaos!",
+          self);
+    pause; exec("emote exclaims 'All will die!'", self);
+    pause; exec("cackle", self);
+    pause; goto start;
+}
+dilend
+end
+
+/* ---------------------- QUEST MOBS -------------------------- */
+
+                              xalev
+
+names {"xalev", "historian", "man"}
+title "Xalev"
+descr "Xalev the Historian sits here reading a book."
+extra {}
+"You see a tall, ancient elf with white hair and heard.  He looks
+strong and muscular despite his age.  Xalev was once a Hero of
+Midgaard in his youth, knighted by King Elland for his efforts in
+driving out undead aggression from the city.  But ever since the
+Last Battle, nothing has been heard of him again."
+flags {UNIT_FL_NO_TELEPORT}
+race RACE_ELF
+level 50
+sex SEX_MALE
+height 184
+weight 203
+alignment 1000
+NATURAL_DEF(WPN_FIST, ARM_PLATE)
+MSET_ABILITY(17,15,10,18,16,8,0,16)
+MSET_WEAPON(10,15,7,7,5,7)
+MSET_SPELL(15,1,1,1,1,5,5,5,5,5,5)
+position POSITION_SITTING
+default POSITION_SITTING
+
+dilcopy combat_mag@function("","heal",25,2);
+
+dilbegin xalev_act();
+var
+   pc : unitptr;
+   i  : integer;
+code
+{
+  :init:
+  on_activation((self.position <= POSITION_SLEEPING) or
+                (self.position == POSITION_FIGHTING), skip);
+
+  :start:
+  heartbeat := PULSE_SEC * 5;
+  wait(SFB_DONE, (command(CMD_LOOK) or command(CMD_EXAMINE) or
+                  command("poke") or command("smile")) and
+                  (self == target));
+  pc := activator;
+  secure(pc, lostpc);
+  if ("$invasion" in self.extra) {
+     if (pc.level < 30) {
+         goto invade1;
+     } else {
+       goto invade;
+     }
+  }
+  if (pc.level < 30) goto peace1;
+
+  :peace:
+  pause;
+  exec("emote looks up from his book.", self);
+  pause;
+  exec("smile "+pc.name, self);
+  pause;
+  exec("say I have returned from seclusion to watch the land once again.",
+        self);
+  pause;
+  exec("say Urgnak has designs to control the city of Midgaard.  We have "+
+       "to stop him, and defend the innocent.", self);
+  pause;
+  exec("sigh", self);
+  pause;
+  exec("emote looks towards the heavens.", self);
+  pause;
+  exec("say I am old, and no longer the tough warrior I used to be.",
+        self);
+  pause;
+  exec("say The task of defending the city will be left to you, "+
+       pc.name+"!", self);
+  pause;
+  exec("say In the near future Urgnak's army will raid the city.  What "+
+       "foul evil means he will use I do not know.", self);
+  pause;
+  exec("think", self);
+  pause;
+  exec("say However, if this day shall befall, remember to come to me "+
+       "again!", self);
+  pause;
+  exec("say I will show you the way to repel the invasion!", self);
+  pause;
+  exec("smile", self);
+  pause;
+  exec("emote returns to his reading.", self);
+  unsecure(pc);
+  goto start;
+
+  :peace1:
+  pause;
+  exec("smile "+pc.name, self);
+  pause;
+  exec("say May you become an accomplished warrior some day!", self);
+  pause;
+  exec("ruffle "+pc.name, self);
+  pause;
+  exec("say Leave me to my studies, I have a lot to read.", self);
+  pause;
+  exec("emote returns to his studies.", self);
+  unsecure(pc);
+  goto start;
+
+  :invade:
+  pause;
+  exec("say Ixanthus the Demon Lord has entered our realms!", self);
+  pause;
+  exec("say In the night, he will summon his undead army to "+
+       "invade Midgaard!", self);
+  pause;
+  exec("say "+pc.name+", you must stop him!", self);
+  pause;
+  exec("sigh", self);
+  pause;
+  exec("say My child, unfortunately it will not be easy.", self);
+  pause;
+  exec("say Urgnak has, through his powerful magic, conjured up a portal "+
+       "to Abyss and gated in his Lord, Ixanthus.", self);
+  pause;
+  exec("say In order to banish Ixanthus, you will have to seek out "+
+       "his amulet...", self);
+  pause;
+  exec("say And send it back into the portal!", self);
+  pause;
+  exec("say This is the only way to close the portal and stop his " +
+       "evil influence!", self);
+  pause;
+  exec("say You must hurry!", self);
+  pause;
+  exec("wave "+pc.name, self);
+  unsecure(pc);
+  goto start;
+
+  :invade1:
+  pause;
+  exec("say The war is not over yet, "+pc.name, self);
+  pause;
+  exec("say Return to Midgaard and defend the city against evil!", self);
+  pause;
+  exec("say Now begone!", self);
+  unsecure(pc);
+  goto start;
+
+  :lostpc:
+  pause;
+  exec("sigh", self);
+  pause;
+  exec("emote returns to his reading.", self);
+  goto start;
+
+}
+dilend
+
+dilbegin xalev_setflag();
+code
+{
+   :start:
+   wait(SFB_MSG, activator.nameidx == "portal");
+   if (argument == "invade on")
+      addextra(self.extra, {"$invasion"}, "");
+   else
+   if (argument == "invade off")
+   {
+      while ("$invasion" in self.extra)
+         subextra(self.extra, "$invasion");
+   }
+   goto start;
+}
+dilend
+
+dilbegin xalev_restore();
+code
+{
+    :start:
+    wait(SFB_COM | SFB_CMD, TRUE);
+    self.hp := self.max_hp;
+    self.mana := 40;
+    goto start;
+}
+dilend
+end
+
+                        ixanthus
+
+names {"ixanthus", "demon"}
+title "Ixanthus"
+descr "Ixanthus, the Demon Lord of the Undead stands here."
+extra {}
+"You see a huge, awful creature with head of a goat and horns of a ram.
+Ixanthus is grossly fat and heavy.  It appears that his slender goat-like
+legs are too weak to support his bulk.  From his back, vast bat-like wings
+sprout in power and supremacy."
+level 55
+alignment -1000
+race RACE_GREATER_DEMON
+height 620
+weight 1240
+NATURAL_DEF(WPN_CRUSH, ARM_PLATE)
+MSET_ABILITY(22,22,17,22,17,0,0,0)
+MSET_WEAPON(15,8,8,8,8,8)
+MSET_SPELL(0,0,0,12,0,5,5,5,8,5,5)
+ATTACK_DEFENSE(0,+500)
+romflags {CHAR_DETECT_INVISIBLE}
+flags {UNIT_FL_NO_TELEPORT}
+
+dilcopy combat_mag@function("lightning bolt","",25,2);
+
+dilbegin ix_init();
+var
+   item : unitptr;
+   loc  : integer;
+code
+{
+     if (self.loadcount > 1) destroy(self);
+     if (findsymbolic("ix_amulet@keep") == null)
+     {
+        item := load("ix_amulet@keep");
+        exec("wear all", self);
+     }
+     loc := rnd(1,6);
+     if (loc == 1) link(self, findroom("moun_tr6@mount"));
+     if (loc == 2) link(self, findroom("laby_28@keep"));
+     if (loc == 3) link(self, findroom("br_ov_mo@elfdom"));
+     if (loc == 4) link(self, findroom("rn_8301@ww2"));
+     if (loc == 5) link(self, findroom("sm_int4@ratswarf"));
+     if (loc == 6) link(self, findroom("outcropping_1@atl_sea"));
+
+    :start:
+    wait(SFB_MSG, argument == "destruct");
+    heartbeat := rnd(4,20);
+    pause;
+    act("The Fires of Abyss shoots up from the ground consuming $1n.",
+        A_SOMEONE, self, null, null, TO_ALL);
+    destroy(self);
+    goto start;
+}
+dilend
+
+dilbegin ix_rndtele();
+var
+   loc : integer;
+   ix  : unitptr;
+code
+{
+   heartbeat := PULSE_SEC * 900;
+   on_activation(self.position != POSITION_STANDING, skip);
+
+   :start:
+   nopriority;
+   wait(SFB_TICK, TRUE);
+   priority;
+   act("A black portal opens in mid air as $1n steps into it.",
+        A_HIDEINV, self, null, null, TO_ALL);
+
+   :retry:
+   loc := rnd(1,6);
+   if (loc == 1)
+   {
+      if (self.outside.zoneidx == "mount") goto retry;
+      link(self, findroom("moun_tr6@mount"));
+   }
+   else if (loc == 2)
+   {
+      if (self.outside.zoneidx == "keep") goto retry;
+      link(self, findroom("laby_28@keep"));
+   }
+   else if (loc == 3)
+   {
+      if (self.outside.zoneidx == "elfdom") goto retry;
+      link(self, findroom("br_ov_mo@elfdom"));
+   }
+   else if (loc == 4)
+   {
+      if (self.outside.zoneidx == "ww2") goto retry;
+      link(self, findroom("rn_8301@ww2"));
+   }
+   else if (loc == 5)
+   {
+      if (self.outside.zoneidx == "ratswarf") goto retry;
+      link(self, findroom("sm_int4@ratswarf"));
+   }
+   else if (loc == 6)
+   {
+      if (self.outside.zoneidx == "atl_sea") goto retry;
+      link(self, findroom("outcropping_1@atl_sea"));
+   }
+   act("A black portal opens in mid air as $1n steps out.",
+        A_HIDEINV, self, null, null, TO_ALL);
+   goto start;
+}
+dilend
+
+dilbegin ix_trackamulet();
+var
+   item    : unitptr;
+   thisptr : unitptr;
+   prevptr : unitptr;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC * 2;
+   on_activation((findsymbolic("ix_amulet@keep") == null) or
+                 (self.position != POSITION_STANDING), skip);
+
+   :start:
+   pause;
+   nopriority;
+   wait(SFB_TICK, findunit(self, "amulet of Ixanthus", 0, self.inside)
+                   == null);
+   priority;
+   item := findsymbolic("ix_amulet@keep");
+   thisptr := item;
+   while (thisptr.type != UNIT_ST_ROOM)
+   {
+      prevptr := thisptr;
+      thisptr := thisptr.outside;
+   }
+   if (thisptr != self.outside)
+   {
+      act("A black portal opens in mid air as $1n steps in.",
+           A_HIDEINV, self, null, null, TO_ALL);
+      link(self, thisptr);
+      act("A black portal opens in mid air as $1n steps out.",
+           A_HIDEINV, self, null, null, TO_ALL);
+   }
+   if ((prevptr.type == UNIT_ST_PC) or
+       (prevptr.type == UNIT_ST_NPC))
+   {
+      exec("say Die insolent fool!", self);
+      set_fighting(self, prevptr);
+      goto start;
+   }
+   if (prevptr.type == UNIT_ST_OBJ)
+   {
+      unset(item.flags, UNIT_FL_BURIED);
+      exec("emote points his fingers at "+prevptr.title+ ".", self);
+      link(item, self);
+      exec("wear all", self);
+      pause;
+      exec("grin", self);
+   }
+   goto start;
+}
+dilend
+
+dilbegin ix_conjure();
+var
+   counter : integer;
+   number  : integer;
+   zom     : unitptr;
+   item    : unitptr;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC * 45;
+   on_activation((mudhour > 5) and (mudhour < 20), skip);
+
+   :start:
+   wait(SFB_TICK, (self.position == POSITION_STANDING));
+   counter := 0;
+   number := rnd(1,6);
+   act("$1n conjures up a portal, and sends some human bones through.",
+        A_SOMEONE, self, null, null, TO_ALL);
+   while (counter < number)
+   {
+     counter := counter + 1;
+     zom := load("zom_warr@keep");
+     zom := load("zom_guard@keep");
+   }
+   zom := load("skel_priest@keep");
+   if (rnd(1,10) < 6) zom := load("zul_demon@keep");
+   if (rnd(1,10) < 3) zom := load("zul_demon@keep");
+   if (rnd(1,10) < 2) zom := load("eru_demon@keep");
+   if (rnd(1,15) < 2) zom := load("vampire@keep");
+  
+   goto start;
+}
+dilend
+
+dilbegin ix_blocksteal();
+code
+{
+   on_activation(self.position <= POSITION_SLEEPING, skip);
+
+   :start:
+   wait(SFB_CMD, (command(CMD_STEAL)) or (command(CMD_FILCH)));
+   block;
+   if (self.position == POSITION_STANDING)
+      exec("kill "+activator.name, self);
+   goto start;
+}
+dilend
+special SFUN_RANDOM_GLOBAL_MOVE time 60 bits SFB_RANTIME
+end
+
+                        eru_demon
+
+names {"eru demon", "eru", "demon"}
+title "an Eru demon"
+descr "An Eru demon is here flapping its bat-like wings."
+extra {}
+"A foul minion of Ixanthus, the Eru demon has a skeletal-like torso
+and a snake head.  Behind its back are two huge bat-like wings."
+M_DEMON_AVG(SEX_NEUTRAL)
+romflags {CHAR_DETECT_INVISIBLE}
+
+dilbegin eru_init();
+var
+    loc  : integer;
+code
+{
+    heartbeat := PULSE_SEC * 3;
+    priority;
+    if (self.outside.nameidx == "ixanthus")
+    {
+      loc := rnd(1,5);
+      if (loc == 1) link(self,findroom("out_egate@midgaard"));
+      if (loc == 2) link(self,findroom("out_ngate@midgaard"));
+      if (loc == 3) link(self,findroom("out_wgate@midgaard"));
+      if (loc == 4) link(self,findroom("out_sgate@midgaard"));
+      if (loc == 5) link(self,findroom("market_sq@midgaard"));
+      act("The ground splits as a column of fire shoots up to form $1n.",
+           A_SOMEONE, self, null, null, TO_ALL);
+    }
+    loc := rnd(1,5);
+    if (loc == 1) walkto(findroom("armory@paladin_guild"));
+    if (loc == 2) walkto(findroom("storage@paladin_guild"));
+    if (loc == 3) walkto(findroom("stables@paladin_guild"));
+    if (loc == 4) walkto(findroom("g_shrine@paladin_guild"));
+    if (loc == 5) walkto(findroom("meditat@paladin_guild"));
+
+    quit;
+}
+dilend
+
+dilbegin eru_destruct();
+code
+{
+    :start:
+    wait(SFB_MSG, argument == "destruct");
+    heartbeat := rnd(4,20);
+    pause;
+    act("The ground splits open momentarily as $1n falls in.",
+        A_SOMEONE, self, null, null, TO_ALL);
+    destroy(self);
+    quit;
+}
+dilend
+
+special SFUN_AGGRESSIVE time PULSE_SEC * 3 bits SFB_RANTIME
+end
+
+                        zul_demon
+
+names {"zul demon", "zul", "demon"}
+title "a Zul demon"
+descr "A Zul demon stares at you with its blood-shot eyes."
+extra {}
+"A lesser demon among Ixanthus' minions, the Zul demon is as aggressive
+and evil as the rest."
+M_DEMON_LESSER(SEX_NEUTRAL)
+romflags {CHAR_DETECT_INVISIBLE}
+
+dilbegin zul_init();
+var
+    loc  : integer;
+code
+{
+    priority;
+    heartbeat := PULSE_SEC * 3;
+
+    if (self.outside.nameidx == "ixanthus")
+    {
+      loc := rnd(1,5);
+      if (loc == 1) link(self,findroom("out_egate@midgaard"));
+      if (loc == 2) link(self,findroom("out_ngate@midgaard"));
+      if (loc == 3) link(self,findroom("out_wgate@midgaard"));
+      if (loc == 4) link(self,findroom("out_sgate@midgaard"));
+      if (loc == 5) link(self,findroom("market_sq@midgaard"));
+      act("The ground splits as a column of fire shoots up to form $1n.",
+           A_SOMEONE, self, null, null, TO_ALL);
+    }
+    loc := rnd(1,5);
+    if (loc == 1) walkto(findroom("armory@paladin_guild"));
+    if (loc == 2) walkto(findroom("storage@paladin_guild"));
+    if (loc == 3) walkto(findroom("stables@paladin_guild"));
+    if (loc == 4) walkto(findroom("g_shrine@paladin_guild"));
+    if (loc == 5) walkto(findroom("meditat@paladin_guild"));
+
+    quit;
+}
+dilend
+
+dilbegin zul_destruct();
+code
+{
+    :start:
+    wait(SFB_MSG, argument == "destruct");
+    heartbeat := rnd(4,20);
+    pause;
+    act("The ground splits open momentarily as $1n falls in.",
+        A_SOMEONE, self, null, null, TO_ALL);
+    destroy(self);
+    quit;
+}
+dilend
+
+special SFUN_AGGRESSIVE time PULSE_SEC * 3 bits SFB_RANTIME
+end
+
+                        vampire
+
+names {"blood-sucking vampire", "vampire"}
+title "a blood-sucking vampire"
+descr "A blood-sucking vampire is looking to feast on someone."
+extra {}
+"He looks like an ordinary human if not for his deathly-pale face and
+long dreadful fangs."
+race RACE_VAMPIRE
+level 25
+height 176
+weight 203
+NATURAL_DEF(WPN_CLAW, ARM_CHAIN)
+MSET_ABILITY(15,15,10,20,15,15,10,0)
+MSET_WEAPON(15,4,4,4,4,4)
+MSET_SPELL(15,5,5,5,5,5,5,5,5,5,5)
+romflags {CHAR_DETECT_INVISIBLE}
+
+dilbegin vamp_init();
+var
+   loc : integer;
+code
+{
+   heartbeat := PULSE_SEC * 3;
+   priority;
+   if (self.outside.nameidx == "ixanthus")
+   {
+      loc := rnd(1,5);
+      if (loc == 1) link(self,findroom("out_egate@midgaard"));
+      if (loc == 2) link(self,findroom("out_ngate@midgaard"));
+      if (loc == 3) link(self,findroom("out_wgate@midgaard"));
+      if (loc == 4) link(self,findroom("out_sgate@midgaard"));
+      if (loc == 5) link(self,findroom("market_sq@midgaard"));
+      act("$1n emerges from the shadows.",
+           A_SOMEONE, self, null, null, TO_ALL);
+   }
+   quit;
+}
+dilend 
+
+dilbegin vamp_destruct();
+code
+{
+    :start:
+    wait(SFB_MSG, argument == "destruct");
+    heartbeat := rnd(4,20);
+    pause;
+    act("$1n disappears into the shadows.",
+        A_SOMEONE, self, null, null, TO_ALL);
+    destroy(self);
+    quit;
+}
+dilend
+
+dilbegin vamp_suck();
+var
+    npc_ptr : unitptr;
+    n       : integer;
+code
+{
+    :init:
+    on_activation(self.position != POSITION_STANDING, skip);
+
+    :start:
+    heartbeat := PULSE_SEC * 4;
+    wait(SFB_TICK, TRUE);
+    npc_ptr := findrndunit(self, FIND_UNIT_SURRO, UNIT_ST_NPC);
+    if ((("cityguard" in npc_ptr.names) or ("captain" in npc_ptr.names))
+         and isset(npc_ptr.charflags, CHAR_PROTECTED))
+    {
+       priority;
+       heartbeat := PULSE_SEC * 2;
+       secure(npc_ptr, release);
+       if (not(dilfind("block_guard@keep", npc_ptr)))
+           dilcopy("block_guard@keep", npc_ptr);
+       act("$1n grabs hold of $3n.",
+            A_HIDEINV, self, null, npc_ptr, TO_REST);
+       act("$3n tries to struggle but cannot!",
+            A_HIDEINV, self, null, npc_ptr, TO_REST);
+       pause;
+       act("$1n impales $1m fangs into $3n's neck!",
+            A_HIDEINV, self, null, npc_ptr, TO_REST);
+       act("$3n screams in agony!",
+            A_HIDEINV, self, null, npc_ptr, TO_REST);
+       pause;
+       act("$3n's face starts to turn pale.", A_HIDEINV, self, null,
+            npc_ptr, TO_REST);
+       pause;
+       act("$3n turns into a vampire!", A_HIDEINV, self, null, npc_ptr,
+           TO_REST);
+       if ("cityguard" in npc_ptr.names)
+       {
+          npc_ptr.title := "A vampiric cityguard";
+          npc_ptr.outside_descr :=
+                  "A vampiric cityguard is here looking for blood.";
+          subextra(npc_ptr.extra, "");
+          addextra(npc_ptr.extra, {""},
+                  "A big, strong, and dangerous vampiric guard.  He looks as "+
+                  "though he's keeping an eye on the blood in your neck.");
+          unset(npc_ptr.charflags, CHAR_PROTECTED);
+       }
+       dilcopy("attack_guard@keep", npc_ptr);
+       n := dildestroy("block_guard@keep", npc_ptr);
+       unsecure(npc_ptr);
+       nopriority;
+    }
+    goto start;
+
+    :release:
+    n := dildestroy("block_guard@keep", npc_ptr);
+    goto start;
+}
+dilend
+
+dilcopy wander_zones@function("midgaard", 25, 1, 0);
+end
+
+                        skel_priest
+
+names {"skeletal priest", "priest", "skeleton"}
+title "a skeletal priest"
+descr "A skeletal priest is looking for corpses to animate."
+extra {}
+"An awful creature rattling its bones as it walks."
+race RACE_SKELETON
+level 20
+height 176
+weight 203
+NATURAL_DEF(WPN_CLAW, ARM_CHAIN)
+MSET_ABILITY(15,15,10,20,15,15,10,0)
+MSET_WEAPON(15,4,4,4,4,4)
+MSET_SPELL(15,5,5,5,5,5,5,5,5,5,5)
+romflags {CHAR_DETECT_INVISIBLE}
+
+dilbegin priest_init();
+var item : unitptr;
+    loc  : integer;
+code
+{
+    :init:
+    heartbeat := PULSE_SEC * 3;
+    item := load("staff_plague@keep");
+    item.height := self.height;
+    item := load("rusty_jerkin@keep");
+    item.height := self.height;
+    item := load("rusty_skirt@keep");
+    item.height := self.height;
+    item := load("rusty_sleeves@keep");
+    item.height := self.height;
+    exec("wear all", self);
+    if (self.outside.nameidx == "ixanthus")
+    {
+      loc := rnd(1,5);
+      if (loc == 1) link(self,findroom("out_egate@midgaard"));
+      if (loc == 2) link(self,findroom("out_ngate@midgaard"));
+      if (loc == 3) link(self,findroom("out_wgate@midgaard"));
+      if (loc == 4) link(self,findroom("out_sgate@midgaard"));
+      if (loc == 5) link(self,findroom("market_sq@midgaard"));
+      act("A portal opens as $1n walks out.", A_SOMEONE, self,
+           null, null, TO_ALL);
+    }
+
+    :start:
+    wait(SFB_TICK, (mudhour > 5) and (mudhour < 20));
+    act("$1n crumbles into dust!", A_SOMEONE,
+         self, null, null, TO_ROOM);
+    destroy(self);
+    goto start;
+}
+dilend
+
+dilbegin priest_cmdzom();
+code
+{
+   on_activation(self.position != POSITION_FIGHTING, skip);
+
+   :start:
+   wait(SFB_COM, TRUE);
+   exec("tell zombie kill "+self.fighting.name, self);
+   exec("tell 2.zombie kill "+self.fighting.name, self);
+   exec("tell 3.zombie kill "+self.fighting.name, self);
+   exec("tell 4.zombie kill "+self.fighting.name, self);
+   exec("tell 5.zombie kill "+self.fighting.name, self);
+   exec("tell 6.zombie kill "+self.fighting.name, self);
+   goto start;
+}
+dilend
+
+dilbegin priest_anidead();
+var
+    found         : integer;
+    this_ptr      : unitptr;
+    prev_ptr      : unitptr;
+    counter       : integer;
+    n             : integer;
+code
+{
+    :init:
+    on_activation(self.position <= POSITION_FIGHTING, skip);
+
+    :start:
+    heartbeat := PULSE_SEC*3;
+    counter := 0;
+    wait(SFB_TICK, TRUE);
+
+    :findmob:
+    heartbeat := PULSE_SEC;
+    this_ptr := self.outside.inside;
+    found := FALSE;
+    while ((this_ptr != null) and (found == FALSE))
+    {
+       counter := counter + 1;
+       if (counter > 9)
+       {
+          secure(this_ptr, start);
+          pause;
+          unsecure(this_ptr);
+          counter := 0;
+       }
+       if ((this_ptr.type == UNIT_ST_OBJ) and
+          (this_ptr.nameidx == "corpse") and
+          (this_ptr.value[2] == 0))
+       {
+         found := TRUE;
+       }
+       prev_ptr := this_ptr;
+       this_ptr := this_ptr.next;
+    }
+    if (found == TRUE)
+       n := cast_spell(SPL_ANIMATE_DEAD, self, self, prev_ptr, "");
+    goto start;
+}
+dilend
+
+dilcopy wander_zones@function("midgaard", 20, 1, 0);
+special SFUN_AGGRESSIVE time PULSE_SEC * 5 bits SFB_RANTIME
+end
+
+                        zom_warr
+
+names {"zombie warrior", "zombie", "warrior"}
+title "a zombie warrior"
+descr "A zombie warrior searches for life forms to destroy."
+extra {}
+"A magically created warrior, its existence spells doom and destruction
+to the living."
+M_ZOMBIE_WARRIOR
+romflags {CHAR_DETECT_INVISIBLE}
+
+dilcopy crumble_light@keep();
+
+dilbegin warr_init();
+var
+    item : unitptr;
+    loc  : integer;
+code
+{
+    :init:
+    heartbeat := PULSE_SEC * 3;
+    if (rnd(1,100) < 11)
+       item := load("iron_mattock@keep")
+    else
+       item := load("skull_hammer@keep");
+    item.height := self.height;
+
+    item := load("rusty_jerkin@keep");
+    item.height := self.height;
+
+    item := load("rusty_skirt@keep");
+    item.height := self.height;
+
+    item := load("rusty_sleeves@keep");
+    item.height := self.height;
+
+    exec("wear all", self);
+    if (self.outside.nameidx == "ixanthus")
+    {
+      loc := rnd(1,5);
+      if (loc == 1) link(self,findroom("out_egate@midgaard"));
+      if (loc == 2) link(self,findroom("out_ngate@midgaard"));
+      if (loc == 3) link(self,findroom("out_wgate@midgaard"));
+      if (loc == 4) link(self,findroom("out_sgate@midgaard"));
+      if (loc == 5) link(self,findroom("market_sq@midgaard"));
+      act("A portal opens as $1n walks out.", A_SOMEONE, self,
+           null, null, TO_ALL);
+    }
+    quit;
+}
+dilend
+
+dilcopy zombie_attack@keep(5,50);
+dilcopy wander_zones@function("midgaard", 20, 1, 0);
+end
+
+                        zom_guard
+
+names {"zombie guard", "zombie", "guard"}
+title "a zombie guard"
+descr "A zombie guard is patrolling the area."
+extra {}
+"Long sharp nails and a rotting body, the zombie guard looks awful."
+M_ZOMBIE_GUARD
+romflags {CHAR_DETECT_INVISIBLE}
+
+dilcopy crumble_light@keep();
+
+dilbegin guard_init();
+var
+    item : unitptr;
+    loc  : integer;
+code
+{
+    :init:
+    heartbeat := PULSE_SEC * 3;
+    item := load("skull_hammer@keep");
+    item.height := self.height;
+    exec("wear all", self);
+    if (self.outside.nameidx == "ixanthus")
+    {
+      loc := rnd(1,5);
+      if (loc == 1) link(self,findroom("out_egate@midgaard"));
+      if (loc == 2) link(self,findroom("out_ngate@midgaard"));
+      if (loc == 3) link(self,findroom("out_wgate@midgaard"));
+      if (loc == 4) link(self,findroom("out_sgate@midgaard"));
+      if (loc == 5) link(self,findroom("market_sq@midgaard"));
+      act("A portal opens as $1n walks out.", A_SOMEONE, self,
+           null, null, TO_ALL);
+    }
+    quit;
+}
+dilend
+
+dilcopy zombie_attack@keep(5,50);
+dilcopy wander_zones@function("midgaard", 25, 1, 0);
+end
+
+%objects
+
+death_keep_key
+names {"ivory key","black key","key"}
+title "a dull black ivory key"
+descr "A dull black ivory key is here."
+extra {} "This strange-looking key opens the gate to the Death Keep."
+type ITEM_KEY
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+weight 1
+end
+
+bedroom_3_key
+names {"crooked key","key"}
+title "a crooked iron key"
+descr "A crooked iron key is here lying on the ground."
+extra {} "This key looks quite crooked, perhaps it is meant to be this way."
+type ITEM_KEY
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+weight 1
+end
+
+tr_rm_key
+names {"bat-shaped key","key"}
+title "a bat-shaped key"
+descr "A small key shaped like a bat is lying on the ground."
+extra {} "This key is shaped like a bat with vicious-looking eyes and fangs."
+type ITEM_KEY
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+weight 1
+end
+
+vault_key
+names {"vault key","key"}
+title "a large golden key"
+descr "A large golden key is here lying on the ground."
+extra {} "This is a beautiful golden key that sparkles in the light."
+type ITEM_KEY
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+weight 1
+end
+
+sign_post
+names {"sign post","sign"}
+title "a sign post"
+descr "A sign post is here planted into the ground."
+extra {}
+"&lThe sign reads:
+
+   +-----------------------------------------------------------------+
+   |  Begone worthy adventurers!  Therein the Keep lies aggressive   |
+   |  creatures of foul evil!  Be not a fool to enter!  Let not thy  |
+   |  own folly bring destruction unto thee!                         |
+   +-----------------------------------------------------------------+
+
+    Note: For players of levels 30 and up.  This is a grouping zone.
+          Players are not encouraged to venture solo here.
+"
+type ITEM_OTHER
+weight 20
+end
+
+weapon_rack
+names {"weapon rack", "rack"}
+title "a weapon rack"
+descr "A weapon rack stands here against the wall."
+extra {}
+"The guards must have used this to store their weapons previously. The rack is
+bolted against the wall to prevent it from collapsing."
+CONTAINER_DEF(300)
+manipulate {MANIPULATE_ENTER}
+end
+
+vampire_coffin
+names {"vampire's coffin","large coffin","coffin"}
+title "a large coffin"
+descr "A large, beautifully crafted coffin inlaid with gems stands here."
+extra {}
+"This coffin is huge and beautifully crafted. You see gemstones of all sorts
+inlaid on its cover. You can never find such quality coffins from Marty the
+Mortician."
+manipulate {MANIPULATE_ENTER}
+CONTAINER_DEF(450)
+open {EX_OPEN_CLOSE,EX_CLOSED,EX_INSIDE_OPEN}
+flags {UNIT_FL_NO_TELEPORT}
+cost 10 SILVER_PIECE
+weight 150
+
+dilbegin coffin_touch();
+var
+    this_ptr : unitptr;
+code
+{
+    :start:
+    wait(SFB_DONE,(command(CMD_OPEN) and (medium == self) and
+                   (activator.nameidx != "vlad_teres")));
+    this_ptr := self.inside;
+    while (this_ptr != null) {
+        sendto(activator.name, this_ptr);
+        this_ptr := this_ptr.next;
+    }
+    goto start;
+}
+dilend
+end
+
+iron_sword
+names {"iron sword","sword"}
+title "an iron sword"
+descr "A huge iron sword has been left here."
+extra {}
+"This sword is entirely made from iron, even up to the hilt. It is very heavy
+and unwieldly."
+WEAPON_DEF(WPN_GREAT_SWORD,0,0)
+weight 30
+cost 10 SILVER_PIECE
+end
+
+skeletal_sword
+names {"skeletal sword","sword"}
+title "a skeletal sword"
+descr "A skeletal sword has been left here."
+extra {} "This is a sword made of bones from the blade to the hilt."
+WEAPON_DEF(WPN_GREAT_SWORD,0,0)
+weight 25
+cost 10 SILVER_PIECE
+end
+
+rusty_jerkin
+names {"rusty chain jerkin","chain jerkin","jerkin"}
+title "a rusty chain jerkin"
+descr "A rusty chain jerkin lies here."
+extra {}
+"This rusty chain jerkin is dent in many places and full of holes. You wonder
+how much protection it can offer."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+ARMOUR_CHAIN(-15,0)
+weight 25
+cost 1 COPPER_PIECE
+end
+
+rusty_sleeves
+names {"rusty sleeves","sleeves"}
+title "a pair of rusty chain sleeves"
+descr "A pair of rusty chain sleeves lies here."
+extra {}
+"These rusty chain sleeves are dented in many places and full of holes. You
+wonder how much protection they can offer."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_ARMS}
+ARMOUR_CHAIN(-15,0)
+weight 15
+cost 1 COPPER_PIECE
+end
+
+rusty_skirt
+names {"rusty chain skirt","chain skirt","skirt"}
+title "a pair of rusty chain skirt"
+descr "A pair of rusty chain skirt lies here."
+extra {}
+"These rusty chain skirt are dented in many places and full of holes. You
+wonder how much protection they can offer."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_LEGS}
+ARMOUR_CHAIN(-15,0)
+weight 15
+cost 1 COPPER_PIECE
+end
+
+brass_jerkin
+names {"brass chain jerkin","chain jerkin","jerkin"}
+title "a brass chain jerkin"
+descr "A brass chain jerkin lies here."
+extra {} "This jerkin is a little tarnished, but still in good condition."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+ARMOUR_CHAIN(3,0)
+weight 30
+cost 2 GOLD_PIECE
+end
+
+brass_leggings
+names {"brass chain leggings","chain leggings","leggings"}
+title "a pair of brass chain leggings"
+descr "A pair of brass chain leggings lies here."
+extra {}
+"These chain leggings are a little tarnished, but still in good condition."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_LEGS}
+ARMOUR_CHAIN(0,0)
+weight 15
+cost 2 GOLD_PIECE
+end
+
+brass_sleeves
+names {"brass chain sleeves","chain sleeves","sleeves"}
+title "a pair of brass chain sleeves"
+descr "A pair of brass chain sleeves lies here."
+extra {} "These sleeves are a little tarnished, but still in good condition."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_ARMS}
+ARMOUR_CHAIN(0,0)
+weight 15
+cost 2 GOLD_PIECE
+end
+
+tattered_robe
+names {"tattered robe","robe"}
+title "a tattered robe"
+descr "A tattered robe has been discarded on the ground."
+extra {}
+"This used to be a brown fur robe. Perhaps it has been gnawed by rats to this
+condition."
+type ITEM_WORN
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_ABOUT}
+weight 8
+cost 4 SILVER_PIECE
+end
+
+black_jerkin
+names {"black chain jerkin","chain jerkin","jerkin"}
+title "a black chain jerkin"
+descr "A black, gleaming chain jerkin is left on the ground."
+extra {}
+"This jerkin is entirely black chain and bears a small insignia of a
+white skull with red eye sockets."
+extra {"$identify"}
+"This jerkin when donned will improve the constitution of the wearer. It will
+also give the wearer better defense against acid sphere."
+extra {"$improved identify"}
+"This jerkin when donned will give +1 CON and +1% defense against acid
+sphere."
+flags {UNIT_FL_MAGIC}
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+ARMOUR_CHAIN(0,0)
+CON_TRANSFER(1)
+SPELL_TRANSFER(SPL_EXTERNAL,1)
+weight 28
+cost 326 COPPER_PIECE
+rent 163 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_STR,60,0,25,"");
+end
+
+black_skirt
+names {"black chain skirt","chain skirt","skirt"}
+title "a pair of black chain skirt"
+descr "A pair of black, gleaming chain skirt are left on the ground."
+extra {}
+"This pair of chain skirt are entirely black and bears a small insignia of a
+white skull with red eye sockets."
+flags {UNIT_FL_MAGIC}
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_LEGS}
+ARMOUR_CHAIN(0,0)
+SPELL_TRANSFER(SPL_INTERNAL,1)
+weight 15
+cost 326 COPPER_PIECE
+rent 163 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_STR,60,0,25,"");
+end
+
+black_sleeves
+names {"black chain sleeves","chain sleeves","sleeves"}
+title "a pair of black chain sleeves"
+descr "A pair of black, gleaming chain sleeves are left on the ground."
+extra {}
+"This pair of chain sleeves are entirely black and bears a small insignia
+of a white skull with red eye sockets."
+extra {"$identify"}
+"This pair of sleeves when donned will improve the magic of the wearer. It
+will also give the wearer better defense against electricity sphere."
+extra {"$improved identify"}
+"This pair of sleeves when donned will give +1 MAG and +1% defense against
+electricity sphere."
+flags {UNIT_FL_MAGIC}
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_ARMS}
+ARMOUR_CHAIN(0,0)
+MAG_TRANSFER(1)
+SPELL_TRANSFER(SPL_CELL,1)
+weight 16
+cost 326 COPPER_PIECE
+rent 163 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_STR,60,0,25,"");
+end
+
+black_boots
+names {"black boots","boots"}
+title "a pair of black boots"
+descr "A pair of black, gleaming boots is left on the ground."
+extra {}
+"This pair of boots is entirely black chains and bears a small insignia of
+a white skull with red eye sockets."
+extra {"$identify"}
+"This pair of boots when donned will make the wearer more skilled at fleeing
+and better defense against fire sphere."
+extra {"$identify"}
+"This pair of boots when donned will give +1% skill in fleeing and +1%
+defense against fire sphere."
+flags {UNIT_FL_MAGIC}
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_FEET}
+ARMOUR_CHAIN(0,0)
+SKILL_TRANSFER(SKI_FLEE,1)
+SPELL_TRANSFER(SPL_HEAT,1)
+weight 8
+cost 270 COPPER_PIECE
+rent 135 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_STR,60,0,25,"");
+end
+
+black_coif
+names {"black chain coif","chain coif","coif"}
+title "a black chain coif"
+descr "A black, gleaming chain coif is left on the ground."
+extra {}
+"This coif is entirely black chains and bears a small insignia of a white
+skull with red eye sockets."
+extra {"$identify"}
+"This coif will provide no extra powers to the wearer."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_HEAD}
+flags {UNIT_FL_MAGIC}
+ARMOUR_CHAIN(0,0)
+weight 5
+cost 270 COPPER_PIECE
+rent 135 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_STR,60,0,25,"");
+end
+
+black_gauntlets
+names {"black gauntlets","gauntlets"}
+title "a pair of black gauntlets"
+descr "A pair of black, gleaming gauntlets is left on the ground."
+extra {}
+"This pair of gauntlets is entirely black chains and bears a small insignia of
+a white skull with red eye sockets."
+extra {"$identify"}
+"This pair of gauntlets when donned will make the wearer more skilled in war
+mattock and better defense against frost sphere."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_HANDS}
+ARMOUR_CHAIN(0,0)
+weight 5
+cost 326 COPPER_PIECE
+rent 163 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_STR,60,0,25,"");
+end
+
+silver_jerkin
+names {"silver chain jerkin","chain jerkin","jerkin"}
+title "a silver chain jerkin"
+descr "A light, silver chain jerkin lies on the ground."
+extra {}
+"This chain jerkin is unusually thin and light. Despite of this, it offers good
+protection."
+extra {"$identify"}
+"When worn this jerkin improves the wearer's sneak."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+flags {UNIT_FL_MAGIC}
+ARMOUR_CHAIN(0,0)
+weight 15
+cost 270 COPPER_PIECE
+rent 135 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_DEX,37,0,25,"");
+end
+
+silver_sleeves
+names {"silver chain sleeves","chain sleeves","sleeves"}
+title "a pair of silver chain sleeves"
+descr "A pair of light, silver chain sleeves are lying on the ground."
+extra {}
+"These chain sleeves are unsually thin and light. Despite of this they offer
+good protection."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_ARMS}
+flags {UNIT_FL_MAGIC}
+ARMOUR_CHAIN(0,0)
+weight 10
+cost 326 COPPER_PIECE
+rent 163 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_DEX,37,0,25,"");
+end
+
+silver_skirt
+names {"silver chain skirt","chain skirt","skirt"}
+title "a silver chain skirt"
+descr "A silver chain skirt is lying on the ground."
+extra {}
+"This skirt is unsually thin and light.  Despite of this it offers good
+protection."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_LEGS}
+flags {UNIT_FL_MAGIC}
+ARMOUR_CHAIN(0,0)
+weight 10
+cost 270 COPPER_PIECE
+rent 135 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_DEX,37,0,25,"");
+end
+
+chain_jerkin
+names {"chain jerkin","jerkin"}
+title "a chain jerkin"
+descr "A chain jerkin lies here on the ground."
+extra {}
+"Ordinary-looking chain jerkin, you can see nothing special about it."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+ARMOUR_CHAIN(0,0)
+weight 20
+cost 60 COPPER_PIECE
+end
+
+chain_sleeves
+names {"chain sleeves","sleeves"}
+title "a pair of chain sleeves"
+descr "A pair of chain sleeves lie here on the ground."
+extra {}
+"Ordinary-looking chain sleeves, you can see nothing special about it."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_ARMS}
+ARMOUR_CHAIN(0,0)
+weight 13
+cost 4 SILVER_PIECE
+end
+
+chain_skirt
+names {"chain skirt","skirt"}
+title "a chain skirt"
+descr "A chain skirt lies here on the ground."
+extra {}
+"Ordinary-looking chain skirt, you can see nothing special about it."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_LEGS}
+ARMOUR_CHAIN(0,0)
+weight 13
+cost 50 COPPER_PIECE
+end
+
+wooden_staff
+names {"wooden staff","staff"}
+title "a wooden staff"
+descr "An old wooden staff is here."
+extra {} "This staff looks quite old, but still in good condition."
+WEAPON_DEF(WPN_QUARTERSTAFF,-5,0)
+weight 7
+cost 10 COPPER_PIECE
+end
+
+wavy_dagger
+names {"wavy dagger","dagger"}
+title "a wavy dagger"
+descr "A dagger with a short wavy blade is here."
+extra {}
+"This is a mithril-steel dagger with its blade fabricated into the shape of a
+slithering snake."
+WEAPON_DEF(WPN_DAGGER,0,0)
+weight 2
+cost 12 COPPER_PIECE
+end
+
+hooded_cloak
+names {"hooded cloak","cloak"}
+title "a hooded cloak"
+descr "A black hooded cloak lies on the ground."
+extra {}
+"This cloak is of very old-fashioned design. Probably it could do as a piece of
+antique if not for it being just a cloak."
+type ITEM_WORN
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_ABOUT}
+weight 4
+cost 50 COPPER_PIECE
+end
+
+gloves_thievery
+names {"gloves of thievery","gloves"}
+title "gloves of thievery"
+descr "A pair of black leather gloves are left on the ground."
+extra {}
+"These magical gloves will shrink and enlarge to fit the wearer's hands. Made
+of hard, black leather, it is much sought after by thieves throughout the land."
+flags {UNIT_FL_MAGIC}
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_HANDS}
+ARMOUR_HRD_LEATHER(0,0)
+weight 3
+cost 326 COPPER_PIECE
+rent 163 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_DEX,47,0,25,"");
+
+dilbegin glove_restrict();
+code
+{
+    heartbeat := PULSE_SEC*2;
+
+    :start:
+    wait(SFB_DONE,command(CMD_WEAR) and (activator == self.outside));
+    if (self.equip != 0) {
+      if (self.outside.skills[SKI_STEAL] == 0) {
+        act("Your $2N slides from your hands and drops to the ground.",
+            A_SOMEONE,self.outside,self,null,TO_CHAR);
+        act("$1n's $2N slides from $1s hands and drops to the ground.",
+            A_SOMEONE,self.outside,self,null,TO_REST);
+        link(self, self.outside.outside);
+      }
+    }
+}
+dilend
+end
+
+leather_boots
+names {"black leather boots","leather boots","boots"}
+title "a pair of black leather boots"
+descr "A pair of black leather boots have been thrown on the ground."
+extra {}
+"This is a pair of ordinary-looking, hard leather boots."
+ARMOUR_HRD_LEATHER(0, 0)
+weight 3
+cost 4 COPPER_PIECE
+end
+
+sword_vengeance
+names {"sword of vengeance","short sword","sword"}
+title "a sword of vengeance"
+descr "A dark blue short sword has been left here."
+extra {}
+"A deadly looking short sword that will only realise its full potential in the
+hands of thieves and assassins."
+extra {"$identify"}
+"This sword is of average quality, yet a strong sense of power overwhelms
+you as you examine this weapon. There is much to learn about this item."
+extra {"$improved identify"}
+"This short sword has incredibly powerful spell attack depending on if it
+has charges or not. A weapon of this power requires to generate its magical
+powers, use the command CHARGES to view the amount of charges it has.
+Finally, to activate its massive power, type REVENGE during combat."
+extra {"$wear_s"}
+"You firmly grab the hilt of your $2n, preparing for combat."
+extra {"$wear_o"}
+"$1n firmly grips the hilt of $1s $2n, and prepares for combat."
+extra {"$rem_s"}
+"You feel the urge to backstab people leave you as you remove your $2n."
+extra {"$rem_o"}
+"$1n looks less likely to backstab you as $1e removes $1s $2n."
+flags {UNIT_FL_MAGIC}
+WEAPON_DEF(WPN_SHORT_SWORD,2,2)
+DEX_TRANSFER(2)
+weight 6
+cost 510 COPPER_PIECE
+rent 100 IRON_PIECE
+spell 50
+dilcopy level_restrict@function(25,0,25,"");
+dilcopy guild_restrict@function({GUILD_UDG_THIEF, GUILD_ASSASSIN},0,25,"");
+dilbegin recall sword_charger();
+code
+{
+:start:
+heartbeat:=PULSE_SEC*SECS_PER_MUD_DAY/1;
+wait (SFB_TICK,(self.equip==WEAR_WIELD));
+heartbeat:=PULSE_SEC*3;
+act("You feel a surge of energy in the sword as it comes to life.", A_ALWAYS, self.outside, self, null, TO_CHAR);
+sendto ("add charge",self);
+goto start;
+}
+dilend
+
+dilbegin recall veng_multihit();
+var
+        i       : integer;
+        n       : integer;
+        charge  : integer;
+        pwr     : integer;
+        amount  : string;
+        pc      : unitptr;
+        enemy   : unitptr;
+
+code
+{
+
+pwr:=1;
+
+:init:
+ heartbeat := PULSE_SEC*3;
+ charge:=interrupt (SFB_MSG,((self==activator) and (argument=="add charge")), charge);
+
+:start:
+ wait(SFB_CMD, ((activator #= self.outside) and (self.equip == WEAR_WIELD)));
+ pc := activator;
+
+ if(command("revenge") and (pc.position != POSITION_FIGHTING))
+ {
+ block;
+ act ("Your sword of vengeance will only operate in combat.",  A_ALWAYS, self.outside, null, null, TO_CHAR);
+ goto start;
+ }
+
+ if(command("revenge") and (pwr<1) and (pc.position == POSITION_FIGHTING))
+ {
+ block;
+ goto no_charge;
+ }
+ 
+ if(command("revenge") and (pwr>0) and (pc.position == POSITION_FIGHTING))
+  {
+         block;
+         pwr:=pwr-1;
+         enemy:= self.outside.fighting;
+         n:=cast_spell(SPL_FIREBALL_2, self.outside, self, enemy, "swordaffect@keep");
+         pause;
+         goto start;
+  }
+
+ if(command("charges"))
+ {
+       block; 
+       if (pwr == 0)
+       {
+        amount := "Zero";
+       }
+       else
+        {
+        amount := itoa(pwr);
+        }
+        act("Your sword of vengeance contains:&c+b "+amount+"&cw charges.", A_SOMEONE, pc,self,null,TO_CHAR);
+        goto start;
+}
+else
+{
+goto start;
+}
+
+:no_charge:
+block;
+act("There isnt enough power in your sword to do that.", A_ALWAYS, pc, null, null,TO_CHAR);
+goto start;
+
+
+:charge:
+clear (charge);
+if (pwr<1)
+pwr:=pwr+1;
+if (pwr>1) pwr := 1;
+goto init;
+goto start;
+}
+dilend
+end
+
+silver_mace
+names {"silver mace","mace","battle mace"}
+title "a silver battle mace"
+descr "A sparkling, silver battle mace is left here."
+extra {}
+"This beautiful battle mace shining in silvery light is a result of some fine
+craftsmanship and quality."
+WEAPON_DEF(WPN_BATTLE_MACE,0,0)
+weight 10
+cost 40 SILVER_PIECE
+end
+
+hikas_barrel
+names {"hikas' vodka barrel","vodka barrel","barrel","vodka"}
+title "Hikas' Vodka Barrel"
+descr "A large, well-crafted wooden barrel is here."
+extra {}
+"This fabled barrel is much sought after by Vodka-lovers.  It is said that
+Hikas' Vodka Barrel fills itself up magically when it is empty."
+manipulate {MANIPULATE_TAKE,MANIPULATE_HOLD}
+LIQ_DEF(LIQ_VODKA,15,50,50,0)
+flags {UNIT_FL_MAGIC}
+cost 1 PLATINUM_PIECE
+rent 40 IRON_PIECE
+
+dilbegin hikas_refill();
+var
+    new_barrel : unitptr;
+    basewgt    : integer;
+code
+{
+    heartbeat := WAIT_SEC*30;
+    on_activation(self.value[1] != 0, skip);
+
+    :start:
+    wait(SFB_TICK, TRUE);
+    act("You hear a soft sound of rushing water in your vodka barrel.",
+         A_SOMEONE, self.outside, null, null, TO_CHAR);
+    self.value[1] := 50;
+    self.value[2] := LIQ_VODKA;
+    addstring(self.names, "vodka");
+    basewgt := self.baseweight + 65 - self.weight;
+    setweight(self, basewgt);
+    goto start;
+}
+dilend
+end
+
+sword_darkness
+names {"sword of darkness","sword"}
+title "sword of darkness"
+descr "A dark-bladed sword is here emitting a soft hum."
+extra {}
+"This deadly sword is forged from the heat of a volcano making the blade
+very hard and sharp.  It emits a soft humming sound."
+extra {"$identify"}
+"This sword is specially enchanted to slay humans. The sword gives bonuses to
+strength, dexterity and increases your defenses in category sword. It can only
+be used by those of great evil intentions."
+extra {"$improved identify"}
+"This sword is specially enchanted to slay humans. The sword gives +2 STR, +1
+DEX and +2% defenses in category sword. It will only be weilded by those of
+-900 alignment or more evil."
+flags {UNIT_FL_MAGIC}
+WEAPON_DEF(WPN_GREAT_SWORD,2,2)
+WEAPON_SLAYER(RACE_HUMAN)
+weight 7
+cost 410 COPPER_PIECE
+rent 205 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_STR,54,0,25,"");
+
+dilbegin drk_evilonly();
+code
+{
+    heartbeat := PULSE_SEC*60;
+    on_activation((self.outside.type != UNIT_ST_PC) or
+                  (self.equip!=WEAR_WIELD), skip);
+
+    :start:
+    wait(SFB_TICK,(self.outside.alignment>(-900)));
+    act("Your $2N shrieks as it disappears from your grip!",
+        A_ALWAYS,self.outside,self,null,TO_CHAR);
+    act("$1N's $2N shrieks as it disappears from $1m grip!",
+        A_HIDEINV,self.outside,self,null,TO_REST);
+    destroy(self);
+    goto start;
+}
+dilend
+end
+
+black_shield
+names {"black shield","shield"}
+title "a black shield"
+descr "A black, gleaming shield is left on the ground"
+extra {}
+"This shield is entirely black and bears a large insignia of a white skull with
+red eye sockets. It is a large shield."
+extra {"$identify"}
+"When used this shield gives the bearer improved shielding skill."
+extra {"$improved identify"}
+"This shield gives the bearer a shield skill bonus of 5%."
+flags {UNIT_FL_MAGIC}
+SHIELD_DEF(SHIELD_LARGE,0,0)
+weight 28
+cost 176 COPPER_PIECE
+rent 88 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_STR,50,0,25,"");
+end
+
+wdragon_bplate
+names {"breast plate","plate"}
+title "a white dragon breast plate"
+descr "A white, scaly breast plate is left on the ground."
+extra {}
+"This breast plate is made from the scales of a mature white dragon. It is a
+fine piece of work by a master dwarven blacksmith, excelling in both
+craftsmanship and quality."
+flags {UNIT_FL_MAGIC}
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_BODY}
+ARMOUR_PLATE(0,0)
+CHAR_FLAG_TRANSFER(CHAR_DETECT_INVISIBLE)
+CHAR_FLAG_TRANSFER(CHAR_DETECT_ALIGN)
+weight 35
+cost 426 COPPER_PIECE
+rent 213 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_STR,57,0,25,"");
+end
+
+neck_knowledge
+names {"necklace of knowledge","necklace"}
+title "a necklace of knowledge"
+descr "A gold necklace has been carelessly left here."
+extra {} "This is a necklace of considerable power and enchantment."
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_NECK}
+flags {UNIT_FL_MAGIC}
+type ITEM_WORN
+weight 2
+cost 180 COPPER_PIECE
+rent 90 IRON_PIECE
+dilcopy abi_restrict@function(ABIL_BRA,52,0,25,"");
+end
+
+ring_vamp
+names{"ring of vampirism","vampirism","ring"}
+title "a ring of vampirism"
+descr "A grey, shadowy ring has been left on the ground."
+extra {}
+"This ring is fabricated using the essense of a vampire's blood in the plane of
+shadow. It has the power to drain an opponent's hitpoints during combat and
+transferring them to the wearer."
+extra {"$identify"}
+"This ring has a chance in every combat round of draining hitpoints from
+the opponent and transferring a like amount to the wearer.  However
+there is a slight chance of reverse effect."
+extra {"$improved identify"}
+"This ring has a 10% chance in every combat round of draining hitpoints
+from the opponent and transferring a like amount to the wearer.  However,
+there is a 10% chance upon success that the magic will work in reverse."
+flags {UNIT_FL_MAGIC}
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_FINGER}
+type ITEM_OTHER
+weight 2
+cost 10 GOLD_PIECE
+rent 5 SILVER_PIECE
+dilcopy level_restrict@function(50,0,25,"");
+dilcopy ali_restrict@function(-350,-1000,0,25,"");
+
+dilbegin recall ring_drain();
+var
+    enemy    : unitptr;
+    hp_drain : integer;
+    charges  : integer;
+code
+{
+    :init:
+    charges := 50;
+ 
+    :start:
+    wait(SFB_COM, ((self.outside.position == POSITION_FIGHTING) and
+                   ((self.equip == WEAR_FINGER_L) or
+                    (self.equip == WEAR_FINGER_R))) );
+    enemy := self.outside.fighting;
+    if (charges <= 0) goto removefunc;
+    if (rnd(1,100) <= 6)
+    {
+        hp_drain := 10 * self.outside.max_hp * rnd(70,130) / 10000;
+        if ((rnd(1,100) <= 5) and ((self.outside.race >
+            RACE_OTHER_UNDEAD) or (self.outside.race < RACE_ZOMBIE)))
+            {
+                act("$1n's $2N backfires!",
+                     A_SOMEONE, self.outside, self, enemy, TO_NOTVICT);
+                act("$1n's $2N drains $1N's life energy!",
+                     A_SOMEONE, self.outside, self, enemy, TO_NOTVICT);
+                act("Your $2N backfires!", A_ALWAYS,
+                     self.outside, self, enemy, TO_CHAR);
+                act("Your $2N drains your life energy and heals $3n!",
+                     A_ALWAYS, self.outside, self, enemy, TO_CHAR);
+                act("$1n's $2N backfires!",
+                     A_SOMEONE, self.outside, self, enemy, TO_VICT);
+                act("$1n's $2N drains $1N's life energy and heals " +
+                    "your wounds!", A_SOMEONE, self.outside, self,
+                     enemy, TO_VICT);
+                if (hp_drain > self.outside.hp)
+                     hp_drain := self.outside.hp;
+                if (hp_drain < 0) hp_drain := 0;
+                self.outside.hp := self.outside.hp - hp_drain;
+                enemy.hp := enemy.hp + hp_drain;
+                if (enemy.hp > enemy.max_hp)
+                   enemy.hp := enemy.max_hp;
+                charges := charges - 1;
+            }
+            else
+            {
+                act("$1n's $2N glows!",
+                     A_SOMEONE, self.outside, self, enemy, TO_NOTVICT);
+                act("$1n's $2N drains $3n's life energy!",
+                     A_SOMEONE, self.outside, self, enemy, TO_NOTVICT);
+                act("Your $2N glows!", A_ALWAYS,
+                     self.outside, self, enemy, TO_CHAR);
+                act("Your $2N drains $3n's life energy and heals " +
+                    "your wounds!", A_ALWAYS, self.outside, self,
+                     enemy, TO_CHAR);
+                act("$1n's $2N glows!",
+                     A_SOMEONE, self.outside, self, enemy, TO_VICT);
+                act("$1n's $2N drains your life energy!",
+                     A_SOMEONE, self.outside, self, enemy, TO_VICT);
+                if (hp_drain > enemy.hp) hp_drain := enemy.hp;
+                if (hp_drain < 0) hp_drain := 0;
+                enemy.hp := enemy.hp - hp_drain;
+                self.outside.hp := self.outside.hp + hp_drain;
+                if (self.outside.hp > self.outside.max_hp)
+                    self.outside.hp := self.outside.max_hp;
+                charges := charges - 1;
+            }
+    }
+
+    :end_combat:
+    goto start;
+
+    :removefunc:
+    quit;
+}
+dilend
+
+dilbegin ring_wearone();
+var
+     this_ring   : unitptr;
+code
+{
+     :init:
+     heartbeat := PULSE_SEC*2;
+
+     :start:
+     /* Cannot use SFB_DONE in this case.  The 1st ring they wear may
+        be on either finger.  SFB_DONE only works for one case, not the
+        other.  This particular dil will take into account both instances
+        by only checking one finger - more efficient.               */
+
+     wait(SFB_CMD, command(CMD_WEAR) and (activator == self.outside));
+     pause;
+     if (self.equip == WEAR_FINGER_L)
+     {
+        this_ring := findunit(self.outside, "vampirism",
+                              FIND_UNIT_EQUIP, null);
+        if (this_ring == self)
+            this_ring := findunit(self.outside, "2.vampirism",
+                                  FIND_UNIT_EQUIP, null);
+        if (not(this_ring == null))
+        {
+           act("You feel both rings of vampirism working against "+
+               "each other and one drops off.", A_ALWAYS, self.outside,
+                null, null, TO_CHAR);
+           act("One of $1n's $2N drops to the ground. ", A_HIDEINV,
+              self.outside, self, null, TO_REST);
+           link(self, self.outside.outside);
+        }
+     }
+     goto start;
+}
+dilend
+end
+
+
+scythe_disease
+names {"scythe of disease","scythe"}
+title "a scythe of disease"
+descr "A dull, ebony scythe with a glowing blade lies here."
+extra {}
+"This foul weapon is Urgnak's favourite.  He uses it torture his captivities,
+enjoying the sight of them being withered slowly to death.  Legend has it that
+this weapon is strongly cursed and it is little wonder no one will lay his
+hands on it other than Urgnak."
+extra {"$identify"}
+"The scythe's magic resists your attempts to unveil its powers."
+extra {"$improved identify"}
+"The scythe's magic resists your attempts to unveil its powers."
+flags {UNIT_FL_MAGIC}
+WEAPON_DEF(WPN_SCYTHE,-10,-6)
+CURSED_OBJECT
+weight 12
+cost 660 COPPER_PIECE
+rent 330 IRON_PIECE
+spell 199
+dilcopy abi_restrict@function(ABIL_STR,48,0,25,"");
+
+/* During combat, the scythe has 50% chance every round of causing poison
+   to the opponent. */
+
+dilbegin recall scy_compoison();
+var
+    enemy   : unitptr;
+    charges : integer;
+    n       : integer;
+code
+{
+    :init:
+    /* use value[4] to store the number of charges */
+    self.value[4] := 75;
+
+    :start:
+    wait(SFB_COM, ((self.outside.position == POSITION_FIGHTING) and
+                   (self.equip == WEAR_WIELD)));
+    enemy := self.outside.fighting;
+    if ((rnd(1,100) <= 50) and (charges > 0))
+    {
+       act("$1n's $2N suddenly gives out a loud hum!",
+            A_SOMEONE, self.outside, self, null, TO_REST);
+       act("Your $2N suddenly gives out a loud hum!",
+            A_ALWAYS, self.outside, self, null, TO_CHAR);
+       n := cast_spell(SPL_POISON, self.outside, self, enemy, "");
+       self.value[4] := self.value[4] - 1;
+    }
+    goto start;
+}
+dilend
+
+/* If a PC is in possession of this scythe, the scythe will have 30% chance
+   of poisoning him every 15 secs. */
+
+dilbegin scy_poisonwlder();
+var
+    n : integer;
+code
+{
+    :init:
+    heartbeat := WAIT_SEC*15;
+    on_activation(((self.outside.type != UNIT_ST_PC) or
+                   (self.equip != WEAR_WIELD) or
+                   (self.outside.level >= IMMORTAL_LEVEL)), skip);
+
+    :start:
+    wait(SFB_TICK, TRUE);
+
+    if (rnd(1,100) <= 30)
+    {
+       act("Your $2N suddenly gives off a soft hum.",
+            A_ALWAYS, self.outside, self, null, TO_CHAR);
+       act("You hear a soft humming sound coming from $1n.",
+            A_SOMEONE, self.outside, self, null, TO_REST);
+       self.value[4] := self.value[4] - 1;
+       if (rnd(1,100 <= 50))
+       {
+         n := cast_spell(SPL_DISEASE_2, self.outside, self, self.outside, "");
+       }
+       else
+       {
+         n := cast_spell(SPL_POISON, self.outside, self, self.outside, "");
+       }
+    }
+    goto start;
+}
+dilend
+end
+
+sc_sleep
+names{"scroll of sleep","sleep","scroll"}
+title "a scroll of sleep"
+descr "An ancient-looking scroll lies here."
+extra {} "On it you see the words : Boney's scroll of sleep spell."
+SCROLL_DEF(80,SPL_SLEEP,SPL_NONE,SPL_NONE)
+cost 30 SILVER_PIECE
+weight 2
+end
+
+sc_det_inv
+names{"scroll of detect invisible","detect invisible","scroll"}
+title "a scroll of detect invisible"
+descr "An ancient-looking scroll lies here."
+extra {} "On it you see the words : Boney's scroll of detect invisible spell."
+SCROLL_DEF(80,SPL_DET_INVISIBLE,SPL_NONE,SPL_NONE)
+cost 30 SILVER_PIECE
+weight 2
+end
+
+sc_identify
+names{"scroll of identify","identify","scroll"}
+title "a scroll of identify"
+descr "An ancient-looking scroll lies here."
+extra {} "On it you see the words : Boney's scroll of identify spell."
+SCROLL_DEF(80,SPL_IDENTIFY_1,SPL_NONE,SPL_NONE)
+cost 30 SILVER_PIECE
+weight 2
+end
+
+sc_heal
+names{"scroll of healing","healing","scroll"}
+title "a scroll of healing"
+descr "An ancient-looking scroll lies here."
+extra {} "On it you see the words : Boney's scroll of cure wounds spell."
+SCROLL_DEF(80,SPL_CURE_WOUNDS_2,SPL_CURE_WOUNDS_2,SPL_NONE)
+cost 30 SILVER_PIECE
+weight 2
+end
+
+sc_sanctuary
+names{"scroll of sanctuary","sanctuary","scroll"}
+title "a scroll of sanctuary"
+descr "An ancient-looking scroll lies here."
+extra {} "On it you see the words : Boney's scroll of sanctuary spell."
+SCROLL_DEF(80,SPL_SANCTUARY,SPL_NONE,SPL_NONE)
+cost 40 SILVER_PIECE
+weight 2
+end
+
+sc_fear
+names{"scroll of fear","fear","scroll"}
+title "a scroll of fear"
+descr "An ancient-looking scroll lies here."
+extra {} "On it you see the words : Boney's scroll of fear spell."
+SCROLL_DEF(80,SPL_FEAR,SPL_NONE,SPL_NONE)
+cost 1 GOLD_PIECE
+weight 2
+end
+
+sc_heat_resist
+names{"scroll of heat resistance","heat resistance","scroll"}
+title "a scroll of heat resistance"
+descr "An ancient-looking scroll lies here."
+extra {} "On it you see the words : Boney's scroll of raise heat spell."
+SCROLL_DEF(80,SPL_HEAT_RESI,SPL_NONE,SPL_NONE)
+cost 1 GOLD_PIECE
+weight 2
+end
+
+sc_cold_resist
+names{"scroll of cold resistance","cold resistance","scroll"}
+title "a scroll of cold resistance"
+descr "An ancient-looking scroll lies here."
+extra {} "On it you see the words : Boney's scroll of raise cold spell."
+SCROLL_DEF(80,SPL_COLD_RESI,SPL_NONE,SPL_NONE)
+cost 1 GOLD_PIECE
+weight 2
+end
+
+sc_inv
+names {"scroll of invisibility","invisibility","scroll"}
+title "a scroll of invisibility"
+descr "An ancient-looking scroll lies here."
+extra {} "On it you see the words : Boney's scroll of invisibility spell."
+SCROLL_DEF(80,SPL_INVISIBILITY,SPL_NONE,SPL_NONE)
+cost 1 GOLD_PIECE
+weight 2
+end
+
+sc_rem_curse
+names {"scroll of remove curse","remove curse","scroll"}
+title "a scroll of remove curse"
+descr "An ancient-looking scroll lies here."
+extra {} "On it you see the words : Boney's scroll of remove curse spell."
+SCROLL_DEF(80,SPL_REMOVE_CURSE,SPL_NONE,SPL_NONE)
+cost 1 GOLD_PIECE
+weight 2
+end
+
+sc_gascloud
+names {"scroll of gascloud","gascloud","scroll"}
+title "a scroll of gascloud"
+descr "An ancient-looking scroll lies here."
+extra {} "On it you see the words : Boney's scroll of stinking cloud spell."
+SCROLL_DEF(80,SPL_STINKING_CLOUD_1,SPL_NONE,SPL_NONE)
+cost 1 GOLD_PIECE
+weight 2
+end
+
+/* ---------------------- QUEST STUFFS ------------------------*/
+
+
+                        swd_hero
+
+names {"sword of heroes", "sword"}
+title "the Sword of Heroes"
+descr "A magnificent sword with a golden blade lies here."
+extra {}
+"You see a magnificent sword with a shimmering golden blade sparkling
+under the light.  It is indeed the sword that will capture the heart
+and soul of all heros throughout the land.  Legend has it that this
+sword is the creation of some powerful immortals in a very holy shrine
+that gives it a life of its own.  According to historians and sages, the
+sword bears a strong hatred against all evil.&n&n
+
+When wielded, the sword allows you to sense the degree of evilness from
+another character or mobile.  To activate it, just type : sense <name>."
+extra {"$identify"}
+"This sword defies sorcery, and your attempts to unveil its powers."
+extra {"$improved identify"}
+"This sword defies sorcery, and your attempts to unveil its powers."
+flags {UNIT_FL_MAGIC}
+WEAPON_DEF(WPN_GREAT_SWORD, +10, +6)
+STR_TRANSFER(+2)
+DIV_TRANSFER(+2)
+WEAPON_TRANSFER(WPN_GREAT_SWORD, +10)
+SKILL_TRANSFER(SKI_FLEE, -10)
+weight 12
+rent 560 IRON_PIECE
+cost 1120 COPPER_PIECE
+spell 100
+dilcopy abi_restrict@function(ABIL_STR,100,0,25,"");
+dilcopy abi_restrict@function(ABIL_DIV,75,0,25,"");
+
+dilcopy quest_restrict@function(MIDGAARD_HERO, 50, 0, "");
+
+dilbegin swd_restrict();
+var
+     str : string;
+code
+{
+     :init:
+     heartbeat := PULSE_SEC * 3;
+     on_activation((self.outside.position <= POSITION_SLEEPING) or
+                   (self.outside.type != UNIT_ST_PC), skip);
+
+     :start:
+     nopriority;
+     wait(SFB_CMD, command(CMD_WIELD) and (activator == self.outside));
+     priority;
+     if (self.equip == 0)
+     {
+       pause;
+       if (self.equip != 0)
+       {
+         if (self.outside.abilities[ABIL_MAG] > 0)
+         {
+           act("A voice echoes in your mind exclaiming 'I sense sorcery "+
+               "in you! Now begone!'", A_ALWAYS, self.outside,
+               null, null, TO_CHAR);
+           act("You are hit by a strong burst of light and drops your $2N!",
+               A_ALWAYS, self.outside, self, null, TO_CHAR);
+           act("$1n's $2N burst in light engulfing $1m.", A_SOMEONE,
+               self.outside, self, null, TO_REST);
+           if (self.outside.level < IMMORTAL_LEVEL)
+               self.outside.hp := self.outside.hp / 2;
+           position_update(self.outside);
+           link(self, self.outside.outside);
+         }
+         else
+         {
+           if (self.outside.alignment > 700)
+           {
+              act("You see the tip of your sword give out a sparkle as it "+
+                  "comes to life.", A_ALWAYS, self.outside, null,
+                  null, TO_CHAR);
+              if (not(dilfind("swd_blkmagic@keep", self.outside))) {
+
+                  dilcopy("swd_blkmagic@keep", self.outside);
+              }
+           }
+           else
+           {
+              act("A voice echoes in your mind exclaiming 'You soul is not "+
+                  "pure enough to be worthy of me!'", A_ALWAYS,
+                   self.outside, null, null, TO_CHAR);
+              act("Your $2N tears from your grip and drops to the ground.",
+                   A_ALWAYS, self.outside, self, null, TO_CHAR);
+              act("$1n's $2N tears from $1s grip and drops to the ground.",
+                  A_ALWAYS, self.outside, self, null, TO_REST);
+              link(self, self.outside.outside);
+           }
+         }
+       }
+     }
+     goto start;
+}
+dilend
+
+dilbegin swd_detevil();
+var
+   tgt  : unitptr;
+   evilstr : string;
+code
+{
+   :init:
+   heartbeat := PULSE_SEC;
+   on_activation((self.outside.position <= POSITION_SLEEPING)
+                 or (self.equip == 0) , skip);
+
+   :start:
+   wait(SFB_CMD, command("sense") and (activator == self.outside));
+   block;
+   tgt := findunit(self.outside, argument, FIND_UNIT_SURRO, null);
+   if (tgt == null) goto fail;
+   if ((tgt.type != UNIT_ST_NPC) and (tgt.type != UNIT_ST_PC))
+      goto fail;
+   if (tgt.alignment == -1000) evilstr := "ultimate evil";
+   else if (tgt.alignment < -900) evilstr := "prime evil";
+   else if (tgt.alignment < -800) evilstr := "great evil";
+   else if (tgt.alignment < -650) evilstr := "moderate evil";
+   else if (tgt.alignment < -500) evilstr := "some evil";
+   else if (tgt.alignment < -349) evilstr := "slight evil";
+   else evilstr := "no evil";
+
+   act("Your sword glows softly as you sense $2t from $3n.", A_SOMEONE,
+       self.outside, evilstr, tgt, TO_CHAR);
+   act("$1n's $2N glows softly and subsides.", A_HIDEINV,
+       self.outside, self, null, TO_REST);
+   goto start;
+
+   :fail:
+   pause;
+   act("You fail to sense anything with your sword.", A_ALWAYS,
+       self.outside, null, null, TO_CHAR);
+   goto start;
+}
+dilend
+
+dilbegin swd_combat();
+var
+   enemy  : unitptr;
+   damage : integer;
+code
+{
+   :start:
+   wait(SFB_COM, (self.equip != 0) and (activator == self.outside));
+   enemy := self.outside.fighting;
+
+   if ((enemy.alignment < -349) and (rnd(1,3) == 1))
+   {
+     act("Your $2N discharges a burst of energy at $3n!", A_ALWAYS,
+          self.outside, self, enemy, TO_CHAR);
+     act("$1n's $2N discharges a burst of energy at $3n!", A_ALWAYS,
+          self.outside, self, enemy, TO_NOTVICT);
+     act("$1n's $2N discharges a burst of energy at you!", A_ALWAYS,
+          self.outside, self, enemy, TO_VICT);
+     damage := cast_spell(SPL_ENERGY_BOLT, self.outside,
+                          self, enemy, "");
+   }
+   goto start;
+}
+dilend
+
+end
+
+
+iron_mattock
+names {"iron mattock","mattock"}
+title "an iron mattock"
+descr "An iron mattock has been left here."
+extra {} "This is an ordinary-looking mattock of average quality."
+WEAPON_DEF(WPN_WAR_MATTOCK,0,0)
+cost 1 GOLD_PIECE
+weight 10
+end
+
+skull_hammer
+names {"skull hammer","hammer"}
+title "a skull hammer"
+descr "A skull hammer has been left here."
+extra {} "This hammer appears to be made from human skull and bones."
+WEAPON_DEF(WPN_WAR_HAMMER,0,0)
+cost 1 GOLD_PIECE
+weight 10
+end
+
+ix_amulet
+names {"amulet of Ixanthus", "amulet"}
+title "an amulet of Ixanthus"
+descr "A blood-red amulet has been left here."
+extra {}
+"This is the amulet of the Demon Lord Ixanthus.  You sense great evil
+emanating from it.  The amulet pulses continuously as if having a
+heart beat of its own."
+type ITEM_OTHER
+manipulate {MANIPULATE_TAKE,MANIPULATE_WEAR_NECK}
+flags {UNIT_FL_MAGIC,UNIT_FL_NOSAVE,UNIT_FL_NO_TELEPORT}
+weight 2
+height 620
+rent 5 GOLD_PIECE
+dilcopy level_restrict@function(38,0,25,"");
+
+dilbegin amulet_destruct();
+code
+{
+    :init:
+    if (self.loadcount > 1) destroy(self);
+
+    :start:
+    wait(SFB_MSG,argument=="destruct");
+    if ((self.outside.type==UNIT_ST_PC) and (self.equip!=0)) {
+      act("Your amulet of Ixanthus vanishes in a flash!",A_ALWAYS,
+          self.outside,null,null,TO_CHAR);
+      act("$1n's amulet of Ixanthus vanishes in a flash!",A_SOMEONE,
+          self.outside,null,null,TO_REST); }
+    destroy(self);
+}
+dilend
+end
+
+staff_plague
+names {"staff of plague","staff"}
+title "a staff of plague"
+descr "A black, shimmering staff lies here."
+extra {}
+"This much dreaded weapon is used by Ixanthus' minions to spread
+disease and death throughout the land.  It may be a good idea to
+destroy it before it causes further harm."
+extra {"$identify"}
+"This staff constantly seeths with disease."
+extra {"$improved identify"}
+"This staff constantly seeths with a contagious disease that can spread
+beyond control."
+flags {UNIT_FL_MAGIC}
+WEAPON_DEF(WPN_QUARTERSTAFF,5,-5)
+CURSED_OBJECT
+spell 150
+cost 300 COPPER_PIECE
+rent 150 IRON_PIECE
+dilcopy level_restrict@function(20,0,25,"");
+
+dilbegin recall stf_plagueroom();
+var
+    this_ptr      : unitptr;
+    prev_ptr      : unitptr;
+    counter       : integer;
+    n             : integer;
+code
+{
+    :init:
+    self.value[4] := 100;
+    on_activation(self.equip == 0, skip);
+
+    :start:
+    heartbeat := PULSE_SEC*30;
+    counter := 0;
+    wait(SFB_TICK, TRUE);
+
+    :findmob:
+    heartbeat := PULSE_SEC;
+    this_ptr := self.outside.outside.inside;
+    act("$1n's $2N emits a deathly humming sound.", A_SOMEONE,
+         self.outside, self, null, TO_REST);
+    act("A misty black cloud forms around $1n and disperses in all "+
+        "directions.", A_SOMEONE, self.outside, null, null, TO_REST);
+    act("Your $2N emits a deathly humming sound.", A_SOMEONE,
+         self.outside, self, null, TO_CHAR);
+    act("A misty black cloud forms around you and disperses in all "+
+        "directions.", A_SOMEONE, self.outside, null, null, TO_CHAR);
+    self.value[4] := self.value[4] - 1;
+    while (this_ptr != null)
+    {
+       counter := counter + 1;
+       if (counter > 9)
+       {
+          secure(this_ptr, start);
+          pause;
+          unsecure(this_ptr);
+          counter := 0;
+       }
+       if ((this_ptr.type == UNIT_ST_PC) or
+          (this_ptr.type == UNIT_ST_NPC))
+       {
+         if ((this_ptr.race < 6) and (this_ptr != self.outside) and
+             (this_ptr.level < IMMORTAL_LEVEL)) {
+            if (rnd(1,160) > this_ptr.abilities[ABIL_CON])
+               dilcopy("spl_plague@basis(100)", this_ptr);
+         }
+       }
+       prev_ptr := this_ptr;
+       this_ptr := this_ptr.next;
+    }
+    goto start;
+}
+dilend
+end
+
+                       portal
+
+names {"black portal", "portal"}
+title "a black portal"
+descr "A portal stands before the altar bursting in black flames."
+extra {}
+"This portal looks like a gateway to some other planes.  A great
+sense of evilness emits from this portal.  Somehow, you feel that
+the existence of this portal spells certain doom and destruction."
+CONTAINER_DEF(2)
+flags {UNIT_FL_MAGIC, UNIT_FL_NO_TELEPORT}
+manipulate {MANIPULATE_ENTER}
+weight 20000
+
+dilbegin portl_chkinside();
+var
+    pc : unitptr;
+code
+{
+   if (self.outside.nameidx != "bedroom_3") destroy(self);
+   sendtoall("invade on", "xalev@keep");
+
+   :start:
+   heartbeat := PULSE_SEC * 3;
+   wait(SFB_CMD | SFB_TICK, TRUE);
+   if (command(CMD_PUT) == TRUE)
+   {
+      pc := activator;
+      heartbeat := PULSE_SEC;
+      secure(pc, start);
+      pause;
+      if (self.inside.nameidx == "ix_amulet")
+      {
+         act("You hear a loud shriek as the $1N collapses!",
+             A_ALWAYS, self, null, null, TO_ALL);
+         act("You gain experience!", A_ALWAYS,
+             pc, null, null, TO_CHAR);
+         if (not(MIDGAARD_HERO in pc.quests))
+         {
+            addextra(pc.quests, {MIDGAARD_HERO}, "");
+            experience(3000, pc);
+         }
+         else
+         {
+            experience(1000, pc);
+         }
+         unsecure(pc);
+         sendtoall("destruct", "eru_demon@keep");
+         sendtoall("destruct", "zul_demon@keep");
+         sendtoall("destruct", "ix_amulet@keep");
+         sendtoall("destruct", "ixanthus@keep");
+         sendtoall("destruct", "vampire@keep");
+         sendtoall("invade off", "xalev@keep");
+         destroy(self);
+      }
+   }
+   if (self.inside != null)
+   {
+      if ((self.inside.type == UNIT_ST_OBJ) or
+          ((self.inside.type == UNIT_ST_NPC) and
+           (self.inside.nameidx != "ixanthus")))
+      {
+         act("$1n bursts into flames consuming $2n.", A_SOMEONE,
+             self, self.inside, null, TO_ALL);
+         destroy(self.inside);
+      }
+      else if (self.inside.nameidx != "ixanthus")
+      {
+         act("You are sucked through a vacuum!", A_ALWAYS,
+             self.inside, null, null, TO_CHAR);
+         link(self.inside, findroom("void@basis"));
+      }
+   }
+   goto start;
+}
+dilend
+
+dilbegin portl_loadix();
+var
+   ix  : unitptr;
+code
+{
+   heartbeat := PULSE_SEC * 3660;
+
+   :start:
+   wait(SFB_TICK, findsymbolic("ixanthus@keep") == null);
+   ix  := load("ixanthus@keep");
+   goto start;
+}
+dilend
+end
+
+%reset
+
+door keep_entrance NORTH {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+door passage_to_hall SOUTH {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+door corridor_e2_end NORTH {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+door bedroom_3 SOUTH {EX_OPEN_CLOSE,EX_CLOSED, EX_LOCKED}
+door passageway_w_s SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door prison_post NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door drkcorr_end EAST {EX_OPEN_CLOSE, EX_CLOSED, EX_HIDDEN}
+door laby_1 WEST {EX_OPEN_CLOSE, EX_CLOSED}
+door laby_30 SOUTH {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_HIDDEN}
+door cavern NORTH {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+door cavern WEST {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_HIDDEN}
+door t_vault EAST {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED}
+door passageway_end NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door backyard_1 SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door backyard_3 NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door stable_1 SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door backyard_4 NORTH {EX_OPEN_CLOSE, EX_CLOSED}
+door stable_2 SOUTH {EX_OPEN_CLOSE, EX_CLOSED}
+door backyard_4 EAST {EX_CLOSED, EX_PICKPROOF}
+
+load sign_post into keep_entrance local 1
+load weapon_rack into sentry_post local 1
+remove vampire_coffin@keep in bedroom_2@keep
+load vampire_coffin into bedroom_2 local 1
+{
+   load vlad_teres
+   {
+        equip hooded_cloak position WEAR_ABOUT
+        equip ring_vamp position WEAR_FINGER_L
+        equip wooden_staff position WEAR_WIELD
+        load bedroom_3_key
+   }
+}
+load boney into scroll_shop max 1
+{
+        load sc_inv
+        load sc_inv
+        load sc_det_inv
+        load sc_det_inv
+        load sc_rem_curse
+        load sc_rem_curse
+        load sc_cold_resist
+        load sc_cold_resist
+        load sc_gascloud
+        load sc_gascloud
+        load sc_identify
+        load sc_identify
+        load sc_identify
+        load sc_identify
+        load sc_sanctuary
+        load sc_sanctuary
+        load sc_heal
+        load sc_heal
+        load sc_heal
+        load sc_heal
+        load sc_sleep
+        load sc_sleep
+        load sc_heat_resist
+        load sc_heat_resist
+        load sc_fear
+        load sc_fear
+}
+load iron_golem into keep_entrance local 1
+{
+        load death_keep_key
+        equip iron_sword position WEAR_WIELD
+}
+
+load skel_guard into sentry_post local 2
+{
+        equip black_jerkin position WEAR_BODY
+        equip rusty_sleeves position WEAR_ARMS
+        equip rusty_skirt position WEAR_LEGS
+        equip silver_mace position WEAR_WIELD
+}
+
+load skel_guard into sentry_post local 2
+{
+        equip silver_mace position WEAR_WIELD
+        equip rusty_sleeves position WEAR_ARMS
+        equip rusty_skirt position WEAR_LEGS
+        equip rusty_jerkin position WEAR_BODY
+}
+
+load skel_guard into guards_dorm local 2
+{
+        equip silver_mace position WEAR_WIELD
+        equip rusty_sleeves position WEAR_ARMS
+        equip rusty_skirt position WEAR_LEGS
+        equip rusty_jerkin position WEAR_BODY
+}
+
+load skel_guard into guards_dorm local 2
+{
+        equip black_gauntlets position WEAR_ARMS
+        equip silver_mace position WEAR_WIELD
+        equip rusty_sleeves position WEAR_ARMS
+        equip rusty_skirt position WEAR_LEGS
+        equip rusty_jerkin position WEAR_BODY
+
+}
+
+load duernor into tower_top max 1
+{
+        equip brass_jerkin position WEAR_BODY
+        equip brass_sleeves position WEAR_ARMS
+        equip brass_leggings position WEAR_LEGS
+        equip black_shield position WEAR_HOLD
+        equip sword_darkness position WEAR_WIELD
+}
+load mummy into servants_qtrs local 1
+{
+        load black_skirt
+}
+
+load ghoul into main_hall_ne zonemax 8
+load ghoul into main_hall_sw zonemax 8
+load ghoul into kitchen zonemax 8
+{
+        load black_boots
+}
+load ghoul into cor_e_junction zonemax 8
+
+load ghoul into main_hall_c zonemax 8
+load jaw into throne zonemax 3
+load jaw into corridor_e2_end zonemax 3
+load jaw into laby_17 zonemax 3
+load ghast into laby_4 zonemax 10
+load ghast into laby_8 zonemax 10
+load ghast into laby_10 zonemax 10
+load ghast into laby_12 zonemax 10
+{
+        load black_coif
+}
+load ghast into laby_14 zonemax 10
+load ghast into laby_16 zonemax 10
+load ghast into laby_20 zonemax 10
+load ghast into laby_24 zonemax 10
+{
+        load silver_skirt
+}
+load ghast into laby_27 zonemax 10
+load ghast into laby_31 zonemax 10
+load spectre into laby_15 zonemax 4
+{
+        load black_sleeves
+}
+load spectre into laby_19 zonemax 4
+load spectre into laby_25 zonemax 4
+load spectre into laby_23 zonemax 4
+load death_rodent into drkcorr_end zonemax 6
+load death_rodent into prison_3 zonemax 6
+load death_rodent into prison_5 zonemax 6
+{
+        load silver_sleeves
+}
+load death_rodent into drkcorr_start zonemax 6
+load death_rodent into drkcorr_1 zonemax 6
+load death_rodent into prison_6 zonemax 6
+
+load stallion into stable_1 local 1
+load stallion into stable_2 local 1
+load scarecrow into backyard_3 zonemax 1
+
+load wight into storeroom max 1
+{
+        load silver_jerkin
+        equip tattered_robe position WEAR_ABOUT
+}
+
+load hikas into cellar_2 max 1
+{
+        equip hikas_barrel position WEAR_HOLD
+}
+load tarsha into bedroom_1 max 1
+{
+        equip neck_knowledge position WEAR_NECK_1
+        equip wavy_dagger position WEAR_WIELD
+}
+load skel_dragon into cavern max 1
+{
+        load vault_key
+}
+load urgnak into bedroom_3 max 1
+{
+        equip scythe_disease position WEAR_WIELD
+        equip wdragon_bplate position WEAR_BODY
+}
+load bodyguard into bedroom_3 local 2
+{
+        equip skeletal_sword position WEAR_WIELD
+        equip brass_jerkin position WEAR_BODY
+        equip brass_leggings position WEAR_LEGS
+        equip brass_sleeves position WEAR_ARMS
+}
+load bodyguard into bedroom_3 local 2
+{
+        equip skeletal_sword position WEAR_WIELD
+        equip brass_jerkin position WEAR_BODY
+        equip brass_leggings position WEAR_LEGS
+        equip brass_sleeves position WEAR_ARMS
+}
+load nasnder into laby_21 max 1
+{
+        load tr_rm_key
+        equip leather_boots position WEAR_FEET
+        equip chain_skirt position WEAR_LEGS
+        equip chain_jerkin position WEAR_BODY
+        equip chain_sleeves position WEAR_ARMS
+        equip gloves_thievery position WEAR_HANDS
+        equip sword_vengeance position WEAR_WIELD
+}
+load xalev into de_swamp6@deadl1 max 1
+%end
+
