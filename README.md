@@ -15,3 +15,5 @@ To compile zones
 
 DMC/dmc zon/midgaard.zon
 
+You have to create a directory "ply/" and in there one directory for each letter in the alphabet "a/", "b/", etc.
+
