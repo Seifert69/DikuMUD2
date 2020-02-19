@@ -58,7 +58,7 @@ char *mktemp(char *);
 #elif defined(AMIGA)
   #define CPP               "gnu:lib/gcc-lib/mc68020-cbm-amigados/2.6.3/cpp"
 #else
-  #define CPP               "cpp"
+  #define CPP               "cpp -traditional"
 #endif
 
 #ifndef CPPI

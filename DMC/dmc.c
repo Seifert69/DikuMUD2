@@ -246,7 +246,7 @@ void fix(const char *file)
       TAIL(inc);
    }
 
-   sprintf(tmp, "%s -traditional %s< %s > %s", CPP, incstr, tmpfile1, tmpfile2);
+   sprintf(tmp, "%s %s< %s > %s", CPP, incstr, tmpfile1, tmpfile2);
    i = system(tmp);
    if (i == 127 || i == -1)
    {
