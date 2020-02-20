@@ -28,7 +28,7 @@
 
 #include <values.h>
 
-#define dilend dilend^
+/* #define dilend dilend^ */
 #define pause wait(SFB_TICK | SFB_RANTIME, TRUE)
 
 #define IS_GOOD(a)    ((a) >= 350)
