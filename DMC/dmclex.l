@@ -182,7 +182,7 @@ dilbegin[^\^]*\^        {
 			  /* During %dil section, tell compiler only to
 			  generate templates */
 
-			  sprintf(cmd, "dil %d %s %s -z %s < %s > %s",
+			  sprintf(cmd, "DIL/dil %d %s %s -z %s < %s > %s",
 				  startlinenum,
 				  istemplate?"-t":"",
 				  first_dil ? "-v" : "",
