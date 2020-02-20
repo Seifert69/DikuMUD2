@@ -36,7 +36,7 @@ cNamelist::cNamelist(void)
    length = 0;
 }
 
-void cNamelist::CopyList(const char **list)
+void cNamelist::CopyList(const char * const * const list)
 {
    if (list)
      for (int i = 0; list[i]; i++)

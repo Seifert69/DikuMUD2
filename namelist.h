@@ -36,7 +36,7 @@ class cNamelist
    ~cNamelist(void);
 
    void Free(void);
-   void CopyList(const char **list);
+   void CopyList(const char * const * const list);
    void CopyList(class cNamelist *);
 
    void AppendBuffer(CByteBuffer *pBuf);
