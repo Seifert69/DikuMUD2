@@ -49,7 +49,7 @@ YFLAGS	=	-d -v 	# y.tab.h generator, and verbose output
 LDLIBS	=	$(EXTRA_LDLIBS)
 #LDFLAGS	=	-static
 
-OPT	=	-O6 	# -O might be a good idea, but we have a tough time
+OPT	=	#-O6 	# -O might be a good idea, but we have a tough time
                         # just getting the show on the road.   :)
 
 # SOURCES

@@ -34,7 +34,7 @@ LEXFILTER=	| perl lexfilter $(SYSPORT) # Got to filter lex for bad code
 LINK.cpp=	$(CPP) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS)
 LINK.c	=	$(LD) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS)
 
-DEBUG	=	#-O6
+DEBUG	=	-g #-O6
 
 CFL	=	$(DEBUG) $(SYSPORT) $(SYSFLAGS) $(EXTRA_CFLAGS)
 CFLAGS	=	-I .. -DDIL $(CFL) -pedantic -Wall -Wno-unused -Wno-format-overflow -Wno-variadic-macros
