@@ -75,7 +75,7 @@ struct dilprg *cur_prg;
 int myi, cur_ex, errcon = 0;
 
 /* Temporary data for stringlists */
-int str_top;
+int str_top = 0; //MS2020
 char *str_list[50];
 char empty_ref[] = {'\0', '\0'};
 int istemplate;
@@ -153,7 +153,8 @@ void warning(const char *str);
 %left '+' '-' '*' '/' SPLUS
 %right UMINUS UPLUS
 
-%expect 2 /*  I can't seem to get rid of the two shift/reduce in `expr'
+ /*
+% expect 2   I can't seem to get rid of the two shift/reduce in `expr'
 	   *  And they're not really bothering anyone, so let's ignore them!
 	   *  /gnort 08-Aug-94
 	   */
@@ -708,6 +709,7 @@ unit_field	: NAMES stringlist
 			    cur_extra = UNIT_EXTRA_DESCR(cur);
 			  }
 			  cur_extra->next = 0;
+
 			  cur_extra->names.CopyList((const char **) $2);
 			  /* strcat($3, "\n\r"); */
 			  strip_trailing_blanks($3);
@@ -1204,7 +1206,12 @@ stringlist	: hardstringlist
 
 hardstringlist	: '{' strings '}'
 			{
-			  $$ = (char **) mmalloc(sizeof(char *) * (str_top + 1));
+			  // MS2020 $$ = (char **) mmalloc(sizeof(char *) * (str_top + 1));
+			  // Looks like there's an error in the old code. str_top=0 means there's one string and
+			  // thus we will need 2 indices.
+			  // error is compounded by <= in the for loop and the final setting to 0 which will be OOB
+			  //
+			  $$ = (char **) mmalloc(sizeof(char *) * (str_top + 2));
 			  for (myi = 0; myi <= str_top; myi++)
 			    $$[myi] = str_list[myi];
 			  $$[myi] = 0;

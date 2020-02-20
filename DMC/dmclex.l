@@ -47,12 +47,13 @@
 #ifdef yywrap
 #undef yywrap
 #endif
-// #define yywrap() 1 MS2020
+/*MS2020 #define yywrap 1*/
 #undef free // MS2020
 
 extern char cur_filename[], top_filename[];
 extern struct zone_info zone;
 extern int istemplate;
+extern int verbose;
 
 int first_dil = TRUE;
 int linenum = 1;
@@ -66,6 +67,7 @@ void dmc_exit(int n);
 
 char tmpstr[YYLMAX + 1], *a, *b;
 %}
+
 
 %%
 \n			{
@@ -178,13 +180,17 @@ dilbegin[^\^]*\^        {
 			  char *msbuf = tmpnam(tmp2);
 #endif
 			  /* During %dil section, tell compiler only to
-                             generate templates */
+			  generate templates */
+
 			  sprintf(cmd, "dil %d %s %s -z %s < %s > %s",
 				  startlinenum,
 				  istemplate?"-t":"",
 				  first_dil ? "-v" : "",
 				  zone.z_zone.name,
 				  tmp1, tmp2);
+
+			  if (verbose)
+			     fprintf(stderr, "verbose: system(%s)\n", cmd);
 
 			  first_dil = FALSE;
 
@@ -201,6 +207,8 @@ dilbegin[^\^]*\^        {
 #endif
                             dmc_exit(1);
 			  }
+			  if (verbose)
+			     fprintf(stderr, "verbose: DIL compiled\n");
 
 			  remove(tmp1);
 
@@ -224,6 +232,8 @@ dilbegin[^\^]*\^        {
 
 			  yylval.str = (char *) mmalloc(strlen(tmp1) + 1);
 			  strcpy(yylval.str, tmp1);
+			  if (verbose)
+			     fprintf(stderr, "Done with DIL\n");
 			  return DILPRG;
 			}
 
@@ -238,6 +248,9 @@ dilbegin[^\^]*\^        {
 			  return DIL;
 	       		}
 \%end                   {
+                          if (verbose)
+			     fprintf(stderr, "verbose: end\n");
+
                           return ENDMARK;
                         }
 \%zone			{
@@ -308,15 +321,15 @@ void init_lex(FILE *file)
 #endif
 }
 
-int yywrap()
-{
-  return 0;
-}
-
 void destroy_fptr(struct unit_data *u, struct unit_fptr *f)
 {
 }
 
 void unlink_affect(struct unit_affected_type *u)
 {
+}
+
+int yywrap()
+{
+   return 1;
 }

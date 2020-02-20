@@ -163,7 +163,7 @@ void fix(const char *file)
    FILE *cpp;
    int i, result, compressed = 0;
 
-   //void init_lex(FILE *file);
+   void init_lex(FILE *file);
    int yyparse(void);
 
    /* Examine filename */
@@ -217,6 +217,9 @@ void fix(const char *file)
 #endif
 
    sprintf(tmp, "%s %s > %s", compressed ? ZCAT : CAT, file, tmpfile1);
+   if (verbose)
+     fprintf(stderr, "verbose: system(%s)\n", tmp);
+
    i = system(tmp);
    if (i == 127 || i == -1)
    {
@@ -247,6 +250,8 @@ void fix(const char *file)
    }
 
    sprintf(tmp, "%s %s< %s > %s", CPP, incstr, tmpfile1, tmpfile2);
+   if (verbose)
+     fprintf(stderr, "verbose: system(%s)\n", tmp);
    i = system(tmp);
    if (i == 127 || i == -1)
    {
@@ -268,17 +273,27 @@ void fix(const char *file)
    if ((cpp = fopen(tmpfile2, "r")) == NULL)
    {
       remove(tmpfile2);
-      perror("dmc fopen tmpfile2");
+      perror("dmc fopen tmpfile2 ");
       exit(1);
    }
 
-   //MS2020 init_lex(cpp);
+   if (verbose)
+     fprintf(stderr, "verbose: init_lex\n");
+
+   init_lex(cpp);
+
+   if (verbose)
+     fprintf(stderr, "verbose: yyparse\n");
+
    result = yyparse();
+
+   if (verbose)
+     fprintf(stderr, "verbose: yyparse() done\n");
 
    if (fclose(cpp))
    {
       remove(tmpfile2);
-      perror("fclose");
+      perror("fclose ");
       exit(1);
    }
    remove(tmpfile2);
