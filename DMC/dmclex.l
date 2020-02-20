@@ -321,8 +321,32 @@ void init_lex(FILE *file)
 #endif
 }
 
+
+/*
+MS2020 Terrible hack
+
+All of this memory handling should really be done with smart
+pointers and reference counts. The below is needed or DMC will
+hang...
+			  
+*/
 void destroy_fptr(struct unit_data *u, struct unit_fptr *f)
 {
+
+   struct unit_fptr *tf;
+
+   /* Only unlink function, do not free it! */
+   if (UNIT_FUNC(u) == f)
+      UNIT_FUNC(u) = f->next;
+   else
+   {
+      for (tf = UNIT_FUNC(u); tf && (tf->next != f); tf = tf->next)   ;
+      if (tf)
+      {
+         assert(tf->next == f);
+         tf->next = f->next;
+      }
+   }
 }
 
 void unlink_affect(struct unit_affected_type *u)
