@@ -155,6 +155,9 @@ static int hit_limit_number(struct unit_data *ch, int point)
 {
    if (IS_PC(ch))
    {
+      if (IS_IMMORTAL(ch)) //MS2020
+	return 3*point + 20;
+	
       if (age(ch).year > PC_LIFESPAN(ch))
 	return -1;
       
@@ -228,6 +231,9 @@ int move_limit(struct unit_data *ch)
    {
       int pct;
 
+      if (IS_IMMORTAL(ch)) //MS2020
+	return ml;
+	
       pct = age_graph(age(ch).year, PC_LIFESPAN(ch),
 		      80, 130, 110, 90, 70, 50, 20, 0);
 
@@ -296,6 +302,9 @@ int mana_limit(struct unit_data *ch)
    {
       int pct;
 
+      if (IS_IMMORTAL(ch)) //MS2020
+	return ml;
+	
       pct = age_graph(age(ch).year, PC_LIFESPAN(ch),
 		      0, 100, 105, 110, 120, 130, 140, 0);
 
