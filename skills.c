@@ -901,7 +901,7 @@ static void skill_read(void)
    touch_file(str_cc(libdir, SKILL_DEFS));
    if (!(fl=fopen(str_cc(libdir, SKILL_DEFS), "rb")))
    {
-      slog(LOG_ALL, 0, "unable to create lib/" SKILL_DEFS);
+     slog(LOG_ALL, 0, "unable to read lib/%s", SKILL_DEFS); //MS2020
       exit(0);
    }
 
@@ -929,7 +929,7 @@ static void skill_read(void)
 	 idx = atoi(pCh);
 	 if (!str_is_number(pCh) || !is_in(idx, 0, SKI_TREE_MAX-1))
 	 {
-	    slog(LOG_ALL, 0, "Skill boot error: %s", pCh);
+	    slog(LOG_ALL, 0, "Skill boot error, no index: %s", pCh);
 	    idx = -1;
 	 }
 	 continue;
@@ -941,13 +941,13 @@ static void skill_read(void)
 
 	 if (!str_is_number(pCh))
 	 {
-	    slog(LOG_ALL, 0, "Skill boot error: %s", pCh);
+	    slog(LOG_ALL, 0, "Skill boot error, no cmdindex: %s", pCh);
 	 }
 	 else
 	 {
 	    extern struct command_info cmd_info[];
 
-	    for (int i = 0; cmd_info[i].cmd_str; i++)
+	    for (int i = 0; *cmd_info[i].cmd_str; i++) //MS2020, missing *
 	    {
 	       if (cmd_info[i].no == cmdidx)
 	       {
@@ -989,8 +989,8 @@ static void skill_read(void)
 
       if (cmdptr == NULL)
       {
-	 slog(LOG_ALL,0,"cmdindex not defined for skill after index %d!",
-	      idx);
+	 slog(LOG_ALL,0,"cmdptr not found for skill after index %d! %s=%s",
+	      idx, pTmp, pCh);
 	 continue;
       }
 
