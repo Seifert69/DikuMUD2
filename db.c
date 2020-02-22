@@ -1559,6 +1559,7 @@ void boot_db(void)
    slog(LOG_OFF, 0, "Building interpreter trie.");
    assign_command_pointers();
   
+   slog(LOG_OFF, 0, "DIL check."); // MS2020
    interpreter_dil_check();
 
    slog(LOG_OFF, 0, "Loading fight messages.");

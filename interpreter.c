@@ -1060,7 +1060,7 @@ void assign_command_pointers(void)
 
 void interpreter_dil_check(void)
 {
-   for (int i=0; cmd_info[i].cmd_str; i++)
+   for (int i=0; *(cmd_info[i].cmd_str); i++) //MS2020 bug, missing *
    {
       if (cmd_info[i].tmpl == NULL)
 	continue;
