@@ -553,9 +553,5 @@ void player_file_index(void)
    if ((player_id = tmp_sl) <= 0)
    {
       slog(LOG_ALL, 0, "WARNING: Player ID is %d", player_id);
-#ifdef MARCEL
-      slog(LOG_ALL, 0, "UH OH OH: Setting player ID to 1 to prevent 255!");
-      player_id = 1;
-#endif
    }
 }

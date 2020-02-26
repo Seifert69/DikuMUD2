@@ -1847,14 +1847,7 @@ void do_wizhelp(struct unit_data *ch, char *arg,
 void do_kickit(struct unit_data *ch, char *arg,
 	       const struct command_info *cmd)
 {
-#ifdef MARCEL
-   system("./dmcd.perl &");
-   send_to_char("Tried to boot the compiler.\n\r", ch);
-   slog(LOG_ALL, UNIT_MINV(ch), "%s booted the compiler.",
-	UNIT_NAME(CHAR_ORIGINAL(ch)));
-#else
    send_to_char("No compiler in this version, I guess.\n\r", ch);
-#endif
 }
 
 

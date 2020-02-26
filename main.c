@@ -141,13 +141,6 @@ void swap_check(void *, void *);
  *             main game loop and related stuff                        *
  * ******************************************************************* */
 
-#ifdef MARCEL
-#include <sys/time.h>
-#include <sys/resource.h>
-
-int setrlimit(int, struct rlimit *);
-#endif
-
 #ifdef LINUX
 #include <sys/time.h>
 #include <sys/resource.h>
@@ -205,33 +198,6 @@ int main(int argc, char **argv)
 
       n = getrlimit(RLIMIT_RSS, &rlim);
       slog(LOG_ALL, 0, "RLIMIT RSS: %d / %d.", rlim.rlim_cur, rlim.rlim_max);
-   }
-#endif
-
-#ifdef MARCEL
-   /* Gnort:  added this to allow process to use more memory 
-    *
-    * (This must be temporary!!  We need a fix for that memory wasting!!!)
-    */
-
-   /* MS: I suggest extending the string reuse system to includethe followign:
-          names, titles, descr, extra descr. That would save *a lot* !
-          I.e. every copy of the newspaper takes up at least 40Kb!.
-
-      Gnort: Well, of course, the problem is the invariant the string reuse
-             system demands:  I.e., if you change a string, you have to get
-	     your copy first.  This is hell in the present source...
-
-      MS: Stop whining.
-    */
-
-   struct rlimit rl;
-   rl.rlim_cur = 16*1024*1024;
-
-   if (setrlimit(RLIMIT_DATA, &rl) < 0)
-   {
-      slog(LOG_ALL,0,"Setrlimit");
-      exit(1);
    }
 #endif
 

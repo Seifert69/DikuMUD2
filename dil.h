@@ -31,11 +31,6 @@
 	  #define   L_tmpnam       1024 /* Oh thank you Marcel! */
 #endif
 	
-#ifdef MARCEL
-	int mkstemp(char *);
-	char *mktemp(char *);
-#endif
-	
 #define WAITCMD_MAXINST	   2000
 
 #define SKIP     0xffffffff /* skip label/index defined */

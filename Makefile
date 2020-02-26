@@ -87,10 +87,10 @@ SERV_OBJS =	$(SERV_SRCS:.c=.o)
    # ------------------------------ oOoOoOo ------------------------------ #
 
 all:	$(SERVER)
-	@cd DMC;make
-	@cd DIL;make
-	@cd Mplex;make
-	@cd Utility;make
+	@cd DMC;make all
+	@cd DIL;make all
+	@cd Mplex;make all
+	@cd Utility;make all
 
 spells:
 	perl spellconvert.perl
@@ -102,7 +102,7 @@ $(SERV_OBJS):
 	$(CPP) -D DMSERVER $(OPT) $(CFLAGS) -c $(@:.o=.c) -o $@
 
 clean:
-	-rm -f *.o *.dh
+	-rm -f *.o *.dh dmserver
 
 realclean: clean
 	@-rm -f $(SERVER)
@@ -138,14 +138,8 @@ TAGS:	$(SERV_SRCS) $(SERV_HDRS) # Only tags for server...
 	@echo Done.
 
 data:
-	dmc -m zon/*.zon zon/*.zon.Z
+	DMC/dmc -m zon/*.zon zon/*.zon.Z
 
-#zones:	data
-#.if $(ZONEDIR) != "zon/"
-#	# Only copy if ZONEDIR is not the dir to copy from!
-#	@cp zon/*.reset zon/*.data zon/zonelist $(ZONEDIR)
-#.endif
-#
 backup:
 	tar cvf - *.[chly] | gzip -9 >! dikusrc.tgz
 	tar cvf - Makefile TODO distfile | gzip -9 >! dikumisc.tgz
@@ -154,10 +148,8 @@ backup:
 
 src:
 	tar cf - *.[chly] Filelist Makefile.* TODO TODO.gnort .patch_exclude \
-          lexfilter sign addheader pack.perl list.perl \
+            lexfilter sign addheader pack.perl list.perl \
           | gzip -1 > Src.tgz
 
 #.include ".depends"		# For `normal' make
 include .depends		# For gnu-make
-
-

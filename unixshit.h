@@ -45,25 +45,6 @@ int vsprintf(char *s, const char *format, va_list ap);
 /* ======================== UNISTD.H ============================= */
 
 
-#if defined(MARCEL) && defined(SOCK_STREAM)
-
-/* external functions */
-/*
-int read(int fd, char *buf, int nbyte);
-int write(int fd, char *buf, int nbyte);
-*/
-int select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds,
-           struct timeval *timeout);
-int accept(int s, struct sockaddr *addr, int *addrlen);
-int bind(int s, struct sockaddr *name, int namelen);
-int getpeername(int s, struct sockaddr *name, int *namelen);
-int connect(int s, struct sockaddr *name, int namelen);
-int socket(int domain, int type, int protocol);
-int listen(int s, int backlog);
-int setsockopt(int s, int level, int optname, char *optval, int optlen);
-#endif
-
-
 #if defined(GENERIC_BSD)
 int getdtablesize(void);
 #endif
@@ -143,8 +124,5 @@ int system(const char *string);
 #endif
 
 /* ======================== ???.H ============================= */
-#ifdef MARCEL
-int usleep(unsigned int);
-#endif
 
 #endif /* _MUD_UNIXSHIT_H */
