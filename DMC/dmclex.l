@@ -349,8 +349,29 @@ void destroy_fptr(struct unit_data *u, struct unit_fptr *f)
    }
 }
 
-void unlink_affect(struct unit_affected_type *u)
+void unlink_affect(struct unit_data *u, struct unit_affected_type *af)
 {
+   UNIT_AFFECTED(u) = 0;
+   return;
+
+   struct unit_affected_type *i;
+
+   /* Unlink affect structure from local list */
+
+   if (af->owner == 0)
+     return;
+   
+   i = UNIT_AFFECTED(af->owner);
+
+   if (i == af)
+     UNIT_AFFECTED(af->owner)        = i->next;
+   else
+   {
+      for(; i->next != af; i = i->next)       ;
+
+      assert(i);
+      i->next = af->next;
+   }
 }
 
 int yywrap()

@@ -249,7 +249,8 @@ void fix(const char *file)
       TAIL(inc);
    }
 
-   sprintf(tmp, "%s %s< %s > %s", CPP, incstr, tmpfile1, tmpfile2);
+   // MS2020 WAS: sprintf(tmp, "%s %s< %s > %s", CPP, incstr, tmpfile1, tmpfile2);
+   sprintf(tmp, "./%s %s %s > %s", CPP, tmpfile1, incstr, tmpfile2);
    if (verbose)
      fprintf(stderr, "verbose: system(%s)\n", tmp);
    i = system(tmp);
