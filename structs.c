@@ -356,7 +356,7 @@ unit_data::~unit_data(void)
 
    ubit8 type;
    
-   void unlink_affect(struct unit_affected_type *af);
+   void unlink_affect(struct unit_data *u, struct unit_affected_type *af);
    
    /* Sanity due to wierd bug I saw (MS, 30/05-95) */
 
@@ -373,7 +373,7 @@ unit_data::~unit_data(void)
      destroy_fptr(this, UNIT_FUNC(this));  /* Unlinks, no free */
 
    while (UNIT_AFFECTED(this))
-     unlink_affect(UNIT_AFFECTED(this));
+     unlink_affect(this, UNIT_AFFECTED(this));
    
    type = UNIT_TYPE(this);
    

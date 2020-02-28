@@ -39,7 +39,7 @@
 
 #ifdef MEMORY_DEBUG /* Endif is at the very bottom! */
 
-ubit32 memory_total_limit     = 15L * 1024L * 1024L;
+ubit32 memory_total_limit     = 64L * 1024L * 1024L;
 
 ubit32 memory_total_alloc     = 0L;
 ubit32 memory_total_overhead  = 0L;

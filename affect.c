@@ -126,10 +126,15 @@ void create_affect(struct unit_data *unit, struct unit_affected_type *af)
 
 /* Unlink  an affect structure from lists        */
 /* It is freed by 'clear_destruct' automatically */
-void unlink_affect(struct unit_affected_type *af)
+/* MS2020 added unit data as parameter. Shouldnt be necessary */
+/* But I need it for sanity in DMC where there is an odd bug */
+void unlink_affect(struct unit_data *u, struct unit_affected_type *af)
 {
    struct unit_affected_type *i;
 
+   assert(UNIT_AFFECTED(u) == af); //MS2020
+   assert(af->owner == u); //MS2020
+   
    /* NB! Mucho importanto!                                    */
    /* Affects may never be removed by lower function than this */
    register_destruct(DR_AFFECT ,af);
@@ -191,7 +196,7 @@ void destroy_affect(struct unit_affected_type *af)
    }
 
    assert(!is_destructed(DR_AFFECT, af));
-   unlink_affect(af);
+   unlink_affect(af->owner, af);
 }
 
 

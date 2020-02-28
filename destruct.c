@@ -96,7 +96,7 @@ void destruct_unit(struct unit_data *unit)
    void unsnoop(struct unit_data *ch, int mode);
    void die_follower(struct unit_data *ch);
    void stop_fighting(struct unit_data *ch);
-   void unlink_affect(struct unit_affected_type *af);
+   void unlink_affect(struct unit_data *u, struct unit_affected_type *af);
    void nanny_menu(struct descriptor_data *d, char *arg);
    void nanny_close(struct descriptor_data *d, char *arg);
 
@@ -154,7 +154,7 @@ void destruct_unit(struct unit_data *unit)
 	destroy_fptr(unit, UNIT_FUNC(unit));  /* Unlinks, no free */
 
       while (UNIT_AFFECTED(unit))
-	unlink_affect(UNIT_AFFECTED(unit));
+	unlink_affect(unit, UNIT_AFFECTED(unit));
    }
 
    if (UNIT_IN(unit))
