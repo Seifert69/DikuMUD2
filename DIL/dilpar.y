@@ -48,6 +48,8 @@
 extern char *yytext; 
 extern int yylex();
 extern int linenum;
+
+ int verbose = 0; // MS2020
  
 /*
  *  MUST be changed to
@@ -284,14 +286,16 @@ file     : program
 
 	       if (!istemplate)
 	       {
-		  fprintf(stderr," prg : %-20s ", nBuf);
+		  if (verbose)
+		    fprintf(stderr," prg : %-20s ", nBuf);
 
 		  bwrite_dil(pBuf, &prg);
 		  /* dumpdil(&prg); */
 	       }
 	       else
 	       {
-		  fprintf(stderr," tmpl: %-20s ", nBuf);
+		  if (verbose)
+		    fprintf(stderr," tmpl: %-20s ", nBuf);
 
 		  bwrite_diltemplate(pBuf, &tmpl);
 		  /* dumpdiltemplate(&tmpl); */
@@ -321,7 +325,8 @@ file     : program
             free_namelist(label_names);
             if (label_no)
                free(label_adr);
-            fprintf(stderr," (%5d bytes)\n", pBuf->GetLength());
+	    if (verbose)
+	      fprintf(stderr," (%5d bytes)\n", pBuf->GetLength());
             printf("Data in: %s\n", tmpfname);
 	    if (errcon)
 	      remove(tmpfname);
@@ -366,7 +371,8 @@ diloptions: DILSC_REC diloptions
 
 dilinit   : /* nothing */
          {
-	    fprintf(stderr, "DIL (line %5d)",linenum);
+	    if (verbose)
+	      fprintf(stderr, "DIL (line %5d)",linenum);
 
             /* Set up template  */
             CREATE(tmpl.argt, ubit8, ARGMAX);

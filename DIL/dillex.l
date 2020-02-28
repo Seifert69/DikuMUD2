@@ -34,6 +34,7 @@
 #include "tmp_dilpar.h"
 #include "diltok.h"
 #include "textutil.h"
+#include "structs.h"
 
 #ifdef YYLMAX
 #undef YYLMAX
@@ -186,6 +187,7 @@ void destroy_fptr(struct unit_data *u, struct unit_fptr *f)
 {
 }
 
-void unlink_affect(struct unit_affected_type *u)
+void unlink_affect(struct unit_data *u, struct unit_affected_type *af)
 {
+   u->affected = 0;
 }
