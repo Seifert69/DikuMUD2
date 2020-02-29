@@ -1,0 +1,339 @@
+Configuration
+
+By far this is the most complicated task of running a VME server.  This is
+where you will have to decide what races, spells, skills, etc you want to
+have.  This is where you will set up your login/logoff screens, etc.  
+
+Directory Structure
+
+We will start out our discussion on the directory structure that was created
+when you untared this.  In our install directory (/home/mud/vme in our
+case) you should have 5 other directories
+
+/home/mud/vme
+    bin
+    etc
+    lib
+    log
+    include
+
+The bin directory contains all of VME's executable files ( the files that
+actually run the mud ).  There is no configurable files located in this
+directory.
+
+The etc directory is where all of the configurable parameters of the mud
+will be made, there are many files that will be edited using your faviorte
+text editor in linux (ie emacs, vi, pico, jed, etc).  Each file will be
+described below:
+
+Server Configuration: server.cfg 
+
+This file is line order sensitive. Do not move around the order of the
+configuration lines. Comments and blank lines can be inserted and remove at
+your leisure.  A comment is any line that begins with a # sign. 
+
+The mudname that you want people to see in the main menu as they connect,
+also used by the multiplexers while the vme server is being rebooted to
+inform the players the mud is being rebooted, etc. NOTE:  The string must
+begin and end with a ~.
+
+mudname =~Valhalla Mud Server (VME) V1.0~
+
+The list below is the directories and their locations, if you are having
+trouble running VME you might try putting full pathnames instead of the
+relative paths.
+
+libdir = ~../lib/~
+etcdir = ~../etc/~
+logdir = ~../log/~
+zondir = ~../zone/~
+plydir = ~../ply/~
+
+The mother port is used to communicate between the mplex and the vme server,
+change this only if necessary, you must also then change the runmplex.sh
+script to reflect the same.
+
+motherport = 4999
+
+The rent field determines how much rent is charged. 0 means disabeled, 100
+means the same amount as specified in the zone files. Any number in between
+is a percentage of the rent specified per object.
+
+rent = 10
+
+The Book of Blood.  The book of blood is used to implement player killing in
+a controlled fashion.  Only players willing to sign the BOB will be allowed
+to Player Kill or be Killed by a player.  This also stops looting of corpses
+from a BOB to a non-BOB and vise versa.  Use "1" to let the server support
+the Book of Blood, use 0 if not. If you choose not to use the Book of Blood
+you must remember to remove the book from the zones as well as check that
+there is no BOB DIL code hanging around in your zones to disturb you.  You
+can search your zone files using grep. 
+grep PC_PK_RELAXED *.zon 
+grep "$BOB" *.zon 
+
+It is recomended that you leave bob set to one unless you fully understand
+what you will have to remove from the zone files and are comfortable doing
+so.
+
+bob = 1
+
+When Alias Shout equals 0, then players are not allowed to make shout
+statements in them VME alias dictionaries. When it equals 1 players can make
+shouts in aliases.
+
+Alias Shout = 0
+
+Mainly for debugging.  If set to one, no special routines will be activated.
+You should keep this at zero.
+
+No Specials = 0
+
+Don't set to anything but zero, unless directed to by technical support..
+Used on obsure systems where you have to shutdown at high loads, etc. etc.
+
+Lawful = 0
+
+When BBS is set to TRUE to server will assume that the game is operating on
+a BBS system.
+
+BBS use assumes that all players connect via some terminal program instead
+of telnet. This has to do with colour & hidden characters.
+
+BBS = 0
+
+Use 0 to disable accounting. All game play is free. Use 1 to enable
+accounting.  Unless a business licence is purchased, this option is not
+functional, all game play is free regardless.
+
+accounting = 0
+
+Here you can set at which level a newbie can shout...
+
+shout = 3
+
+The subnetmask and localhost ip numbers are used to specify which Internet
+addresses are from the LAN. If you are not on the Internet, please omit
+these or set them to "255.255.255.255" and "0.0.0.0" respectively.
+
+If you are on the Internet, any connection which is from the LAN will bypass
+the regular accounting system and have all such players play for free. If
+you do not wish this to happen, set the addresses as shown above.
+
+subnetmask = ~255.255.255.255~
+localhost  = ~0.0.0.0~
+
+The multiplexors can theoretically connect from any host (and that's
+intentional). To avoid hacking attempts, here you specify a list of
+different hosts that are trusted as "multiplexor" safe.
+
+More are specified like usual namelists, e.g. ~127.0.0.1~ ~0.0.0.0~
+
+mplex hosts = ~127.0.0.1~
+
+Color specifications.
+
+Some of these are interpreted as complete strings to be shown directly, and
+some are merely "prefixes" like for example the color room title. The
+control.txt (Color Codes) shows what each of the &c code are and their
+respective colors.
+
+Must have three numbers (%d), mana, enduance and hits
+
+color prompt =~&c+c%dm/%de/%ldh&c+b>&cw&s~
+
+color who  = ~&c+cPlayers&n&c+c-------&cw~
+
+Must have six %s's following each other 1 = name, 2 = ~~ or ~ ~, 3 = title,
+4 = ~~ or ~ (~, 5 = ~~ or guild 6 = ~~ or ~)~
+
+color who elem  = ~&cc%s%s&cc%s&c+w%s%s%s&cw~
+
+color room title  = ~&c+b~
+color room text   = ~&cw~
+
+color exits begin = ~&c+b[&c+cExits:&s&c+c~
+color exits end   = ~&c+b]&cw~
+
+When hitting someone in Melee, sent to attacker, defender, others.  Must
+have three entries.
+
+color melee hit    = ~&c+y~ ~&c+r~ ~&c+r~
+color melee miss   = ~&c+b~ ~&c+b~  ~&c+b~
+color melee nodam  = ~&c+g~ ~&cg~  ~&cg~
+color melee shield = ~&c+w~ ~&c+w~  ~&c+w~
+color melee death  = ~&cr~ ~&cb~  ~&cb~
+
+The Zone List: zonelist
+
+The zonelist file is used in order to tell VME which zones to boot up, and
+what permissions and prescedance.  Each entry is a one line with six (6)
+parameters as shown below.
+
+	<zonename> <password> <compile> <priority> <loadlevel> <payplay>
+
+Format is as follows:
+
+1. Zonename 
+  The on-disk filename of the zone.  This is the acutal file name of the zone
+  minus the .zon extention.
+
+2. Password
+	Used solely for compiler scripts, at the time of this documentation no
+	publicly available scripts are available, but there should be in the near
+	future.
+
+ 3. Compile time errors
+   Used solely for the (email/ftp) zone compiler. When set to 0 the zone is
+	compiled with the vmecomp flag '-l' which causes all warnings to be
+	treated as errors. Used for beginner / non-trusted builders.
+
+4.   Reset priority and 'runtime priviliges'
+   The primary purpose of this field, is to set in which order zones are
+	reset at boot-time. It is important that "basic" zones are reset first,
+	since there is a delay of 1 - 2 seconds between each zone reset. The
+	second purpose is to set what access the zone is allowed via DIL.  When
+	set to '0' it means the zone has 'root' privileges and is allowed to do
+	stuff that can be ultimately destructive to the mud. This should only be
+	set by the VME administrator and is only intended for the basis.zon and
+	spells.zon to make spell implementation via DIL possible.
+
+5. Load-level
+	The load-level can be set individually for each zone. The load level is
+	what level a wizard charecter must be in order to load an item from this
+	zone.  The load level is overridden if the person attempting to load is
+	the creator of the zone in question (i.e. in the %zone creators {...} ).
+
+6. Pay only
+	Set to 0 if anyone can play.  If set to "1" only players with a credit
+	larger > 0 can play here.  If set to "2" only players with an active
+	flatrate can play here.  If set to "3" players can play here with either
+	of the above options.  This is only functional in the Business VME
+	distribution.
+
+<zonename> <password> <compile> <priority> <loadlevel> <payplay>
+
+basis	trustme	1	0	250	0
+skills	2skillme	1	0	250	0
+...
+...
+
+Information Screens - logo, motd, welcome, newbie, wizlists, news, story, &
+credits.
+
+All of the above mentioned files are nothing but text files that will
+display information to the user at different times of login/logoff, and on
+certain commands.  All of these files may be contain color codes (refer to
+Appendix A) and any other ascii standard charters.
+
+logo - The logo file is what a user will see when he/she first connects to
+VME.  This should probally be the name of your mud/server.
+
+motd - This is the file that is displayed immediatly after the user has
+successfully logged into VME.
+
+welcome - The welcome screen will be displayed to the user after they choose
+(1) on the login menu.
+
+newbie - The newbie file will be displayed after a newuser has successfully
+logged on to the system.
+
+wizlist - The wizlist (Wizards List) is a file that show the current
+wizards/builders on the mud when the wizlist command is issued by a player,
+of course you can put any information you like as well.
+
+news - The news file contains any current news, this will be displayed when
+a user types news.
+
+story - The story file is <????>
+
+credits - The credits file is used to display credits when a player type
+credits.
+
+Help Files - help, help.wiz and help.local
+
+The help files are files that are displayed to the users when they do a help
+command.  The main help file help and the help.local files are available for
+all users to see.  The help local file is a local help file for specific
+topics relating to your own mud.  The help.wiz is a helpfile that only
+Wizards will be able to see.  The general format of the help files is:
+
+"topic" "more topic"
+This is a help file on topic
+#
+
+"index" "help"
+Check out the following topics:
+ Topic
+#
+
+
+The first line is searched on when a user does help topic, when matched the
+text below is displayed until the # sign.  Then another topic below that
+ending with a # sign, and so on.
+
+The file must end with a #~.
+
+For more illisturation on the help files please examine help, help.local or
+help.wiz.
+
+Socials/Actions - actions
+
+The actions file is a configuration file for socials.  This is where you can
+define what a player sees when he types certain commands that are know as
+socials, like scratch, kiss, dance, etc.  The file is a list of socials one
+after the other in each having ten lines as described below.
+
+<command-name> <act-flag> <min-pos user> <min-pos victim> <min-level>
+
+<command-name>	The command that the person will type to activate this command.
+
+<act-flag> Either someone or hideinv, refering to weather when the social
+will display the persons name if they are invisible or wizinvs.  Someone
+will display someone instead of the name for those that are invisible or
+wizinvisible, hideinv does not.
+
+<min-pos>	One of dead, sleep, rest, sit, fight, stand
+
+<min-level>	The minimum level the person needs to be to use this command.
+
+Then 3 or 8 more lines, like:
+
+1.	Message to self, no victim.
+2.	Message to others, no victim.
+3.	A single #, meaning no more lines for this social command, OR       Message to self, when there's a victim.
+4.	Message to others, with victim
+5.	Message to victim.
+6.	Message to self, victim not found.
+7.	Message to self, victim is self.
+8.	Message to others, victim is self.
+
+The messages are built as documented for DIL's act(). 
+
+Example:
+
+	laugh someone rest dead 0
+	You fall down laughing.
+	$1n falls down laughing.
+	You laugh wholeheartedly at $3n.
+	$1n starts laughing at $3n.
+	$1n laughs at your funny attitude.
+	Not likely, as there is no-one her by that name.
+	You laugh at yourself, aren't you just FUNNY?
+	$1n laughs noisely for a time, seemingly amused by $1mself. 
+
+If you have a single # at other lines than line 3, it means don't send any
+text.  This can be used to have a private social, for example a telepathic
+think command that only you and the victim is aware about.
+
+It's also good for socials that demand a victim, for example: 
+   squeeze someone rest dead 0
+   Where, what, how, WHO ???
+   #
+   You squeeze $3n fondly.
+   $1n squeezes $3n fondly.
+   $1n squeezes you fondly.
+   Where, what, how, WHO ???
+   You squeeze yourself - try to relax a little !
+   $1n squeezes $1mself.
+

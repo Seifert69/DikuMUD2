@@ -1,0 +1,142 @@
+Author seifert@diku.dk & gnort@
+
+Shops for Dummies
+-----------------
+
+Not really a DIL thing, but here goes:
+
+The shop file consists of a number of fields, whose order isn't very strict.
+
+Basics:
+
+Make a suitable mobile, preferably using the M_SHOP_KEEPER macro (as
+defined in some header-file, I assume.)
+
+Syntax:
+special SFUN_SHOP_INIT <data>
+
+where <data> is:
+
+   [Profit sell = <100..500>], default is 150
+   [Profit buy  = <1..99>],    default is 10
+   [Currencies  = {<currency>}]
+   [Production  = {~<symbolic-index>~}]
+   [Trade types = {<item type>}]
+   [Msg1 = ~<str>~]
+   [Msg2 = ~<str>~]
+   [Msg3 = ~<str>~]
+   [Msg4 = ~<str>~]
+   [Msg5 = ~<str>~]
+   [Msg6 = ~<str>~]
+   [Msg7 = ~<str>~]
+   Hours1 = <num> <num>
+   Hours2 = <num> <num>
+
+
+Explanation:
+
+Profit sell
+-----------
+Indicates the profit a shop keeper takes for an item. If for example
+110, he gains a 10% profit on any items sold.
+
+Profit buy
+----------
+Indicates the profit a shop keeper takes when he buys an item. If for example
+50, he buys items at half price.
+
+
+Currencies
+----------
+The next numbers contain the currencies the shopkeeper accepts.
+This is fairly moot, as we only have one currency at the moment...  Just
+omit this field, and the shop-keeper will default to the `default currency'.
+If you don't omit it, use the '+' string addition to add the proper
+macros with the string.
+
+Production
+----------
+Following this will be the actual `producing' list; i.e. what items do this
+shop-keeper keep on trading!  It's no good having a baker who only has one
+bread to sell, right?  Remember, it makes little sense to put items in this
+list, which you don't give to the shop-keeper in his %reset definition as
+well...
+
+Trade types
+-----------
+The numbers will each contain the item TYPES the keeper trades with,
+i.e. the types of objects he will buy from players.  A barman or baker will
+probably have an empty list here.  The values expected are defined in
+values.h as ITEM_ARMOR and so on. Use these macros with string
+addition.
+
+Msg1..7
+-------
+The next lines are the shopkeepers' lines, i.e. what he says in various
+situations.  This uses act internally, so it's like a format-line for act,
+allowing you to use the various $-codes.  $1 is the shopkeeper, $2 is the
+object being traded and $3 is the customer.
+
+The lines in order of appearance:
+
+  When the costumer is trying to buy something, the shopkeeper doesn't have
+  for sale.
+
+  When the costumer is trying to sell something, he doesn't have in his
+  inventory.
+
+  When the costumer is trying to sell something to the keeper, which he
+  doesn't trade in (the item types discussed above.)
+
+  When the costumer is trying to sell something too expensive for the
+  keeper.
+
+  When the costumer is trying to buy something he can't afford.
+
+  When a sale was successful.  Use %s to indicate the amount the costumer is
+  charged.
+
+  When a buy was successful.  Again, use %s to indicate the amount the
+  costumer recieves.
+
+The following are the defaults for the messages:
+ 
+  Msg1 = ~$1n says, 'I've got no such item!'~
+  Msg2 = ~$1n says, '$3n, you haven't even got it!'~
+  Msg3 = ~$1n says, 'I don't trade with things such as $2n'~
+  Msg4 = ~$1n says, 'I can't afford it, sorry!'~
+  Msg5 = ~$1n says, '$3n, you can't afford $2n'~
+  Msg6 = ~$1n says, 'That's %s for $2n'~
+  Msg7 = ~$1n says, 'Thank you $3n, here are %s for $2n.'~
+
+
+Hours1 & Hours2
+---------------
+The final values indicate in what time period the shop is open, 24hour
+format, e.g. "2..12 13..23", would have the shop closed between 12am and
+1pm, and between 11pm and 2am.
+
+
+Here's an example, taken from midgaard.zon:
+-------------------------------------------
+Remember that all fields except hours can be ommitted.
+
+special SFUN_SHOP_INIT
+"Profit sell = 130
+Profit buy = 10
+Production = ~kipper@midgaard~ ~split_cod@midgaard~ ~salmon@midgaard~
+Trade types = "+ITEM_FOOD+"
+Msg1 = ~$1n says, 'I've got no such fish, landlubber!'~
+Msg2 = ~$1n says, 'You are really trying to sell me something you don't have, $3n?'~
+Msg3 = ~$1n says, 'Would you like to buy some fish?'~
+Msg4 = ~$1n says, 'I can't afford it, sorry!'~
+Msg5 = ~$1n says, '$3n, you can't afford $2n'~
+Msg6 = ~$1n says, 'That's %s for $2n'~
+Msg7 = ~$1n says, '%s for $2n.'~
+Hours1 = 4 12
+Hours2 = 13 23"
+
+
+Hope this explains shops satisfactorily,
+
+Gnort & Papi

@@ -1,0 +1,91 @@
+DIL's act for Dummies
+---------------------
+
+Act takes 6 arguments.
+
+The most IMPORTANT argument of act is, somewhat strangely, the third.  This
+must be a unitptr, and it must be defined, as everything else in act relies
+on it!
+
+The fourth and fifth argument can have three different types, unitptr,
+string or null.
+
+Henceforth, when we discuss the third and fifth arguments (when they are
+characters), we shall refer to `char' and `victim' respectively.
+
+The purpose of act is to send a message to a number of players PRESENT in
+the room.  The room is defined as the room containing the above mentioned
+character (provided he himself is in the room, not e.g. in a closed coffin.)
+
+The first argument is a string, the socalled format string, informing act
+of how the other arguments are to be interpreted.  I'll get back to this.
+
+The second argument defines the visibility of this message.  This is
+defined as `How should I react when the player about to recieve this
+message can't see `char'?'.  It currently has three different values:
+
+A_SOMEONE:
+  Rather clear.  If reciever can't see `char', exchange name with `someone'.
+
+A_HIDEINV:
+  If reciever can't see `char' don't send the message at all.  This is what
+  e.g. `smile' should do, and indeed does.
+
+A_ALWAYS:
+  This acts like A_SOMEONE, except the reciever gets to see the string even
+  when sleeping (he doesn't normally.)
+
+
+The sixth argument to act describes WHO should recieve the message.
+It currently has 6 different values:
+
+TO_ROOM:
+  Sends to the entire room, excluding `char'.
+
+TO_VICT:
+  Sends to `vict' only.  `vict' must be defined, naturally.
+
+TO_NOTVICT:
+  Same as TO_ROOM, except `vict' is excluded as well.
+
+TO_CHAR:
+  Sends to `char' only.
+
+TO_ALL:
+  Sends to everybody present.
+
+TO_REST
+  This is a bit peculiar, best described with an example.
+  In most cases it will work just like TO_ROOM.
+
+  If you're on a horse, the message 
+    "The horse has arrived, carrying Gnort"
+  isn't supposed to be sent to you, but to every one else in the room.
+  This can be done with:
+    act("$1n has arrived.", A_SOMEONE, horse, null, gnort, TO_REST);
+
+  I.e., TO_REST means, `don't send to who is inside me'.
+
+
+The format string is a normal message, containing some special characters:
+  A double `$' will be sent to the reciever as a single `$'
+  A `$' followed by a number and an extra character.
+    The number refers to the arguments as described above, i.e. 1 is the
+    third argument, 2 is fourth, 3 is fifth.
+  
+    The extra character refers to what to put in the message here, where
+    the unit or string refers to the numbered argument:
+      'n': title of unit, or 'something' or 'someone'
+           'a bag' or 'gnort'
+      'N': name of unit, or 'something' or 'someone'
+           (whatever the zone builder put as first name in list)
+      'm': 'it' 'him' 'her' depending on sex
+      's': 'its' 'his' 'her' depending on sex
+      'e': 'it' 'he' 'she' depending on sex
+      'a': 'an' or 'a' depending on unit name
+      't': the string in the argument
+
+Hope this explains act 
+satisfactorily.
+
+Gnort

@@ -1,0 +1,53 @@
+/* Algorithm: Search for "myring@myzone" in pc's inventory and equipment
+ * Author   : gnort@daimi.aau.dk
+ */
+
+dilbegin
+var
+        list    : unitptr;
+        ring    : unitptr;
+        pc      : unitptr;
+        search  : string;
+        zonnam  : string;
+        objnam  : string;
+code
+{
+    zonnam := "myzone";
+    objnam := "myring";
+
+ :start:
+    wait(SFB_CMD, activator.type == UNIT_ST_PC);
+    pc := activator;
+    secure(pc, start);
+
+    ring := findsymbolic(objnam + "@" + zonnam);
+    if (ring #= null) {
+        goto start;
+    }
+    else {
+        search := ring.name;
+    }
+
+    list := pc.inside;
+    ring := null;
+
+ :search_on:
+    if (not (list #= null)) { /* As long as there is something to search: */
+        ring := findunit(pc, search, 0, list); /* Look for ring */
+
+        /* Is this the EXCACT ring? */
+        if (not (res.zoneidx $= zonnam and res.nameidx $= objnam)) {
+            list := ring.next; /* No, start at next element in list    */
+            ring := null;      /* ..and zero ring, to get right result */
+            goto search_on;
+        }
+    }
+
+    if (not (ring #= null)) {
+        act("$1n exclaims 'Aha!  You have my $3n, $2n!!!'",
+            A_SOMEONE, self, pc, ring, TO_ROOM);
+    }
+
+    goto start;
+}
+dilend

@@ -503,8 +503,7 @@ int original_main(int argc, char *argv[])
 
 int main(int argc, char *argv[])
 {
-  //original_main(argc, argv);
-  //return 1;
+   return original_main(argc, argv);
 
   pponly = 1;
 

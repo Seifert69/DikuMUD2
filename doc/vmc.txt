@@ -1,0 +1,650 @@
+                     Valhalla Mud Engine v1.0
+           -- The New and Improved Database Format --
+                   Comments to seifert@valhalla.com
+
+HISTORY
+
+NAME
+
+vmc - valhalla mud compiler.
+
+SYNOPSIS
+
+vmc -y moneyfile [-v] [-m] [-s] pathname ...
+
+DESCRIPTION
+
+Vmc is the databse-compiler for VME Server. It
+takes  as  input  a number of source files, and produces a corre-
+sponding number of binary datafiles, in a format readable by  the
+VME-Server.
+
+FILENAMES
+
+A sourcefile should have a filename ending in '.zon'.  Output is placed in
+files with corresponding filenames, and the suffixes '.data' and '.reset'.
+
+OPTIONS
+
+The argument string is processed from left to right. Options  may
+appear  between  filenames, but it should be noted that an option
+only takes effect when it is encountered. In most cases,  options
+should be placed to the left of the filename arguments.
+
+-m The location of the money file.  Normally etc/money.
+
+-v Verbose output.
+
+-m  Make option. Only compile sourcefiles if they have been modi-
+fied more recently than the corresponding output files.
+
+-s Suppress the generation of output files.
+
+GENERAL CONCEPT
+
+The new database format is designed to improve the system on  two
+factors: Runtime efficiency and user-friendliness (ease of build-
+ing). The second part is achieved through the  use  of  a  format
+that  imitates  a series of data assignments in a high-level pro-
+gramming language.  To prevent this higher-level format from  af-
+fecting  the  performance  of  the game, the data files are 'com-
+piled' into a binary format that is easily  read  by  the  server
+program.  In some cases, it is possible to store data directly in
+the structures used by the server; Thus, data can be read and as-
+signed in a single operation. Symbolic names are used for all da-
+ta-fields.  The Compiler is able to  supply  default  values  for
+most fields, so the builder frequently only needs to define a few
+key values.  All units will be referred  to  by  symbolic,  user-
+selected  names  within  the source files, improving readability.
+The  compiler  will  filter  the  input  files  through  the   C-
+preprocessor,  allowing  builders  to benefit from the use of in-
+cluded files and macro definitions. Predefined macros for  often-
+used values and names will be automatically included. Each 'zone'
+of the game will be contained in one single file, making the pro-
+cess  of  using constructors from foreign sites considerably more
+attractive.
+
+The C-PREPROCESSOR
+
+If you're already familiar with this program, you can  skip  this
+section.  If  not,  this is a brief outline of the most important
+functions. For details, consult a C-manual (or man cpp).
+
+MACRO SUBSTITUTION
+
+For our purposes, this is the most powerful feature of  the  pre-
+processor. It allows you to enter lines like:
+
+#define DIRTFLOOR {UNIT_FL_NO_WEATHER, UNIT_FL_CAN_BURY}
+
+(note that the '#' must be in column one)
+
+Then, later on in the text, you can write:
+
+flags {DIRTFLOOR, UNIT_FL_SPEC_TICK}
+
+The preprocessor will substitute the 'macro' resulting in:
+
+flags {{UNIT_FL_NO_WEATHER, UNIT_FL_CAN_BURY}, UNIT_FL_SPEC_TICK}
+
+Another function, #include, allows you to include other files  in
+your zone description. Files containing macro definitions for the
+most important values are automatically included.
+
+In addition, of course, the preprocessor permits you to put  com-
+ments  enclosed  in  /* ... */ anywhere in your file - increasing
+the readability.
+
+THE ZONE FILES (data format)
+
+Spaces, Htabs, and linefeeds are considered  whitespace  and  ig-
+nored.
+
+A  zonefile  is split up into 5 sections. A zone-declaration sec-
+tion, a mobile (NPC) section, an object section, a room  section,
+and  a reset section. None of the sections actually have to be in
+the file, and they may appear in any order.
+
+Each section is preceded by a section header. These are the  five
+possible headers:
+
+%zone
+%rooms
+%mobiles
+%objects
+%reset
+
+The  first  four sections may be considered lists of definitions.
+The last section is can be considered a program in a simple  pro-
+gramming language.
+
+A definition takes the general form:
+
+                           field value
+
+Where field is the name of a data field, and value is some value.
+Values are of one of 5 types:
+
+Number: A (possibly hexa-) decimal integer, possibly prepended by
+a  '-'. Hexadecimal numbers are on the normal C-style format (eg.
+0x0f3). Hexadecimal digits may be in lower or upper case.
+
+String: A string of characters enclosed in '"'s. Newlines may ap-
+pear in the string.
+
+Stringlist: Either a single string (see above), or a construction
+like:
+
+             { "Adolf Adolfson", "Adolf", "guard" }
+
+NOTE: A stringlist is used to provide a unit  with  one  or  more
+names  by  which  the players can refer to it. Due to the way the
+parser works, there are some  important  considerations  to  make
+when writing a stringlist.
+   An obvious namelist for, say, a small dwarf would be:
+
+names {"small", "small dwarf", "dwarf"}
+
+However, if a player were to type:
+
+hit small dwarf with bottle,
+
+The  parser  would assume that "small" was the name of the dwarf,
+and that "dwarf bottle" was the weapon to be used.
+
+Thus, if one name can form a prefix for another in this style, it
+should be placed AFTER that name, e.g.:
+
+names {"small dwarf", "small", "dwarf"}
+
+Note also that the name "small" is really a very questionable way
+of referring to a small dwarf, and that maybe "small  dwarf"  and
+"dwarf" should be left as the only alternatives.
+
+Flags: Either a single number, or a list like:
+
+                         {8, 16, 1, 128}
+
+A  list like the above has the effect of binary ORing each member
+of the list together. Thus, the list above  wouldhave  the  value
+153.
+   Actually,  one  would  rarely  see lists like the above; macro
+definitions are supplied for all of the commonly-used  flag  val-
+ues. Thus, you might see:
+
+          uflags {UNIT_FL_NO_WEATHER, UNIT_FL_CAN_BURY}
+
+in the definition for a room with a dirt floor.
+
+the '{'...'}' pairs may be nested, to ease the creation of macros
+with multi-flag values.
+
+Symbol: Either a standard C-style identifier, denoting some  unit
+within  the zone, or two identifiers, separated by a @ or a /, to
+reference a unit in a different zone. The format is:
+
+<unit-ident> @ <zone-ident>
+
+or:
+
+<zone-ident> / <unit-ident>
+
+The two versions are interchangeable, but it is probably wise  to
+stick to one format within a single zonefile in order to maintain
+readability.
+   The usual care should be applied when choosing  identifiers  -
+they  should be easy to remember and eay to type - especially for
+objects that're to be frequently loaded 'manually', eg. by immor-
+tals within the game.
+
+Below are descriptions for each of the sections.
+
+ZONE section
+
+The  Zone-section  defines  the global parameters for the current
+zone. It is usually wise to place this section in the top of  the
+file. The fields and their formats are as follows:
+
+title <string> This is the title of the zone, for example Town of
+Midgaard, Thieves Guild, Forest of Haon Dor, or whatever.  It  is
+currently  only used when players request a list or available ar-
+eas in the game. Leaving it undefined will keep it away from  the
+areas list.
+
+lifespan <number>
+This  defines  the interval between resets for this zone, in min-
+utes. Default is 60.
+
+reset <number>
+This should be set to one of the macros RESET_NOT, RESET_IFEMPTY,
+RESET_ANYHOW.  Default is RESET_ANYHOW, which means that the zone
+will be reset even if players are present within it.
+
+creators <stringlist>
+This should contain the MUD names of the creators  of  the  zone.
+Filling  out  this field will enable immortals to see who to con-
+tact in case of zone problems. It also gives the possibility  for
+directing errors to you directly via mud-mail. Seen via the 'stat
+zone' mud-command.
+
+notes <string>
+This is a plain text description of the zone for other immortals.
+Seen  via the 'stat zone' mud-command. It is often a good idea to
+include your e-mail address in the  notes  so  that  you  can  be
+reached easily by the implementors.
+
+<symbol>  If  existing,  this entry defines the name of the zone.
+Default is the trailing component of the current filename,  minus
+the trailing ".zon".
+
+ROOM section
+
+This section defines the rooms in the zone. Each room consists of
+a symbol, which is the identifier of the room; a number (possibly
+zero)  room  fields, and a trailing 'end', to mark the end of the
+room.
+
+The fields are as follows:
+
+movement <number>
+How hard it is to walk in and out of the room. The possible  val-
+ues are defined and described in values.h, and have SECT_ prefix-
+es.
+
+romflags <flags>
+Special flags for this room (room/object/mobile-flags; hence  the
+name).  The  values  are defined in values.h, and have the prefix
+ROOM_FL_.
+
+exit[<number>] to <symbol>, key <symbol>, keyword <stringlist>,
+open <flags>, descr <string> ;
+
+At least one of the subfields must be defined, and they  may  ap-
+pear  in  any  order. The separating commas are optional, whereas
+the trailing semicolon must be present.
+
+The macros NORTH, SOUTH, EAST, WEST, UP, and DOWN denote the  ex-
+its. Further, the macros north, south, east, west, up, down (low-
+ercase) are supplied. The macro north is defined to  exit[NORTH],
+etc. A valid exit definition is thus:
+
+exit[NORTH] to temple@midgaard keyword "temple";
+
+or:
+
+north to temple@midgaard keyword "temple";
+
+(note that the '{' and '}'s are not needed for the stringlist, if
+it contains only a single string.)
+
+The keywords can be used, for example, for the 'enter'-command in
+the game (eg, "enter shop").
+
+The  description  is seen by a player which tries to look in that
+direction. If none is defined, he/she sees "You  see  nothing  of
+interest.", or some such string.
+
+the  to-field says which room the exit leads to (it may be in an-
+other zone). If it is left undefined, the exit is 'blocked'.
+
+The flags for the open-subfield are defined in values.h, and have
+EX_ prefixes.
+
+The  key defines the key which can lock/unlock this door. If none
+is defined, the door cannot be locked/unlocked.
+
+UNIT-fields
+
+In   addition   to   the   standard   room-fields,   each    unit
+(room/mobile/object)  has  a  common set of fields. These are de-
+scribed below:
+
+names <stringlist>
+The namelist of the unit. Default is a list consisting of a  sin-
+gle  name,  namely the identifier of the unit. See the discussion
+about stringlists above.
+Be aware of the proper use of capital letters.  Any  proper  name
+such  as Mary, Adolf, Tiamat, Jafar, Hansen and John should be in
+caps, whereas names like cityguard, guard, armourer, weaponsmith,
+alchymist and mage should be in lowercase only. The reason should
+be fairly obvious - if not mail me and I will add a  lengthy  ex-
+planation.  The  "caps"  consideration  is exactly the same which
+must be used in the "title" section (below).
+
+For example:
+   names {"Adolf Adolfsson", "Adolf", "cityguard", "guard", "cap-
+tain"}
+
+title <string>
+For  rooms   :  the string shown before the long description, eg.
+"The Temple".
+For objects: eg. "an apple", "a dagger", etc.
+For mobiles: eg. "the dragon", "the dwarf", "Fido", etc.
+
+Please be conscious  of  the  capitalization  of  these  strings:
+Whereas  the title of a room should often contain leading capital
+letters, this is rarely the case for mobiles and objects. An  ex-
+ception is a monster like "Puff".
+   Default is the first name of the namelist.
+
+descr <string>
+The long-description of the unit. Again, this is treated somewhat
+differently for the various kinds of units.
+
+For rooms: The description people see when they stand in the room
+(unless they're in compact mode).
+For  mobiles:  What people see of a mobile if it's in its default
+position, Eg. "A big ugly troll looms before you.".
+For objects: What people see when the  object  is  lying  in  the
+room.
+
+extra  <stringlist>  <string>  Adds  an  extra-description to the
+unit. An arbitrary  number  may  exist  in  any  unit.  An  empty
+stringlist  ('{}')  matches  the  namelist  of  the current unit.
+Hence, if you want to tag a description to the name(s) of a unit,
+this is a good shorthand.
+
+key <symbol>
+The object necessary to lock/unlock this unit. Eg:
+
+   key goldkey@midgaard
+
+open <flags>
+Some  characteristics  related  to  containers. The flags are the
+same as for room-exits (the EX_ prefix macros).
+
+manipulate <flags>
+Flags describing the handling-characteristics of  the  unit.  The
+flags are defined in values.h, with MANIPULATE_ prefixes.
+
+
+alignment <number>
+The  alignment of a unit, -1000 is most evil, 0 is neutral, +1000
+is most good. Any value in [-1000..-350] is considered evil.  Any
+value  in [+350..+1000] is considered good. Values in between are
+neutral. Default is 0.
+
+
+minv <level 1..255>
+The level for which this unit is invisible. Default is zero.
+
+flags <flags>
+Flags describing the unit. The values have  the  prefix  UNIT_FL_
+(see values.h)
+
+weight <number>
+The weight of the unit.
+
+capacity <number>
+The carrying-capacity of the unit.
+
+height <number>
+The height a monster in centimeters, the length of a rope, or the
+size of a weapon, shield or armour (the latter  have  their  size
+specified  as  the  size of the humanoid required to wield them).
+One centimeter = 0.3937 inches, and 1 inch = 2.54 cm.  12  inches
+is 30.48 cm, 12*6 inches = 72 inches = 182.88 cm
+
+special <number> text <string> time <number> bits <bitfield>
+The  number  of  a special routine to associate with this mobile.
+An arbitrary number of special routines may be associated with  a
+mobile.  The text-field is optional. If included, it sets the da-
+ta-field associated with that function. Note that only some func-
+tions  use  the data-field, and that others elect to set it them-
+selves. An example of a special-routine that uses  a  text-string
+stored  in the data-field is SFUN_RANSAY, which, at random inter-
+vals, feeds the text to the 'say'-command.  The <time>  specifies
+how  often  the special routine is activated on an event-basis (0
+if only commands and the like) and the bits  specify  variability
+of the time field (see values.h SFB_XXX). Eg:
+
+special  RANSAY text "Oh my god, it is full of stars!"       time
+WAIT_SEC*60 bits SFB_TIME1
+
+This would cause activation of the special routine every 60  sec-
+onds  in the random interval described for SFB_TIME1 in values.h.
+The time should never be set to less than WAIT_SEC*3 (3  seconds)
+unless  zero.   The  possible special routines are defined in the
+file values.h and have a SFUN_ prefix along with the SFB_ macros.
+
+
+
+-----------------------------
+
+OBJECT fields
+
+action <string>
+The  'action-description'. Currently, this string is only used to
+contain the text on notes.
+
+value[<number>] <flags>
+This sets the element of the value-array associated with objects.
+The standard uses of this array are described elsewhere.
+
+spell[<number>] <number>
+Associate  a  spell with this object. The spell-types (to be used
+as index) are defined in values.h,  with  the  prefix  SPL_.  The
+macro MSET_SPELL() should be used for this purpose.
+
+cost <money list>
+The standard price for this object. Used by shops, etc. The money
+list is a number followed by a money definition. Use  the  prede-
+fined  money  constants  XXX_PIECE  in  values.h. Example: cost 4
+IRON_PIECE, 7 SILVER_PIECE
+
+rent <money list>
+The cost for storing this object for one day.  See  the  document
+wpn_arm  for  a description of rent with associated items. Speci-
+fied as 'cost' above.
+
+type <number>
+The type of object. The values are defined in values.h  with  the
+ITEM_ prefix.
+
+romflags <flags>
+Object flags. The values are defined in values.h with a OBJ_ pre-
+fix.
+
+
+MOBILE fields
+
+mana <number>
+
+hit <number>
+Hitpoints.
+
+money <money list>
+Wallet size, see 'cost' in object fields.
+
+exp <number>
+Experience.  A value of 0% .. 200%. See the monster document  for
+further explanation.  Default is 100%.
+
+
+sex <number>
+Gender, one of these:
+
+SEX_NEUTRAL
+SEX_MALE
+SEX_FEMALE
+
+(defined in values.h)
+
+level <number>
+
+race <number>
+Race. Values defined in values.h with the RACE_ prefix.
+
+attack <number>
+Attack type. Values defined in values.h with the prefix WPN_.
+
+position <number>
+default <number>
+The  position  and  default position of the mobile. Values are in
+values.h - prefix POSITION_. When a monster is loaded it  is  put
+in  the  position  'position'.  When the monsters position equals
+'default' the 'descr' text will be shown  to  players,  otherwise
+the  monsters  title  along  with current position information is
+displayed.
+
+npcflags <flags>
+Mobile flags - defined in values.h; prefix NPC_.
+
+romflags <flags>
+Character flags - defined in values.h; prefix CHAR_.
+
+hand <number>
+A measure for how much damage the mobile can  do  with  its  bare
+hand  (or  tentacles). See the monster and wpn_arm document for a
+detailed discussion of this attribute.
+
+ability [<number>] <number>
+Set an ability-value. The Ability-types (to be used as index) are
+defined  in  values.h, with the prefix ABIL_. See the monster and
+wpn_arm document for a detailed discussion of this attribute.
+
+
+weapon [<number>] <number>
+Set the skill in the usage of a certain weapon. Weapon-types  are
+defined  in values.h - prefix WPN_. Use the available MSET_WEAPON
+macro.  See the monster and wpn_arm document for a detailed  dis-
+cussion of this attribute.
+
+spell [<number>] <number>
+Set  the  mobile's  knowledge of a certain spell. Spell-types are
+defined in values.h with the  prefix  SPL_.   Use  the  available
+MSET_SPELL macro.  See the monster and wpn_arm document for a de-
+tailed discussion of this attribute.
+
+-----------------------------
+
+RESET fields
+
+Any reset command may be preceeded by a pair of curly brackets {}
+containing  more reset commands. The commands inside the brackets
+will only be executed in case the associated command was success-
+ful.
+
+load udgaard/fido into midgaard/temple max 1
+{
+   load bone
+   load escrement into midgaard/temple
+   load bag
+   {
+      load apple
+   }
+}
+
+The  above example would load 'fido' into the temple, and if suc-
+cessful (i.e. if the max has not been  exceeded)  then  it  would
+nest into the brackets load a bone (in fido's inventory), load an
+escrement into the temple (same room as fido), load a  bag  (into
+fido) and put an apple inside the bag.
+
+max <num>
+This  command  is  always  part  of  another reset command (load,
+equip, etc.).  At reset time the entire world is scanned for  oc-
+curences of the loaded unit - only if the currently existing num-
+ber is less than <num> will the command be executed.
+
+local <num>
+This command is always  part  of  another  reset  command  (load,
+equip, etc.).  At reset time the location of which the unit is to
+be loaded into is scanned for occurences of the loaded unit - on-
+ly  if  the currently existing number is less than <num> will the
+command be executed.
+
+zonemax <num>
+This command is always  part  of  another  reset  command  (load,
+equip,  etc.).   At  reset  time  the  entire zone being reset is
+scanned for occurences of the loaded unit - only if the currently
+existing  number is less than <num> will the command be executed.
+
+load <symbol1> [into <symbol2>] [max <num>] [zonemax <num>]  [lo-
+cal <num>] [complete]
+Loads the unit <symbol1> into the location <symbol2>. If the load
+command is nested, the into <symbol2> defaults to the unit  which
+the command is inside. The complete flag is specified later.
+
+equip <symbol> position <num> [max <num>] [complete]
+Command is always used nested inside a loaded mobile to equip the
+object <symbol> on the mobile. Position can be  any  macro  value
+WEAR_ from values.h.
+
+follow  <symbol>  [max <num>] [zonemax <num>] [local <num>] [com-
+plete]
+Command is always used nested inside a loaded mobile to force the
+mobile <symbol> to follow the mobile.
+
+door <symbol> <num> <flags>
+The  command  is  used to reset door status. In the room <symbol>
+the door in the direction <num> gets its flags  set  to  <flags>.
+(Use  the  macros NORTH, EAST, SOUTH, WEST, UP and DOWN for <num>
+and the EX_ macros for the flags).
+
+purge <symbol>
+Inside the room <symbol> all units are purged from existence.
+
+remove <symbol1> in <symbol2>
+Removes all occurences of <symbol1> in the room <symbol2>.
+
+random <num>
+Make set of resets on a given chance (percent). For example:
+
+random 80 {
+   load captain into jail_room complete
+   {
+      equip magic_sword position WEAR_WIELD max 1
+      load bag
+      {
+         load ruby_ring max 1
+      }
+   } }
+
+complete
+Some of the above specified commands may be preceeded by the com-
+plete  flag. In the case where this flag is set, the unit is only
+loaded in case all immediate commands inside its nesting are exe-
+cuted successfully.  For example:
+
+
+load captain into jail_room complete
+{
+   equip magic_sword position WEAR_WIELD max 1
+   load bag
+   {
+      load ruby_ring max 1
+   }
+}
+
+In  this  case  the  captain  is  only loaded if the objects mag-
+ic_sword and bag are successfully loaded. In case  the  ruby_ring
+is  not  loaded this will have no effect on the complete flag. To
+make the ruby_ring affect to captains complete flag, the bag must
+also  have  specified a complete flag (becuase the bag would then
+not be complete, and thus the captain would not be complete).
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,840 @@
+By agcowan@turing.uncg.edu
+
+*****************************************************************************
+
+
+III.  		Valhalla's Guide to Writing Your First Zone	
+    	      -----------------------------------------------
+
+    This Guide is the last part of a 3 part tutorial designed to introduce
+area building on Valhalla Mud (or derivatives of). It in no way serves as a 
+replacement for any of the other docs on area building, instead it should
+bring everything together and illustrate the finer points with a helpful
+example. A tiny sample world (with 2 rooms, 2 mobiles and 3 objects) will 
+be constructed with many added comments to show a generalization which 
+could be applied to your ideas. Any suggestions/comments should be sent to
+Andrew Cowan (agcowan@turing.uncg.edu == Icculus@Valhalla). Many thanks to
+Cabal (Brian Clark), Papi (Michael Seifert), and Dethe (Tom Martin) for
+their help when I was learning, without these guys I would have quit before
+getting the first one done :) .
+
+
+	**************************************************************
+		   My Zone is Written, Now What Do I Do?
+        **************************************************************   
+
+
+    Many of you probably already have read the docs and have actually created
+a zone file. So what do you do now? Valhalla offers our designers the 24 hr
+a day, 7 days a week zone compiler (though on occasion has been known to go
+down *grins*). This compiler can be accessed on the same site that you found 
+this file on (ftp.stacken.kth.se) and through your ftp daemon you can 1) test 
+compile your area, 2) make modifications to an already linked zone, 3) and even 
+send stuff for the mud administration to look at (though please be very patient 
+for a reply, these guys are ALWAYS busy! *smile*). 
+
+(NOTE) - This Tutorial assumes you have access to the internet and an
+ftp-daemon. It also assumes you know how to use ftp to send and retrieve
+files over the internet. If you do not you will of course need to get 
+either an instructional internet manual or read the man pages. 
+
+I) To compile your area and check for errors - Make sure your zone file
+is named accordingly filename.zon. Ftp to the site mentioned above and move to
+the directory: pub/mud/diku/in. From here you can send the file directly
+to the compiler which will handle all incoming files in a queue-like fashion.
+Give the compiler about 5 minutes though it can take more or less than that
+time depending on the circumstances. Then move to the dir:  pub/mud/dikuii/out
+and use 'ls -al' to see if your zone has been compiled. The compiler outputs
+to a .err file, that is, your output file would be filename.zon.err. The reason
+for the -al switch is to check on compile time. That is, if you send a file and
+the results indicate an error, when you recompile you need to know if what you
+are looking at is up-to-date, the -al switch will help determine this. There
+is also a dmclog file in the /out directory, which contains the list of all
+zones that have been compiled (error-free or not) since the directory was
+last cleared.
+
+(BTW)  The Valhalla zone compiler is an actual compiler, very much unlike DikuI
+base muds which view zones through an interpreter during runtime. When you
+upload your zone to the /upload directory, it gets fed through to the compiler.
+A successful compilation will create two files, filename.reset and 
+filename.data. These files are linked in with the mud code at runtime and cannot
+be changed until a modification is compiled and the mud is rebooted, or
+crashes.
+
+II) To send your debugged zone file to the mud administration there is a 
+special directory on the ftp site for this (pub/mud/dikuii/to-mudadmin).
+Please make sure the file you send is completely debugged!
+
+III) To update an existing zone file or add a new zone for the first time,
+there is a directory to send to (pub/mud/dikuii/upload). Just send the file
+and check the output in the /out directory. (NOTE) - Any files uploaded to
+this directory will require approved passwords. If you have a working password
+and the compilation results in no errors, the modifications will be online
+after the next reboot or crash. (NOTE) - If your recent compilation results
+in any errors, it will not replace the currently working zone. So there is
+no way any errors can get mixed in by accident.
+
+	************************************************************
+
+    Ok, so the rest of us want to see how to put together everything the
+other docs say into one working zone! It is very important you have some of
+the other docs handy at all times during this tutorial. I will refer to things
+mentioned in alternative sources all available on the ftp site, so try to
+have these in hard-copy: objects.ans, mobiles.ans, rooms.ans, values.h,
+wmacros.h. The last two files, values.h and wmacros.h, are mainly to be used 
+during the actual zone creation. If you need to look up something like maybe
+a specific race def for RACE_MONKEY, values.h is where to look, and if you
+are interested in seeing how some macros work, like MSET_SPELLS, then
+you can find help in wmacros.h. We will now create a tiny zone with just a
+couple of rooms, mobiles and objects. The idea is that you see the basic
+format of any zone so you can use information contained in the other docs
+to apply this format to your ideas!
+
+   ************************************************************************** 
+			            Tiny_Zone
+   **************************************************************************
+   (NOTE) Comments are added in C style, with a /* to indicate the start of
+   a multiline comment and */ to indicate the end. Everything that follows
+   this will be actual zone file contents, except for the comments. (NOTE)-
+   The first line of every zone file must have a password declaration line.
+   The format is this /*pwd:password here*/ and though technically this line
+   is just a comment, it is a very important one and must have the first line
+   all to itself. Passwords are assigned to debugged zones after being approved.
+   **************************************************************************
+
+/*pwd:This is my password*/
+ 
+#include <composed.h>
+
+/* The #include is a C preprocessor directive and is very important for
+your zone to work. composed.h is a header file which contains definitions
+for previously defined mobiles, which you may utilize for your areas
+if you have a need. (NOTE) - The composed.h file has two #include calls
+itself, one for values.h and another for wmacros.h. These two files contain
+very important definitions and must be included in your zone! If you have
+no need for including composed.h, then you must include the other two
+explicitly. */
+
+/* (NOTE) Every zone is made up of 5 sections:
+1) %zone    - Defines zone name and other zone-specific information
+2) %rooms   - The room definitions are here
+3) %mobiles - The mobile (monster) definitions are here
+4) %objects - Objects are defined here
+5) %reset   - (**Important**) Defines how everything in the zone resets and
+              how (mobiles&objects) get loaded into their assigned rooms */
+
+%zone tiny_zone
+lifespan 20
+reset RESET_ANYWAY
+
+/* I just named my zone tiny_zone. Now, this name is important because 
+everything in the zone can be referenced with the format : sym_name@zone
+and what follows the %zone call is the value of zone here. It is also
+recommended that as a convention you use your zone-name as the zone
+filename with a .zon extension (Must always have .zon extension or the
+compiler will not understand what to do). So for our zone, we would name
+this file tiny_zone.zon. The lifespan call simply defines the zon life for
+tiny_zone, in this case tiny_zone wants to reset every 20 minutes. The
+reset call however defines how this zone reset is made. In our case we will
+reset every 20 minutes regardless of anything else! The other options for
+reset are:
+1) RESET_NOT - Resets only at Mud boot time (I.E. Like the wight skin belt!)
+2) RESET_IFEMPTY - Resets only if the zone is empty */
+
+/* (NOTE) Generally the only zones which reset quickly are newbie zones.
+It is recommended that a zone reset time of at least 20 minutes is used,
+if you need to make an exception please let us know, and explain why a
+quick reset is important. */
+
+creators {"icculus", "venger"}
+
+/* Believe it or not, the format of this is important also! The names must
+be in lowercase or the correct names will not be registered. There are
+certain objects available to immortal designers which help debug areas and
+modify to meet player suggestions. These objects make sure the person using
+them is one of the names in the creators field and so make sure you use all 
+lowercase, and add everyone who had a part in it! */
+
+notes "What can I say but this will be short and probably not a very
+       fun zone to adventure in! Send all complaints to:
+       Andrew Cowan agcowan@turing.uncg.edu."
+
+/* Self-explanatory I hope! You can add anything you want immortals to
+see when they check your zone statistics! It also helps if the designer
+adds his/her email address and name to this section, in the event that any
+future modification is needed. */
+
+/* In the room, mobile and object definitions that follow, I use my own
+specific style (With exception to Tiamat which is Chris Armstrong's style).
+There is a great deal of flexibility involved here and you can make up your
+own format for definitions. The only thing of importance here is that you start
+every definition with its symbolic_name (on its own line!) and end the 
+definition with the word 'end' on a line by itself. */
+
+%rooms
+
+				cluttered_room
+names {"cluttered room"}
+title "A Cluttered Room"
+descr
+"   You have entered a very cluttered room, in fact you find difficulty
+in finding an empty place to stand! Scattered all about you are various
+artifacts located within the area, maps made recently by explorers and
+assorted other trinkets from around the globe. You notice an exit north,
+which appears to lead to midgaard, and something looking like a hinge on
+the floor at your feet."
+
+
+/* Ok, so the first line has the room's symbolic name by itself. Now to refer
+to this room in any dil program or on the mud you can use the symbolic format.
+That is, for this room, cluttered_room@tiny_zone is the way to refer to it.
+The names field is generally only required for special rooms, that is, rooms
+that will be well travelled. Names should be defined on just about everything 
+you create (objs and mobs) but for rooms, only those which find it necessary.
+
+(BTW) The names field is what you could use as a controlled teleport keyword
+I.E. cast contr cluttered room. And gods can use those names for the 'goto'
+command, which believe me is much nicer than using the symbolic format
+repeatedly. 
+
+(NOTE) - You should follow this simple convention for name-lists: Put all
+names which are a subset of others later in this list, following their
+superset. I.E For a room named 'The Room of Light Magic', my namelist
+could look like this: 
+
+names {"room of light magic", "room of light", "room of magic", "light magic"}
+
+It may not seem important, but due to the way namelists are searched it does
+turn out to be.
+
+The title is what players see as they enter the room, and acts like a room name
+as far as mortals are concerned so keep this in mind before choosing obscure 
+titles! The descr is basically the room layout, or as much of it as is given to 
+the mortals inside. This is possibly the most important aspect of any zone, for
+no matter how great the equipment is inside, if the room descriptions are not
+well thought out, the players lose interest and the zone loses its link!
+The extra descriptions which follow are used in conjunction with the room
+description and this should be true for all zones. A simple policy to set
+for your zone is this: Every single thing you mention in your room description
+has got to have an extra description defined for it! I warn you, this is very
+tedious for large zones but the logic is simple to see why they must be there.
+If I enter a room and the description says 'You see an ugly rug in the corner.'
+chances are I will type 'look rug' to get a closer inspection. If there is not
+an extra description defined for the rug, the mud will tell me 'You do not see
+that here' when it just told me it was there a second ago! So there must be
+an extra description defined for everything mentioned in room descriptions.*/
+
+extra {"various artifacts", "artifacts", "artifact"}
+"These look to be rather old, and quite possibly worth alot! I think
+they look alot like the artifacts Mykel, Ranma and Willow have discovered! "
+
+extra {"maps", "map"}
+"Newly received information allowed for these maps to be made. Though many
+died to ensure safe transport of this information, the contents will prove
+their value in time!"
+
+extra {"assorted trinkets", "trinkets", "trinket"}
+"All sorts of neat stuff it seems, you feel like a little child as you
+gaze in wonder at the plethora of fun looking toys. *sigh* It sure brings
+back the days when life was easier!"
+
+extra {"hinges", "hinge"}
+"Looks like there may be a hidden exit here! Could this be a trapdoor?"
+
+/* Now the more technical information that makes up a typical room definition.
+We can set various flags for our rooms and even define dil programs on them.
+The Dil portion will not be shown here since there are several guides available
+on the ftp site about them. */
+
+flags {UNIT_FL_NO_TELEPORT, UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+
+/* Now we have set up several flags for this room, and these help us make
+our rooms serve our zone's purpose better. For this room, we have set it
+to be non-teleportable, it is defined as being an inside location and
+there will be no weather messages displayed (would it make sense to have it
+describe rain inside a cave??? *blush*) There are many options for the
+flags you can set, please refer to values.h for the list. */
+
+movement SECT_INSIDE
+
+/* This line tells the mud how much endurance each move should cost from
+leaving this room. There are many to choose from although some appear to
+be disabled. The complete list of sector types is in values.h and you can
+try them all. If the compiler gives you parse errors on any sector type, it
+means it is disabled and you should try another. */
+
+
+north to midgaard/market_sq;
+down to death_room open {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_HIDDEN}
+	key death_key keyword {"trapdoor", "door", "hinge", "floor"};
+SECRET_DOOR_DIFFICULTY(DOWN, 85)
+
+/* The first line is the standard method of defining a room connection 
+from one zone to another. If you wish to connect a room in your area to
+an existing room of some other area, you will need to find out its symbolic
+name and reference it with the zonename like above. Otherwise you just use
+the symbolic room name. The second two lines basically describe just one
+thing, a hidden trapdoor which leads down to a room with symbolic name
+death_room. The key things to notice are the open flags, the keyword section,
+and only in cases of hidden doors, the level of search required to find this
+door. The open flags are what tells the mud that the exit is in fact a door
+and in our example, we also make it closed and locked on reset, and it is 
+hidden (means players must use their search skill to locate it). The SECRET_
+DOOR_DIFFICULTY specifies the exit direction (in case of more than one hidden
+exit) and the 'skill level' required to search out the exit, in our case level
+85. This does not mean players below level 85 cannot search here, it means 
+players with a search skill comparable for level 85 have a good chance at
+success. Remember it only takes one successful search so really anyone can
+get lucky and find the exit, but levels 85 and up can do it consistently. */
+
+/* (NOTE Added By PAPI)
+Ok, this is very important. The first name in the list is used as the
+displayed name, and should therefore be trapdoor (it would then say
+"You open the trapdoor"). The second aspect is, that when defining a secret 
+exit, you must remember that people need to search for something. So we 
+have added the floor to handle this search possibility!  */
+
+/* A key is not necessary for doors (since many can pick locks or cast unlock)
+but if you wish, you can define one with 'key keyname' which is specific for 
+this door. So we must write the definition for an object death_key, which 
+we will do in the %objects section. The keyword list consists of what you
+will allow the door to be referred as. That is, players can try to search
+for a door, hinge or trapdoor here to actually find the exit. Another option
+for doors, which I left out because this one is secret, is a description, used
+like:	     descr "This door looks recently polished."
+This can be inserted before the keyword line and you will have added a
+door description. (NOTE) This should never be used for secret doors of
+course, but is mandatory on all other doors." 
+
+(BTW) Exit descriptions can also be added for players that like to look
+in each direction before travelling onward. So we could change our exit
+to midgaard like so:
+
+north to midgaard/market_sq descr "The wonderful city of Midgaard is there.";
+
+Now when players in the cluttered room type 'look north' they will see that
+exit description.  */
+
+ALWAYS_LIGHT
+end
+
+/* These two lines mark the end of this room definition. The first is
+an option you may use to specify what sort of lighting the rooms have.
+This one is pretty self-explanatory, the room will not get dark even
+during evening (makes sense in a lighted indoors eh?). I will warn you
+however, the flags used for darkness settings have been known to cause
+compilation errors in the past, though I have just been assured they
+should be working. Finally the 'end' statement which, like the symbolic 
+name, requires its own line, signifying the end of this room definition.
+So now we have one room defined and we can make the death room downstairs
+to this room. */
+
+
+				death_room
+names {"room of death", "death room"}
+title "The Room of Death"
+descr
+"   The stink is so deep, it seems to take on a life all its own and
+you are convinced its actually visible! Carcasses lay scattered about like
+so much rubbish, and splintered bones are arranged in a haphazard fashion
+all about you. There looks to be some sort of nest in the corner of the room."
+
+extra {"stink"}
+"Yes, you can actually see this smell it is so powerful!"
+extra {"carcasses", "carcass", "corpse", "body"}
+"There are many, all perished in truely horrid ways! Some are missing
+limbs, most appear chewed and you notice charred flesh remaining on a few
+such corpses. Definately looks like a dragon's work."
+extra {"splintered bones", "bones", "bone"}
+"Something was very hungry for there is very little remaining on most
+of these bones, even the marrow looks to have been sucked out!"
+extra {"corner", "nest"}
+"This is definately a nest here, and from what you can tell, the owner is
+very large!"
+
+flags {UNIT_FL_INDOORS, UNIT_FL_NO_WEATHER}
+movement SECT_INSIDE
+up to cluttered_room open {EX_OPEN_CLOSE, EX_CLOSED}
+	descr "There is a door here." keyword {"door"};
+
+/* So far the only thing worth mentioning is this door definition. You'll
+notice that we only specified 2 open flags and we also added a door 
+description. These two flags tell the mud that we have a door (EX_OPEN_CLOSE
+tells it that what we are labelling a door is actually a door) and that
+it should be closed on a zone reset (EX_CLOSED). So this exit is not
+hidden, and why should it be? They already found it from the other side
+so it would make no sense. Also, the descr we added allows players to type
+'look door' and they will see the door description. This allows for you
+to make any sort of entrance you desire, just name it as such. I.E. You
+want a gate or window, then do one of these:
+
+1)	descr "The large gate is here." keyword {"gate"};
+2)	descr "You see a rather large window." keyword {"window"};
+
+BTW - You should take CAREFUL notice that every exit statement must end
+with a semicolon (;). I have found that about 80% of the parse errors I get
+from zone compilations are due to these exits, whether it be a missing
+semicolon or a missing ", be careful with these! */
+
+special SFUN_DEATH_ROOM "100" time WAIT_SEC*20
+
+/* Here is something new, it is called a special assignment and there
+are many interesting ones to choose from, for rooms, mobiles and objects.
+The DEATH_RROM special says that this room will be a death trap, we specify
+100 as the number of hitpoints to be deducted but note, this is actually the
+number 10.0, so always remember that the last place is the tenths digit and 
+not the units digit! The 10.0 hitpoints will be deducted every 20 seconds
+so we are actually giving the players a great chance to escape mostly intact!
+The complete list of specials is in values.h, and they are each defined in
+great detail. Get in the habit of using these, they really make zones more
+complex and interesting.
+
+(BTW) Pure death traps are NOT encouraged! By replacing the "100" with
+a "9999" we could easily kill anyone we want as soon as they enter.
+Instead you should always give players a chance to escape. How many of
+you can actually say you have run into a death trap that you liked? */
+
+end   /* Notice there are no lights so it should be dark always*/
+
+/* Ok, so we have our second room which connects to the cluttered room.
+Why did we name it the death room? Well, let's load Tiamat here and then
+it will deserve its name! Loading of mobiles and objects into rooms is all
+handled in the last section, the %reset section. Thanks to Chris Armstrong
+for his Tiamat definition, we have all come to respect this creature as I
+am sure most of us have been killed by her before, lets see the actual code
+that defines her! We now start the %mobiles section, and you'll notice by
+doing this we are signalling that the %rooms section is done. */
+
+%mobiles
+
+				dragon_tiamat
+names {"tiamat", "dragon"}
+title "Tiamat"
+descr "Tiamat, the Queen of all evil dragonkind is here."
+extra {}
+"Tiamat is the most powerful evil dragon known to exist.  Her massive body
+is topped with the heads of all five of her guardian dragons.  Her claws are
+huge, and her scales are multi-colored.  She has come to this place to spawn
+evil dragons and obviously does not like your presence.  In a way, this dragon
+is very beautiful in all of her splendor, but at the same time, the sheer evil
+of this beast could make the strongest warrior cower in fear."
+
+/* The first parts of a mobile definition are very similar to that of a
+room, you'll notice one exception so far. The descr for a mobile is what
+players see when they enter a room or look in a room, the extra {} here
+(notice there is nothing inside { and }, this signifies it is an extra on
+the entire mobile itself) is what is seen when a player types 'look tiamat'. */
+
+level 160
+alignment -1000
+race RACE_DRAGON_GREEN
+
+/* (NOTE Added by PAPI)
+  If you encounter a race which is non-existant, please add it yourself
+  by using "#define RACE_LOBSTER nnnn" where nnnn is a number that is
+  UNUSED in values.h for RACE_XXX. Then later the administrators will insert
+  it into values.h. At that point you will get a "warning: ... redefined".
+  When this happens, simply erase your own definitions as they are now a
+  part of values.h */
+
+sex SEX_FEMALE
+height 2650
+weight 5300
+money 4 PLATINUM_PIECE
+exp 50
+
+/* So now we give some information to the mud which will tell it how to
+treat Tiamat. She is level 160 which means she is pretty good experience
+to anyone level 150 and below (which is everyone :) ). Her alignment being
+-1000 means she is one evil bitch! In fact she couldn't be more evil, and
+this should be since she does rule the entire first plane of hell! Her race
+is the same as a green dragon, her sex of course is female. (NOTE) - There
+are 3 sexes to choose from, SEX_FEMALE, SEX_MALE, and SEX_NEUTRAL. The height
+of a mob will take some getting used to unless you are a wiz with the metric
+system, of which I am pretty sad with *grin*. We load her with 4 platinum pcs
+on every zone reset, and with the exp 50 statement, we add 50% experience to
+the experience her level would specify (this makes her worth quite a heap!). 
+There are some guidelines for this that you must follow, you can read about
+them in the mobiles.ans doc. So now she has some distinctive features
+appropriate for a dragon and we can continue with some more technical
+information. */
+
+/* (NOTE Added by PAPI)
+Height is in cm, and weight is in lbs (kind'a breed system :).
+You should know that WEIGHT will have impact on maximum damage on
+the new system when using natural attacks. Thus the 'hand' will
+be limited by 'weight'. For example a rabbit is 'small' and thus
+has a low maximum. I will make a 'medium' size the default weight. */
+
+NATURAL_DEF(WPN_CLAW, ARM_PLATE)
+MSET_ABILITY(18,15,16,19,9,14,9,0)
+MSET_WEAPON(4,5,4,4,9,4)
+MSET_SPELL(1,1,1,1,1,1,11,20,11,11,11)
+
+/* The previous 4 lines are quite important as you might imagine with all
+those numbers and such. The first one determine how well our mobile will
+do in battle. This line defines the mobiles' natural attack and defense
+types, which figures into battle accordingly. The natural attack type
+will specify which battle messages get sent, i.e. for a natural attack
+type WPN_CLAW we can expect to see messages like 'Tiamat slashes you
+with her claws, rather than something which would make no sense like
+'Tiamat pounds you with her fists' which would be absurd since she has
+no fists! The natural armor type determines how tough the mobiles' skin
+will be, what type of armor is best comparable to her skin. She is a
+dragon, dragons have scales and since we want her to be rather 'thick 
+skinned', she deserves the best, namely ARM_PLATE. These values are all
+defined in values.h, if you use an editor with search, just search on
+keyword WPN_ or ARM_ to get to the appropriate list. To understand the
+NATURAL_DEF statement better, the file 'monsters.ans' does have an
+explanation. This NATURAL_DEF statement is brand new (as of Jan 1, 1994).
+It has replaced the two statments TGH_DEF and HAND_DEF which can still be
+found in older zone files.
+
+    The MSET_ABILITY, MSET_WEAPON and MSET_SPELL macros tell the mud
+exactly how good Tiamat is with everything! The wmacros.h doc goes into
+detail about these so I would advise reading about them at this point. These
+values are very important and your mobile will not behave as you desire unless
+you carefully implement them. I.E. If you want your mob to cast controlled
+teleport and you give him a 0% summoning sphere ability, there are not too
+many places he will be teleporting to! */
+
+/* (NOTE) - There is a macro defined for green dragons which we could have
+easily used, rather than define much of what we just did. We could have made
+this call:
+
+M_DRAGON_GREEN(160,SEX_FEMALE)
+
+Which would have used all of the defs for the M_DRAGON_GREEN macro in
+composed.h (the level 160 and sex SEX_FEMALE serve as arguments here).
+In general, we are trying to slowly add a steady base of macros to the
+composed.h file so try to get into the habit of using what is already
+defined. */
+
+special SFUN_BREATH_WEAPON "103"
+special SFUN_RAN_ATTACK time WAIT_SEC*5
+romflags {CHAR_DETECT_INVISIBLE}
+
+/* (NOTE) - We could also use this breath weapon def instead:
+
+special SFUN_BREATH_WEAPON ""+SPL_FIREBALL_3
+
+where the SPL_FIEBALL_3 is defined in values.h. I would recommend
+using macros whenever possible, there are new ones added periodically. */
+
+/* Ok, now we get to Tiamat's special abilities. Of course we all know
+she has one mean breath weapon, this one gives Tiamat a third sphere
+Fireball spell as her breath weapon. The RAN_ATTACK special determines
+which mobiles are agressive. In case you have not noticed yet, the 
+agressive mob flag does not work, this takes its place. It basically
+specifies how long to wait before Tiamat can attack. The romflags list
+can be seen in values.h, it basically specifies what character abilities
+the mobile may have. Tiamat can see invisible because of this romflag. */
+
+end
+
+/* Thats all there is to it, we have just defined the same Tiamat that
+we have all been killed by periodically. So now if the DEATH_ROOM doesn't
+kill the room occupants we are sure Tiamat will finish them off, the only
+thing is the death room will injure her also. In general, a death room
+will affect everything in it, playing or non-playing. */
+
+/* We need one more mobile now, hmmmm, how about we make an evil human
+who will sacrifice himself everytime the zone resets. We will throw in
+some PAIN code to make this mobile 'come to life'. BTW - PAIN is no
+longer officially supported since the birth of Dil code, but I find it
+a necessity in my zones and I would be more than happy to send the doc
+on PAIN to anyone wishing to learn. Its very easy to learn and very powerful,
+though mostly for aesthetics, nothing too technical like Dil!!! Some
+mobiles you may recognize which use PAIN code are: the hippies that used
+to wander Ratswarf, the Urland citizens, the ravens Hugin and Munin, all of
+the mobiles in the mansion zone, etc... */ 
+
+
+				human_sacrifice
+names {"human sacrifice", "sacrifice", "human"}
+title "A human sacrifice"
+descr "A human sacrifice waits here for his death."
+extra {}
+"   He looks very gaunt, almost to the point of starvation. His bones 
+show clearly through the skin and you can tell its been very long since
+his last meal. There are tattoes all over his arms and legs, all seem
+to be of a dragon, one which you recognize as the dragon Queen."
+
+level 85
+alignment -800
+race RACE_HUMAN
+sex SEX_MALE
+height 200
+weight 200
+money 1 COPPER_PIECE
+exp 0
+
+/* This mobile is very different from Tiamat! You'll note he has 0% extra
+experience, this is because he does not meet any of the conditions necessary
+for there to be any extra exp. You can read about this in the mobiles.ans
+doc. Tiamat has 50% extra for two reasons, 1) she is an agressive mobile (and)
+2) she has a third sphere breath weapon. */
+
+NATURAL_DEF(WPN_FIST, ARM_CLOTHES)
+MSET_ABILITY(15,15,10,15,10,10,10,15)
+MSET_WEAPON(25,5,5,5,5,5)
+MSET_SPELL(1,1,1,1,1,1,1,1,1,1,1)
+
+/* Clearly the human is much weaker in all respects, and this is of course
+how it should be. When you make your mobiles and objects, you should always
+be aware of how they will relate to their respective levels and power! Try
+to restrain yourselves from exaggerating stats on your creations, consistency
+is necessary!!! This means there should never be a level 100 sword being given
+out in a level 20 zone, or a level 50 agressive mobile in a level 10 zone! 
+Basically this human has only one thing going for him, his knowledge in the
+hammer-axe weapons category.*/
+
+special SFUN_PAIN_INIT time WAIT_SEC*25 bits SFB_RANTIME
+"  100 Cemote shifts uneasily, he is clearly nervous.@
+   110 Csay My time has come now, pity me not my friend, it was a choice.@
+   120 Cponder@
+   130 Cemote Gathers his wits and gets ready to do his master's bidding.@
+   150 Csigh@
+   160 Cwave@
+   170 Csay I must feed my master Tiamat now, goodbye life!@
+   180 Csearch trapdoor@
+   190 Cunlock trapdoor@
+   200 Copen trapdoor@    /* (NOTE) - Not necessary, line 210 does this */
+   210 Gtiny_zone/death_room@
+"
+
+/* You'll notice there are no predefined specials on him, but he does have some 
+PAIN code to make things more interesting. The PAIN code is similar to basic 
+in a way, each line being numbered, but much easier. The first line basically
+tells the mud this mob has a special routine written in PAIN, each line
+should be executed with a 25 second delay, and SFB_RANTIME has become the
+standard time unit used. Then you decide what goes next, " and " act as the
+boundaries of the actual program (If you wish to see all that PAIN can do
+please send me an email request). This man will give his little speech and
+then search for the door, open it and leave down to Tiamat's room. (NOTE)
+This Gzone/room command is very smart, the mobiles will even open the
+doors on their own if they can see them and they will follow a shortest path
+to their destination. */
+
+end 
+
+/* So our human sacrifice is completed also and all that remains is object
+defs and the reset section. */
+
+%objects
+
+/* Lets give this human some things to go to his death with. Lets say he
+was a proud warrior in the past and wishes to go to his death with his
+sword, and his blue robe. The robe that is defined as blue_robe@asgaard
+is defined below. */
+
+                                blue_robe
+names {"blue robe", "robe"}
+title "a deep blue robe"
+descr "A deep Blue Robe lies here."
+extra {}
+"This robe is made of a very fine and delicate silken material.
+It seems to glisten when the sun shines its rays upon it."
+extra {"$identify"}
+"When worn,an enhanced dexterity is attained, but your knowledge
+of magic will weaken slightly."
+manipulate {MANIPULATE_TAKE, MANIPULATE_WEAR_ABOUT}
+
+/* Ok, the first new occurence and a must for most items! The manipulate
+statement defines all of the possible ways for this particular item to
+be worn, held or taken. The list is in values.h and each one is described.
+For this robe, it is takeable (very important for anything you want to not
+be bolted to the floor!) and it can be worn about the body, which means
+over any armor you wear already. There are of course all of the body parts
+defined for the manipulate command so all you need to do is pour over 
+values.h. Also note the extra {"$identify"}, this is what will be displayed
+as output of the identify spell. */
+
+/* (NOTE) - There is also a spell 'improved identify' which will read from
+an extra you define here. We could make the following extra for players
+who cast that improved spell.
+
+extra {"$improved identify}
+"When worn, this robe will add 3 to DEX, 2 to CHA, 2 to STR and reduce
+MAG by 1 and DIV by 1"
+
+Players like getting as much information as possible so you should get
+into the habit of using this for magical equipment. */
+
+ARMOUR_FULL_PLATE(+15, +15)
+
+/* The armor defs are all defined in great detail in objects.ans, I will not
+go over these and I suggest that you scan the section on armours in your
+doc. These armour defs are also brand new so if you have used the older
+versions, please obtain new docs and read up on them. The files to look 
+at are: values.h, wmacros.h and objects.ans. */
+
+DEX_TRANSFER(+3)
+CHA_TRANSFER(+2)
+STR_TRANSFER(+2)
+MAG_TRANSFER(-1)
+DIV_TRANSFER(-1)
+
+/* Ok, this is how to make your objects actually do something, there are many
+possibilities for objects, only a few of which are shown here. If you have an
+older version of values.h and wmacros.h, I would suggest getting the newest
+versions on the ftp site. There are some new transfers available for skills,
+weapons and spells and the newest docs explains these. (NOTE) There are limits
+as to what you can transfer, typically the limit is +7 max on all the ability
+transfers made. Any excesses (like above) require deductions in other ability
+fields. */
+
+/* (NOTE) - An example which would transfer some skill of the weapon 'war
+mattock' to the player wearing this robe is defined below:
+
+WEAPON_TRANSFER(WPN_WAR_MATTOCK, 25)
+
+This player is lucky, wearing this robe improves his knowledge of the
+War Mattock (one of the most powerful weapons available) by 25%. There
+is also SPELL_TRANSFER and SKILL_TRANSFER available for your use, just
+as long as you do not get ridiculous. Your zones will be thoroughly checked 
+before being linked so if you design a crazy item that makes the player an 
+expert in 10 spells, chances are it will not be approved! */ 
+
+weight 12
+cost 120000
+rent 100000
+
+/* weight should be self-explanatory. The cost refers to the sell back
+value and sacrifice values, these are in the old style of defining
+a monetary value, all in gold pieces. The rent is the per day charge 
+to store this item, also in the old money values. */
+
+special SFUN_RESTRICT_OBJ "Level = 85
+	                   Dex = 30"
+
+/* The last line puts some restrictions on the item, as you can see
+the blue robe of Asgaard requires a level of at least 85 and a dexterity
+ability of 30 or greater. You can set any restriction combinations you like
+as long as they are logically thought out and are not outrageous, like putting
+a level 100 restriction on a sword found in a level 20 area! */
+
+end
+
+/* And that completes the definition for the blue robe. (NOTE) Though
+in the game it is defined as blue_robe@asgaard, if it is also in this
+file we could refer to it as blue_robe@tiny_world. The same goes for
+Tiamat, she could also be dragon_tiamat@tiny_zone. */
+
+/* Let's define that key now. */
+
+                                death_key
+names {"death key","key"}
+title "the Key to Death (Tiamat)"
+descr "A blood red key is here."
+extra {}
+"This key has an inscription of a dragon's head. It looks very
+old and perhaps you should take care not to lose it."
+type ITEM_KEY
+manipulate {MANIPULATE_TAKE, MANIPULATE_HOLD}
+weight 1
+end
+
+/* As you can see there is not too much involved with making a key. Do
+make sure that the symbolic name here (death_key) is the same as what
+you define for the door, also named death_key; Otherwise the key will
+not work for the door. One thing of semi-importance is the type ITEM_KEY
+statement, but as it turns out this is not a necessity. That is the mud 
+will allow other items to 'unlock' locks! This key can be taken and can be 
+held. Keys should not weigh too much and since 1 is the lowest non-zero value
+we can use, it suits us fine. Now we have the key that unlocks the door
+to Tiamat. */
+
+/* Lets make the human sacrifice a sword now. */
+
+				ugly_sword
+names {"ugly sword", "sword"}
+title "an ugly sword"
+descr "An ugly sword has been left here"
+extra{}
+"This sword bears the mark of Tiamat, the wielder must be a
+human sacrifice in the last days of his life."
+
+/* Nothing new here so far, the extra works just like it does for
+mobiles. */
+
+manipulate {MANIPULATE_TAKE, MANIPULATE_WIELD}
+WEAPON_DEF(WPN_LONG_SWORD, +5, +5)
+WEAPON_SLAYER(RACE_HUMAN)
+
+/* This WEAPON_DEF can be read about in the objects.ans file so we
+will not delve into it, but this sword turns out to be pretty decent
+overall. Leave it to Tiamat to give a human slayer to a human. This
+WEAPON_SLAYER call can only define one slaying race, and if you try
+to put more than one of these calls, only the last one gets acknowledged.
+The slaying race is mostly a feature and should only be put on swords of
+high value. 
+
+(NOTE) The WEAPON_DEF statement has changed very recently so if you are 
+used to using the older style, it is certainly advisable to read up in the 
+new docs.*/
+
+weight 25
+cost 10000
+rent 10000 
+
+end  
+
+/* Ok, so we have defined everything that needs defining and all that remains
+is setting up the zone resets. */
+
+%reset
+
+/* The order in what you reset is not important, so feel free to establish
+any format you like for your zone files. I generally start with doors and
+then mobiles based on their respective levels. */
+
+door cluttered_room DOWN {EX_OPEN_CLOSE, EX_CLOSED, EX_LOCKED, EX_HIDDEN}
+door death_room UP {EX_OPEN_CLOSE, EX_CLOSED}
+
+/* These two lines define how the ONE door works which seperates the
+two rooms named here. In general, you will always need two door statments
+for every one door you want. The syntax for a door statement is:
+
+door room_name direction {open flags go here}
+
+where direction can be (UP, DOWN, NORTH, SOUTH, EAST, WEST) and the open
+flags are the same as defined in the room definition. So you see to make
+one door, you need to define it in each room it will be in, and give it two
+door resets in the %reset section. */
+
+load human_sacrifice into cluttered_room max 1
+{
+	equip blue_robe position WEAR_ABOUT
+  	equip ugly_sword position WEAR_WIELD
+	load death_key
+}
+
+/* Every zone reset we load the human sacrifice into the cluttered
+room if there are not any others anywhere else in the world. If we
+had specified max 3, then as long as there were 0, 1, or 2 such
+sacrifices in the world, another would be loaded on this zone's reset.
+We equip the sacrifice with his robe and sword, each being worn at
+the respective location. The death key is also loaded into his
+inventory at each zone reset. */
+
+load tiamat into death_room local 1
+
+/* Tiamat has nothing to load or wear, but you notice we use local 1
+rather than max 1. This means if there is a Tiamat anywhere else in
+the world, we can load her here, but if any other Tiamats occupy this
+room, there will not be another loaded. Can you imagine more than one
+Tiamat in any room anyhow? *shiver* */
+
+/* Well, that completes the zone file, there is no formal way to end
+the file, no end label or special symbol, so if you feel better we
+can put a comment to signify the end of tiny_zone.zon */
+
+/* ************************** End of ZONE **************************** */
+
+I hope this guide helps tie in some of the loose ends with what you
+got out of the other docs. Keep the other docs handy always, as you 
+will undoubtably come across something new you wish to try and periodically
+check the ftp site for new versions, they do pop up often believe it or not!
+Happy creating! (Iccy)
+

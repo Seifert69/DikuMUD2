@@ -1,0 +1,2281 @@
+                            DIL DOCUMENTATION v. 3.66
+
+Authors: bombman@valhalla.com and seifert@valhalla.com
+
+------------------------------------------------------------------------------
+                                Document History
+
+v3.66
+   Added the SFB_PRE event for spells and for damage. This is an extremely
+   powerful new feature allowing things such as globe of invulnerability,
+   ring of fire resistance (25%), immunity to fire, shield of spell reflection,
+   etc. etc.
+
+v3.65
+   Fixed description of spellinfo.
+
+v3.64
+   Converted dil.txt to dil.html, moved some things (like Procedures into
+   Built-In Procedures) and fixed a few of the spelling errors (Javelin)
+
+v3.63
+   Added spellindex and spellinfo functions.
+
+v3.62
+   Added moneystring func
+
+v3.61
+   Added pathto function
+
+v3.60
+   Added new findsymbolic functionality with reference and bitvector.
+
+v3.59
+   The SFB_DONE message made for entering rooms via walk, sail or
+   ride. Detailed explanation in the message section below
+   and in commands.txt.
+
+v3.58
+   Added max_endurance.
+
+v3.57
+   Added function integer can_carry(#,#,#) which tells you if someone
+   can carry a unit. Also changed namelist assignments so its now
+   possible to do:
+
+        sl := {"kermit", "the", "cow"};
+        sl.[2] := "frog";
+
+v3.56
+   Made function string fits(#,#,#)
+
+v3.55
+   More clarifications on SFB_DEAD
+
+v3.54
+   Removed SFB_DONE descriptions at the end of the document and pointed
+   to the file instead.
+
+v3.53
+   Fixed bug in the on goto description.
+
+v3.52
+   Changed the 'in' to return the numeric index of a string in a
+   stringlist (0 for not there, or 1.. is there).
+
+v3.51
+   Changed the height field to be a unit-field instead of a char field.
+
+v3.50
+   The "on <N> goto <l0>, ..., <ln>; was undocumented, it has been
+   added.
+
+v3.49
+   Added "follow(#,#)" and "logcrime(#,#,#)" procedures.
+
+v3.48
+   The "spell-effect" DIL changed, docs updated.
+
+v3.47
+   Added '.info' field for PC's (RW) used for storing important information
+   like maiden name, questionaires, etc.
+
+v3.46
+   Added sendtext to send raw text to a person. Only useful for
+   "nanny" stuff.
+
+v3.45
+   All DIL strings are now processed according to the escape formatting
+   code at compile time only! Remember that a single '&' must now be
+   written as &&! However, where DMC assumes that it must format
+   the text per default (i.e. the &f option), DIL assumes that all
+   strings are litteral per default (i.e. the &l option).
+
+v3.44
+   Added lifespan field.
+
+v3.43
+   Added max_mana field.
+
+v3.42
+   Added DONE for "cast" with info on which spell was cast in "power".
+   Also changed transfermoney so that it can dispose of money.
+
+v3.40
+   Changed transfermoney to allow creation of money (with log notice).
+
+v3.39
+   Made the "dilcopy" instead of the special SFUN_DIL_COPY.
+
+v3.38
+   Modified meleeattack so that it takes a third integer argument which
+   is any + or - bonus and a fourth which is the weapon type.
+   Added "void acc_modify(unitptr, integer)" which can be operated only
+   with root privileges in DIL.
+
+v3.37
+   Added new "store" and "restore" functions which allows one copy of a
+   unit to be saved to disk.
+
+v3.36
+   Added a new function "openroll" which makes an open-ended roll using
+   dices. Could have been made in DIL, but it could in theory loop for a
+   very long time, and I suspect it will be used frequently!
+
+v3.35
+   Added a cmdstr reserved variable which contains the command-string as
+   entered by the player.
+------------------------------------------------------------------------------
+
+
+This documentation is designed for people with some experience in programming. 
+Experience in C is recommended, but PASCAL or BASIC in some form or other 
+will do just fine too.
+
+DIL is a simple programming language with fixed types reflecting the types 
+used in Valhalla Mud. The language gives you almost endless posibilities in 
+designing your adventures and quests. It gives you the control you need for 
+making the game interresing and intelligent.
+
+
+Making a program:
+=================
+
+You define your DIL programs within your zone file. Each program you make is 
+a *template*. Such a template must be equipped with a unique name (for that
+zone). Templates can eighter be defined in a new %dil section, just below the
+%zone section in the zone file, or directly attached to units defined in
+your zonefile. 
+
+If you define your DIL templates just under unit definitions, these units
+are automatically assigned a program using that template. If you want to
+use an already designed template, either in your own, or another zone, you
+use a special function named "dilcopy", that takes the name of a template,
+and any optional parameters in parenthesis. The parameters of a template
+called with 'dilcopy' may only be of types integer, strings and stringlists.
+
+Example:
+
+dilcopy myfunc@myzone("say Hello, my friend!", 1, CMD_SAY, {"name1", "name2"});
+
+DIL templates can always be reused. In fact, with version 2.0 of DIL,
+programs are no longer saved with equipment, but only a symbolic 
+reference is used. That way, if you make a change in your zone, ALL
+units using that program are changed. This however requires you keep 
+the name. Upon loading, if a template is not found, the program is
+halted and rendered useless until such a reference can be found 
+during loading.
+
+
+Technical note:
+
+   When you use several 'dilcopy' in your zonefile, only one instance
+   is present game-time, thus saving tremendous amounts of memory.
+   It is similar to a shared-library, in which code is shared
+   but variables are not.
+
+You may use your templates to define both procedure and functions for your
+other templates to call. 
+
+A template is defined by beginning with 'dilbegin' and ending with 'dilend'.
+Inside the template your program section is defined, marked by the keyword 
+'code', followed by the program itself;
+
+dilbegin myprogram();
+code
+{
+  heartbeat:=PULSE_SEC*5;
+  :start:
+  exec("say Hello world", self);
+  pause;
+  goto start;
+}
+dilend
+
+This simple template does nothing but making its owner say 'Hello world'
+once every 5 seconds. The template is called 'myprogram' and takes no
+arguments. The 'pause' command waits for the program to rescieve a
+timer message, which duration is set by the 'inline' variable 'heartbeat'.
+The 'self' variable is a unitptr refering to the unit owning the DIL
+program. Other inline variables will be explained later.
+
+For a DIL program to work, it must be part of a *unit*: a room, player, 
+non-player or object. The program uses *messages* to operate. Your program gets 
+activated when it rescieves a message that some command is being executed, 
+or a certain amount of time has passed. You decide yourself in the program, 
+what to wait for, before the program continues executing. 
+
+Supposing you want your program to contain variables, you have to put them
+in a section before the 'code' section markes 'var'. The variables are
+declared by their type and their name, semerated by a ':' and ended by a ';'
+For an example, see the program below. Variables of type 'string',
+'stringlist' and 'integer' are saved, if the unit the program is attached 
+to is saved with player inventory. Variables of type 'unitpr' and 'extraptr'
+are 'volatile'. This means that they are cleared whenever there is a chance
+that their contents may have been rendered non usable. This ensures that you 
+do not have any 'loose' pointers. However it is possible to 'secure' the
+contents of a 'unitptr' type variable of a unit located in your local
+environment (the units directly 'visible' to the unit who owns the DIL 
+program) (see the secure / unsecure functions).
+
+
+Types:
+======
+
+DIL supports a fixed set of types you can use and manipulate. Through 
+these, you can get and manipulate information about almost anything in
+the game. The types are listed below:
+
+
+String: 
+-------
+
+   A string is some text. They are used for alot of things such as 
+command arguments, room descriptions etc. String variables are 
+automagically resized and allocated when you assign them, so you do not
+have to worry about the string length nor allocation in your DIL programs.
+Strings may be compared eighter with '==' (equal to) or '!=' (not equal), 
+or with the obsolete '#=' (pointer compare) or '$=' (same as '=='). 
+Static strings are defined just as in the rest of the zone, within double 
+quotations. Strings may be searched easily with the 'in' operator.
+Variables of type string are saved with DIL programs, if attached to a 
+saved unit.
+
+example: 
+
+  "This is a static string"
+
+Strings may also be added to eachother, in an expression.
+
+example:
+
+  "say "+itoa(42)+" is the answer!"
+
+example:
+
+  if (self.name == self.names.[1]) ...
+
+
+Stringlist: 
+-----------
+
+   A stringlist is a list of seperate strings. This is used for
+things such as (multiple) names or keywords. You may request a
+specified word in a stringlist by its number
+
+example: 
+
+  mystring := self.names.[2]; 
+
+returning null if out of bounds of the stringlist (see 'length()')
+Static stringlists are defined just as in the rest of the zonefile, 
+as a comma seperated list of static strings within curly brackets.
+
+example: 
+
+  mysrtringlist := {"Some string","another string","the last string"}
+
+Stringlists are modified through the 'addstring()' and 'substring()'
+procedures. Stringlists are searched easily by the 'in' operator. See 
+documentation below. They can also be set directly (see example above).
+Variables of type string are saved with DIL programs, if attached to a 
+saved unit.
+
+
+Integer: 
+--------
+
+Non-fraction numbers can be used throughout your DIL programs. 
+They are given normally, or in normal C style hexadecimal, preceded 
+with '0x'. Integers are signed 32-bit integers. Variables of type string 
+are saved with DIL programs, if attached to a saved unit.
+
+example: 
+
+  0x10
+
+example: 
+
+  2
+
+Integers are used within expressions as both number value and boolean
+(true/false) values. You may use comparison between integers through the
+comparison operators; '==' (equality), '<' (less than), '>' (greater than),
+'<=' (less or equal), '>=' (greater or equal) '!=' (not equal). 
+
+
+example:
+
+  if (42<12) ...
+
+Returning the boolean value (true/false) depending on the comparison between 
+integers. The result may be stored in an integer variable, and tested
+later, or used directly in an 'if' or 'while', etc.
+You may also operate on boolean expression themselves, using LOGICAL
+operators 'and','not','or', which allows you to combine the expressions.
+
+example:
+
+  if ( not ( (self.hp<42) or (self.level>10) ) ) ..
+
+Integer expressions may also use a number of other operators; '+' (addition)
+'-' (substraction/negation), '*' (multiplication), '/' (division),
+'|' (bitwise or, for flags), '&' (bitwise and, for flags)
+
+Precedence rules for using these operators are still somewhat messed up. 
+You'd better use parenthesis whereever possible.
+
+
+Extraptr: 
+---------
+
+Extra descriptions, quests structures, etc can be searched and 
+manipulated using variables of this type. There is no way to declare static 
+structures of this type in DIL programs. Lists of extra descriptions are 
+easily searched with the 'in' operator (See below).
+Extraptr variables are 'volatile', and thus cleared whenever there is
+a possibility that they are rendered unusable.
+
+
+Unitptr: 
+--------
+
+Unit pointers are used to keep track of units: rooms, players, 
+non-playe or objects. Through a variable of this type you can access most
+of the information in a unit. Unitptr variables are 'volatile', and thus 
+cleared whenever there is a possibility that they are rendered unusable.
+
+Labels in your DIL programs, for 'goto' or interrupts are defined 
+within ':'. For an example, see the program below.
+
+
+Messages:
+=========
+
+In DIL, a program attached to a unit gets activated when the program 
+resceives a message. In order to save CPU usage, there are a number of 
+different message categories which will cause activation of a program. 
+The 'wait()' commands first parameter is an integer, telling what message
+categories the program should reactivate on. The second parameter is
+an expression, which also must evaluate to TRUE. 'pause' is just special 
+instances of the 'wait()' command.
+
+The message categories are as follows:
+
+SFB_CMD            Command message
+
+  When this flag is set, the program gets activated by all commands (legal 
+  or illegal) issued by PC's or NPC's. Moving around is also considered a 
+  command. 
+
+  Assume a janitor executes the command 'get all from corpse',
+  then this will occur in the DIL program:
+
+     'activator' is a unitptr to the janitor.
+     'cmdstr' is a string which contains the string entered, it would
+              contain 'get' in this example.
+     'argument' will contain 'all from corpse'
+     command(CMD_GET) will evaluate to TRUE.
+
+
+SFB_DONE           'Command has now been executed' message
+
+  When this flag is set, the program gets activated by all successful commands
+  issued by PC's or NPC's. The 'activator', 'medium' and 'target' special
+  values are used as follows:
+
+     'activator' The PC / NPC which executed the command
+     'medium'    The unit which is operated upon.
+     'target'    The target of the operation.
+
+  For example, assume the player John gives a garlic to Mary the Lumberjack
+  wife. The following values are set:
+
+     activator == John (unitptr)
+     medium    == Mushroom (unitptr)
+     target    == Mary (unitptr)
+
+  You thus know that Mary has in fact received the mushroom. It is NOT
+  possible to block (using the 'block' command) these commands since they
+  have already been executed at the time of notification.
+  In a 'get' command, medium would be a unitptr to where the unit was
+  taken from, and target would be the object which was taken.
+
+  See the file commands.txt for a description of how the arguments are
+  set for each command. If you can not find a command in there, just ask
+  to get it implemented. Especially you should pay attention to the
+  non-obvious SFB_DONE command(CMD_AUTO_ENTER).
+
+SFB_TICK           Timer message
+ 
+  When this flag is set, the routine gets activated by a "clock". The clock 
+  ticks (in 1/4th of a second) are determined by the 'heartbeat' variable.
+
+     'activator' is null.
+     'argument' will be empty.
+     command(CMD_AUTO_TICK) will evaluate to TRUE.
+
+
+SFB_COM            Combat message
+
+  When this flag is set, the routine gets activated whenever a combat is in 
+  progress. The unit containing the DIL program needs not be involved in the 
+  combat itself:
+
+     'activator' is a unitptr to the PC/NPC about to hit someone else.
+     'argument' is empty.
+     command(CMD_AUTO_COMBAT) will evaluate to TRUE.
+
+SFB_DEAD           Death message
+
+  When this flag is set, the routine gets activated when a PC or NPC dies:
+
+     'activator' will point to the PC/NPC that is about to die.
+     'argument' is empty.
+     command(CMD_AUTO_DEAD) will evaluate to TRUE
+
+  The SFB_DEAD message is sent, just as the character dies, while his items
+  are still equipped, just before the corpse is created. The character's
+  '.fighting' field points to his primary opponent, although this person does
+  not nessecarily have to be the one that killed him.
+
+  This can be exploited by making items wizinvisible (the .minv field)
+  just as the message is received, causing them to stay inside the player
+  rather than being transferred to the corpse. This does both give
+  the ultimate crash protection, as well as a means of letting items,
+  such as bribe items, forever be a part of the player (remember to 
+  make it un-wizinvis when the player returns from heaven - players
+  should not have access to items while in heaven).
+
+
+SFB_MSG            User message
+
+  When this flag is set, the routine gets activated when a message is passed 
+  to it. Messages can be passed with the DIL commands 'sendto' and 'send':
+
+     'activator' is a unitptr to the unit sending the message.
+     'argument' is a string containing possible data from the sender.
+     command(CMD_AUTO_MSG) will evaluate to true.
+
+
+  Messeges are normally not generated by actions performed by the owner of
+  the program. For a program to be able to be aware of messages from the 
+  owner, a keyword 'aware' should be listed just after 'dilbegin'.
+
+  When a unit is saved, normally, the DIL programs in it would restart
+  when the program is loaded. However it is possible to let DIL programs
+  recall their execution from where they left off when they where saved.
+  This is done by listing the keyword 'recall' after the 'dilbegin'.
+  This is however a bit limited. Only the status of the original
+  template is saved. Not the state inside a template called as a function
+  or procedure from inside the original template. 'secure' and interrupts 
+  are not recalled uppon loading the template.
+  
+
+Example:
+--------
+dilbegin recall aware mute();
+var
+   i : integer;
+
+code
+{
+   i:=10;
+   while (i>0)
+   {
+      wait(SFB_CMD,command(CMD_SAY) or command(CMD_SHOUT));
+      exec("emote tries to make a sound, but only blood spurts through"+
+           "the lips",self);
+      block;
+   }
+
+   i:=10;
+   while (i>0)
+   {
+      wait(SFB_CMD,command(CMD_SAY) or command(CMD_SHOUT));
+      exec("emote tries to make a sound, but can't",self);
+      block;
+   }
+
+   i:=10;
+   while (i>0)
+   {
+      wait(SFB_CMD,command(CMD_SAY) or command(CMD_SHOUT));
+      exec("emote tries to make a loud sound, but can't",self);
+      block;
+   }  
+   quit;
+}
+dilend
+
+/* When attached to a PC, the pc will be unable to utter a sound 
+   the first 10 sound command, and blood will spurt out.
+   The next 10 sound commands, the victim just can't
+   The last 10 sound commands only say will work. 
+   In the end, 'quit' removes the program all together.
+   The smart thing is that the 'aware' keyword lets the program
+   rescieve messages from the owner (player) commands. Secondly,
+   the keyword 'recall' makes sure that the program does not start over,
+   if the victim quits in the middle, but restart at the position it
+   had attained.
+   Do not put in the 'aware' if it is not needed. It saves some
+   interpretation time not having to pass the extra messages.
+*/
+ 
+SFB_PRE            Command preprocessing
+
+  When this flag is set, the program is activated by a few special events
+  which can then be blocked or changed. Currently, this event is triggered
+  just prior to a spell being cast, and just prior to any sort of damage
+  being given to a target.
+
+  PRE "command(CMD_CAST)"
+
+  Assume a a spell is cast from player A on player B with a scroll C.
+
+     'activator'... is a unitptr to A.
+     'medium'   ... is a unitptr to C.
+     'target'   ... is a unitptr to B.
+     
+     command(CMD_CAST) will evaluate to TRUE.
+
+     'argument'.... will contain a number followed by any
+                    argument to the spell itself. You should
+                    parse this number, it equals the spell number SPL_XXX.
+     'power' ....   is set to 'HM', i.e. how powerful the spell cast
+                    is going to be. YOu can change this number at will.
+                    If you decide to block the spell, you ought to set it
+                    to -1.
+
+Example:
+   wait(SFB_PRE, command(CMD_CAST));
+
+   s := getword(argument);
+   splno := atoi(s);
+
+   if (splno == SPL_FIREBALL_3)
+     power := 0; /* No damage */
+   ...
+
+
+  PRE "command(CMD_AUTO_DAMAGE)"
+
+  Assume that damage is given from player A to player B with a sword C.
+
+     'activator'... is a unitptr to A.
+     'medium'   ... is a unitptr to C.
+     'target'   ... is a unitptr to B.
+     
+     command(CMD_AUTO_DAMAGE) will evaluate to TRUE.
+
+     'power' ....   is set to how much damage will be given. You can change
+                    this number at will, but you should not set it to less
+                    than zero.
+
+     'argument'.... will contain three numbers that you must parse to
+                    determine what kind of damage we're talking about.
+
+                    First number is the attack group, this can be one of
+                    MSG_TYPE_XXX from values.h.
+
+                    Second number is dependant on the attack group and
+                    identifies what damage compared to the group. For
+                    example WPN_XXX for weapon group.
+
+                    Third number is the body hit location, one of WEAR_XXX,
+                    (but not all of them, just hands, feet, legs, body, head,
+                     arms, i.e. the armour positions, not positions like finger
+                     or ear).
+
+
+Example:
+   wait(SFB_PRE, command(CMD_AUTO_DAMAGE));
+
+   s1 := getword(argument);
+   grpno := atoi(s1);
+
+   s2 := getword(argument);
+   atkno := atoi(s2);
+
+   s3 := getword(argument);
+   hitloc := atoi(s3);
+
+   if (grpno == MSG_TYPE_SPELL)
+   {
+      if ((s2 == SPL_FINGER_DEATH))
+      {
+          act("Your scaraebae lights up as it protects your life force.");
+          power := -1;
+          block;
+      }
+   }
+   ...
+
+
+A note upon activating a DIL program
+------------------------------------ 
+
+This is what you can't do:
+
+  If a DIL program is already active, e.g. it is sending a message or 
+  perhaps using "exec" to perform an action, then it can not be activated.
+  Thus, any active DIL program is unable to catch further messages.
+  Imagine this setting:
+
+   You have five program P1..P5. P1 sends a message, which is intercepted
+   by P2. P2 now sends a message, but since P1 is busy it can not process
+   the message. P3..P5 are however possible candidates.
+   Assume P3 sends a message, and P4 acts upon it. P4 now sends a message
+   and the ONLY program which can catch it is P5, since all the other programs
+   are "busy". If P5 sends a message no-one can act upon it. When P5
+   returns, so does P4, P3, P2 and finally P1.
+
+
+Built-in Variables:
+===================
+
+'cmdstr'
+   This variable is a string which contains the "command" which was entered
+   by a player. The result of adding:
+
+      cmdstr + " " + argument
+
+   is the entire string as entered by the player.
+   The 'cmdstr' is EXPANDED by the interpreter, so assume a player
+   types 's' then the string is expanded to 'south'.
+
+'self'
+   This variable is a unitptr to the unit owning the DIL program.
+   For C++ people, this is like the 'this' pointer.
+   For example, if Mary has a program, then self.title equals
+   "Mary the Lumberjack wife"
+
+'activator'
+   This variable is a unit pointer to the unit which activated the DIL
+   program. It is set if 'activator' issued a command or unknown command
+   and the program was setup to catch it, with : wait (SFB_CMD...).
+   See description of messages for more information.
+
+'target'
+   This variable is a unit pointer to the unit which is the target of the
+   current operation. For 'done' messages this could for example be the
+   destination in a give command.
+   See description of messages for more information.
+
+'medium'
+   This variable is a unit pointer to the unit which was used during an
+   operation. For 'done' messages this could for example be a bag which
+   was the medium in a get operation.
+   See description of messages for more information.
+
+'power'
+   This variable is an integer which can be reassigned. It is used in 
+   permission messages and in a few done messages. For example a permission
+   request to damage a person with 100 damage would have power equal 100.
+   This could then be reduced to 50 by assigning a new number.
+   See description of messages for more information.
+
+'argument'
+   This variable is a string, showing the argument of a command resulting
+   in the activation of the DIL program. See SFB_CMD for example.
+
+'heartbeat'
+   This is the DIL programs heartbeat. It can be assigned runtime to
+   change the rate with which SFB_TICK is activated. Do not set it 
+   too low, and remember that it is specified in 1/4th of a second.
+   use the constant PULSE_SEC to multiply your wanted delay, for
+   example:
+      heartbeat := PULSE_SEC*25; /* Tick every 25 seconds */
+
+'null'
+   This is a null pointer.
+
+'weather'
+   This is the state of the mud-weather. It will equal one of the
+   SKY_XXX values in values.h.
+
+'mudday'
+'mudhour'
+'mudmonth'
+'mudyear'
+   These variables lets your program keep track of the time in the mud.
+   They all have integer types.
+
+
+DIL constructs:
+===============
+
+DIL offers a set of construct for you to program with.
+
+if:		The if statement is much like C. It takes any type as
+		argument. Non integers are considered 'TRUE' if they are 
+		not null.
+example:
+
+  dilbegin foo();
+  code 
+  {
+    if (self.hp>10) 
+    {
+      exec("say Hehe!",self);
+    }
+    else 
+    {
+      exec("say Auch!", self);
+    }
+  }
+  dilend
+
+example:
+
+  dilbegin foo();
+  code 
+  {
+    if (self.loaded>10) 
+    {
+      exec("say its getting crowded!",self);
+    }
+  }
+  dilend
+
+example:
+
+  dilbegin foo();
+  code 
+  {
+    if (self.loaded<10) 
+      exec("say plenty of room!",self);
+  }
+  dilend
+
+goto: 		The goto statement let you jump about in the code. 
+		As mentioned before, labels are maked between ':'
+example:
+
+  dilbegin foo();
+  code 
+  {
+    :mylabel:
+    exec("say Hello world",self);
+    pause;
+    goto mylabel;
+  }
+  dilend
+
+while:		The while statement lets you execute a series of 
+		statements while an expression evaluates tu TRUE.
+example:
+
+  dilbegin foo();
+  code 
+  {
+    while (not self.inside) {
+      exec("say I own nothing", self);
+      pause;
+    }
+    exec("say ahh.. now i own something", self);
+  }
+  dilend
+  
+break:		The break statement makes you break out of any loop
+		youre currently in.
+example:
+
+  dilbegin foo();
+  code 
+  {
+    while (self.inside) {
+      if (self.position<POSITION_SLEEPING)
+        break;
+      exec("say I own something", self);
+      pause;
+    }
+  }
+  dilend
+  
+continue:	The continue statement makes you jump to the top of
+		any loop youre currently in.
+example:
+
+  dilbegin foo();
+  code 
+  {
+    while (self.inside) {
+      if (self.position<POSITION_SLEEPING)
+        break;
+      pause;
+      if (self.hp<0) continue;
+      exec("say I own something", self);
+      pause;
+    }
+  }
+  dilend
+  
+assignment:	You can assign values to the variables you declare in your
+		'var' section, and some of the built-in variables. This is 
+		done by the ':=' operator. Note that you can also assign a 
+		variable the result of an expression
+		(the addition of strings below as an example)
+
+example:
+
+  dilbegin foo();
+  var
+    myvarsl : stringlist;
+    myvars : string;
+  code
+  {
+    :start:
+    myvarsl := {"a string","another","the first"};
+    myvars := self.name+" XX ";
+    myvarsl.[2] := "the last";  
+    myvarsl.[3] := "illegal";  /* Will not work since [3] is not defined */
+    pause;
+    goto start:
+  }
+  dilend
+
+on <n> goto <la>, <lb>, ..., <ln>:
+
+          This construct is an easy way of performing a goto operation
+          based on the result of an integer. The integer value 'n' must
+          be zero or positive and less than the number of labels specified
+          in the label-list. If n is outside this range, the on-goto operation
+          is skipped and execution continues at the next instruction.
+
+          Based on the value of 'n' execution continues at the label
+          corresponding to number 'n' in the list. I.e. if n is 0, then
+          execution continues at the first specified label, if n is 1
+          then at the second, etc. etc.
+
+
+Example:
+
+          Assume you have an integer 'i' larger than zero, which takes
+          on 0, 1, 2, 3, 4 or 5. Based on each value you need to take a
+          different action, this is how you can do it:
+
+          on i goto grin, laugh, grin, nada, poke, laugh;
+          log("Value was not in the range 0..5");
+          quit;
+
+          :laugh:
+          exec("grin", self);
+          goto ...;
+          
+          :grin:
+          exec("cackle", self);
+          goto ...;
+
+          :blank:
+          exec("cry", self);
+          goto ...;
+
+          :poke:
+          exec("smirk", self);
+          goto ...;
+
+It is often used in this context
+
+          on rnd(0,4) goto l1, l2, l3, l4, l5;
+
+          :l1:
+          bla;
+
+          :l2:
+          bla;
+
+          ....
+
+
+foreach:  Foreach is an easy way to process all the units in the
+          local environment relative to the 'self' executing the
+          foreach. Foreach takes care of creating a list of local
+          units, and of securing them. You can use both break and
+          continue in a foreach statement. The unit executing
+          the foreach ('self') is always a part of the foreach.
+
+          It is important to understand that the units in the local
+          environment are relative to the 'self' executing the foreach.
+
+Example:
+   This foreach is copied onto the spell caster, and hence all units
+   relative to the spell caster (i.e. self) are processed in the foreach.
+   Assume that it was executed on the spell caster's staff, then all units
+   found would be relative to the staff, i.e. the spell caster's inventory.
+
+...
+   foreach (UNIT_ST_PC|UNIT_ST_NPC, u)
+   {
+      if (u.hp < u.max_hp)
+      {
+         act("Warm raindrops fall upon you, cleaning your wounds.",
+             A_ALWAYS, u, null, null, TO_CHAR);
+         u.hp := u.hp + 6;
+         if (u.hp > u.max_hp)
+           u.hp := u.max_hp;
+      }
+      else
+        act("Warm raindrops fall upon you.",
+            A_ALWAYS, u, null, null, TO_CHAR);
+      pause;
+   }
+...
+   
+
+expressions:	The expressions used in assignment can return any of the
+		types you can declare variables. Also they might return 
+		fail or null. An expression returning fail will not result
+		in any action being taken. Fail is returned whan you
+		request a field from a null pointer, or the like.
+
+example:
+
+  dilbegin foo();
+  var
+    myvarsl : stringlist;
+    myvars : string;
+    myvarint : integer;
+    myvaredp : extraptr;
+    myvarunit : unitptr;
+  code
+  {
+    :start:
+    myvarunit := self.inside.next;
+    myvarsl := {"a string","another","the last"};
+    myvars := self.name+" XX "+itoa(self.hp);
+    myvarint := activator.hp;
+    myvaredp := "Rabbit Stew Complete" in activator.quests;
+    pause;
+    goto start:
+  }
+  dilend
+
+
+		DIL features many other operators. For integers,
+		'<', '>', '<=', '>=', '!=' '==' signify less than, 
+		greater than, less or equal, greater or equal, not equal,
+		and equality operators. Furthermore, you can compare
+		strings win '==' or '$=' for equality test, and '!='
+		for non equality. Pointers may also use '==' and '!='
+		and you may force DIL to compare pointers, even for
+		strings with the '#=' pointer-equality operator.
+		The '$=' and '#=' is considered obsolete, and only
+		used for backward compatability.
+
+in:		The special operator 'in' is a multipurpose operator for 
+		alot of things. It allows you to search through
+		quests and extra descriptions, stringlists and search
+		for words in strings.
+
+string 'in' string
+   Argument 1: A string to find.
+   Argument 2: A string to search.
+   Return: TRUE, if first string is found in second string.
+
+example: 
+
+  dilbegin foo();
+  code 
+  {
+    if ("guard" in activator.title) 
+      exec("say hello guard",self);
+    pause;
+  }
+  dilend
+
+string 'in' stringlist
+   Argument 1: A string to find.
+   Argument 2: A stringlist to search.
+   Returns: 1.. if first string is found in stringlist, or 0 if it is
+            non existant. If found the number equals the index of the
+            string found plus one.
+
+Example 1:
+  s := "c";
+  sl := {"a","b","c","d"};
+  i := s in sl;
+
+  The result of 'i' is 3, and sl.[i-1] equals "c" (s).
+
+Example 2:
+
+  dilbegin foo();
+  code 
+  {
+    if ("james" in activator.names) 
+      exec("say hello james.",self);
+    pause;
+  }
+  dilend
+
+string in extraptr
+   Argument 1: A string to find.
+   Argument 2: An extra descrption list to search.
+   Return: Extraptr to first entry with string matching .names or
+           null if none. (names must be exact letter by letter
+           match, although case is ignored).
+
+example: 
+
+  dilbegin foo();
+  code 
+  {
+    if ("Rabbit Stew Complete" in activator.quests) {
+      exec("say wow!, you helped Mary get her stew!", self);
+      exec("app", self);
+    }
+    pause;
+  }
+  dilend
+
+procedures:	DIL features some build-in procedures that allows you
+		increased control over in-game data structures and
+		and eventhandling. Once such procedure (used above) is 
+		'exec()'. The inline procedures are used as any other
+		procedure by typing its name, followed by a list
+		of argument expression enclosed in parentheses. The
+		return types of the expressions used for build-in
+		procedure calls are checked by the compiler.
+
+		DIL also lets you call templates defined in the current or 
+		other zones. The naming of templates follows the
+		normal naming convention for zone, using the 'name@zone'
+		as a symbolic name for a procedure. Before begin able to
+		use external procedures, you must define their name and 
+		type in a seperate 'external' section in the template.
+		The declaration in the 'external' section should
+		match the original declaration of the referenced
+		program. You can define the number and type of arguments 
+		the template take, by listing them inside the declaration 
+		parenthesis (as well as in the original decleration
+		of that template) (see example below) 
+		
+example:
+
+  dilbegin bar(s:string);
+  code
+  {
+    exec("say "+s,self);
+    return;
+  }
+  dilend
+
+  dilbegin foo();
+  external
+    someproc@hades1();
+    bar(s:string);
+  code
+  {
+    someproc@hased1();
+    bar("Hello "+activator.name);
+    pause;
+  }
+  dilend
+  
+		When the procedure is called, the argument expresstions
+		are calculated, and passed to the template. 
+		Build-in procdures, their arguments and function are listed 
+		later.
+
+
+functions:	DIL featuers an extended set of build-in functions for
+		extended program control. Build-in functions can be part of 
+		any expression in DIL. The build-in functions are 
+		listed later. 
+
+example:
+
+  dilbegin foo();
+  code
+  {
+    exec("say i exists in "+itoa(self.loaded)+"copies");
+    pause;
+  }
+  dilend
+
+		DIL also lets you use templates as functions, but in a
+		limited way. Using templates as functions, you may only
+		use the return value to assign it to one of the variables
+		declared in the 'var' section. No fields.
+
+example:
+
+  dilbegin integer bar(s:string);
+  code
+  {
+    exec("say "+s",self);
+    return rnd(1,10);
+  }
+  dilend
+
+  dilbegin foo();
+  external
+    bar(s:string);
+  var
+    myint:integer;
+  code
+  {
+    myint := bar(" rolling the dice");
+    exec("say i rolled a "+itoa(myint));
+    pause;
+  }
+  dilend
+
+
+quit:		This simple command quits the entire DIL program, even if 
+		called while inside a procedure or function.
+
+return:		Return from a call to a procedure template (no return type 
+		declared). The execution continures from where the procedure
+		was called.
+
+return():	Return from a call to a function (return type declared).
+		The expression inside the parenthesis evaluates to the value
+		returned.
+
+	DIL also allows for game-time *symbolic* resolving of 
+	function/procedure names. This allows you to pass template names 
+	as string arguments and call them in your program. This kind of 
+	function call requires taxing lookups and typecheck runtime, so 
+	use the normal kind of procedures if possible. 
+
+	In effect, the syntax of a symbolic call is similar to that of
+	a normal, except you use a string variable as function name
+	instead of the real function name. If the string variable contains
+	a valid reference to a procedure/function, and all the argument 
+	types matches the found templates argument types, the call
+	is made. Otherwise, the call is skipped. Note that you will get no
+	type check by the compiler when using symbolic references.
+
+
+Fields:
+=======
+
+The 'extraptr' and 'unitptr' types contain information which is available to 
+you by using fields. For example (self is a unitptr), self.inside is a 
+unitptr to what is inside the 'self' unit. (Hence '.inside' is the field). 
+And self.inside.outside is a unitptr to self (assuming that something is 
+actually inside self, otherwise self.inside would evaluate to null).
+Some fields may not be changed by DIL programs directly but must be modified
+indirectly using certain procedure calls in DIL. Others may not be changed 
+at all. All are readable for DIL programs.
+
+The extraptr structure is used for several things. The primary is
+extra descriptions for units, and quest data. Keywords in the 'names' 
+field and the actual description/data in the 'descr' field.
+
+In the following (RW) means the value may be assigned new values by DIL,
+while (RO) means the the value only can be read. A (RO) value might be
+possible to change through build-in functions/procedures
+
+The extraptr has the following fields:
+
+   extraptr:
+      'names'        :stringlist (RW)
+         names is a list of strings of names, that the 
+         extradescription matches on.
+      'descr'        :string (RW)
+         descr is the contents of the extra description.
+      'next'         :extraptr (RO)
+         next is the next extra description in a list.
+
+The unitptr is the key structure in the MUD, containing any kind of the
+following subtypes:
+
+   object      : a normal object, a swort, a vail, etc.
+   room        : a room, location or the like.
+   pc          : a playing character.
+   npc         : a non playing charater (mobile, monster, etc)
+
+The unitptr has the following fields:
+
+   unitptr:
+      'names'        :stringlist (RW)
+         A list of names that matches the unit.
+      'name'         :string (RW)
+         The first name in the namelist in 'names'
+      'outside_descr' :string (RW)
+         The desciption of the unit from the 'outside'. f.inst.
+         the description of a boat, seen from the outside.
+      'inside_descr' :string (RW)
+         The desciption of the unit from the 'inside'. f.inst.
+         the description of a boat, seen from the inside.
+      'next'         :unitptr (RO)
+         The next unit in the local list of units. For instance, the
+         units in the inventory of a PC, is linked with this field.
+      'title'        :string (RW)
+         The title of the unit. 
+      'extra'        :extraptr (RW)
+         Extra descriptions of the unit (identify, look at, read etc.).
+      'outside'      :unitptr (RO)
+         The outside of the unit hirachy (catied by, contained by).
+         For instance, the contents of a bag have their 'outside'
+         field pointing to the bag.
+      'inside'       :unitptr (RO)
+         The inside of the unit hirachy (carry, contains).
+         Forinstance the first unit in a PC's inventory is referenced
+         by the 'inside' field.
+      'gnext'        :unitptr (RO)
+         Next unit in the global list of units.
+      'gprevious'    :unitptr (RO)
+         Preveous unit in the global list of units.
+      'hasfunc'      :integer (RO)
+         Returns TRUE if unit has special functions attached to it.
+      'max_hp'       :integer (RO/RW)
+         The maximum hitpoints of unit, RO for players, RW for mobiles.
+      'max_mana'       :integer (RO)
+         The maximum mana of the character (player or mobile).
+      'max_endurance'  :integer (RO)
+         The maximum endurance of the character (player or mobile).
+      'lifespan'       :integer (RW)
+         The lifespan of a character, write permission only on root access.
+      'hp'           :integer (RW)
+         The current hitpoints of unit. For objects, this can render
+         it 'broken' by being set low.
+      'manipulate'   :integer (RW)
+         Bits that specify how unit can be handled, see MANIPULATE_*
+         flags in values.h
+      'flags'        :integer (RW)
+         Bits that specify different proporties of a unit, see
+         UNIT_FL_* in values.h
+      'baseweight'   :integer (RO)
+         The empty weight of the unit. This can be set with the 
+         procedure 'setweight()'
+      'weight'       :integer (RO)
+         The current weight of the unit (and its contents).
+      'capacity'     :integer (RW)
+         The amount of weight the unit can contain.
+      'height'       :integer (RW)
+         The height of a PC/NPC, the length of a rope, the size of weapons,
+         armours, and shields.
+      'alignment'    :integer (RW)
+         The alignment of the unit. [1000..-1000], 
+         1000 is good, 0 is neutral, -1000 is evil.
+      'openflags'    :integer (RW)
+         Bits thats specify how a unit may be opened, locked, etc,
+         see EX_* in values.
+      'light'        :integer (RO)
+         How much light is inside the unit. 
+      'bright'       :integer (RO)
+         How much the unit light up. This can be set with the 
+         procedure 'setbright()'
+      'illum'        :integer (RO)
+         How much unit inside a transparent unit light up
+      'minv'         :integer (RW)
+         The 'wizard invisibility' level.
+      'spells'[]     :integer (RO)
+         The defence/skill of the different spell spheres/spells
+         The index should be one of the SPL_* in values.h         
+
+      'zoneidx'      :string (RO)
+         The unique database name (in the zone) for this unit.
+      'nameidx'      :string (RO)
+         The unique databse zone name for this unit.
+      'idx'      :integer (RO)
+         The unique database index (in the zone) for this unit.
+         This provides a smart alternative to check for zoneidx
+         and nameidx. Thus if (u1.idx == u2.idx) then
+         (u1.nameidx == u2.nameidx) and (u1.zoneidx == u2.zoneidx).
+         Be warned, this value change between each reboot, so do not
+         count o it for purposes of saving.
+
+      'zone'         :string (RO)
+         The name of the zone th unit is in.
+      'type'         :integer (RO)
+         The type of the unit, see UNIT_ST_* in values.h 
+      'loadcount'    :integer (RO)
+         Returns the number of units loaded in the game
+         of this definition (zoneidx,nameidx / idx)
+
+if the type is UNIT_ST_OBJ
+
+      'objecttype'   :integer (RW)
+         The type of an object, see ITEM_* in values.h for types.
+      'value'[]      :integer (RW)
+         Values for an object. The meaning of the values differ
+         from object type to object type. Index should be [0..4].
+         These values are used differently for each object type.
+      'objectflags'  :integer (RW)
+         Bits specifying special propoties for an object. Some
+         combinations may not be logical, see OBJ_* in values.h
+      'cost'         :integer (RW)
+         The basic cost of an object. (old gold value)
+      'rent'         :integer (RW) 
+         The basic cost of renting an object. Mostly used on very 
+         special objects. (old gold value)
+      'equip'        :integer (RO) 
+         The position in eqipment. This is used by units in a PC/NPC's
+         inventory to tell if they are equipped by that PC/NPC.
+         use the 'addequip()' and 'unequip()' procedures.
+
+if the type is UNIT_ST_ROOM
+
+      'exit_descr'[] :string (RW)
+         The description 'look north' etc. The index should be one of
+         NORTH EAST SOUTH WEST UP DOWN in values.h
+      'exit_names'[]  :stringlist (RW)
+         The names matching the exit name 'open grate' The index should
+         be one of NORTH EAST SOUTH WEST UP DOWN in values.h
+         Example:
+           sl := self.exit_names[SOUTH];
+           act("The "+s.[0]+" slides open as you press the button.",
+                A_ALWAYS, activator, null, null, TO_CHAR);
+      'exit_info'[]  :integer (RW)
+         Bits specifying the conditions of the exits, see EX_* in
+         values.h The index should be one of NORTH EAST SOUTH WEST 
+         UP DOWN in values.h
+      'exit_to'[]    :unitptr (RO)
+         The unit, the direction exits to. The index should
+         be one of NORTH EAST SOUTH WEST UP DOWN in values.h
+         You may not change the directions through DIL programs.
+      'roomflags'    :integer (RW)
+         Bits specifying proporties of the room, see ROOM_FL_* in
+         values.h
+      'movement'     :integer (RW)
+         The type of movement in the room, see SECT_* in values.h
+
+if the type is UNIT_ST_PC or UNIT_ST_NPC 
+
+      'speed'        :integer (RO)
+         The current default combat-speed (as seen by wstat)
+      'fighting'     :unitptr (RO)
+         The unit the PC/NPC is fighting. 
+      'master'       :unitptr (RO)
+         The unit the PC/NPC is following.
+      'follower'     :unitptr (RO)
+         The first follower of a PC/NPC. There is currently no way
+         of finding other followers, except using a foreach loop in 
+         the local environment.
+      'exp'          :integer (RO)
+         The number of experience points for PC, or experience 
+         quality of monster. The exp can be set by the function
+         'experience()'
+      'charflags'     :integer (RW)
+         Bits specifying by spells affects and other PC/NPC affects, 
+         and many other things, see CHAR_* in values.h
+      'mana'         :integer (RW)
+         The amount of mana a PC/CHAR has left.
+      'dex_red'      :integer (RO)
+         The amount of DEX reduction the PC/NPC suffers due to
+         encumberence or otherwise.
+      'endurance'    :integer (RW)
+         The amount of endurance a PC/NPC has left.
+      'attack_type'  :integer (RW)
+         The non-weapon attack type of a PC/NPC.
+      'race'         :integer (RW)
+         The race of a PC/NPC, see RACE_* in values.h
+      'sex'          :integer (RW)
+         The sex of a PC/NPC, see SEX_* in values.h
+      'level'        :integer (RO)
+         The level of a PC/NPC.
+      'position'     :integer (RW)
+         The position of a PC/NPC, see POSITION_* in values.h
+         affected by the 'position_update()' procedure
+      'abilities'[]  :integer (RO)
+         The abilities of a PC/NPC. Index should be ABIL_* in values.h
+      'weapons'[]    :integer (RO)
+         The weapon skills of a PC/NPC. Index should be WPN_* in values.h
+      
+if the type is UNIT_ST_NPC 
+
+      'defaultpos'   :integer (RW)
+         The default position of a NPC, see POSITION_* in values.h
+      'npcflags'     :integer (RW)
+         Some small options for NPC's see NPC_* in values.h
+
+if the type is UNIT_ST_PC
+
+      'birth'         :integer (RO)
+         The time a PC was created.
+      'hometown'      :integer (RO)
+         The hometown of a PC.
+      'pcflags'       :integer (RW)
+         The setup of player options. See PC_* in values.h
+      'playtime'      :integer (RO)
+         The time a PC has played.
+      'skill_points'   :integer (RO)
+         The amount of unused skill points the PC has.
+      'ability_points' :integer (RO)
+         The amount of unused ability points the PC has.
+      'skills'[]     :integer (RO)
+         The skills of a PC. Index should be SKI_* in values.h
+      'guild'        :string (RW)
+         The guild the PC belongs to.
+      'crimes'       :integer (RW)
+         The number of crimes the PC has.
+      'full'         :integer (RW)
+         How hungry the PC is.
+      'thirst'       :integer (RW)
+         How thirsty the PC is.
+      'drunk'        :integer (RW)
+         How drunk the PC is.
+      'quests'       :extraptr (RW)
+         The quests a PC is finishing/has finished.
+      'info'         :extraptr (RW)
+         The info structure of a PC.
+      'acc_balance'  : integer (RO)
+         If the game is in accounting mode, then this returns the balance
+         of the player, what would be shown on balance in wstat <player> acc.
+      'acc_total'  : integer (RO)
+         If the game is in accounting mode, then this returns the total
+         credit of the player, what would be shown on total in wstat
+         <player> acc.
+
+
+Functions
+=========
+   Following are definitions and documentation for the 
+   build-in functions in DIL. The definitions are not
+   definitions 'as such', but serve to distinguish arguments 
+   in the documentation below.
+
+integer spellindex(s : string)
+   s  : The abbreviated or full spell name
+
+   Returns: -1 if no such spell, otherwise it returns the spell index
+            for that spell.
+
+   Example:
+      s := "cu li wo"; /* cure light wounds */
+      i := spellindex(s);
+
+
+string spellinfo(idx : integer, i1 : integer, i2 : integer, i3 : integer, 
+                 i4 : integer, i5 : integer, i6 : integer, i7 : integer, )
+
+   s   : The abbreviated or full spell name
+   idx : The spell index (SPL_XXX)
+   i1  : Spell realm (MAG / DIC)
+   i2  : Spell sphere (SPL_XXX)
+   i3  : Mana usage
+   i4  : 0 if a non-offensive spell, non-zero otherwise
+   i5  : Resistance required (SPLCST_XXX)
+   i6  : Mediums (MEDIA_XXX)
+   i7  : Targets (FIND_UNIT_XXX & TAR_XXX)
+
+   Returns: The full name of the spell, or the empty string if no such spell.
+
+   Example:
+      s := "cu li wo"; /* cure light wounds */
+      i := spellindex(s);
+      s := spellinfo(i, i1, i2, i3, i4, i5, i6, i7);
+      /* s & i1 - i7 now set */
+
+
+integer can_carry(ch : unitptr, u : unitptr, n : integer)
+   ch : The character to check
+   u  : The unit to check if he can carry.
+   n  : How many copies of that unit.
+
+   Returns: 0 if 'ch' can carry 'n' times 'u'.
+            1 if 'n' items are too many (his hands are full)
+            2 if 'n' times 'u' are too heavy
+
+   Example:
+
+      i := can_carry(activator, item, 1);
+
+      if (i == 1)
+        exec("say Your hands are full!", self);
+      else if (i == 2)
+        exec("say You cant carry that much weight.", self);
+      else
+        exec("give "+item.name+" to "+activator.name, self);
+
+string fits( char : unitptr, obj : unitptr, pos : integer );
+   char: Character which we want to test if obj can be fitted upon
+   obj:  The object we want to see if fits char.
+   pos:  -1 or WEAR_XXX
+   Returns: Empty string if ok, or a textual description of the size problem.
+
+   Fits tests if "obj" can be worn by "char" in position "pos". If
+   pos is -1, then fits automatically figures out the default worn
+   position for "obj".
+
+   Example:
+
+      s := fits(self, obj, -1);
+      if (s != "")
+        exec("say Dont buy it, its "+s, self);
+
+
+unitptr restore( zone : string, name : string )
+   name : The symbolic unit-name.
+   zone : The symbolic unit-zone-name.
+   Returns: The unit loaded or null if not found.
+
+     Restore loads a copy of a unit which was previously saved with the
+     'store' command. Just as with "load", the unit is put inside the
+     unit which executes the restore command.
+     Note, that it is only possible to 'restore' as long
+     as the main-database contains a reference for the unit 'name@zone'.
+     Please use store and restore sparingly - remember that items saved in
+     player's inventories are automatically saved in their instance.
+     Disk access is always slow.
+     The 'store' and 'restore' are perfect for operations such as an
+     on-line edited newspaper, a lottery where the tickets sold to players
+     are stored and the player is announced. In fact the bulletin board system
+     could very easilly be written in DIL using store and restore.
+
+integer meleeattack ( ch : unitptr, vict : unitptr,
+                     bonus : integer, wtype : integer )
+   ch    : The character which should make an additional attack.
+   vict  : The victim of the attack.
+   bonus : Any penalty or bonus added to the attack.
+   wtype : The weapon type of the attack, if a valid type then that is
+           used for the attack purpose, otherwise the default weapon/hand
+           attack is used.
+
+   result: 'ch' performs a melee attack (using whatever weapon is wielded
+           or his bare hands) against 'vict'. Returns the amount of damage
+           given (-1 is failed).
+
+   If wtype is within a valid weapon range (WPN_XXX) any weapon will
+   be bypassed, and the value will be used as the attacktype. Good
+   for things like "meleeattack(ch, vict, WPN_CIRCLE_KICK)"
+   if you want person to be able to perform an extra attack even
+   though wielding a weapon or something. Note that this will require
+   BOTH a weapon type WPN_CIRCLE_KICK and a skill "kick" in order for
+   it to work.
+
+string moneystring(amt : integer, verbose : integer)
+   amt    : The amount of money
+   verbose: True if an expanded string (copper pieces) or false
+            if abbreviated money types (cp).
+   result : The moneystring for the given currency.
+
+unitptr equipment ( u : unitptr , i : integer )
+   u : The character to search.
+   i : What equipment to find, any of the WEAR_XXX macros.
+   result: Returns the unit on 'u' which is equipped on position 'i'.
+           See WEAR_* in values.h
+
+
+integer visible(u1 : unitptr, u2 : unitptr)
+   u1: The character who is looking at u2
+   u2: The unit which the character u1 is trying to see.
+   return: TRUE if u1 can see u2, FALSE otherwise.
+   example: if (visible(self, victim)) ...
+
+
+integer opponent(u1 : unitptr, u2 : unitptr)
+   u1, u2: Two characters
+   return: TRUE if u1 is in combat with u2, FALSE otherwise.
+   example: if (opponent(self, victim)) ...
+
+   When in a combat, you are usually only melee-attacking one opponent,
+   although you may have many other opponents. This function lets you
+   check if you are directly / indirectly an opponent to another unit.
+
+
+integer purse(u : unitptr, coinage : integer)
+   u : The unit to check
+   coinage: The money type (e.g. gold, silver), one of IRON_PIECE, etc.
+   Returns: The number of such units found.
+   Example: if (purse(self, PLATINUM_PIECE) > 10)
+              exec("say I am loaded with platinum!", self);
+
+========================================
+
+integer atoi ( s : string )
+   s : A string with a number.
+   return: The number in the string.
+   example: i := atoi("42");
+
+
+integer command ( cmd : string or integer )
+   cmd : A string of the full typed command, e.g. "push" or "say".
+         Alternatively you can specify one of the macro's defined in
+         values.h, e.g. CMD_SAY
+   return: Whether the command specified by the activator is the one of the
+           argument.
+
+
+integer dildestroy( s : string, u : unitptr )
+   s : name of diltemplate to delete.
+   u : unit to remove program from.
+   return: Weather a program using a template with same name as in 's'
+           attached to unit 'u' was removed.
+
+
+integer dilfind( s : string, u : unitptr )
+   s : name of diltemplate to find.
+   u : unit to find program in.
+   return: Weather a program using a template with same name as in 's'
+           attached to unit 'u' was removed.
+
+
+string itoa ( i : integer )
+   i : A number.
+   return: A string with the number.
+   example: s := itoa(42);
+
+
+integer isaff ( u : unitptr , i : integer )
+   u : A unit to be examined.
+   i : An id of an affect, see ID_* in values.h
+   return: TRUE, if unit 'u' is affected by affect id 'i'
+
+
+integer isset ( i : integer , bit : integer )
+   i : An integer to examine.
+   bit : A set of bits to match.
+   return: TRUE, if bits in 'bit' is set in 'i'.
+   example: if (isset(self.manipulate, MANIPULATE_TAKE)) ...
+
+
+unitptr findunit ( u : unitptr , s : string , i : integer , l : unitptr )
+   u : The unit the local environment is relative to.
+   s : A string with name of the unit to find.
+   i : The environment, where to look for it, see FIND_UNIT_*
+       in values.h.
+   l : An optional list of units to search.
+   return: If the unit is found, the function returns that unit.
+           Returns null if nothing found.
+
+   The first argument is typically the char that's looking for something,
+   i.e. if Mary needs a spoon to stir the pot, she'll be the first argument.
+
+   The second argument is what you're looking for, represented by a string.
+   In the above mentioned example, that'd be "spoon".
+
+   For the second or third argument, you have a choice, as you'll only need to
+   use one of them, and let the other be 0 or null.  For instance, if you have
+   a pointer to Mary's kitchen utensil pot, you can use the line
+
+       findunit(mary, "spoon", 0, pot);
+
+   or you can just let her look around for it with
+
+       findunit(mary, "spoon", FIND_UNIT_INVEN or FIND_UNIT_SURRO, null);
+
+   You can use all the FIND_UNIT_ values defined in values.h, if you want to
+   look for something for example within the zone (FIND_UNIT_ZONE), the entire
+   world (FIND_UNIT_WORLD) (you rarely need to do that, it's mainly for tell
+   etc.), or just the inventory or equipment of the char in question
+   (FIND_UNIT_INVEN and FIND_UNIT_EQUIP).  Finally, as in the example above,
+   you can look in the room of the char (FIND_UNIT_SURRO).
+
+
+unitptr findrndunit( u : unitptr, sv : integer, uf : integer)
+   Returns: A pointer to a random unit, or null
+   u  : The unit point which the search is relative to.
+   sv : The search-location, a value (not bitvector) of FIND_UNIT_XXX
+   uf : Bitvector. The unit flags which can match of UNIT_ST_XXX
+
+   example: u := findrndunit(self, FIND_UNIT_ZONE, UNIT_ST_PC|UNIT_ST_NPC);
+
+   This routine returns a random unit. Notice how the 'uf' lets you
+   specify exactly what unit types to look for. The 'sv' is not a
+   bitvector, although FIND_UNIT_XXX is usually used as such. If 
+   you need to search multiple environments, then call the routine
+   once for each.
+
+
+unitptr findroom ( s : string )
+   s : Symbolic name of room.
+   return: A pointer to the room, or null
+   example: findroom("inn@udgaard")
+
+
+unitptr findsymbolic ( s : string )
+   s : Symbolic name of the NPC or Object to find.
+   return: A pointer to an instance of the unit, or null.
+   Example: findsymbolic("bread@midgaard")
+
+   This routine supplements findroom and findunit. It comes in handy,
+   if it is important to get a correct reference to a NPC in the world.
+   If for example, Mary needs to send a message to John the Lumberjack,
+   then she should NOT use the findroom since it may locate a differnt
+   John - even a player! If she instead locates him using
+   findsymbolic("john@haon_dor") she will be certain that it is in fact
+   her husband, and not the player Joe Blow from Norway.
+   It will NOT locate rooms, for the only reason that findroom is a lot
+   more efficient.
+
+
+unitptr findsymbolic ( u : unitptr, s : string, i : integer )
+   u : Search is relative to this unit.
+   s : Symbolic name of the NPC or Object to find.
+   i : FIND_UNIT_XXX bitvector of places to search.
+   return: A pointer to an instance of the unit, or null.
+   Example: findsymbolic(self, "bread@midgaard", FIND_UNIT_INVEN)
+
+   This routine supplements findroom, findunit and findsymbolic(#).
+   It comes in handy, if it is important to get a correct reference
+   to a unit somewhere relative to 'u'.
+   If for example, Mary needs to check if she has her own cooking pot,
+   then she should NOT use the findunit since it may locate a different
+   pot, not belonging to Haon-Dor but to some other zone. If she instead
+   locates it using findsymbolic(self, "pot@haon_dor", FIND_UNIT_IN_ME)
+   she would be certain that it is in fact her own cooking pot that she
+   is carrying around, and not some other pot from a Joe Blow zone.
+
+
+string getword ( var s : string )
+   s : A string with zero or more words seperated by space.
+   return: The first word of the string.
+
+   The argument string has thge returned word removed.
+
+
+stringlist getwords ( var s : string )
+   s : A string with zero or more words seperated by space.
+   return: A stringlist where each string was a word in 's'.
+
+
+integer length ( a : string or stringlist ) 
+   a : a string or stringlist to examine.
+   return: The length of the string in characters, or the number of
+           strings in a list.
+
+
+unitptr load ( s : string )
+   s : Symbolic name of unit.
+   return: A pointer to the unit, or null
+   example: load("garlic@midgaard")
+
+   The loaded unit is automatically placed inside the object which
+   loaded it. Use for example the link command to move it to other
+   units.
+
+
+integer openroll( dice : integer , end : integer )
+   dice : The size of the dice being rolled.
+   end  : The margin for the open-ended roll.
+   return: A random integer in approximately +/- 2^31 in worst case.
+   example: i := openroll(100,5); The "100" roll continues on values
+            96 - 100 and on values 1 - 5.
+
+integer pathto( from : unitptr, to : unitptr )
+   from   : The unit which the path is taken from
+   to     : The unit which the path is taken to
+   returns: DIR_XXX from values.h.
+   example: i := pathto(self, findroom("inn@midgaard"));
+
+
+integer rnd ( i1 : integer , i2 : integer )
+   i1 : Start of range.
+   i2 : End of range.
+   return: A random integer in an interval from 'i1' to 'i2'.
+   example: i := rnd(1,10);
+
+
+
+Procedures:
+===========
+
+   Following are definitions and documentation for the 
+   built-in procedures in DIL. The definitions are not
+   definitions 'as such', but serve to distinguish arguments 
+   in the documentation below.
+
+
+follow( f : unitptr, m : unitptr )
+   f : The character to follow
+   m : The character to be followed
+
+   Unconditionally makes 'f' follow 'm', even if 'f' is mortally
+   wounded, sleeping, fighting or whatever.
+
+
+logcrime( c : unitptr, v : unitptr, t : integer )
+   c : The criminal (main suspect)
+   m : The victim
+   t : The crime type (CRIME_XXX)
+
+   Registers a crime committed against 'v' by 'c'. Use the
+   CRIME_XXX values from values.h as the 't' argument.
+   The logcrime routine automatically registers group members
+   of the criminal, etc. In stuff like steal, remember to make
+   the criminal visible if he fails his attempts.
+
+acc_modify( u : unitptr, i : integer )
+   u : A player
+   i : An amount in 1/100s, for example 100 would equal $1.00, and
+       -100 would equal -$1.00.
+
+   Access only allowed with 'root' access and all transactions are
+   registered in the specially encrypted account log file. Use with
+   great caution, and always test thoroughly before using.
+   Use without prior permission may cause deletion of god / zone.
+
+
+store( u : unitptr )
+   u : A pointer to a unit (except rooms)
+   Result: Stores the unit 'u' on disk overwriting any existing
+           versions of the same unit. See also 'restore'.
+
+position_update ( u : unitptr )
+   u : A pointer to a player or a monster. The character will be
+       updated and perhaps killed, incapacitated, mortally 
+       wounded, revived, etc. depending on current hitpoints.
+       Useful when tampering with the 'hp' field. Example:
+
+       pc.hp := pc.hp - 100;
+       position_update(pc);
+
+
+set ( var i : integer , bit : integer )
+   i : Integer variable to alter.
+   bit : Bits to set in integer variable.
+   result: Sets bits in 'i'
+
+
+unset ( var i : integer , bit : integer )
+   i : Integer variable to alter.
+   bit : Bits to unset in integer variable.
+   result: Unsets bits in 'i'.
+
+
+addextra ( var e : extraptr, l : stringlist , s : string )
+   e : Extra description list to add element to.
+   l : Stringlist for the .names field.
+   s : String for the .descr field.
+   result: Adds an extra description to a list of extra descriptions.   
+
+
+addstring ( var l : stringlist, s : string )
+   l : Stringlist to add string to.
+   s : String to add.
+   result : Adds a string 's' to a stringlist 'l'.
+
+
+subextra ( var e : extraptr, s : string )
+   e : Axtra description list to remove element from.
+   s : String matching .names field in element
+   result: Removes first extra description from list with matching name.
+
+   
+substring ( var l : stringlist, s : string )
+   l : Stringlist list to remove string from.
+   s : String to remove
+   result: Removes string 's' from stringlist 'l'.
+
+
+subaff ( u : unitptr, i : integer )
+   u : Unit remove affect from.
+   i : Affect id to remove, see ID_* in values.h
+   result: Removes first affect at 'u' with matching id 'i'.
+
+
+addaff ( u : unitptr, id : integer, tif_first : integer, tif_tick : integer,
+         tif_last : integer, apf : integer, )XXX
+   u : Unit remove affect from.
+   i : Affect id to remove, see ID_* in values.h
+   result: Removes first affect at 'u' with matching id 'i'.
+
+
+destroy ( u : unitptr )
+   u : Unit to destroy.
+   result: Extracts unit from game, if not a room, linking it out, etc.
+
+   
+walkto ( u : unitptr )
+   u : Room to walk to.
+   result: Makes unit (self) walk to room, taking a 'step' at each 'tick'.
+
+
+link ( u : unitptr, t : unitptr )
+   u : Unit to link.
+   t : Unit to link into.
+   result: Link a unit into another unit hirachy. (Automatically
+           unequips if equipped).
+
+
+experience ( i : integer, u : unitptr )
+   i : A integer number of experience to gain or loose.
+   u : The player to receieve the experience.
+   result: The integer amount of experience is added to the players
+           total amount of experience (thus causing more or less 
+           experience). USE WITH CARE! SUGGEST THAT YOU ONLY USE
+           INTEGER CONSTANTS AS THE EXPRESSION TO AVOID ERRORS.
+
+
+act ( s : string , vis : integer , dilexp , dilexp , dilexp , to : integer )
+   Call the inteligent message parser.
+   s : The message to be send.
+   vis : Visibility of message, see A_* in values.h.
+   Argument 3,4,5: Arguments to message (can be unitptr or string)
+   to : Who to show it to, see TO_* in values.h
+   result: The message is parsed so that a '$' followed by a number and
+           a control code is diplayed differently to the PC/NPC's in the
+           room. There is a maximum of 3 Arguments, and the parser accepts 
+           the following control chars:
+               'n': title of unit, or 'something' or 'someone'
+               'N': name of unit, or 'something' or 'someone'
+               'm': 'it' 'him' 'her' depending on sex
+               's': 'its' 'his' 'her' depending on sex
+               'e': 'it' 'he' 'she' depending on sex
+               'a': 'an' or 'a' depending on unit name
+               'd': number in Argument 
+               't': text in Argument
+
+
+exec ( s : string , u : unitptr )
+   s : Command and arguments to perform.
+   u : Unit to perform command.
+   result: Unit (PC/NPC) executes command. The argument is treated just as
+           is a normal PC entered a command at the command prompt in the
+           game. It is not directly possible to detect weather the command
+           was a success or fail. For example, you might force a PC to
+           "get key". If there is no 'key' available, the PC will get 
+           notified the normal way. Plenty of examples are given above.
+
+
+wait ( i : integer , dilexp )
+   i : Message class to accept, see SFB_* in values.h 
+   dilexp : Expression that has to be TRUE or not null to accept message.
+   result: Waits for a command, matching the flagset, and satisfies the 
+           expression. When using the 'wait()' command, the first argumnent 
+           is an integer, that tells what classes of messages to wait for. 
+           Each message class is represented by a bit named as described in 
+           the chapter on messages. 
+example:
+
+   wait (SFB_TICK|SFB_MSG, TRUE)
+   /* Will accept a message, either from another DIL program or a
+      timer message. As the second argument is always TRUE, any
+      such message will reactivate the DIL program.
+    */
+      
+example:
+
+  wait (SFB_CMD, commad("transmutate"))
+  /* waits for an command entered named 'transmutate'.
+     Activates the DIL program, that then can block the command, or
+     let it pass (and then let the game produce the normal error
+     message for unknown commands). 
+  */
+
+
+secure ( u : unitptr , label )
+   u : Unit to secure.
+   label : Label to jump to, on removal.
+   result: Secures a unitptr, so that the program will go to 'label'
+           if unit leaves local environment. If this happens, during
+           a call to another function/procedure, it will continue 
+           at that label when the function/procedure returns.
+           If you perform some kind of call to a template, the removing
+           of a unit from the local environment will not have affect. 
+           until the return from that function, as the program execution
+           will continue at the designated label after a call. Should
+           several secured units leave local environment, the last such
+           event will determine the point of execution uppon return.
+
+          
+unsecure ( u : unitptr )
+   u : Secured unit.
+   result: Drop secure on a given unit.
+
+
+block
+   result: Blocks any command issued by a player or mobile. Blocking a
+           command prevents the command from being parsed by the
+           interpreter. This is ideal if you need to make a routine
+           which intercepts a command, reacts on it in a special way,
+           and does not need the standard way of reacting.
+
+
+priority
+   result: Set until nopriority command. When set, no special routines 
+           "below" the current DIL program will be executed. This is used 
+           to make other special routines idle. See haon-dor.zon for an 
+           example.
+
+
+nopriority
+   result: Cancels the priority procedure.
+
+
+addequip ( u : unitptr , i : integer )
+   u : Unit to equip.
+   i : Where to equip unit.
+   result: Equips unit, presumed to be in invetory PC/NPC at
+           given position. See WEAR_* in values.h
+
+
+unequip ( u : unitptr )
+   u : Unit to unequip.
+   result: Unequips unit presumed to be in equipment of PC/NPC.
+
+
+dilcopy( s : string, u : unitptr )
+   s : Name template to attach to unit.
+   u : Unit to attach a dilprogram to.
+   result: Attaches a DIL program to a unit 'u', which uses a template
+           named by 's'.
+
+sendtext( s : string, u : unitptr )
+   s : text to send
+   u : Unit to send the text to
+   result: Sends the string 's' to 'u'. Useful only for nanny stuff,
+           because no newline appended.
+
+change_speed( u : unitptr, i : integer )
+   u : the unit on which you wish to alter the current combat speed.
+   i : the amount to add to the speed.
+
+   Beware, this is not the 'speed' as in the speed field, rather this is
+   the speed which is calculated during combat. It is used for spells like
+   'stun' which effectively puts the character out of combat for one
+   round. Such a spell would be implemented like:
+
+     change_speed(u, 12)
+
+   and would only cause any effect if 'u' was fighting already (if not,
+   use setfighting).
+
+
+integer transfermoney( f : unitptr, t : unitptr, amount : integer)
+   f : The char the money is taken from
+   t : The char the money is given to
+   amount : How much money.
+   Returns: TRUE is money was transferred, FALSE if could not afford.
+
+   If 'f' is null and 't' isnt, then money is created and given to 't'.
+   If 'f' isnt null but 't' is, then money is removed from 'f'.
+
+
+set_fighting( u : unitptr, t : unitptr )
+   u : the unit on which attacks.
+   t : the unit being attacked.
+
+   This is used to set two characters fighting. If the attacker is
+   fighting already, the target will simply be inserted into the
+   opponent list and perhaps killed a little later.
+
+
+setweight( u : unitptr, i : integer )
+   u : the unit on which you wish to alter the weight.
+   i : the new weight
+
+   This is needed on forexample drink-containers. I.e. if you wish to
+   remove or add some liquid, you must also adjust the weight of the
+   container, or you will mess up things.
+
+setbright( u : unitptr, i : integer )
+   u : the unit on which you want to change the brightness.
+   i : the new brightness
+
+   When you want to increase / decrease the amount of light shed by a 
+   unit, use this funtion. Units with "bright" light up rooms so that
+   people can see.
+
+log( s : string )
+   s : Text to put in the log.
+   result: Puts text in the log for debugging purposes.
+
+
+send ( s : string )
+   s : Message to send.
+   result: Send a message to all DIL programs in current local environment,
+           matching the message class SFB_MSG. The message is not rescieved 
+           by those DIL programs in the local environment that is not set up 
+           to wait for that message class.
+
+
+sendto ( s : string , u : unitptr )
+   s : Message to send.
+   u : Unit to send it to.
+   result: The message is passed to all DIL programs in unit, matching the
+           message class SFB_MSG. The message is not 
+           rescieved by those DIL programs in the local environment that is 
+           not set up to wait for that message class.
+
+
+sendtoall( m : string, s : string )
+   m : Message to send.
+   s : Name idx to send message to.
+   result: Send a message to all units matching a given database name.
+
+example: 
+
+   sendtoall ( "some message", "rabbit@haon-dor");
+   
+   The message "some message" is sent to all units in the world matching the
+   data base name "rabbit@haon-dor". Like 'send()' and 'sendto()', the 
+   message rescieved matches the SFB_MSG message class.
+           
+
+sendtoalldil( m : string, s : string )
+   m : Message to send.
+   s : Name idx to a DIL program to send message to.
+   result: Send a message to all DIL programs matching a given database name.
+
+example: 
+
+   sendtoalldil ( "some message", "intercomm@cemetery");
+   
+   The message "some message" is sent to all DIL program in the world
+   matching the data base name "intercomm@cemetery".
+   Like 'send()' and 'sendto()', the 
+   message rescieved matches the SFB_MSG message class.           
+
+cast_spell( i : integer, caster : unitptr, medium : unitptr, target : unitptr )
+
+   WILL EVENTUALLY BE OBSOLETE AND REPLACED BY THE CAST_SPELL BELOW.
+
+   i : Spell index to cast. See SPL_* in values.h.
+   caster : The caster of the spell.
+   medium : The medium, with which the spell is cast, might be caster.
+   target : The target of the spell.
+
+   Use this to cast spells without performning all the usual mana stuff, etc.
+   Very useful with for example rings / items posessing magical abilities.
+
+integer cast_spell( i : integer, caster : unitptr, medium : unitptr, target : unitptr, effect : string )
+   i : Spell index to cast. See SPL_* in values.h.
+   caster : The caster of the spell.
+   medium : The medium, with which the spell is cast, might be caster.
+   target : The target of the spell.
+   effect : A symbolic DIL program which takes no arguments. This will
+            cause all effects to be suppressed and leave this to the program
+            specified. A string of "" will cause the ordinary messages to
+            appear.
+   returns: The result of the spell.
+
+   Use this to cast spells without performning all the usual mana stuff, etc.
+   Very useful with for example rings / items posessing magical abilities.
+
+   Example:
+
+   %dil
+
+   dilbegin myeffect(medi : unitptr, targ : unitptr, hm : integer);
+   code
+   {
+      act("The caster is $1N medium is $2N and target is $3N",
+          A_ALWAYS, self, medi, targ, TO_ALL);
+      act("The spell result is "+itoa(pwr), A_ALWAYS, self,null, null, TO_ALL);
+      quit;
+   }
+   dilend
+
+   .....
+
+   %...
+
+   dilbegin test();
+   var
+     n : integer;
+   code
+   {
+      wait(SFB_DONE, command("beg"));
+
+      n := cast_spell(SPL_FIREBALL_1, self, self, activator, "myeffect@wiz");
+
+      exec("say Result of spell was "+itoa(n), self);
+   }
+   dilend
+
+
+integer attack_spell( n : integer, caster : unitptr, medium : unitptr,
+                      target : unitrptr, bonus : integer)
+   Returns : The amount of damage given.
+   n : The spell index of the offensive spell (SPL_XXX)
+   caster : The caster of the spell.
+   medium : The medium, with which the spell is cast, might be caster.
+   target : The target of the spell.
+   bonus  : Possible (+) advantage or (-) penalty.
+
+   This is low-level internal spell stuff used to develop new spells. Do not
+   use unless you know what you are doing and have been allowed to do so by
+   Papi.
+
+integer interrupt( flags : integer, dilexp, label )
+
+   Set up interrupt matching message classes matching "flags", 
+   for example "SFB_COM" or "SFB_COM | SFB_MSG".
+
+   When the program is activated on either of the specified conditions
+   the 'dilexp' is evaluated. If true, then execution continues at 'label',
+   otherwise the next interrupt is checkked (if any).
+
+   Interrupts are saved (restored), when 'recall' is set.
+   Returns an integer which is used for clear() to clear an interrupt.
+
+Example:
+
+The following program shows, that the owner (self) of the program keeps
+snoring while sleeping. The on_activation ensures that the program
+is only activated when the owner is sleeping. Hoever, since the interrupt
+preceedes the on_activation, these may still be intercepted before the
+on_activation. The on_activation is just another type of interrupt that
+reacts on all flags (without actually setting them so that the program
+is activated).
+
+When the program receives the message "relief" the snoring stops briefly.
+As used, "relief" may only be set once.
+
+When the program receives the message "cured", the snoring stops completely
+(i.e. the program quits itself).
+
+dilbegin
+
+var
+   i : integer;
+
+code
+{
+   /* NOtice that the sequence in which the interrupts (and the on_activation)
+      are executed, is quite important: You can be cured at *any* time. The
+      program will skip if you are not sleeping. If you are sleeping you can
+      be relieved. */
+
+   interrupt(SFB_MSG, argument == "cured", the_end);
+
+   on_activation(self.position != POSITION_SLEEPING, skip);
+
+   i1 := interrupt(SFB_MSG, argument == "relief", relief);
+
+   :loop:
+   exec("snore", self);
+   pause;
+   goto loop;
+
+   :relief:
+   /* Suppose you can only be relieved once, then we must clear interrupt */
+   clear(i1);
+   pause;
+   pause;
+   goto loop;
+
+   :the_end:
+   /* Person is cured... */
+   quit;
+}
+dilend
+
+
+clear( i : integer )
+
+   Clears the interrupt number "i". If i is invalid, this will either
+   clear an wrong interrupt or do nothing.
+
+
+integer on_activation ( dilexp , label )
+   dilexp  : A boolean DIL expression.
+   label   : Label to jump to - OR the reserved keyword SKIP.
+   returns : The index to the interrupt handing the on_activation.
+
+   result: Sets up an interrupt that is executed before every activation
+           of the DIL program. This is for example useful to catch
+           situations where your NPC has fallen asleep or is injured.
+           If 'dilexp' evaluates to TRUE then the program jumps to 'label'.
+           If 'label' is 'skip' then the program is simply not activated.
+           When the on_activation evaluates to true, and jumps to a label
+           other than skip, the condition is automatically cleared. If the
+           dilexp evaluates to false, or if the label is skip, the activation
+           remains active. Use the clear() to remove the on_activation.
+
+   example:
+           on_activation(self.position <= POSITION_SLEEPING, skip);
+             or
+           on_activation(self.position > POSITION_SLEEPING, let_me_sleep);
+
+===============================================================================
+How 'Done' messages (SFB_DONE) are treated. Note that not all commands are
+implemented, if you are missing one, let Papi know and it will be created.
+See commands.txt for details.
