@@ -654,14 +654,14 @@ puttoken(const char s[])
         {
             if(ch == '\n')
             {
-                if(lastoutc != '\n')
-                {
+	      /* MS2020 if(lastoutc != '\n')
+		 { We do need multiple newlines (in quoted text)*/
                     if (A_outstr)
                         output_addc(lastoutc = '\n');
                     else
                         putc(lastoutc = '\n',Output);
                     Outline++;
-                }
+		    /* } MS2020 */
                 /*
                  *	No character written if lastoutc WAS a newline.
                  */
