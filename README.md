@@ -1,24 +1,37 @@
 # DikuMUD2
 DikuMUD II from 1997
 
-==
-2020-02-22
-WORK IN PROGRESS BUT ALMOST DONE
-Seems like I pretty much just need to find a new C pre-processor.
-With a little help from Ken Perry on that we should be good to release.
-==
+------------
+
 February 2020, Michael Seifert
 
-I've compiled it for Ubuntu 19. Trying to make the old wheels turn on a 64 bit architecture :) 
+I've compiled this old venerable project for Ubuntu 19. Making the old wheels turn on a 64 bit architecture :) 
 
-A few notes
+A few notes on getting it running.
 
-First, get the mplex/mplex up and running. This program accepts (telnet) connections and in turn communicates with the dmserver. Default port is 4242 as far as I recall.
+1) Clone the repo
 
-Secondly, run dmserver.
+2) Compile (make all)
 
-To compile zones
+3) Be sure to create a directory "ply/" and in there one directory for
+   each letter in the alphabet "a/", "b/", ..., "z/", etc.
 
-DMC/dmc zon/midgaard.zon
+------------
 
-You have to create a directory "ply/" and in there one directory for each letter in the alphabet "a/", "b/", etc.
+To make it run:
+
+1) compile all zones:
+      DMC/dmc zon/*.zon
+
+2) Get the Mplex/mplex up and running.
+      Mplex/mplex &
+   This program accepts (telnet) connections and in turn communicates with
+   the dmserver. Default port is 4242. There's a way to have one with color
+   support and one without. The multiplexers communicate with the dmserver
+   on port 4999
+
+3) Run Diku II:
+
+     ./dmserver
+     (or gdb dmserver)
+
