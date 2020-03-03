@@ -15,10 +15,18 @@ A few notes on getting it running.
 
 1) Clone the repo
 
-2) Compile (make all)
+   cd dm-dist-ii/
+
+2) Compile
+      touch .depends ; make depend
+      make all
 
 3) Be sure to create a directory "ply/" and in there one directory for
    each letter in the alphabet "a/", "b/", ..., "z/", etc.
+
+4) Make symbolic links
+     ln -s PP/pp
+     ln -s DIL/dil
 
 ------------
 
