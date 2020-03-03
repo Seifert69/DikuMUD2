@@ -186,10 +186,10 @@ int main(int argc, char *argv[])
       tm_off.tm_wday = (tm_off.tm_yday / 7)+1;
 
       if ((
-	   (((day!=-1) && (tm_on.tm_yday == day) || (tm_off.tm_yday == day)) ||
-	    ((week!=-1) && (tm_on.tm_wday == week) || (tm_off.tm_wday==week))||
-	    ((month!=-1) && (tm_on.tm_mon == month) || (tm_off.tm_mon==month)))
-	   && ((year==-1)||(tm_on.tm_year == year) || (tm_off.tm_year==year)))
+	   (((day!=-1) && ((tm_on.tm_yday == day) || (tm_off.tm_yday == day))) ||
+	    ((week!=-1) && ((tm_on.tm_wday == week) || (tm_off.tm_wday==week)))||
+	    ((month!=-1) && ((tm_on.tm_mon == month) || (tm_off.tm_mon==month))))
+	   && ((year==-1)|| (tm_on.tm_year == year) || (tm_off.tm_year==year)))
 	  || (day==-1&&week==-1&&month==-1&&year==-1))
 	  
       {

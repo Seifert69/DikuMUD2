@@ -226,6 +226,6 @@ void destroy_fptr(unit_data *u, unit_fptr *f)
 {
 }
 
-void unlink_affect(unit_affected_type *u)
+void unlink_affect(struct unit_data *u, unit_affected_type *af)
 {
 }
