@@ -132,7 +132,6 @@ void unlink_affect(struct unit_data *u, struct unit_affected_type *af)
 {
    struct unit_affected_type *i;
 
-   assert(UNIT_AFFECTED(u) == af); //MS2020
    assert(af->owner == u); //MS2020
    
    /* NB! Mucho importanto!                                    */
