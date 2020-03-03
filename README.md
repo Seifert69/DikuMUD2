@@ -3,6 +3,10 @@ DikuMUD II from 1997
 
 ------------
 
+March 3, 2020
+Not completely done. Waiting for Makefile from Ken Perry regarding PP.
+
+-----------
 February 2020, Michael Seifert
 
 I've compiled this old venerable project for Ubuntu 19. Making the old wheels turn on a 64 bit architecture :) 
