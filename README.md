@@ -4,7 +4,7 @@ DikuMUD II from 1997
 ------------
 
 March 3, 2020
-Not completely done. Waiting for Makefile from Ken Perry regarding PP.
+It works. But not completely done. Waiting for Makefile from Ken Perry regarding PP.
 
 -----------
 February 2020, Michael Seifert
@@ -20,6 +20,8 @@ A few notes on getting it running.
 2) Compile
       touch .depends ; make depend
       make all
+      cd PP/
+      ./ppmake 
 
 3) Be sure to create a directory "ply/" and in there one directory for
    each letter in the alphabet "a/", "b/", ..., "z/", etc.
