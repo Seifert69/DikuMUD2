@@ -108,41 +108,42 @@ var
         room    : unitptr;
 code
 {
-        :init:
-        heartbeat := PULSE_SEC*3;
+   :init:
+   heartbeat := PULSE_SEC*3;
 
-        :start:
-pc := (self.inside);
-secure(pc,gone);
+   :start:
+   wait(SFB_TICK,TRUE);
+   pc := (self.inside);
+   secure(pc,gone);
 
-if ((pc.abilities[ABIL_DEX]+pc.skills[SKI_CLIMB])<(rnd(0,80)))
-{
-act("You can feel your grip slipping...",A_ALWAYS,pc,null,null,TO_CHAR);
-act("$1n's hands slowly slip on the iron rings..."
-,A_HIDEINV,pc,null,null,TO_REST);pause;
-act("You lose your handhold and plunge down into the darkness, screaming!"
-,A_ALWAYS,pc,null,null,TO_CHAR);
-act("$1n loses $1s handhold and plunges down into the darkness, screaming!"
-,A_SOMEONE,pc,null,null,TO_REST);
-if (pc.level < 200)
-{
-        pc.hp := pc.hp-(rnd(3,10));
-        position_update(pc);
-}
-room:=findroom(sted);
-link(pc,room);
-act("(&c+wcOuch!!! You hit the stones hard!&cw",
-A_ALWAYS,pc,null,null,TO_CHAR);
-act("$1n falls from above and smashes into the stones!"
-,A_SOMEONE,pc,null,null,TO_REST);
-exec("look",pc);
-unsecure(pc);
-goto start;
-}
-else goto start;
-:gone:
-unsecure(pc);
-goto start;
+   if ((pc.abilities[ABIL_DEX]+pc.skills[SKI_CLIMB])<(rnd(0,80)))
+   {
+      act("You can feel your grip slipping...",A_ALWAYS,pc,null,null,TO_CHAR);
+      act("$1n's hands slowly slip on the iron rings..."
+            ,A_HIDEINV,pc,null,null,TO_REST);pause;
+      act("You lose your handhold and plunge down into the darkness, screaming!"
+             ,A_ALWAYS,pc,null,null,TO_CHAR);
+      act("$1n loses $1s handhold and plunges down into the darkness, screaming!"
+             ,A_SOMEONE,pc,null,null,TO_REST);
+      if (pc.level < 200)
+      {
+         pc.hp := pc.hp-(rnd(3,10));
+         position_update(pc);
+      }
+      room:=findroom(sted);
+      link(pc,room);
+      act("(&c+wcOuch!!! You hit the stones hard!&cw",
+                A_ALWAYS,pc,null,null,TO_CHAR);
+      act("$1n falls from above and smashes into the stones!"
+               ,A_SOMEONE,pc,null,null,TO_REST);
+      exec("look",pc);
+      unsecure(pc);
+      goto start;
+  }
+
+  :gone:
+  unsecure(pc);
+  goto start;
 }
 dilend
 
@@ -307,13 +308,14 @@ code
         on_activation(self.position==POSITION_FIGHTING,skip);
 
         :start:
-wait(SFB_DONE,self.position==POSITION_STANDING);
+	wait(SFB_DONE,self.position==POSITION_STANDING);
 
         :loop:
-u:=findrndunit(self,FIND_UNIT_SURRO,UNIT_ST_NPC);
-if (u==self) goto loop;
-if (not("orc" in u.names)) goto loop;
-if (not(u)) goto waitawhile;
+	u:=findrndunit(self,FIND_UNIT_SURRO,UNIT_ST_NPC);
+
+	if (u==self) goto waitawhile;
+	if (not("orc" in u.names)) goto waitawhile;
+	if (not(u)) goto waitawhile;
 
 i:=rnd(1,5);
 
