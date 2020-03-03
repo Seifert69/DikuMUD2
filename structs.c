@@ -69,18 +69,6 @@ char_data::~char_data(void)
    world_nochars--;
 }
 
-unit_swap_data::unit_swap_data(void)
-{
-   extra_descr = NULL;
-}
-
-
-
-unit_swap_data::~unit_swap_data(void)
-{
-   extra_descr->free_list();
-}
-
 
 room_data::room_data(void)
 {
@@ -306,8 +294,7 @@ unit_data::unit_data(ubit8 type)
    next      = NULL;
    gnext     = NULL;
    gprevious = NULL;
-   swap      = NULL;
-   swapblk   = BLK_NULL;
+   extra_descr = NULL;
 
    chars = 0;
    manipulate = 0;
@@ -379,8 +366,7 @@ unit_data::~unit_data(void)
    
    /* Call functions of the unit which have any data                     */
    /* that they might want to work on.                                   */
-   if (UNIT_SWAP(this))
-     delete UNIT_SWAP(this);
+   extra_descr->free_list();
    
    if (IS_OBJ(this))
      delete U_OBJ(this);

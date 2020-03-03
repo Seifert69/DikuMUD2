@@ -103,32 +103,28 @@ int bread_extra(CByteBuffer *pBuf, class extra_descr_data **ppExtra)
 }
 
 
-int bread_swap(CByteBuffer *pBuf, struct unit_swap_data **ppSwap)
+int bread_swap(CByteBuffer *pBuf, struct unit_data *u)
 {
-   struct unit_swap_data *swap;
    char *c;
 
-   swap    = new (struct unit_swap_data);
-   *ppSwap = swap;
+   if (pBuf->SkipString(&c))
+     return 1;
+
+   u->title.Reassign(c);
 
    if (pBuf->SkipString(&c))
      return 1;
 
-   swap->title.Reassign(c);
+   u->out_descr.Reassign(c);
 
    if (pBuf->SkipString(&c))
      return 1;
 
-   swap->out_descr.Reassign(c);
+   u->in_descr.Reassign(c);
 
-   if (pBuf->SkipString(&c))
-     return 1;
+   u->extra_descr = new extra_descr_data;
 
-   swap->in_descr.Reassign(c);
-
-   swap->extra_descr = new extra_descr_data;
-
-   if (bread_extra(pBuf, &swap->extra_descr))
+   if (bread_extra(pBuf, &u->extra_descr))
      return 1;
 
    return 0;
@@ -139,7 +135,6 @@ int bread_swap_skip(CByteBuffer *pBuf)
 {
    int i;
    ubit8 t8;
-   char *c;
 
    pBuf->SkipString();
    pBuf->SkipString();

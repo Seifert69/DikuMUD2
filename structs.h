@@ -439,24 +439,6 @@ struct unit_fptr
    struct unit_fptr *next; /* Next in linked list                         */
 };
 
-class unit_swap_data
-{
-  public:
-   unit_swap_data(void);
-   ~unit_swap_data(void);
-
-   /* Room title, Char title, Obj "the barrel", NPC "the Beastly Fido" */
-   class cStringInstance title;
-
-   /* The outside description of a unit           */
-   class cStringInstance out_descr;
-
-   /* The inside description of a unit            */
-   class cStringInstance in_descr;
-
-   class extra_descr_data /* All the look 'at' stuff                     */
-     *extra_descr;
-};
 
 class unit_data
 {
@@ -516,8 +498,19 @@ class unit_data
 
    sbit16 alignment;     /* +-1000 for alignments                         */
 
-   blk_handle swapblk;
-   class unit_swap_data *swap;
+   /* MS2020 Cleaned up the swap stuff */
+  
+   /* Room title, Char title, Obj "the barrel", NPC "the Beastly Fido" */
+   class cStringInstance title;
+
+   /* The outside description of a unit           */
+   class cStringInstance out_descr;
+
+   /* The inside description of a unit            */
+   class cStringInstance in_descr;
+
+   class extra_descr_data /* All the look 'at' stuff                     */
+     *extra_descr;
 };
 
 

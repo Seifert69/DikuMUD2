@@ -400,7 +400,6 @@ struct unit_data *mcreate_unit(int type)
    struct unit_data *rslt;
 
    rslt = new (class unit_data)(type);
-   UNIT_SWAP(rslt) = new (class unit_swap_data);
 
    init_unit(rslt);
    return rslt;

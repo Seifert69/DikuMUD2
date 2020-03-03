@@ -33,7 +33,6 @@
 #include "essential.h"
 
 extern const sbit8 time_light[];
-void swap_in(struct unit_data *unit);
 
 /* ..................................................................... */
 
@@ -80,12 +79,6 @@ void swap_in(struct unit_data *unit);
 #endif
 
 /* ..................................................................... */
-
-#define UNIT_SWAP(unit) \
-  ((unit)->swap)
-
-#define UNIT_SWAP_HANDLE(unit) \
-  ((unit)->swapblk)
 
 #define UNIT_FUNC(unit) \
    ((unit)->func)
@@ -161,20 +154,17 @@ void swap_in(struct unit_data *unit);
 
 /* --- Swapped --- */
 
-#define USWAP(u) \
-   (UNIT_SWAP(u) ? UNIT_SWAP(u) : (swap_in(u), UNIT_SWAP(u)))
-
 #define UNIT_TITLE(unit)  \
-   (USWAP(unit)->title)
+  ((unit)->title)
 
 #define UNIT_OUT_DESCR(unit)  \
-   (USWAP(unit)->out_descr)
+  ((unit)->out_descr)
 
 #define UNIT_IN_DESCR(unit)  \
-   (USWAP(unit)->in_descr)
+  ((unit)->in_descr)
 
 #define UNIT_EXTRA_DESCR(unit)  \
-   (USWAP(unit)->extra_descr)
+  ((unit)->extra_descr)
 
 /* ..................................................................... */
 

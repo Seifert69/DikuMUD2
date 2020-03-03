@@ -38,7 +38,7 @@ void *bread_dil(CByteBuffer *pBuf, struct unit_data *, ubit8 version,
 struct diltemplate *bread_diltemplate(CByteBuffer *pBuf);
 int bread_extra(CByteBuffer *pBuf, class extra_descr_data **ppExtra);
 
-int bread_swap(CByteBuffer *pBuf, struct unit_swap_data **ppSwap);
+int bread_swap(CByteBuffer *pBuf, struct unit_data *u);
 int bread_swap_skip(CByteBuffer *pBuf);
 int    bread_affect(CByteBuffer *pBuf, struct unit_data *u, ubit8 nVersion);
 

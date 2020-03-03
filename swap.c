@@ -49,12 +49,14 @@ static int nSwapSumLen = 0;
 
 void swap_in(struct unit_data *u)
 {
-   CByteBuffer Buf;
+  return;
+     /*
+  CByteBuffer Buf;
    ubit8 *p;
 
    assert(UNIT_SWAP(u) == NULL);
 
-   if (UNIT_SWAP_HANDLE(u) == BLK_NULL) /* In '.data' file */
+   if (UNIT_SWAP_HANDLE(u) == BLK_NULL) // In '.data' file
    {
       FILE *f;
       char str[256];
@@ -81,7 +83,7 @@ void swap_in(struct unit_data *u)
 
    blk_length n;
    p = (ubit8 *) blk_read(swap_file, UNIT_SWAP_HANDLE(u), &n);
-   assert(p != NULL);  /* If read error here, we are fucked bad */
+   assert(p != NULL);  // If read error here, we are fucked bad
 
    Buf.SetData(p, n);
 
@@ -108,11 +110,14 @@ void swap_in(struct unit_data *u)
       abort();
    }
    nSwapIn++;
+*/
 }
 
 
 void swap_out(struct unit_data *u)
 {
+  return;
+/*
    CByteBuffer *pBuf = &g_FileBuffer;
    ubit8 *p;
 
@@ -145,10 +150,13 @@ void swap_out(struct unit_data *u)
      default:
       abort();
    }
+*/
 }
 
 void swap_status(struct unit_data *ch)
 {
+  return;
+  /*
    char Buf[1024];
 
    sprintf(Buf, "\n\rSwapping status:\n\r"
@@ -161,17 +169,20 @@ void swap_status(struct unit_data *ch)
 	   nSwapIn, nSwapOut, nSwapSumLen,
 	   (nSwapOut-nSwapIn) > 0 ? nSwapSumLen / (nSwapOut-nSwapIn) : 0);
    send_to_char(Buf, ch);
+  */
 }
 
 void swap_check(void *p1, void *p2)
 {
+  return;
+  /*
    struct unit_data *u;
 
 #ifdef SUSPEKT
    static int nOldSwapIn = 0;
    if (nOldSwapIn != nSwapIn)
    {
-      /* We had swap in activity, lets wait until we get an idle moment */
+      // We had swap in activity, lets wait until we get an idle moment
       nOldSwapIn = nSwapIn;
       return;
    }
@@ -179,9 +190,9 @@ void swap_check(void *p1, void *p2)
 
    event_enq(PULSE_SEC*60*5, swap_check, 0, 0);
 
-   /* Find some stuff to swap out... This is not very pretty, but unless
-      I put in all kind of timing shit, I see no better way. The reason
-      for not putting in timing is efficiency. */
+   // Find some stuff to swap out... This is not very pretty, but unless
+   // I put in all kind of timing shit, I see no better way. The reason
+   // for not putting in timing is efficiency.
 
    for (u = unit_list; u; u = u->gnext)
    {
@@ -194,18 +205,22 @@ void swap_check(void *p1, void *p2)
 	 swap_out(u);
       }
    }
+  */
 }
 
 void boot_swap(void)
 {
+  return;
+  /*
    FILE *f;
 
    extern char libdir[];
 
-   /* Create swapfile */
+   // Create swapfile
    if (!(f=fopen(str_cc(libdir, SWAP_FILE_NAME), "w")))
      abort();
    fclose(f);
 
    swap_file = blk_open(str_cc(libdir, SWAP_FILE_NAME), SWAP_BLK_LENGTH);
+  */
 }

@@ -626,7 +626,7 @@ struct unit_data *read_unit_string(CByteBuffer *pBuf, int type, int len,
       slog(LOG_EXTENSIVE, 0, "FATAL: Attempted to read '%s' but found "
 	   "version number %d which was NEWER than this implementation "
 	   "can handle! Aborting server.", whom, unit_version);
-      exit(0);
+      assert(FALSE);
    }
 
    g_nCorrupt += UNIT_NAMES(u).ReadBuffer(pBuf);
@@ -640,15 +640,7 @@ struct unit_data *read_unit_string(CByteBuffer *pBuf, int type, int len,
       UNIT_NAMES(u).Substitute(0, buf);
    }
 
-   if (bSwapin)
-     g_nCorrupt += bread_swap(pBuf, &UNIT_SWAP(u));
-   else
-   {
-      UNIT_SWAP_HANDLE(u) = BLK_NULL;
-      UNIT_SWAP(u)        = NULL;
-
-      g_nCorrupt += bread_swap_skip(pBuf);
-   }
+   g_nCorrupt += bread_swap(pBuf, u);
 
    /* Read Key Zone, Name */
    g_nCorrupt += pBuf->ReadStringCopy(zone, sizeof(zone));
