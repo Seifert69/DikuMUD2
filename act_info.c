@@ -292,7 +292,8 @@ void do_status(struct unit_data *ch, char *arg,
    {
       "weapons", 
       "spells", 
-      "skills"
+      "skills",
+      NULL
    };
 
    extern const char *char_sex[];
