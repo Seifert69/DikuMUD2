@@ -6,6 +6,15 @@ DikuMUD II from 1997
 March 3, 2020
 It works. But not completely done. Waiting for Makefile from Ken Perry regarding PP.
 
+I've run into a number of bugs that were there for 5-7 years and never before
+caused issues. That's quite normal in my experience with radically new enviroments. So dont be suprised if there's a crash bug here or there. I'll try to help if I can.
+
+Back when this version was retired it was quite stable.
+
+I have not yet recalled how to make the first new player character into a level 255. :o)
+
+It may be that the Perry brothers release Diku III (Valhalla MUD) under LGPL too.
+
 -----------
 February 2020, Michael Seifert
 
@@ -48,4 +57,17 @@ To make it run:
 
      ./dmserver
      (or gdb dmserver)
+
+-----------------
+Wish list
+
+If I had real time to spend on this project my priority number one
+would be to use SmartPtr with all unit_data and affects. Get rid of
+all the complicated and not 100% reliable destructor code and replace it
+then by freeing objects with a reference count of zero.
+
+My second priority would be to make more use of C classes for strings, name lists and more to handle more memory in the class rather than juggling mallocs and frees.
+
+
+
 
