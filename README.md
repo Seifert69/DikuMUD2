@@ -3,6 +3,8 @@ DikuMUD II from 1997
 
 ------------
 
+Check out history and notes on www.dikumud.com
+
 March 3, 2020
 It works. But not completely done. Waiting for Makefile from Ken Perry regarding PP.
 
