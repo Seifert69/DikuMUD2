@@ -41,7 +41,7 @@ char bugs[1024]    =
 char status[1024]    =
 " * Status : Unpublished.                                                   *";
 
-char *notice1 =
+const char *notice1 =
 " * Copyright (C) Valhalla (This work is unpublished).                      *"
 "\n"
 " *                                                                         *"
@@ -67,7 +67,7 @@ char *notice1 =
 " * authorization of Valhalla is prohobited.                                *";
 
 
-char *notice2 =
+const char *notice2 =
 " * Copyright (C) 1994 - 1996 by Valhalla (This work is published).         *"
 "\n"
 " *                                                                         *"
