@@ -13,8 +13,6 @@ caused issues. That's quite normal in my experience with radically new enviromen
 
 Back when this version was retired it was quite stable.
 
-I have not yet recalled how to make the first new player character into a level 255. :o)
-
 It may be that the Perry brothers release Diku III (Valhalla MUD) under LGPL too.
 
 -----------
@@ -40,6 +38,14 @@ A few notes on getting it running.
 4) Make symbolic links
      ln -s PP/pp
      ln -s DIL/dil
+
+5) Login with the admin
+     telnet localhost 4242
+     username: admin
+     password (CIA grade): ABC123
+
+   Change the password, or advance a new character to level 255, then quit
+   and delete the admin character from the ply/a/ directory
 
 ------------
 
