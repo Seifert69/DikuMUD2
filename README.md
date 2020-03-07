@@ -1,19 +1,24 @@
 # DikuMUD2
-DikuMUD II from 1997
-
+DikuMUD II (1997)
 ------------
+This is the source of the never before released DikuMUD II. The source code is
+released under LGPL (only) and originates from a running version from December 1997.
 
 Check out history and notes on www.dikumud.com
 
-March 3, 2020
-It works. But not completely done. Waiting for Makefile from Ken Perry regarding PP.
+March 3, 2020:
+  *  It works. But not completely done. Waiting for Makefile from
+     Ken Perry regarding PP.
 
-I've run into a number of bugs that were there for 5-7 years and never before
-caused issues. That's quite normal in my experience with radically new enviroments. So dont be suprised if there's a crash bug here or there. I'll try to help if I can.
+  * I've run into a number of bugs that were there for 5-7 years and never before
+    caused issues. That's quite normal in my experience with radically new
+    enviroments. So dont be suprised if there's a crash bug here or there. I'll
+    try to help if I can.
 
-Back when this version was retired it was quite stable.
+  * Back when this version was retired it was quite stable.
 
-It may be that the Perry brothers release Diku III (Valhalla MUD) under LGPL too.
+  * It may be that the Perry brothers release Diku III (Valhalla MUD)
+    under LGPL too.
 
 -----------
 February 2020, Michael Seifert
@@ -39,14 +44,6 @@ A few notes on getting it running.
      ln -s PP/pp
      ln -s DIL/dil
 
-5) Login with the admin
-     telnet localhost 4242
-     username: admin
-     password (CIA grade): ABC123
-
-   Change the password, or advance a new character to level 255, then quit
-   and delete the admin character from the ply/a/ directory
-
 ------------
 
 To make it run:
@@ -65,6 +62,14 @@ To make it run:
 
      ./dmserver
      (or gdb dmserver)
+
+4) Login with the admin
+     telnet localhost 4242
+     username: admin
+     password (CIA grade): ABC123
+
+   Change the password, or advance a new character to level 255, then quit
+   and delete the admin character from the ply/a/ directory
 
 -----------------
 Wish list
