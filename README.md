@@ -78,3 +78,10 @@ all the complicated and not 100% reliable destructor code and replace it
 then by freeing objects with a reference count of zero.
 
 My second priority would be to make more use of C classes for strings, name lists and more to handle more memory in the class rather than juggling mallocs and frees.
+
+Also, given we're in 2020. Why isn't there a pure html5/js client anywhere? :o)
+Looks like html5/websockets would be the way to go and that would be quite easy to implement in the Diku II 
+code because it's separated out into the Mplex. So you could run one Mplex for telnet, one for telnet with color
+and one for web-sockets. And then add just a few lines of code to your webpage and you have a basic MUD client.
+Which of course could be wonderfully expanded with a little meta-data
+from the server.
