@@ -35,35 +35,33 @@ A few notes on getting it running.
       touch .depends ; make depend
       make all
       cd PP/
-      ./ppmake 
+      ./ppmake
+      cd ..
 
-3) Be sure to create a directory "ply/" and in there one directory for
-   each letter in the alphabet "a/", "b/", ..., "z/", etc.
-
-4) Make symbolic links
+3) Make symbolic links (in dm-dist-ii/)
      ln -s PP/pp
      ln -s DIL/dil
 
-------------
-
-To make it run:
-
-1) compile all zones:
+4) compile all zones:
       DMC/dmc zon/*.zon
 
-2) Get the Mplex/mplex up and running.
+------------
+
+To run DikuMUD II:
+
+1) Get the Mplex/mplex up and running.
       Mplex/mplex &
    This program accepts (telnet) connections and in turn communicates with
    the dmserver. Default port is 4242. There's a way to have one with color
    support and one without. The multiplexers communicate with the dmserver
    on port 4999
 
-3) Run Diku II:
+2) Run Diku II:
 
      ./dmserver
      (or gdb dmserver)
 
-4) Login with the admin
+3) Login with the admin
      telnet localhost 4242
      username: admin
      password (CIA grade): ABC123
@@ -80,7 +78,3 @@ all the complicated and not 100% reliable destructor code and replace it
 then by freeing objects with a reference count of zero.
 
 My second priority would be to make more use of C classes for strings, name lists and more to handle more memory in the class rather than juggling mallocs and frees.
-
-
-
-
