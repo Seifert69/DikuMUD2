@@ -411,9 +411,16 @@ void show_obj_to_char_inv(char *buffer, struct unit_data *obj,
    c = single_unit_messg(UNIT_IN(obj), "$in_it_o", "", "$1n");
 
    act_generate(buffer, c, A_HIDEINV, obj, UNIT_IN(obj), ch, TO_VICT, ch);
+
+   
+   /* MS2020 BUG - buffer can be ""
    TAIL(buffer);
-   buffer -= 2; /* Overwrite \n\r */
-   *buffer = 0;
+   buffer -= 2; // Overwrite \n\r
+   *buffer = 0; */
+
+   if (strlen(buffer) >= 2)
+     buffer[strlen(buffer)-2] = 0;
+   
    cat_passing_effects(ch, obj, buffer);
    strcat(buffer, "\n\r");
 }
