@@ -8,7 +8,7 @@ Check out history and notes on www.dikumud.com
 
 March 3, 2020:
   *  It works. But not completely done. Waiting for Makefile from
-     Ken Perry regarding PP.
+     Ken Perry regarding PP. You can run the ppmake script though.
 
   * I've run into a number of bugs that were there for 5-7 years and never before
     caused issues. That's quite normal in my experience with radically new
@@ -18,7 +18,12 @@ March 3, 2020:
   * Back when this version was retired it was quite stable.
 
   * It may be that the Perry brothers release Diku III (Valhalla MUD)
-    under LGPL too.
+    under LGPL too. We're working together on it right now and looking
+    into adding HTML5 / Websockets support.
+    
+  * @nerratt reported that it compiles on OpenSuse if you remove
+    the declaration of gettimeofday in main.c.
+    
 
 -----------
 February 2020, Michael Seifert
