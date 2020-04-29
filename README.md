@@ -36,6 +36,9 @@ A few notes on getting it running.
 
    cd dm-dist-ii/
 
+1.5) Be sure you have flex and bison installed. Look e.g. here for help:
+       https://stackoverflow.com/questions/3871425/how-to-install-lex-and-yacc-in-ubuntu
+
 2) Compile
       touch .depends ; make depend
       make all
@@ -47,7 +50,7 @@ A few notes on getting it running.
      ln -s PP/pp
      ln -s DIL/dil
 
-4) compile all zones:
+4) when in the main dir (dm-dist-ii/) compile all zones:
       DMC/dmc zon/*.zon
 
 ------------
