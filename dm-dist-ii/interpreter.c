@@ -494,6 +494,8 @@ void command_interpreter(struct unit_data *ch, char *arg)
    struct command_info *cmd_ptr;
    int is_social = FALSE;
 
+//   printf("prool's debug: interpreter.c: arg='%s'\n", arg);
+
    assert(IS_CHAR(ch));
 
    if (is_destructed(DR_UNIT, ch))
