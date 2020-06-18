@@ -533,18 +533,6 @@ void game_event(void)
 	    send_to_descriptor(buffer, CHAR_DESCRIPTOR(point->snoop.snoop_by));
 	 }
 
-#if 0	// prool debug code
-	 printf("prool's debug main.c pcomm='%s' [ ", pcomm);
-	 char *cc;
-	 cc=pcomm;
-	 while (*cc)
-	 {
-		 printf("%02X ",*cc);
-		 cc++;
-	 }
-	 printf(" ]\n");
-#endif	// end of prool debug code
-
 	 point->fptr(point, pcomm);
 	 free(pcomm);
       }

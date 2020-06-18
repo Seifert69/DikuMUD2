@@ -176,7 +176,7 @@ int g_bModeANSI   = FALSE;
 int g_bModeEcho   = FALSE;
 int g_bModeRedraw = FALSE;
 int g_bModeTelnet = FALSE;
-int g_bModeFull8bit = FALSE; // this flag adding by prool
+int g_bModeFull8bit = FALSE;
 
 
 class cConHook *connection_list = NULL;
@@ -194,7 +194,7 @@ void ShowUsage(char *name)
    fprintf(stderr, "  -p  Player port number, default is 4242.\n");
    fprintf(stderr, "  -a  Internet address of server (localhost default).\n");
    fprintf(stderr, "  -s  Internet port of server (4999 default).\n");
-   fprintf(stderr, "  -u  Full 8bit characters for UTF-8, koi8-r, cp1251, etc (by prool)\n");
+   fprintf(stderr, "  -u  Full 8bit characters for UTF-8, koi8-r, cp1251, etc\n");
    exit(0);
 }
 
@@ -345,7 +345,7 @@ char cConHook::AddInputChar(ubit8 c)
    *cp++ = c;
    *cp = 0;
 
-   if ( g_bModeFull8bit ) // prool's 
+   if ( g_bModeFull8bit ) // prool: full 8 bit characters support
    {
    if ((c < ' ') || (c==255) || (m_sSetup.telnet && ((c==0xFD) || (c==0xFE))))
      *(cp-1) = 0;
@@ -1435,7 +1435,7 @@ int main(int argc, char *argv[])
 
    CaptainHook.Hook(fd, &MotherHook);
 
-   slog(LOG_OFF, 0, "mplex/prool mod. Mother connection on port %d opened.",
+   slog(LOG_OFF, 0, "Mother connection on port %d opened.",
 	arg.nMotherPort);
 
    /* Subtract stdout, stdin, stderr, fdmud, fdmother and 2 to be safe. */
