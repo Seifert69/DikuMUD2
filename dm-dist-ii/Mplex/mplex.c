@@ -176,6 +176,7 @@ int g_bModeANSI   = FALSE;
 int g_bModeEcho   = FALSE;
 int g_bModeRedraw = FALSE;
 int g_bModeTelnet = FALSE;
+int g_bModeFull8bit = FALSE;
 
 
 class cConHook *connection_list = NULL;
@@ -193,6 +194,7 @@ void ShowUsage(char *name)
    fprintf(stderr, "  -p  Player port number, default is 4242.\n");
    fprintf(stderr, "  -a  Internet address of server (localhost default).\n");
    fprintf(stderr, "  -s  Internet port of server (4999 default).\n");
+   fprintf(stderr, "  -u  Full 8bit characters for UTF-8, koi8-r, cp1251, etc\n");
    exit(0);
 }
 
@@ -238,6 +240,10 @@ int ParseArg(int argc, char *argv[], struct arg_type *arg)
 
 	case 't':
 	 g_bModeTelnet = TRUE;
+	 break;
+
+	case 'u':
+	 g_bModeFull8bit = TRUE;
 	 break;
 
         case 'a':
@@ -339,8 +345,16 @@ char cConHook::AddInputChar(ubit8 c)
    *cp++ = c;
    *cp = 0;
 
+   if ( g_bModeFull8bit ) // prool: full 8 bit characters support
+   {
+   if ((c < ' ') || (c==255) || (m_sSetup.telnet && ((c==0xFD) || (c==0xFE))))
+     *(cp-1) = 0;
+   }
+   else
+   {
    if ((c < ' ') || (c==255) || (m_sSetup.telnet && (c > 127)))
      *(cp-1) = 0;
+   }
 
    return *(cp - 1);
 }
