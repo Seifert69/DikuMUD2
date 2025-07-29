@@ -102,7 +102,7 @@ char tmpstr[YYLMAX + 1], *a, *b;
 				 dmc_exit(1);
 			      }
 
-			      if ((*a < ' ') && !isspace(*a))
+			      if (0/*(*a < ' ') && !isspace(*a)*/) // by prool: allow full 8bit characters
 			      {
 				 sprintf(buf, "Illegal character ascii %d.",
 					 *a);
