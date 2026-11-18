@@ -606,6 +606,27 @@ void nanny_dil(struct descriptor_data *d, char *arg)
 }
 
 
+/* The name is the salt. crypt() returns NULL or a failure token ("*0")
+   for input it can't hash (e.g. a libxcrypt without DES), which must
+   never be stored as the password. Returns TRUE when the password is set. */
+int pc_set_password(struct unit_data *pc, const char *plain)
+{
+   const char *hashed = crypt(plain, PC_FILENAME(pc));
+
+   if (hashed == NULL || hashed[0] == '*')
+   {
+      slog(LOG_ALL, 0, "crypt() failed for a new password of %s; "
+	   "the password is unchanged.", PC_FILENAME(pc));
+      return FALSE;
+   }
+
+   strncpy(PC_PWD(pc), hashed, 10);
+   *(PC_PWD(pc) + 10) = '\0';
+
+   return TRUE;
+}
+
+
 void nanny_pwd_confirm(struct descriptor_data *d, char *arg)
 {
    struct unit_data *u;
@@ -619,8 +640,8 @@ void nanny_pwd_confirm(struct descriptor_data *d, char *arg)
 
    send_to_descriptor(CONTROL_ECHO_ON"\n\r", d);
 
-   if (strncmp(crypt(arg, PC_FILENAME(d->character)),
-	       PC_PWD(d->character), 10))
+   if (pwdcompare(crypt(arg, PC_FILENAME(d->character)),
+		  PC_PWD(d->character), 10))
    {
       send_to_descriptor("Passwords don't match.\n\r", d);
       set_descriptor_fptr(d, nanny_new_pwd, TRUE);
@@ -709,8 +730,13 @@ void nanny_new_pwd(struct descriptor_data *d, char *arg)
       return;
    }
 
-   strncpy(PC_PWD(d->character), crypt(arg, PC_FILENAME(d->character)), 10);
-   *(PC_PWD(d->character) + 10) = '\0';
+   if (!pc_set_password(d->character, arg))
+   {
+      send_to_descriptor("\n\rThat password can't be used, "
+			 "please choose another.\n\r", d);
+      set_descriptor_fptr(d, nanny_new_pwd, TRUE);
+      return;
+   }
 
    set_descriptor_fptr(d, nanny_pwd_confirm, TRUE);
 }
@@ -730,8 +756,8 @@ void nanny_change_pwd_confirm(struct descriptor_data *d, char *arg)
 
    send_to_descriptor(CONTROL_ECHO_ON"\n\r", d);
 
-   if (strncmp(crypt(arg, PC_FILENAME(d->character)),
-	       PC_PWD(d->character), 10))
+   if (pwdcompare(crypt(arg, PC_FILENAME(d->character)),
+		  PC_PWD(d->character), 10))
    {
       send_to_descriptor("Passwords don't match.\n\r", d);
       set_descriptor_fptr(d, nanny_change_pwd, TRUE);
@@ -759,8 +785,13 @@ void nanny_change_pwd(struct descriptor_data *d, char *arg)
       return;
    }
 
-   strncpy(PC_PWD(d->character), crypt(arg, PC_FILENAME(d->character)), 10);
-   *(PC_PWD(d->character) + 10) = '\0';
+   if (!pc_set_password(d->character, arg))
+   {
+      send_to_descriptor("\n\rThat password can't be used, "
+			 "please choose another.\n\r", d);
+      set_descriptor_fptr(d, nanny_change_pwd, TRUE);
+      return;
+   }
 
    set_descriptor_fptr(d, nanny_change_pwd_confirm, TRUE);
 }
@@ -787,8 +818,8 @@ COLOUR_NORMAL, d);
 
    send_to_descriptor(CONTROL_ECHO_ON"\n\r", d);
 
-   if (strncmp(crypt(arg, PC_PWD(d->character)),
-		PC_PWD(d->character), 10) != 0)
+   if (pwdcompare(crypt(arg, PC_PWD(d->character)),
+		  PC_PWD(d->character), 10) != 0)
    {
       /* Wrong password */
       send_to_descriptor("Deletion not confirmed, you are safe again.", d);
@@ -1791,8 +1822,8 @@ void nanny_existing_pwd(struct descriptor_data *d, char *arg)
       return;
    }
 
-   if (strncmp(crypt(arg, PC_PWD(d->character)),
-		PC_PWD(d->character), 10) != 0)
+   if (pwdcompare(crypt(arg, PC_PWD(d->character)),
+		  PC_PWD(d->character), 10) != 0)
    {
       if (!str_is_empty(arg))
       {

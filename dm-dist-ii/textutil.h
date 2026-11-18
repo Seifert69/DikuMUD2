@@ -62,6 +62,7 @@ char *str_dup(const char *source);
 char *str_str(const char *cs, const char *ct);
 char *str_cstr(const char *cs, const char *ct);
 ubit1 str_is_empty(const char *arg);
+int pwdcompare(const char *p1, const char *p2, int nMax);
 ubit1 str_is_number(const char *str);
 ubit1 next_word_is_number(const char *str);
 char *one_argument(const char *argument, char *first_arg);
