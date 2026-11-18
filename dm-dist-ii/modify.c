@@ -410,6 +410,7 @@ void do_set(struct unit_data *ch, char *argument,
    struct unit_affected_type *aff;
 
    int required_xp(int level);
+   int pc_set_password(struct unit_data *pc, const char *plain);
 
    if (!CHAR_DESCRIPTOR(ch))
      return;
@@ -1047,7 +1048,8 @@ void do_set(struct unit_data *ch, char *argument,
     
      case 36:			/* "pwd" */
       argument = str_next_word(argument, strarg);
-      strncpy(PC_PWD(unt), crypt(strarg, UNIT_NAME(unt)), 10);
+      if (!pc_set_password(unt, strarg))
+	send_to_char("crypt() failed, the password is unchanged.\n\r", ch);
       return;
     
      case 37:			/* "setup-flags" */

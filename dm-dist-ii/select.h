@@ -40,7 +40,7 @@ class cCaptainHook;
 
 class cHook
 {
-   friend cCaptainHook;
+   friend class cCaptainHook;
 
   public:
    cHook(void);
@@ -69,7 +69,7 @@ class cHook
 
 class cCaptainHook
 {
-   friend cHook;
+   friend class cHook;
 
   public:
    cCaptainHook(void);

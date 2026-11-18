@@ -333,6 +333,19 @@ ubit1 str_is_empty(const char *arg)
 }
 
 
+/* Compare a crypt() result p1 with a stored password p2, like
+   strncmp(p1, p2, nMax). crypt() returns NULL or a failure token
+   ("*0"/"*1") when it can't hash (e.g. a libxcrypt without DES):
+   that is never a match. */
+int pwdcompare(const char *p1, const char *p2, int nMax)
+{
+   if (p1 == NULL || p2 == NULL || *p1 == '*')
+     return 1;
+
+   return strncmp(p1, p2, nMax);
+}
+
+
 /* Check if the string contains nothing but numbers */
 ubit1 str_is_number(const char *str)
 {

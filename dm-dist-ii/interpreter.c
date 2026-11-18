@@ -427,11 +427,11 @@ static void dump_command_history(void)
    for (j=0, i=command_history_pos; j < MAX_DEBUG_HISTORY; j++)
    {
       slog(LOG_ALL, 0, "CMD %s@%s [%s]",
-	   command_history_data[i].pcname ?
+	   command_history_data[i].pcname[0] ?
 	   command_history_data[i].pcname :
 	   FI_NAME(command_history_data[i].fi),
 
-	   command_history_data[i].pcname ?
+	   command_history_data[i].pcname[0] ?
 	   "" : FI_ZONENAME(command_history_data[i].fi),
 	   command_history_data[i].str);
       i = (i + 1) % MAX_DEBUG_HISTORY;
