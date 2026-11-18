@@ -32,6 +32,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <time.h>
+#include <sys/time.h>
 #include <cerrno>
 
 #ifdef DOS
@@ -115,8 +116,6 @@ void boot_db(void);
 #if defined(SOLARIS) || defined(HPUX)
   void srand48(long seedval);
 #endif
-
-int gettimeofday(struct timeval *tp, struct timezone *tzp);
 
 /* local functions */
 void run_the_game(void);

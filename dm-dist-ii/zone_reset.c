@@ -249,7 +249,7 @@ struct unit_data *zone_equip(struct unit_data *u, struct zone_reset_cmd *cmd)
 /* num[1] is the new state                                  */
 struct unit_data *zone_door(struct unit_data *u, struct zone_reset_cmd *cmd)
 {
-  if (!cmd->fi || !cmd->fi[0]->room_ptr)
+  if (!cmd->fi[0] || !cmd->fi[0]->room_ptr)
     szonelog(boot_zone, "Zone Reset Error: Not a room in door reference!");
   else if (!ROOM_EXIT(cmd->fi[0]->room_ptr, cmd->num[0]))
     szonelog(boot_zone, 
